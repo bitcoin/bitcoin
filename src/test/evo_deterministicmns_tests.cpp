@@ -93,7 +93,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
 static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CKey& operatorKeyRet)
 {
     ownerKeyRet.MakeNewKey(true);
-    operatorKeyRet.MakeNewKey();
+    operatorKeyRet.MakeNewKey(true);
 
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1000 * COIN, change);
@@ -189,7 +189,7 @@ static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
     GetTxPayload(tx, proTx);
 
     CKey key;
-    key.MakeNewKey(false);
+    key.MakeNewKey(true);
     proTx.scriptPayout = GetScriptForDestination(key.GetPubKey().GetID());
 
     CMutableTransaction tx2 = tx;
@@ -201,7 +201,7 @@ static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
 static CScript GenerateRandomAddress()
 {
     CKey key;
-    key.MakeNewKey(false);
+    key.MakeNewKey(true);
     return GetScriptForDestination(key.GetPubKey().GetID());
 }
 
@@ -246,8 +246,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
     CKey ownerKey;
     CKey operatorKey;
-    CBitcoinAddress payoutAddress("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
-    auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutAddress.Get()), coinbaseKey, ownerKey, operatorKey);
+    CTxDestination payoutAddress = DecodeDestination("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
+    auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutAddress), coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = chainActive.Height();
@@ -275,7 +275,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 {
     CKey sporkKey;
-    sporkKey.MakeNewKey(false);
+    sporkKey.MakeNewKey(true);
     CBitcoinSecret sporkSecret(sporkKey);
     CBitcoinAddress sporkAddress;
     sporkAddress.Set(sporkKey.GetPubKey().GetID());
@@ -404,7 +404,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     // test reviving the MN
     CKey newOperatorKey;
-    newOperatorKey.MakeNewKey();
+    newOperatorKey.MakeNewKey(true);
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
     tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPubKey().GetID(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx

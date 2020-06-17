@@ -287,7 +287,7 @@ bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMas
     return true;
 }
 
-bool CGovernanceObject::CheckSignature(const CPubKey& pubKeyMasternode) const
+bool CGovernanceObject::CheckSignature(const CKeyID& pubKeyMasternode) const
 {
     std::string strError;
 

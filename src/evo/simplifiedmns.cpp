@@ -34,7 +34,7 @@ uint256 CSimplifiedMNListEntry::CalcHash() const
 std::string CSimplifiedMNListEntry::ToString() const
 {
     return strprintf("CSimplifiedMNListEntry(proRegTxHash=%s, confirmedHash=%s, service=%s, pubKeyOperator=%s, votingAddress=%s, isValid=%d)",
-        proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(false), CBitcoinAddress(pubKeyOperator).ToString(), CBitcoinAddress(keyIDVoting).ToString(), isValid);
+        proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(false), EncodeDestination(CTxDestination(pubKeyOperator)), EncodeDestination(CTxDestination(keyIDVoting)), isValid);
 }
 
 void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
@@ -44,8 +44,8 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
     obj.push_back(Pair("proRegTxHash", proRegTxHash.ToString()));
     obj.push_back(Pair("confirmedHash", confirmedHash.ToString()));
     obj.push_back(Pair("service", service.ToString(false)));
-    obj.push_back(Pair("pubKeyOperator", CBitcoinAddress(pubKeyOperator).ToString()));
-    obj.push_back(Pair("votingAddress", CBitcoinAddress(keyIDVoting).ToString()));
+    obj.push_back(Pair("pubKeyOperator", EncodeDestination(CTxDestination(pubKeyOperator))));
+    obj.push_back(Pair("votingAddress", EncodeDestination(CTxDestination(keyIDVoting))));
     obj.push_back(Pair("isValid", isValid));
 }
 
