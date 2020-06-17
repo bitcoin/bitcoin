@@ -8,6 +8,7 @@
 
 #include <amount.h>
 #include <script/sign.h>
+#include <wallet/bdb.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
 #include <key.h>
@@ -288,5 +289,8 @@ void MaybeCompactWalletDB();
 
 //! Unserialize a given Key-Value pair and load it into the wallet
 bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr);
+
+/** Return whether a wallet database is currently loaded. */
+bool IsWalletLoaded(const fs::path& wallet_path);
 
 #endif // BITCOIN_WALLET_WALLETDB_H
