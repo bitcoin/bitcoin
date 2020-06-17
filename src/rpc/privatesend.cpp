@@ -30,8 +30,6 @@ UniValue privatesend(const JSONRPCRequest& request)
             "  reset       - Reset mixing\n"
         );
 
-    ObserveSafeMode();
-
     if (fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
 
