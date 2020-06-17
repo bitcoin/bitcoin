@@ -5,6 +5,9 @@
 #ifndef SYSCOIN_QT_CLIENTMODEL_H
 #define SYSCOIN_QT_CLIENTMODEL_H
 
+#include <evo/deterministicmns.h>
+#include <sync.h>
+
 #include <QObject>
 #include <QDateTime>
 
@@ -58,11 +61,15 @@ public:
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
-    QString getMasternodeCountString() const;
     int getNumBlocks() const;
     uint256 getBestBlockHash();
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
+
+    // SYSCOIN
+    void setMasternodeList(const CDeterministicMNList& mnList);
+    CDeterministicMNList getMasternodeList() const;
+    void refreshMasternodeList();
 
     //! Returns enum BlockSource of the current importing/syncing state
     enum BlockSource getBlockSource() const;
@@ -105,8 +112,11 @@ private:
     //! A thread to interact with m_node asynchronously
     QThread* const m_thread;
 
-    // SYSCOIN
-	QTimer *pollMnTimer;
+    // SYSCOIN The cache for mn list is not technically needed because CDeterministicMNManager
+    // caches it internally for recent blocks but it's not enough to get consistent
+    // representation of the list in UI during initial sync/reindex, so we cache it here too.
+    mutable CCriticalSection cs_mnlinst; // protects mnListCached
+    CDeterministicMNList mnListCached;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -125,7 +135,7 @@ Q_SIGNALS:
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
     // SYSCOIN
-    void strMasternodesChanged(const QString &strMasternodes);
+    void masternodeListChanged() const;
     void additionalDataSyncProgressChanged(double nSyncProgress);
 
 public Q_SLOTS:

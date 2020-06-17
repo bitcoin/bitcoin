@@ -131,15 +131,6 @@ public:
         }
         return false;
     }
-    // SYSCOIN
-    bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) override
-    {
-        std::unique_ptr<SigningProvider> provider = m_wallet->GetSolvingProvider(script);
-        if (provider) {
-            return provider->GetKey(address, key);
-        }
-        return false;
-    }
     SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) override
     {
         return m_wallet->SignMessage(message, pkhash, str_sig);
@@ -228,6 +219,12 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
+    }
+    // SYSCOIN
+    void listProTxCoins(std::vector<COutPoint>& outputs) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->ListProTxCoins(outputs);
     }
     CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,

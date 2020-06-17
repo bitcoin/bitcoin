@@ -54,12 +54,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     // move timer to thread so that polling doesn't disturb main event loop
     timer->moveToThread(m_thread);
     m_thread->start();
-    
-    // SYSCOIN
-    pollMnTimer = new QTimer(this);
-    connect(pollMnTimer, &QTimer::timeout, this, &ClientModel::updateMnTimer);
-    // no need to update as frequent as data for balances/txes/blocks
-    pollMnTimer->start(MODEL_UPDATE_DELAY * 4);
+
 
     subscribeToCoreSignals();
 }
@@ -71,16 +66,7 @@ ClientModel::~ClientModel()
     m_thread->quit();
     m_thread->wait();
 }
-QString ClientModel::getMasternodeCountString() const
-{
-    // return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)mnodeman.size()))
-    return tr("Total: %1 (Enabled: %3)")
-            .arg(QString::number((int)mnodeman.size()))
-            .arg(QString::number((int)mnodeman.CountEnabled()));
-            // .arg(QString::number((int)mnodeman.CountByIP(NET_IPV4)))
-            // .arg(QString::number((int)mnodeman.CountByIP(NET_IPV6)))
-            // .arg(QString::number((int)mnodeman.CountByIP(NET_TOR)));
-}
+
 int ClientModel::getNumConnections(unsigned int flags) const
 {
     CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
@@ -94,16 +80,26 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
     return m_node.getNodeCount(connections);
 }
-void ClientModel::updateMnTimer()
+void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
 {
-    QString newMasternodeCountString = getMasternodeCountString();
-
-    if (cachedMasternodeCountString != newMasternodeCountString)
-    {
-        cachedMasternodeCountString = newMasternodeCountString;
-
-        Q_EMIT strMasternodesChanged(cachedMasternodeCountString);
+    LOCK(cs_mnlinst);
+    if (mnListCached.GetBlockHash() == mnList.GetBlockHash()) {
+        return;
     }
+    mnListCached = mnList;
+    Q_EMIT masternodeListChanged();
+}
+
+CDeterministicMNList ClientModel::getMasternodeList() const
+{
+    LOCK(cs_mnlinst);
+    return mnListCached;
+}
+
+void ClientModel::refreshMasternodeList()
+{
+    LOCK(cs_mnlinst);
+    setMasternodeList(deterministicMNManager->GetListAtChainTip());
 }
 int ClientModel::getHeaderTipHeight() const
 {
@@ -285,6 +281,11 @@ static void BannedListChanged(ClientModel *clientmodel)
     assert(invoked);
 }
 // SYSCOIN
+static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
+{
+    clientmodel->setMasternodeList(newList);
+}
+
 static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)
 {
     QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
@@ -329,7 +330,9 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_banned_list_changed = m_node.handleBannedListChanged(std::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, false));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, true));
+    // SYSCOIN
     m_handler_additional_data_sync_progress_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(std::bind(NotifyAdditionalDataSyncProgressChanged, this, std::placeholders::_1));
+    m_handler_masternodelist_changed = m_node.handleMasternodeListChanged(boost::bind(NotifyMasternodeListChanged, this, std::placeholders::_1));
    
 }
 
@@ -345,6 +348,7 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_notify_header_tip->disconnect();
      // SYSCOIN
     m_handler_additional_data_sync_progress_changed->disconnect();   
+    m_handler_masternodelist_changed->disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const

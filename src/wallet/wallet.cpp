@@ -40,7 +40,7 @@
 // SYSCOIN
 #include <services/asset.h> // ReserializeAssetCommitment
 #include <masternodeconfig.h>
-
+#include <evo/deterministicmns.h>
 using interfaces::FoundBlock;
 
 const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
@@ -814,6 +814,15 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash);
+        // SYSCOIN
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
+            if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
+                if (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
+                    LockCoin(COutPoint(hash, i));
+                }
+            }
+        }
     }
 
     if (!fInsertedNew)
@@ -3343,6 +3352,24 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 
     return DBErrors::LOAD_OK;
 }
+// SYSCOIN
+// Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
+// This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
+void CWallet::AutoLockMasternodeCollaterals()
+{
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    LOCK2(cs_main, cs_wallet);
+    for (const auto& pair : mapWallet) {
+        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
+                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
+                    LockCoin(COutPoint(pair.first, i));
+                }
+            }
+        }
+    }
+}
 
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
 {
@@ -3757,6 +3784,24 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
          it != setLockedCoins.end(); it++) {
         COutPoint outpt = (*it);
         vOutpts.push_back(outpt);
+    }
+}
+
+// SYSCOIN
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
+{
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    AssertLockHeld(cs_wallet);
+
+    for (const auto& pair : mapWallet) {
+        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
+                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
+                    vOutpts.emplace_back(o);
+                }
+            }
+        }
     }
 }
 
@@ -4333,57 +4378,37 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error, std::vector<bilin
     return true;
 }
 
-bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount)
+// SYSCOIN
+bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, CAmount amount, const COutPoint& outpoint)
 {
+    // make our change address
+    CReserveKey reservekey(this);
+
     CScript scriptChange;
     scriptChange << OP_RETURN << ToByteVector(hash);
 
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
-    bilingual_str error;
+    std::string strFail = "";
     std::vector< CRecipient > vecSend;
     vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl coinControl;
-    bool success = CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, error, coinControl, true);
+    if (!outpoint.IsNull()) {
+        coinControl.Select(outpoint);
+    }
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl);
     if(!success){
-        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", error.original);
+        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
         return false;
     }
 
     return true;
 }
-void CWallet::LockMasternodeOutputs(){
-    LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile().string());
-    if(gArgs.GetBoolArg("-mnconflock", true) && (masternodeConfig.getCount() > 0)) {
-        LogPrintf("Locking Masternodes:\n");
-        uint256 mnTxHash;
-        uint32_t outputIndex;
-        for (const auto& mne : masternodeConfig.getEntries()) {
-            mnTxHash.SetHex(mne.getTxHash());
-            if(!ParseUInt32(mne.getOutputIndex(), &outputIndex)){
-                LogPrintf("  %s %s - Could not parse output index, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
-                continue;
-            }
-            const COutPoint &outpoint = COutPoint(mnTxHash, outputIndex);
-            // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
-            if(IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
-                LogPrintf("  %s %s - IS NOT SPENDABLE, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
-                continue;
-            }
-            {
-                LOCK(cs_wallet);
-                LockCoin(outpoint);
-            }
-            LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
-        }
-    }
-}
+
 void CWallet::postInitProcess()
 {
     LOCK(cs_wallet);
-    // SYSCOIN
-    LockMasternodeOutputs();
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ReacceptWalletTransactions();

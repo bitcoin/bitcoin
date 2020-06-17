@@ -377,6 +377,11 @@ void SyscoinGUI::createActions()
     m_mask_values_action->setStatusTip(tr("Mask the values in the Overview tab"));
     m_mask_values_action->setCheckable(true);
 
+    // SYSCOIN
+    openRepairAction = new QAction(platformStyle->SingleColorIcon(":/icons/options"), tr("Wallet &Repair"), this);
+    openRepairAction->setStatusTip(tr("Show wallet repair options"));
+    openRepairAction->setEnabled(false);
+
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
     connect(aboutAction, &QAction::triggered, this, &SyscoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
@@ -386,6 +391,11 @@ void SyscoinGUI::createActions()
     connect(openRPCConsoleAction, &QAction::triggered, this, &SyscoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
+    // SYSCOIN
+    connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
+
+    // Get restart command-line parameters and handle restart
+    connect(rpcConsole, &RPCConsole::handleRestart, this, &SyscoinGUI::handleRestart);
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -446,6 +456,8 @@ void SyscoinGUI::createActions()
 
     connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindowActivateConsole);
     connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindow);
+    // SYSCOIN
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R), this), &QShortcut::activated, this, &SyscoinGUI::showRepair);
 }
 
 void SyscoinGUI::createMenuBar()
@@ -466,6 +478,7 @@ void SyscoinGUI::createMenuBar()
         file->addAction(m_open_wallet_action);
         file->addAction(m_close_wallet_action);
         file->addSeparator();
+        file->addAction(openRepairAction);
         file->addAction(openAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
@@ -1257,6 +1270,7 @@ void SyscoinGUI::showEvent(QShowEvent *event)
     openRPCConsoleAction->setEnabled(true);
     aboutAction->setEnabled(true);
     optionsAction->setEnabled(true);
+    openRepairAction->setEnabled(true);
 }
 
 #ifdef ENABLE_WALLET
@@ -1494,6 +1508,13 @@ static bool ThreadSafeMessageBox(SyscoinGUI* gui, const bilingual_str& message, 
                                Q_ARG(QString, detailed_message));
     assert(invoked);
     return ret;
+}
+
+/** Get restart command-line parameters and request restart */
+void SyscoinGUI::handleRestart(QStringList args)
+{
+    if (!ShutdownRequested())
+        Q_EMIT requestedRestart(args);
 }
 
 void SyscoinGUI::subscribeToCoreSignals()

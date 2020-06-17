@@ -815,6 +815,31 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
             return;
         }
     }
+    // SYSCOIN
+    {
+        // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
+        // and reduce further locking overhead for cs_main in other parts of code inclluding GUI
+        LogPrintf("Filling coin cache with masternode UTXOs...\n");
+        LOCK(cs_main);
+        int64_t nStart = GetTimeMillis();
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+            Coin coin;
+            GetUTXOCoin(dmn->collateralOutpoint, coin);
+        });
+        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
+    }
+
+    if (fMasternodeMode) {
+        assert(activeMasternodeManager);
+        activeMasternodeManager->Init();
+    }
+    #ifdef ENABLE_WALLET
+        // we can't do this before DIP3 is fully initialized
+        for (CWalletRef pwallet : vpwallets) {
+            pwallet->AutoLockMasternodeCollaterals();
+        }
+    #endif
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
         LogPrintf("Stopping after block import\n");
