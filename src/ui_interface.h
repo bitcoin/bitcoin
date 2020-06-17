@@ -122,6 +122,7 @@ void InitWarning(const bilingual_str& str);
 
 /** Show error message **/
 bool InitError(const bilingual_str& str);
+constexpr auto AbortError = InitError;
 
 extern CClientUIInterface uiInterface;
 
