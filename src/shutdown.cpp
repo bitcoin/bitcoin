@@ -6,12 +6,14 @@
 #include <shutdown.h>
 
 #include <atomic>
+#include <veriblock/context.hpp>
 
 static std::atomic<bool> fRequestShutdown(false);
 
 void StartShutdown()
 {
     fRequestShutdown = true;
+    altintegration::RequestShutdown();
 }
 void AbortShutdown()
 {

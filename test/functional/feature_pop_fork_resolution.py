@@ -139,6 +139,12 @@ class PopFr(BitcoinTestFramework):
                 "node[{}] expected to select shorter chain ({}) with higher pop score\n" \
                 "but selected longer chain ({})".format(i, tip['height'], bestblocks[i]['height'])
 
+        # get best headers view
+        blockchaininfo = [x.getblockchaininfo() for x in self.nodes]
+        for n in blockchaininfo:
+            assert_equal(n['blocks'], n['headers'])
+
+
         self.log.info("all nodes selected fork A as best chain")
         self.log.warning("_shorter_endorsed_chain_wins() succeeded!")
 

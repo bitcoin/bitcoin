@@ -2378,9 +2378,8 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
         g_best_block = pindexNew->GetBlockHash();
         g_best_block_cv.notify_all();
     }
-
-    altintegration::ValidationState state;
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    altintegration::ValidationState state;
     bool ret = pop.setState(pindexNew->GetBlockHash(), state);
     assert(ret && "block has been checked previously and should be valid");
 
@@ -2632,6 +2631,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
  */
 CBlockIndex* CChainState::FindBestChain()
 {
+    AssertLockHeld(cs_main);
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
     CBlockIndex* bestCandidate = m_chain.Tip();
 
@@ -2659,6 +2659,8 @@ CBlockIndex* CChainState::FindBestChain()
         }
     }
 
+    // update best header after POP FR
+    pindexBestHeader = bestCandidate;
     return bestCandidate;
 }
 
