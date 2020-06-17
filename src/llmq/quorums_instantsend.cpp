@@ -8,7 +8,6 @@
 
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
-#include <coins.h>
 #include <txmempool.h>
 #include <masternode/masternode-sync.h>
 #include <net_processing.h>

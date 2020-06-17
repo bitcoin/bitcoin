@@ -2,10 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/quorums.h>
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_signing.h>
 #include <llmq/quorums_utils.h>
 
 #include <chain.h>

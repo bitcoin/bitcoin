@@ -3,9 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_debug.h>
-#include <llmq/quorums_utils.h>
 
 #include <evo/specialtx.h>
 

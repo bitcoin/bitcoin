@@ -7,7 +7,6 @@
 #include <consensus/validation.h>
 #include <hash.h>
 #include <primitives/block.h>
-#include <primitives/transaction.h>
 #include <validation.h>
 
 #include <evo/cbtx.h>

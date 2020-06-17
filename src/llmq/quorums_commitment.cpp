@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums_commitment.h>
-#include <llmq/quorums_utils.h>
 
 #include <chainparams.h>
 #include <validation.h>

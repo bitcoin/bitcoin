@@ -6,10 +6,8 @@
 
 #include <wallet/wallet.h>
 
-#include <base58.h>
 #include <checkpoints.h>
 #include <chain.h>
-#include <wallet/coincontrol.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
@@ -40,7 +38,6 @@
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>
 
-#include <algorithm>
 #include <assert.h>
 #include <future>
 

@@ -6,7 +6,6 @@
 
 #include <hash.h>
 #include <random.h>
-#include <streams.h>
 
 #include <crypto/aes.h>
 

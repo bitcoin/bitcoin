@@ -12,10 +12,7 @@
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <spork.h>
-#include <util.h>
 #include <validation.h>
-
-#include <evo/deterministicmns.h>
 
 #include <string>
 

@@ -6,17 +6,14 @@
 #include <core_io.h>
 #include <governance/governance-classes.h>
 #include <governance/governance-validators.h>
-#include <governance/governance-vote.h>
 #include <governance/governance.h>
 #include <masternode/masternode-meta.h>
 #include <masternode/masternode-sync.h>
 #include <messagesigner.h>
 #include <spork.h>
-#include <util.h>
 #include <validation.h>
 
 #include <string>
-#include <univalue.h>
 
 CGovernanceObject::CGovernanceObject() :
     cs(),

@@ -9,7 +9,6 @@
 #include <init.h>
 #include <masternode/masternode-sync.h>
 #include <netbase.h>
-#include <sync.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 #include <qt/walletmodel.h>
@@ -17,7 +16,6 @@
 #include <univalue.h>
 
 #include <QMessageBox>
-#include <QTimer>
 #include <QtGui/QClipboard>
 
 int GetOffsetFromUtc()

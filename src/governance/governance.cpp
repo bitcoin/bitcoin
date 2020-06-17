@@ -5,9 +5,7 @@
 #include <governance/governance.h>
 #include <consensus/validation.h>
 #include <governance/governance-classes.h>
-#include <governance/governance-object.h>
 #include <governance/governance-validators.h>
-#include <governance/governance-vote.h>
 #include <init.h>
 #include <masternode/masternode-meta.h>
 #include <masternode/masternode-sync.h>
@@ -16,7 +14,6 @@
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <spork.h>
-#include <util.h>
 #include <validation.h>
 #include <validationinterface.h>
 

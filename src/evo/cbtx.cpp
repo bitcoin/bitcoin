@@ -12,7 +12,6 @@
 
 #include <chainparams.h>
 #include <consensus/merkle.h>
-#include <univalue.h>
 #include <validation.h>
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
