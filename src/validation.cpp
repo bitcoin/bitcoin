@@ -1394,26 +1394,23 @@ CAmount GetBlockSubsidyRegtest(int nHeight, const Consensus::Params& consensusPa
     nSubsidy >>= halvings;
     return nSubsidy;
 }
-CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
+CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
 {
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) {
-        nTotalRewardWithMasternodes = GetBlockSubsidyRegtest(nHeight, consensusParams);
-        return nTotalRewardWithMasternodes;
+        return GetBlockSubsidyRegtest(nHeight, consensusParams);
     }
     if (nHeight == 0)
         return 50*COIN;
     if (nHeight == 1)
     {
         // SYSCOIN 4 snapshot
-        nTotalRewardWithMasternodes = 554200000 * COIN;
-        return nTotalRewardWithMasternodes;
+        return 554200000 * COIN;
     }
 
     CAmount nSubsidy = 38.5 * COIN;
     int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
     if (reductions >= 50) {
-        nTotalRewardWithMasternodes = 0;
-        return nTotalRewardWithMasternodes;
+        return 0;
     }
     // Subsidy reduced every 525600 blocks which will occur approximately every year.
     // yearly decline of production by 5% per year, projected ~888M coins max by year 2067+.
@@ -1426,31 +1423,9 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensus
     if (fSuperblockPartOnly)
         return nSuperblockPart;
     nSubsidy -= nSuperblockPart;
-    nTotalRewardWithMasternodes = nSubsidy;
-    if (fMasternodePartOnly) {
-        nSubsidy *= 0.75;
-        if (nHeight > 0 && nStartHeight > 0) {
-            unsigned int nDifferenceInBlocks = 0;
-            if (nHeight > nStartHeight)
-                nDifferenceInBlocks = (nHeight - nStartHeight);
-                
-             double fSubsidyAdjustmentPercentage = 0;
-             if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight2)
-                fSubsidyAdjustmentPercentage = consensusParams.nSeniorityLevel2;
-             else if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight1)
-                fSubsidyAdjustmentPercentage = consensusParams.nSeniorityLevel1;
-                
-            if(fSubsidyAdjustmentPercentage > 0){
-                const CAmount &nChange = nSubsidy*fSubsidyAdjustmentPercentage;
-                nSubsidy += nChange;
-                nTotalRewardWithMasternodes += nChange;
-            }
-        }
-    }
     return nSubsidy;
 
 }
-
 CoinsViews::CoinsViews(
     std::string ldb_name,
     size_t cache_size_bytes,
@@ -1937,6 +1912,10 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         error("DisconnectBlock(): block and undo data inconsistent");
         return DISCONNECT_FAILED;
     }
+    // SYSCOIN
+    if (!UndoSpecialTxsInBlock(block, pindex)) {
+        return DISCONNECT_FAILED;
+    }
 
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
@@ -2383,30 +2362,30 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         LogPrintf("ERROR: %s: CheckQueue failed\n", __func__);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-validation-failed");
     }
-    // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
-    // It's possible that we simply don't have enough data and this could fail
-    // (i.e. block itself could be a correct one and we need to store it),
-    // that's why this is in ConnectBlock. Could be the other way around however -
-    // the peer who sent us this block is missing some data and wasn't able
-    // to recognize that block is actually invalid.
-    // TODO: resync data (both ways?) and try to reprocess this block later.
-    CAmount nTotalRewardWithMasternodes;
-    const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 
-    if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nFees, nTotalRewardWithMasternodes)) {
-        {
-        
-            mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
-        }
+    // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
+    const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
+    CAmount nMNSeniorityRet;
+    // detect MN was paid properly, accounting for seniority which is added to subsidy
+    if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nFees, nMNSeniorityRet)) {
         LogPrintf("ERROR: ConnectBlock(): couldn't find masternode or superblock payments\n");
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-payee");
     }
 
     std::string strError = "";
-    if (pindex->nHeight > 1 && !IsBlockValueValid(block, pindex->nHeight, nTotalRewardWithMasternodes, nFees, strError)) {
+    // add seniority to reward when checking for limit
+    if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nMNSeniorityRet, strError)) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
+
+    if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
+        LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s",
+                     pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
+    }
+
+
     // END SYSCOIN
 
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;

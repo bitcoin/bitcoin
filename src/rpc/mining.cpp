@@ -651,25 +651,25 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
+
+    if (::ChainstateActive().IsInitialBlockDownload())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
+
     // SYSCOIN
-    // when enforcement is on we need information about a masternode payee or otherwise our block is going to be orphaned by the network
-    CScript payee;
-    if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)
-        && !masternodeSync.IsWinnersListSynced()
-        && !mnpayments.GetBlockPayee(::ChainActive().Height() + 1, payee))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Syscoin Core is downloading masternode winners...");
-  
+    // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
+    // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
+    std::vector<CTxOut> voutMasternodePayments;
+    mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments);
+
     // next bock is a superblock and we need governance info to correctly construct it
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
         && !masternodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Syscoin Core is syncing with network...");
     
-    if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
-
-    if (::ChainstateActive().IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
 
     static unsigned int nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(request.context);
@@ -899,7 +899,42 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
     }
+    // SYSCOIN
+    UniValue masternodeObj(UniValue::VARR);
+    for (const auto& txout : pblocktemplate->voutMasternodePayments) {
+        CTxDestination address1;
+        ExtractDestination(txout.scriptPubKey, address1);
 
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("payee", EncodeDestination(address1)));
+        obj.push_back(Pair("script", HexStr(txout.scriptPubKey)));
+        obj.push_back(Pair("amount", txout.nValue));
+        masternodeObj.push_back(obj);
+    }
+
+    result.push_back(Pair("masternode", masternodeObj));
+    result.push_back(Pair("masternode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock));
+    result.push_back(Pair("masternode_payments_enforced", true));
+
+    UniValue superblockObjArray(UniValue::VARR);
+    if(pblocktemplate->voutSuperblockPayments.size()) {
+        for (const auto& txout : pblocktemplate->voutSuperblockPayments) {
+            UniValue entry(UniValue::VOBJ);
+            CTxDestination address1;
+            ExtractDestination(txout.scriptPubKey, address1);
+            entry.push_back(Pair("payee", EncodeDestination(address1)));
+            entry.push_back(Pair("script", HexStr(txout.scriptPubKey)));
+            entry.push_back(Pair("amount", txout.nValue));
+            superblockObjArray.push_back(entry);
+        }
+    }
+    result.push_back(Pair("superblock", superblockObjArray));
+    result.push_back(Pair("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock));
+    result.push_back(Pair("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)));
+    std::vector<unsigned char> vchData;
+	int nOut;
+	if (GetSyscoinData(tx, vchData, nOut))
+        result.push_back(Pair("coinbase_payload", HexStr(vchData)));
     return result;
 }
 

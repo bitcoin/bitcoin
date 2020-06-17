@@ -14,7 +14,7 @@
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    if (tx.nType != TRANSACTION_COINBASE) {
+    if (tx.nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-type");
     }
 
@@ -31,9 +31,6 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
     }
 
-    if (pindexPrev && pindexPrev->nHeight + 1 != cbTx.nHeight) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-height");
-    }
 
     if (pindexPrev) {
         bool fDIP0008Active = VersionBitsState(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
@@ -48,7 +45,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
 bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValidationState& state)
 {
-    if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
+    if (block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
         return true;
     }
 
@@ -63,7 +60,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
     }
 
     int64_t nTime2 = GetTimeMicros(); nTimePayload += nTime2 - nTime1;
-    LogPrint(BCLog::BENCHMARK, "          - GetTxPayload: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimePayload * 0.000001);
+    LogPrint(BCLog::BENCH, "          - GetTxPayload: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimePayload * 0.000001);
 
     if (pindex) {
         uint256 calculatedMerkleRoot;
@@ -75,7 +72,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
         }
 
         int64_t nTime3 = GetTimeMicros(); nTimeMerkleMNL += nTime3 - nTime2;
-        LogPrint(BCLog::BENCHMARK, "          - CalcCbTxMerkleRootMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeMerkleMNL * 0.000001);
+        LogPrint(BCLog::BENCH, "          - CalcCbTxMerkleRootMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeMerkleMNL * 0.000001);
     }
 
     return true;
@@ -97,12 +94,12 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
     }
 
     int64_t nTime2 = GetTimeMicros(); nTimeDMN += nTime2 - nTime1;
-    LogPrint(BCLog::BENCHMARK, "            - BuildNewListFromBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeDMN * 0.000001);
+    LogPrint(BCLog::BENCH, "            - BuildNewListFromBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeDMN * 0.000001);
 
     CSimplifiedMNList sml(tmpMNList);
 
     int64_t nTime3 = GetTimeMicros(); nTimeSMNL += nTime3 - nTime2;
-    LogPrint(BCLog::BENCHMARK, "            - CSimplifiedMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeSMNL * 0.000001);
+    LogPrint(BCLog::BENCH, "            - CSimplifiedMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeSMNL * 0.000001);
 
     static CSimplifiedMNList smlCached;
     static uint256 merkleRootCached;
@@ -117,7 +114,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
     merkleRootRet = sml.CalcMerkleRoot(&mutated);
 
     int64_t nTime4 = GetTimeMicros(); nTimeMerkle += nTime4 - nTime3;
-    LogPrint(BCLog::BENCHMARK, "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeMerkle * 0.000001);
+    LogPrint(BCLog::BENCH, "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeMerkle * 0.000001);
 
     smlCached = std::move(sml);
     merkleRootCached = merkleRootRet;
@@ -128,6 +125,6 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
 std::string CCbTx::ToString() const
 {
-    return strprintf("CCbTx(nHeight=%d, nVersion=%d, merkleRootMNList=%s)",
-        nVersion, nHeight, merkleRootMNList.ToString());
+    return strprintf("CCbTx(nVersion=%d, merkleRootMNList=%s)",
+        nVersion, merkleRootMNList.ToString());
 }

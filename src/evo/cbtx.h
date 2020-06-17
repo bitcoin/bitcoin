@@ -20,7 +20,6 @@ public:
 
 public:
     uint16_t nVersion{CURRENT_VERSION};
-    int32_t nHeight{0};
     uint256 merkleRootMNList;
 
 public:
@@ -30,7 +29,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(nVersion);
-        READWRITE(nHeight);
         READWRITE(merkleRootMNList);
     }
 
@@ -41,7 +39,6 @@ public:
         obj.clear();
         obj.setObject();
         obj.push_back(Pair("version", (int)nVersion));
-        obj.push_back(Pair("height", (int)nHeight));
         obj.push_back(Pair("merkleRootMNList", merkleRootMNList.ToString()));
     }
 };

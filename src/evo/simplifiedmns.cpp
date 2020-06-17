@@ -167,11 +167,6 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     // null block hash was provided to get the diff from the genesis block.
     mnListDiffRet.baseBlockHash = baseBlockHash;
 
-    if (!mnListDiffRet.BuildQuorumsDiff(baseBlockIndex, blockIndex)) {
-        errorRet = strprintf("failed to build quorums diff");
-        return false;
-    }
-
     // TODO store coinbase TX in CBlockIndex
     CBlock block;
     if (!ReadBlockFromDisk(block, blockIndex, Params().GetConsensus())) {

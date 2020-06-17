@@ -403,11 +403,10 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     size_t paramIdx = 1;
 
-    CAmount collateralAmount = 1000 * COIN;
+    CAmount collateralAmount = 100000 * COIN;
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_REGISTER;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER;
 
     CProRegTx ptx;
     ptx.nVersion = CProRegTx::CURRENT_VERSION;
@@ -564,7 +563,7 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
     if (!DecodeHexTx(tx, request.params[1].get_str())) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "transaction not deserializable");
     }
-    if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
+    if (tx.nVersion != SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "transaction not a ProRegTx");
     }
     CProRegTx ptx;
@@ -633,8 +632,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     }
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE;
 
     // param operatorPayoutAddress
     if (request.params.size() >= 5) {
@@ -744,8 +742,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     }
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR;
 
     // make sure we get anough fees added
     ptx.vchSig.resize(65);
@@ -821,8 +818,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     }
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
 
     if (request.params.size() > 4) {
         CTxDestination feeSourceAddress = DecodeDestination(request.params[4].get_str());

@@ -50,7 +50,9 @@ private:
     unsigned char nFlags;
 
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
-
+    // SYSCOIN
+    // Check additional matches for special transactions
+    bool CheckSpecialTransactionMatchesAndUpdate(const CTransaction& tx);
 public:
     /**
      * Creates a new bloom filter which will provide the given fp rate when filled with the given number of elements

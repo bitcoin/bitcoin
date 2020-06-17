@@ -129,6 +129,10 @@ public:
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
     mutable uint64_t m_epoch; //!< epoch when last touched, useful for graph algorithms
+    // SYSCOIN
+    // If this is a proTx, this will be the key for which this ProTx was valid
+    mutable CKeyID validForProTxKey;
+    mutable bool isKeyChangeProTx{false};
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -563,7 +567,12 @@ private:
 
     /** track locally submitted transactions to periodically retry initial broadcast */
     std::set<uint256> m_unbroadcast_txids GUARDED_BY(cs);
-
+    // SYSCOIN
+    std::multimap<uint256, uint256> mapProTxRefs; // proTxHash -> transaction (all TXs that refer to an existing proTx)
+    std::map<CService, uint256> mapProTxAddresses;
+    std::map<CKeyID, uint256> mapProTxPubKeyIDs;
+    std::map<CKeyID, uint256> mapProTxBlsPubKeyHashes;
+    std::map<COutPoint, uint256> mapProTxCollaterals;
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas;
@@ -593,6 +602,12 @@ public:
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     // SYSCOIN
+    void removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId);
+    void removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSPublicKey &pubKey);
+    void removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint);
+    void removeProTxSpentCollateralConflicts(const CTransaction &tx);
+    void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash);
+    void removeProTxConflicts(const CTransaction &tx);
     bool existsConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool isSyscoinConflictIsFirstSeen(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -711,7 +726,8 @@ public:
     CTransactionRef get(const uint256& hash) const;
     TxMempoolInfo info(const uint256& hash) const;
     std::vector<TxMempoolInfo> infoAll() const;
-
+    // SYSCOIN
+    bool existsProviderTxConflict(const CTransaction &tx) const;
     size_t DynamicMemoryUsage() const;
 
     /** Adds a transaction to the unbroadcast set */

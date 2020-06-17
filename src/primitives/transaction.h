@@ -608,6 +608,13 @@ typedef std::shared_ptr<const CTransaction> CTransactionRef;
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 // SYSCOIN
+
+const int SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER = 80;
+const int SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE = 81;
+const int SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR = 82;
+const int SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE = 83;
+const int SYSCOIN_TX_VERSION_MN_COINBASE = 84;
+
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
 const int SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 129;
 const int SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 130;

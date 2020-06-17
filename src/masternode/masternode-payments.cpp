@@ -21,7 +21,7 @@
 
 CMasternodePayments mnpayments;
 
-bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet) {
+bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blockReward, std::string& strErrorRet) {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
@@ -74,7 +74,7 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount b
 *   - When non-superblocks are detected, the normal schedule should be maintained
 */
 
-bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet)
+bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blockReward, std::string& strErrorRet)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
@@ -159,7 +159,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
     return true;
 }
 
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, CAmount& nMNSeniorityRet)
 {
     if(fLiteMode) {
         //there is no budget data to use to check anything, let's just accept the longest chain
@@ -200,9 +200,9 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
         // should NOT allow superblocks at all, when superblocks are disabled
         LogPrint(BCLog::GOBJECT, "%s -- Superblocks are disabled, no superblocks allowed\n", __func__);
     }
-
+    const CAmount &nHalfFee = fees / 2;
     // Check for correct masternode payment
-    if(mnpayments.IsTransactionValid(txNew, nBlockHeight, blockReward)) {
+    if(mnpayments.IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString());
         return true;
     }
@@ -211,7 +211,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     return false;
 }
 
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
@@ -220,18 +220,20 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
             LogPrint(BCLog::GOBJECT, "%s -- triggered superblock creation at height %d\n", __func__, nBlockHeight);
             CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
     }
-
-    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
+    const CAmount &nHalfFee = fees / 2;
+    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, nHalfFee, voutMasternodePaymentsRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
     }
-
+	// miner takes 25% of the reward and half fees
+	txNew.vout[0].nValue = (blockReward*0.25);
+	txNew.vout[0].nValue += nHalfFee;
+    // mn is paid 75% of block reward plus any seniority
     txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
+    // superblock governance amount is extra
     txNew.vout.insert(txNew.vout.end(), voutSuperblockPaymentsRet.begin(), voutSuperblockPaymentsRet.end());
 
     std::string voutMasternodeStr;
     for (const auto& txout : voutMasternodePaymentsRet) {
-        // subtract MN payment from miner reward
-        txNew.vout[0].nValue -= txout.nValue;
         if (!voutMasternodeStr.empty())
             voutMasternodeStr += ",";
         voutMasternodeStr += txout.ToString();
@@ -295,12 +297,12 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 *   Get masternode payment tx outputs
 */
 
-bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const
+bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, const CAmount &nHalfFee, std::vector<CTxOut>& voutMasternodePaymentsRet, CAmount& nMNSeniorityRet) const
 {
     // make sure it's not filled yet
     voutMasternodePaymentsRet.clear();
 
-    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
+    if(!GetBlockTxOuts(nBlockHeight, blockReward, nHalfFee, voutMasternodePaymentsRet, nMNSeniorityRet)) {
         LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
         return false;
     }
@@ -314,12 +316,30 @@ bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, CAmount blockRew
 
     return true;
 }
-
-bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const
+CAmount GetBlockMNSubsidy(const CAmount nBlockReward, unsigned int nHeight, const Consensus::Params& consensusParams, unsigned int nStartHeight, CAmount& nMNSeniorityRet)
+{
+    CAmount nSubsidy = nBlockReward*0.75;
+    if (nHeight > 0 && nStartHeight > 0) {
+        unsigned int nDifferenceInBlocks = 0;
+        if (nHeight > nStartHeight)
+            nDifferenceInBlocks = (nHeight - nStartHeight);
+            
+            double fSubsidyAdjustmentPercentage = 0;
+            if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight2)
+            fSubsidyAdjustmentPercentage = consensusParams.nSeniorityLevel2;
+            else if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight1)
+            fSubsidyAdjustmentPercentage = consensusParams.nSeniorityLevel1;
+            
+        if(fSubsidyAdjustmentPercentage > 0){
+            nMNSeniorityRet = nSubsidy*fSubsidyAdjustmentPercentage;
+            nSubsidy += nMNSeniorityRet;
+        }
+    }
+    return nSubsidy;
+}
+bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, const CAmount &nHalfFee, std::vector<CTxOut>& voutMasternodePaymentsRet, CAmount& nMNSeniorityRet) const
 {
     voutMasternodePaymentsRet.clear();
-
-    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward);
 
     const CBlockIndex* pindex;
     {
@@ -331,6 +351,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
     if (!dmnPayee) {
         return false;
     }
+    CAmount masternodeReward = GetBlockMNSubsidy(blockReward, nBlockHeight, Params().GetConsensus(), dmnPayee->pdmnState->nRegisteredHeight, nMNSeniorityRet) + nHalfFee;
 
     CAmount operatorReward = 0;
     if (dmnPayee->nOperatorReward != 0 && dmnPayee->pdmnState->scriptOperatorPayout != CScript()) {
@@ -363,7 +384,7 @@ bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNo
     return false;
 }
 
-bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const
+bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount& nHalfFee, CAmount& nMNSeniorityRet) const
 {
     if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here
@@ -371,7 +392,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
     }
 
     std::vector<CTxOut> voutMasternodePayments;
-    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
+    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments, nHalfFee, nMNSeniorityRet)) {
         LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
         return true;
     }
