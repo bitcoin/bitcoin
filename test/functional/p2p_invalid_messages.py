@@ -121,10 +121,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_large_inv(self):
         conn = self.nodes[0].add_p2p_connection(P2PInterface())
-        with self.nodes[0].assert_debug_log(['Misbehaving', '(0 -> 20): message inv size() = 50001']):
+        with self.nodes[0].assert_debug_log(['Misbehaving', '(0 -> 20): inv message size = 50001']):
             msg = msg_inv([CInv(MSG_TX, 1)] * 50001)
             conn.send_and_ping(msg)
-        with self.nodes[0].assert_debug_log(['Misbehaving', '(20 -> 40): message getdata size() = 50001']):
+        with self.nodes[0].assert_debug_log(['Misbehaving', '(20 -> 40): getdata message size = 50001']):
             msg = msg_getdata([CInv(MSG_TX, 1)] * 50001)
             conn.send_and_ping(msg)
         with self.nodes[0].assert_debug_log(['Misbehaving', '(40 -> 60): headers message size = 2001']):
