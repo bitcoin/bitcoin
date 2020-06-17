@@ -1430,3 +1430,163 @@ class msg_no_witness_blocktxn(msg_blocktxn):
 
     def serialize(self):
         return self.block_transactions.serialize(with_witness=False)
+
+#VeriBlock messages
+
+class msg_offer_atv:
+    __slots__ = ("atv_ids",)
+    command = b"ofATV"
+
+    def __init__(self, atv_ids = None):
+        self.atv_ids = atv_ids
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return ser_string_vector([bytes.fromhex(x) for x in self.atv_ids])
+
+    def __repr__(self):
+        return "msg_offer_atv()"
+
+class msg_offer_vtb:
+    __slots__ = ("vtb_ids",)
+    command = b"ofVTB"
+
+    def __init__(self, vtb_ids = None):
+        self.vtb_ids = vtb_ids
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return ser_string_vector([bytes.fromhex(x) for x in self.vtb_ids])
+
+    def __repr__(self):
+        return "msg_offer_vtb()"
+
+class msg_offer_vbk:
+    __slots__ = ("vbk_ids",)
+    command = b"ofVBK"
+
+    def __init__(self, vbk_ids = None):
+        self.vbk_ids = vbk_ids
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return ser_string_vector([bytes.fromhex(x) for x in self.vbk_ids])
+
+    def __repr__(self):
+        return "msg_offer_vbk()"
+
+class msg_atv:
+    __slots__ = ("atv",)
+    command = b'ATV'
+
+    def __init__(self, atv = None):
+        self.atv = atv
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        b = bytes.fromhex(self.atv)
+        r = ser_compact_size(len(b))
+        r += b
+        return r
+
+    def __repr__(self):
+        return "msg_offer_atv()"
+
+class msg_vtb:
+    __slots__ = ("vtb",)
+    command = b'VTB'
+
+    def __init__(self, vtb = None):
+        self.vtb = vtb
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        b = bytes.fromhex(self.vtb)
+        r = ser_compact_size(len(b))
+        r += b
+        return r
+
+    def __repr__(self):
+        return "msg_offer_vtb()"
+
+class msg_vbk:
+    __slots__ = ("vbk",)
+    command = b'VBK'
+
+    def __init__(self, vbk = None):
+        self.vbk = vbk
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        b = bytes.fromhex(self.vbk)
+        r = ser_compact_size(len(b))
+        r += b
+        return r
+
+    def __repr__(self):
+        return "msg_offer_vbk()"
+
+class msg_get_atv:
+    __slots__ = ("atv_ids",)
+    command = b'gATV'
+
+    def __init__(self, atv_ids = None):
+        self.atv_ids = atv_ids
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return ser_string_vector([bytes.fromhex(x) for x in self.atv_ids])
+
+    def __repr__(self):
+        return "msg_get_atv()"
+
+class msg_get_vtb:
+    __slots__ = ("vtb_ids",)
+    command = b'gVTB'
+
+    def __init__(self, vtb_ids = None):
+        self.vtb_ids = vtb_ids
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return ser_string_vector([bytes.fromhex(x) for x in self.vtb_ids])
+
+    def __repr__(self):
+        return "msg_get_vtb()"
+
+class msg_get_vbk:
+    __slots__ = ("vbk_ids",)
+    command = b'gVBK'
+
+    def __init__(self, vbk_ids = None):
+        self.vbk_ids = vbk_ids
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return ser_string_vector([bytes.fromhex(x) for x in self.vbk_ids])
+
+    def __repr__(self):
+        return "msg_get_vbk()"
+
+
+
+
+

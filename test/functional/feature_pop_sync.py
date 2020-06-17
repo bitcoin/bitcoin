@@ -71,15 +71,8 @@ class PoPSync(BitcoinTestFramework):
                 self.log.info("node0 and node2 got containing block over p2p")
 
                 # assert that all txids exist in this block
-                block = self.nodes[0].getblock(containingblockhash)
-                atvs = [x['atv'] for x in block['pop']['data']]
-
-                assert node0_txid in atvs, "node0: Containing block {} does not contain pop tx {}".format(block['hash'],
-                                                                                                          node0_txid)
-                assert node1_txid in atvs, "node1: Containing block {} does not contain pop tx {}".format(block['hash'],
-                                                                                                          node1_txid)
-                assert node2_txid in atvs, "node2: Containing block {} does not contain pop tx {}".format(block['hash'],
-                                                                                                          node2_txid)
+                for node in self.nodes:
+                    self.assert_atvs_in_node(node, containingblockhash, [node0_txid, node1_txid, node2_txid])
 
                 # assert that node height matches
                 assert self.nodes[0].getblockcount() == self.nodes[1].getblockcount() == self.nodes[2].getblockcount()
@@ -87,9 +80,12 @@ class PoPSync(BitcoinTestFramework):
             height += 1
         self.log.info("success! _check_pop_sync()")
 
-    def is_atv_in_block(self, node, blockhash, atv):
-        block = node.getblock(blockhash)
-        return atv in atvs
+    def assert_atvs_in_node(self, node, containingblockhash, expected):
+        block = node.getblock(containingblockhash)
+        atvs = [x['atv'] for x in block['pop']['data']]
+
+        for atv in expected:
+            assert atv in atvs, "containing block {} does not contain ATV {}".format(containingblockhash, atv)
 
     def run_test(self):
         """Main test logic"""

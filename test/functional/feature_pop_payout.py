@@ -48,9 +48,8 @@ class PopPayouts(BitcoinTestFramework):
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
-        txid = endorse_block(self.nodes[0], self.apm, 5, addr)
+        atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
 
-        # TODO fixed it after P2P modified for the pop_data
         # wait until node[1] gets relayed pop tx
         sync_mempools(self.nodes)
         self.log.info("node1 got relayed transaction")
@@ -65,8 +64,7 @@ class PopPayouts(BitcoinTestFramework):
         # assert that txid exists in this block
         block = self.nodes[0].getblock(containingblockhash)
 
-        ## TODO check that this pop data contains in the containing block
-        ##assert txid in block['tx'], "Containing block {} does not contain pop tx {}".format(block['hash'], txid)
+        assert atv_id in [el['atv'] for el in block['pop']['data']]
 
         # target height is 5 + POP_PAYOUT_DELAY
         n = POP_PAYOUT_DELAY + 5 - block['height']

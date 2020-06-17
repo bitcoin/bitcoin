@@ -798,6 +798,8 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
 
     mapNodeState.erase(nodeid);
+    // VeriBlock
+    VeriBlock::p2p::mapPopDataNodeState.erase(nodeid);
 
     if (mapNodeState.empty()) {
         // Do a consistency check after the last peer is removed.
@@ -1899,9 +1901,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if(!VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman))
+    int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
+    if(pop_res != -1)
     {
-        return false;
+        return pop_res;
     }
 
     if (!(pfrom->GetLocalServices() & NODE_BLOOM) &&
