@@ -96,16 +96,83 @@ bool CBloomFilter::contains(const uint256& hash) const
     std::vector<unsigned char> data(hash.begin(), hash.end());
     return contains(data);
 }
-// SYSCOIN
-void CBloomFilter::clear()
-{
-    vData.assign(vData.size(),0);
-}
+
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
+// SYSCOIN
+
+// If the transaction is a special transaction that has a registration
+// transaction hash, test the registration transaction hash.
+// If the transaction is a special transaction with any public keys or any
+// public key hashes test them.
+// If the transaction is a special transaction with payout addresses test
+// the hash160 of those addresses.
+// Filter is updated only if it has BLOOM_UPDATE_ALL flag to be able to have
+// simple SPV wallets that doesn't work with DIP2 transactions (multicoin
+// wallets, etc.)
+bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &tx)
+{
+    switch(tx.nVersion) {
+    case(SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER): {
+        CProRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.collateralOutpoint) ||
+                    contains(proTx.keyIDOwner) ||
+                    contains(proTx.keyIDVoting) ||
+                    CheckScript(proTx.scriptPayout)) {
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(tx.GetHash());
+                return true;
+            }
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE): {
+        CProUpServTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.proTxHash)) {
+                return true;
+            }
+            if(CheckScript(proTx.scriptOperatorPayout)) {
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(proTx.proTxHash);
+                return true;
+            }
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR): {
+        CProUpRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.proTxHash))
+                return true;
+            if(contains(proTx.keyIDVoting) ||
+                    CheckScript(proTx.scriptPayout)) {
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(proTx.proTxHash);
+                return true;
+            }
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE): {
+        CProUpRevTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.proTxHash))
+                return true;
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_COINBASE):
+        // No aditional checks for this transaction types
+        return false;
+    }
+
+    return false;
+}
 bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
 {
     bool fFound = false;
@@ -116,6 +183,10 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     const uint256& hash = tx.GetHash();
     if (contains(hash))
         fFound = true;
+
+
+    // SYSCOIN Check additional matches for special transactions
+    fFound = fFound || CheckSpecialTransactionMatchesAndUpdate(tx);
 
     for (unsigned int i = 0; i < tx.vout.size(); i++)
     {

@@ -16,9 +16,9 @@
 class CMasternodePayments;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
-bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
+bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blockReward, std::string& strErrorRet);
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward);
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
 std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight);
 
 extern CMasternodePayments mnpayments;
@@ -31,11 +31,11 @@ extern CMasternodePayments mnpayments;
 class CMasternodePayments
 {
 public:
-    bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const;
+    bool GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, const CAmount &nHalfFee, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &nHalfFee) const;
     bool IsScheduled(const CDeterministicMNCPtr& dmn, int nNotBlockHeight) const;
 
-    bool GetMasternodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
+    bool GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, const CAmount &nHalfFee, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
 };
 
 #endif

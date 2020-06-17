@@ -166,28 +166,38 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    // SYSCOIN
-    CAmount nTotalRewardWithMasternodes;
-    CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus(), nTotalRewardWithMasternodes);
+    CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus());
 
     // Compute regular coinbase transaction.
     coinbaseTx.vout[0].nValue = blockReward + nFees;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // SYSCOIN
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !chainparams.MineBlocksOnDemand()) {
-        if (masternodeSync.IsFailed()) {
-            throw std::runtime_error("Masternode information has failed to sync, please restart your node!");
-        }
-        if (!masternodeSync.IsSynced()) {
-            throw std::runtime_error("Masternode information has not synced, please wait until it finishes before mining!");
-        }
         if(fGethSyncStatus != "synced"){
             throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
         }
     }
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST)
-        FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
+    coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE;
+
+    CCbTx cbTx;
+    bool fDIP0008Active_context = VersionBitsState(chainActive.Tip(), chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
+    if (fDIP0008Active_context) {
+        cbTx.nVersion = 2;
+    } else {
+        cbTx.nVersion = 1;
+    }
+    CValidationState state;
+    if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state)) {
+        throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
+    }
+    SetTxPayload(coinbaseTx, cbTx);
+
+    // Update coinbase transaction with additional info about masternode and governance payments,
+    // get some info back to pass to getblocktemplate
+    FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
+    
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());

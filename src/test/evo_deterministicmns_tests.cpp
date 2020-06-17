@@ -96,7 +96,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     operatorKeyRet.MakeNewKey(true);
 
     CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1000 * COIN, change);
+    auto inputs = SelectUTXOs(utxos, 100000 * COIN, change);
 
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
@@ -107,9 +107,8 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     proTx.scriptPayout = scriptPayout;
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_REGISTER;
-    FundTransaction(tx, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER;
+    FundTransaction(tx, utxos, scriptPayout, 100000 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
@@ -128,8 +127,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
     proTx.scriptOperatorPayout = scriptOperatorPayout;
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
@@ -151,8 +149,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
     proTx.scriptPayout = scriptPayout;
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
     CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
@@ -171,8 +168,7 @@ static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256&
     proTx.proTxHash = proTxHash;
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));

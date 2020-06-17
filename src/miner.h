@@ -32,8 +32,8 @@ struct CBlockTemplate
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
     // SYSCOIN
-    CTxOut txoutMasternode; // masternode payment
-    std::vector<CTxOut> voutSuperblock; // superblock payment
+    std::vector<CTxOut> voutMasternodePayments; // masternode payment
+    std::vector<CTxOut> voutSuperblockPayments; // superblock payment
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)

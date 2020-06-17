@@ -125,8 +125,6 @@ public:
     CSimplifiedMNListDiff();
     ~CSimplifiedMNListDiff();
 
-    bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex);
-
     void ToJson(UniValue& obj) const;
 };
 

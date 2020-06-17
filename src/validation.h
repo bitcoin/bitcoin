@@ -174,7 +174,7 @@ bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::P
  */
 bool ActivateBestChain(BlockValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
 // SYSCOIN
-CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount & nTotalRewardWithMasternodes, bool fSuperblockPartOnly = false, bool fMasternodePartOnly = false, unsigned int nStartHeight = 0);
+CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
