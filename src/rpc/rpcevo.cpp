@@ -527,10 +527,10 @@ UniValue protx_register(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
         }
         CTxDestination txDest;
-        CKeyID keyID;
-        if (!ExtractDestination(coin.out.scriptPubKey, txDest) || !CBitcoinAddress(txDest).GetKeyID(keyID)) {
+        if (!ExtractDestination(coin.out.scriptPubKey, txDest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
         }
+        
 
         if (isPrepareRegister) {
             // external signing with collateral key
@@ -544,10 +544,24 @@ UniValue protx_register(const JSONRPCRequest& request)
             return ret;
         } else {
             // lets prove we own the collateral
-            CKey key;
-            if (!pwallet->GetKey(keyID, key)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(CTxDestination(keyID))));
+     
+            CKeyID keyID;
+            LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+            LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+
+            EnsureWalletIsUnlocked(pwallet);
+
+            if (!ExtractDestination(coin.out.scriptPubKey, txDest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
             }
+            keyID = GetKeyForDestination(spk_man, txDest);
+            if (keyID.IsNull()) {
+                throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+            }
+            CKey key;
+            if (!spk_man->GetKey(keyID, key))
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(CTxDestination(keyID))));
+
             SignSpecialTxPayloadByString(tx, ptx, key);
             SetTxPayload(tx, ptx);
             return SignAndSendSpecialTx(tx);

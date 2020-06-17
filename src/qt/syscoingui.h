@@ -218,6 +218,9 @@ public Q_SLOTS:
     void setNumConnections(int count);
     /** Set network state shown in the UI */
     void setNetworkActive(bool networkActive);
+    // SYSCOIN
+    /** Get restart command-line parameters and request restart */
+    void handleRestart(QStringList args);
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers, SynchronizationState sync_state);
     /** SYSCOIN Set additional data sync status shown in the UI */

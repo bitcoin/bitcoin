@@ -138,9 +138,17 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-dest");
         }
 
-        // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
+        // Extract key from collateral.
         // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
-        if (!CBitcoinAddress(collateralTxDest).GetKeyID(keyForPayloadSig)) {
+        // Only supports destinations which map to single public keys, i.e. P2PKH,
+        // P2WPKH, and P2SH-P2WPKH.
+        if (auto id = boost::get<PKHash>(&collateralTxDest)) {
+            keyForPayloadSig = CKeyID(*id);
+        }
+        else if (auto witness_id = boost::get<WitnessV0KeyHash>(&collateralTxDest)) {
+            keyForPayloadSig = CKeyID(*witness_id);
+        }
+        else {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-pkh");
         }
 

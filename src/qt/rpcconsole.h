@@ -100,6 +100,15 @@ public Q_SLOTS:
     void fontBigger();
     void fontSmaller();
     void setFontSize(int newSize);
+
+    /** SYSCOINvWallet repair options */
+    void walletSalvage();
+    void walletRescan();
+    void walletZaptxes1();
+    void walletZaptxes2();
+    void walletUpgrade();
+    void walletReindex();
+
     /** Append the message to the message widget */
     void message(int category, const QString &msg) { message(category, msg, false); }
     void message(int category, const QString &message, bool html);
@@ -107,8 +116,8 @@ public Q_SLOTS:
     void setNumConnections(int count);
     /** Set network state shown in the UI */
     void setNetworkActive(bool networkActive);
-    /** SYSCOIN Set number of masternodes shown in the UI */
-    void setMasternodeCount(const QString &strMasternodes); 
+    /** SYSCOIN Update number of masternodes shown in the UI */
+    void updateMasternodeCount();
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
@@ -135,13 +144,16 @@ public Q_SLOTS:
 Q_SIGNALS: 
     // For RPC command executor
     void cmdRequest(const QString &command, const WalletModel* wallet_model);
-
+    /** SYSCOIN Get restart command-line parameters and handle restart */
+    void handleRestart(QStringList args);
 private:
     void startExecutor();
     void setTrafficGraphRange(int mins);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
-
+    // SYSCOIN
+    /** Build parameter list for restart */
+    void buildParameterlist(QString arg);
     enum ColumnWidths
     {
         ADDRESS_COLUMN_WIDTH = 200,
