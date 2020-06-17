@@ -14,7 +14,6 @@
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <streams.h>
 #include <util/strencodings.h>
 #include <validation.h>
 
@@ -199,8 +198,9 @@ int PopServiceImpl::compareForks(const CBlockIndex& leftForkTip, const CBlockInd
 
 PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
 {
+    payloads_store = std::make_shared<altintegration::PayloadsStorage>();
     config.validate();
-    altTree = altintegration::Altintegration::create(config);
+    altTree = altintegration::Altintegration::create(config, *payloads_store);
     mempool = std::make_shared<altintegration::MemPool>(altTree->getParams(), altTree->vbk().getParams(), altTree->btc().getParams(), HashFunction);
 }
 
