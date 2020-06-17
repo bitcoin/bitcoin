@@ -413,13 +413,9 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
 // were somehow broken and returning the wrong scriptPubKeys
 static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& view, const CTxMemPool& pool,
-                 unsigned int flags, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+                 unsigned int flags, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs) {
     AssertLockHeld(cs_main);
-
-    // pool.cs should be locked already, but go ahead and re-take the lock here
-    // to enforce that mempool doesn't change between when we check the view
-    // and when we actually call through to CheckInputScripts
-    LOCK(pool.cs);
+    AssertLockHeld(pool.cs);
 
     assert(!tx.IsCoinBase());
     for (const CTxIn& txin : tx.vin) {
@@ -514,7 +510,7 @@ private:
     // result in the scriptcache. This should be done after
     // PolicyScriptChecks(). This requires that all inputs either be in our
     // utxo set or in the mempool.
-    bool ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData &txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData &txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Try to add the transaction to the mempool, removing any conflicts first.
     // Returns true if the transaction is in the mempool after any size
