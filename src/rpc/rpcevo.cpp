@@ -180,20 +180,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     if (fundDest == nodest) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No source of funds specified");
     }
-
-    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
-    ds << payload;
-    tx.vExtraPayload.assign(ds.begin(), ds.end());
-
-    static CTxOut dummyTxOut(0, CScript() << OP_RETURN);
-    std::vector<CRecipient> vecSend;
-    bool dummyTxOutAdded = false;
-
-    if (tx.vout.empty()) {
-        // add dummy txout as CreateTransaction requires at least one recipient
-        tx.vout.emplace_back(dummyTxOut);
-        dummyTxOutAdded = true;
-    }
+    SetTxPayload(tx, payload);
 
     for (const auto& txOut : tx.vout) {
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, false};
@@ -230,14 +217,6 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 
     tx.vin = wtx.tx->vin;
     tx.vout = wtx.tx->vout;
-
-    if (dummyTxOutAdded && tx.vout.size() > 1) {
-        // CreateTransaction added a change output, so we don't need the dummy txout anymore.
-        // Removing it results in slight overpayment of fees, but we ignore this for now (as it's a very low amount).
-        auto it = std::find(tx.vout.begin(), tx.vout.end(), dummyTxOut);
-        assert(it != tx.vout.end());
-        tx.vout.erase(it);
-    }
 }
 
 template<typename SpecialTxPayload>
