@@ -254,6 +254,7 @@ private:
 private:
     std::vector<std::unique_ptr<CDKGMember>> members;
     std::map<uint256, size_t> membersMap;
+    std::set<uint256> relayMembers;
     BLSVerificationVectorPtr vvecContribution;
     BLSSecretKeyVector skContributions;
 
