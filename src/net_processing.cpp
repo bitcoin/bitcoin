@@ -35,7 +35,6 @@
 #include <governance.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
-#include <masternodeman.h>
 #include <typeinfo>
 
 #if defined(NDEBUG)
