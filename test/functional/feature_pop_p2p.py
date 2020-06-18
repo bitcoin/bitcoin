@@ -19,15 +19,61 @@ from test_framework.mininode import (
     msg_atv,
 )
 
+import time
+
 class BaseNode(P2PInterface):
-    def __init__(self):
+    def __init__(self, log = None):
         super().__init__()
+        self.log = log
+        # Test variables for the offer PopData messages
+        self.executed_msg_offer_atv = 0
+        self.executed_msg_offer_vtb = 0
+        self.executed_msg_offer_vbk = 0
+        # Test variables for the send PopData messages
+        self.executed_msg_atv = 0
+        self.executed_msg_vtb = 0
+        self.executed_msg_vbk = 0
+        # Test variables for the get PopData messages
+        self.executed_msg_get_atv = 0
+        self.executed_msg_get_vtb = 0
+        self.executed_msg_get_vbk = 0
 
-    def on_block(self, message):
-        pass
 
-    def on_inv(self, message):
-        pass
+    def on_ofATV(self, message):
+        self.log.info("receive message offer ATV")
+        self.executed_msg_offer_atv = self.executed_msg_offer_atv + 1
+
+    def on_ofVTB(self, message):
+        self.log.info("receive message offer VTB")
+        self.executed_msg_offer_vtb = self.executed_msg_offer_vtb + 1
+
+    def on_ofVBK(self, message):
+        self.log.info("receive message offer VBK")
+        self.executed_msg_offer_vbk = self.executed_msg_offer_vbk + 1
+
+    def on_ATV(self, message):
+        self.log.info("receive message ATV")
+        self.executed_msg_atv = self.executed_msg_atv + 1
+
+    def on_VTB(self, message):
+        self.log.info("receive message VTB")
+        self.executed_msg_vtb = self.executed_msg_vtb + 1
+
+    def on_VBK(self, message):
+        self.log.info("receive message VBK")
+        self.executed_msg_vbk = self.executed_msg_vbk + 1
+
+    def on_gATV(self, message):
+        self.log.info("receive message get ATV")
+        self.executed_msg_get_atv = self.executed_msg_get_atv + 1
+
+    def on_gVTB(self, message):
+        self.log.info("receive message get VTB")
+        self.executed_msg_get_vtb = self.executed_msg_get_vtb + 1
+
+    def on_gVBK(self, message):
+        self.log.info("receive message get VBK")
+        self.executed_msg_get_vbk = self.executed_msg_get_vbk + 1
 
 class PopP2P(BitcoinTestFramework):
     def set_test_params(self):
@@ -45,66 +91,51 @@ class PopP2P(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         self.sync_all(self.nodes)
 
-    def _run_case(self, msg_func, i):
-        bn = BaseNode()
-        self.nodes[0].add_p2p_connection(bn)
-        self.log.warning("running case {}".format(i))
+    def _run_sync_case(self):
+        self.log.warning("running _run_sync_case")
 
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
         atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
 
-        assert len(self.nodes[0].getpeerinfo()) == 1
-        peerinfo = self.nodes[0].getpeerinfo()[0]
-        assert(not 'noban' in peerinfo['permissions'])
+        bn = BaseNode(self.log)
 
-        # spaming node1
-        self.log.info("spaming node0 ...")
-        disconnected = False
-        for i in range(10000):
-            try:
-                msg = msg_func([atv_id])
-                # Send message is used to send a P2P message to the node over our P2PInterface
-                self.nodes[0].p2p.send_message(msg)
-            except IOError:
-                disconnected = True
-
-        self.log.info("node0 banned our peer")
-        assert disconnected
-
-        assert_equal(len(self.nodes[0].getpeerinfo()), 0)
-
-    def _run_case2(self):
-        bn = BaseNode()
         self.nodes[0].add_p2p_connection(bn)
-        self.log.warning("running case for pop data sending")
+
+        assert bn.executed_msg_atv == 0
+        assert bn.executed_msg_offer_atv == 1
+        assert bn.executed_msg_offer_vbk == 1
+
+        msg = msg_get_atv([atv_id])
+        self.nodes[0].p2p.send_message(msg)
+        self.nodes[0].p2p.send_message(msg)
+        self.nodes[0].p2p.send_message(msg)
+
+        time.sleep(2)
+
+        assert bn.executed_msg_atv == 3
+
+
+    def _run_sync_after_generating(self):
+        self.log.warning("running _run_sync_after_generating")
+
+        bn = BaseNode(self.log)
+        self.nodes[0].add_p2p_connection(bn)
 
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
         atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
-        raw_atv = self.nodes[0].getrawatv(atv_id)
 
-        assert len(self.nodes[0].getpeerinfo()) == 1
-        peerinfo = self.nodes[0].getpeerinfo()[0]
-        assert(not 'noban' in peerinfo['permissions'])
+        msg = msg_get_atv([atv_id])
+        self.nodes[0].p2p.send_message(msg)
 
-        # spaming node1
-        self.log.info("spaming node0 ...")
-        disconnected = False
-        for i in range(10000):
-            try:
-                msg = msg_atv(raw_atv)
-                # Send message is used to send a P2P message to the node over our P2PInterface
-                self.nodes[0].p2p.send_message(msg)
-            except IOError:
-                disconnected = True
+        time.sleep(2)
 
-        self.log.info("node0 banned our peer")
-        assert disconnected
+        assert bn.executed_msg_atv == 2
+        assert bn.executed_msg_offer_vbk == 1
 
-        assert_equal(len(self.nodes[0].getpeerinfo()), 0)
 
     def run_test(self):
         """Main test logic"""
@@ -115,14 +146,10 @@ class PopP2P(BitcoinTestFramework):
         from pypopminer import MockMiner
         self.apm = MockMiner()
 
-        self.cases = [msg_offer_atv, msg_get_atv]
+        self._run_sync_case()
 
-        for i, case in enumerate(self.cases):
-            self._run_case(case, i)
-            self.restart_node(0)
-
-        self._run_case2()
-
+        self.restart_node(0)
+        self._run_sync_after_generating()
 
 if __name__ == '__main__':
     PopP2P().main()
