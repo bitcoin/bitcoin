@@ -551,6 +551,10 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-zmqpubhashtx=<address>", "Enable publish hash transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubrawblock=<address>", "Enable publish raw block in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubrawtx=<address>", "Enable publish raw transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubhashgovernancevote=<address>", "Enable publish hash of governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubhashgovernanceobject=<address>", "Enable publish hash of governance objects transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubrawgovernancevote=<address>", "Enable publish raw governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubrawgovernanceobject=<address>", "Enable publish raw governance objects transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubrawmempooltx=<address>", "Enable publish raw transaction in <address> when entering mempool only", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashblockhwm=<n>", strprintf("Set publish hash block outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashtxhwm=<n>", strprintf("Set publish hash transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -564,6 +568,10 @@ void SetupServerArgs(NodeContext& node)
     hidden_args.emplace_back("-zmqpubhashtx=<address>");
     hidden_args.emplace_back("-zmqpubrawblock=<address>");
     hidden_args.emplace_back("-zmqpubrawtx=<address>");
+    hidden_args.emplace_back("-zmqpubhashgovernancevote=<address>");
+    hidden_args.emplace_back("-zmqpubhashgovernanceobject=<address>");
+    hidden_args.emplace_back("-zmqpubrawgovernancevote=<address>");
+    hidden_args.emplace_back("-zmqpubrawgovernanceobject=<address>");
     hidden_args.emplace_back("-zmqpubrawmempooltx=<address>");
     hidden_args.emplace_back("-zmqpubrawmempoolhwm=<n>");
     hidden_args.emplace_back("-zmqpubhashblockhwm=<n>");

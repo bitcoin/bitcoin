@@ -341,6 +341,10 @@ public:
     {
         return MakeHandler(::uiInterface.NotifyAdditionalDataSyncProgressChanged_connect(fn));
     }
+    std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyMasternodeListChanged_connect(fn));
+    }
     NodeContext* context() override { return &m_context; }
     NodeContext m_context;
     util::Ref m_context_ref{m_context};

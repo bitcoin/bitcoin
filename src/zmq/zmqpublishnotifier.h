@@ -62,4 +62,26 @@ class CZMQPublishRawSyscoinNotifier : public CZMQAbstractPublishNotifier
 public:
     bool NotifySyscoinUpdate(const char *value, const char *topic) override;
 };
+class CZMQPublishHashGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyGovernanceVote(const CGovernanceVote &vote) override;
+};
+
+class CZMQPublishHashGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyGovernanceObject(const CGovernanceObject &object) override;
+};
+class CZMQPublishRawGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyGovernanceVote(const CGovernanceVote &vote) override;
+};
+
+class CZMQPublishRawGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyGovernanceObject(const CGovernanceObject &object) override;
+};
 #endif // SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

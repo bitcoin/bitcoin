@@ -8,7 +8,8 @@
 
 #include <boost/signals2/last_value.hpp>
 #include <boost/signals2/signal.hpp>
-
+// SYSCOIN
+#include <evo/deterministicmns.h>
 CClientUIInterface uiInterface;
 
 struct UISignals {
@@ -23,6 +24,7 @@ struct UISignals {
     boost::signals2::signal<CClientUIInterface::NotifyHeaderTipSig> NotifyHeaderTip;
     boost::signals2::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
     boost::signals2::signal<CClientUIInterface::NotifyAdditionalDataSyncProgressChangedSig> NotifyAdditionalDataSyncProgressChanged;
+    boost::signals2::signal<CClientUIInterface::NotifyMasternodeListChangedSig> NotifyMasternodeListChanged;
 };
 static UISignals g_ui_signals;
 
@@ -44,6 +46,7 @@ ADD_SIGNALS_IMPL_WRAPPER(NotifyHeaderTip);
 ADD_SIGNALS_IMPL_WRAPPER(BannedListChanged);
 // SYSCOIN
 ADD_SIGNALS_IMPL_WRAPPER(NotifyAdditionalDataSyncProgressChanged);
+ADD_SIGNALS_IMPL_WRAPPER(NotifyMasternodeListChanged);
 
 bool CClientUIInterface::ThreadSafeMessageBox(const bilingual_str& message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeMessageBox(message, caption, style); }
 bool CClientUIInterface::ThreadSafeQuestion(const bilingual_str& message, const std::string& non_interactive_message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeQuestion(message, non_interactive_message, caption, style); }
@@ -56,6 +59,7 @@ void CClientUIInterface::NotifyBlockTip(SynchronizationState s, const CBlockInde
 void CClientUIInterface::NotifyHeaderTip(SynchronizationState s, const CBlockIndex* i) { return g_ui_signals.NotifyHeaderTip(s, i); }
 void CClientUIInterface::BannedListChanged() { return g_ui_signals.BannedListChanged(); }
 void CClientUIInterface::NotifyAdditionalDataSyncProgressChanged(double nSyncProgress) { return g_ui_signals.NotifyAdditionalDataSyncProgressChanged(nSyncProgress); }
+void CClientUIInterface::NotifyMasternodeListChanged(const CDeterministicMNList& mnList) { return g_ui_signals.NotifyMasternodeListChanged(mnList); }
 
 bool InitError(const bilingual_str& str)
 {

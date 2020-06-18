@@ -9,7 +9,9 @@
 
 class CBlockIndex;
 class CZMQAbstractNotifier;
-
+// SYSCOIN
+class CGovernanceObject;
+class CGovernanceVote;
 typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
 
 class CZMQAbstractNotifier
@@ -45,6 +47,8 @@ public:
     // SYSCOIN
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifySyscoinUpdate(const char *, const char *);
+    virtual bool NotifyGovernanceVote(const CGovernanceVote &vote);
+    virtual bool NotifyGovernanceObject(const CGovernanceObject &object);
 
 protected:
     void *psocket;
