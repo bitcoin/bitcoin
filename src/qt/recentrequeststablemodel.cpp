@@ -82,7 +82,7 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount requested)");
             else if (role == Qt::EditRole)
-                return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, SyscoinUnits::separatorNever);
+                return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, SyscoinUnits::SeparatorStyle::NEVER);
             else
                 return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
