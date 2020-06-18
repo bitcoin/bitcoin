@@ -27,12 +27,12 @@ CSigningManager* quorumSigningManager;
 UniValue CRecoveredSig::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("llmqType", (int)llmqType));
-    ret.push_back(Pair("quorumHash", quorumHash.ToString()));
-    ret.push_back(Pair("id", id.ToString()));
-    ret.push_back(Pair("msgHash", msgHash.ToString()));
-    ret.push_back(Pair("sig", sig.Get().ToString()));
-    ret.push_back(Pair("hash", sig.Get().GetHash().ToString()));
+    ret.pushKV("llmqType", (int)llmqType);
+    ret.pushKV("quorumHash", quorumHash.ToString());
+    ret.pushKV("id", id.ToString());
+    ret.pushKV("msgHash", msgHash.ToString());
+    ret.pushKV("sig", sig.Get().ToString());
+    ret.pushKV("hash", sig.Get().GetHash().ToString());
     return ret;
 }
 

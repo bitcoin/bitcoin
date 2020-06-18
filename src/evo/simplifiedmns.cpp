@@ -44,12 +44,12 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("proRegTxHash", proRegTxHash.ToString()));
-    obj.push_back(Pair("confirmedHash", confirmedHash.ToString()));
-    obj.push_back(Pair("service", service.ToString(false)));
-    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.Get().ToString()));
-    obj.push_back(Pair("votingAddress", EncodeDestination(keyIDVoting)));
-    obj.push_back(Pair("isValid", isValid));
+    obj.pushKV("proRegTxHash", proRegTxHash.ToString());
+    obj.pushKV("confirmedHash", confirmedHash.ToString());
+    obj.pushKV("service", service.ToString(false));
+    obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
+    obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
+    obj.pushKV("isValid", isValid);
 }
 
 CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries)
@@ -136,20 +136,20 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 {
     obj.setObject();
 
-    obj.push_back(Pair("baseBlockHash", baseBlockHash.ToString()));
-    obj.push_back(Pair("blockHash", blockHash.ToString()));
+    obj.pushKV("baseBlockHash", baseBlockHash.ToString());
+    obj.pushKV("blockHash", blockHash.ToString());
 
     CDataStream ssCbTxMerkleTree(SER_NETWORK, PROTOCOL_VERSION);
     ssCbTxMerkleTree << cbTxMerkleTree;
-    obj.push_back(Pair("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end())));
+    obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end()));
 
-    obj.push_back(Pair("cbTx", EncodeHexTx(*cbTx)));
+    obj.pushKV("cbTx", EncodeHexTx(*cbTx));
 
     UniValue deletedMNsArr(UniValue::VARR);
     for (const auto& h : deletedMNs) {
         deletedMNsArr.push_back(h.ToString());
     }
-    obj.push_back(Pair("deletedMNs", deletedMNsArr));
+    obj.pushKV("deletedMNs", deletedMNsArr);
 
     UniValue mnListArr(UniValue::VARR);
     for (const auto& e : mnList) {
@@ -157,16 +157,16 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
         e.ToJson(eObj);
         mnListArr.push_back(eObj);
     }
-    obj.push_back(Pair("mnList", mnListArr));
+    obj.pushKV("mnList", mnListArr);
 
     UniValue deletedQuorumsArr(UniValue::VARR);
     for (const auto& e : deletedQuorums) {
         UniValue eObj(UniValue::VOBJ);
-        eObj.push_back(Pair("llmqType", e.first));
-        eObj.push_back(Pair("quorumHash", e.second.ToString()));
+        eObj.pushKV("llmqType", e.first);
+        eObj.pushKV("quorumHash", e.second.ToString());
         deletedQuorumsArr.push_back(eObj);
     }
-    obj.push_back(Pair("deletedQuorums", deletedQuorumsArr));
+    obj.pushKV("deletedQuorums", deletedQuorumsArr);
 
     UniValue newQuorumsArr(UniValue::VARR);
     for (const auto& e : newQuorums) {
@@ -174,13 +174,13 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
         e.ToJson(eObj);
         newQuorumsArr.push_back(eObj);
     }
-    obj.push_back(Pair("newQuorums", newQuorumsArr));
+    obj.pushKV("newQuorums", newQuorumsArr);
 
     CCbTx cbTxPayload;
     if (GetTxPayload(*cbTx, cbTxPayload)) {
-        obj.push_back(Pair("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString()));
+        obj.pushKV("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString());
         if (cbTxPayload.nVersion >= 2) {
-            obj.push_back(Pair("merkleRootQuorums", cbTxPayload.merkleRootQuorums.ToString()));
+            obj.pushKV("merkleRootQuorums", cbTxPayload.merkleRootQuorums.ToString());
         }
     }
 }

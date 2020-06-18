@@ -140,7 +140,7 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
         return obj;
     }
 
-    obj.push_back(Pair("keys_left",     pwallet->nKeysLeftSinceAutoBackup));
+    obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
     obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
                                         ? "WARNING: keypool is almost depleted!" : ""));
 #endif // ENABLE_WALLET

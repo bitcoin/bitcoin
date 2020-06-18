@@ -122,7 +122,7 @@ void CKeePassIntegrator::init()
 
 void CKeePassIntegrator::CKeePassRequest::addStrParameter(const std::string& strName, const std::string& strValue)
 {
-    requestObj.push_back(Pair(strName, strValue));
+    requestObj.pushKV(strName, strValue);
 }
 
 void CKeePassIntegrator::CKeePassRequest::addStrParameter(const std::string& strName, const SecureString& sValue)

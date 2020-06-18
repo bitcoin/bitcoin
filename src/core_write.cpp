@@ -188,12 +188,12 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                 auto it = ptxSpentInfo->mSpentInfo.find(spentKey);
                 if (it != ptxSpentInfo->mSpentInfo.end()) {
                     auto spentInfo = it->second;
-                    in.push_back(Pair("value", ValueFromAmount(spentInfo.satoshis)));
-                    in.push_back(Pair("valueSat", spentInfo.satoshis));
+                    in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
+                    in.pushKV("valueSat", spentInfo.satoshis);
                     if (spentInfo.addressType == 1) {
-                        in.push_back(Pair("address", EncodeDestination(CKeyID(spentInfo.addressHash))));
+                        in.pushKV("address", EncodeDestination(CKeyID(spentInfo.addressHash)));
                     } else if (spentInfo.addressType == 2) {
-                        in.push_back(Pair("address", EncodeDestination(CScriptID(spentInfo.addressHash))));
+                        in.pushKV("address", EncodeDestination(CScriptID(spentInfo.addressHash)));
                     }
                 }
             }
@@ -223,9 +223,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             auto it = ptxSpentInfo->mSpentInfo.find(spentKey);
             if (it != ptxSpentInfo->mSpentInfo.end()) {
                 auto spentInfo = it->second;
-                out.push_back(Pair("spentTxId", spentInfo.txid.GetHex()));
-                out.push_back(Pair("spentIndex", (int)spentInfo.inputIndex));
-                out.push_back(Pair("spentHeight", spentInfo.blockHeight));
+                out.pushKV("spentTxId", spentInfo.txid.GetHex());
+                out.pushKV("spentIndex", (int)spentInfo.inputIndex);
+                out.pushKV("spentHeight", spentInfo.blockHeight);
             }
         }
         vout.push_back(out);
@@ -233,8 +233,8 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("vout", vout);
 
     if (!tx.vExtraPayload.empty()) {
-        entry.push_back(Pair("extraPayloadSize", (int)tx.vExtraPayload.size()));
-        entry.push_back(Pair("extraPayload", HexStr(tx.vExtraPayload)));
+        entry.pushKV("extraPayloadSize", (int)tx.vExtraPayload.size());
+        entry.pushKV("extraPayload", HexStr(tx.vExtraPayload));
     }
 
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
@@ -242,42 +242,42 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proRegTx", obj));
+            entry.pushKV("proRegTx", obj);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proUpServTx", obj));
+            entry.pushKV("proUpServTx", obj);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proUpRegTx", obj));
+            entry.pushKV("proUpRegTx", obj);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proUpRevTx", obj));
+            entry.pushKV("proUpRevTx", obj);
         }
     } else if (tx.nType == TRANSACTION_COINBASE) {
         CCbTx cbTx;
         if (GetTxPayload(tx, cbTx)) {
             UniValue obj;
             cbTx.ToJson(obj);
-            entry.push_back(Pair("cbTx", obj));
+            entry.pushKV("cbTx", obj);
         }
     } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qcTx;
         if (GetTxPayload(tx, qcTx)) {
             UniValue obj;
             qcTx.ToJson(obj);
-            entry.push_back(Pair("qcTx", obj));
+            entry.pushKV("qcTx", obj);
         }
     }
 

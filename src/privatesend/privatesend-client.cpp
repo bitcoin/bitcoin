@@ -1741,13 +1741,13 @@ void CPrivateSendClientSession::GetJsonInfo(UniValue& obj) const
     obj.setObject();
     if (mixingMasternode != nullptr) {
         assert(mixingMasternode->pdmnState);
-        obj.push_back(Pair("protxhash", mixingMasternode->proTxHash.ToString()));
-        obj.push_back(Pair("outpoint",  mixingMasternode->collateralOutpoint.ToStringShort()));
-        obj.push_back(Pair("service",   mixingMasternode->pdmnState->addr.ToString()));
+        obj.pushKV("protxhash", mixingMasternode->proTxHash.ToString());
+        obj.pushKV("outpoint",  mixingMasternode->collateralOutpoint.ToStringShort());
+        obj.pushKV("service",   mixingMasternode->pdmnState->addr.ToString());
     }
-    obj.push_back(Pair("denomination",  ValueFromAmount(CPrivateSend::DenominationToAmount(nSessionDenom))));
-    obj.push_back(Pair("state",         GetStateString()));
-    obj.push_back(Pair("entries_count", GetEntriesCount()));
+    obj.pushKV("denomination",  ValueFromAmount(CPrivateSend::DenominationToAmount(nSessionDenom)));
+    obj.pushKV("state",         GetStateString());
+    obj.pushKV("entries_count", GetEntriesCount());
 }
 
 void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
@@ -1755,15 +1755,15 @@ void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
     LOCK(cs_deqsessions);
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("enabled",       fEnablePrivateSend));
-    obj.push_back(Pair("running",       fPrivateSendRunning));
-    obj.push_back(Pair("multisession",  fPrivateSendMultiSession));
-    obj.push_back(Pair("max_sessions",  nPrivateSendSessions));
-    obj.push_back(Pair("max_rounds",    nPrivateSendRounds));
-    obj.push_back(Pair("max_amount",    nPrivateSendAmount));
-    obj.push_back(Pair("denoms_goal",   nPrivateSendDenomsGoal));
-    obj.push_back(Pair("denoms_hardcap", nPrivateSendDenomsHardCap));
-    obj.push_back(Pair("queue_size",    GetQueueSize()));
+    obj.pushKV("enabled",       fEnablePrivateSend);
+    obj.pushKV("running",       fPrivateSendRunning);
+    obj.pushKV("multisession",  fPrivateSendMultiSession);
+    obj.pushKV("max_sessions",  nPrivateSendSessions);
+    obj.pushKV("max_rounds",    nPrivateSendRounds);
+    obj.pushKV("max_amount",    nPrivateSendAmount);
+    obj.pushKV("denoms_goal",   nPrivateSendDenomsGoal);
+    obj.pushKV("denoms_hardcap", nPrivateSendDenomsHardCap);
+    obj.pushKV("queue_size",    GetQueueSize());
 
     UniValue arrSessions(UniValue::VARR);
     for (const auto& session : deqSessions) {
@@ -1773,5 +1773,5 @@ void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
             arrSessions.push_back(objSession);
         }
     }
-    obj.push_back(Pair("sessions",  arrSessions));
+    obj.pushKV("sessions",  arrSessions);
 }

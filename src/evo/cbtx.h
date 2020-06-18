@@ -45,11 +45,11 @@ public:
     {
         obj.clear();
         obj.setObject();
-        obj.push_back(Pair("version", (int)nVersion));
-        obj.push_back(Pair("height", (int)nHeight));
-        obj.push_back(Pair("merkleRootMNList", merkleRootMNList.ToString()));
+        obj.pushKV("version", (int)nVersion);
+        obj.pushKV("height", (int)nHeight);
+        obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
         if (nVersion >= 2) {
-            obj.push_back(Pair("merkleRootQuorums", merkleRootQuorums.ToString()));
+            obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
         }
     }
 };

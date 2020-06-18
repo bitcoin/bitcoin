@@ -16,12 +16,12 @@ UniValue CMasternodeMetaInfo::ToJson() const
 
     auto now = GetAdjustedTime();
 
-    ret.push_back(Pair("lastDSQ", nLastDsq));
-    ret.push_back(Pair("mixingTxCount", nMixingTxCount));
-    ret.push_back(Pair("lastOutboundAttempt", lastOutboundAttempt));
-    ret.push_back(Pair("lastOutboundAttemptElapsed", now - lastOutboundAttempt));
-    ret.push_back(Pair("lastOutboundSuccess", lastOutboundSuccess));
-    ret.push_back(Pair("lastOutboundSuccessElapsed", now - lastOutboundSuccess));
+    ret.pushKV("lastDSQ", nLastDsq);
+    ret.pushKV("mixingTxCount", nMixingTxCount);
+    ret.pushKV("lastOutboundAttempt", lastOutboundAttempt);
+    ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt);
+    ret.pushKV("lastOutboundSuccess", lastOutboundSuccess);
+    ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess);
 
     return ret;
 }
