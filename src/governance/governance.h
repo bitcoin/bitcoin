@@ -2,22 +2,22 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_H
-#define GOVERNANCE_H
+#ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_H
+#define SYSCOIN_GOVERNANCE_GOVERNANCE_H
 
-#include "bloom.h"
-#include "cachemap.h"
-#include "cachemultimap.h"
-#include "chain.h"
-#include "governance-exceptions.h"
-#include "governance-object.h"
-#include "governance-vote.h"
-#include "net.h"
-#include "sync.h"
-#include "timedata.h"
-#include "util.h"
+#include <bloom.h>
+#include <cachemap.h>
+#include <cachemultimap.h>
+#include <chain.h>
+#include <governance/governance-exceptions.h>
+#include <governance/governance-object.h>
+#include <governance/governance-vote.h>
+#include <net.h>
+#include <sync.h>
+#include <timedata.h>
+#include <util.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 #include <univalue.h>
 
