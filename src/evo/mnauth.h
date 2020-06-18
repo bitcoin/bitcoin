@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_MNAUTH_H
-#define DASH_MNAUTH_H
+#ifndef SYSCOIN_EVO_MNAUTH_H
+#define SYSCOIN_EVO_MNAUTH_H
 
-#include "serialize.h"
+#include <serialize.h>
 
 class CConnman;
 class CDataStream;
@@ -39,13 +39,9 @@ public:
     std::vector<char> sig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CMNAuth, obj)
     {
-        READWRITE(proRegTxHash);
-        READWRITE(sig);
+        READWRITE(obj.proRegTxHash, obj.sig);
     }
 
     static void PushMNAUTH(CNode* pnode, CConnman& connman);
@@ -54,4 +50,4 @@ public:
 };
 
 
-#endif //DASH_MNAUTH_H
+#endif //SYSCOIN_EVO_MNAUTH_H

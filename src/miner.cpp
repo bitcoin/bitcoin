@@ -180,14 +180,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate
     coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE;
-
     CCbTx cbTx;
-    bool fDIP0008Active_context = VersionBitsState(chainActive.Tip(), chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
-    if (fDIP0008Active_context) {
-        cbTx.nVersion = 2;
-    } else {
-        cbTx.nVersion = 1;
-    }
+    cbTx.nVersion = 2;
     CValidationState state;
     if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state)) {
         throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));

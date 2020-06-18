@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_PROVIDERTX_H
-#define DASH_PROVIDERTX_H
+#ifndef SYSCOIN_EVO_PROVIDERTX_H
+#define SYSCOIN_EVO_PROVIDERTX_H
 
-#include "consensus/validation.h"
-#include "primitives/transaction.h"
+#include <consensus/validation.h>
+#include <primitives/transaction.h>
 
-#include "base58.h"
-#include "netaddress.h"
-#include "pubkey.h"
-#include "univalue.h"
+#include <base58.h>
+#include <netaddress.h>
+#include <pubkey.h>
+#include <univalue.h>
 
 class CBlockIndex;
 
@@ -35,24 +35,12 @@ public:
     std::vector<unsigned char> vchSig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProRegTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(nType);
-        READWRITE(nMode);
-        READWRITE(collateralOutpoint);
-        READWRITE(addr);
-        READWRITE(keyIDOwner);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(nOperatorReward);
-        READWRITE(scriptPayout);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.nType, obj.nMode, obj.collateralOutpoint, obj.addr,
+        obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting, obj.nOperatorReward, obj.scriptPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
     }
 
@@ -98,18 +86,12 @@ public:
     std::vector<char> sig;
 
 public:
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProUpServTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(addr);
-        READWRITE(scriptOperatorPayout);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.proTxHash, obj.addr, obj.scriptOperatorPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(sig);
+            READWRITE(obj.sig);
         }
     }
 
@@ -147,20 +129,12 @@ public:
     std::vector<unsigned char> vchSig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProUpRegTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(nMode);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(scriptPayout);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.proTxHash, obj.nMode, obj.pubKeyOperator, obj.keyIDVoting,
+        obj.scriptPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
     }
 
@@ -205,17 +179,11 @@ public:
     std::vector<char> sig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProUpRevTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(nReason);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.proTxHash, obj.nReason, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(sig);
+            READWRITE(obj.sig);
         }
     }
 
@@ -239,4 +207,4 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 
-#endif //DASH_PROVIDERTX_H
+#endif //SYSCOIN_EVO_PROVIDERTX_H

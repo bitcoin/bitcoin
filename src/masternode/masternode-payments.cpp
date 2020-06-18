@@ -266,7 +266,7 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
     }
 
     LOCK(cs_main);
-    int nChainTipHeight = chainActive.Height();
+    int nChainTipHeight = ::ChainActive().Height();
 
     bool doProjection = false;
     for(int h = nStartHeight; h < nEndHeight; h++) {

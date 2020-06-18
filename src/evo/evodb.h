@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_EVODB_H
-#define DASH_EVODB_H
+#ifndef SYSCOIN_EVO_EVODB_H
+#define SYSCOIN_EVO_EVODB_H
 
-#include "dbwrapper.h"
-#include "uint256.h"
+#include <dbwrapper.h>
+#include <uint256.h>
 
 // "b_b" was used in the initial version of deterministic MN storage
 // "b_b2" was used after compact diffs were introduced
@@ -107,4 +107,4 @@ private:
 
 extern CEvoDB* evoDb;
 
-#endif //DASH_EVODB_H
+#endif //SYSCOIN_EVO_EVODB_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_SPECIALTX_H
-#define DASH_SPECIALTX_H
+#ifndef SYSCOIN_EVO_SPECIALTX_H
+#define SYSCOIN_EVO_SPECIALTX_H
 
 #include <primitives/transaction.h>
 
@@ -61,4 +61,4 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
 
 uint256 CalcTxInputsHash(const CTransaction& tx);
 
-#endif //DASH_SPECIALTX_H
+#endif //SYSCOIN_EVO_SPECIALTX_H

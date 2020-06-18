@@ -131,7 +131,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     AssertLockHeld(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
 
-    const CBlockIndex* baseBlockIndex = chainActive.Genesis();
+    const CBlockIndex* baseBlockIndex = ::ChainActive().Genesis();
     if (!baseBlockHash.IsNull()) {
         auto it = mapBlockIndex.find(baseBlockHash);
         if (it == mapBlockIndex.end()) {
@@ -147,7 +147,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     }
     const CBlockIndex* blockIndex = blockIt->second;
 
-    if (!chainActive.Contains(baseBlockIndex) || !chainActive.Contains(blockIndex)) {
+    if (!::ChainActive().Contains(baseBlockIndex) || !::ChainActive().Contains(blockIndex)) {
         errorRet = strprintf("block %s and %s are not in the same chain", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }

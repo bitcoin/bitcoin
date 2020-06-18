@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_CBTX_H
-#define DASH_CBTX_H
+#ifndef SYSCOIN_EVO_CBTX_H
+#define SYSCOIN_EVO_CBTX_H
 
-#include "consensus/validation.h"
-#include "primitives/transaction.h"
-#include "univalue.h"
+#include <consensus/validation.h>
+#include <primitives/transaction.h>
+#include <univalue.h>
 
 class CBlock;
 class CBlockIndex;
@@ -23,13 +23,9 @@ public:
     uint256 merkleRootMNList;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CCbTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(merkleRootMNList);
+         READWRITE(obj.nVersion, obj.merkleRootMNList);
     }
 
     std::string ToString() const;
@@ -48,4 +44,4 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state);
 
-#endif //DASH_CBTX_H
+#endif //SYSCOIN_EVO_CBTX_H
