@@ -21,7 +21,6 @@ from test_framework.mininode import (
     mininode_lock,
     msg_block,
     msg_getdata,
-    NODE_NETWORK,
     network_thread_join,
     network_thread_start,
 )

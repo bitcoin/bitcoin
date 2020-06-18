@@ -20,12 +20,11 @@ happened previously.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_raises_rpc_error, connect_nodes, sync_blocks, assert_equal, set_node_times)
+from test_framework.util import (assert_raises_rpc_error, connect_nodes, assert_equal, set_node_times)
 
 import collections
 import enum
 import itertools
-import sys
 
 Call = enum.Enum("Call", "single multi")
 Data = enum.Enum("Data", "address pub priv")

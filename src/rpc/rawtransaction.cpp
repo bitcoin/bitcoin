@@ -748,7 +748,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
             "\nArguments:\n"
             "1. \"hexstring\"     (string, required) The transaction hex string\n"
-            "2. \"prevtxs\"       (string, optional) An json array of previous dependent transaction outputs\n"
+            "2. \"prevtxs\"       (string, optional) A json array of previous dependent transaction outputs\n"
             "     [               (json array of json objects, or 'null' if none provided)\n"
             "       {\n"
             "         \"txid\":\"id\",             (string, required) The transaction id\n"

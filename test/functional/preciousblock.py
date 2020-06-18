@@ -9,7 +9,6 @@ from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
     sync_chain,
-    sync_blocks,
 )
 
 def unidirectional_node_sync_via_rpc(node_src, node_dest):

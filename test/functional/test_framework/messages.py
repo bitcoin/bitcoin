@@ -22,7 +22,7 @@ import struct
 import time
 
 from test_framework.siphash import siphash256
-from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
+from test_framework.util import hex_str_to_bytes, bytes_to_hex_str
 
 import dash_hash
 

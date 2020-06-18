@@ -182,6 +182,9 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-3, "Unexpected key foo", self.nodes[2].fundrawtransaction, rawtx, {'foo':'bar'})
 
+        # reserveChangeKey was deprecated and is now removed
+        assert_raises_rpc_error(-3, "Unexpected key reserveChangeKey", lambda: self.nodes[2].fundrawtransaction(hexstring=rawtx, options={'reserveChangeKey': True}))
+
         ############################################################
         # test a fundrawtransaction with an invalid change address #
         ############################################################
@@ -661,7 +664,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                   self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee}),
                   self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee, "subtractFeeFromOutputs": [0]})]
 
-        dec_tx = [self.nodes[3].decoderawtransaction(tx['hex']) for tx in result]
+        dec_tx = [self.nodes[3].decoderawtransaction(tx_['hex']) for tx_ in result]
         output = [d['vout'][1 - r['changepos']]['value'] for d, r in zip(dec_tx, result)]
         change = [d['vout'][r['changepos']]['value'] for d, r in zip(dec_tx, result)]
 

@@ -15,6 +15,7 @@ For a description of arguments recognized by test scripts, see
 """
 
 import argparse
+from collections import deque
 import configparser
 import datetime
 import os
@@ -50,6 +51,9 @@ if os.name == 'posix':
 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
+
+# 20 minutes represented in seconds
+TRAVIS_TIMEOUT_DURATION = 20 * 60
 
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
@@ -197,6 +201,7 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--combinedlogslen', '-c', type=int, default=0, help='print a combined log (of length n lines) from all test nodes and test framework to the console on failure.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
@@ -247,29 +252,27 @@ def main():
         sys.exit(0)
 
     # Build list of tests
+    test_list = []
     if tests:
         # Individual tests have been specified. Run specified tests that exist
         # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
-        tests = [re.sub("\.py$", "", t) + ".py" for t in tests]
-        test_list = []
-        for t in tests:
-            if t in ALL_SCRIPTS:
-                test_list.append(t)
+        tests = [re.sub("\.py$", "", test) + ".py" for test in tests]
+        for test in tests:
+            if test in ALL_SCRIPTS:
+                test_list.append(test)
             else:
-                print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], t))
+                print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
+    elif args.extended:
+        # Include extended tests
+        test_list += ALL_SCRIPTS
     else:
-        # No individual tests have been specified.
-        # Run all base tests, and optionally run extended tests.
-        test_list = BASE_SCRIPTS
-        if args.extended:
-            # place the EXTENDED_SCRIPTS first since the three longest ones
-            # are there and the list is shorter
-            test_list = EXTENDED_SCRIPTS + test_list
+        # Run base tests only
+        test_list += BASE_SCRIPTS
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
-        tests_excl = [re.sub("\.py$", "", t) + ".py" for t in args.exclude.split(',')]
-        for exclude_test in tests_excl:
+        exclude_tests = [re.sub("\.py$", "", test) + ".py" for test in args.exclude.split(',')]
+        for exclude_test in exclude_tests:
             if exclude_test in test_list:
                 test_list.remove(exclude_test)
             else:
@@ -283,7 +286,7 @@ def main():
     if args.help:
         # Print help for test_runner.py, then print help of the first script (with args removed) and exit.
         parser.print_help()
-        subprocess.check_call([(config["environment"]["SRCDIR"] + '/test/functional/' + test_list[0].split()[0])] + ['-h'])
+        subprocess.check_call([sys.executable, os.path.join(config["environment"]["SRCDIR"], 'test', 'functional', test_list[0].split()[0]), '-h'])
         sys.exit(0)
 
     check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=args.ci)
@@ -302,9 +305,10 @@ def main():
         args=passon_args,
         failfast=args.failfast,
         runs_ci=args.ci,
+        combined_logs_len=args.combinedlogslen,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=None, failfast=False, runs_ci):
+def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=None, failfast=False, runs_ci, combined_logs_len=0):
     args = args or []
 
     # Warn if dashd is already running (unix only)
@@ -341,7 +345,7 @@ def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_c
     if len(test_list) > 1 and jobs > 1:
         # Populate cache
         try:
-            subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+            subprocess.check_output([sys.executable, tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
         except subprocess.CalledProcessError as e:
             sys.stdout.buffer.write(e.output)
             raise
@@ -353,15 +357,15 @@ def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_c
         tmpdir=tmpdir,
         test_list=test_list,
         flags=flags,
-        timeout_duration=20 * 60 if runs_ci else float('inf'),  # in seconds
+        timeout_duration=TRAVIS_TIMEOUT_DURATION if runs_ci else float('inf'),  # in seconds
     )
-    time0 = time.time()
+    start_time = time.time()
     test_results = []
 
     max_len_name = len(max(test_list, key=len))
 
     for _ in range(len(test_list)):
-        test_result, stdout, stderr = job_queue.get_next()
+        test_result, testdir, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
 
         if test_result.status == "Passed":
@@ -372,12 +376,20 @@ def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_c
             print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
+            if combined_logs_len and os.path.isdir(testdir):
+                # Print the final `combinedlogslen` lines of the combined logs
+                print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
+                print('\n============')
+                print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
+                print('============\n')
+                combined_logs, _ = subprocess.Popen([sys.executable, os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
 
             if failfast:
                 logging.debug("Early exiting after test failure")
                 break
 
-    print_results(test_results, max_len_name, (int(time.time() - time0)))
+    print_results(test_results, max_len_name, (int(time.time() - start_time)))
 
     if coverage:
         coverage.report_rpc_coverage()
@@ -439,19 +451,21 @@ class TestHandler:
         while self.num_running < self.num_jobs and self.test_list:
             # Add tests
             self.num_running += 1
-            t = self.test_list.pop(0)
+            test = self.test_list.pop(0)
             portseed = len(self.test_list) + self.portseed_offset
             portseed_arg = ["--portseed={}".format(portseed)]
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
-            test_argv = t.split()
-            tmpdir = ["--tmpdir=%s/%s_%s" % (self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)]
-            self.jobs.append((t,
+            test_argv = test.split()
+            testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
+            tmpdir_arg = ["--tmpdir={}".format(testdir)]
+            self.jobs.append((test,
                               time.time(),
-                              subprocess.Popen([self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir,
+                              subprocess.Popen([sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
                                                universal_newlines=True,
                                                stdout=log_stdout,
                                                stderr=log_stderr),
+                              testdir,
                               log_stdout,
                               log_stderr))
         if not self.jobs:
@@ -459,15 +473,14 @@ class TestHandler:
         while True:
             # Return first proc that finishes
             time.sleep(.5)
-            for j in self.jobs:
-                (name, time0, proc, log_out, log_err) = j
-                if int(time.time() - time0) > self.timeout_duration:
-                    # In travis, timeout individual tests after 20 minutes (to stop tests hanging and not
-                    # providing useful output.
+            for job in self.jobs:
+                (name, start_time, proc, testdir, log_out, log_err) = job
+                if int(time.time() - start_time) > self.timeout_duration:
+                    # In travis, timeout individual tests (to stop tests hanging and not providing useful output).
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
-                    [stdout, stderr] = [l.read().decode('utf-8') for l in (log_out, log_err)]
+                    [stdout, stderr] = [file.read().decode('utf-8') for file in (log_out, log_err)]
                     log_out.close(), log_err.close()
                     if proc.returncode == TEST_EXIT_PASSED and stderr == "":
                         status = "Passed"
@@ -476,9 +489,9 @@ class TestHandler:
                     else:
                         status = "Failed"
                     self.num_running -= 1
-                    self.jobs.remove(j)
+                    self.jobs.remove(job)
 
-                    return TestResult(name, status, int(time.time() - time0)), stdout, stderr
+                    return TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr
             print('.', end='', flush=True)
 
     def kill_and_join(self):
@@ -523,7 +536,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     Check that there are no scripts in the functional tests directory which are
     not being run by pull-tester.py."""
     script_dir = src_dir + '/test/functional/'
-    python_files = set([t for t in os.listdir(script_dir) if t[-3:] == ".py"])
+    python_files = set([file for file in os.listdir(script_dir) if file.endswith(".py")])
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
@@ -559,7 +572,7 @@ class RPCCoverage():
 
         if uncovered:
             print("Uncovered RPC commands:")
-            print("".join(("  - %s\n" % i) for i in sorted(uncovered)))
+            print("".join(("  - %s\n" % command) for command in sorted(uncovered)))
         else:
             print("All RPC commands covered.")
 
@@ -583,8 +596,8 @@ class RPCCoverage():
         if not os.path.isfile(coverage_ref_filename):
             raise RuntimeError("No coverage reference found")
 
-        with open(coverage_ref_filename, 'r') as f:
-            all_cmds.update([i.strip() for i in f.readlines()])
+        with open(coverage_ref_filename, 'r') as file:
+            all_cmds.update([line.strip() for line in file.readlines()])
 
         for root, dirs, files in os.walk(self.dir):
             for filename in files:
@@ -592,8 +605,8 @@ class RPCCoverage():
                     coverage_filenames.add(os.path.join(root, filename))
 
         for filename in coverage_filenames:
-            with open(filename, 'r') as f:
-                covered_cmds.update([i.strip() for i in f.readlines()])
+            with open(filename, 'r') as file:
+                covered_cmds.update([line.strip() for line in file.readlines()])
 
         return all_cmds - covered_cmds
 

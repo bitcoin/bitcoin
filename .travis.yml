@@ -123,7 +123,6 @@ install:
     - export HOST_SRC_DIR=$TRAVIS_BUILD_DIR
     - export HOST_CACHE_DIR=$HOME/cache
     - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
-    - export PYTHON_DEBUG=1
     - source ./ci/matrix.sh
     - mkdir -p $HOST_CACHE_DIR/docker && mkdir -p $HOST_CACHE_DIR/ccache && mkdir -p $HOST_CACHE_DIR/depends && mkdir -p $HOST_CACHE_DIR/sdk-sources
     # Keep this as it makes caching related debugging easier

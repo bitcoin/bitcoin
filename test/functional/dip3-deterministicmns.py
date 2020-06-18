@@ -6,10 +6,8 @@
 #
 # Test deterministic masternodes
 #
-import sys
-
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
-from test_framework.mininode import CTransaction, ToHex, FromHex, CTxOut, COIN, CCbTx
+from test_framework.mininode import CTransaction, ToHex, FromHex, COIN, CCbTx
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 

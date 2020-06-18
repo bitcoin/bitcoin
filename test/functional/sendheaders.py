@@ -103,7 +103,6 @@ from test_framework.mininode import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    sync_blocks,
     wait_until,
 )
 

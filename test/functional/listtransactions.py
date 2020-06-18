@@ -6,7 +6,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import CTransaction, COIN
+from test_framework.mininode import CTransaction
 from io import BytesIO
 
 def txFromHex(hexstring):

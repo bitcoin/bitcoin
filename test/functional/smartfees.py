@@ -15,8 +15,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     connect_nodes,
     satoshi_round,
-    sync_blocks,
-    sync_mempools,
 )
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them

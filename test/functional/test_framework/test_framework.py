@@ -4,8 +4,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Base class for RPC testing."""
+
 import copy
-from collections import deque
 from enum import Enum
 import logging
 import optparse
@@ -15,7 +15,6 @@ import shutil
 import sys
 import tempfile
 import time
-import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 from .authproxy import JSONRPCException
@@ -113,7 +112,9 @@ class BitcoinTestFramework():
 
         PortSeed.n = self.options.port_seed
 
-        os.environ['PATH'] = self.options.srcdir + ":" + self.options.srcdir + "/qt:" + os.environ['PATH']
+        os.environ['PATH'] = self.options.srcdir + os.pathsep + \
+                             self.options.srcdir + os.path.sep + "qt" + os.pathsep + \
+                             os.environ['PATH']
 
         check_json_precision()
 
@@ -170,36 +171,26 @@ class BitcoinTestFramework():
             self.log.info("Note: dashds were not stopped and may still be running")
 
         if not self.options.nocleanup and not self.options.noshutdown and success != TestStatus.FAILED:
-            self.log.info("Cleaning up")
-            shutil.rmtree(self.options.tmpdir)
+            self.log.info("Cleaning up {} on exit".format(self.options.tmpdir))
+            cleanup_tree_on_exit = True
         else:
             self.log.warning("Not cleaning up dir %s" % self.options.tmpdir)
-            if os.getenv("PYTHON_DEBUG", ""):
-                # Dump the end of the debug logs, to aid in debugging rare
-                # travis failures.
-                import glob
-                filenames = [self.options.tmpdir + "/test_framework.log"]
-                filenames += glob.glob(self.options.tmpdir + "/node*/regtest/debug.log")
-                MAX_LINES_TO_PRINT = 1000
-                for fn in filenames:
-                    try:
-                        with open(fn, 'r') as f:
-                            print("From", fn, ":")
-                            print("".join(deque(f, MAX_LINES_TO_PRINT)))
-                    except OSError:
-                        print("Opening file %s failed." % fn)
-                        traceback.print_exc()
+            cleanup_tree_on_exit = False
 
         if success == TestStatus.PASSED:
             self.log.info("Tests successful")
-            sys.exit(TEST_EXIT_PASSED)
+            exit_code = TEST_EXIT_PASSED
         elif success == TestStatus.SKIPPED:
             self.log.info("Test skipped")
-            sys.exit(TEST_EXIT_SKIPPED)
+            exit_code = TEST_EXIT_SKIPPED
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
-            logging.shutdown()
-            sys.exit(TEST_EXIT_FAILED)
+            self.log.error("Hint: Call {} '{}' to consolidate all logs".format(os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../combine_logs.py"), self.options.tmpdir))
+            exit_code = TEST_EXIT_FAILED
+        logging.shutdown()
+        if cleanup_tree_on_exit:
+            shutil.rmtree(self.options.tmpdir)
+        sys.exit(exit_code)
 
     # Methods to override in subclass test scripts.
     def set_test_params(self):
