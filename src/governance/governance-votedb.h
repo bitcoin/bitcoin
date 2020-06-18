@@ -2,16 +2,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_VOTEDB_H
-#define GOVERNANCE_VOTEDB_H
+#ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
+#define SYSCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
 
 #include <list>
 #include <map>
 
-#include "governance-vote.h"
-#include "serialize.h"
-#include "streams.h"
-#include "uint256.h"
+#include <governance/governance-vote.h>
+#include <serialize.h>
+#include <streams.h>
+#include <uint256.h>
 
 /**
  * Represents the collection of votes associated with a given CGovernanceObject

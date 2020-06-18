@@ -4,9 +4,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <activemasternode.h>
-#include <masternodesync.h>
+#include <masternode/masternode-sync.h>
 #include <masternodeman.h>
-#include <masternodepayments.h>
+#include <masternode/masternode-payments.h>
 #include <netbase.h>
 #include <protocol.h>
 #include <script/standard.h>

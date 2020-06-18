@@ -56,7 +56,7 @@
 #include <key_io.h>
 #include <outputtype.h>
 #include <masternodeman.h>
-#include <masternodepayments.h>
+#include <masternode/masternode-payments.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>
 #include <algorithm> // std::unique

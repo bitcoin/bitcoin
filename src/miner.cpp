@@ -24,8 +24,8 @@
 #include <algorithm>
 #include <utility>
 // SYSCOIN
-#include <masternodepayments.h>
-#include <masternodesync.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;

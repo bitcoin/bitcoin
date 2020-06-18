@@ -46,7 +46,7 @@ static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed"
 
 #include <math.h>
 // SYSCOIN
-#include <masternodesync.h>
+#include <masternode/masternode-sync.h>
 #include <masternodeman.h>
 #include <rpc/server.h>
 // How often to dump addresses to peers.dat

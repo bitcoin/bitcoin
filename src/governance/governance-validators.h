@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_VALIDATORS_H
-#define GOVERNANCE_VALIDATORS_H
+#ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_VALIDATORS_H
+#define SYSCOIN_GOVERNANCE_GOVERNANCE_VALIDATORS_H
 
 #include <string>
 

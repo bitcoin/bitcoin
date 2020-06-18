@@ -6,8 +6,8 @@
 #include <activemasternode.h>
 #include <consensus/validation.h>
 #include <governanceclasses.h>
-#include <masternodepayments.h>
-#include <masternodesync.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>

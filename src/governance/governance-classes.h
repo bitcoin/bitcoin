@@ -1,14 +1,13 @@
 // Copyright (c) 2014-2020 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef GOVERNANCE_CLASSES_H
+#ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
 #define GOVERNANCE_CLASSES_H
 
-#include "base58.h"
-#include "governance.h"
-#include "key.h"
-#include "script/standard.h"
-#include "util.h"
+#include <base58.h>
+#include <governance/governance.h>
+#include <key.h>
+#include <script/standard.h>
 
 class CSuperblock;
 class CGovernanceTriggerManager;
