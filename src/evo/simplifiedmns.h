@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_SIMPLIFIEDMNS_H
-#define DASH_SIMPLIFIEDMNS_H
+#ifndef SYSCOIN_EVO_SIMPLIFIEDMNS_H
+#define SYSCOIN_EVO_SIMPLIFIEDMNS_H
 
-#include "merkleblock.h"
-#include "netaddress.h"
-#include "pubkey.h"
-#include "serialize.h"
-#include "version.h"
+#include <merkleblock.h>
+#include <netaddress.h>
+#include <pubkey.h>
+#include <serialize.h>
+#include <version.h>
 
 class UniValue;
 class CDeterministicMNList;
@@ -45,17 +45,10 @@ public:
     }
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CSimplifiedMNListEntry, obj)
     {
-        READWRITE(proRegTxHash);
-        READWRITE(confirmedHash);
-        READWRITE(service);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(isValid);
+        READWRITE(obj.proRegTxHash, obj.confirmedHash, obj.service, obj.pubKeyOperator,
+        obj.keyIDVoting, obj.isValid);
     }
 
 public:
@@ -87,13 +80,9 @@ public:
     uint256 blockHash;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj)
     {
-        READWRITE(baseBlockHash);
-        READWRITE(blockHash);
+        READWRITE(obj.baseBlockHash, obj.blockHash);
     }
 };
 
@@ -108,17 +97,10 @@ public:
     std::vector<CSimplifiedMNListEntry> mnList;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CSimplifiedMNListDiff, obj)
     {
-        READWRITE(baseBlockHash);
-        READWRITE(blockHash);
-        READWRITE(cbTxMerkleTree);
-        READWRITE(cbTx);
-        READWRITE(deletedMNs);
-        READWRITE(mnList);
+        READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx,
+        obj.deletedMNs, obj.mnList);
     }
 
 public:
@@ -130,4 +112,4 @@ public:
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
 
-#endif //DASH_SIMPLIFIEDMNS_H
+#endif //SYSCOIN_EVO_SIMPLIFIEDMNS_H

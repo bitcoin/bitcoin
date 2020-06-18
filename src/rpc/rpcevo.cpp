@@ -189,7 +189,6 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 
     CCoinControl coinControl;
     coinControl.destChange = fundDest;
-    coinControl.fRequireAllInputs = false;
 
     std::vector<COutput> vecOutputs;
     pwallet->AvailableCoins(vecOutputs);
@@ -263,7 +262,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     LOCK(cs_main);
 
     CValidationState state;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state)) {
+    if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state)) {
         throw std::runtime_error(FormatStateMessage(state));
     }
 
@@ -964,8 +963,8 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
-        if (height < 1 || height > chainActive.Height()) {
+        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : ::ChainActive().Height();
+        if (height < 1 || height > ::ChainActive().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
@@ -996,8 +995,8 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
-        if (height < 1 || height > chainActive.Height()) {
+        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : ::ChainActive().Height();
+        if (height < 1 || height > ::ChainActive().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
@@ -1068,7 +1067,7 @@ static uint256 ParseBlock(const UniValue& v, std::string strName)
         return ParseHashV(v, strName);
     } catch (...) {
         int h = ParseInt32V(v, strName);
-        if (h < 1 || h > chainActive.Height())
+        if (h < 1 || h > ::ChainActive().Height())
             throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
         return *chainActive[h]->phashBlock;
     }

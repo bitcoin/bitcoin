@@ -73,16 +73,20 @@ public:
     void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
     std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointMasternode, bool fProposal);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
-        READWRITE(nMemoryVotes);
-        READWRITE(listVotes);
-        if (ser_action.ForRead()) {
-            RebuildIndex();
-        }
+        s << nMemoryVotes;
+        s << listVotes;
+   
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> nMemoryVotes;
+        s >> listVotes;
+        RebuildIndex();
     }
 
 private:

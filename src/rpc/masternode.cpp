@@ -222,13 +222,13 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
-
-    // Find possible candidates
     std::vector<COutput> vPossibleCoins;
-    CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_1000;
-    pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
-
+    {
+        LOCK(pwallet->cs_wallet);
+        // Find possible candidates
+        auto locked_chain = pwallet->chain().lock();
+        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, nullptr, 100000 * COIN, 100000 * COIN, MAX_MONEY, 0, true);
+    }
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {
         obj.push_back(Pair(out.tx->GetHash().ToString(), strprintf("%d", out.i)));
@@ -295,7 +295,7 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     int nHeight;
     {
         LOCK(cs_main);
-        CBlockIndex* pindex = chainActive.Tip();
+        CBlockIndex* pindex = ::ChainActive().Tip();
         if (!pindex) return NullUniValue;
 
         nHeight = pindex->nHeight;
@@ -525,8 +525,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
-    { "dash",               "masternode",             &masternode,             true,  {} },
-    { "dash",               "masternodelist",         &masternodelist,         true,  {} },
+    { "masternode",               "masternode",             &masternode,             true,  {} },
+    { "masternode",               "masternodelist",         &masternodelist,         true,  {} },
 };
 
 void RegisterMasternodeRPCCommands(CRPCTable &t)

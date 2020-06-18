@@ -565,8 +565,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
         if (mi != mapBlockIndex.end() && (*mi).second) {
             CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex)) {
-                nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
+            if (::ChainActive().Contains(pindex)) {
+                nConfirmationsIn += ::ChainActive().Height() - pindex->nHeight + 1;
             }
         }
     }

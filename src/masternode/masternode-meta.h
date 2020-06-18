@@ -37,13 +37,10 @@ public:
     {
     }
 
-    ADD_SERIALIZE_METHODS
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CMasternodeMetaInfo, obj)
     {
         LOCK(cs);
-        READWRITE(proTxHash);
-        READWRITE(mapGovernanceObjectsVotedOn);
+        READWRITE(obj.proTxHash, obj.mapGovernanceObjectsVotedOn);
     }
 
 public:
@@ -67,40 +64,36 @@ private:
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
         LOCK(cs);
-
         std::string strVersion;
-        if(ser_action.ForRead()) {
-            Clear();
-            READWRITE(strVersion);
-            if (strVersion != SERIALIZATION_VERSION_STRING) {
-                return;
-            }
-        }
-        else {
-            strVersion = SERIALIZATION_VERSION_STRING;
-            READWRITE(strVersion);
-        }
-
+        strVersion = SERIALIZATION_VERSION_STRING;
+        s << strVersion;
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
-        if (ser_action.ForRead()) {
-            READWRITE(tmpMetaInfo);
-            metaInfos.clear();
-            for (auto& mm : tmpMetaInfo) {
-                metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
-            }
-        } else {
-            for (auto& p : metaInfos) {
-                tmpMetaInfo.emplace_back(*p.second);
-            }
-            READWRITE(tmpMetaInfo);
+        for (auto& p : metaInfos) {
+            tmpMetaInfo.emplace_back(*p.second);
         }
+        s << tmpMetaInfo;
+    }
 
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        LOCK(cs);
+        std::string strVersion;
+        Clear();
+        s >> strVersion;
+        if (strVersion != SERIALIZATION_VERSION_STRING) {
+            return;
+        }
+        std::vector<CMasternodeMetaInfo> tmpMetaInfo;
+        s >> tmpMetaInfo;
+        metaInfos.clear();
+        for (auto& mm : tmpMetaInfo) {
+            metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
+        }
     }
 
 public:

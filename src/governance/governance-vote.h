@@ -112,21 +112,33 @@ public:
 
     std::string ToString() const;
 
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
-        READWRITE(masternodeOutpoint);
-        READWRITE(nParentHash);
-        READWRITE(nVoteOutcome);
-        READWRITE(nVoteSignal);
-        READWRITE(nTime);
+        s << masternodeOutpoint;
+        s << nParentHash;
+        s << nVoteOutcome;
+        s << nVoteSignal;
+        s << nTime;
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            s << vchSig;
         }
-        if (ser_action.ForRead())
-            UpdateHash();
+   
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> masternodeOutpoint;
+        s >> nParentHash;
+        s >> nVoteOutcome;
+        s >> nVoteSignal;
+        s >> nTime;
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> vchSig;
+        }
+        UpdateHash();
     }
 };
 

@@ -120,6 +120,13 @@ SYSCOIN_CORE_H = \
   governance/governance-validators.h \
   governance/governance-vote.h \
   governance/governance-votedb.h \
+  evo/cbtx.h \
+  evo/deterministicmns.h \
+  evo/evodb.h \
+  evo/mnauth.h \
+  evo/providertx.h \
+  evo/simplifiedmns.h \
+  evo/specialtx.h \
   masternode/activemasternode.h \
   masternode/masternode-payments.h \
   masternode/masternode-sync.h \
@@ -342,6 +349,13 @@ libsyscoin_server_a_SOURCES = \
   governance/governance-validators.cpp \
   governance/governance-vote.cpp \
   governance/governance-votedb.cpp \
+  evo/cbtx.cpp \
+  evo/deterministicmns.cpp \
+  evo/evodb.cpp \
+  evo/mnauth.cpp \
+  evo/providertx.cpp \
+  evo/simplifiedmns.cpp \
+  evo/specialtx.cpp \
   masternode/activemasternode.cpp \
   masternode/masternode-payments.cpp \
   masternode/masternode-sync.cpp \
@@ -350,6 +364,7 @@ libsyscoin_server_a_SOURCES = \
   netfulfilledman.cpp \
   rpc/masternode.cpp \
   rpc/governance.cpp \
+  rpc/rpcevo.cpp \
   spork.cpp \
   addrdb.cpp \
   addrman.cpp \
@@ -442,6 +457,7 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
   rpc/governance.cpp \
+  rpc/rpcevo.cpp \
   rpc/masternode.cpp \
   rpc/auxpow_miner.cpp \
   services/rpc/wallet/assetwalletrpc.cpp \

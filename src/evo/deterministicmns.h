@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_DETERMINISTICMNS_H
-#define DASH_DETERMINISTICMNS_H
+#ifndef SYSCOIN_EVO_DETERMINISTICMNS_H
+#define SYSCOIN_EVO_DETERMINISTICMNS_H
 
-#include "arith_uint256.h"
-#include "dbwrapper.h"
-#include "evodb.h"
-#include "providertx.h"
-#include "simplifiedmns.h"
+#include <arith_uint256.h>
+#include <dbwrapper.h>
+#include <evo/evodb.h>
+#include <evo/providertx.h>
+#include <evo/simplifiedmns.h>
 
-#include "immer/map.hpp"
-#include "immer/map_transient.hpp"
+#include <immer/map.hpp>
+#include <immer/map_transient.hpp>
 
 #include <map>
 
@@ -56,24 +56,11 @@ public:
         s >> *this;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDeterministicMNState, obj)
     {
-        READWRITE(nRegisteredHeight);
-        READWRITE(nLastPaidHeight);
-        READWRITE(nPoSePenalty);
-        READWRITE(nPoSeRevivedHeight);
-        READWRITE(nPoSeBanHeight);
-        READWRITE(nRevocationReason);
-        READWRITE(confirmedHash);
-        READWRITE(keyIDOwner);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(addr);
-        READWRITE(scriptPayout);
-        READWRITE(scriptOperatorPayout);
+         READWRITE(obj.nRegisteredHeight, obj.nLastPaidHeight, obj.nPoSePenalty, obj.nPoSeRevivedHeight, obj.nPoSeBanHeight,
+         obj.nRevocationReason, obj.confirmedHash, obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting,
+         obj.addr, obj.scriptPayout, obj.scriptOperatorPayout);
     }
 
     void ResetOperatorFields()
@@ -152,15 +139,12 @@ public:
 #undef DMN_STATE_DIFF_LINE
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
     {
-        READWRITE(VARINT(fields));
-#define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) READWRITE(state.f);
+        READWRITE(VARINT(obj.fields));
+        #define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) READWRITE(obj.state.f);
         DMN_STATE_DIFF_ALL_FIELDS
-#undef DMN_STATE_DIFF_LINE
+        #undef DMN_STATE_DIFF_LINE
     }
 
     void ApplyToState(CDeterministicMNState& target) const
@@ -188,28 +172,9 @@ public:
     CDeterministicMNStateCPtr pdmnState;
 
 public:
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, bool oldFormat)
+    SERIALIZE_METHODS(CDeterministicMN, obj)
     {
-        READWRITE(proTxHash);
-        if (!oldFormat) {
-            READWRITE(VARINT(internalId));
-        }
-        READWRITE(collateralOutpoint);
-        READWRITE(nOperatorReward);
-        READWRITE(pdmnState);
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s) const
-    {
-        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), false);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s, bool oldFormat = false)
-    {
-        SerializationOp(s, CSerActionUnserialize(), oldFormat);
+        READWRITE(obj.proTxHash, VARINT(obj.internalId), obj.collateralOutpoint, obj.nOperatorReward, obj.pdmnState);
     }
 
 public:
@@ -640,4 +605,4 @@ private:
 
 extern CDeterministicMNManager* deterministicMNManager;
 
-#endif //DASH_DETERMINISTICMNS_H
+#endif //SYSCOIN_EVO_DETERMINISTICMNS_H
