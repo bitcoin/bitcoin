@@ -70,10 +70,10 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
-    std::set<uint256> result;
-
     if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+        auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
+        std::set<uint256> result;
+
         for (auto& dmn : mns) {
             if (dmn->proTxHash == forMember) {
                 continue;
@@ -87,12 +87,18 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
             }
         }
         return result;
+    } else {
+        return GetQuorumRelayMembers(llmqType, pindexQuorum, forMember, onlyOutbound);
     }
+}
 
-    // TODO remove this after activation of SPORK_21_QUORUM_ALL_CONNECTED
+std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(Consensus::LLMQType llmqType, const CBlockIndex *pindexQuorum, const uint256 &forMember, bool onlyOutbound)
+{
+    auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
+    std::set<uint256> result;
 
     auto calcOutbound = [&](size_t i, const uint256 proTxHash) {
-        // Connect to nodes at indexes (i+2^k)%n, where
+        // Relay to nodes at indexes (i+2^k)%n, where
         //   k: 0..max(1, floor(log2(n-1))-1)
         //   n: size of the quorum/ring
         std::set<uint256> r;
