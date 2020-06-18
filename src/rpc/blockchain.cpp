@@ -1004,7 +1004,8 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
     const CoinStatsHashType hash_type = ParseHashType(request.params[0], CoinStatsHashType::HASH_SERIALIZED);
 
     CCoinsView* coins_view = WITH_LOCK(cs_main, return &ChainstateActive().CoinsDB());
-    if (GetUTXOStats(coins_view, stats, hash_type, RpcInterruptionPoint)) {
+    NodeContext& node = EnsureNodeContext(request.context);
+    if (GetUTXOStats(coins_view, stats, hash_type, node.rpc_interruption_point)) {
         ret.pushKV("height", (int64_t)stats.nHeight);
         ret.pushKV("bestblock", stats.hashBlock.GetHex());
         ret.pushKV("transactions", (int64_t)stats.nTransactions);
@@ -1974,8 +1975,10 @@ static UniValue savemempool(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+namespace {
 //! Search for a given set of pubkey scripts
-bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results) {
+bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results, std::function<void()>& interruption_point)
+{
     scan_progress = 0;
     count = 0;
     while (cursor->Valid()) {
@@ -1983,7 +1986,7 @@ bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& 
         Coin coin;
         if (!cursor->GetKey(key) || !cursor->GetValue(coin)) return false;
         if (++count % 8192 == 0) {
-            RpcInterruptionPoint();
+            interruption_point();
             if (should_abort) {
                 // allow to abort the scan via the abort reference
                 return false;
@@ -2002,6 +2005,7 @@ bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& 
     scan_progress = 100;
     return true;
 }
+} // namespace
 
 /** RAII object to prevent concurrency issue when scanning the txout set */
 static std::atomic<int> g_scan_progress;
@@ -2150,7 +2154,8 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             tip = ::ChainActive().Tip();
             CHECK_NONFATAL(tip);
         }
-        bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins);
+        NodeContext& node = EnsureNodeContext(request.context);
+        bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);
         result.pushKV("success", res);
         result.pushKV("txouts", count);
         result.pushKV("height", tip->nHeight);
@@ -2305,6 +2310,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CCoinsStats stats;
     CBlockIndex* tip;
+    NodeContext& node = EnsureNodeContext(request.context);
 
     {
         // We need to lock cs_main to ensure that the coinsdb isn't written to
@@ -2323,7 +2329,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
 
         ::ChainstateActive().ForceFlushStateToDisk();
 
-        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, RpcInterruptionPoint)) {
+        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, node.rpc_interruption_point)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
 
@@ -2341,7 +2347,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     unsigned int iter{0};
 
     while (pcursor->Valid()) {
-        if (iter % 5000 == 0) RpcInterruptionPoint();
+        if (iter % 5000 == 0) node.rpc_interruption_point();
         ++iter;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
             afile << key;
