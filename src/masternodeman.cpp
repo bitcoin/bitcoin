@@ -8,8 +8,8 @@
 #include <clientversion.h>
 #include <init.h>
 #include <governance.h>
-#include <masternodepayments.h>
-#include <masternodesync.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>

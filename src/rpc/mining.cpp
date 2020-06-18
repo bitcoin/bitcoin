@@ -40,9 +40,9 @@
 #include <stdint.h>
 // SYSCOIN
 #include <boost/thread.hpp>
-#include <governanceclasses.h>
-#include <masternodepayments.h>
-#include <masternodesync.h>
+#include <governance/governance-classes.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.

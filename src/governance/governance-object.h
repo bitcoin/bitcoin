@@ -2,18 +2,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_OBJECT_H
-#define GOVERNANCE_OBJECT_H
+#ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H
+#define SYSCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H
 
-#include "cachemultimap.h"
-#include "governance-exceptions.h"
-#include "governance-vote.h"
-#include "governance-votedb.h"
-#include "key.h"
-#include "net.h"
-#include "sync.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <cachemultimap.h>
+#include <governance/governance-exceptions.h>
+#include <governance/governance-vote.h>
+#include <governance/governance-votedb.h>
+#include <key.h>
+#include <net.h>
+#include <util/strencodings.h>
 
 #include <univalue.h>
 
@@ -22,9 +20,9 @@ class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
 
-static const int MIN_GOVERNANCE_PEER_PROTO_VERSION = 70213;
-static const int GOVERNANCE_FILTER_PROTO_VERSION = 70206;
-static const int GOVERNANCE_POSE_BANNED_VOTES_VERSION = 70215;
+static const int MIN_GOVERNANCE_PEER_PROTO_VERSION = MIN_PEER_PROTO_VERSION;
+static const int GOVERNANCE_FILTER_PROTO_VERSION = MIN_PEER_PROTO_VERSION;
+static const int GOVERNANCE_POSE_BANNED_VOTES_VERSION = MIN_PEER_PROTO_VERSION;
 
 static const double GOVERNANCE_FILTER_FP_RATE = 0.001;
 
@@ -32,7 +30,7 @@ static const int GOVERNANCE_OBJECT_UNKNOWN = 0;
 static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
 static const int GOVERNANCE_OBJECT_TRIGGER = 2;
 
-static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (5.0 * COIN);
+static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (150.0 * COIN);
 
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS = 1;

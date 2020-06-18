@@ -33,8 +33,8 @@
 // SYSCOIN
 #include <spork.h>
 #include <governance.h>
-#include <masternodepayments.h>
-#include <masternodesync.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 #include <masternodeman.h>
 #include <typeinfo>
 

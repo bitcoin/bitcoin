@@ -8,7 +8,6 @@
 #include "init.h"
 #include "netbase.h"
 #include "validation.h"
-#include "util.h"
 #include "utilmoneystr.h"
 #include "txmempool.h"
 

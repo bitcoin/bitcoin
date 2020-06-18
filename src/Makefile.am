@@ -111,19 +111,20 @@ SYSCOIN_CORE_H = \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
   services/rpc/wallet/assetwalletrpc.h \
-  activemasternode.h \
   spork.h \
   dsnotificationinterface.h \
-  governance.h \
-  governanceclasses.h \
-  governanceexceptions.h \
-  governanceobject.h \
-  governancevalidators.h \
-  governancevote.h \
-  governancevotedb.h \
-  masternode.h \
-  masternodepayments.h \
-  masternodesync.h \
+  governance/governance.h \
+  governance/governance-classes.h \
+  governance/governance-exceptions.h \
+  governance/governance-object.h \
+  governance/governance-validators.h \
+  governance/governance-vote.h \
+  governance/governance-votedb.h \
+  masternode/masternode.h \
+  masternode/activemasternode.h \
+  masternode/masternode-payments.h \
+  masternode/masternode-sync.h \
+  masternode/masternode-meta.h \
   masternodeman.h \
   masternodeconfig.h \
   messagesigner.h \
@@ -336,18 +337,18 @@ libsyscoin_server_a_SOURCES = \
   services/assetconsensus.cpp \
   services/rpc/assetrpc.cpp \
   core_write.cpp \
-  activemasternode.cpp \
   dsnotificationinterface.cpp \
-  governance.cpp \
-  governanceclasses.cpp \
-  governanceobject.cpp \
-  governancevalidators.cpp \
-  governancevote.cpp \
-  governancevotedb.cpp \
-  masternode.cpp \
-  masternodepayments.cpp \
-  masternodesync.cpp \
-  masternodeconfig.cpp \
+  governance/governance.cpp \
+  governance/governance-classes.cpp \
+  governance/governance-object.cpp \
+  governance/governance-validators.cpp \
+  governance/governance-vote.cpp \
+  governance/governance-votedb.cpp \
+  masternode/masternode.cpp \
+  masternode/activemasternode.cpp \
+  masternode/masternode-payments.cpp \
+  masternode/masternode-sync.cpp \
+  masternode/masternode-meta.cpp \
   masternodeman.cpp \
   messagesigner.cpp \
   netfulfilledman.cpp \

@@ -63,7 +63,7 @@
 #include <QVBoxLayout>
 #include <QWindow>
 // SYSCOIN
-#include <masternodesync.h>
+#include <masternode/masternode-sync.h>
 #include <qt/masternodelist.h>
 
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =

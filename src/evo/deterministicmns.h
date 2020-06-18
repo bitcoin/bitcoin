@@ -10,7 +10,6 @@
 #include "evodb.h"
 #include "providertx.h"
 #include "simplifiedmns.h"
-#include "sync.h"
 
 #include "immer/map.hpp"
 #include "immer/map_transient.hpp"
