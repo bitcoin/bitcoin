@@ -767,7 +767,7 @@ bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
 bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
 {
     if (!pdb)
-        return true;
+        return false;
     if (fReadOnly)
         assert(!"Write called on database in read-only mode");
 
