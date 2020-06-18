@@ -3545,7 +3545,7 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman)
     return false;
 }
 
-bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc, bool &fRetDidWork)
+bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
     const CChainParams& chainparams = Params();
     //
@@ -3557,17 +3557,13 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     //  (x) data
     //
     bool fMoreWork = false;
-    fRetDidWork = false;
 
-    if (!pfrom->vRecvGetData.empty()) {
+    if (!pfrom->vRecvGetData.empty())
         ProcessGetData(pfrom, chainparams, connman, interruptMsgProc);
-        fRetDidWork = true;
-    }
 
     if (!pfrom->orphan_work_set.empty()) {
         LOCK2(cs_main, g_cs_orphans);
         ProcessOrphanTx(connman, pfrom->orphan_work_set);
-        fRetDidWork = true;
     }
 
     if (pfrom->fDisconnect)
@@ -3591,7 +3587,6 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
         pfrom->nProcessQueueSize -= msgs.front().vRecv.size() + CMessageHeader::HEADER_SIZE;
         pfrom->fPauseRecv = pfrom->nProcessQueueSize > connman->GetReceiveFloodSize();
         fMoreWork = !pfrom->vProcessMsg.empty();
-        fRetDidWork = true;
     }
     CNetMessage& msg(msgs.front());
 
