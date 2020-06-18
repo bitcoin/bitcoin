@@ -25,6 +25,15 @@ bool CZMQAbstractNotifier::NotifyTransactionMempool(const CTransaction &/*transa
     return true;
 }
 // SYSCOIN
+bool CZMQAbstractNotifier::NotifyGovernanceVote(const CGovernanceVote& /*vote*/)
+{
+    return true;
+}
+
+bool CZMQAbstractNotifier::NotifyGovernanceObject(const CGovernanceObject& /*object*/)
+{
+    return true;
+}
 bool CZMQAbstractNotifier::NotifySyscoinUpdate(const char *, const char *)
 {
     return true;

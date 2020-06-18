@@ -104,7 +104,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     // SYSCOIN
     std::unique_ptr<interfaces::Handler>  m_handler_additional_data_sync_progress_changed;
-    QString cachedMasternodeCountString;
+    std::unique_ptr<interfaces::Handler>  m_handler_masternodelist_changed;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
