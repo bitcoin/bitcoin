@@ -31,6 +31,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     // VBK
     { "getbtcblockhash", 0, "height"},
     { "getvbkblockhash", 0, "height"},
+    { "getrawatv", 1, "verbose"},
+    { "getrawvtb", 1, "verbose"},
+    { "getrawvbkblock", 1, "verbose"},
     // VBK
     { "setmocktime", 0, "timestamp" },
     { "utxoupdatepsbt", 1, "descriptors" },
