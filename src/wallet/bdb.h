@@ -172,7 +172,7 @@ private:
 };
 
 /** RAII class that provides access to a Berkeley database */
-class BerkeleyBatch
+class BerkeleyBatch : public DatabaseBatch
 {
     /** RAII class that automatically cleanses its data on destruction */
     class SafeDbt final
@@ -195,10 +195,10 @@ class BerkeleyBatch
     };
 
 private:
-    bool ReadKey(CDataStream&& key, CDataStream& value);
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true);
-    bool EraseKey(CDataStream&& key);
-    bool HasKey(CDataStream&& key);
+    bool ReadKey(CDataStream&& key, CDataStream& value) override;
+    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true) override;
+    bool EraseKey(CDataStream&& key) override;
+    bool HasKey(CDataStream&& key) override;
 
 protected:
     Db* pdb;
@@ -211,71 +211,20 @@ protected:
 
 public:
     explicit BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
-    ~BerkeleyBatch() { Close(); }
+    ~BerkeleyBatch() override { Close(); }
 
     BerkeleyBatch(const BerkeleyBatch&) = delete;
     BerkeleyBatch& operator=(const BerkeleyBatch&) = delete;
 
-    void Flush();
-    void Close();
+    void Flush() override;
+    void Close() override;
 
-    template <typename K, typename T>
-    bool Read(const K& key, T& value)
-    {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(1000);
-        ssKey << key;
-
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        if (!ReadKey(std::move(ssKey), ssValue)) return false;
-        try {
-            ssValue >> value;
-            return true;
-        } catch (const std::exception&) {
-            return false;
-        }
-    }
-
-    template <typename K, typename T>
-    bool Write(const K& key, const T& value, bool fOverwrite = true)
-    {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(1000);
-        ssKey << key;
-
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        ssValue.reserve(10000);
-        ssValue << value;
-
-        return WriteKey(std::move(ssKey), std::move(ssValue), fOverwrite);
-    }
-
-    template <typename K>
-    bool Erase(const K& key)
-    {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(1000);
-        ssKey << key;
-
-        return EraseKey(std::move(ssKey));
-    }
-
-    template <typename K>
-    bool Exists(const K& key)
-    {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(1000);
-        ssKey << key;
-
-        return HasKey(std::move(ssKey));
-    }
-
-    bool StartCursor();
-    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete);
-    void CloseCursor();
-    bool TxnBegin();
-    bool TxnCommit();
-    bool TxnAbort();
+    bool StartCursor() override;
+    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override;
+    void CloseCursor() override;
+    bool TxnBegin() override;
+    bool TxnCommit() override;
+    bool TxnAbort() override;
 };
 
 std::string BerkeleyDatabaseVersion();
