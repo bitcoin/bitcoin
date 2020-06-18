@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <hash.h>
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
+#include <hash.h>
+#include <span.h>
 
 
 inline uint32_t ROTL32(uint32_t x, int8_t r)
@@ -12,7 +13,7 @@ inline uint32_t ROTL32(uint32_t x, int8_t r)
     return (x << r) | (x >> (32 - r));
 }
 
-unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char>& vDataToHash)
+unsigned int MurmurHash3(unsigned int nHashSeed, const Span<const unsigned char>& vDataToHash)
 {
     // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
     uint32_t h1 = nHashSeed;

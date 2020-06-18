@@ -52,7 +52,7 @@ static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
     return false;
 }
 
-bool CompressScript(const CScript& script, std::vector<unsigned char> &out)
+bool CompressScript(const CScript& script, CompressedScript& out)
 {
     CKeyID keyID;
     if (IsToKeyID(script, keyID)) {
@@ -92,7 +92,7 @@ unsigned int GetSpecialScriptSize(unsigned int nSize)
     return 0;
 }
 
-bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &in)
+bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in)
 {
     switch(nSize) {
     case 0x00:

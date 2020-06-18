@@ -49,7 +49,7 @@ private:
     unsigned int nTweak;
     unsigned char nFlags;
 
-    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
+    unsigned int Hash(unsigned int nHashNum, const Span<const unsigned char>& vDataToHash) const;
 
 public:
     /**
@@ -66,11 +66,11 @@ public:
 
     SERIALIZE_METHODS(CBloomFilter, obj) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
 
-    void insert(const std::vector<unsigned char>& vKey);
+    void insert(const Span<const unsigned char>& vKey);
     void insert(const COutPoint& outpoint);
     void insert(const uint256& hash);
 
-    bool contains(const std::vector<unsigned char>& vKey) const;
+    bool contains(const Span<const unsigned char>& vKey) const;
     bool contains(const COutPoint& outpoint) const;
     bool contains(const uint256& hash) const;
 
@@ -101,9 +101,9 @@ class CRollingBloomFilter
 public:
     CRollingBloomFilter(const unsigned int nElements, const double nFPRate);
 
-    void insert(const std::vector<unsigned char>& vKey);
+    void insert(const Span<const unsigned char>& vKey);
     void insert(const uint256& hash);
-    bool contains(const std::vector<unsigned char>& vKey) const;
+    bool contains(const Span<const unsigned char>& vKey) const;
     bool contains(const uint256& hash) const;
 
     void reset();
