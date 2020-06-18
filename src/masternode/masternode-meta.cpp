@@ -2,7 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "masternode-meta.h"
+#include <masternode/masternode-meta.h>
 
 CMasternodeMetaMan mmetaman;
 
@@ -38,24 +38,6 @@ CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash,
     return it->second;
 }
 
-void CMasternodeMetaMan::AllowMixing(const uint256& proTxHash)
-{
-    LOCK(cs);
-    auto mm = GetMetaInfo(proTxHash);
-    nDsqCount++;
-    LOCK(mm->cs);
-    mm->nLastDsq = nDsqCount;
-    mm->nMixingTxCount = 0;
-}
-
-void CMasternodeMetaMan::DisallowMixing(const uint256& proTxHash)
-{
-    LOCK(cs);
-    auto mm = GetMetaInfo(proTxHash);
-
-    LOCK(mm->cs);
-    mm->nMixingTxCount++;
-}
 
 bool CMasternodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash)
 {
@@ -97,7 +79,6 @@ std::string CMasternodeMetaMan::ToString() const
 {
     std::ostringstream info;
 
-    info << "Masternodes: meta infos object count: " << (int)metaInfos.size() <<
-         ", nDsqCount: " << (int)nDsqCount;
+    info << "Masternodes: meta infos object count: " << (int)metaInfos.size();
     return info.str();
 }

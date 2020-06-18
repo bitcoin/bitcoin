@@ -112,7 +112,6 @@ void masternode_count_help()
             "1. \"mode\"      (string, optional, DEPRICATED) Option to get number of masternodes in different states\n"
             "\nAvailable modes:\n"
             "  total         - total number of masternodes"
-            "  ps            - number of PrivateSend compatible masternodes"
             "  enabled       - number of enabled masternodes"
             "  qualify       - number of qualified masternodes"
             "  all           - all above in one string"

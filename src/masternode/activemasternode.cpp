@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activemasternode.h"
-#include "evo/deterministicmns.h"
-#include "init.h"
-#include "masternode/masternode-sync.h"
-#include "netbase.h"
-#include "protocol.h"
-#include "validation.h"
-#include "warnings.h"
+#include <masternode/activemasternode.h>
+#include <evo/deterministicmns.h>
+#include <init.h>
+#include <masternode/masternode-sync.h>
+#include <netbase.h>
+#include <protocol.h>
+#include <validation.h>
+#include <warnings.h>
 
 // Keep track of the active Masternode
 CActiveMasternodeInfo activeMasternodeInfo;
