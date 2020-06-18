@@ -97,6 +97,7 @@
 #include <key_io.h>
 #include <util/executable_path/include/boost/executable_path.hpp>
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
+#include <flat-database.h>
 std::string exePath = "";
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
