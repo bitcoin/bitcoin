@@ -124,6 +124,7 @@ SYSCOIN_CORE_H = \
   masternode/masternode-payments.h \
   masternode/masternode-sync.h \
   masternode/masternode-meta.h \
+  flat-database.h \
   messagesigner.h \
   netfulfilledman.h \
   flatdatabase.h \

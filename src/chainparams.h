@@ -90,7 +90,8 @@ public:
     // SYSCOIN
     void SetSYSXAssetForUnitTests(uint32_t asset);
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
-    const std::string& SporkAddress() const { return strSporkAddress; }
+    const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
+    int MinSporkKeys() const { return nMinSporkKeys; }
 protected:
     CChainParams() {}
 
@@ -114,7 +115,8 @@ protected:
     ChainTxData chainTxData;
     // SYSCOIN
     int nFulfilledRequestExpireTime;
-    std::string strSporkAddress;   
+    std::vector<std::string> vSporkAddresses;
+    int nMinSporkKeys;
 };
 
 /**

@@ -84,6 +84,7 @@ UniValue mnsync(const JSONRPCRequest& request)
     }
     return "failure";
 }
+
 /*
     Used for updating/reading spork settings on the network
 */
@@ -94,16 +95,14 @@ UniValue spork(const JSONRPCRequest& request)
         std:: string strCommand = request.params[0].get_str();
         if (strCommand == "show") {
             UniValue ret(UniValue::VOBJ);
-            for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
-                if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
-                    ret.pushKV(sporkManager.GetSporkNameByID(nSporkID), sporkManager.GetSporkValue(nSporkID));
+            for (const auto& sporkDef : sporkDefs) {
+                ret.push_back(Pair(sporkDef.name, sporkManager.GetSporkValue(sporkDef.sporkId)));
             }
             return ret;
         } else if(strCommand == "active"){
             UniValue ret(UniValue::VOBJ);
-            for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
-                if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
-                    ret.pushKV(sporkManager.GetSporkNameByID(nSporkID), sporkManager.IsSporkActive(nSporkID));
+            for (const auto& sporkDef : sporkDefs) {
+                ret.push_back(Pair(sporkDef.name, sporkManager.IsSporkActive(sporkDef.sporkId)));
             }
             return ret;
         }
@@ -141,8 +140,7 @@ UniValue spork(const JSONRPCRequest& request)
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)){
-            sporkManager.ExecuteSpork(nSporkID, nValue);
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
             return "success";
         } else {
             throw std::runtime_error(
