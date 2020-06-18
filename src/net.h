@@ -973,17 +973,19 @@ public:
         }
     }
 
-    void PushInventory(const CInv& inv)
+    void PushTxInventory(const uint256& hash)
     {
-        if (inv.type == MSG_TX && m_tx_relay != nullptr) {
-            LOCK(m_tx_relay->cs_tx_inventory);
-            if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
-                m_tx_relay->setInventoryTxToSend.insert(inv.hash);
-            }
-        } else if (inv.type == MSG_BLOCK) {
-            LOCK(cs_inventory);
-            vInventoryBlockToSend.push_back(inv.hash);
+        if (m_tx_relay == nullptr) return;
+        LOCK(m_tx_relay->cs_tx_inventory);
+        if (!m_tx_relay->filterInventoryKnown.contains(hash)) {
+            m_tx_relay->setInventoryTxToSend.insert(hash);
         }
+    }
+
+    void PushBlockInventory(const uint256& hash)
+    {
+        LOCK(cs_inventory);
+        vInventoryBlockToSend.push_back(hash);
     }
 
     void PushBlockHash(const uint256 &hash)
