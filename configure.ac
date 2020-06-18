@@ -807,6 +807,10 @@ if test x$use_hardening != xno; then
   case $host in
     *mingw*)
        AC_CHECK_LIB([ssp],      [main],, AC_MSG_ERROR(libssp missing))
+
+       dnl stack-clash-protection does not work on Windows
+       dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458
+       AX_CHECK_COMPILE_FLAG([-fno-stack-clash-protection],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fno-stack-clash-protection"])
     ;;
   esac
 fi
