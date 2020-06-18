@@ -1,11 +1,11 @@
 // Copyright (c) 2014-2019 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef MASTERNODE_SYNC_H
-#define MASTERNODE_SYNC_H
+#ifndef SYSCOIN_MASTERNODE_MASTERNODE_SYNC_H
+#define SYSCOIN_MASTERNODE_MASTERNODE_SYNC_H
 
-#include "chain.h"
-#include "net.h"
+#include <chain.h>
+#include <net.h>
 
 class CMasternodeSync;
 
