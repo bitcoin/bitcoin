@@ -283,7 +283,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
         member->contributions.emplace(hash);
 
         CInv inv(MSG_QUORUM_CONTRIB, hash);
-        RelayInvToParticipants(inv);
+        RelayOtherInvToParticipants(inv);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
             status.receivedContribution = true;
@@ -589,7 +589,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, b
         member->complaints.emplace(hash);
 
         CInv inv(MSG_QUORUM_COMPLAINT, hash);
-        RelayInvToParticipants(inv);
+        RelayOtherInvToParticipants(inv);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
             status.receivedComplaint = true;
@@ -803,7 +803,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
 
         // we always relay, even if further verification fails
         CInv inv(MSG_QUORUM_JUSTIFICATION, hash);
-        RelayInvToParticipants(inv);
+        RelayOtherInvToParticipants(inv);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
             status.receivedJustification = true;
@@ -1170,7 +1170,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitm
     validCommitments.emplace(hash);
 
     CInv inv(MSG_QUORUM_PREMATURE_COMMITMENT, hash);
-    RelayInvToParticipants(inv);
+    RelayOtherInvToParticipants(inv);
 
     quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
         status.receivedPrematureCommitment = true;
@@ -1308,7 +1308,7 @@ void CDKGSession::MarkBadMember(size_t idx)
     member->bad = true;
 }
 
-void CDKGSession::RelayInvToParticipants(const CInv& inv) const
+void CDKGSession::RelayOtherInvToParticipants(const CInv& inv) const
 {
     LOCK(invCs);
     connman.ForEachNode([&](CNode* pnode) {
@@ -1319,7 +1319,7 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
             relay = true;
         }
         if (relay) {
-            pnode->PushInventory(inv);
+            pnode->PushOtherInventory(inv);
         }
     });
 }

@@ -650,7 +650,7 @@ void CGovernanceObject::Relay(CConnman& connman)
     }
 
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    connman.RelayInv(inv);
+    connman.RelayOtherInv(inv);
 }
 
 void CGovernanceObject::UpdateSentinelVariables()
