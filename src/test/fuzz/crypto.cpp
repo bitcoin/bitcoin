@@ -44,8 +44,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                 }
             }
 
-            (void)hash160.Write(data.data(), data.size());
-            (void)hash256.Write(data.data(), data.size());
+            (void)hash160.Write(data);
+            (void)hash256.Write(data);
             (void)hmac_sha256.Write(data.data(), data.size());
             (void)hmac_sha512.Write(data.data(), data.size());
             (void)ripemd160.Write(data.data(), data.size());

@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s << OP_0 << ToByteVector(pubkey.GetID());
     BOOST_CHECK(ExtractDestination(s, address));
     WitnessV0KeyHash keyhash;
-    CHash160().Write(pubkey.begin(), pubkey.size()).Finalize(keyhash.begin());
+    CHash160().Write(pubkey).Finalize(keyhash.begin());
     BOOST_CHECK(boost::get<WitnessV0KeyHash>(&address) && *boost::get<WitnessV0KeyHash>(&address) == keyhash);
 
     // TxoutType::WITNESS_V0_SCRIPTHASH

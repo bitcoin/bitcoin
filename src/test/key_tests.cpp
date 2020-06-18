@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(key_key_negation)
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
-    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
+    CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash.begin());
 
     // import the static test key
     CKey key = DecodeSecret(strSecret1C);

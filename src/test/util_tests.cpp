@@ -1009,7 +1009,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         desc += "\n";
 
-        out_sha.Write((const unsigned char*)desc.data(), desc.size());
+        out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {
             BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
         }
@@ -1112,7 +1112,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
         }
         desc += "\n";
 
-        out_sha.Write((const unsigned char*)desc.data(), desc.size());
+        out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {
             BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
         }
