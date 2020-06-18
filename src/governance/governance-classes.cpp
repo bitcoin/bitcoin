@@ -348,7 +348,7 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
             CTxDestination address1;
             ExtractDestination(payment.script, address1);
 
-            // TODO: PRINT NICE N.N DASH OUTPUT
+            // TODO: PRINT NICE N.N SYSCOIN OUTPUT
 
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
                         i, EncodeDestination(address1), payment.nAmount);
@@ -897,7 +897,7 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
         const CTxDestination &address = DecodeDestination(vecParsed1[i]);
         if (!IsValidDestination(address)) {
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Dash Address : " << vecParsed1[i];
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Syscoin Address : " << vecParsed1[i];
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }

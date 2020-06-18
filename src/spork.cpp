@@ -111,7 +111,7 @@ void CSporkManager::CheckAndRemove()
 
 void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if(fLiteMode) return; // disable all Dash specific functionality
+    if(fLiteMode) return; // disable all Syscoin MN specific functionality
 
     if (strCommand == NetMsgType::SPORK) {
 
