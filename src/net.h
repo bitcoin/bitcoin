@@ -441,7 +441,7 @@ public:
             return true;
         });
     }
-    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+    void RelayOtherInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
@@ -1123,21 +1123,26 @@ public:
         }
     }
 
-    void PushInventory(const CInv& inv)
+    void PushTxInventory(const uint256& hash)
     {
-        if (inv.type == MSG_TX && m_tx_relay != nullptr) {
-            LOCK(m_tx_relay->cs_tx_inventory);
-            if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
-                m_tx_relay->setInventoryTxToSend.insert(inv.hash);
-            }
-        } else if (inv.type == MSG_BLOCK) {
-            LOCK(cs_inventory);
-            vInventoryBlockToSend.push_back(inv.hash);
-        } else {
-            // SYSCOIN
-            LogPrint(BCLog::NET, "PushOtherInventory --  inv: %s peer=%d\n", inv.ToString(), id);
-            vInventoryOtherToSend.push_back(inv);
-        } 
+        if (m_tx_relay == nullptr) return;
+        LOCK(m_tx_relay->cs_tx_inventory);
+        if (!m_tx_relay->filterInventoryKnown.contains(hash)) {
+            m_tx_relay->setInventoryTxToSend.insert(hash);
+        }
+    }
+
+    void PushOtherInventory(const CInv& inv)
+    {
+        // SYSCOIN
+        vInventoryOtherToSend.push_back(inv);
+    }
+ 
+
+    void PushBlockInventory(const uint256& hash)
+    {
+        LOCK(cs_inventory);
+        vInventoryBlockToSend.push_back(hash);
     }
 
     void PushBlockHash(const uint256 &hash)

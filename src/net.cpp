@@ -2976,11 +2976,11 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 // SYSCOIN
-void CConnman::RelayInv(CInv &inv, const int minProtoVersion) {
+void CConnman::RelayOtherInv(CInv &inv, const int minProtoVersion) {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes)
         if(pnode->nVersion >= minProtoVersion)
-            pnode->PushInventory(inv);
+            pnode->PushOtherInventory(inv);
 }
 
 void CConnman::RecordBytesRecv(uint64_t bytes)

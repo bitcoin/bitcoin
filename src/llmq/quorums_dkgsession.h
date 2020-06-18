@@ -307,7 +307,7 @@ public:
     bool AreWeMember() const { return !myProTxHash.IsNull(); }
     void MarkBadMember(size_t idx);
 
-    void RelayInvToParticipants(const CInv& inv) const;
+    void RelayOtherInvToParticipants(const CInv& inv) const;
 
 public:
     CDKGMember* GetMember(const uint256& proTxHash) const;

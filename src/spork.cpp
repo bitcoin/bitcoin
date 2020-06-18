@@ -444,5 +444,5 @@ bool CSporkMessage::GetSignerKeyID(CKeyID &retKeyidSporkSigner, bool fSporkSixAc
 void CSporkMessage::Relay(CConnman& connman)
 {
     CInv inv(MSG_SPORK, GetHash());
-    connman.RelayInv(inv);
+    connman.RelayOtherInv(inv);
 }

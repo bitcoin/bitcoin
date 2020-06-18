@@ -723,7 +723,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
     
     connman.ForEachNode([&](CNode* pnode) {
         if (pnode->fSendRecSigs) {
-            pnode->PushInventory(inv);
+            pnode->PushOtherInventory(inv);
         }
     });
 

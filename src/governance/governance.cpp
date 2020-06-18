@@ -619,7 +619,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
         if (filter.contains(nVoteHash) || !vote.IsValid(onlyVotingKeyAllowed)) {
             continue;
         }
-        pnode->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash));
+        pnode->PushOtherInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash));
         ++nVoteCount;
     }
 
@@ -666,7 +666,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
 
         // Push the inventory budget proposal message over to the other client
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing govobj: %s, peer=%d\n", __func__, strHash, pnode->GetId());
-        pnode->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, nHash));
+        pnode->PushOtherInventory(CInv(MSG_GOVERNANCE_OBJECT, nHash));
         ++nObjCount;
     }
 
