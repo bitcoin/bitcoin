@@ -55,7 +55,6 @@
 #include <bech32.h>
 #include <key_io.h>
 #include <outputtype.h>
-#include <masternodeman.h>
 #include <masternode/masternode-payments.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>

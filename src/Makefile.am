@@ -120,13 +120,10 @@ SYSCOIN_CORE_H = \
   governance/governance-validators.h \
   governance/governance-vote.h \
   governance/governance-votedb.h \
-  masternode/masternode.h \
   masternode/activemasternode.h \
   masternode/masternode-payments.h \
   masternode/masternode-sync.h \
   masternode/masternode-meta.h \
-  masternodeman.h \
-  masternodeconfig.h \
   messagesigner.h \
   netfulfilledman.h \
   flatdatabase.h \
@@ -344,12 +341,10 @@ libsyscoin_server_a_SOURCES = \
   governance/governance-validators.cpp \
   governance/governance-vote.cpp \
   governance/governance-votedb.cpp \
-  masternode/masternode.cpp \
   masternode/activemasternode.cpp \
   masternode/masternode-payments.cpp \
   masternode/masternode-sync.cpp \
   masternode/masternode-meta.cpp \
-  masternodeman.cpp \
   messagesigner.cpp \
   netfulfilledman.cpp \
   rpc/masternode.cpp \

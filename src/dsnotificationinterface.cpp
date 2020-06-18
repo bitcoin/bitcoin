@@ -6,7 +6,6 @@
 #include <chainparams.h>
 #include <dsnotificationinterface.h>
 #include <governance.h>
-#include <masternodeman.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
 

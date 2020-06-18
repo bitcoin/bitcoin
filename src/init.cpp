@@ -84,10 +84,9 @@
 // SYSCOIN
 #include <masternode/activemasternode.h>
 #include <dsnotificationinterface.h>
-#include <governance.h>
+#include <governance/governance.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
-#include <masternodeman.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>

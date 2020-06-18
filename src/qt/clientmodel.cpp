@@ -23,7 +23,6 @@
 #include <QThread>
 #include <QTimer>
 // SYSCOIN
-#include <masternodeman.h>
 #include <masternode/masternode-sync.h>
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
