@@ -49,9 +49,9 @@ class DIP3Test(SyscoinTestFramework):
 
     def run_test(self):
         self.log.info("funding controller node")
-        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
+        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 100000:
             self.nodes[0].generate(1) # generate enough for collaterals
-        self.log.info("controller node has {} dash".format(self.nodes[0].getbalance()))
+        self.log.info("controller node has {} syscoin".format(self.nodes[0].getbalance()))
 
         # Make sure we're below block 135 (which activates dip3)
         self.log.info("testing rejection of ProTx before dip3 activation")
