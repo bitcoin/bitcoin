@@ -82,7 +82,7 @@
 #include <zmq/zmqrpc.h>
 #endif
 // SYSCOIN
-#include <activemasternode.h>
+#include <masternode/activemasternode.h>
 #include <dsnotificationinterface.h>
 #include <governance.h>
 #include <masternode/masternode-payments.h>
