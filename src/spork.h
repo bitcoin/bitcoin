@@ -89,7 +89,6 @@ public:
         nTimeSigned(0)
         {}
 
-    template<typename Stream>
     SERIALIZE_METHODS(CSporkMessage, obj)
     {
          READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);
