@@ -50,7 +50,7 @@ public:
     /** Handle removal of a peer by updating various state and removing it from mapNodeState */
     void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) override;
     /** Process protocol messages received from a given node */
-    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt, bool &fRetDidWork) override;
+    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
     /**
     * Send queued protocol messages to be sent to a give node.
     *
