@@ -3861,7 +3861,7 @@ void ProcessMessage(
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
             Misbehaving(pfrom.GetId(), 1, strError);
         }
-        return true;
+        return;
     }
 
 
@@ -3869,7 +3869,7 @@ void ProcessMessage(
         // we have never requested this
         LOCK(cs_main);
         Misbehaving(pfrom.GetId(), 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom.GetId()));
-        return true;
+        return;
     }
     if (msg_type == NetMsgType::NOTFOUND) {
         // Remove the NOTFOUND transactions from the peer
@@ -3916,7 +3916,7 @@ void ProcessMessage(
         llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
         llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
         llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
-        return true;
+        return;
     }
         
     // Ignore unknown commands for extensibility
