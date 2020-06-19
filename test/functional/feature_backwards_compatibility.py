@@ -36,13 +36,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.num_nodes = 7
         # Add new version after each release:
         self.extra_args = [
-            [], # Pre-release: use to mine blocks
-            ["-nowallet"], # Pre-release: use to receive coins, swap wallets, etc
-            ["-nowallet"], # v20.0.1 - last legacy-only version, no descriptor wallets
-            ["-nowallet"], # v19.3.0
-            ["-nowallet"], # v18.2.2
-            ["-nowallet"], # v0.17.0.3
-            ["-nowallet"], # v0.16.1.1
+            ["-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks
+            ["-nowallet", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-whitelist=noban@127.0.0.1"], # v20.0.1 - last legacy-only version, no descriptor wallets
+            ["-nowallet", "-whitelist=noban@127.0.0.1"], # v19.3.0
+            ["-nowallet", "-whitelist=noban@127.0.0.1"], # v18.2.2
+            ["-nowallet", "-whitelist=127.0.0.1"], # v0.17.0.3
+            ["-nowallet", "-whitelist=127.0.0.1"], # v0.16.1.1
         ]
         self.wallet_names = [self.default_wallet_name]
 
