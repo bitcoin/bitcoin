@@ -63,6 +63,17 @@ struct Peer {
     /** Whether this peer should be disconnected and marked as discouraged (unless it has the noban permission). */
     bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
 
+    /** Protects block inventory data members */
+    Mutex m_block_inv_mutex;
+    /** List of blocks that we'll anounce via an `inv` message.
+     * There is no final sorting before sending, as they are always sent
+     * immediately and in the order requested. */
+    std::vector<uint256> vInventoryBlockToSend GUARDED_BY(m_block_inv_mutex);
+    /** Unfiltered list of blocks that we'd like to announce via a `headers`
+     * message. If we can't announce via a `headers` message, we'll fall back to
+     * announcing via `inv`. */
+    std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(m_block_inv_mutex);
+
     /** This peer's reported block height when we connected */
     std::atomic<int> m_starting_height{-1};
 
