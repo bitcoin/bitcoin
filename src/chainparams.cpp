@@ -186,7 +186,8 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
-        strSporkAddress = "SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN";    
+        vSporkAddresses = {"SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN"};
+        nMinSporkKeys = 1;   
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         m_is_test_chain = false;
         m_is_mockable_chain = false;
@@ -315,7 +316,9 @@ public:
         m_is_test_chain = true;
 
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
-        strSporkAddress = "TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX";
+        vSporkAddresses = {"TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX"};
+        nMinSporkKeys = 1;   
+
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
 
@@ -418,7 +421,8 @@ public:
         m_is_test_chain = true;
         m_is_mockable_chain = true;
         // privKey: cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW
-        strSporkAddress = "mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z";
+        vSporkAddresses = {"mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z"};
+        nMinSporkKeys = 1; 
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
        /* 
         

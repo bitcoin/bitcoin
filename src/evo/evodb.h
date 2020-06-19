@@ -105,6 +105,6 @@ private:
     void RollbackCurTransaction();
 };
 
-extern CEvoDB* evoDb;
+extern std::unique_ptr<CEvoDB> evoDb;
 
 #endif //SYSCOIN_EVO_EVODB_H
