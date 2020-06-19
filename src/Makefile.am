@@ -287,6 +287,7 @@ SYSCOIN_CORE_H = \
   util/threadnames.h \
   util/time.h \
   util/translation.h \
+  util/ui_change_type.h \
   util/url.h \
   util/executable_path/include/boost/executable_path.hpp \
   util/executable_path/include/boost/detail/executable_path_internals.hpp \

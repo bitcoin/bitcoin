@@ -9,8 +9,8 @@
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
-#include <ui_interface.h>              // For ChangeType
 #include <util/message.h>
+#include <util/ui_change_type.h>
 
 #include <functional>
 #include <map>
