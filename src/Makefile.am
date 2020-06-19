@@ -264,7 +264,7 @@ SYSCOIN_CORE_H = \
   torcontrol.h \
   txdb.h \
   txmempool.h \
-  ui_interface.h \
+  node/ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
   util/asmap.h \
@@ -447,7 +447,7 @@ libsyscoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
-  ui_interface.cpp \
+  node/ui_interface.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
