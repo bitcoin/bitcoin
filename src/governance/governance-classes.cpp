@@ -861,7 +861,6 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
 
     return nPaymentsLimit;
 }
-
 void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts)
 {
     // SPLIT UP ADDR/AMOUNT STRINGS AND PUT IN VECTORS
@@ -894,18 +893,19 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
     */
 
     for (int i = 0; i < (int)vecParsed1.size(); i++) {
-        const CTxDestination &address = DecodeDestination(vecParsed1[i]);
-        if (!IsValidDestination(address)) {
+        CTxDestination dest = DecodeDestination(vecParsed1[i]);
+        if (!IsValidDestination(dest)) {
             std::ostringstream ostr;
             ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Syscoin Address : " << vecParsed1[i];
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
+
         CAmount nAmount = ParsePaymentAmount(vecParsed2[i]);
 
         LogPrint(BCLog::GOBJECT, "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld\n", i, vecParsed2[i], nAmount);
 
-        CGovernancePayment payment(address, nAmount);
+        CGovernancePayment payment(dest, nAmount);
         if (payment.IsValid()) {
             vecPayments.push_back(payment);
         } else {
@@ -1023,6 +1023,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
 
             CTxDestination dest;
             ExtractDestination(payment.script, dest);
+            LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid: %d payment %d to %s not found\n", i, payment.nAmount, EncodeDestination(dest));
 
             return false;
         }
@@ -1086,7 +1087,8 @@ std::string CSuperblockManager::GetRequiredPaymentsString(int nBlockHeight)
         if (pSuperblock->GetPayment(i, payment)) {
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
-            ExtractDestination(payment.script, address1);
+            CTxDestination dest;
+            ExtractDestination(payment.script, dest);
 
             // RETURN NICE OUTPUT FOR CONSOLE
 
