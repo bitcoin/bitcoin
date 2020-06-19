@@ -4,9 +4,25 @@
 
 #include <masternode/masternode-meta.h>
 
+#include <timedata.h>
+
 CMasternodeMetaMan mmetaman;
 
-const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-1";
+const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-2";
+
+UniValue CMasternodeMetaInfo::ToJson() const
+{
+    UniValue ret(UniValue::VOBJ);
+
+    auto now = GetAdjustedTime();
+
+    ret.pushKV("lastOutboundAttempt", lastOutboundAttempt);
+    ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt);
+    ret.pushKV("lastOutboundSuccess", lastOutboundSuccess);
+    ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess);
+
+    return ret;
+}
 
 void CMasternodeMetaInfo::AddGovernanceVote(const uint256& nGovernanceObjectHash)
 {
@@ -37,7 +53,6 @@ CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash,
     it = metaInfos.emplace(proTxHash, std::make_shared<CMasternodeMetaInfo>(proTxHash)).first;
     return it->second;
 }
-
 
 bool CMasternodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash)
 {
