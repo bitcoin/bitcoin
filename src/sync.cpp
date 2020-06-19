@@ -13,7 +13,10 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
+#include <boost/thread/mutex.hpp>
+
 #include <map>
+#include <mutex>
 #include <set>
 #include <system_error>
 #include <thread>
@@ -135,7 +138,8 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
-static void push_lock(void* c, const CLockLocation& locklocation)
+template <typename MutexType>
+static void push_lock(MutexType* c, const CLockLocation& locklocation)
 {
     LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
@@ -175,10 +179,16 @@ static void pop_lock()
     }
 }
 
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
+template <typename MutexType>
+void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry)
 {
     push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry, util::ThreadGetInternalName()));
 }
+template void EnterCritical(const char*, const char*, int, Mutex*, bool);
+template void EnterCritical(const char*, const char*, int, RecursiveMutex*, bool);
+template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
+template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
+template void EnterCritical(const char*, const char*, int, boost::mutex*, bool);
 
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
