@@ -1,18 +1,4 @@
-# The test build matrix (stage: test) is constructed to test a wide range of
-# configurations, rather than a single pass/fail. This helps to catch build
-# failures and logic errors that present on platforms other than the ones the
-# author has tested.
-#
-# Some builders use the dependency-generator in `./depends`, rather than using
-# apt-get to install build dependencies. This guarantees that the tester is
-# using the same versions as Gitian, so the build results are nearly identical
-# to what would be found in a final release.
-#
-# In order to avoid rebuilding all dependencies for each build, the binaries
-# are cached and re-used when possible. Changes in the dependency-generator
-# will trigger cache-invalidation and rebuilds as necessary.
-#
-# These caches can be manually removed if necessary. This is one of the very
+# Travis caches can be manually removed if necessary. This is one of the very
 # few manual operations that is possible with Travis, and it can be done by a
 # Bitcoin Core GitHub member via the Travis web interface [0].
 #
@@ -27,7 +13,7 @@
 
 version: ~> 1.0
 
-dist: xenial
+dist: bionic
 os: linux
 language: minimal
 arch: amd64
@@ -126,13 +112,12 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
 
     - stage: test
-      name: 'x86_64 Linux [GOAL: install]  [bionic]  [multiprocess]'
-      if: type != pull_request OR commit_message =~ /depends:|multiprocess:/ # Skip on non-depends, non-multiprocess PRs
+      name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
 
