@@ -39,10 +39,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    if (fLiteMode)
-        return;
-
-    governance.UpdatedBlockTip(pindexNew, connman);
+    if (!fLiteMode) governance.UpdatedBlockTip(pindexNew, connman);
 }
 
 
