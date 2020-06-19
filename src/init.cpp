@@ -264,16 +264,18 @@ void Shutdown(NodeContext& node)
     node.banman.reset();
 
     // SYSCOIN
-    if (!fLiteMode && !RPCIsInWarmup(nullptr)) {
+    if (!RPCIsInWarmup(nullptr)) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
         CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
         flatdb1.Dump(mmetaman);
-        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-        flatdb3.Dump(governance);
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
         flatdb4.Dump(netfulfilledman);
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
         flatdb6.Dump(sporkManager);
+        if (!fLiteMode) {
+            CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+            flatdb3.Dump(governance);
+        }
     }
 
     if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
@@ -495,7 +497,7 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> for the relayer (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast or full (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    gArgs.AddArg("-litemode=<n>", strprintf("Disable all Syscoin specific functionality (Masternodes, Governance) (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-litemode=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1691,13 +1693,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // ********************************************************* Step 7: load block chain
     bool fRegTest = gArgs.GetBoolArg("-regtest", false);
     fLiteMode = gArgs.GetBoolArg("-litemode", fRegTest);
-    if (!fLiteMode) {
-        uiInterface.InitMessage(_("Loading sporks cache..."));
-        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
-        if (!flatdb6.Load(sporkManager)) {
-            return InitError(_("Failed to load sporks cache from") + "\n" + (GetDataDir() / "sporks.dat").string());
-        }
+    
+    uiInterface.InitMessage(_("Loading sporks cache..."));
+    CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+    if (!flatdb6.Load(sporkManager)) {
+        return InitError(_("Failed to load sporks cache from") + "\n" + (GetDataDir() / "sporks.dat").string());
     }
+    
     fReindex = gArgs.GetBoolArg("-reindex", false);
     bool fReindexChainState = gArgs.GetBoolArg("-reindex-chainstate", false);
 
@@ -2062,7 +2064,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // SYSCOIN
     fZMQEthStatus = gArgs.IsArgSet("-zmqpubethstatus");
 
-     //lite mode disables all masternode functionality
+     //lite mode disables all governance functionality
     const std::vector<std::string> auth = gArgs.GetArgs("-rpcauth");
     if(!fRegTest && !auth.empty()) {
         return InitError(Untranslated("You can not use rpcauth in any network other than regtest. It is not compliant with the Syscoin Relayer."));
@@ -2071,7 +2073,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // if regtest then make sure geth is shown as synced as well
     fGethSynced = fRegTest;
     if(fLiteMode) {
-        LogPrintf("You are starting in lite mode, all masternode-specific functionality is disabled.\n");
+        LogPrintf("You are starting in lite mode, all governance validation functionality is disabled.\n");
     }
     
 
@@ -2126,7 +2128,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // SYSCOIN ********************************************************* Step 11b: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
-    bool fLoadCacheFiles = !(fLiteMode || fReindex || fReindexChainState);
+    bool fLoadCacheFiles = !(fReindex || fReindexChainState);
 fs::path pathDB = GetDataDir();
     std::string strDBName;
 
@@ -2147,7 +2149,7 @@ fs::path pathDB = GetDataDir();
     strDBName = "governance.dat";
     uiInterface.InitMessage(_("Loading governance cache..."));
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-    if (fLoadCacheFiles) {
+    if (fLoadCacheFiles && !fLiteMode) {
         if(!flatdb3.Load(governance)) {
             return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
         }
@@ -2176,12 +2178,13 @@ fs::path pathDB = GetDataDir();
         return false;
     }
 
+    
+    node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(mnpayments)), std::chrono::minutes{1});
+    node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync)), std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
+    node.scheduler->scheduleEvery(CMasternodeUtils::DoMaintenance, std::chrono::minutes{1});
     if (!fLiteMode) {
-        node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(mnpayments)), std::chrono::minutes{1});
-        node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync)), std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
         node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance)), std::chrono::minutes{5});
     }
-    node.scheduler->scheduleEvery(CMasternodeUtils::DoMaintenance, std::chrono::minutes{1});
 
     // ********************************************************* Step 12: start node
 

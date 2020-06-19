@@ -280,7 +280,7 @@ void SyscoinGUI::createActions()
 #ifdef ENABLE_WALLET
    // SYSCOIN
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
+    if (settings.value("fShowMasternodesTab").toBool()) {
         masternodeAction = new QAction(QIcon(":/icons/masternodes"), tr("&Masternodes"), this);
         masternodeAction->setStatusTip(tr("Browse masternodes"));
         masternodeAction->setToolTip(masternodeAction->statusTip());
@@ -571,7 +571,7 @@ void SyscoinGUI::createToolBars()
         toolbar->addAction(historyAction);
         // SYSCOIN
         QSettings settings;
-        if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction)
+        if (settings.value("fShowMasternodesTab").toBool() && masternodeAction)
         {
             toolbar->addAction(masternodeAction);
         }
@@ -758,7 +758,7 @@ void SyscoinGUI::setWalletActionsEnabled(bool enabled)
     historyAction->setEnabled(enabled);
     // SYSCOIN
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
+    if (settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
         masternodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
@@ -885,7 +885,7 @@ void SyscoinGUI::openClicked()
 void SyscoinGUI::gotoMasternodePage()
 {
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
+    if (settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
         masternodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }

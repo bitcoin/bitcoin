@@ -361,6 +361,7 @@ int GetUTXOHeight(const COutPoint& outpoint)
 int GetUTXOConfirmations(const COutPoint& outpoint)
 {
     // -1 means UTXO is yet unknown or already spent
+    LOCK(cs_main);
     int nPrevoutHeight = GetUTXOHeight(outpoint);
     return (nPrevoutHeight > -1 && ::ChainActive().Tip()) ? ::ChainActive().Height() - nPrevoutHeight + 1 : -1;
 }
@@ -3860,6 +3861,9 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
     // SYSCOIN
+    if(block.vtx[0].nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-cb-type", strprintf("%s : Incorrect version of coinbase transaction", __func__));
+    }
     for (const auto& txRef : block.vtx)
     {
         if(IsSyscoinMintTx(txRef->nVersion)){
