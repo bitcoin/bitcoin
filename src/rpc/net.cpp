@@ -133,8 +133,8 @@ static RPCHelpMan getpeerinfo()
                             {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
                                                                       "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
                                                                       "best capture connection behaviors."},
-                            {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
                             {RPCResult::Type::NUM, "banscore", "The ban score (DEPRECATED, returned only if config option -deprecatedrpc=banscore is passed)"},
+                            {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
                             {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
                             {RPCResult::Type::NUM, "synced_blocks", "The last block we have in common with this peer"},
                             {RPCResult::Type::ARR, "inflight", "",
@@ -224,12 +224,12 @@ static RPCHelpMan getpeerinfo()
             // addnode is deprecated in v0.21 for removal in v0.22
             obj.pushKV("addnode", stats.m_manual_connection);
         }
-        obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
             if (IsDeprecatedRPCEnabled("banscore")) {
                 // banscore is deprecated in v0.21 for removal in v0.22
                 obj.pushKV("banscore", statestats.m_misbehavior_score);
             }
+            obj.pushKV("startingheight", statestats.nStartingHeight);
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);

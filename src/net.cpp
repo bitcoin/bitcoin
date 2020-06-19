@@ -590,7 +590,6 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     stats.m_manual_connection = IsManualConn();
     X(m_bip152_highbandwidth_to);
     X(m_bip152_highbandwidth_from);
-    X(nStartingHeight);
     {
         LOCK(cs_vSend);
         X(mapSendBytesPerMsgCmd);
