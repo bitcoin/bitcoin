@@ -19,10 +19,12 @@ struct CompareScoreMN
 
 void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
 {
+    std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
+
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
     int nonMasternodeCount = 0;
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fMasternode) {
+        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fMasternode && !pnode->fMasternodeProbe) {
             nonMasternodeCount++;
         }
     });
@@ -31,14 +33,21 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
     }
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (pnode->fMasternode) {
-            if (fLogIPs) {
-                LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
-            } else {
-                LogPrintf("Closing Masternode connection: peer=%d\n", pnode->GetId());
-            }
-            pnode->fDisconnect = true;
+        // we're only disconnecting fMasternode connections
+        if (!pnode->fMasternode) return;
+        // we're only disconnecting outbound connections
+        if (pnode->fInbound) return;
+        // we're not disconnecting LLMQ connections
+        if (connman.IsMasternodeQuorumNode(pnode)) return;
+        // we're not disconnecting masternode probes for at least a few seconds
+        if (pnode->fMasternodeProbe && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
+
+        if (fLogIPs) {
+            LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
+        } else {
+            LogPrintf("Closing Masternode connection: peer=%d\n", pnode->GetId());
         }
+        pnode->fDisconnect = true;
     });
 }
 
@@ -47,6 +56,12 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman)
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
         return;
 
-    ProcessMasternodeConnections(connman);
+    static unsigned int nTick = 0;
+
+    nTick++;
+
+    if(nTick % 60 == 0) {
+        ProcessMasternodeConnections(connman);
+    }
 }
 

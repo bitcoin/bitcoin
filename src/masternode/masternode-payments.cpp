@@ -12,6 +12,7 @@
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <spork.h>
+#include <util.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>
@@ -148,7 +149,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
     // this actually also checks for correct payees and not only amount
     if (!CSuperblockManager::IsValid(*block.vtx[0], nBlockHeight, blockReward)) {
         // triggered but invalid? that's weird
-        LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, block.vtx[0]->ToString());
+        LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, block.vtx[0]->ToString()); /* Continued */
         // should NOT allow invalid superblocks, when superblocks are enabled
         strErrorRet = strprintf("invalid superblock detected at height %d", nBlockHeight);
         return false;
@@ -188,7 +189,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
                 LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString());
                 // continue validation, should also pay MN
             } else {
-                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
                 // should NOT allow such superblocks, when superblocks are enabled
                 return false;
             }
@@ -199,14 +200,16 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
         // should NOT allow superblocks at all, when superblocks are disabled
         LogPrint(BCLog::GOBJECT, "%s -- Superblocks are disabled, no superblocks allowed\n", __func__);
     }
+
     const CAmount &nHalfFee = fees / 2;
+
     // Check for correct masternode payment
     if(mnpayments.IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString());
         return true;
     }
 
-    LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+    LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
     return false;
 }
 
@@ -219,6 +222,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
             LogPrint(BCLog::GOBJECT, "%s -- triggered superblock creation at height %d\n", __func__, nBlockHeight);
             CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
     }
+
     const CAmount &nHalfFee = fees / 2;
     if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, nHalfFee, voutMasternodePaymentsRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
@@ -228,7 +232,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
 	txNew.vout[0].nValue += nHalfFee;
     // mn is paid 75% of block reward plus any seniority
     txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
-    // superblock governance amount is extra
+    // superblock governance amount is added as extra
     txNew.vout.insert(txNew.vout.end(), voutSuperblockPaymentsRet.begin(), voutSuperblockPaymentsRet.end());
 
     std::string voutMasternodeStr;
@@ -307,10 +311,10 @@ bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &b
     }
 
     for (const auto& txout : voutMasternodePaymentsRet) {
-        CTxDestination address1;
-        ExtractDestination(txout.scriptPubKey, address1);
+        CTxDestination dest;
+        ExtractDestination(txout.scriptPubKey, dest);
 
-        LogPrintf("CMasternodePayments::%s -- Masternode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(address1));
+        LogPrintf("CMasternodePayments::%s -- Masternode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(dest));
     }
 
     return true;
@@ -340,6 +344,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
 {
     voutMasternodePaymentsRet.clear();
 
+
     const CBlockIndex* pindex;
     {
         LOCK(cs_main);
@@ -368,19 +373,6 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
     }
 
     return true;
-}
-
-// Is this masternode scheduled to get paid soon?
-// -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 blocks of votes
-bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNotBlockHeight) const
-{
-    auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
-    for (const auto &dmn : projectedPayees) {
-        if (dmn->proTxHash == dmnIn->proTxHash) {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount& nHalfFee, CAmount& nMNSeniorityRet) const

@@ -9,13 +9,15 @@
 
 #include <evo/deterministicmns.h>
 
+#include <univalue.h>
+
 #include <memory>
 
 class CConnman;
 
 
 // Holds extra (non-deterministic) information about masternodes
-// This is mostly local information, e.g. about governance
+// This is mostly local information, e.g. about mixing and governance
 class CMasternodeMetaInfo
 {
     friend class CMasternodeMetaMan;
@@ -28,20 +30,25 @@ private:
     // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
     std::map<uint256, int> mapGovernanceObjectsVotedOn;
 
+    int64_t lastOutboundAttempt = 0;
+    int64_t lastOutboundSuccess = 0;
+
 public:
     CMasternodeMetaInfo() {}
-    CMasternodeMetaInfo(const uint256& _proTxHash) : proTxHash(_proTxHash) {}
+    explicit CMasternodeMetaInfo(const uint256& _proTxHash) : proTxHash(_proTxHash) {}
     CMasternodeMetaInfo(const CMasternodeMetaInfo& ref) :
         proTxHash(ref.proTxHash),
-        mapGovernanceObjectsVotedOn(ref.mapGovernanceObjectsVotedOn)
+        mapGovernanceObjectsVotedOn(ref.mapGovernanceObjectsVotedOn),
+        lastOutboundAttempt(ref.lastOutboundAttempt),
+        lastOutboundSuccess(ref.lastOutboundSuccess)
     {
+    }
+    SERIALIZE_METHODS(CMasternodeMetaInfo, obj) {
+        LOCK(cs);
+        READWRITE(obj.proTxHash, obj.mapGovernanceObjectsVotedOn, obj.lastOutboundAttempt, obj.lastOutboundSuccess);
     }
 
-    SERIALIZE_METHODS(CMasternodeMetaInfo, obj)
-    {
-        LOCK(cs);
-        READWRITE(obj.proTxHash, obj.mapGovernanceObjectsVotedOn);
-    }
+    UniValue ToJson() const;
 
 public:
     const uint256& GetProTxHash() const { LOCK(cs); return proTxHash; }
@@ -50,6 +57,11 @@ public:
     void AddGovernanceVote(const uint256& nGovernanceObjectHash);
 
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
+
+    void SetLastOutboundAttempt(int64_t t) { LOCK(cs); lastOutboundAttempt = t; }
+    int64_t GetLastOutboundAttempt() const { LOCK(cs); return lastOutboundAttempt; }
+    void SetLastOutboundSuccess(int64_t t) { LOCK(cs); lastOutboundSuccess = t; }
+    int64_t GetLastOutboundSuccess() const { LOCK(cs); return lastOutboundSuccess; }
 };
 typedef std::shared_ptr<CMasternodeMetaInfo> CMasternodeMetaInfoPtr;
 
@@ -77,17 +89,16 @@ public:
         }
         s << tmpMetaInfo;
     }
-
     template<typename Stream>
     void Unserialize(Stream& s)
     {
         LOCK(cs);
+        
         std::string strVersion;
         Clear();
         s >> strVersion;
         if (strVersion != SERIALIZATION_VERSION_STRING) {
             return;
-        }
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
         s >> tmpMetaInfo;
         metaInfos.clear();
@@ -112,4 +123,4 @@ public:
 
 extern CMasternodeMetaMan mmetaman;
 
-#endif//MASTERNODE_META_H
+#endif//SYSCOIN_MASTERNODE_MASTERNODE_META_H

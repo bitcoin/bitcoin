@@ -22,8 +22,8 @@ extern CActiveMasternodeManager* activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
-    std::unique_ptr<CKeyID> pubKeyOperator;
-    std::unique_ptr<CKey> keyOperator;
+    std::unique_ptr<CBLSPublicKey> blsPubKeyOperator;
+    std::unique_ptr<CBLSSecretKey> blsKeyOperator;
 
     // Initialized while registering Masternode
     uint256 proTxHash;
@@ -52,7 +52,7 @@ private:
 public:
     virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
 
-    void Init();
+    void Init(const CBlockIndex* pindex);
 
     std::string GetStateString() const;
     std::string GetStatus() const;
