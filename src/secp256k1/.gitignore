@@ -9,6 +9,7 @@ bench_internal
 tests
 exhaustive_tests
 gen_context
+valgrind_ctime_test
 *.exe
 *.so
 *.a

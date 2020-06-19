@@ -114,7 +114,7 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
     // confused with the decimal marker.
     QChar thin_sp(THIN_SP_CP);
     int q_size = quotient_str.size();
-    if (separators == separatorAlways || (separators == separatorStandard && q_size > 4))
+    if (separators == SeparatorStyle::ALWAYS || (separators == SeparatorStyle::STANDARD && q_size > 4))
         for (int i = 3; i < q_size; i += 3)
             quotient_str.insert(q_size - i, thin_sp);
 

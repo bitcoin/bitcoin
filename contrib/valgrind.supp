@@ -1,7 +1,5 @@
-# Valgrind suppressions file for Bitcoin.
-#
-# Includes known Valgrind warnings in our dependencies that cannot be fixed
-# in-tree.
+# This valgrind suppressions file includes known Valgrind warnings in our
+# dependencies that cannot be fixed in-tree.
 #
 # Example use:
 # $ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
@@ -14,6 +12,9 @@
 #       --error-limit=no src/test/test_bitcoin
 #
 # Note that suppressions may depend on OS and/or library versions.
+# Tested on:
+# * aarch64 (Ubuntu 20.04 system libs, without gui)
+# * x86_64  (Ubuntu 18.04 system libs, without gui)
 {
    Suppress libstdc++ warning - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65434
    Memcheck:Leak
@@ -47,8 +48,7 @@
    Suppress libdb warning
    Memcheck:Param
    pwrite64(buf)
-   fun:pwrite
-   fun:__os_io
+   ...
    obj:*/libdb_cxx-*.so
 }
 {

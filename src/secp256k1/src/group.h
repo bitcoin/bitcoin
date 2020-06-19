@@ -95,14 +95,13 @@ static int secp256k1_gej_is_infinity(const secp256k1_gej *a);
 /** Check whether a group element's y coordinate is a quadratic residue. */
 static int secp256k1_gej_has_quad_y_var(const secp256k1_gej *a);
 
-/** Set r equal to the double of a. If rzr is not-NULL, r->z = a->z * *rzr (where infinity means an implicit z = 0).
- * a may not be zero. Constant time. */
-static void secp256k1_gej_double_nonzero(secp256k1_gej *r, const secp256k1_gej *a, secp256k1_fe *rzr);
+/** Set r equal to the double of a, a cannot be infinity. Constant time. */
+static void secp256k1_gej_double_nonzero(secp256k1_gej *r, const secp256k1_gej *a);
 
-/** Set r equal to the double of a. If rzr is not-NULL, r->z = a->z * *rzr (where infinity means an implicit z = 0). */
+/** Set r equal to the double of a. If rzr is not-NULL this sets *rzr such that r->z == a->z * *rzr (where infinity means an implicit z = 0). */
 static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, secp256k1_fe *rzr);
 
-/** Set r equal to the sum of a and b. If rzr is non-NULL, r->z = a->z * *rzr (a cannot be infinity in that case). */
+/** Set r equal to the sum of a and b. If rzr is non-NULL this sets *rzr such that r->z == a->z * *rzr (a cannot be infinity in that case). */
 static void secp256k1_gej_add_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_gej *b, secp256k1_fe *rzr);
 
 /** Set r equal to the sum of a and b (with b given in affine coordinates, and not infinity). */
@@ -110,7 +109,7 @@ static void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const
 
 /** Set r equal to the sum of a and b (with b given in affine coordinates). This is more efficient
     than secp256k1_gej_add_var. It is identical to secp256k1_gej_add_ge but without constant-time
-    guarantee, and b is allowed to be infinity. If rzr is non-NULL, r->z = a->z * *rzr (a cannot be infinity in that case). */
+    guarantee, and b is allowed to be infinity. If rzr is non-NULL this sets *rzr such that r->z == a->z * *rzr (a cannot be infinity in that case). */
 static void secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, secp256k1_fe *rzr);
 
 /** Set r equal to the sum of a and b (with the inverse of b's Z coordinate passed as bzinv). */
@@ -133,7 +132,7 @@ static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const secp256k1_ge 
 /** Convert a group element back from the storage type. */
 static void secp256k1_ge_from_storage(secp256k1_ge *r, const secp256k1_ge_storage *a);
 
-/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
+/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
 static void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_ge_storage *a, int flag);
 
 /** Rescale a jacobian point by b which must be non-zero. Constant-time. */

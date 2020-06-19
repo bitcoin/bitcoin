@@ -18,6 +18,7 @@
 #include <compat/sanity.h>
 #include <consensus/validation.h>
 #include <fs.h>
+#include <hash.h>
 #include <httprpc.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
@@ -42,6 +43,7 @@
 #include <script/sigcache.h>
 #include <script/standard.h>
 #include <shutdown.h>
+#include <sync.h>
 #include <timedata.h>
 #include <torcontrol.h>
 #include <txdb.h>
@@ -49,12 +51,11 @@
 #include <ui_interface.h>
 #include <util/asmap.h>
 #include <util/moneystr.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
-#include <hash.h>
-
 
 #include <validationinterface.h>
 #include <walletinitinterface.h>
@@ -71,11 +72,9 @@
 #include <sys/stat.h>
 #endif
 
-#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/signals2/signal.hpp>
-#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
 
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
@@ -173,11 +172,10 @@ void Interrupt(NodeContext& node)
 
 void Shutdown(NodeContext& node)
 {
-    LogPrintf("\n%s: In progress...\n", __func__);
-    static RecursiveMutex cs_Shutdown;
-    TRY_LOCK(cs_Shutdown, lockShutdown);
-    if (!lockShutdown)
-        return;
+    static Mutex g_shutdown_mutex;
+    TRY_LOCK(g_shutdown_mutex, lock_shutdown);
+    if (!lock_shutdown) return;
+    LogPrintf("%s: In progress...\n", __func__);
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,
     /// for example if the data directory was found to be locked.
@@ -444,7 +442,7 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-maxreceivebuffer=<n>", strprintf("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXRECEIVEBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-maxsendbuffer=<n>", strprintf("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXSENDBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-maxtimeadjustment", strprintf("Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)", DEFAULT_MAX_TIME_ADJUSTMENT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    gArgs.AddArg("-maxuploadtarget=<n>", strprintf("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)", DEFAULT_MAX_UPLOAD_TARGET), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-maxuploadtarget=<n>", strprintf("Tries to keep outbound traffic under the given target (in MiB per 24h). Limit does not apply to peers with 'noban' permission. 0 = no limit (default: %d)", DEFAULT_MAX_UPLOAD_TARGET), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-onion=<ip:port>", "Use separate SOCKS5 proxy to reach peers via Tor hidden services, set -noonion to disable (default: -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-onlynet=<net>", "Make outgoing connections only through network <net> (ipv4, ipv6 or onion). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-peerbloomfilters", strprintf("Support filtering of blocks and transaction with bloom filters (default: %u)", DEFAULT_PEERBLOOMFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -468,11 +466,7 @@ void SetupServerArgs(NodeContext& node)
     hidden_args.emplace_back("-upnp");
 #endif
     gArgs.AddArg("-whitebind=<[permissions@]addr>", "Bind to given address and whitelist peers connecting to it. "
-        "Use [host]:port notation for IPv6. Allowed permissions are bloomfilter (allow requesting BIP37 filtered blocks and transactions), "
-        "noban (do not ban for misbehavior), "
-        "forcerelay (relay transactions that are already in the mempool; implies relay), "
-        "relay (relay even in -blocksonly mode), "
-        "and mempool (allow requesting BIP35 mempool contents). "
+        "Use [host]:port notation for IPv6. Allowed permissions: " + Join(NET_PERMISSIONS_DOC, ", ") + ". "
         "Specify multiple permissions separated by commas (default: noban,mempool,relay). Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 
     gArgs.AddArg("-whitelist=<[permissions@]IP address or network>", "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or "
@@ -502,14 +496,7 @@ void SetupServerArgs(NodeContext& node)
 #endif
 
     gArgs.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-checklevel=<n>", strprintf("How thorough the block verification of -checkblocks is: "
-        "level 0 reads the blocks from disk, "
-        "level 1 verifies block validity, "
-        "level 2 verifies undo data, "
-        "level 3 checks disconnection of tip blocks, "
-        "and level 4 tries to reconnect the blocks, "
-        "each level includes the checks of the previous levels "
-        "(0-4, default: %u)", DEFAULT_CHECKLEVEL), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-checklevel=<n>", strprintf("How thorough the block verification of -checkblocks is: %s (0-4, default: %u)", Join(CHECKLEVEL_DOC, ", "), DEFAULT_CHECKLEVEL), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checkblockindex", strprintf("Do a consistency check for the block tree, chainstate, and other validation data structures occasionally. (default: %u, regtest: %u)", defaultChainParams->DefaultConsistencyChecks(), regtestChainParams->DefaultConsistencyChecks()), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checkmempool=<n>", strprintf("Run checks every <n> transactions (default: %u, regtest: %u)", defaultChainParams->DefaultConsistencyChecks(), regtestChainParams->DefaultConsistencyChecks()), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checkpoints", strprintf("Enable rejection of any forks from the known historical chain until block 295000 (default: %u)", DEFAULT_CHECKPOINTS_ENABLED), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -964,17 +951,27 @@ bool AppInitParameterInteraction()
 
     // also see: InitParameterInteraction()
 
-    // Warn if network-specific options (-addnode, -connect, etc) are
+    // Error if network-specific options (-addnode, -connect, etc) are
     // specified in default section of config file, but not overridden
     // on the command line or in this network's section of the config file.
     std::string network = gArgs.GetChainName();
+    bilingual_str errors;
     for (const auto& arg : gArgs.GetUnsuitableSectionOnlyArgs()) {
-        return InitError(strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, network, network));
+        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section.") + Untranslated("\n"), arg, network, network);
+    }
+
+    if (!errors.empty()) {
+        return InitError(errors);
     }
 
     // Warn if unrecognized section name are present in the config file.
+    bilingual_str warnings;
     for (const auto& section : gArgs.GetUnrecognizedSections()) {
-        InitWarning(strprintf(Untranslated("%s:%i ") + _("Section [%s] is not recognized."), section.m_file, section.m_line, section.m_name));
+        warnings += strprintf(Untranslated("%s:%i ") + _("Section [%s] is not recognized.") + Untranslated("\n"), section.m_file, section.m_line, section.m_name);
+    }
+
+    if (!warnings.empty()) {
+        InitWarning(warnings);
     }
 
     if (!fs::is_directory(GetBlocksDir())) {
@@ -1468,7 +1465,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         if (Lookup(strAddr, addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
             AddLocal(addrLocal, LOCAL_MANUAL);
         else
-            return InitError(Untranslated(ResolveErrMsg("externalip", strAddr)));
+            return InitError(ResolveErrMsg("externalip", strAddr));
     }
 
     // Read asmap file if configured
@@ -1907,21 +1904,21 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     for (const std::string& strBind : gArgs.GetArgs("-bind")) {
         CService addrBind;
         if (!Lookup(strBind, addrBind, GetListenPort(), false)) {
-            return InitError(Untranslated(ResolveErrMsg("bind", strBind)));
+            return InitError(ResolveErrMsg("bind", strBind));
         }
         connOptions.vBinds.push_back(addrBind);
     }
     for (const std::string& strBind : gArgs.GetArgs("-whitebind")) {
         NetWhitebindPermissions whitebind;
-        std::string error;
-        if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(Untranslated(error));
+        bilingual_str error;
+        if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(error);
         connOptions.vWhiteBinds.push_back(whitebind);
     }
 
     for (const auto& net : gArgs.GetArgs("-whitelist")) {
         NetWhitelistPermissions subnet;
-        std::string error;
-        if (!NetWhitelistPermissions::TryParse(net, subnet, error)) return InitError(Untranslated(error));
+        bilingual_str error;
+        if (!NetWhitelistPermissions::TryParse(net, subnet, error)) return InitError(error);
         connOptions.vWhitelistedRange.push_back(subnet);
     }
 

@@ -140,7 +140,7 @@ void TestGUI(interfaces::Node& node)
     }
     node.context()->connman = std::move(test.m_node.connman);
     node.context()->mempool = std::move(test.m_node.mempool);
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), WalletDatabase::CreateMock());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), CreateMockWalletDatabase());
     bool firstRun;
     wallet->LoadWallet(firstRun);
     {
@@ -178,7 +178,7 @@ void TestGUI(interfaces::Node& node)
         QString balanceText = balanceLabel->text();
         int unit = walletModel.getOptionsModel()->getDisplayUnit();
         CAmount balance = walletModel.wallet().getBalance();
-        QString balanceComparison = BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways);
+        QString balanceComparison = BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::SeparatorStyle::ALWAYS);
         QCOMPARE(balanceText, balanceComparison);
     }
 
@@ -204,7 +204,7 @@ void TestGUI(interfaces::Node& node)
     QString balanceText = balanceLabel->text().trimmed();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
     CAmount balance = walletModel.wallet().getBalance();
-    QString balanceComparison = BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways);
+    QString balanceComparison = BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::SeparatorStyle::ALWAYS);
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button

@@ -21,8 +21,6 @@ if [ -n "$USE_VALGRIND" ]; then
   END_FOLD
 fi
 
-bash -c "${CI_WAIT}" &  # Print dots in case the tests take a long time to run
-
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
   DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib make $MAKEJOBS check VERBOSE=1
@@ -38,6 +36,12 @@ fi
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   BEGIN_FOLD functional-tests
   DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib ${TEST_RUNNER_ENV} test/functional/test_runner.py --ci $MAKEJOBS --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" --ansi --combinedlogslen=4000 ${TEST_RUNNER_EXTRA} --quiet --failfast
+  END_FOLD
+fi
+
+if [ "$RUN_SECURITY_TESTS" = "true" ]; then
+  BEGIN_FOLD security-tests
+  DOCKER_EXEC make test-security-check
   END_FOLD
 fi
 

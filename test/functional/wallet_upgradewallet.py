@@ -16,7 +16,6 @@ import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    adjust_bitcoin_conf_for_pre_17,
     assert_equal,
     assert_greater_than,
     assert_is_hex_string,
@@ -46,9 +45,6 @@ class UpgradeWalletTest(BitcoinTestFramework):
             160300,
             150200,
         ])
-        # adapt bitcoin.conf, because older bitcoind's don't recognize config sections
-        adjust_bitcoin_conf_for_pre_17(self.nodes[1].bitcoinconf)
-        adjust_bitcoin_conf_for_pre_17(self.nodes[2].bitcoinconf)
         self.start_nodes()
 
     def dumb_sync_blocks(self):

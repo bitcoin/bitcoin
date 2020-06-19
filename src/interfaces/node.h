@@ -10,6 +10,7 @@
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
 #include <support/allocators/secure.h> // For SecureString
+#include <util/translation.h>
 
 #include <functional>
 #include <memory>
@@ -45,7 +46,7 @@ public:
     virtual ~Node() {}
 
     //! Send init error.
-    virtual void initError(const std::string& message) = 0;
+    virtual void initError(const bilingual_str& message) = 0;
 
     //! Set command line arguments.
     virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
@@ -81,7 +82,7 @@ public:
     virtual void initParameterInteraction() = 0;
 
     //! Get warnings.
-    virtual std::string getWarnings() = 0;
+    virtual bilingual_str getWarnings() = 0;
 
     // Get log flags.
     virtual uint32_t getLogCategories() = 0;

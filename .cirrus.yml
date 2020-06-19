@@ -30,9 +30,5 @@ task:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
     folder: "/tmp/cirrus-ci-build/depends/built"
-  install_script:
-    - apt-get update
-    - apt-get -y install git bash ccache
-    - ccache --max-size=${CCACHE_SIZE}
   ci_script:
     - ./ci/test_run_all.sh

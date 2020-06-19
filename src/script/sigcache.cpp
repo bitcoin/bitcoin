@@ -11,7 +11,7 @@
 #include <util/system.h>
 
 #include <cuckoocache.h>
-#include <boost/thread.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace {
 /**

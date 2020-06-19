@@ -77,12 +77,6 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet)
     return true;
 }
 
-bool HasWallets()
-{
-    LOCK(cs_wallets);
-    return !vpwallets.empty();
-}
-
 std::vector<std::shared_ptr<CWallet>> GetWallets()
 {
     LOCK(cs_wallets);
@@ -752,7 +746,6 @@ void CWallet::SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned
 bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
 {
     AssertLockHeld(cs_wallet);
-    CTxDestination dst;
     const CWalletTx* srctx = GetWalletTx(hash);
     if (srctx) {
         assert(srctx->tx->vout.size() > n);
@@ -2748,6 +2741,12 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
             // Get the fee rate to use effective values in coin selection
             CFeeRate nFeeRateNeeded = GetMinimumFeeRate(*this, coin_control, &feeCalc);
+            // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
+            // provided one
+            if (coin_control.m_feerate && nFeeRateNeeded > *coin_control.m_feerate) {
+                error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(), nFeeRateNeeded.ToString());
+                return false;
+            }
 
             nFeeRet = 0;
             bool pick_new_inputs = true;
@@ -2997,7 +2996,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     }
 
     if (nFeeRet > m_default_max_tx_fee) {
-        error = Untranslated(TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED));
+        error = TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED);
         return false;
     }
 
@@ -3706,7 +3705,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     }
 
     // Keep same database environment instance across Verify/Recover calls below.
-    std::unique_ptr<WalletDatabase> database = WalletDatabase::Create(wallet_path);
+    std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(wallet_path);
 
     try {
         if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
@@ -3730,7 +3729,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.GetBoolArg("-zapwallettxes", false)) {
         chain.initMessage(_("Zapping all transactions from wallet...").translated);
 
-        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, WalletDatabase::Create(location.GetPath()));
+        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, CreateWalletDatabase(location.GetPath()));
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DBErrors::LOAD_OK) {
             error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
@@ -3744,7 +3743,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     bool fFirstRun = true;
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, location, WalletDatabase::Create(location.GetPath())), ReleaseWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, location, CreateWalletDatabase(location.GetPath())), ReleaseWallet);
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
         if (nLoadWalletRet == DBErrors::CORRUPT) {

@@ -26,10 +26,12 @@ don't have test cases for.
   The Travis linter also checks this, but [possibly not in all cases](https://github.com/bitcoin/bitcoin/pull/14884#discussion_r239585126).
 - See [the python lint script](/test/lint/lint-python.sh) that checks for violations that
   could lead to bugs and issues in the test code.
+- Use [type hints](https://docs.python.org/3/library/typing.html) in your code to improve code readability
+  and to detect possible bugs earlier.
 - Avoid wildcard imports
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
-- When subclassing the BitcoinTestFramwork, place overrides for the
+- When subclassing the BitcoinTestFramework, place overrides for the
   `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
   the subclass, then locally-defined helper methods, then the `run_test()` method.
 - Use `'{}'.format(x)` for string formatting, not `'%s' % x`.
@@ -45,7 +47,7 @@ don't have test cases for.
     - `rpc` for tests for individual RPC methods or features, eg `rpc_listtransactions.py`
     - `tool` for tests for tools, eg `tool_wallet.py`
     - `wallet` for tests for wallet features, eg `wallet_keypool.py`
-- use an underscore to separate words
+- Use an underscore to separate words
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
 - Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
 

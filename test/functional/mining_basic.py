@@ -18,24 +18,25 @@ from test_framework.blocktools import (
 from test_framework.messages import (
     CBlock,
     CBlockHeader,
-    BLOCK_HEADER_SIZE
+    BLOCK_HEADER_SIZE,
 )
-from test_framework.mininode import (
-    P2PDataStore,
-)
+from test_framework.mininode import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     connect_nodes,
 )
-from test_framework.script import CScriptNum
 
 
 def assert_template(node, block, expect, rehash=True):
     if rehash:
         block.hashMerkleRoot = block.calc_merkle_root()
-    rsp = node.getblocktemplate(template_request={'data': block.serialize().hex(), 'mode': 'proposal', 'rules': ['segwit']})
+    rsp = node.getblocktemplate(template_request={
+        'data': block.serialize().hex(),
+        'mode': 'proposal',
+        'rules': ['segwit'],
+    })
     assert_equal(rsp, expect)
 
 
@@ -87,15 +88,8 @@ class MiningTest(BitcoinTestFramework):
         next_height = int(tmpl["height"])
         coinbase_tx = create_coinbase(height=next_height)
         # sequence numbers must not be max for nLockTime to have effect
-        coinbase_tx.vin[0].nSequence = 2 ** 32 - 2
+        coinbase_tx.vin[0].nSequence = 2**32 - 2
         coinbase_tx.rehash()
-
-        # round-trip the encoded bip34 block height commitment
-        assert_equal(CScriptNum.decode(coinbase_tx.vin[0].scriptSig), next_height)
-        # round-trip negative and multi-byte CScriptNums to catch python regression
-        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(1500))), 1500)
-        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(-1500))), -1500)
-        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(-1))), -1)
 
         block = CBlock()
         block.nVersion = tmpl["version"]
@@ -124,7 +118,11 @@ class MiningTest(BitcoinTestFramework):
         assert_raises_rpc_error(-22, "Block does not start with a coinbase", node.submitblock, bad_block.serialize().hex())
 
         self.log.info("getblocktemplate: Test truncated final transaction")
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': block.serialize()[:-1].hex(), 'mode': 'proposal', 'rules': ['segwit']})
+        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
+            'data': block.serialize()[:-1].hex(),
+            'mode': 'proposal',
+            'rules': ['segwit'],
+        })
 
         self.log.info("getblocktemplate: Test duplicate transaction")
         bad_block = copy.deepcopy(block)
@@ -143,7 +141,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("getblocktemplate: Test nonfinal transaction")
         bad_block = copy.deepcopy(block)
-        bad_block.vtx[0].nLockTime = 2 ** 32 - 1
+        bad_block.vtx[0].nLockTime = 2**32 - 1
         bad_block.vtx[0].rehash()
         assert_template(node, bad_block, 'bad-txns-nonfinal')
         assert_submitblock(bad_block, 'bad-txns-nonfinal')
@@ -153,7 +151,11 @@ class MiningTest(BitcoinTestFramework):
         bad_block_sn = bytearray(block.serialize())
         assert_equal(bad_block_sn[BLOCK_HEADER_SIZE], 1)
         bad_block_sn[BLOCK_HEADER_SIZE] += 1
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': bad_block_sn.hex(), 'mode': 'proposal', 'rules': ['segwit']})
+        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
+            'data': bad_block_sn.hex(),
+            'mode': 'proposal',
+            'rules': ['segwit'],
+        })
 
         self.log.info("getblocktemplate: Test bad bits")
         bad_block = copy.deepcopy(block)
@@ -168,7 +170,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("getblocktemplate: Test bad timestamps")
         bad_block = copy.deepcopy(block)
-        bad_block.nTime = 2 ** 31 - 1
+        bad_block.nTime = 2**31 - 1
         assert_template(node, bad_block, 'time-too-new')
         assert_submitblock(bad_block, 'time-too-new', 'time-too-new')
         bad_block.nTime = 0

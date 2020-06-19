@@ -28,6 +28,7 @@ from test_framework.messages import (
     NODE_WITNESS,
 )
 
+
 def assert_net_servicesnames(servicesflag, servicenames):
     """Utility that checks if all flags are correctly decoded in
     `getpeerinfo` and `getnetworkinfo`.
@@ -39,6 +40,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     for servicename in servicenames:
         servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
     assert servicesflag_generated == servicesflag
+
 
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -57,6 +59,7 @@ class NetTest(BitcoinTestFramework):
         self._test_getnetworkinfo()
         self._test_getaddednodeinfo()
         self._test_getpeerinfo()
+        self.test_service_flags()
         self._test_getnodeaddresses()
 
     def _test_connection_count(self):
@@ -139,6 +142,11 @@ class NetTest(BitcoinTestFramework):
         for info in peer_info:
             assert_net_servicesnames(int(info[0]["services"], 0x10), info[0]["servicesnames"])
 
+    def test_service_flags(self):
+        self.nodes[0].add_p2p_connection(P2PInterface(), services=(1 << 4) | (1 << 63))
+        assert_equal(['UNKNOWN[2^4]', 'UNKNOWN[2^63]'], self.nodes[0].getpeerinfo()[-1]['servicesnames'])
+        self.nodes[0].disconnect_p2ps()
+
     def _test_getnodeaddresses(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
 
@@ -173,6 +181,7 @@ class NetTest(BitcoinTestFramework):
         LARGE_REQUEST_COUNT = 10000
         node_addresses = self.nodes[0].getnodeaddresses(LARGE_REQUEST_COUNT)
         assert_greater_than(LARGE_REQUEST_COUNT, len(node_addresses))
+
 
 if __name__ == '__main__':
     NetTest().main()

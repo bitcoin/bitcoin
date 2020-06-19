@@ -32,8 +32,16 @@ static unsigned int secp256k1_scalar_get_bits(const secp256k1_scalar *a, unsigne
 /** Access bits from a scalar. Not constant time. */
 static unsigned int secp256k1_scalar_get_bits_var(const secp256k1_scalar *a, unsigned int offset, unsigned int count);
 
-/** Set a scalar from a big endian byte array. */
+/** Set a scalar from a big endian byte array. The scalar will be reduced modulo group order `n`.
+ * In:      bin:        pointer to a 32-byte array.
+ * Out:     r:          scalar to be set.
+ *          overflow:   non-zero if the scalar was bigger or equal to `n` before reduction, zero otherwise (can be NULL).
+ */
 static void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *bin, int *overflow);
+
+/** Set a scalar from a big endian byte array and returns 1 if it is a valid
+ *  seckey and 0 otherwise. */
+static int secp256k1_scalar_set_b32_seckey(secp256k1_scalar *r, const unsigned char *bin);
 
 /** Set a scalar to an unsigned integer. */
 static void secp256k1_scalar_set_int(secp256k1_scalar *r, unsigned int v);
@@ -102,5 +110,8 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar *r1, secp256k1_scalar
 
 /** Multiply a and b (without taking the modulus!), divide by 2**shift, and round to the nearest integer. Shift must be at least 256. */
 static void secp256k1_scalar_mul_shift_var(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b, unsigned int shift);
+
+/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
+static void secp256k1_scalar_cmov(secp256k1_scalar *r, const secp256k1_scalar *a, int flag);
 
 #endif /* SECP256K1_SCALAR_H */

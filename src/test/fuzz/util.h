@@ -214,4 +214,18 @@ NODISCARD inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsVie
     return false;
 }
 
+/**
+ * Returns a byte vector of specified size regardless of the number of remaining bytes available
+ * from the fuzzer. Pads with zero value bytes if needed to achieve the specified size.
+ */
+NODISCARD inline std::vector<uint8_t> ConsumeFixedLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t length) noexcept
+{
+    std::vector<uint8_t> result(length);
+    const std::vector<uint8_t> random_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(length);
+    if (!random_bytes.empty()) {
+        std::memcpy(result.data(), random_bytes.data(), random_bytes.size());
+    }
+    return result;
+}
+
 #endif // BITCOIN_TEST_FUZZ_UTIL_H

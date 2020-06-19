@@ -970,8 +970,8 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
     int nInbound = 0;
-    //int nMaxInbound = nMaxConnections - m_max_outbound;
-    int nMaxInbound = 10000; // Cybersecurity Lab
+    int nMaxInbound = nMaxConnections - m_max_outbound;
+    //int nMaxInbound = 10000; // Cybersecurity Lab
 
     if (hSocket != INVALID_SOCKET) {
         if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
@@ -2655,7 +2655,7 @@ void CConnman::RecordBytesSent(uint64_t bytes)
         nMaxOutboundTotalBytesSentInCycle = 0;
     }
 
-    // TODO, exclude whitebind peers
+    // TODO, exclude peers with noban permission
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 
