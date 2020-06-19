@@ -2,17 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "cbtx.h"
-#include "core_io.h"
-#include "deterministicmns.h"
-#include "simplifiedmns.h"
-#include "specialtx.h"
+#include <evo/cbtx.h>
+#include <core_io.h>
+#include <evo/deterministicmns.h>
+#include <llmq/quorums.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_commitment.h>
+#include <evo/simplifiedmns.h>
+#include <evo/specialtx.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "consensus/merkle.h"
-#include "univalue.h"
-#include "validation.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <consensus/merkle.h>
+#include <univalue.h>
+#include <validation.h>
 
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
@@ -34,7 +37,7 @@ uint256 CSimplifiedMNListEntry::CalcHash() const
 std::string CSimplifiedMNListEntry::ToString() const
 {
     return strprintf("CSimplifiedMNListEntry(proRegTxHash=%s, confirmedHash=%s, service=%s, pubKeyOperator=%s, votingAddress=%s, isValid=%d)",
-        proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(false), EncodeDestination(CTxDestination(pubKeyOperator)), EncodeDestination(CTxDestination(keyIDVoting)), isValid);
+        proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(false), pubKeyOperator.Get().ToString(), EncodeDestination(keyIDVoting), isValid);
 }
 
 void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
@@ -44,8 +47,8 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
     obj.pushKV("proRegTxHash", proRegTxHash.ToString());
     obj.pushKV("confirmedHash", confirmedHash.ToString());
     obj.pushKV("service", service.ToString(false));
-    obj.pushKV("pubKeyOperator", EncodeDestination(CTxDestination(pubKeyOperator)));
-    obj.pushKV("votingAddress", EncodeDestination(CTxDestination(keyIDVoting)));
+    obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
+    obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
     obj.pushKV("isValid", isValid);
 }
 
@@ -93,6 +96,42 @@ CSimplifiedMNListDiff::~CSimplifiedMNListDiff()
 {
 }
 
+bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex)
+{
+    auto baseQuorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex);
+    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(blockIndex);
+
+    std::set<std::pair<Consensus::LLMQType, uint256>> baseQuorumHashes;
+    std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
+    for (auto& p : baseQuorums) {
+        for (auto& p2 : p.second) {
+            baseQuorumHashes.emplace(p.first, p2->GetBlockHash());
+        }
+    }
+    for (auto& p : quorums) {
+        for (auto& p2 : p.second) {
+            quorumHashes.emplace(p.first, p2->GetBlockHash());
+        }
+    }
+
+    for (auto& p : baseQuorumHashes) {
+        if (!quorumHashes.count(p)) {
+            deletedQuorums.emplace_back((uint8_t)p.first, p.second);
+        }
+    }
+    for (auto& p : quorumHashes) {
+        if (!baseQuorumHashes.count(p)) {
+            llmq::CFinalCommitment qc;
+            uint256 minedBlockHash;
+            if (!llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p.second, qc, minedBlockHash)) {
+                return false;
+            }
+            newQuorums.emplace_back(qc);
+        }
+    }
+    return true;
+}
+
 void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 {
     obj.setObject();
@@ -120,9 +159,27 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
     }
     obj.pushKV("mnList", mnListArr);
 
+    UniValue deletedQuorumsArr(UniValue::VARR);
+    for (const auto& e : deletedQuorums) {
+        UniValue eObj(UniValue::VOBJ);
+        eObj.pushKV("llmqType", e.first);
+        eObj.pushKV("quorumHash", e.second.ToString());
+        deletedQuorumsArr.push_back(eObj);
+    }
+    obj.pushKV("deletedQuorums", deletedQuorumsArr);
+
+    UniValue newQuorumsArr(UniValue::VARR);
+    for (const auto& e : newQuorums) {
+        UniValue eObj;
+        e.ToJson(eObj);
+        newQuorumsArr.push_back(eObj);
+    }
+    obj.pushKV("newQuorums", newQuorumsArr);
+
     CCbTx cbTxPayload;
     if (GetTxPayload(*cbTx, cbTxPayload)) {
         obj.pushKV("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString());
+        obj.pushKV("merkleRootQuorums", cbTxPayload.merkleRootQuorums.ToString());
     }
 }
 
@@ -166,6 +223,11 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     // response. This will usually be identical to the block found in baseBlockIndex. The only difference is when a
     // null block hash was provided to get the diff from the genesis block.
     mnListDiffRet.baseBlockHash = baseBlockHash;
+
+    if (!mnListDiffRet.BuildQuorumsDiff(baseBlockIndex, blockIndex)) {
+        errorRet = strprintf("failed to build quorums diff");
+        return false;
+    }
 
     // TODO store coinbase TX in CBlockIndex
     CBlock block;

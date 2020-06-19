@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_EVO_PROVIDERTX_H
 #define SYSCOIN_EVO_PROVIDERTX_H
 
+#include <bls/bls.h>
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 
@@ -27,7 +28,7 @@ public:
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
     CKeyID keyIDOwner;
-    CKeyID pubKeyOperator;
+    CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     uint16_t nOperatorReward{0};
     CScript scriptPayout;
@@ -35,8 +36,7 @@ public:
     std::vector<unsigned char> vchSig;
 
 public:
-    SERIALIZE_METHODS(CProRegTx, obj)
-    {
+    SERIALIZE_METHODS(CProRegTx, obj) {
         READWRITE(obj.nVersion, obj.nType, obj.nMode, obj.collateralOutpoint, obj.addr,
         obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting, obj.nOperatorReward, obj.scriptPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -58,8 +58,8 @@ public:
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString(false));
-        obj.pushKV("ownerAddress", EncodeDestination(CTxDestination(keyIDOwner)));
-        obj.pushKV("votingAddress", EncodeDestination(CTxDestination(keyIDVoting)));
+        obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
+        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
 
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
@@ -83,12 +83,10 @@ public:
     CService addr;
     CScript scriptOperatorPayout;
     uint256 inputsHash; // replay protection
-    std::vector<char> sig;
+    CBLSSignature sig;
 
 public:
-
-    SERIALIZE_METHODS(CProUpServTx, obj)
-    {
+    SERIALIZE_METHODS(CProUpServTx, obj) {
         READWRITE(obj.nVersion, obj.proTxHash, obj.addr, obj.scriptOperatorPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(obj.sig);
@@ -122,15 +120,14 @@ public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
     uint16_t nMode{0}; // only 0 supported for now
-    CKeyID pubKeyOperator;
+    CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     CScript scriptPayout;
     uint256 inputsHash; // replay protection
     std::vector<unsigned char> vchSig;
 
 public:
-    SERIALIZE_METHODS(CProUpRegTx, obj)
-    {
+    SERIALIZE_METHODS(CProUpRegTx, obj) {
         READWRITE(obj.nVersion, obj.proTxHash, obj.nMode, obj.pubKeyOperator, obj.keyIDVoting,
         obj.scriptPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -147,7 +144,7 @@ public:
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("proTxHash", proTxHash.ToString());
-        obj.pushKV("votingAddress", EncodeDestination(CTxDestination(keyIDVoting)));
+        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
             obj.pushKV("payoutAddress", EncodeDestination(dest));
@@ -176,12 +173,11 @@ public:
     uint256 proTxHash;
     uint16_t nReason{REASON_NOT_SPECIFIED};
     uint256 inputsHash; // replay protection
-    std::vector<char> sig;
+    CBLSSignature sig;
 
 public:
-    SERIALIZE_METHODS(CProUpRevTx, obj)
-    {
-        READWRITE(obj.nVersion, obj.proTxHash, obj.nReason, obj.inputsHash);
+    SERIALIZE_METHODS(CProUpRevTx, obj) {
+         READWRITE(obj.nVersion, obj.proTxHash, obj.nReason, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(obj.sig);
         }
