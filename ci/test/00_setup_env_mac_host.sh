@@ -8,6 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_macos
 export HOST=x86_64-apple-darwin
+export DOCKER_NAME_TAG=ubuntu:18.04  # Check that bionic can cross-compile to macos (bionic is used in the gitian build as well)
 export PIP_PACKAGES="zmq lief"
 export RUN_SECURITY_TESTS="true"
 export GOAL="install"

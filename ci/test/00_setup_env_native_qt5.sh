@@ -7,6 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_qt5
+export DOCKER_NAME_TAG=ubuntu:18.04  # Check that bionic can compile our c++17 and run our functional tests in python3
 export PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libdbus-1-dev libharfbuzz-dev"
 export DEP_OPTS="NO_UPNP=1 DEBUG=1"
 # TODO: we have few rpcs that aren't covered by any test, re-enable the line below once it's fixed
