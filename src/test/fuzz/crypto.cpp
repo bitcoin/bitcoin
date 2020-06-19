@@ -73,12 +73,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 8)) {
             case 0: {
                 data.resize(CHash160::OUTPUT_SIZE);
-                hash160.Finalize(data.data());
+                hash160.Finalize(data);
                 break;
             }
             case 1: {
                 data.resize(CHash256::OUTPUT_SIZE);
-                hash256.Finalize(data.data());
+                hash256.Finalize(data);
                 break;
             }
             case 2: {
