@@ -415,7 +415,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         }
         mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
         mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
-        mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator, tx.GetHash());
+        mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             mapProTxCollaterals.emplace(proTx.collateralOutpoint, tx.GetHash());
         }
@@ -430,10 +430,10 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         bool ok = GetTxPayload(tx, proTx);
         assert(ok);
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-        mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator, tx.GetHash());
+        mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         assert(dmn);
-        newit->validForProTxKey = dmn->pdmnState->pubKeyOperator;
+        newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
             newit->isKeyChangeProTx = true;
         }
@@ -444,7 +444,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         assert(dmn);
-        newit->validForProTxKey = dmn->pdmnState->pubKeyOperator;
+        newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
             newit->isKeyChangeProTx = true;
         }
@@ -493,7 +493,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         }
     };
 
-    if (ptx->nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
             assert(false);
@@ -505,21 +505,21 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
         mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
         mapProTxCollaterals.erase(proTx.collateralOutpoint);
-    } else if (ptx->nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
+    } else if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
             assert(false);
         }
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         mapProTxAddresses.erase(proTx.addr);
-    } else if (ptx->nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
+    } else if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
             assert(false);
         }
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
-    } else if (ptx->nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
+    } else if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
             assert(false);
@@ -711,6 +711,7 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
     return true;
 }
 // SYSCOIN
+
 void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId)
 {
     if (mapProTxPubKeyIDs.count(keyId)) {
@@ -757,7 +758,7 @@ void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
             } else {
                 // Should not happen as we track referencing TXs in addUnchecked/removeUnchecked.
                 // But lets be on the safe side and not run into an endless loop...
-                LogPrintf("%s: ERROR: found invalid TX ref in mapProTxRefs, proTxHash=%s, txHash=%s", __func__, proTxHash.ToString(), it->second.ToString());
+                LogPrint(BCLog::MEMPOOL, "%s: ERROR: found invalid TX ref in mapProTxRefs, proTxHash=%s, txHash=%s\n", __func__, proTxHash.ToString(), it->second.ToString());
                 mapProTxRefs.erase(it);
             }
         }
@@ -777,7 +778,7 @@ void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
     }
 }
 
-void CTxMemPool::removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const CKeyID& newKeyHash)
+void CTxMemPool::removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash)
 {
     std::set<uint256> conflictingTxs;
     for (auto its = mapProTxRefs.equal_range(proTxHash); its.first != its.second; ++its.first) {
@@ -794,6 +795,7 @@ void CTxMemPool::removeProTxKeyChangedConflicts(const CTransaction &tx, const ui
         removeRecursive(tx, MemPoolRemovalReason::CONFLICT);
     }
 }
+
 void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
 {
     removeProTxSpentCollateralConflicts(tx);
@@ -801,7 +803,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     if (tx.nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return;
         }
 
@@ -819,7 +821,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return;
         }
 
@@ -832,20 +834,20 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return;
         }
 
         removeProTxPubKeyConflicts(tx, proTx.pubKeyOperator);
-        removeProTxKeyChangedConflicts(tx, proTx.proTxHash, proTx.pubKeyOperator);
+        removeProTxKeyChangedConflicts(tx, proTx.proTxHash, ::SerializeHash(proTx.pubKeyOperator));
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return;
         }
 
-        removeProTxKeyChangedConflicts(tx, proTx.proTxHash, CKeyID());
+        removeProTxKeyChangedConflicts(tx, proTx.proTxHash, ::SerializeHash(CBLSPublicKey()));
     }
 }
 /**
@@ -1140,7 +1142,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     if (tx.nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return true; // i.e. can't decode payload == conflict
         }
         if (mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash()))
@@ -1159,7 +1161,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return true; // i.e. can't decode payload == conflict
         }
         auto it = mapProTxAddresses.find(proTx.addr);
@@ -1167,14 +1169,14 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return true; // i.e. can't decode payload == conflict
         }
 
         // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
-            LogPrintf("%s: ERROR: Masternode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
         }
         // only allow one operator key change in the mempool
@@ -1189,14 +1191,14 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
             return true; // i.e. can't decode payload == conflict
         }
 
         // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
-            LogPrintf("%s: ERROR: Masternode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
         }
         // only allow one operator key change in the mempool
