@@ -33,6 +33,7 @@ export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
 export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-true}
+export RUN_SECURITY_TESTS=${RUN_SECURITY_TESTS:-false}
 export TEST_RUNNER_ENV=${TEST_RUNNER_ENV:-}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export CONTAINER_NAME=${CONTAINER_NAME:-ci_unnamed}

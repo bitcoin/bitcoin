@@ -10,7 +10,7 @@
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
 
 #include <atomic>
 #include <condition_variable>

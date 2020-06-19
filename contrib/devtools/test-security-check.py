@@ -20,10 +20,9 @@ def write_testcode(filename):
     ''')
 
 def call_security_check(cc, source, executable, options):
-    subprocess.check_call([cc,source,'-o',executable] + options)
-    p = subprocess.Popen(['./security-check.py',executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    return (p.returncode, stdout.rstrip())
+    subprocess.run([cc,source,'-o',executable] + options, check=True)
+    p = subprocess.run(['./contrib/devtools/security-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
+    return (p.returncode, p.stdout.rstrip())
 
 class TestSecurityChecks(unittest.TestCase):
     def test_ELF(self):

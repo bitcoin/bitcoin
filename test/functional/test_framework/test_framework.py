@@ -91,6 +91,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     This class also contains various public and private helper methods."""
 
+    chain = None  # type: str
+    setup_clean_chain = None  # type: bool
+
     def __init__(self):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
         self.chain = 'regtest'
@@ -407,7 +410,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
-    def add_nodes(self, num_nodes, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
+    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
         """Instantiate TestNode objects.
 
         Should only be called once after the nodes have been specified in
@@ -449,7 +452,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(binary), num_nodes)
         assert_equal(len(binary_cli), num_nodes)
         for i in range(num_nodes):
-            self.nodes.append(TestNode(
+            test_node_i = TestNode(
                 i,
                 get_datadir_path(self.options.tmpdir, i),
                 chain=self.chain,
@@ -467,7 +470,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
                 descriptors=self.options.descriptors,
-            ))
+            )
+            self.nodes.append(test_node_i)
+            if not test_node_i.version_is_at_least(170000):
+                # adjust conf for pre 17
+                conf_file = test_node_i.bitcoinconf
+                with open(conf_file, 'r', encoding='utf8') as conf:
+                    conf_data = conf.read()
+                with open(conf_file, 'w', encoding='utf8') as conf:
+                    conf.write(conf_data.replace('[regtest]', ''))
 
     def start_node(self, i, *args, **kwargs):
         """Start a bitcoind"""
@@ -528,7 +539,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         Split the network of four nodes into nodes 0/1 and 2/3.
         """
         disconnect_nodes(self.nodes[1], 2)
-        disconnect_nodes(self.nodes[2], 1)
         self.sync_all(self.nodes[:2])
         self.sync_all(self.nodes[2:])
 

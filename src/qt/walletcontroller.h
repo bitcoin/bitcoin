@@ -62,6 +62,7 @@ public:
     std::map<std::string, bool> listWalletDir() const;
 
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
+    void closeAllWallets(QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void walletAdded(WalletModel* wallet_model);

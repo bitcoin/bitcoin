@@ -8,37 +8,37 @@
 #include <util/system.h>
 #include <util/translation.h>
 
-std::string TransactionErrorString(const TransactionError err)
+bilingual_str TransactionErrorString(const TransactionError err)
 {
     switch (err) {
         case TransactionError::OK:
-            return "No error";
+            return Untranslated("No error");
         case TransactionError::MISSING_INPUTS:
-            return "Missing inputs";
+            return Untranslated("Missing inputs");
         case TransactionError::ALREADY_IN_CHAIN:
-            return "Transaction already in block chain";
+            return Untranslated("Transaction already in block chain");
         case TransactionError::P2P_DISABLED:
-            return "Peer-to-peer functionality missing or disabled";
+            return Untranslated("Peer-to-peer functionality missing or disabled");
         case TransactionError::MEMPOOL_REJECTED:
-            return "Transaction rejected by AcceptToMemoryPool";
+            return Untranslated("Transaction rejected by AcceptToMemoryPool");
         case TransactionError::MEMPOOL_ERROR:
-            return "AcceptToMemoryPool failed";
+            return Untranslated("AcceptToMemoryPool failed");
         case TransactionError::INVALID_PSBT:
-            return "PSBT is not sane";
+            return Untranslated("PSBT is not sane");
         case TransactionError::PSBT_MISMATCH:
-            return "PSBTs not compatible (different transactions)";
+            return Untranslated("PSBTs not compatible (different transactions)");
         case TransactionError::SIGHASH_MISMATCH:
-            return "Specified sighash value does not match existing value";
+            return Untranslated("Specified sighash value does not match existing value");
         case TransactionError::MAX_FEE_EXCEEDED:
-            return "Fee exceeds maximum configured by -maxtxfee";
+            return Untranslated("Fee exceeds maximum configured by -maxtxfee");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
 }
 
-std::string ResolveErrMsg(const std::string& optname, const std::string& strBind)
+bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind)
 {
-    return strprintf(_("Cannot resolve -%s address: '%s'").translated, optname, strBind);
+    return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
 }
 
 bilingual_str AmountHighWarn(const std::string& optname)

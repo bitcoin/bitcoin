@@ -16,15 +16,9 @@ Note:
 */
 
 	.syntax unified
-	.arch armv7-a
 	@ eabi attributes - see readelf -A
-	.eabi_attribute 8, 1  @ Tag_ARM_ISA_use = yes
-	.eabi_attribute 9, 0  @ Tag_Thumb_ISA_use = no
-	.eabi_attribute 10, 0 @ Tag_FP_arch = none
 	.eabi_attribute 24, 1 @ Tag_ABI_align_needed = 8-byte
 	.eabi_attribute 25, 1 @ Tag_ABI_align_preserved = 8-byte, except leaf SP
-	.eabi_attribute 30, 2 @ Tag_ABI_optimization_goals = Aggressive Speed
-	.eabi_attribute 34, 1 @ Tag_CPU_unaligned_access = v6
 	.text
 
 	@ Field constants

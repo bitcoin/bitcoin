@@ -718,4 +718,19 @@ SECP256K1_INLINE static void secp256k1_scalar_mul_shift_var(secp256k1_scalar *r,
     secp256k1_scalar_cadd_bit(r, 0, (l[(shift - 1) >> 5] >> ((shift - 1) & 0x1f)) & 1);
 }
 
+static SECP256K1_INLINE void secp256k1_scalar_cmov(secp256k1_scalar *r, const secp256k1_scalar *a, int flag) {
+    uint32_t mask0, mask1;
+    VG_CHECK_VERIFY(r->d, sizeof(r->d));
+    mask0 = flag + ~((uint32_t)0);
+    mask1 = ~mask0;
+    r->d[0] = (r->d[0] & mask0) | (a->d[0] & mask1);
+    r->d[1] = (r->d[1] & mask0) | (a->d[1] & mask1);
+    r->d[2] = (r->d[2] & mask0) | (a->d[2] & mask1);
+    r->d[3] = (r->d[3] & mask0) | (a->d[3] & mask1);
+    r->d[4] = (r->d[4] & mask0) | (a->d[4] & mask1);
+    r->d[5] = (r->d[5] & mask0) | (a->d[5] & mask1);
+    r->d[6] = (r->d[6] & mask0) | (a->d[6] & mask1);
+    r->d[7] = (r->d[7] & mask0) | (a->d[7] & mask1);
+}
+
 #endif /* SECP256K1_SCALAR_REPR_IMPL_H */

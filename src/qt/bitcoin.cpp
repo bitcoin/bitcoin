@@ -33,6 +33,7 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <util/threadnames.h>
 #include <validation.h>
 
@@ -154,7 +155,7 @@ BitcoinCore::BitcoinCore(interfaces::Node& node) :
 void BitcoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings()));
+    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
 }
 
 void BitcoinCore::initialize()
@@ -399,7 +400,7 @@ void BitcoinApplication::shutdownResult()
 
 void BitcoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(nullptr, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(PACKAGE_NAME) + QString("\n\n") + message);
+    QMessageBox::critical(nullptr, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(PACKAGE_NAME) + QString("<br><br>") + message);
     ::exit(EXIT_FAILURE);
 }
 
@@ -457,7 +458,7 @@ int GuiMain(int argc, char* argv[])
     SetupUIArgs();
     std::string error;
     if (!node->parseParameters(argc, argv, error)) {
-        node->initError(strprintf("Error parsing command line arguments: %s\n", error));
+        node->initError(strprintf(Untranslated("Error parsing command line arguments: %s\n"), error));
         // Create a message box, because the gui has neither been created nor has subscribed to core signals
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             // message can not be translated because translations have not been initialized
@@ -498,13 +499,13 @@ int GuiMain(int argc, char* argv[])
     /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!CheckDataDirOption()) {
-        node->initError(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
+        node->initError(strprintf(Untranslated("Specified data directory \"%s\" does not exist.\n"), gArgs.GetArg("-datadir", "")));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
     if (!node->readConfigFiles(error)) {
-        node->initError(strprintf("Error reading configuration file: %s\n", error));
+        node->initError(strprintf(Untranslated("Error reading configuration file: %s\n"), error));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
@@ -520,7 +521,7 @@ int GuiMain(int argc, char* argv[])
     try {
         node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
-        node->initError(strprintf("%s\n", e.what()));
+        node->initError(Untranslated(strprintf("%s\n", e.what())));
         QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(e.what()));
         return EXIT_FAILURE;
     }
@@ -598,10 +599,10 @@ int GuiMain(int argc, char* argv[])
         }
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings()));
+        app.handleRunawayException(QString::fromStdString(node->getWarnings().translated));
     } catch (...) {
         PrintExceptionContinue(nullptr, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings()));
+        app.handleRunawayException(QString::fromStdString(node->getWarnings().translated));
     }
     return rv;
 }

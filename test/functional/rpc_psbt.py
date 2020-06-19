@@ -43,10 +43,8 @@ class PSBTTest(BitcoinTestFramework):
         online_node = self.nodes[1]
 
         # Disconnect offline node from others
+        # Topology of test network is linear, so this one call is enough
         disconnect_nodes(offline_node, 1)
-        disconnect_nodes(online_node, 0)
-        disconnect_nodes(offline_node, 2)
-        disconnect_nodes(mining_node, 0)
 
         # Create watchonly on online_node
         online_node.createwallet(wallet_name='wonline', disable_private_keys=True)

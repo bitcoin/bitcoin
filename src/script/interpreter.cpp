@@ -1522,7 +1522,7 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
     CScript scriptPubKey;
-    Span<const valtype> stack = MakeSpan(witness.stack);
+    Span<const valtype> stack{witness.stack};
 
     if (witversion == 0) {
         if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
