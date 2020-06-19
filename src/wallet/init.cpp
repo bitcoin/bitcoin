@@ -7,8 +7,8 @@
 #include <interfaces/chain.h>
 #include <net.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <outputtype.h>
-#include <ui_interface.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/translation.h>
