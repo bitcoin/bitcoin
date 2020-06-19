@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "deterministicmns.h"
-#include "providertx.h"
-#include "specialtx.h"
+#include <evo/deterministicmns.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "clientversion.h"
-#include "core_io.h"
-#include "hash.h"
-#include "messagesigner.h"
-#include "script/standard.h"
-#include "streams.h"
-#include "univalue.h"
-#include "validation.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <clientversion.h>
+#include <core_io.h>
+#include <hash.h>
+#include <messagesigner.h>
+#include <script/standard.h>
+#include <streams.h>
+#include <univalue.h>
+#include <validation.h>
 
 template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state)
@@ -23,7 +23,7 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidati
     if (!proTx.addr.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !proTx.addr.IsRoutable()) {
+    if (Params().RequireRoutableExternalIP() && !proTx.addr.IsRoutable()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
 
@@ -64,6 +64,15 @@ static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationS
 }
 
 template <typename ProTx>
+static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state)
+{
+    if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false);
+    }
+    return true;
+}
+
+template <typename ProTx>
 static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidationState& state)
 {
     uint256 inputsHash = CalcTxInputsHash(tx);
@@ -95,7 +104,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-mode");
     }
 
-    if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsNull() || ptx.keyIDVoting.IsNull()) {
+    if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
     int witnessversion;
@@ -117,6 +126,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
     if (ptx.addr != CService() && !CheckService(tx.GetHash(), ptx, state)) {
+        // pass the state returned by the function above
         return false;
     }
 
@@ -125,7 +135,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     }
 
     CTxDestination collateralTxDest;
-    CKeyID keyForPayloadSig;
+    const CKeyID *keyForPayloadSig = nullptr;
     COutPoint collateralOutpoint;
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
@@ -138,17 +148,10 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-dest");
         }
 
-        // Extract key from collateral.
+        // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
         // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
-        // Only supports destinations which map to single public keys, i.e. P2PKH,
-        // P2WPKH, and P2SH-P2WPKH.
-        if (auto id = boost::get<PKHash>(&collateralTxDest)) {
-            keyForPayloadSig = CKeyID(*id);
-        }
-        else if (auto witness_id = boost::get<WitnessV0KeyHash>(&collateralTxDest)) {
-            keyForPayloadSig = CKeyID(*witness_id);
-        }
-        else {
+        keyForPayloadSig = boost::get<CKeyID>(&collateralTxDest);
+        if (!keyForPayloadSig) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-pkh");
         }
 
@@ -198,9 +201,10 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return false;
     }
 
-    if (!keyForPayloadSig.IsNull()) {
+    if (keyForPayloadSig) {
         // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
-        if (!CheckStringSig(ptx, keyForPayloadSig, state)) {
+        if (!CheckStringSig(ptx, *keyForPayloadSig, state)) {
+            // pass the state returned by the function above
             return false;
         }
     } else {
@@ -224,11 +228,12 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
     }
 
-    if (ptx.nVersion == 0 || ptx.nVersion > CProRegTx::CURRENT_VERSION) {
+    if (ptx.nVersion == 0 || ptx.nVersion > CProUpServTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
     }
 
     if (!CheckService(ptx.proTxHash, ptx, state)) {
+        // pass the state returned by the function above
         return false;
     }
 
@@ -258,9 +263,11 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
         // we can only check the signature if pindexPrev != nullptr and the MN is known
         if (!CheckInputsHash(tx, ptx, state)) {
+            // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator, state)) {
+        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
+            // pass the state returned by the function above
             return false;
         }
     }
@@ -279,14 +286,14 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
     }
 
-    if (ptx.nVersion == 0 || ptx.nVersion > CProRegTx::CURRENT_VERSION) {
+    if (ptx.nVersion == 0 || ptx.nVersion > CProUpRegTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
     }
     if (ptx.nMode != 0) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-mode");
     }
 
-    if (ptx.pubKeyOperator.IsNull() || ptx.keyIDVoting.IsNull()) {
+    if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
     int witnessversion;
@@ -342,9 +349,11 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         }
 
         if (!CheckInputsHash(tx, ptx, state)) {
+            // pass the state returned by the function above
             return false;
         }
         if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state)) {
+            // pass the state returned by the function above
             return false;
         }
     }
@@ -363,7 +372,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
     }
 
-    if (ptx.nVersion == 0 || ptx.nVersion > CProRegTx::CURRENT_VERSION) {
+    if (ptx.nVersion == 0 || ptx.nVersion > CProUpRevTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
     }
 
@@ -379,10 +388,14 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         if (!dmn)
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
 
-        if (!CheckInputsHash(tx, ptx, state))
+        if (!CheckInputsHash(tx, ptx, state)) {
+            // pass the state returned by the function above
             return false;
-        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator, state))
+        }
+        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
+            // pass the state returned by the function above
             return false;
+        }
     }
 
     return true;
@@ -404,8 +417,8 @@ std::string CProRegTx::MakeSignString() const
 
     s += strPayout + "|";
     s += strprintf("%d", nOperatorReward) + "|";
-    s += EncodeDestination(CTxDestination(keyIDOwner)) + "|";
-    s += EncodeDestination(CTxDestination(keyIDVoting)) + "|";
+    s += EncodeDestination(keyIDOwner) + "|";
+    s += EncodeDestination(keyIDVoting) + "|";
 
     // ... and also the full hash of the payload as a protection agains malleability and replays
     s += ::SerializeHash(*this).ToString();
@@ -422,7 +435,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
-        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(CTxDestination(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(CTxDestination(keyIDVoting)), payee);
+        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(keyIDOwner), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
 }
 
 std::string CProUpServTx::ToString() const
@@ -446,7 +459,7 @@ std::string CProUpRegTx::ToString() const
     }
 
     return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s)",
-        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(CTxDestination(keyIDVoting)), payee);
+        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
 }
 
 std::string CProUpRevTx::ToString() const

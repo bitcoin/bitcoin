@@ -6,6 +6,7 @@
 #define SYSCOIN_EVO_EVODB_H
 
 #include <dbwrapper.h>
+#include <sync.h>
 #include <uint256.h>
 
 // "b_b" was used in the initial version of deterministic MN storage
@@ -30,8 +31,9 @@ public:
 
 class CEvoDB
 {
-private:
+public:
     CCriticalSection cs;
+private:
     CDBWrapper db;
 
     typedef CDBTransaction<CDBWrapper, CDBBatch> RootTransaction;
@@ -42,7 +44,7 @@ private:
     CurTransaction curDBTransaction;
 
 public:
-    CEvoDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    explicit CEvoDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction()
     {
@@ -52,6 +54,7 @@ public:
 
     CurTransaction& GetCurTransaction()
     {
+        AssertLockHeld(cs); // lock must be held from outside as long as the DB transaction is used
         return curDBTransaction;
     }
 

@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_EVO_MNAUTH_H
 #define SYSCOIN_EVO_MNAUTH_H
 
+#include <bls/bls.h>
 #include <serialize.h>
 
 class CConnman;
@@ -36,13 +37,13 @@ class CMNAuth
 {
 public:
     uint256 proRegTxHash;
-    std::vector<char> sig;
+    CBLSSignature sig;
 
 public:
-    SERIALIZE_METHODS(CMNAuth, obj)
-    {
+    SERIALIZE_METHODS(CMNAuth, obj) {
         READWRITE(obj.proRegTxHash, obj.sig);
     }
+
 
     static void PushMNAUTH(CNode* pnode, CConnman& connman);
     static void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);

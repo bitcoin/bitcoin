@@ -21,11 +21,11 @@ public:
 public:
     uint16_t nVersion{CURRENT_VERSION};
     uint256 merkleRootMNList;
+    uint256 merkleRootQuorums;
 
 public:
-    SERIALIZE_METHODS(CCbTx, obj)
-    {
-         READWRITE(obj.nVersion, obj.merkleRootMNList);
+    SERIALIZE_METHODS(CCbTx, obj) {
+        READWRITE(obj.nVersion, obj.merkleRootMNList, obj.merkleRootQuorums);
     }
 
     std::string ToString() const;
@@ -36,6 +36,7 @@ public:
         obj.setObject();
         obj.pushKV("version", (int)nVersion);
         obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
+        obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
     }
 };
 
@@ -43,5 +44,6 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 
 bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state);
+bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state);
 
-#endif //SYSCOIN_EVO_CBTX_H
+#endif //DASH_CBTX_H

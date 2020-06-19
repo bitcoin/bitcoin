@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_EVO_SIMPLIFIEDMNS_H
 #define SYSCOIN_EVO_SIMPLIFIEDMNS_H
 
+#include <bls/bls.h>
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
@@ -15,19 +16,24 @@ class UniValue;
 class CDeterministicMNList;
 class CDeterministicMN;
 
+namespace llmq
+{
+    class CFinalCommitment;
+} // namespace llmq
+
 class CSimplifiedMNListEntry
 {
 public:
     uint256 proRegTxHash;
     uint256 confirmedHash;
     CService service;
-    CKeyID pubKeyOperator;
+    CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     bool isValid;
 
 public:
     CSimplifiedMNListEntry() {}
-    CSimplifiedMNListEntry(const CDeterministicMN& dmn);
+    explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
 
     bool operator==(const CSimplifiedMNListEntry& rhs) const
     {
@@ -45,8 +51,7 @@ public:
     }
 
 public:
-    SERIALIZE_METHODS(CSimplifiedMNListEntry, obj)
-    {
+    SERIALIZE_METHODS(CSimplifiedMNListEntry, obj) {
         READWRITE(obj.proRegTxHash, obj.confirmedHash, obj.service, obj.pubKeyOperator,
         obj.keyIDVoting, obj.isValid);
     }
@@ -65,8 +70,8 @@ public:
 
 public:
     CSimplifiedMNList() {}
-    CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
-    CSimplifiedMNList(const CDeterministicMNList& dmnList);
+    explicit CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
+    explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
     uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
 };
@@ -80,8 +85,7 @@ public:
     uint256 blockHash;
 
 public:
-    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj)
-    {
+    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj) {
         READWRITE(obj.baseBlockHash, obj.blockHash);
     }
 };
@@ -96,16 +100,21 @@ public:
     std::vector<uint256> deletedMNs;
     std::vector<CSimplifiedMNListEntry> mnList;
 
+    // we also transfer changes in active quorums
+    std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
+    std::vector<llmq::CFinalCommitment> newQuorums;
+
 public:
-    SERIALIZE_METHODS(CSimplifiedMNListDiff, obj)
-    {
+    SERIALIZE_METHODS(CSimplifiedMNListDiff, obj) {
         READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx,
-        obj.deletedMNs, obj.mnList);
+        obj.deletedMNs, obj.mnList, obj.deletedQuorums, obj.newQuorums);
     }
 
 public:
     CSimplifiedMNListDiff();
     ~CSimplifiedMNListDiff();
+
+    bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex);
 
     void ToJson(UniValue& obj) const;
 };
