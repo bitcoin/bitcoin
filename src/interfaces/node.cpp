@@ -17,6 +17,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/settings.h>
@@ -26,7 +27,6 @@
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>

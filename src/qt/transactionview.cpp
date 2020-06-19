@@ -17,7 +17,7 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
-#include <ui_interface.h>
+#include <node/ui_interface.h>
 
 #include <QApplication>
 #include <QComboBox>
