@@ -319,6 +319,15 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         info = wallet.getwalletinfo()
         assert info['keypoolsize'] == 1
 
+        # Create upgrade wallet in v0.16
+        self.stop_node(-1)
+        self.start_node(-1, extra_args=["-wallet=u1_v16"])
+        wallet = node_v16.get_wallet_rpc("u1_v16")
+        v16_addr = wallet.getnewaddress('', "bech32")
+        v16_info = wallet.validateaddress(v16_addr)
+        v16_pubkey = v16_info['pubkey']
+        self.stop_node(-1)
+
         self.log.info("Test wallet upgrade path...")
         # u1: regular wallet, created with v0.17
         node_v17.rpc.createwallet(wallet_name="u1_v17")
@@ -327,6 +336,30 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         v17_info = wallet.getaddressinfo(address)
         hdkeypath = v17_info["hdkeypath"]
         pubkey = v17_info["pubkey"]
+
+        # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
+        shutil.copyfile(
+            os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
+            os.path.join(node_master_wallets_dir, "u1_v16")
+        )
+        load_res = node_master.loadwallet("u1_v16")
+        # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
+        assert_equal(load_res['warning'], '')
+        wallet = node_master.get_wallet_rpc("u1_v16")
+        info = wallet.getaddressinfo(v16_addr)
+        descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + v16_pubkey + ")"
+        assert_equal(info["desc"], descsum_create(descriptor))
+
+        # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
+        os.remove(os.path.join(node_v16_wallets_dir, "wallets/u1_v16"))
+        shutil.copyfile(
+            os.path.join(node_master_wallets_dir, "u1_v16"),
+            os.path.join(node_v16_wallets_dir, "wallets/u1_v16")
+        )
+        self.start_node(-1, extra_args=["-wallet=u1_v16"])
+        wallet = node_v16.get_wallet_rpc("u1_v16")
+        info = wallet.validateaddress(v16_addr)
+        assert_equal(info, v16_info)
 
         # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
         node_v17.unloadwallet("u1_v17")
