@@ -241,6 +241,17 @@ class BlockchainTest(BitcoinTestFramework):
         del res['disk_size'], res3['disk_size']
         assert_equal(res, res3)
 
+        self.log.info("Test hash_type option for gettxoutsetinfo()")
+        # Adding hash_type 'hash_serialized_2', which is the default, should
+        # not change the result.
+        res4 = node.gettxoutsetinfo(hash_type='hash_serialized_2')
+        del res4['disk_size']
+        assert_equal(res, res4)
+
+        # hash_type none should not return a UTXO set hash.
+        res5 = node.gettxoutsetinfo(hash_type='none')
+        assert 'hash_serialized_2' not in res5
+
     def _test_getblockheader(self):
         node = self.nodes[0]
 
