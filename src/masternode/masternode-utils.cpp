@@ -47,12 +47,6 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman)
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
         return;
 
-    static unsigned int nTick = 0;
-
-    nTick++;
-
-    if(nTick % 60 == 0) {
-        ProcessMasternodeConnections(connman);
-    }
+    ProcessMasternodeConnections(connman);
 }
 

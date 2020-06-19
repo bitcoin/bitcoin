@@ -18,7 +18,7 @@
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
 static const std::string DB_LIST_DIFF = "dmn_D";
 
-CDeterministicMNManager* deterministicMNManager;
+std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
 std::string CDeterministicMNState::ToString() const
 {
@@ -945,68 +945,4 @@ bool CDeterministicMNManager::UpgradeDiff(CDBBatch& batch, const CBlockIndex* pi
     batch.Write(std::make_pair(DB_LIST_DIFF, pindexNext->GetBlockHash()), newDiff);
 
     return true;
-}
-
-// TODO this can be completely removed in a future version
-void CDeterministicMNManager::UpgradeDBIfNeeded()
-{
-    LOCK(cs_main);
-
-    if (chainActive.Tip() == nullptr) {
-        return;
-    }
-
-    if (evoDb.GetRawDB().Exists(EVODB_BEST_BLOCK)) {
-        return;
-    }
-
-    // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
-    // process is cancelled in-between. But if the new version sees that the old EVODB_BEST_BLOCK is already removed,
-    // then we must assume that the upgrade process was already running before but was interrupted.
-    if (chainActive.Height() > 1 && !evoDb.GetRawDB().Exists(std::string("b_b"))) {
-        LogPrintf("CDeterministicMNManager::%s -- ERROR, upgrade process was interrupted and can't be continued. You need to reindex now.\n", __func__);
-    }
-    evoDb.GetRawDB().Erase(std::string("b_b"));
-
-    if (chainActive.Height() < Params().GetConsensus().DIP0003Height) {
-        // not reached DIP3 height yet, so no upgrade needed
-        auto dbTx = evoDb.BeginTransaction();
-        evoDb.WriteBestBlock(chainActive.Tip()->GetBlockHash());
-        dbTx->Commit();
-        return;
-    }
-
-    LogPrintf("CDeterministicMNManager::%s -- upgrading DB to use compact diffs\n", __func__);
-
-    CDBBatch batch(evoDb.GetRawDB());
-
-    CDeterministicMNList curMNList;
-    curMNList.SetHeight(Params().GetConsensus().DIP0003Height - 1);
-    curMNList.SetBlockHash(chainActive[Params().GetConsensus().DIP0003Height - 1]->GetBlockHash());
-
-    for (int nHeight = Params().GetConsensus().DIP0003Height; nHeight <= chainActive.Height(); nHeight++) {
-        auto pindex = chainActive[nHeight];
-
-        CDeterministicMNList newMNList;
-        UpgradeDiff(batch, pindex, curMNList, newMNList);
-
-        if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0) {
-            batch.Write(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), newMNList);
-            evoDb.GetRawDB().WriteBatch(batch);
-            batch.Clear();
-        }
-
-        curMNList = newMNList;
-    }
-
-    evoDb.GetRawDB().WriteBatch(batch);
-
-    LogPrintf("CDeterministicMNManager::%s -- done upgrading\n", __func__);
-
-    // Writing EVODB_BEST_BLOCK (which is b_b2 now) marks the DB as upgraded
-    auto dbTx = evoDb.BeginTransaction();
-    evoDb.WriteBestBlock(chainActive.Tip()->GetBlockHash());
-    dbTx->Commit();
-
-    evoDb.GetRawDB().CompactFull();
 }

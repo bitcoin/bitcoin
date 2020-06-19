@@ -597,12 +597,11 @@ public:
 public:
     // TODO these can all be removed in a future version
     bool UpgradeDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
-    void UpgradeDBIfNeeded();
 
 private:
     void CleanupCache(int nHeight);
 };
 
-extern CDeterministicMNManager* deterministicMNManager;
+extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
 #endif //SYSCOIN_EVO_DETERMINISTICMNS_H
