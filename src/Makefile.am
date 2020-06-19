@@ -234,6 +234,7 @@ BITCOIN_CORE_H = \
   util/threadnames.h \
   util/time.h \
   util/translation.h \
+  util/ui_change_type.h \
   util/url.h \
   util/vector.h \
   validation.h \
