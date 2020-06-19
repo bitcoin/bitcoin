@@ -34,8 +34,8 @@ public:
     {
         obj.clear();
         obj.setObject();
-        obj.push_back(Pair("version", (int)nVersion));
-        obj.push_back(Pair("merkleRootMNList", merkleRootMNList.ToString()));
+        obj.pushKV("version", (int)nVersion);
+        obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
     }
 };
 

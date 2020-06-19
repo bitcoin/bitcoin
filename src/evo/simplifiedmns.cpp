@@ -41,12 +41,12 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("proRegTxHash", proRegTxHash.ToString()));
-    obj.push_back(Pair("confirmedHash", confirmedHash.ToString()));
-    obj.push_back(Pair("service", service.ToString(false)));
-    obj.push_back(Pair("pubKeyOperator", EncodeDestination(CTxDestination(pubKeyOperator))));
-    obj.push_back(Pair("votingAddress", EncodeDestination(CTxDestination(keyIDVoting))));
-    obj.push_back(Pair("isValid", isValid));
+    obj.pushKV("proRegTxHash", proRegTxHash.ToString());
+    obj.pushKV("confirmedHash", confirmedHash.ToString());
+    obj.pushKV("service", service.ToString(false));
+    obj.pushKV("pubKeyOperator", EncodeDestination(CTxDestination(pubKeyOperator)));
+    obj.pushKV("votingAddress", EncodeDestination(CTxDestination(keyIDVoting)));
+    obj.pushKV("isValid", isValid);
 }
 
 CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries)
@@ -97,20 +97,20 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 {
     obj.setObject();
 
-    obj.push_back(Pair("baseBlockHash", baseBlockHash.ToString()));
-    obj.push_back(Pair("blockHash", blockHash.ToString()));
+    obj.pushKV("baseBlockHash", baseBlockHash.ToString());
+    obj.pushKV("blockHash", blockHash.ToString());
 
     CDataStream ssCbTxMerkleTree(SER_NETWORK, PROTOCOL_VERSION);
     ssCbTxMerkleTree << cbTxMerkleTree;
-    obj.push_back(Pair("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end())));
+    obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end()));
 
-    obj.push_back(Pair("cbTx", EncodeHexTx(*cbTx)));
+    obj.pushKV("cbTx", EncodeHexTx(*cbTx));
 
     UniValue deletedMNsArr(UniValue::VARR);
     for (const auto& h : deletedMNs) {
         deletedMNsArr.push_back(h.ToString());
     }
-    obj.push_back(Pair("deletedMNs", deletedMNsArr));
+    obj.pushKV("deletedMNs", deletedMNsArr);
 
     UniValue mnListArr(UniValue::VARR);
     for (const auto& e : mnList) {
@@ -118,11 +118,11 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
         e.ToJson(eObj);
         mnListArr.push_back(eObj);
     }
-    obj.push_back(Pair("mnList", mnListArr));
+    obj.pushKV("mnList", mnListArr);
 
     CCbTx cbTxPayload;
     if (GetTxPayload(*cbTx, cbTxPayload)) {
-        obj.push_back(Pair("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString()));
+        obj.pushKV("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString());
     }
 }
 
