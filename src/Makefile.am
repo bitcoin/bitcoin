@@ -148,9 +148,9 @@ SYSCOIN_CORE_H = \
   base58.h \
   batchedlogger.h \
   bech32.h \
-  bloom.h \
   blockencodings.h \
   blockfilter.h \
+  bloom.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -170,6 +170,7 @@ SYSCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  dbwrapper.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -185,7 +186,6 @@ SYSCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  dbwrapper.h \
   limitedmap.h \
   llmq/quorums.h \
   llmq/quorums_blockprocessor.h \
@@ -215,6 +215,7 @@ SYSCOIN_CORE_H = \
   node/context.h \
   node/psbt.h \
   node/transaction.h \
+  node/ui_interface.h \
   node/utxo_snapshot.h \
   noui.h \
   optional.h \
@@ -258,13 +259,12 @@ SYSCOIN_CORE_H = \
   support/events.h \
   support/lockedpool.h \
   sync.h \
-  threadsafety.h \
   threadinterrupt.h \
+  threadsafety.h \
   timedata.h \
   torcontrol.h \
   txdb.h \
   txmempool.h \
-  node/ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
   util/asmap.h \
@@ -274,8 +274,6 @@ SYSCOIN_CORE_H = \
   util/error.h \
   util/fees.h \
   util/golombrice.h \
-  util/spanparsing.h \
-  util/system.h \
   util/macros.h \
   util/memory.h \
   util/message.h \
@@ -283,7 +281,9 @@ SYSCOIN_CORE_H = \
   util/rbf.h \
   util/ref.h \
   util/settings.h \
+  util/spanparsing.h \
   util/string.h \
+  util/system.h \
   util/threadnames.h \
   util/time.h \
   util/translation.h \
@@ -296,9 +296,9 @@ SYSCOIN_CORE_H = \
   validationinterface.h \
   versionbits.h \
   versionbitsinfo.h \
-  walletinitinterface.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
+  wallet/coinselection.h \
   wallet/context.h \
   wallet/crypter.h \
   wallet/db.h \
@@ -313,7 +313,7 @@ SYSCOIN_CORE_H = \
   wallet/walletdb.h \
   wallet/wallettool.h \
   wallet/walletutil.h \
-  wallet/coinselection.h \
+  walletinitinterface.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
@@ -404,16 +404,16 @@ libsyscoin_server_a_SOURCES = \
   blockfilter.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
+  dbwrapper.cpp \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
   index/base.cpp \
   index/blockfilterindex.cpp \
   index/txindex.cpp \
+  init.cpp \
   interfaces/chain.cpp \
   interfaces/node.cpp \
-  init.cpp \
-  dbwrapper.cpp \
   miner.cpp \
   net.cpp \
   netfulfilledman.cpp \
@@ -423,6 +423,7 @@ libsyscoin_server_a_SOURCES = \
   node/context.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
+  node/ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/rbf.cpp \
@@ -447,7 +448,6 @@ libsyscoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
-  node/ui_interface.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
