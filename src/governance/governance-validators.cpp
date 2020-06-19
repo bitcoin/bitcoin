@@ -152,12 +152,11 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    const CTxDestination &address = DecodeDestination(strPaymentAddress);
-    if (!IsValidDestination(address)) {
+    CTxDestination dest = DecodeDestination(strPaymentAddress);
+    if (!IsValidDestination(dest)) {
         strErrorMessages += "payment_address is invalid;";
         return false;
     }
-
 
     return true;
 }

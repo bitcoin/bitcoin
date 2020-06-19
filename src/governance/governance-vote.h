@@ -7,6 +7,7 @@
 
 #include <key.h>
 #include <primitives/transaction.h>
+#include <bls/bls.h>
 
 class CGovernanceVote;
 class CConnman;
@@ -96,6 +97,8 @@ public:
 
     bool Sign(const CKey& key, const CKeyID& keyID);
     bool CheckSignature(const CKeyID& keyID) const;
+    bool Sign(const CBLSSecretKey& key);
+    bool CheckSignature(const CBLSPublicKey& pubKey) const;
     bool IsValid(bool useVotingKey) const;
     void Relay(CConnman& connman) const;
 
@@ -111,9 +114,7 @@ public:
     uint256 GetSignatureHash() const;
 
     std::string ToString() const;
-
-
-    template<typename Stream>
+        template<typename Stream>
     void Serialize(Stream& s) const
     {
         s << masternodeOutpoint;
@@ -123,10 +124,8 @@ public:
         s << nTime;
         if (!(s.GetType() & SER_GETHASH)) {
             s << vchSig;
-        }
-   
+        }      
     }
-
     template<typename Stream>
     void Unserialize(Stream& s)
     {
@@ -137,7 +136,7 @@ public:
         s >> nTime;
         if (!(s.GetType() & SER_GETHASH)) {
             s >> vchSig;
-        }
+        } 
         UpdateHash();
     }
 };

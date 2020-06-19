@@ -12,6 +12,7 @@
 #include <masternode/masternode-sync.h>
 #include <messagesigner.h>
 #include <spork.h>
+#include <util.h>
 #include <validation.h>
 
 #include <string>
@@ -151,7 +152,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
         return false;
     } else if (vote.GetTimestamp() == voteInstanceRef.nCreationTime) {
-        // Someone is doing smth fishy, there can be no two votes from the same masternode
+        // Someone is doing something fishy, there can be no two votes from the same masternode
         // with the same timestamp for the same object and signal and yet different hash/outcome.
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote, same timestamp for the different outcome";
@@ -267,7 +268,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
         for (auto& h : removedVotes) {
             removedStr += strprintf("  %s\n", h.ToString());
         }
-        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr);
+        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr); /* Continued */
         fDirtyCache = true;
     }
 
@@ -302,20 +303,22 @@ void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
     masternodeOutpoint = outpoint;
 }
 
-bool CGovernanceObject::Sign(const CKey& key)
+bool CGovernanceObject::Sign(const CBLSSecretKey& key)
 {
-    if(!CHashSigner::SignHash(GetSignatureHash(), key, vchSig)) {
-        LogPrint(BCLog::SPORK, "CSporkMessage::Sign -- SignHash() failed\n");
+    CBLSSignature sig = key.Sign(GetSignatureHash());
+    if (!key.IsValid()) {
         return false;
     }
+    sig.GetBuf(vchSig);
     return true;
 }
 
-bool CGovernanceObject::CheckSignature(const CKeyID& pubKeyId) const
+bool CGovernanceObject::CheckSignature(const CBLSPublicKey& pubKey) const
 {
-    std::string strError;
-    if (!CHashSigner::VerifyHash(GetSignatureHash(), pubKeyId, vchSig, strError)) {
-         LogPrintf(BCLog::GOBJECT, "CGovernanceObject::CheckSignature -- Verify() failed, error: %s\n", strError);
+    CBLSSignature sig;
+    sig.SetBuf(vchSig);
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
+        LogPrintf("CGovernanceObject::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
     return true;
@@ -472,8 +475,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         }
 
         // Check that we have a valid MN signature
-        if (!CheckSignature(dmn->pdmnState->pubKeyOperator) {
-            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + EncodeDestination(CTxDestination(dmn->pdmnState->pubKeyOperator));
+        if (!CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.Get().ToString();
             return false;
         }
 
