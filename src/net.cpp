@@ -868,7 +868,7 @@ void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
     uint256 hash = Hash(msg.data);
 
     // create header
-    CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), msg.data.size());
+    CMessageHeader hdr(Params().MessageStart(), msg.m_type.c_str(), msg.data.size());
     memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
 
     // serialize header
@@ -4061,9 +4061,9 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
-    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", SanitizeString(msg.command), nMessageSize, pnode->GetId());
+    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", SanitizeString(msg.m_type), nMessageSize, pnode->GetId());
     if (gArgs.GetBoolArg("-capturemessages", false)) {
-        CaptureMessage(pnode->addr, msg.command, msg.data, /* incoming */ false);
+        CaptureMessage(pnode->addr, msg.m_type, msg.data, /* incoming */ false);
     }
 
     // make sure we use the appropriate network transport format
@@ -4071,15 +4071,15 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     pnode->m_serializer->prepareForTransport(msg, serializedHeader);
 
     size_t nTotalSize = nMessageSize + serializedHeader.size();
-    statsClient.count("bandwidth.message." + SanitizeString(msg.command.c_str()) + ".bytesSent", nTotalSize, 1.0f);
-    statsClient.inc("message.sent." + SanitizeString(msg.command.c_str()), 1.0f);
+    statsClient.count("bandwidth.message." + SanitizeString(msg.m_type.c_str()) + ".bytesSent", nTotalSize, 1.0f);
+    statsClient.inc("message.sent." + SanitizeString(msg.m_type.c_str()), 1.0f);
 
     {
         LOCK(pnode->cs_vSend);
         bool hasPendingData = !pnode->vSendMsg.empty();
 
-        //log total amount of bytes per command
-        pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
+        //log total amount of bytes per message type
+        pnode->mapSendBytesPerMsgCmd[msg.m_type] += nTotalSize;
         pnode->nSendSize += nTotalSize;
 
         if (pnode->nSendSize > nSendBufferMaxSize) pnode->fPauseSend = true;

@@ -61,7 +61,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         SetMockTime(mock_time);
 
         CSerializedNetMsg net_msg;
-        net_msg.command = random_message_type;
+        net_msg.m_type = random_message_type;
         net_msg.data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
 
         CNode& random_node = *PickValue(fuzzed_data_provider, peers);

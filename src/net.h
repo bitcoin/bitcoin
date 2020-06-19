@@ -135,7 +135,7 @@ struct CSerializedNetMsg
     CSerializedNetMsg& operator=(const CSerializedNetMsg&) = delete;
 
     std::vector<unsigned char> data;
-    std::string command;
+    std::string m_type;
 };
 
 /** Different types of connections to a peer. This enum encapsulates the
