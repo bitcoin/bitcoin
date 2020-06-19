@@ -2217,9 +2217,9 @@ static void ProcessGetCFCheckPt(CNode& pfrom, CDataStream& vRecv, const CChainPa
     connman.PushMessage(&pfrom, std::move(msg));
 }
 // Header for the masked ProcessMessage
-bool  ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc);
+bool  ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc);
 
-bool _ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
+bool _ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
@@ -3573,7 +3573,7 @@ bool _ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRe
 
 // Masked proces
 // Wrapper to time message processing, overrides ProcessMessage
-bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
+bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
   int vRecvSize = vRecv.size();
   // Timer start
@@ -3634,11 +3634,11 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
   (connman->timePerMessage)[commandIndex + 3] += vRecvSize;
   if(vRecvSize > (connman->timePerMessage)[commandIndex + 4]) (connman->timePerMessage)[commandIndex + 4] = vRecvSize;
 
-  LogPrint(BCLog::RESEARCHER, "\n*** Message ** addr=%s ** cmd=%s ** cycles=%f ** bytes=%f", pfrom->addr.ToString(), msg_type, elapsed_time, vRecvSize); // Cybersecurity Lab
+  LogPrint(BCLog::RESEARCHER, "\n*** Message ** addr=%s ** cmd=%s ** cycles=%f ** bytes=%f", pfrom.addr.ToString(), msg_type, elapsed_time, vRecvSize); // Cybersecurity Lab
   return result;
 }
 
-bool PeerLogicValidation::CheckIfBanned(CNode* pnode)
+bool PeerLogicValidation::CheckIfBanned(CNode& pnode)
 {
     AssertLockHeld(cs_main);
     CNodeState &state = *State(pnode.GetId());
