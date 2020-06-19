@@ -241,59 +241,47 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 
 namespace
 {
-class CScriptVisitor : public boost::static_visitor<bool>
+class CScriptVisitor : public boost::static_visitor<CScript>
 {
-private:
-    CScript *script;
 public:
-    explicit CScriptVisitor(CScript *scriptin) { script = scriptin; }
-
-    bool operator()(const CNoDestination &dest) const {
-        script->clear();
-        return false;
-    }
-
-    bool operator()(const PKHash &keyID) const {
-        script->clear();
-        *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
-        return true;
-    }
-
-    bool operator()(const ScriptHash &scriptID) const {
-        script->clear();
-        *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
-        return true;
-    }
-
-    bool operator()(const WitnessV0KeyHash& id) const
+    CScript operator()(const CNoDestination& dest) const
     {
-        script->clear();
-        *script << OP_0 << ToByteVector(id);
-        return true;
+        return CScript();
     }
 
-    bool operator()(const WitnessV0ScriptHash& id) const
+    CScript operator()(const PKHash& keyID) const
     {
-        script->clear();
-        *script << OP_0 << ToByteVector(id);
-        return true;
+        return CScript() << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
-    bool operator()(const WitnessUnknown& id) const
+    CScript operator()(const ScriptHash& scriptID) const
     {
-        script->clear();
-        *script << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
-        return true;
+        return CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
+    }
+
+    CScript operator()(const WitnessV0KeyHash& id) const
+    {
+        return CScript() << OP_0 << ToByteVector(id);
+    }
+
+    CScript operator()(const WitnessV0ScriptHash& id) const
+    {
+        return CScript() << OP_0 << ToByteVector(id);
+    }
+
+    CScript operator()(const WitnessUnknown& id) const
+    {
+        return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
     }
 };
+
+const CScriptVisitor g_script_visitor;
+
 } // namespace
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
-    CScript script;
-
-    boost::apply_visitor(CScriptVisitor(&script), dest);
-    return script;
+    return boost::apply_visitor(::g_script_visitor, dest);
 }
 
 CScript GetScriptForRawPubKey(const CPubKey& pubKey)
