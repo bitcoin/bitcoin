@@ -274,14 +274,11 @@ public:
         return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
     }
 };
-
-const CScriptVisitor g_script_visitor;
-
 } // namespace
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
-    return boost::apply_visitor(::g_script_visitor, dest);
+    return boost::apply_visitor(CScriptVisitor{}, dest);
 }
 
 CScript GetScriptForRawPubKey(const CPubKey& pubKey)
