@@ -64,7 +64,8 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
     if (pindex) {
         uint256 calculatedMerkleRoot;
         if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, state)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
+            // pass the state returned by the function above
+            return false;
         }
         if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
@@ -89,6 +90,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
     CDeterministicMNList tmpMNList;
     if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, tmpMNList, false)) {
+        // pass the state returned by the function above
         return false;
     }
 
@@ -106,7 +108,10 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
     if (sml.mnList == smlCached.mnList) {
         merkleRootRet = merkleRootCached;
-        return !mutatedCached;
+        if (mutatedCached) {
+            return state.DoS(100, false, REJECT_INVALID, "mutated-cached-calc-cb-mnmerkleroot");
+        }
+        return true;
     }
 
     bool mutated = false;
@@ -119,7 +124,11 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
     merkleRootCached = merkleRootRet;
     mutatedCached = mutated;
 
-    return !mutated;
+    if (mutated) {
+        return state.DoS(100, false, REJECT_INVALID, "mutated-calc-cb-mnmerkleroot");
+    }
+
+    return true;
 }
 
 std::string CCbTx::ToString() const
