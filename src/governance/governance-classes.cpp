@@ -345,13 +345,13 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
 
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
+            CTxDestination dest;
+            ExtractDestination(payment.script, dest);
 
-            // TODO: PRINT NICE N.N SYSCOIN OUTPUT
+            // TODO: PRINT NICE N.N DASH OUTPUT
 
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
-                        i, EncodeDestination(address1), payment.nAmount);
+                        i, EncodeDestination(dest), payment.nAmount);
         } else {
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Payment not found\n");
         }
@@ -911,7 +911,7 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
         } else {
             vecPayments.clear();
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << EncodeDestination(address)
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << EncodeDestination(dest)
                  << ", amount = " << nAmount;
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
@@ -1021,9 +1021,8 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
         if (!fPaymentMatch) {
             // Superblock payment not found!
 
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
-            LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid: %d payment %d to %s not found\n", i, payment.nAmount, EncodeDestination(address1));
+            CTxDestination dest;
+            ExtractDestination(payment.script, dest);
 
             return false;
         }
@@ -1087,15 +1086,14 @@ std::string CSuperblockManager::GetRequiredPaymentsString(int nBlockHeight)
         if (pSuperblock->GetPayment(i, payment)) {
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
-            CTxDestination address1;
             ExtractDestination(payment.script, address1);
 
             // RETURN NICE OUTPUT FOR CONSOLE
 
             if (ret != "Unknown") {
-                ret += ", " + EncodeDestination(address1);
+                ret += ", " + EncodeDestination(dest);
             } else {
-                ret = EncodeDestination(address1);
+                ret = EncodeDestination(dest);
             }
         }
     }

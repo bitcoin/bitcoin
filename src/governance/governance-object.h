@@ -11,7 +11,10 @@
 #include <governance/governance-votedb.h>
 #include <key.h>
 #include <net.h>
+#include <sync.h>
+#include <util.h>
 #include <util/strencodings.h>
+#include <bls/bls.h>
 
 #include <univalue.h>
 
@@ -62,7 +65,6 @@ struct vote_instance_t {
         nCreationTime(nCreationTimeIn)
     {
     }
-
     template<typename Stream>
     void Serialize(Stream& s) const
     {
@@ -72,7 +74,6 @@ struct vote_instance_t {
         s << nCreationTime;
    
     }
-
     template<typename Stream>
     void Unserialize(Stream& s)
     {
@@ -82,7 +83,6 @@ struct vote_instance_t {
         s >> nCreationTime;
         eOutcome = vote_outcome_enum_t(nOutcome);
     }
-
 };
 
 typedef std::map<int, vote_instance_t> vote_instance_m_t;
@@ -93,9 +93,7 @@ typedef vote_instance_m_t::const_iterator vote_instance_m_cit;
 
 struct vote_rec_t {
     vote_instance_m_t mapInstances;
-
-    SERIALIZE_METHODS(vote_rec_t, obj)
-    {
+    SERIALIZE_METHODS(vote_rec_t, obj) {
         READWRITE(obj.mapInstances);
     }
 };
@@ -255,8 +253,8 @@ public:
     // Signature related functions
 
     void SetMasternodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CKey& key);
-    bool CheckSignature(const CKeyID& pubKeyId) const;
+    bool Sign(const CBLSSecretKey& key);
+    bool CheckSignature(const CBLSPublicKey& pubKey) const;
 
     uint256 GetSignatureHash() const;
 
@@ -307,8 +305,7 @@ public:
     std::string GetDataAsPlainString() const;
 
     // SERIALIZER
-    SERIALIZE_METHODS(CGovernanceObject, obj)
-    {
+    SERIALIZE_METHODS(CGovernanceObject, obj) {
         READWRITE(obj.nHashParent, obj.nRevision, obj.nTime, obj.nCollateralHash, 
         obj.vchData, obj.nObjectType, obj.masternodeOutpoint);
         if (!(s.GetType() & SER_GETHASH)) {

@@ -7,6 +7,7 @@
 #include <masternode/masternode-sync.h>
 #include <messagesigner.h>
 #include <spork.h>
+#include <util.h>
 
 #include <evo/deterministicmns.h>
 
@@ -162,18 +163,33 @@ uint256 CGovernanceVote::GetSignatureHash() const
 bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 {
     std::string strError;
-    const uint256 &hash = GetSignatureHash();
 
-    if (!CHashSigner::SignHash(hash, key, vchSig)) {
-        LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
-        return false;
-    }
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
 
-    if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
-        LogPrintf("CGovernanceVote::Sign -- VerifyHash() failed, error: %s\n", strError);
-        return false;
+        if (!CHashSigner::SignHash(hash, key, vchSig)) {
+            LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
+            return false;
+        }
+
+        if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
+            LogPrintf("CGovernanceVote::Sign -- VerifyHash() failed, error: %s\n", strError);
+            return false;
+        }
+    } else {
+        std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+                                 std::to_string(nVoteSignal) + "|" + std::to_string(nVoteOutcome) + "|" + std::to_string(nTime);
+
+        if (!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
+            LogPrintf("CGovernanceVote::Sign -- SignMessage() failed\n");
+            return false;
+        }
+
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+            LogPrintf("CGovernanceVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
+            return false;
+        }
     }
-    
 
     return true;
 }
@@ -181,8 +197,56 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 {
     std::string strError;
-    if (!CHashSigner::VerifyHash(GetSignatureHash(), keyID, vchSig, strError)) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
+
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
+
+        if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
+            // could be a signature in old format
+            std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+                                     std::to_string(nVoteSignal) + "|" +
+                                     std::to_string(nVoteOutcome) + "|" +
+                                     std::to_string(nTime);
+
+            if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+                // nope, not in old format either
+                LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
+                return false;
+            }
+        }
+    } else {
+        std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+                                 std::to_string(nVoteSignal) + "|" +
+                                 std::to_string(nVoteOutcome) + "|" +
+                                 std::to_string(nTime);
+
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool CGovernanceVote::Sign(const CBLSSecretKey& key)
+{
+    uint256 hash = GetSignatureHash();
+    CBLSSignature sig = key.Sign(hash);
+    if (!sig.IsValid()) {
+        return false;
+    }
+    sig.GetBuf(vchSig);
+    return true;
+}
+
+bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
+{
+    uint256 hash = GetSignatureHash();
+    CBLSSignature sig;
+    sig.SetBuf(vchSig);
+    if (!sig.VerifyInsecure(pubKey, hash)) {
+        LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
     return true;
@@ -216,7 +280,7 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
     if (useVotingKey) {
         return CheckSignature(dmn->pdmnState->keyIDVoting);
     } else {
-        return CheckSignature(dmn->pdmnState->pubKeyOperator);
+        return CheckSignature(dmn->pdmnState->pubKeyOperator.Get());
     }
 }
 
