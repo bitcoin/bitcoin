@@ -14,7 +14,6 @@
 #include <interfaces/wallet.h>
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
-#include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
 
