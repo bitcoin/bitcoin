@@ -804,7 +804,7 @@ std::string BerkeleyDatabaseVersion()
     return DbEnv::version(nullptr, nullptr, nullptr);
 }
 
-bool BerkeleyBatch::ReadKey(CDataStream& key, CDataStream& value)
+bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
 {
     if (!pdb)
         return false;
@@ -820,7 +820,7 @@ bool BerkeleyBatch::ReadKey(CDataStream& key, CDataStream& value)
     return false;
 }
 
-bool BerkeleyBatch::WriteKey(CDataStream& key, CDataStream& value, bool overwrite)
+bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
 {
     if (!pdb)
         return true;
@@ -835,7 +835,7 @@ bool BerkeleyBatch::WriteKey(CDataStream& key, CDataStream& value, bool overwrit
     return (ret == 0);
 }
 
-bool BerkeleyBatch::EraseKey(CDataStream& key)
+bool BerkeleyBatch::EraseKey(CDataStream&& key)
 {
     if (!pdb)
         return false;
@@ -848,7 +848,7 @@ bool BerkeleyBatch::EraseKey(CDataStream& key)
     return (ret == 0 || ret == DB_NOTFOUND);
 }
 
-bool BerkeleyBatch::HasKey(CDataStream& key)
+bool BerkeleyBatch::HasKey(CDataStream&& key)
 {
     if (!pdb)
         return false;
