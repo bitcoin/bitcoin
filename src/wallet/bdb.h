@@ -227,7 +227,7 @@ public:
         ssKey << key;
 
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        if (!ReadKey(std::move(ssKey), ssValue)) return false;
+        if (!ReadKey(ssKey, ssValue)) return false;
         try {
             ssValue >> value;
             return true;
@@ -247,7 +247,7 @@ public:
         ssValue.reserve(10000);
         ssValue << value;
 
-        return WriteKey(std::move(ssKey), std::move(ssValue), fOverwrite);
+        return WriteKey(ssKey, ssValue, fOverwrite);
     }
 
     template <typename K>
@@ -257,7 +257,7 @@ public:
         ssKey.reserve(1000);
         ssKey << key;
 
-        return EraseKey(std::move(ssKey));
+        return EraseKey(ssKey);
     }
 
     template <typename K>
@@ -267,7 +267,7 @@ public:
         ssKey.reserve(1000);
         ssKey << key;
 
-        return HasKey(std::move(ssKey));
+        return HasKey(ssKey);
     }
 
     bool StartCursor();
