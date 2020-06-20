@@ -98,6 +98,8 @@
 #include <util/executable_path/include/boost/executable_path.hpp>
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 #include <flat-database.h>
+#include <llmq/quorums_init.h>
+#include <evo/deterministicmns.h>
 std::string exePath = "";
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
@@ -199,6 +201,8 @@ void Interrupt(NodeContext& node)
     InterruptRPC();
     InterruptREST();
     InterruptTorControl();
+    // SYSCOIN
+    llmq::InterruptLLMQSystem();
     InterruptMapPort();
     if (node.connman)
         node.connman->Interrupt();
@@ -226,6 +230,8 @@ void Shutdown(NodeContext& node)
     StopREST();
     StopRPC();
     StopHTTPServer();
+    // SYSCOIN
+    llmq::StopLLMQSystem();
     for (const auto& client : node.chain_clients) {
         client->flush();
     }
@@ -264,7 +270,7 @@ void Shutdown(NodeContext& node)
     node.banman.reset();
 
     // SYSCOIN
-    if (!RPCIsInWarmup(nullptr)) {
+    if (!fRPCInWarmup) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
         CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
         flatdb1.Dump(mmetaman);
@@ -326,6 +332,7 @@ void Shutdown(NodeContext& node)
     passetdb.reset();
     pethereumtxrootsdb.reset();
     pethereumtxmintdb.reset();
+    llmq::DestroyLLMQSystem();
     deterministicMNManager.reset();
     evoDb.reset();
     if (node.chainman) {
@@ -372,7 +379,9 @@ void Shutdown(NodeContext& node)
     node.mempool = nullptr;
     node.chainman = nullptr;
     node.scheduler.reset();
-
+    // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
+    activeMasternodeInfo.blsKeyOperator.reset();
+    activeMasternodeInfo.blsPubKeyOperator.reset();
     try {
         if (!fs::remove(GetPidFile())) {
             LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
@@ -450,7 +459,7 @@ void SetupServerArgs(NodeContext& node)
 
     // Hidden Options
     std::vector<std::string> hidden_args = {
-        "-masternodeprivkey", "-dbcrashratio", "-forcecompactdb",
+        "-masternodeblsprivkey", "-dbcrashratio", "-forcecompactdb",
         // GUI args. These will be overwritten by SetupUIArgs for the GUI
         "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash", "-uiplatform"};
 
@@ -501,13 +510,13 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-masternodeblsprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
     
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-
+    gArgs.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-blockfilterindex=<type>",
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
@@ -862,12 +871,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
         assert(activeMasternodeManager);
         activeMasternodeManager->Init();
     }
-    #ifdef ENABLE_WALLET
-        // we can't do this before DIP3 is fully initialized
-        for (std::shared_ptr<CWallet> pwallet : vpwallets) {
-            pwallet->AutoLockMasternodeCollaterals();
-        }
-    #endif
+    g_wallet_init_interface->AutoLockMasternodeCollaterals();
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
         LogPrintf("Stopping after block import\n");
@@ -893,6 +897,10 @@ static bool InitSanityCheck()
 
     if (!glibc_sanity_test() || !glibcxx_sanity_test())
         return false;
+
+    if (!BLSInit()) {
+        return false;
+    }
 
     if (!Random_SanityCheck()) {
         return InitError(Untranslated("OS cryptographic RNG sanity check failure. Aborting."));
@@ -929,20 +937,34 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
     // SYSCOIN
-    if (gArgs.GetBoolArg("-masternodeprivkey", false)) {
+    if (gArgs.GetBoolArg("-masternodeblsprivkey", false)) {
         // masternodes MUST accept connections from outside
         gArgs.SoftSetBoolArg("-listen", true);
-        LogPrintf("%s: parameter interaction: -masternodeprivkey=... -> setting -listen=1\n", __func__);
+        LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -listen=1\n", __func__);
         #ifdef ENABLE_WALLET
         // masternode should not have wallet enabled
         gArgs.ForceSetArg("-disablewallet", true);
-        LogPrintf("%s: parameter interaction: -masternodeprivkey=... -> setting -disablewallet=1\n", __func__);
+        LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
         #endif // ENABLE_WALLET
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
             gArgs.SoftSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
-            LogPrintf("%s: parameter interaction: -masternodeprivkey=... -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
+            LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
         }
+    }
+    if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST) {
+        if (gArgs.IsArgSet("-llmqtestparams")) {
+            std::string s = gArgs.GetArg("-llmqtestparams", "");
+            std::vector<std::string> v;
+            boost::split(v, s, boost::is_any_of(":"));
+            int size, threshold;
+            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
+                return InitError("Invalid -llmqtestparams specified");
+            }
+            UpdateLLMQTestParams(size, threshold);
+        }
+    } else if (gArgs.IsArgSet("-llmqtestparams")) {
+        return InitError("LLMQ test params can only be overridden on regtest.");
     }
     if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
@@ -992,6 +1014,7 @@ void InitParameterInteraction()
         if (gArgs.SoftSetBoolArg("-whitelistrelay", true))
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
+
 }
 
 /**
@@ -1334,7 +1357,24 @@ bool AppInitParameterInteraction()
 
     nMaxTipAge = gArgs.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
     if (gArgs.IsArgSet("-masternode")) {
-        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeprivkey is enough to start this node as a masternode."));
+        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode."));
+    }
+    if (gArgs.IsArgSet("-masternodeblsprivkey")) {
+        if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) && Params().RequireRoutableExternalIP()) {
+            return InitError("Masternode must accept connections from outside, set -listen=1");
+        }
+        if (!gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
+            return InitError("Masternode must have bloom filters enabled, set -peerbloomfilters=1");
+        }
+        if (gArgs.GetArg("-prune", 0) > 0) {
+            return InitError("Masternode must have no pruning enabled, set -prune=0");
+        }
+        if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
+            return InitError(strprintf("Masternode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
+        }
+        if (gArgs.GetBoolArg("-litemode", false)) {
+            return InitError(_("You can not start a masternode in lite mode."));
+        }
     }
     return true;
 }
@@ -1389,8 +1429,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 {
     const CChainParams& chainparams = Params();
     // SYSCOIN
-    std::string strMasterNodePrivKey = gArgs.GetArg("-masternodeprivkey", "");
-	fMasternodeMode = strMasterNodePrivKey.empty();
+    std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
+	fMasternodeMode = strMasterNodeBLSPrivKey.empty();
     // ********************************************************* Step 4a: application initialization
     if (!CreatePidFile()) {
         // Detailed error printed inside CreatePidFile().
@@ -1759,10 +1799,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 passetdb.reset();
                 pethereumtxrootsdb.reset();
                 pethereumtxmintdb.reset();
-                deterministicMNManager.reset();
+                llmq::DestroyLLMQSystem();
                 evoDb.reset();
                 evoDb = new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState);
-                deterministicMNManager = new CDeterministicMNManager(*evoDb);
+                deterministicMNManager.reset();
+                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+                llmq::InitLLMQSystem(*evoDb, false, fReset || fReindexChainState);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));    
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
@@ -1846,7 +1888,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                         failed_chainstate_init = true;
                         break;
                     }
-
+                    // SYSCOIN flush evodb
+                    if (!evoDb->CommitRootTransaction()) {
+                        strLoadError = _("Failed to commit EvoDB");
+                        break;
+                    }
                     // The on-disk coinsdb is now in a good state, create the cache
                     chainstate->InitCoinsCache();
                     assert(chainstate->CanFlushToDisk());
@@ -2103,24 +2149,28 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         if(resultInt != 1)   
             return InitError(Untranslated("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...")); 
 
-        CKey privKey = DecodeSecret(strMasterNodePrivKey);  
-        if(!privKey.IsValid()) {
-            return InitError(_("Invalid masternodeprivkey"));
-        }    
-        activeMasternodeInfo.keyOperator = std::make_unique<CKey>(privKey);
-        activeMasternodeInfo.pubKeyOperator = std::make_unique<CKeyID>(privKey.GetPubKey().GetID());
-        LogPrintf("MASTERNODE:\n");
-        LogPrintf("  pubKeyOperator: %s\n", EncodeDestination(activeMasternodeInfo.keyOperator));
-        #ifdef ENABLE_WALLET
-        if (!vpwallets.empty()) {
-            return InitError(_("You can not start a masternode with wallet enabled."));
+        auto binKey = ParseHex(strMasterNodeBLSPrivKey);
+        CBLSSecretKey keyOperator;
+        keyOperator.SetBuf(binKey);
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         }
-        #endif //ENABLE_WALLET
+        fMasternodeMode = true;
+        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeMasternodeInfo.blsKeyOperator->GetPublicKey());
+
+        LogPrintf("MASTERNODE:\n");
+        LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
         // Create and register activeMasternodeManager, will init later in ThreadImport
         activeMasternodeManager = new CActiveMasternodeManager();
         RegisterValidationInterface(activeMasternodeManager);
     }
-   
+    if (activeMasternodeInfo.blsKeyOperator == nullptr) {
+        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
+    }
+    if (activeMasternodeInfo.blsPubKeyOperator == nullptr) {
+        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+    }
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
 
@@ -2185,7 +2235,7 @@ fs::path pathDB = GetDataDir();
     if (!fLiteMode) {
         node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance)), std::chrono::minutes{5});
     }
-
+    llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
 
     int chain_active_height;

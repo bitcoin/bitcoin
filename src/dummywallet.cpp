@@ -23,6 +23,8 @@ public:
     void AddWalletOptions() const override;
     bool ParameterInteraction() const override {return true;}
     void Construct(NodeContext& node) const override {LogPrintf("No wallet support compiled in!\n");}
+    // SYSCOIN
+    void AutoLockMasternodeCollaterals() override {}
 };
 
 void DummyWalletInit::AddWalletOptions() const

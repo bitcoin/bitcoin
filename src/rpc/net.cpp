@@ -93,6 +93,10 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                             {RPCResult::Type::NUM, "mapped_as", "The AS in the BGP route to the peer used for diversifying\n"
                                                                 "peer selection (only available if the asmap config flag is set)"},
                             {RPCResult::Type::STR_HEX, "services", "The services offered"},
+                            // SYSCOIN
+                            {RPCResult::Type::STR_HEX, "verified_proregtx_hash", "Only present when the peer is a masternode and succesfully\n"
+                                                                                "autheticated via MNAUTH. In this case, this field contains the\n"
+                                                                                "protx hash of the masternode"},
                             {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form",
                             {
                                 {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
@@ -111,6 +115,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                             {RPCResult::Type::STR, "subver", "The string version"},
                             {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                             {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection"},
+                            {RPCResult::Type::BOOL, "masternode", "Whether connection was due to masternode connection attempt"},
                             {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
                             {RPCResult::Type::NUM, "banscore", "The ban score"},
                             {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
@@ -166,6 +171,10 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         }
         obj.pushKV("services", strprintf("%016x", stats.nServices));
         obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
+        // SYSCOIN
+        if (!stats.verifiedProRegTxHash.IsNull()) {
+            obj.pushKV("verified_proregtx_hash", stats.verifiedProRegTxHash.ToString());
+        }
         obj.pushKV("relaytxes", stats.fRelayTxes);
         obj.pushKV("lastsend", stats.nLastSend);
         obj.pushKV("lastrecv", stats.nLastRecv);
@@ -189,6 +198,8 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("subver", stats.cleanSubVer);
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("addnode", stats.m_manual_connection);
+        // SYSCOIN
+        obj.pushKV("masternode", stats.fMasternode);
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
             obj.pushKV("banscore", statestats.nMisbehavior);

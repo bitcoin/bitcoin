@@ -622,7 +622,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx", tx_state.ToString()); 
         } 
-    }     
+    }  
+    // SYSCOIN   
+    if (tx.nVersion == SYSCOIN_TX_VERSION_QUORUM_COMMITMENT) {
+        // quorum commitment is not allowed outside of blocks
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "qc-not-allowed");
+    }
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");

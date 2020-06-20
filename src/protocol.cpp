@@ -49,16 +49,26 @@ const char *CFCHECKPT="cfcheckpt";
 // Syscoin message types
 const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
-const char *MASTERNODEPAYMENTVOTE="mnw";
-const char *MASTERNODEPAYMENTSYNC="mnget";
-const char *MNANNOUNCE="mnb";
-const char *MNPING="mnp";
-const char *DSEG="dseg";
 const char *SYNCSTATUSCOUNT="ssc";
 const char *MNGOVERNANCESYNC="govsync";
 const char *MNGOVERNANCEOBJECT="govobj";
 const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
-const char *MNVERIFY="mnv";
+const char *GETMNLISTDIFF="getmnlistd";
+const char *MNLISTDIFF="mnlistdiff";
+const char *QSENDRECSIGS="qsendrecsigs";
+const char *QFCOMMITMENT="qfcommit";
+const char *QCONTRIB="qcontrib";
+const char *QCOMPLAINT="qcomplaint";
+const char *QJUSTIFICATION="qjustify";
+const char *QPCOMMITMENT="qpcommit";
+const char *QWATCH="qwatch";
+const char *QSIGSESANN="qsigsesann";
+const char *QSIGSHARESINV="qsigsinv";
+const char *QGETSIGSHARES="qgetsigs";
+const char *QBSIGSHARES="qbsigs";
+const char *QSIGREC="qsigrec";
+const char *QSIGSHARE="qsigshare";
+const char *MNAUTH="mnauth";
 
 } // namespace NetMsgType
 
@@ -95,16 +105,26 @@ const static std::string allNetMessageTypes[] = {
     // NOTE: include non-implmented here, we must keep this list in sync with enum in protocol.h
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
-    NetMsgType::MASTERNODEPAYMENTVOTE,
-    NetMsgType::MASTERNODEPAYMENTSYNC,
-    NetMsgType::MNANNOUNCE,
-    NetMsgType::MNPING,
-    NetMsgType::DSEG,
     NetMsgType::SYNCSTATUSCOUNT,
-    NetMsgType::MNGOVERNANCEOBJECT,
     NetMsgType::MNGOVERNANCESYNC,
+    NetMsgType::MNGOVERNANCEOBJECT,
     NetMsgType::MNGOVERNANCEOBJECTVOTE,
-    NetMsgType::MNVERIFY,   
+    NetMsgType::GETMNLISTDIFF,
+    NetMsgType::MNLISTDIFF,
+    NetMsgType::QSENDRECSIGS,
+    NetMsgType::QFCOMMITMENT,
+    NetMsgType::QCONTRIB,
+    NetMsgType::QCOMPLAINT,
+    NetMsgType::QJUSTIFICATION,
+    NetMsgType::QPCOMMITMENT,
+    NetMsgType::QWATCH,
+    NetMsgType::QSIGSESANN,
+    NetMsgType::QSIGSHARESINV,
+    NetMsgType::QGETSIGSHARES,
+    NetMsgType::QBSIGSHARES,
+    NetMsgType::QSIGREC,
+    NetMsgType::QSIGSHARE,
+    NetMsgType::MNAUTH,  
     NetMsgType::GETCFILTERS,
     NetMsgType::CFILTER,
     NetMsgType::GETCFHEADERS,
@@ -211,14 +231,17 @@ std::string CInv::GetCommand() const
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
     // SYSCOIN
-    case MSG_SPORK:    return cmd.append(NetMsgType::SPORK);
-    case MSG_MASTERNODE_PAYMENT_VOTE:    return cmd.append(NetMsgType::MASTERNODEPAYMENTVOTE);
-    case MSG_MASTERNODE_PAYMENT_BLOCK:    return cmd.append(NetMsgType::MASTERNODEPAYMENTVOTE);
-    case MSG_MASTERNODE_ANNOUNCE:    return cmd.append(NetMsgType::MNANNOUNCE);
-    case MSG_MASTERNODE_PING:    return cmd.append(NetMsgType::MNPING);
-    case MSG_GOVERNANCE_OBJECT:    return cmd.append(NetMsgType::MNGOVERNANCEOBJECT);
-    case MSG_GOVERNANCE_OBJECT_VOTE:    return cmd.append(NetMsgType::MNGOVERNANCEOBJECTVOTE);
-    case MSG_MASTERNODE_VERIFY:    return cmd.append(NetMsgType::MNVERIFY);
+    case MSG_SPORK:                         return cmd.append(NetMsgType::SPORK);
+    case MSG_GOVERNANCE_OBJECT:             return cmd.append(NetMsgType::MNGOVERNANCEOBJECT);
+    case MSG_GOVERNANCE_OBJECT_VOTE:        return cmd.append(NetMsgType::MNGOVERNANCEOBJECTVOTE);
+    case MSG_QUORUM_FINAL_COMMITMENT:       return cmd.append(NetMsgType::QFCOMMITMENT);
+    case MSG_QUORUM_CONTRIB:                return cmd.append(NetMsgType::QCONTRIB);
+    case MSG_QUORUM_COMPLAINT:              return cmd.append(NetMsgType::QCOMPLAINT);
+    case MSG_QUORUM_JUSTIFICATION:          return cmd.append(NetMsgType::QJUSTIFICATION);
+    case MSG_QUORUM_PREMATURE_COMMITMENT:   return cmd.append(NetMsgType::QPCOMMITMENT);
+    case MSG_QUORUM_RECOVERED_SIG:          return cmd.append(NetMsgType::QSIGREC);
+
+
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }
