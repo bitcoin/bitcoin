@@ -1033,15 +1033,7 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
     if (state->nMisbehavior >= banscore && state->nMisbehavior - howmuch < banscore)
     {
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d) DISCOURAGE THRESHOLD EXCEEDED%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
-<<<<<<< HEAD
-<<<<<<< HEAD
-        state->m_should_discourage = true; 
-=======
         state->fShouldBan = true;
->>>>>>> Replace automatic bans with discouragement filter
-=======
-        state->m_should_discourage = true;
->>>>>>> Clean up separated ban/discourage interface
     } else
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d)%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
 }
@@ -3582,29 +3574,12 @@ bool PeerLogicValidation::MaybeDiscourageAndDisconnect(CNode& pnode)
             LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode.addr.ToString());
         } else if (pnode.m_manual_connection) {
             LogPrintf("Warning: not punishing manually-connected peer %s!\n", pnode.addr.ToString());
-<<<<<<< HEAD
-<<<<<<< HEAD
-        } else if (pnode.addr.IsLocal()) { 
-            // Disconnect but don't discourage this local node
-            LogPrintf("Warning: disconnecting but not discouraging local peer %s!\n", pnode.addr.ToString());
-            pnode.fDisconnect = true;
-        } else {  
-            // Disconnect and discourage all nodes sharing the address 
-=======
         else if (pnode.addr.IsLocal()) {
-=======
-        } else if (pnode.addr.IsLocal()) {
->>>>>>> Clean up separated ban/discourage interface
             // Disconnect but don't discourage this local node
             LogPrintf("Warning: disconnecting but not discouraging local peer %s!\n", pnode.addr.ToString());
             pnode.fDisconnect = true;
         } else {
-<<<<<<< HEAD
             // Disconnect and ban all nodes sharing the address
->>>>>>> Replace automatic bans with discouragement filter
-=======
-            // Disconnect and discourage all nodes sharing the address
->>>>>>> Clean up separated ban/discourage interface
             LogPrintf("Disconnecting and discouraging peer %s!\n", pnode.addr.ToString());
             if (m_banman) {
                 m_banman->Discourage(pnode.addr);

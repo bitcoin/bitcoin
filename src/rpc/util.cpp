@@ -122,11 +122,6 @@ CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType d
 
         if (hash_type_input == "hash_serialized_2") {
             return CoinStatsHashType::HASH_SERIALIZED;
-<<<<<<< HEAD
-        } else if (hash_type_input == "none") {
-            return CoinStatsHashType::NONE; 
-=======
->>>>>>> rpc: gettxoutsetinfo can specify hash_type (only legacy option for now)
         } else {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%d is not a valid hash_type", hash_type_input));
         }
