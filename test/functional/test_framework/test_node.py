@@ -297,18 +297,17 @@ class TestNode():
 
     def generate(self, nblocks, maxtries=1000000):
         # if wallet is not compiled, blocks are generated to an address or descriptor using an HD seed
-        hd_address = self.getnewaddress()
-        hd_info = self.getaddressinfo(hd_address)
-        if self.getwalletinfo()["descriptors"]:
-            #TODO: figure out how to make sure the keypath does increase & is unique
-            assert_equal(hd_info["hdkeypath"], "m/84'/1'/0'/0/" + str(self.hdkeypathnonce))
-            self.hdkeypathnonce += 1 
-            self.generatetodescriptor(nblocks, hd_address, maxtries)
-        else:
-            assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(self.hdkeypathnonce)+"'")          
+        if '-disablewallet' in self.extra_args:
+            xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
+            finger_print = "d34db33f"
+            keypath = "/44'/0'/0'/0/" + str(self.hdkeypathnonce)
+            desc = "pkh([" + finger_print + keypath + "]" + xpub+ "/1)" 
             self.hdkeypathnonce += 1
-            self.generatetoaddress(nblocks, hd_address, maxtries)
-
+            return self.generatetodescriptor(nblocks, desc, maxtries)
+        else:
+            hd_address = self.getnewaddress()
+            return self.generatetoaddress(nblocks, hd_address, maxtries)
+          
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
             return RPCOverloadWrapper(self.cli("-rpcwallet={}".format(wallet_name)), True, self.descriptors)
