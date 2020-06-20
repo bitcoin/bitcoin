@@ -30,11 +30,10 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <noui.h>
-#include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
-#include <util/translation.h>
 #include <util/threadnames.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <memory>
