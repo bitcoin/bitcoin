@@ -334,7 +334,7 @@ BerkeleyDatabase::~BerkeleyDatabase()
     }
 }
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr)
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr), m_database(database)
 {
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
     fFlushOnClose = fFlushOnCloseIn;
@@ -408,7 +408,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
                 fReadOnly = fTmp;
             }
         }
-        ++env->mapFileUseCount[strFilename];
+        database.AddRef();
         strFile = strFilename;
     }
 }
@@ -446,11 +446,7 @@ void BerkeleyBatch::Close()
     if (fFlushOnClose)
         Flush();
 
-    {
-        LOCK(cs_db);
-        --env->mapFileUseCount[strFile];
-    }
-    env->m_db_in_use.notify_all();
+    m_database.RemoveRef();
 }
 
 void BerkeleyEnvironment::CloseDb(const std::string& strFile)
@@ -844,6 +840,21 @@ bool BerkeleyBatch::HasKey(CDataStream&& key)
 
     int ret = pdb->exists(activeTxn, datKey, 0);
     return ret == 0;
+}
+
+void BerkeleyDatabase::AddRef()
+{
+    LOCK(cs_db);
+    ++env->mapFileUseCount[strFile];
+}
+
+void BerkeleyDatabase::RemoveRef()
+{
+    {
+        LOCK(cs_db);
+        --env->mapFileUseCount[strFile];
+    }
+    env->m_db_in_use.notify_all();
 }
 
 std::unique_ptr<BerkeleyBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
