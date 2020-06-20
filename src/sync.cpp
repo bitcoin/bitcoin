@@ -264,6 +264,17 @@ void DeleteLock(void* cs)
     }
 }
 
+bool LockStackEmpty()
+{
+    LockData& lockdata = GetLockData();
+    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    const auto it = lockdata.m_lock_stacks.find(std::this_thread::get_id());
+    if (it == lockdata.m_lock_stacks.end()) {
+        return true;
+    }
+    return it->second.empty();
+}
+
 bool g_debug_lockorder_abort = true;
 
 #endif /* DEBUG_LOCKORDER */
