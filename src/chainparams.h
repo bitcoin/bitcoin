@@ -92,6 +92,11 @@ public:
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
+    void UpdateLLMQTestParams(int size, int threshold);
+    /** Require addresses specified with "-externalip" parameter to be routable */
+    bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
+    /** How long to wait until we allow retrying of a LLMQ connection  */
+    int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
 protected:
     CChainParams() {}
 
@@ -114,6 +119,8 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     // SYSCOIN
+    int nLLMQConnectionRetryTimeout;
+    bool fRequireRoutableExternalIP;
     int nFulfilledRequestExpireTime;
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
@@ -142,5 +149,10 @@ void SelectParams(const std::string& chain);
  */
 void TurnOffSegwitForUnitTests();
 // SYSCOIN
+/**
+ * Allows modifying parameters of the test LLMQ
+ */
+void UpdateLLMQTestParams(int size, int threshold);
+
 void SetSYSXAssetForUnitTests(uint32_t asset);
 #endif // SYSCOIN_CHAINPARAMS_H

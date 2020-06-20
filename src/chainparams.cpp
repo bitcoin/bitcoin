@@ -90,6 +90,93 @@ void CChainParams::SetSYSXAssetForUnitTests (uint32_t asset)
 {
   consensus.nSYSXAsset = asset;
 }
+
+// this one is for testing only
+static Consensus::LLMQParams llmq_test = {
+        .type = Consensus::LLMQ_TEST,
+        .name = "llmq_test",
+        .size = 3,
+        .minSize = 2,
+        .threshold = 2,
+
+        .dkgInterval = 60, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 2,
+
+        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+
+        .keepOldConnections = 3,
+        .recoveryMembers = 3,
+};
+
+
+static Consensus::LLMQParams llmq50_60 = {
+        .type = Consensus::LLMQ_50_60,
+        .name = "llmq_50_60",
+        .size = 50,
+        .minSize = 40,
+        .threshold = 30,
+
+        .dkgInterval = 60, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 40,
+
+        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+
+        .keepOldConnections = 25,
+        .recoveryMembers = 25,
+};
+
+static Consensus::LLMQParams llmq400_60 = {
+        .type = Consensus::LLMQ_400_60,
+        .name = "llmq_400_60",
+        .size = 400,
+        .minSize = 300,
+        .threshold = 240,
+
+        .dkgInterval = 60 * 12, // one DKG every 12 hours
+        .dkgPhaseBlocks = 4,
+        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 28,
+        .dkgBadVotesThreshold = 300,
+
+        .signingActiveQuorumCount = 4, // two days worth of LLMQs
+
+        .keepOldConnections = 5,
+        .recoveryMembers = 100,
+};
+
+// Used for deployment and min-proto-version signalling, so it needs a higher threshold
+static Consensus::LLMQParams llmq400_85 = {
+        .type = Consensus::LLMQ_400_85,
+        .name = "llmq_400_85",
+        .size = 400,
+        .minSize = 350,
+        .threshold = 340,
+
+        .dkgInterval = 60 * 24, // one DKG every 24 hours
+        .dkgPhaseBlocks = 4,
+        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
+        .dkgBadVotesThreshold = 300,
+
+        .signingActiveQuorumCount = 4, // four days worth of LLMQs
+
+        .keepOldConnections = 5,
+        .recoveryMembers = 100,
+};
+
+void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
+    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
+    params.size = size;
+    params.minSize = threshold;
+    params.threshold = threshold;
+    params.dkgBadVotesThreshold = threshold;
+}
 /**
  * Main network
  */
@@ -186,8 +273,14 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
+        fRequireRoutableExternalIP = true;
         vSporkAddresses = {"SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN"};
         nMinSporkKeys = 1;   
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+        nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         m_is_test_chain = false;
         m_is_mockable_chain = false;
@@ -313,12 +406,17 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
+        fRequireRoutableExternalIP = true;
         m_is_test_chain = true;
 
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
         vSporkAddresses = {"TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX"};
         nMinSporkKeys = 1;   
-
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+        nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
 
@@ -418,11 +516,16 @@ public:
 
         fDefaultConsistencyChecks = true;
         fRequireStandard = true;
+        fRequireRoutableExternalIP = false;
         m_is_test_chain = true;
         m_is_mockable_chain = true;
         // privKey: cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW
         vSporkAddresses = {"mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z"};
         nMinSporkKeys = 1; 
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
        /* 
         
