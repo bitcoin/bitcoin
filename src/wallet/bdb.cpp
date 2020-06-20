@@ -413,6 +413,11 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
     }
 }
 
+void BerkeleyDatabase::Open(const char* mode)
+{
+    throw std::logic_error("BerkeleyDatabase does not implement Open. This function should not be called.");
+}
+
 void BerkeleyBatch::Flush()
 {
     if (activeTxn)
