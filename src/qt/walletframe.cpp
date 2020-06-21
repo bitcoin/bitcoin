@@ -165,11 +165,11 @@ void WalletFrame::gotoVerifyMessageTab(QString addr)
         walletView->gotoVerifyMessageTab(addr);
 }
 
-void WalletFrame::gotoLoadPSBT()
+void WalletFrame::gotoLoadPSBT(bool from_clipboard)
 {
     WalletView *walletView = currentWalletView();
     if (walletView) {
-        walletView->gotoLoadPSBT();
+        walletView->gotoLoadPSBT(from_clipboard);
     }
 }
 
