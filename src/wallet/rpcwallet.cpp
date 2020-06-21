@@ -3631,12 +3631,10 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                         {RPCResult::Type::STR_HEX, "pubkey", /* optional */ true, "The hex value of the raw public key for single-key addresses (possibly embedded in P2SH or P2WSH)."},
                         {RPCResult::Type::OBJ, "embedded", /* optional */ true, "Information about the address embedded in P2SH or P2WSH, if relevant and known.",
                         {
-                            {RPCResult::Type::ELISION, "", "Includes all\n"
-            "                                                         getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath,\n"
-                            "hdseedid) and relation to the wallet (ismine, iswatchonly)."},
+                            {RPCResult::Type::ELISION, "", "Includes all getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath, hdseedid)\n"
+                            "and relation to the wallet (ismine, iswatchonly)."},
                         }},
                         {RPCResult::Type::BOOL, "iscompressed", /* optional */ true, "If the pubkey is compressed."},
-                        {RPCResult::Type::STR, "label", "DEPRECATED. The label associated with the address. Defaults to \"\". Replaced by the labels array below."},
                         {RPCResult::Type::NUM_TIME, "timestamp", /* optional */ true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
                         {RPCResult::Type::STR, "hdkeypath", /* optional */ true, "The HD keypath, if the key is HD and available."},
                         {RPCResult::Type::STR_HEX, "hdseedid", /* optional */ true, "The Hash160 of the HD seed."},
@@ -3644,12 +3642,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                         {RPCResult::Type::ARR, "labels", "Array of labels associated with the address. Currently limited to one label but returned\n"
                             "as an array to keep the API stable if multiple labels are enabled in the future.",
                         {
-                            {RPCResult::Type::STR, "label name", "The label name. Defaults to \"\"."},
-                            {RPCResult::Type::OBJ, "", "label data, DEPRECATED, will be removed in 0.21. To re-enable, launch bitcoind with `-deprecatedrpc=labelspurpose`",
-                            {
-                                {RPCResult::Type::STR, "name", "The label name. Defaults to \"\"."},
-                                {RPCResult::Type::STR, "purpose", "The purpose of the associated address (send or receive)."},
-                            }},
+                            {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
                         }},
                     }
                 },
@@ -3695,14 +3688,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
 
-    // DEPRECATED: Return label field if existing. Currently only one label can
-    // be associated with an address, so the label should be equivalent to the
-    // value of the name key/value pair in the labels array below.
-    const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
-    if (pwallet->chain().rpcEnableDeprecated("label") && address_book_entry) {
-        ret.pushKV("label", address_book_entry->GetLabel());
-    }
-
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
 
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
@@ -3723,14 +3708,9 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // stable if we allow multiple labels to be associated with an address in
     // the future.
     UniValue labels(UniValue::VARR);
+    const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
     if (address_book_entry) {
-        // DEPRECATED: The previous behavior of returning an array containing a
-        // JSON object of `name` and `purpose` key/value pairs is deprecated.
-        if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
-            labels.push_back(AddressBookDataToJSON(*address_book_entry, true));
-        } else {
-            labels.push_back(address_book_entry->GetLabel());
-        }
+        labels.push_back(address_book_entry->GetLabel());
     }
     ret.pushKV("labels", std::move(labels));
 
