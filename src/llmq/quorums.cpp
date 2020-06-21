@@ -155,10 +155,11 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     });
 }
 
-CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman &_connman) :
     evoDb(_evoDb),
     blsWorker(_blsWorker),
-    dkgManager(_dkgManager)
+    dkgManager(_dkgManager),
+    connman(_connman)
 {
 }
 
@@ -169,7 +170,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     }
 
     for (auto& p : Params().GetConsensus().llmqs) {
-        EnsureQuorumConnections(p.first, pindexNew);
+        EnsureQuorumConnections(p.first, pindexNew, connman);
     }
 }
 
@@ -180,7 +181,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
     auto myProTxHash = activeMasternodeInfo.proTxHash;
     auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections);
 
-    auto connmanQuorumsToDelete = g_connman->GetMasternodeQuorums(llmqType);
+    auto connmanQuorumsToDelete = connman.GetMasternodeQuorums(llmqType);
 
     // don't remove connections for the currently in-progress DKG round
     int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % params.dkgInterval);
@@ -193,14 +194,14 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
             continue;
         }
 
-        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch);
+        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch, connman);
 
         connmanQuorumsToDelete.erase(quorum->qc.quorumHash);
     }
 
     for (auto& qh : connmanQuorumsToDelete) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, qh.ToString());
-        g_connman->RemoveMasternodeQuorumNodes(llmqType, qh);
+        connman.RemoveMasternodeQuorumNodes(llmqType, qh);
     }
 }
 

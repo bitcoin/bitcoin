@@ -21,9 +21,10 @@ CDKGSessionManager* quorumDKGSessionManager;
 static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 
-CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker) :
+CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &_connman) :
     llmqDb(_llmqDb),
-    blsWorker(_blsWorker)
+    blsWorker(_blsWorker),
+    connman(_connman)
 {
 }
 
@@ -36,7 +37,7 @@ void CDKGSessionManager::StartMessageHandlerPool()
     for (const auto& qt : Params().GetConsensus().llmqs) {
         dkgSessionHandlers.emplace(std::piecewise_construct,
                 std::forward_as_tuple(qt.first),
-                std::forward_as_tuple(qt.second, messageHandlerPool, blsWorker, *this));
+                std::forward_as_tuple(qt.second, messageHandlerPool, blsWorker, *this, connman));
     }
 
     messageHandlerPool.resize(2);

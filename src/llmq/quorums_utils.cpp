@@ -156,7 +156,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
     return result;
 }
 
-void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexQuorum, const uint256& myProTxHash, bool allowWatch)
+void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexQuorum, const uint256& myProTxHash, bool allowWatch, CConnman& connman)
 {
     auto members = GetAllQuorumMembers(llmqType, pindexQuorum);
     bool isMember = std::find_if(members.begin(), members.end(), [&](const CDeterministicMNCPtr& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
@@ -175,7 +175,7 @@ void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
         }
     }
     if (!connections.empty()) {
-        if (!g_connman->HasMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
+        if (!connman.HasMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
             std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : connections) {
@@ -188,11 +188,11 @@ void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
             }
             LogPrint(BCLog::NET, debugMsg.c_str());
         }
-        g_connman->SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
+        connman.SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
     }
 }
 
-void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexQuorum, const uint256 &myProTxHash)
+void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexQuorum, const uint256 &myProTxHash, CConnman& connman)
 {
     auto members = GetAllQuorumMembers(llmqType, pindexQuorum);
     auto curTime = GetAdjustedTime();
@@ -224,7 +224,7 @@ void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const C
             }
             LogPrint(BCLog::NET, debugMsg.c_str());
         }
-        g_connman->AddPendingProbeConnections(probeConnections);
+        connman.AddPendingProbeConnections(probeConnections);
     }
 }
 

@@ -21,6 +21,7 @@ namespace llmq
 {
 
 class CDKGSessionManager;
+class CConnman;
 
 /**
  * An object of this class represents a quorum which was mined on-chain (through a quorum commitment)
@@ -84,13 +85,13 @@ private:
     CEvoDB& evoDb;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
-
+    CConnman &connman;
     CCriticalSection quorumsCacheCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, CQuorumPtr> quorumsCache;
     unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, std::vector<CQuorumCPtr>, StaticSaltedHasher, 32> scanQuorumsCache;
 
 public:
-    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
+    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman &_connman);
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 

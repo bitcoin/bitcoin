@@ -143,6 +143,9 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -206,8 +209,8 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
         outpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
     }
 
-    CWalletTx wtx;
-    if (!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
+    CTransactionRef tx;
+    if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (!request.params[6].isNull() && !request.params[7].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
@@ -215,18 +218,14 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
     }
 
-    // -- make our change address
-    CReserveKey reservekey(pwallet);
     // -- send the tx to the network
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
-    }
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
 
     LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), wtx.GetHash().ToString());
 
-    return wtx.GetHash().ToString();
+    return tx.GetHash().ToString();
 }
 #endif // ENABLE_WALLET
 
@@ -252,6 +251,9 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     if(!masternodeSync.IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
     bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
@@ -331,9 +333,9 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     if (fMissingConfirmations) {
         governance.AddPostponedObject(govobj);
-        govobj.Relay(*g_connman);
+        govobj.Relay(*node.connman);
     } else {
-        governance.AddGovernanceObject(govobj, *g_connman);
+        governance.AddGovernanceObject(govobj, *node.connman);
     }
 
     return govobj.GetHash().ToString();
@@ -355,6 +357,10 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_conf_help();
+
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     uint256 hash;
 
@@ -425,7 +431,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if (governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+    if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
         nSuccessful++;
         statusObj.pushKV("result", "success");
     } else {
@@ -444,7 +450,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
 
 UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
-                             vote_outcome_enum_t eVoteOutcome)
+                             vote_outcome_enum_t eVoteOutcome, CConnman& connman)
 {
     int govObjType;
     {
@@ -488,7 +494,7 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         }
 
         CGovernanceException exception;
-        if (governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+        if (governance.ProcessVoteAndRelay(vote, exception, connman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -530,6 +536,11 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
     std::string strVoteOutcome = request.params[3].get_str();
@@ -563,7 +574,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         }
     });
 
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
+    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
 }
 
 void gobject_vote_alias_help(CWallet* const pwallet)
@@ -588,6 +599,11 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
+
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
 
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
@@ -624,7 +640,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     std::map<uint256, CKey> votingKeys;
     votingKeys.emplace(proTxHash, key);
 
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
+    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
 }
 #endif
 
@@ -977,6 +993,10 @@ UniValue voteraw(const JSONRPCRequest& request)
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
                 );
 
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
     uint256 hashMnCollateralTx = ParseHashV(request.params[0], "mn collateral tx hash");
     int nMnCollateralTxIndex = request.params[1].get_int();
     COutPoint outpoint = COutPoint(hashMnCollateralTx, nMnCollateralTxIndex);
@@ -1033,7 +1053,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if (governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+    if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
