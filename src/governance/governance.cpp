@@ -93,10 +93,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
     if (strCommand == NetMsgType::MNGOVERNANCESYNC) {
-        if (pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            return;
-        }
 
         // Ignore such requests until we are fully synced.
         // We could start processing this after masternode list is synced
@@ -108,12 +104,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         vRecv >> nProp;
 
-        if (pfrom->nVersion >= GOVERNANCE_FILTER_PROTO_VERSION) {
-            vRecv >> filter;
-            filter.UpdateEmptyFull();
-        } else {
-            filter.clear();
-        }
+
+        vRecv >> filter;
+        filter.UpdateEmptyFull();
+        
 
         if (nProp == uint256()) {
             SyncObjects(pfrom, connman);
@@ -135,11 +129,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         {
             LOCK(cs_main);
             EraseTxRequest(pfrom->GetId(), nHash);
-        }
-
-        if (pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            return;
         }
 
         if (!masternodeSync.IsBlockchainSynced()) {
@@ -211,9 +200,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             EraseTxRequest(pfrom->GetId(), nHash);
         }
 
-        if (pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-        }
 
         // Ignore such messages until masternode list is synced
         if (!masternodeSync.IsBlockchainSynced()) {
@@ -915,11 +901,6 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
 
     CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
-    if (pfrom->nVersion < GOVERNANCE_FILTER_PROTO_VERSION) {
-        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash));
-        return;
-    }
-
     CBloomFilter filter;
     filter.clear();
 
@@ -944,7 +925,6 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
 
 int CGovernanceManager::RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman)
 {
-    if (pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) return -3;
     std::vector<CNode*> vNodesCopy;
     vNodesCopy.push_back(pnode);
     return RequestGovernanceObjectVotes(vNodesCopy, connman);
@@ -1025,8 +1005,6 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // Only use outbound connections - inbound connection could be a "masternode" connection
             // initiated from another node, so skip it too.
             if (pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
-            // only use up to date peers
-            if (pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;
             // stop early to prevent setAskFor overflow
             {
                 LOCK(cs_main);

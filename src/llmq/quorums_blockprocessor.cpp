@@ -36,7 +36,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         auto hash = ::SerializeHash(qc);
         {
             LOCK(cs_main);
-            EraseObjectRequest(pfrom->GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, hash));
+            EraseTxRequest(pfrom->GetId(), hash);
         }
 
         if (qc.IsNull()) {
@@ -68,7 +68,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 return;
             }
             pquorumIndex = mapBlockIndex[qc.quorumHash];
-            if (chainActive.Tip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
+            if (::ChainActive().Tip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
                 // same, can't punish
@@ -136,7 +136,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     // allowed, including null commitments.
     for (const auto& p : Params().GetConsensus().llmqs) {
         // skip these checks when replaying blocks after the crash
-        if (!chainActive.Tip()) {
+        if (!::ChainActive().Tip()) {
             break;
         }
 
@@ -187,7 +187,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     uint256 quorumHash = GetQuorumBlockHash((Consensus::LLMQType)qc.llmqType, nHeight);
 
     // skip `bad-qc-block` checks below when replaying blocks after the crash
-    if (!chainActive.Tip()) {
+    if (!::ChainActive().Tip()) {
         quorumHash = qc.quorumHash;
     }
 
@@ -279,7 +279,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
     ret.clear();
 
     for (const auto& tx : block.vtx) {
-        if (tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
+        if (tx->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
             CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(*tx, qc)) {
                 // should not happen as it was verified before processing the block
@@ -467,7 +467,7 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
         CInv inv(MSG_QUORUM_FINAL_COMMITMENT, commitmentHash);
-        connman.RelayInv(inv, DMN_PROTO_VERSION);
+        connman.RelayInv(inv);
     }
 }
 
@@ -525,8 +525,7 @@ bool CQuorumBlockProcessor::GetMinableCommitmentTx(Consensus::LLMQType llmqType,
     qc.nHeight = nHeight;
 
     CMutableTransaction tx;
-    tx.nVersion = 3;
-    tx.nType = TRANSACTION_QUORUM_COMMITMENT;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
     SetTxPayload(tx, qc);
 
     ret = MakeTransactionRef(tx);

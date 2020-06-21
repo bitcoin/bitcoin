@@ -417,7 +417,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
         }
 
         LOCK(cs_main);
-        const CBlockIndex* pindex = chainActive[dmn->pdmnState->nLastPaidHeight];
+        const CBlockIndex* pindex = ::ChainActive()[dmn->pdmnState->nLastPaidHeight];
         return (int)pindex->nTime;
     };
 

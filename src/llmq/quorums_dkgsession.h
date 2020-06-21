@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_DKGSESSION_H
-#define DASH_QUORUMS_DKGSESSION_H
+#ifndef SYSCOIN_LLQM_QUORUMS_DKGSESSION_H
+#define SYSCOIN_LLQM_QUORUMS_DKGSESSION_H
 
 #include <consensus/params.h>
 #include <net.h>
@@ -99,17 +99,9 @@ public:
     CDKGComplaint() {}
     explicit CDKGComplaint(const Consensus::LLMQParams& params);
 
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(proTxHash);
-        READWRITE(DYNBITSET(badMembers));
-        READWRITE(DYNBITSET(complainForMembers));
-        READWRITE(sig);
+    SERIALIZE_METHODS(CDKGComplaint, obj) {
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash,
+        DYNBITSET(obj.badMembers), DYNBITSET(obj.complainForMembers), obj.sig);
     }
 
     uint256 GetSignHash() const
@@ -130,16 +122,9 @@ public:
     CBLSSignature sig;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(proTxHash);
-        READWRITE(contributions);
-        READWRITE(sig);
+    SERIALIZE_METHODS(CDKGJustification, obj) {
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash,
+        DYNBITSET(obj.contributions), obj.sig);
     }
 
     uint256 GetSignHash() const
@@ -178,21 +163,11 @@ public:
     }
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(proTxHash);
-        READWRITE(DYNBITSET(validMembers));
-        READWRITE(quorumPublicKey);
-        READWRITE(quorumVvecHash);
-        READWRITE(quorumSig);
-        READWRITE(sig);
+    SERIALIZE_METHODS(CDKGPrematureCommitment, obj) {
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash,
+        DYNBITSET(obj.validMembers), obj.quorumPublicKey, obj.quorumVvecHash,
+        obj.quorumSig, obj.sig);
     }
-
     uint256 GetSignHash() const
     {
         return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
@@ -347,4 +322,4 @@ void SetSimulatedDKGErrorRate(const std::string& type, double rate);
 
 } // namespace llmq
 
-#endif //DASH_QUORUMS_DKGSESSION_H
+#endif //SYSCOIN_LLQM_QUORUMS_DKGSESSION_H

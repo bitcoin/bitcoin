@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_SIGNING_SHARES_H
-#define DASH_QUORUMS_SIGNING_SHARES_H
+#ifndef SYSCOIN_LLQM_QUORUMS_SIGNING_SHARES_H
+#define SYSCOIN_LLQM_QUORUMS_SIGNING_SHARES_H
 
 #include <bls/bls.h>
 #include <chainparams.h>
@@ -54,20 +54,26 @@ public:
         return key.first;
     }
 
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(quorumMember);
-        READWRITE(id);
-        READWRITE(msgHash);
-        READWRITE(sigShare);
-
-        if (ser_action.ForRead()) {
-            UpdateKey();
-        }
+   void Serialize(Stream& s) const
+    {
+        s << llmqType;
+        s << quorumHash;
+        s << quorumMember;
+        s << id;
+        s << msgHash;
+        s << sigShare;
+   
+    }
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> llmqType;
+        s >> quorumHash;
+        s >> quorumMember;
+        s >> id;
+        s >> msgHash;
+        s >> sigShare;
+        UpdateKey();
     }
 };
 
@@ -83,15 +89,9 @@ public:
     uint256 id;
     uint256 msgHash;
 
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(VARINT(sessionId));
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(id);
-        READWRITE(msgHash);
+    SERIALIZE_METHODS(CSigSesAnn, obj) {
+        READWRITE(VARINT(obj.sessionId), obj.llmqType, obj.quorumHash,
+        DYNBITSET(obj.id), obj.msgHash);
     }
 
     std::string ToString() const;
@@ -104,16 +104,9 @@ public:
     std::vector<bool> inv;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    SERIALIZE_METHODS(CSigSharesInv, obj) {
         uint64_t invSize = inv.size();
-
-        READWRITE(VARINT(sessionId));
-        READWRITE(COMPACTSIZE(invSize));
-        READWRITE(AUTOBITSET(inv, (size_t)invSize));
+        READWRITE(VARINT(obj.sessionId), COMPACTSIZE(obj.invSize), AUTOBITSET(obj.inv, (size_t)invSize));
     }
 
     void Init(size_t size);
@@ -134,13 +127,8 @@ public:
     std::vector<std::pair<uint16_t, CBLSLazySignature>> sigShares;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(VARINT(sessionId));
-        READWRITE(sigShares);
+    SERIALIZE_METHODS(CBatchedSigShares, obj) {
+        READWRITE(VARINT(obj.sessionId), obj.sigShares);
     }
 
     std::string ToInvString() const;
@@ -460,4 +448,4 @@ extern CSigSharesManager* quorumSigSharesManager;
 
 } // namespace llmq
 
-#endif //DASH_QUORUMS_SIGNING_SHARES_H
+#endif //SYSCOIN_LLQM_QUORUMS_SIGNING_SHARES_H

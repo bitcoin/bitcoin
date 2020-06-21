@@ -18,23 +18,24 @@ public:
     bool valid{false};
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+template<typename Stream>
+    void Serialize(Stream& s) const
     {
-        if (!ser_action.ForRead()) {
-            assert(valid);
-        } else {
-            valid = false;
-        }
-        READWRITE(ephemeralPubKey);
-        READWRITE(FLATDATA(iv));
-        READWRITE(data);
-        if (ser_action.ForRead()) {
-            valid = true;
-        }
-    };
+        assert(valid);
+        s << ephemeralPubKey;
+        s << iv;
+        s << data;
+   
+    }
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        valid = false;
+        s >> ephemeralPubKey;
+        s >> iv;
+        s >> data;
+        valid = true;
+    }
 
 public:
     bool Encrypt(const CBLSPublicKey& peerPubKey, const void* data, size_t dataSize);
@@ -98,14 +99,8 @@ public:
     bool Decrypt(size_t idx, const CBLSSecretKey& sk, Blob& blobRet) const;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(ephemeralPubKey);
-        READWRITE(ivSeed);
-        READWRITE(blobs);
+    SERIALIZE_METHODS(CBLSIESMultiRecipientBlobs, obj) {
+        READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.blobs);
     }
 };
 

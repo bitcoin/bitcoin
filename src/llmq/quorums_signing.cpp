@@ -685,7 +685,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     {
         LOCK(cs_main);
-        EraseObjectRequest(nodeId, CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash()));
+        EraseTxRequest(nodeId, recoveredSig.GetHash());
     }
 
     if (db.HasRecoveredSigForHash(recoveredSig.GetHash())) {
@@ -731,7 +731,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash());
     connman.ForEachNode([&](CNode* pnode) {
-        if (pnode->nVersion >= LLMQS_PROTO_VERSION && pnode->fSendRecSigs) {
+        if (pnode->fSendRecSigs) {
             pnode->PushInventory(inv);
         }
     });
@@ -823,7 +823,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
     int tipHeight;
     {
         LOCK(cs_main);
-        tipHeight = chainActive.Height();
+        tipHeight = ::ChainActive().Height();
     }
 
     // This might end up giving different results on different members
@@ -908,10 +908,10 @@ std::vector<CQuorumCPtr> CSigningManager::GetActiveQuorumSet(Consensus::LLMQType
     {
         LOCK(cs_main);
         int startBlockHeight = signHeight - SIGN_HEIGHT_OFFSET;
-        if (startBlockHeight > chainActive.Height()) {
+        if (startBlockHeight > ::ChainActive().Height()) {
             return {};
         }
-        pindexStart = chainActive[startBlockHeight];
+        pindexStart = ::ChainActive()[startBlockHeight];
     }
 
     return quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
@@ -939,7 +939,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
 
 bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
 {
-    auto& llmqParams = Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeChainLocks);
+    auto& llmqParams = Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqType);
 
     auto quorum = SelectQuorumForSigning(llmqParams.type, signedAtHeight, id);
     if (!quorum) {

@@ -7,15 +7,13 @@
 #include <llmq/quorums.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
-#include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_dkgsessionmgr.h>
-#include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 
 #include <dbwrapper.h>
-
+#include <net.h>
 namespace llmq
 {
 
