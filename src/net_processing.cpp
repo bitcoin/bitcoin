@@ -324,7 +324,8 @@ private:
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, int64_t nTime);
 
-    /** Send a ping message every PING_INTERVAL or if requested via RPC. */
+    /** Send a ping message every PING_INTERVAL or if requested via RPC. May
+     *  mark the peer to be disconnected if a ping has timed out. */
     void MaybeSendPing(CNode& node_to);
 
     const CChainParams& m_chainparams;
@@ -4297,6 +4298,17 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 
 void PeerManagerImpl::MaybeSendPing(CNode& node_to)
 {
+    // Use mockable time for ping timeouts.
+    // This means that setmocktime may cause pings to time out.
+    auto now = GetTime<std::chrono::microseconds>();
+
+    if (m_connman.RunInactivityChecks(node_to) && node_to.nPingNonceSent &&
+        now > node_to.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL}) {
+        LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(now - node_to.m_ping_start.load()), node_to.GetId());
+        node_to.fDisconnect = true;
+        return;
+    }
+
     const CNetMsgMaker msgMaker(node_to.GetCommonVersion());
     bool pingSend = false;
 
@@ -4305,7 +4317,7 @@ void PeerManagerImpl::MaybeSendPing(CNode& node_to)
         pingSend = true;
     }
 
-    if (node_to.nPingNonceSent == 0 && node_to.m_ping_start.load() + PING_INTERVAL < GetTime<std::chrono::microseconds>()) {
+    if (node_to.nPingNonceSent == 0 && now > node_to.m_ping_start.load() + PING_INTERVAL) {
         // Ping automatically sent as a latency probe & keepalive.
         pingSend = true;
     }
@@ -4316,7 +4328,7 @@ void PeerManagerImpl::MaybeSendPing(CNode& node_to)
             GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
         }
         node_to.fPingQueued = false;
-        node_to.m_ping_start = GetTime<std::chrono::microseconds>();
+        node_to.m_ping_start = now;
         if (node_to.GetCommonVersion() > BIP0031_VERSION) {
             node_to.nPingNonceSent = nonce;
             m_connman.PushMessage(&node_to, msgMaker.Make(NetMsgType::PING, nonce));
@@ -4367,6 +4379,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     const CNetMsgMaker msgMaker(pto->GetCommonVersion());
 
     MaybeSendPing(*pto);
+
+    // MaybeSendPing may have marked peer for disconnection
+    if (pto->fDisconnect) return true;
 
     {
         LOCK(cs_main);

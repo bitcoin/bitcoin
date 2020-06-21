@@ -1247,14 +1247,6 @@ bool CConnman::InactivityCheck(const CNode& node) const
         return true;
     }
 
-    if (node.nPingNonceSent && node.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL} < GetTime<std::chrono::microseconds>()) {
-        // We use mockable time for ping timeouts. This means that setmocktime
-        // may cause pings to time out for peers that have been connected for
-        // longer than m_peer_connect_timeout.
-        LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - node.m_ping_start.load()), node.GetId());
-        return true;
-    }
-
     if (!node.fSuccessfullyConnected) {
         LogPrint(BCLog::NET, "version handshake timeout peer=%d\n", node.GetId());
         return true;
