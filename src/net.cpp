@@ -601,21 +601,8 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         stats.minFeeFilter = 0;
     }
 
-    // It is common for nodes with good ping times to suddenly become lagged,
-    // due to a new block arriving or other large transfer.
-    // Merely reporting pingtime might fool the caller into thinking the node was still responsive,
-    // since pingtime does not update until the ping is complete, which might take a while.
-    // So, if a ping is taking an unusually long time in flight,
-    // the caller can immediately detect that this is happening.
-    std::chrono::microseconds ping_wait{0};
-    if ((0 != nPingNonceSent) && (0 != m_ping_start.load().count())) {
-        ping_wait = GetTime<std::chrono::microseconds>() - m_ping_start.load();
-    }
-
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
     stats.m_ping_usec = nPingUsecTime;
-    stats.m_min_ping_usec  = nMinPingUsecTime;
-    stats.m_ping_wait_usec = count_microseconds(ping_wait);
+    stats.m_min_ping_usec = nMinPingUsecTime;
 
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();
