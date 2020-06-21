@@ -49,8 +49,6 @@ from .util import (
     set_node_times,
     set_timeout_scale,
     satoshi_round,
-    sync_blocks,
-    sync_mempools,
     wait_until,
     get_chain_folder,
 )
@@ -527,21 +525,54 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         connect_nodes(self.nodes[1], 2)
         self.sync_all()
 
-    def sync_blocks(self, nodes=None, **kwargs):
-        sync_blocks(nodes or self.nodes, **kwargs)
+    def sync_blocks(self, nodes=None, wait=1, timeout=60):
+        """
+        Wait until everybody has the same tip.
+        sync_blocks needs to be called with an rpc_connections set that has least
+        one node already synced to the latest, stable tip, otherwise there's a
+        chance it might return before all nodes are stably synced.
+        """
+        rpc_connections = nodes or self.nodes
+        timeout = int(timeout * self.options.timeout_factor)
+        timeout *= self.options.timeout_scale
+        stop_time = time.time() + timeout
+        while time.time() <= stop_time:
+            best_hash = [x.getbestblockhash() for x in rpc_connections]
+            if best_hash.count(best_hash[0]) == len(rpc_connections):
+                return
+            # Check that each peer has at least one connection
+            assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            time.sleep(wait)
+        raise AssertionError("Block sync timed out:{}".format("".join("\n  {!r}".format(b) for b in best_hash)))
 
-    def sync_mempools(self, nodes=None, **kwargs):
-        if self.mocktime != 0:
-            if 'wait' not in kwargs:
-                kwargs['wait'] = 0.1
-            if 'wait_func' not in kwargs:
-                kwargs['wait_func'] = lambda: self.bump_mocktime(3, nodes=nodes)
+    def sync_mempools(self, nodes=None, wait=1, timeout=60, flush_scheduler=True, wait_func=None):
+        """
+        Wait until everybody has the same transactions in their memory
+        pools
+        """
+        rpc_connections = nodes or self.nodes
+        timeout = int(timeout * self.options.timeout_factor)
+        timeout *= self.options.timeout_scale
+        stop_time = time.time() + timeout
+        if self.mocktime != 0 and wait_func is None:
+            wait_func = lambda: self.bump_mocktime(3, nodes=nodes)
+        while time.time() <= stop_time:
+            pool = [set(r.getrawmempool()) for r in rpc_connections]
+            if pool.count(pool[0]) == len(rpc_connections):
+                if flush_scheduler:
+                    for r in rpc_connections:
+                        r.syncwithvalidationinterfacequeue()
+                return
+            # Check that each peer has at least one connection
+            assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            if wait_func is not None:
+                wait_func()
+            time.sleep(wait)
+        raise AssertionError("Mempool sync timed out:{}".format("".join("\n  {!r}".format(m) for m in pool)))
 
-        sync_mempools(nodes or self.nodes, **kwargs)
-
-    def sync_all(self, nodes=None, **kwargs):
-        self.sync_blocks(nodes, **kwargs)
-        self.sync_mempools(nodes, **kwargs)
+    def sync_all(self, nodes=None):
+        self.sync_blocks(nodes)
+        self.sync_mempools(nodes)
 
     def disable_mocktime(self):
         self.mocktime = 0
@@ -1257,7 +1288,7 @@ class DashTestFramework(BitcoinTestFramework):
                 return True
             self.bump_mocktime(sleep, nodes=nodes)
             self.nodes[0].generate(1)
-            sync_blocks(nodes)
+            self.sync_blocks(nodes)
             return False
         wait_until(wait_func, timeout=timeout, sleep=sleep)
 
@@ -1269,7 +1300,7 @@ class DashTestFramework(BitcoinTestFramework):
                     return True
             self.bump_mocktime(sleep, nodes=nodes)
             self.nodes[0].generate(1)
-            sync_blocks(nodes)
+            self.sync_blocks(nodes)
             return False
         wait_until(wait_func, timeout=timeout, sleep=sleep)
 
@@ -1277,7 +1308,7 @@ class DashTestFramework(BitcoinTestFramework):
         time.sleep(1)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(num_blocks)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
     def mine_quorum(self, llmq_type_name="llmq_test", llmq_type=100, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
@@ -1307,7 +1338,7 @@ class DashTestFramework(BitcoinTestFramework):
         if skip_count != 0:
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         q = self.nodes[0].getbestblockhash()
         self.log.info("Expected quorum_hash:"+str(q))
@@ -1349,7 +1380,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].getblocktemplate() # this calls CreateNewBlock
         self.nodes[0].generate(1)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("Waiting for quorum to appear in the list")
         self.wait_for_quorum_list(q, nodes, llmq_type_name=llmq_type_name)
@@ -1361,7 +1392,7 @@ class DashTestFramework(BitcoinTestFramework):
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.nodes[0].generate(8)
 
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
 
@@ -1397,7 +1428,7 @@ class DashTestFramework(BitcoinTestFramework):
         #     self.bump_mocktime(1, nodes=nodes)
         #     self.nodes[0].generate(skip_count)
         #     time.sleep(4)
-        # sync_blocks(nodes)
+        # self.sync_blocks(nodes)
 
         self.move_blocks(nodes, skip_count)
 
@@ -1479,7 +1510,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].getblocktemplate() # this calls CreateNewBlock
         self.nodes[0].generate(1)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         time.sleep(6)
         self.log.info("Waiting for quorum(s) to appear in the list")
@@ -1490,7 +1521,7 @@ class DashTestFramework(BitcoinTestFramework):
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.nodes[0].generate(8)
 
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info_0["height"], q_0, quorum_info_0["quorumIndex"], quorum_info_0["minedBlock"]))
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info_1["height"], q_1, quorum_info_1["quorumIndex"], quorum_info_1["minedBlock"]))
 
@@ -1515,7 +1546,7 @@ class DashTestFramework(BitcoinTestFramework):
         if skip_count != 0:
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
         time.sleep(1)
         self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 

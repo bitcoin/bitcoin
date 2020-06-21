@@ -12,7 +12,6 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     connect_nodes,
-    sync_blocks,
 )
 
 
@@ -203,7 +202,7 @@ class WalletTest(BitcoinTestFramework):
         self.restart_node(1, ['-persistmempool=0', '-checklevel=0'])
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 0)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
         self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
         self.sync_all()
