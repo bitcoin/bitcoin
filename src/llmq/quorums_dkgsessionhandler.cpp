@@ -98,7 +98,7 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctp
     connman(_connman)
 {
     phaseHandlerThread = std::thread([this] {
-        RenameThread(strprintf("dash-q-phase-%d", (uint8_t)params.type).c_str());
+        RenameThread(strprintf("syscoin-q-phase-%d", (uint8_t)params.type).c_str());
         PhaseHandlerThread();
     });
 }
