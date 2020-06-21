@@ -353,9 +353,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # See fPreferredDownload in net_processing.
         #
         # If further outbound connections are needed, they can be added at the beginning of the test with e.g.
-        # connect_nodes(self.nodes[1], 2)
+        # self.connect_nodes(1, 2)
         for i in range(self.num_nodes - 1):
-            connect_nodes(self.nodes[i + 1], i)
+            self.connect_nodes(i + 1, i)
         self.sync_all()
 
     def setup_nodes(self):
@@ -532,11 +532,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
 
+    def connect_nodes(self, a, b):
+        connect_nodes(self.nodes[a], b)
+
+    def disconnect_nodes(self, a, b):
+        disconnect_nodes(self.nodes[a], b)
+
     def split_network(self):
         """
         Split the network of four nodes into nodes 0/1 and 2/3.
         """
-        disconnect_nodes(self.nodes[1], 2)
+        self.disconnect_nodes(1, 2)
         self.sync_all(self.nodes[:2])
         self.sync_all(self.nodes[2:])
 
@@ -544,7 +550,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         Join the (previously split) network halves together.
         """
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(1, 2)
         self.sync_all()
 
     def sync_blocks(self, nodes=None, wait=1, timeout=60):
