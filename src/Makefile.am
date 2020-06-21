@@ -234,6 +234,7 @@ SYSCOIN_CORE_H = \
   rpc/blockchain.h \
   rpc/auxpow_miner.h \
   rpc/client.h \
+  rpc/mining.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
