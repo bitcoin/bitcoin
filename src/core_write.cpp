@@ -394,42 +394,42 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     }
     entry.pushKV("vout", vout);
     // SYSCOIN
-    if (tx.nVersion == SYSCOIN_TX_VERSION_PROVIDER_REGISTER) {
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
             entry.pushKV("proRegTx", obj);
         }
-    } else if (tx.nVersion == SYSCOIN_TX_VERSION_PROVIDER_UPDATE_SERVICE) {
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
             entry.pushKV("proUpServTx", obj);
         }
-    } else if (tx.nVersion == SYSCOIN_TX_VERSION_PROVIDER_UPDATE_REGISTRAR) {
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
             entry.pushKV("proUpRegTx", obj);
         }
-    } else if (tx.nVersion == SYSCOIN_TX_VERSION_PROVIDER_UPDATE_REVOKE) {
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
             entry.pushKV("proUpRevTx", obj);
         }
-    } else if (tx.nVersion == SYSCOIN_TX_VERSION_COINBASE) {
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
         CCbTx cbTx;
         if (GetTxPayload(tx, cbTx)) {
             UniValue obj;
             cbTx.ToJson(obj);
             entry.pushKV("cbTx", obj);
         }
-    } else if (tx.nVersion == SYSCOIN_TX_VERSION_QUORUM_COMMITMENT) {
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qcTx;
         if (GetTxPayload(tx, qcTx)) {
             UniValue obj;

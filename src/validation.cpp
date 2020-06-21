@@ -624,7 +624,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         } 
     }  
     // SYSCOIN   
-    if (tx.nVersion == SYSCOIN_TX_VERSION_QUORUM_COMMITMENT) {
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         // quorum commitment is not allowed outside of blocks
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "qc-not-allowed");
     }

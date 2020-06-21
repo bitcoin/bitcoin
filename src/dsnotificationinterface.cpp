@@ -59,6 +59,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
-    CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff);
+    CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
     governance.UpdateCachesAndClean();
 }

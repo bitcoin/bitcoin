@@ -837,7 +837,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
             break;
         } 
-        case(SYSCOIN_TX_VERSION_QUORUM_COMMITMENT): {
+        case(SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT): {
             llmq::CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(tx, qc)) {
                 return _state.DoS(100, false, REJECT_INVALID, "bad-qc-payload");
