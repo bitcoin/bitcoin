@@ -17,32 +17,32 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
 {
 
     try {
         switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state);
+            return CheckProRegTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, state);
+            return CheckProUpServTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state);
+            return CheckProUpRegTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE:
-            return CheckProUpRevTx(tx, pindexPrev, state);
+            return CheckProUpRevTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_COINBASE:
-            return CheckCbTx(tx, pindexPrev, state);
+            return CheckCbTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT:
-            return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
+            return llmq::CheckLLMQCommitment(tx, pindexPrev, state, fJustCheck);
         default:
             return true;
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
-        return state.DoS(100, false, REJECT_INVALID, "failed-check-special-tx");
+        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "failed-check-special-tx");
     }
 
-    return state.DoS(10, false, REJECT_INVALID, "bad-tx-type-check");
+    return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-tx-type-check");
 }
 
 bool IsSpecialTx(const CTransaction& tx)
@@ -74,7 +74,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
         for (size_t i = 0; i < block.vtx.size(); i++) {
             const CTransaction& tx = *block.vtx[i];
-            if (!CheckSpecialTx(tx, pindex->pprev, state)) {
+            if (!CheckSpecialTx(tx, pindex->pprev, state, false)) {
                 // pass the state returned by the function above
                 return false;
             }
@@ -91,7 +91,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         int64_t nTime3 = GetTimeMicros(); nTimeQuorum += nTime3 - nTime2;
         LogPrint(BCLog::BENCH, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
 
-        if (!deterministicMNManager->ProcessBlock(block, pindex, state, fJustCheck)) {
+        if (!deterministicMNManager->ProcessBlock(block, pindex, state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -108,7 +108,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         LogPrint(BCLog::BENCH, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
     } catch (const std::exception& e) {
         LogPrintf(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
-        return state.DoS(100, false, REJECT_INVALID, "failed-procspectxsinblock");
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-procspectxsinblock");
     }
 
     return true;
