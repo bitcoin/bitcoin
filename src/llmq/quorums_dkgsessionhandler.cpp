@@ -51,7 +51,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
         return;
     }
 
-    EraseObjectRequest(from, CInv(invType, hash));
+    EraseTxRequest(from, hash);
 
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
 }
@@ -445,7 +445,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         auto hash = ::SerializeHash(msg);
         {
             LOCK(cs_main);
-            EraseObjectRequest(p.first, CInv(MessageType, hash));
+            EraseTxRequest(p.first, hash);
         }
 
         bool ban = false;

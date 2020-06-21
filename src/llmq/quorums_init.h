@@ -2,12 +2,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_INIT_H
-#define DASH_QUORUMS_INIT_H
+#ifndef SYSCOIN_LLQM_QUORUMS_INIT_H
+#define SYSCOIN_LLQM_QUORUMS_INIT_H
 
 class CDBWrapper;
 class CEvoDB;
-
+class CConnman;
 namespace llmq
 {
 
@@ -24,4 +24,4 @@ void StopLLMQSystem();
 void InterruptLLMQSystem();
 } // namespace llmq
 
-#endif //DASH_QUORUMS_INIT_H
+#endif //SYSCOIN_LLQM_QUORUMS_INIT_H

@@ -156,9 +156,11 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::LEVELDB, "leveldb"},
     {BCLog::VALIDATION, "validation"},
     // SYSCOIN
-    {BCLog::MN, "masternode"},
     {BCLog::GOBJECT, "gobject"},
-    {BCLog::MNPAYMENT, "mnpayments"},
+    {BCLog::LLMQ, "llmq"},
+    {BCLog::LLMQ_DKG, "llmq-dkg"},
+    {BCLog::LLMQ_SIGS, "llmq-sigs"},
+    {BCLog::MNPAYMENTS, "mnpayments"},
     {BCLog::MNSYNC, "mnsync"},
     {BCLog::SPORK, "spork"},
     {BCLog::SYS, "syscoin"},

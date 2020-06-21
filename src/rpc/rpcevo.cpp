@@ -999,7 +999,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             setOutpts.emplace(outpt);
         }
 
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]);
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             if (setOutpts.count(dmn->collateralOutpoint) ||
                 CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
@@ -1024,7 +1024,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]);
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
             ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
@@ -1093,7 +1093,7 @@ static uint256 ParseBlock(const UniValue& v, std::string strName)
         int h = ParseInt32V(v, strName);
         if (h < 1 || h > ::ChainActive().Height())
             throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
-        return *chainActive[h]->phashBlock;
+        return *::ChainActive()[h]->phashBlock;
     }
 }
 

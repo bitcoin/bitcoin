@@ -189,7 +189,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
         auto& params = p.second;
 
         if (fMasternodeMode) {
-            const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
+            const CBlockIndex* pindexQuorum = ::ChainActive()[tipHeight - (tipHeight % params.dkgInterval)];
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;

@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_SIGNING_H
-#define DASH_QUORUMS_SIGNING_H
+#ifndef SYSCOIN_LLQM_QUORUMS_SIGNING_H
+#define SYSCOIN_LLQM_QUORUMS_SIGNING_H
 
 #include <llmq/quorums.h>
 
@@ -31,19 +31,24 @@ public:
 
 public:
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+   void Serialize(Stream& s) const
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(id);
-        READWRITE(msgHash);
-        READWRITE(sig);
-        if (ser_action.ForRead()) {
-            UpdateHash();
-        }
+        s << llmqType;
+        s << quorumHash;
+        s << id;
+        s << msgHash;
+        s << sig;
+   
+    }
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> llmqType;
+        s >> quorumHash;
+        s >> id;
+        s >> msgHash;
+        s >> sig;
+        UpdateHash();
     }
 
     void UpdateHash()
@@ -190,4 +195,4 @@ extern CSigningManager* quorumSigningManager;
 
 } // namespace llmq
 
-#endif //DASH_QUORUMS_SIGNING_H
+#endif //SYSCOIN_LLQM_QUORUMS_SIGNING_H

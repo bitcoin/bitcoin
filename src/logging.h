@@ -57,12 +57,14 @@ namespace BCLog {
         LEVELDB     = (1 << 20),
         VALIDATION  = (1 << 21),
         // SYSCOIN
-        MN  = (1 << 22),
-        GOBJECT  = (1 << 23),
-        MNPAYMENT  = (1 << 24),
-        MNSYNC  = (1 << 25),
-        SPORK  = (1 << 26),
-        SYS  = (1 << 27),
+        GOBJECT     = ((uint64_t)1 << 33),
+        LLMQ        = ((uint64_t)1 << 36),
+        LLMQ_DKG    = ((uint64_t)1 << 37),
+        LLMQ_SIGS   = ((uint64_t)1 << 38),
+        MNPAYMENTS  = ((uint64_t)1 << 39),
+        MNSYNC      = ((uint64_t)1 << 40),
+        SPORK       = ((uint64_t)1 << 42),
+        SYS         = ((uint64_t)1 << 43),
         ALL         = ~(uint32_t)0,
     };
 

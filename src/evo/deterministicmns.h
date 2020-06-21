@@ -275,13 +275,8 @@ public:
         nTotalRegisteredCount(_totalRegisteredCount)
     {
     }
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOpBase(Stream& s, Operation ser_action)
-    {
-        READWRITE(blockHash);
-        READWRITE(nHeight);
-        READWRITE(nTotalRegisteredCount);
+    SERIALIZE_METHODS(CDeterministicMNList, obj) {
+        READWRITE(obj.blockHash, obj.nHeight, obj.nTotalRegisteredCount);
     }
 
     template<typename Stream>
