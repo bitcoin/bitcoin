@@ -311,15 +311,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.start_node(4)
 
         # Open most recent wallet in v0.16 (no loadwallet RPC)
-        self.stop_node(5)
-        self.start_node(5, extra_args=["-wallet=w2"])
+        self.restart_node(5, extra_args=["-wallet=w2"])
         wallet = node_v16.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
         assert info['keypoolsize'] == 1
 
         # Create upgrade wallet in v0.16
-        self.stop_node(-1)
-        self.start_node(-1, extra_args=["-wallet=u1_v16"])
+        self.restart_node(-1, extra_args=["-wallet=u1_v16"])
         wallet = node_v16.get_wallet_rpc("u1_v16")
         v16_addr = wallet.getnewaddress('', "bech32")
         v16_info = wallet.validateaddress(v16_addr)
