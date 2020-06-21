@@ -32,7 +32,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
             return CheckProUpRevTx(tx, pindexPrev, state);
         case SYSCOIN_TX_VERSION_MN_COINBASE:
             return CheckCbTx(tx, pindexPrev, state);
-        case SYSCOIN_TX_VERSION_QUORUM_COMMITMENT:
+        case SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT:
             return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
         default:
             return true;
@@ -53,7 +53,7 @@ bool IsSpecialTx(const CTransaction& tx)
     case SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR:
     case SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE:
     case SYSCOIN_TX_VERSION_MN_COINBASE:
-    case SYSCOIN_TX_VERSION_QUORUM_COMMITMENT:
+    case SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT:
         return true;
     default:
         return false;

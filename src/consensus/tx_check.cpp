@@ -11,7 +11,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
     // SYSCOIN
     bool allowEmptyTxInOut = false;
-    if (tx.nVersion == SYSCOIN_TX_VERSION_QUORUM_COMMITMENT) {
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         allowEmptyTxInOut = true;
     }
 

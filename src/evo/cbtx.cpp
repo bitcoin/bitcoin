@@ -200,7 +200,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     for (size_t i = 1; i < block.vtx.size(); i++) {
         auto& tx = block.vtx[i];
 
-        if (tx->nVersion == SYSCOIN_TX_VERSION_QUORUM_COMMITMENT) {
+        if (tx->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
             llmq::CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(*tx, qc)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-qc-payload-calc-cbtx-quorummerkleroot");
