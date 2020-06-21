@@ -982,18 +982,6 @@ public:
         }
     }
 
-    void PushBlockInventory(const uint256& hash)
-    {
-        LOCK(cs_inventory);
-        vInventoryBlockToSend.push_back(hash);
-    }
-
-    void PushBlockHash(const uint256 &hash)
-    {
-        LOCK(cs_inventory);
-        vBlockHashesToAnnounce.push_back(hash);
-    }
-
     void CloseSocketDisconnect();
 
     void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
