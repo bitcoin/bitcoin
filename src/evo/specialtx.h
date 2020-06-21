@@ -61,5 +61,5 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
 }
 
 uint256 CalcTxInputsHash(const CTransaction& tx);
-
+extern bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string &errorMessage, bool bConsensus);
 #endif //SYSCOIN_EVO_SPECIALTX_H

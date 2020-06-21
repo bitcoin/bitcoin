@@ -39,10 +39,10 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "failed-check-special-tx");
+        return FormatSyscoinErrorMessage(state, "failed-check-special-tx", fJustCheck);
     }
 
-    return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-tx-type-check");
+    return FormatSyscoinErrorMessage(state, "bad-tx-type-check", fJustCheck);
 }
 
 bool IsSpecialTx(const CTransaction& tx)

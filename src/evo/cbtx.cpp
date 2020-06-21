@@ -18,25 +18,25 @@
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-type");
+        return FormatSyscoinErrorMessage(state, "bad-cbtx-type", fJustCheck);
     }
 
     if (!tx.IsCoinBase()) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-invalid");
+        return FormatSyscoinErrorMessage(state, "bad-cbtx-invalid", fJustCheck);
     }
 
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
+        return FormatSyscoinErrorMessage(state, "bad-cbtx-payload", fJustCheck);
     }
 
     if (cbTx.nVersion == 0 || cbTx.nVersion > CCbTx::CURRENT_VERSION) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-version");
+        return FormatSyscoinErrorMessage(state, "bad-cbtx-version", fJustCheck);
     }
 
     if (pindexPrev) {
         if (cbTx.nVersion < 2) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-version");
+            return FormatSyscoinErrorMessage(state, "bad-cbtx-version", fJustCheck);
         }
     }
 
