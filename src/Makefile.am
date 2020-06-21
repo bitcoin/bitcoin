@@ -120,6 +120,8 @@ SYSCOIN_CORE_H = \
   governance/governance-validators.h \
   governance/governance-vote.h \
   governance/governance-votedb.h \
+  ctpl.h \
+  cxxtimer.hpp \
   evo/cbtx.h \
   evo/deterministicmns.h \
   evo/evodb.h \
@@ -128,9 +130,10 @@ SYSCOIN_CORE_H = \
   evo/simplifiedmns.h \
   evo/specialtx.h \
   masternode/activemasternode.h \
+  masternode/masternode-meta.h \
   masternode/masternode-payments.h \
   masternode/masternode-sync.h \
-  masternode/masternode-meta.h \
+  masternode/masternode-utils.h \
   flat-database.h \
   messagesigner.h \
   netfulfilledman.h \
@@ -183,6 +186,19 @@ SYSCOIN_CORE_H = \
   key_io.h \
   dbwrapper.h \
   limitedmap.h \
+  llmq/quorums.h \
+  llmq/quorums_blockprocessor.h \
+  llmq/quorums_commitment.h \
+  llmq/quorums_chainlocks.h \
+  llmq/quorums_debug.h \
+  llmq/quorums_dkgsessionhandler.h \
+  llmq/quorums_dkgsessionmgr.h \
+  llmq/quorums_dkgsession.h \
+  llmq/quorums_init.h \
+  llmq/quorums_instantsend.h \
+  llmq/quorums_signing.h \
+  llmq/quorums_signing_shares.h \
+  llmq/quorums_utils.h \
   logging.h \
   logging/timer.h \
   memusage.h \
@@ -358,15 +374,30 @@ libsyscoin_server_a_SOURCES = \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \
+  llmq/quorums.cpp \
+  llmq/quorums_blockprocessor.cpp \
+  llmq/quorums_commitment.cpp \
+  llmq/quorums_chainlocks.cpp \
+  llmq/quorums_debug.cpp \
+  llmq/quorums_dkgsessionhandler.cpp \
+  llmq/quorums_dkgsessionmgr.cpp \
+  llmq/quorums_dkgsession.cpp \
+  llmq/quorums_init.cpp \
+  llmq/quorums_instantsend.cpp \
+  llmq/quorums_signing.cpp \
+  llmq/quorums_signing_shares.cpp \
+  llmq/quorums_utils.cpp \
   masternode/activemasternode.cpp \
+  masternode/masternode-meta.cpp \
   masternode/masternode-payments.cpp \
   masternode/masternode-sync.cpp \
-  masternode/masternode-meta.cpp \
+  masternode/masternode-utils.cpp \
   messagesigner.cpp \
   netfulfilledman.cpp \
   rpc/masternode.cpp \
   rpc/governance.cpp \
   rpc/rpcevo.cpp \
+  rpc/rpcquorums.cpp \
   spork.cpp \
   addrdb.cpp \
   addrman.cpp \
