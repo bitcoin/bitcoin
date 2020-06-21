@@ -453,7 +453,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions()
     CDKGLogger logger(*this, __func__);
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
-    g_connman->ForEachNode([&](const CNode* pnode) {
+    connman.ForEachNode([&](const CNode* pnode) {
         if (pnode->verifiedProRegTxHash.IsNull()) {
             return;
         }
@@ -1311,7 +1311,7 @@ void CDKGSession::MarkBadMember(size_t idx)
 void CDKGSession::RelayInvToParticipants(const CInv& inv) const
 {
     LOCK(invCs);
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         bool relay = false;
         if (pnode->qwatch) {
             relay = true;

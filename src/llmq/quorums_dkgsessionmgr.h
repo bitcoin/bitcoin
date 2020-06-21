@@ -10,7 +10,7 @@
 #include <validation.h>
 
 #include <ctpl.h>
-
+class CConnman;
 class UniValue;
 
 namespace llmq
@@ -23,6 +23,7 @@ class CDKGSessionManager
 private:
     CDBWrapper& llmqDb;
     CBLSWorker& blsWorker;
+    CConnman& connman;
     ctpl::thread_pool messageHandlerPool;
 
     std::map<Consensus::LLMQType, CDKGSessionHandler> dkgSessionHandlers;
@@ -47,7 +48,7 @@ private:
     std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache;
 
 public:
-    CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker);
+    CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &connman);
     ~CDKGSessionManager();
 
     void StartMessageHandlerPool();

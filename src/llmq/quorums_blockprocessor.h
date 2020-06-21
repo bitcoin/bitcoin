@@ -26,7 +26,7 @@ class CQuorumBlockProcessor
 {
 private:
     CEvoDB& evoDb;
-
+    CConnman& connman;
     // TODO cleanup
     CCriticalSection minableCommitmentsCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum;
@@ -35,9 +35,7 @@ private:
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher> hasMinedCommitmentCache;
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb) : evoDb(_evoDb) {}
-
-    void UpgradeDB();
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman &_connman) : evoDb(_evoDb), connman(_connman{}
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 

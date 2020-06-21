@@ -10,7 +10,7 @@
 #include <validation.h>
 
 #include <ctpl.h>
-
+class CConnman;
 namespace llmq
 {
 
@@ -106,6 +106,7 @@ private:
     ctpl::thread_pool& messageHandlerPool;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
+    CConnman &connman;
 
     QuorumPhase phase{QuorumPhase_Idle};
     int currentHeight{-1};
@@ -120,7 +121,7 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
+    CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, CConnman& connman);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);

@@ -23,27 +23,21 @@ CBLSWorker* blsWorker;
 
 CDBWrapper* llmqDb;
 
-void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe)
+void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe, CConnman& connman)
 {
     llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
-    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker);
-    quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
-    quorumSigSharesManager = new CSigSharesManager();
-    quorumSigningManager = new CSigningManager(*llmqDb, unitTests);
-    chainLocksHandler = new CChainLocksHandler();
-    quorumInstantSendManager = new CInstantSendManager(*llmqDb);
+    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
+    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker, connman);
+    quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager, connman);
+    quorumSigSharesManager = new CSigSharesManager(connman);
+    quorumSigningManager = new CSigningManager(*llmqDb, unitTests, connman);
 }
 
 void DestroyLLMQSystem()
 {
-    delete quorumInstantSendManager;
-    quorumInstantSendManager = nullptr;
-    delete chainLocksHandler;
-    chainLocksHandler = nullptr;
     delete quorumSigningManager;
     quorumSigningManager = nullptr;
     delete quorumSigSharesManager;
@@ -62,36 +56,22 @@ void DestroyLLMQSystem()
     llmqDb = nullptr;
 }
 
-void StartLLMQSystem()
+void StartLLMQSystem(CConnman &connman)
 {
-    quorumBlockProcessor->UpgradeDB();
-
     if (blsWorker) {
         blsWorker->Start();
     }
     if (quorumDKGSessionManager) {
-        quorumDKGSessionManager->StartMessageHandlerPool();
+        quorumDKGSessionManager->StartMessageHandlerPool(connman);
     }
     if (quorumSigSharesManager) {
         quorumSigSharesManager->RegisterAsRecoveredSigsListener();
         quorumSigSharesManager->StartWorkerThread();
     }
-    if (chainLocksHandler) {
-        chainLocksHandler->Start();
-    }
-    if (quorumInstantSendManager) {
-        quorumInstantSendManager->Start();
-    }
 }
 
 void StopLLMQSystem()
 {
-    if (quorumInstantSendManager) {
-        quorumInstantSendManager->Stop();
-    }
-    if (chainLocksHandler) {
-        chainLocksHandler->Stop();
-    }
     if (quorumSigSharesManager) {
         quorumSigSharesManager->StopWorkerThread();
         quorumSigSharesManager->UnregisterAsRecoveredSigsListener();
@@ -108,9 +88,6 @@ void InterruptLLMQSystem()
 {
     if (quorumSigSharesManager) {
         quorumSigSharesManager->InterruptWorkerThread();
-    }
-    if (quorumInstantSendManager) {
-        quorumInstantSendManager->InterruptWorkerThread();
     }
 }
 

@@ -85,16 +85,17 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
     params(_params),
     messageHandlerPool(_messageHandlerPool),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
-    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
+    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager, _connman)),
     pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
     pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
     pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
-    pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
+    pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT),
+    connman(_connman)
 {
     phaseHandlerThread = std::thread([this] {
         RenameThread(strprintf("dash-q-phase-%d", (uint8_t)params.type).c_str());
@@ -152,7 +153,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 
     const auto& consensus = Params().GetConsensus();
 
-    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
+    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager, connman);
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
         return false;
@@ -529,9 +530,9 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS));
+    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS), connman);
     if (curSession->AreWeMember() && sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
-        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash);
+        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash, connman);
     }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});

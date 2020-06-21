@@ -1804,7 +1804,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 evoDb = new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState);
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-                llmq::InitLLMQSystem(*evoDb, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, false, fReset || fReindexChainState, *node.connman);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));    
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
@@ -2162,7 +2162,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         LogPrintf("MASTERNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
         // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = new CActiveMasternodeManager();
+        activeMasternodeManager = new CActiveMasternodeManager(*node.connman);
         RegisterValidationInterface(activeMasternodeManager);
     }
     if (activeMasternodeInfo.blsKeyOperator == nullptr) {
@@ -2235,7 +2235,6 @@ fs::path pathDB = GetDataDir();
     if (!fLiteMode) {
         node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance)), std::chrono::minutes{5});
     }
-    llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
 
     int chain_active_height;
@@ -2311,7 +2310,7 @@ fs::path pathDB = GetDataDir();
     if (!node.connman->Start(*node.scheduler, connOptions)) {
         return false;
     }
-
+    llmq::StartLLMQSystem(node.connman);
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();

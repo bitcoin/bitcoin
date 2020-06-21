@@ -439,8 +439,9 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory) :
-    db(llmqDb)
+CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman) :
+    db(llmqDb),
+    connman(_connman)
 {
 }
 
@@ -608,7 +609,7 @@ void CSigningManager::ProcessPendingReconstructedRecoveredSigs()
         m = std::move(pendingReconstructedRecoveredSigs);
     }
     for (auto& p : m) {
-        ProcessRecoveredSig(-1, p.second.first, p.second.second, *g_connman);
+        ProcessRecoveredSig(-1, p.second.first, p.second.second, connman);
     }
 }
 
@@ -729,7 +730,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
     }
 
     CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash());
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         if (pnode->nVersion >= LLMQS_PROTO_VERSION && pnode->fSendRecSigs) {
             pnode->PushInventory(inv);
         }

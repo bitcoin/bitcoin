@@ -14,7 +14,6 @@
 #include <unordered_lru_cache.h>
 
 #include <unordered_map>
-
 namespace llmq
 {
 
@@ -123,7 +122,7 @@ private:
     CCriticalSection cs;
 
     CRecoveredSigsDb db;
-
+    CConnman& connman;
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<CRecoveredSig>> pendingRecoveredSigs;
     std::unordered_map<uint256, std::pair<CRecoveredSig, CQuorumCPtr>, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
@@ -136,7 +135,7 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
 
 public:
-    CSigningManager(CDBWrapper& llmqDb, bool fMemory);
+    CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman);
 
     bool AlreadyHave(const CInv& inv);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
