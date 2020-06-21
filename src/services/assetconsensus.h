@@ -70,6 +70,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys);
 bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys);
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck = false);
-bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string errorMessage, bool bErrorNotInvalid = true, bool bConsensus = true);
+bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string &errorMessage, bool bConsensus);
 bool FlushSyscoinDBs();
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

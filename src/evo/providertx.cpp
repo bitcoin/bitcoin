@@ -21,23 +21,23 @@ template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state, bool fJustCheck)
 {
     if (!proTx.addr.IsValid()) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-ipaddr");
+        return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
     }
     if (Params().RequireRoutableExternalIP() && !proTx.addr.IsRoutable()) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-ipaddr");
+        return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
     }
 
     static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if (proTx.addr.GetPort() != mainnetDefaultPort) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-ipaddr-port");
+            return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr-port", fJustCheck);
         }
     } else if (proTx.addr.GetPort() == mainnetDefaultPort) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-ipaddr-port");
+        return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr-port", fJustCheck);
     }
 
     if (!proTx.addr.IsIPv4()) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-ipaddr");
+        return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
     }
 
     return true;
@@ -48,7 +48,7 @@ static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, CValidationSta
 {
     std::string strError;
     if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-sig", false, strError);
+        return FormatSyscoinErrorMessage(state, "bad-protx-sig", fJustCheck);
     }
     return true;
 }
@@ -58,7 +58,7 @@ static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationS
 {
     std::string strError;
     if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig, proTx.MakeSignString(), strError)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-sig", false, strError);
+        return FormatSyscoinErrorMessage(state, "bad-protx-sig", fJustCheck);
     }
     return true;
 }
@@ -67,7 +67,7 @@ template <typename ProTx>
 static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state, bool fJustCheck)
 {
     if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-sig", false);
+        return FormatSyscoinErrorMessage(state, "bad-protx-sig", fJustCheck);
     }
     return true;
 }
@@ -77,7 +77,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
 {
     uint256 inputsHash = CalcTxInputsHash(tx);
     if (inputsHash != proTx.inputsHash) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-inputs-hash");
+        return FormatSyscoinErrorMessage(state, "bad-protx-inputs-hash", fJustCheck);
     }
 
     return true;
@@ -86,41 +86,41 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
+        return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
     }
 
     CProRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payload", fJustCheck);
     }
 
     if (ptx.nVersion == 0 || ptx.nVersion > CProRegTx::CURRENT_VERSION) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-version");
+        return FormatSyscoinErrorMessage(state, "bad-protx-version", fJustCheck);
     }
     if (ptx.nType != 0) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
+        return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
     }
     if (ptx.nMode != 0) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-mode");
+        return FormatSyscoinErrorMessage(state, "bad-protx-mode", fJustCheck);
     }
 
     if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-key-null");
+        return FormatSyscoinErrorMessage(state, "bad-protx-key-null", fJustCheck);
     }
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash() && !ptx.scriptPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payee");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payee", fJustCheck);
     }
 
     CTxDestination payoutDest;
     if (!ExtractDestination(ptx.scriptPayout, payoutDest)) {
         // should not happen as we checked script types before
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payee-dest");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payee-dest", fJustCheck);
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
     if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payee-reuse");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
     }
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
@@ -131,7 +131,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     }
 
     if (ptx.nOperatorReward > 10000) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-operator-reward");
+        return FormatSyscoinErrorMessage(state, "bad-protx-operator-reward", fJustCheck);
     }
 
     CTxDestination collateralTxDest;
@@ -145,14 +145,14 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         }
 
         if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-dest");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral-dest", fJustCheck);
         }
 
         // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
         // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
         keyForPayloadSig = boost::get<CKeyID>(&collateralTxDest);
         if (!keyForPayloadSig) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-pkh");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral-pkh", fJustCheck);
         }
 
         collateralOutpoint = ptx.collateralOutpoint;
@@ -161,11 +161,11 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
             return state.Invalid(TTxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-index");
         }
         if (tx.vout[ptx.collateralOutpoint.n].nValue != 100000 * COIN) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
         }
 
         if (!ExtractDestination(tx.vout[ptx.collateralOutpoint.n].scriptPubKey, collateralTxDest)) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-dest");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral-dest", fJustCheck);
         }
 
         collateralOutpoint = COutPoint(tx.GetHash(), ptx.collateralOutpoint.n);
@@ -174,7 +174,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
     // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
     if (collateralTxDest == CTxDestination(ptx.keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-reuse");
+        return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
     }
 
     if (pindexPrev) {
@@ -182,17 +182,17 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
         // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
         if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->collateralOutpoint != collateralOutpoint) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-addr");
+            return FormatSyscoinErrorMessage(state, "bad-protx-dup-addr", fJustCheck);
         }
 
         // never allow duplicate keys, even if this ProTx would replace an existing MN
         if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-key");
+            return FormatSyscoinErrorMessage(state, "bad-protx-dup-key", fJustCheck);
         }
 
         if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
             if (ptx.keyIDOwner != ptx.keyIDVoting) {
-                return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-key-not-same");
+                return FormatSyscoinErrorMessage(state, "bad-protx-key-not-same", fJustCheck);
             }
         }
     }
@@ -210,7 +210,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     } else {
         // collateral is part of this ProRegTx, so we know the collateral is owned by the issuer
         if (!ptx.vchSig.empty()) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-sig");
+            return FormatSyscoinErrorMessage(state, "bad-protx-sig", fJustCheck);
         }
     }
 
@@ -220,16 +220,16 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
+        return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
     }
 
     CProUpServTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payload", fJustCheck);
     }
 
     if (ptx.nVersion == 0 || ptx.nVersion > CProUpServTx::CURRENT_VERSION) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-version");
+        return FormatSyscoinErrorMessage(state, "bad-protx-version", fJustCheck);
     }
 
     if (!CheckService(ptx.proTxHash, ptx, state)) {
@@ -241,23 +241,23 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
         auto mn = mnList.GetMN(ptx.proTxHash);
         if (!mn) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
+            return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);
         }
 
         // don't allow updating to addresses already used by other MNs
         if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->proTxHash != ptx.proTxHash) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-addr");
+            return FormatSyscoinErrorMessage(state, "bad-protx-dup-addr", fJustCheck);
         }
 
         if (ptx.scriptOperatorPayout != CScript()) {
             if (mn->nOperatorReward == 0) {
                 // don't allow to set operator reward payee in case no operatorReward was set
-                return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-operator-payee");
+                return FormatSyscoinErrorMessage(state, "bad-protx-operator-payee", fJustCheck);
             }
             int witnessversion;
             std::vector<unsigned char> witnessprogram;
             if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash() && !ptx.scriptOperatorPayout.IsPayToScriptHash() && !ptx.scriptOperatorPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
-                return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-operator-payee");
+                return FormatSyscoinErrorMessage(state, "bad-protx-operator-payee", fJustCheck);
             }
         }
 
@@ -283,68 +283,68 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
     CProUpRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payload", fJustCheck);
     }
 
     if (ptx.nVersion == 0 || ptx.nVersion > CProUpRegTx::CURRENT_VERSION) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-version");
+        return FormatSyscoinErrorMessage(state, "bad-protx-version", fJustCheck);
     }
     if (ptx.nMode != 0) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-mode");
+        return FormatSyscoinErrorMessage(state, "bad-protx-mode", fJustCheck);
     }
 
     if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-key-null");
+        return FormatSyscoinErrorMessage(state, "bad-protx-key-null", fJustCheck);
     }
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash() && !ptx.scriptPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payee");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payee", fJustCheck);
     }
 
     CTxDestination payoutDest;
     if (!ExtractDestination(ptx.scriptPayout, payoutDest)) {
         // should not happen as we checked script types before
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payee-dest");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payee-dest", fJustCheck);
     }
 
     if (pindexPrev) {
         auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
         auto dmn = mnList.GetMN(ptx.proTxHash);
         if (!dmn) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
+            return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);
         }
 
         // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
         if (payoutDest == CTxDestination(dmn->pdmnState->keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payee-reuse");
+            return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
         }
 
         Coin coin;
         if (!GetUTXOCoin(dmn->collateralOutpoint, coin)) {
             // this should never happen (there would be no dmn otherwise)
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
         }
 
         // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
         CTxDestination collateralTxDest;
         if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-dest");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral-dest", fJustCheck);
         }
         if (collateralTxDest == CTxDestination(dmn->pdmnState->keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-reuse");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
         }
 
         if (mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
             auto otherDmn = mnList.GetUniquePropertyMN(ptx.pubKeyOperator);
             if (ptx.proTxHash != otherDmn->proTxHash) {
-                return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-key");
+                return FormatSyscoinErrorMessage(state, "bad-protx-dup-key", fJustCheck);
             }
         }
 
         if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
             if (dmn->pdmnState->keyIDOwner != ptx.keyIDVoting) {
-                return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-key-not-same");
+                return FormatSyscoinErrorMessage(state, "bad-protx-key-not-same", fJustCheck);
             }
         }
 
@@ -364,29 +364,29 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
+        return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
     }
 
     CProUpRevTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
+        return FormatSyscoinErrorMessage(state, "bad-protx-payload", fJustCheck);
     }
 
     if (ptx.nVersion == 0 || ptx.nVersion > CProUpRevTx::CURRENT_VERSION) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-version");
+        return FormatSyscoinErrorMessage(state, "bad-protx-version", fJustCheck);
     }
 
     // ptx.nReason < CProUpRevTx::REASON_NOT_SPECIFIED is always `false` since
     // ptx.nReason is unsigned and CProUpRevTx::REASON_NOT_SPECIFIED == 0
     if (ptx.nReason > CProUpRevTx::REASON_LAST) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-reason");
+        return FormatSyscoinErrorMessage(state, "bad-protx-reason", fJustCheck);
     }
 
     if (pindexPrev) {
         auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
         auto dmn = mnList.GetMN(ptx.proTxHash);
         if (!dmn)
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
+            return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);
 
         if (!CheckInputsHash(tx, ptx, state, fJustCheck)) {
             // pass the state returned by the function above

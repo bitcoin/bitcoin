@@ -135,43 +135,43 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
 {
     CFinalCommitmentTxPayload qcTx;
     if (!GetTxPayload(tx, qcTx)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
+        return FormatSyscoinErrorMessage(state, "bad-qc-payload", fJustCheck;
     }
 
     if (qcTx.nVersion == 0 || qcTx.nVersion > CFinalCommitmentTxPayload::CURRENT_VERSION) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-version");
+        return FormatSyscoinErrorMessage(state, "bad-qc-version", fJustCheck);
     }
 
     if (qcTx.nHeight != pindexPrev->nHeight + 1) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-height");
+        return FormatSyscoinErrorMessage(state, "bad-qc-height", fJustCheck);
     }
 
     if (!mapBlockIndex.count(qcTx.commitment.quorumHash)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
+        return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
     }
 
     const CBlockIndex* pindexQuorum = mapBlockIndex[qcTx.commitment.quorumHash];
 
     if (pindexQuorum != pindexPrev->GetAncestor(pindexQuorum->nHeight)) {
         // not part of active chain
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
+        return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
     }
 
     if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)qcTx.commitment.llmqType)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-type");
+        return FormatSyscoinErrorMessage(state, "bad-qc-type", fJustCheck);
     }
     const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qcTx.commitment.llmqType);
 
     if (qcTx.commitment.IsNull()) {
         if (!qcTx.commitment.VerifyNull()) {
-            return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid-null");
+            return FormatSyscoinErrorMessage(state, "bad-qc-invalid-null", fJustCheck);
         }
         return true;
     }
 
     auto members = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
     if (!qcTx.commitment.Verify(members, false)) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
+        return FormatSyscoinErrorMessage(state, "bad-qc-invalid", fJustCheck);
     }
 
     return true;
