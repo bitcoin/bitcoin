@@ -689,9 +689,8 @@ bool LegacyScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::
 
 SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
 {
-    CKeyID key_id(ToKeyID(pkhash));
     CKey key;
-    if (!GetKey(key_id, key)) {
+    if (!GetKey(ToKeyID(pkhash), key)) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
     }
 

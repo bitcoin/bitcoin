@@ -87,6 +87,7 @@ struct ScriptHash : public BaseHash<uint160>
     // These don't do what you'd expect.
     // Use ScriptHash(GetScriptForDestination(...)) instead.
     explicit ScriptHash(const PKHash& hash) = delete;
+
     explicit ScriptHash(const uint160& hash) : BaseHash(hash) {}
     explicit ScriptHash(const CScript& script);
     explicit ScriptHash(const CScriptID& script);
