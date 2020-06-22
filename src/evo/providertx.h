@@ -58,8 +58,8 @@ public:
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString());
-        obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
-        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
+        obj.pushKV("ownerAddress", EncodeDestination(CTxDestination(keyIDOwner)));
+        obj.pushKV("votingAddress", EncodeDestination(CTxDestination(keyIDVoting)));
 
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
