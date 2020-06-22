@@ -279,7 +279,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     {
     LOCK(cs_main);
 
-    CValidationState state;
+    TxValidationState state;
     if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, true)) {
         throw std::runtime_error(FormatStateMessage(state));
     }

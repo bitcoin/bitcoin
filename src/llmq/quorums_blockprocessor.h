@@ -39,7 +39,7 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
 
     void AddMinableCommitment(const CFinalCommitment& fqc);
@@ -55,8 +55,8 @@ public:
     std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex);
 
 private:
-    bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state);
-    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state);
+    bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, BlockValidationState& state);
+    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state);
     bool IsMiningPhase(Consensus::LLMQType llmqType, int nHeight);
     bool IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight);
     uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight);

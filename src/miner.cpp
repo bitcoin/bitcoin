@@ -182,7 +182,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE;
     CCbTx cbTx;
     cbTx.nVersion = 2;
-    CValidationState state;
+    BlockValidationState state;
     if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state)) {
         throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
     }

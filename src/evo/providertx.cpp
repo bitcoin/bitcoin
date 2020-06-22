@@ -18,7 +18,7 @@
 #include <validation.h>
 
 template <typename ProTx>
-static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state, bool fJustCheck)
+static bool CheckService(const uint256& proTxHash, const ProTx& proTx, TxValidationState& state, bool fJustCheck)
 {
     if (!proTx.addr.IsValid()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
@@ -44,7 +44,7 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidati
 }
 
 template <typename ProTx>
-static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state, bool fJustCheck)
+static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, TxValidationState& state, bool fJustCheck)
 {
     std::string strError;
     if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError)) {
@@ -54,7 +54,7 @@ static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, CValidationSta
 }
 
 template <typename ProTx>
-static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state, bool fJustCheck)
+static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, TxValidationState& state, bool fJustCheck)
 {
     std::string strError;
     if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig, proTx.MakeSignString(), strError)) {
@@ -64,7 +64,7 @@ static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationS
 }
 
 template <typename ProTx>
-static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state, bool fJustCheck)
+static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, TxValidationState& state, bool fJustCheck)
 {
     if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
         return FormatSyscoinErrorMessage(state, "bad-protx-sig", fJustCheck);
@@ -73,7 +73,7 @@ static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValid
 }
 
 template <typename ProTx>
-static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidationState& state, bool fJustCheck)
+static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, TxValidationState& state, bool fJustCheck)
 {
     uint256 inputsHash = CalcTxInputsHash(tx);
     if (inputsHash != proTx.inputsHash) {
@@ -83,7 +83,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
@@ -217,7 +217,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
@@ -275,7 +275,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
@@ -361,7 +361,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
