@@ -515,9 +515,11 @@ void CDKGSessionHandler::HandleDKGRound()
     const CBlockIndex* pindexQuorum;
     {
         LOCK(cs_main);
-        pindexQuorum = mapBlockIndex.at(curQuorumHash);
+        pindexQuorum = LookupBlockIndex(curQuorumHash);
     }
-
+    if(!pindexQuorum) {
+        throw AbortPhaseException();
+    }
     if (!InitNewQuorum(pindexQuorum)) {
         // should actually never happen
         WaitForNewQuorum(curQuorumHash);

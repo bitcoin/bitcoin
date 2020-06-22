@@ -146,12 +146,10 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return FormatSyscoinErrorMessage(state, "bad-qc-height", fJustCheck);
     }
 
-    if (!mapBlockIndex.count(qcTx.commitment.quorumHash)) {
+    const CBlockIndex* pindexQuorum = LookupBlockIndex(qcTx.commitment.quorumHash);
+    if(!pindexQuorum) {
         return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
     }
-
-    const CBlockIndex* pindexQuorum = mapBlockIndex[qcTx.commitment.quorumHash];
-
     if (pindexQuorum != pindexPrev->GetAncestor(pindexQuorum->nHeight)) {
         // not part of active chain
         return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
