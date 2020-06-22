@@ -540,13 +540,13 @@ public:
         tmp = ReadCompactSize(s);
         for (size_t i = 0; i < tmp; i++) {
             CDeterministicMNStateDiff diff;
-            tmp2 = ReadVarInt<Stream, uint64_t>(s);
+            tmp2 = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
             s >> diff;
             updatedMNs.emplace(tmp2, std::move(diff));
         }
         tmp = ReadCompactSize(s);
         for (size_t i = 0; i < tmp; i++) {
-            tmp2 = ReadVarInt<Stream, uint64_t>(s);
+            tmp2 = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
             removedMns.emplace(tmp2);
         }
     }
