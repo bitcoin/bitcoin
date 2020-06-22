@@ -275,15 +275,12 @@ public:
         nTotalRegisteredCount(_totalRegisteredCount)
     {
     }
-    SERIALIZE_METHODS(CDeterministicMNList, obj) {
-        READWRITE(obj.blockHash, obj.nHeight, obj.nTotalRegisteredCount);
-    }
-
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        s << *this;
-        //NCONST_PTR(this)->SerializationOpBase(s, CSerActionSerialize());
+        s << blockHash;
+        s << nHeight;
+        s << nTotalRegisteredCount;
         // Serialize the map as a vector
         WriteCompactSize(s, mnMap.size());
         for (const auto& p : mnMap) {
@@ -296,8 +293,9 @@ public:
         mnMap = MnMap();
         mnUniquePropertyMap = MnUniquePropertyMap();
         mnInternalIdMap = MnInternalIdMap();
-        s >> *this;
-        //SerializationOpBase(s, CSerActionUnserialize());
+        s >> blockHash;
+        s >> nHeight;
+        s >> nTotalRegisteredCount;
 
         size_t cnt = ReadCompactSize(s);
         for (size_t i = 0; i < cnt; i++) {
