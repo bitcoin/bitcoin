@@ -52,7 +52,7 @@ public:
         if (rndNodes.empty()) {
             return;
         }
-        std::random_shuffle(rndNodes.begin(), rndNodes.end(), rnd);
+        std::shuffle(rndNodes.begin(), rndNodes.end(), rnd);
 
         size_t idx = 0;
         while (!rndNodes.empty() && cont()) {

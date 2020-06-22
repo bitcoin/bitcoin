@@ -884,7 +884,7 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
         }
         shuffledNodeIds.emplace_back(p.first);
     }
-    std::random_shuffle(shuffledNodeIds.begin(), shuffledNodeIds.end(), rnd);
+    std::shuffle(shuffledNodeIds.begin(), shuffledNodeIds.end(), rnd);
 
     for (auto& nodeId : shuffledNodeIds) {
         auto& nodeState = nodeStates[nodeId];
