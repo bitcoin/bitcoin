@@ -91,8 +91,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.recover_non_hd()
 
         self.log.info("No mnemonic, no mnemonic passphrase, no wallet passphrase, should result in completely different keys")
-        self.stop_node(0)
-        self.start_node(0, extra_args=['-keypool=10'])
+        self.restart_node(0, extra_args=['-keypool=10'])
         assert node.upgradetohd("", "", "", True)
         # Completely different keys, no HD coins should be recovered
         assert mnemonic != node.dumphdinfo()['mnemonic']
@@ -141,8 +140,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.recover_non_hd()
 
         self.log.info("Same mnemonic, no mnemonic passphrase, no wallet passphrase, large enough keepool, should recover all coins with no extra rescan")
-        self.stop_node(0)
-        self.start_node(0, extra_args=['-keypool=10'])
+        self.restart_node(0, extra_args=['-keypool=10'])
         assert node.upgradetohd(mnemonic)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
@@ -152,8 +150,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.recover_non_hd()
 
         self.log.info("Same mnemonic, no mnemonic passphrase, no wallet passphrase, large enough keepool, rescan is skipped initially, should recover all coins after rescanblockchain")
-        self.stop_node(0)
-        self.start_node(0, extra_args=['-keypool=10'])
+        self.restart_node(0, extra_args=['-keypool=10'])
         assert node.upgradetohd(mnemonic, "", "", False)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
