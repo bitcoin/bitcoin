@@ -45,7 +45,7 @@ void CDeterministicMNState::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.pushKV("service", addr.ToStringIPPort(false));
+    obj.pushKV("service", addr.ToStringIPPort());
     obj.pushKV("registeredHeight", nRegisteredHeight);
     obj.pushKV("lastPaidHeight", nLastPaidHeight);
     obj.pushKV("PoSePenalty", nPoSePenalty);
