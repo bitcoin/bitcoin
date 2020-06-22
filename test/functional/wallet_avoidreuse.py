@@ -110,9 +110,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getwalletinfo()["avoid_reuse"], False)
         assert_equal(self.nodes[1].getwalletinfo()["avoid_reuse"], True)
 
-        # Stop and restart node 1
-        self.stop_node(1)
-        self.start_node(1)
+        self.restart_node(1)
         connect_nodes(self.nodes[0], 1)
 
         # Flags should still be node1.avoid_reuse=false, node2.avoid_reuse=true
