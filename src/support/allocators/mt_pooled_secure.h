@@ -9,7 +9,7 @@
 
 #include <thread>
 #include <mutex>
-
+#include <memory.h>
 //
 // Manages a pool of pools to balance allocation between those when multiple threads are involved
 // This allocator is fully thread safe
@@ -35,7 +35,7 @@ struct mt_pooled_secure_allocator : public std::allocator<T> {
         size_t pools_count = std::thread::hardware_concurrency();
         pools.resize(pools_count);
         for (size_t i = 0; i < pools_count; i++) {
-            pools[i] = std::make_unique<internal_pool>(nrequested_size, nnext_size, nmax_size);
+            pools[i] = MakeUnique<internal_pool>(nrequested_size, nnext_size, nmax_size);
         }
     }
     ~mt_pooled_secure_allocator() noexcept {}

@@ -56,7 +56,7 @@ CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& 
 {
     mnList.resize(smlEntries.size());
     for (size_t i = 0; i < smlEntries.size(); i++) {
-        mnList[i] = std::make_unique<CSimplifiedMNListEntry>(smlEntries[i]);
+        mnList[i] = MakeUnique<CSimplifiedMNListEntry>(smlEntries[i]);
     }
 
     std::sort(mnList.begin(), mnList.end(), [&](const std::unique_ptr<CSimplifiedMNListEntry>& a, const std::unique_ptr<CSimplifiedMNListEntry>& b) {
@@ -70,7 +70,7 @@ CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
 
     size_t i = 0;
     dmnList.ForEachMN(false, [this, &i](const CDeterministicMNCPtr& dmn) {
-        mnList[i++] = std::make_unique<CSimplifiedMNListEntry>(*dmn);
+        mnList[i++] = MakeUnique<CSimplifiedMNListEntry>(*dmn);
     });
 
     std::sort(mnList.begin(), mnList.end(), [&](const std::unique_ptr<CSimplifiedMNListEntry>& a, const std::unique_ptr<CSimplifiedMNListEntry>& b) {
