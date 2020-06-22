@@ -62,7 +62,7 @@ struct CLockLocation {
     std::string ToString() const
     {
         return tfm::format(
-            "%s %s:%s%s (in thread %s)",
+            "'%s' in %s:%s%s (in thread '%s')",
             mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
     }
 
@@ -108,16 +108,6 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     std::string strOutput = "";
     strOutput += "POTENTIAL DEADLOCK DETECTED\n";
     strOutput += "Previous lock order was:\n";
-    for (const LockStackItem& i : s2) {
-        if (i.first == mismatch.first) {
-            strOutput += " (1)";
-        }
-        if (i.first == mismatch.second) {
-            strOutput += " (2)";
-        }
-        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
-    }
-    strOutput += "Current lock order is:\n";
     for (const LockStackItem& i : s1) {
         if (i.first == mismatch.first) {
             strOutput += " (1)";
@@ -128,14 +118,28 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
         strOutput += strprintf(" %s\n", i.second.ToString().c_str());
     }
 
+    std::string mutex_a, mutex_b;
+    strOutput += "Current lock order is:\n";
+    for (const LockStackItem& i : s2) {
+        if (i.first == mismatch.first) {
+            strOutput += " (1)";
+            mutex_a = i.second.Name();
+        }
+        if (i.first == mismatch.second) {
+            strOutput += " (2)";
+            mutex_b = i.second.Name();
+        }
+        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
+    }
+
     printf("%s\n", strOutput.c_str());
     LogPrintf("%s\n", strOutput.c_str());
 
     if (g_debug_lockorder_abort) {
-        fprintf(stderr, "Assertion failed: detected inconsistent lock order at %s:%i, details in debug log.\n", __FILE__, __LINE__);
+        fprintf(stderr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString().c_str());
         abort();
     }
-    throw std::logic_error("potential deadlock detected");
+    throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
 static void push_lock(void* c, const CLockLocation& locklocation)
