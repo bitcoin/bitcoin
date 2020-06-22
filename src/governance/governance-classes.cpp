@@ -11,7 +11,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
-
+#include <key_io.h>
 // DECLARE GLOBAL VARIABLES FOR GOVERNANCE CLASSES
 CGovernanceTriggerManager triggerman;
 
