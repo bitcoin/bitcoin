@@ -309,9 +309,7 @@ public:
         }
         if (s.GetType() & SER_DISK) {
             // Only include these for the disk file format
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
             READWRITE(obj.nDeletionTime, obj.fExpired, obj.mapCurrentMNVotes, obj.fileVotes);
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
         }
     }
 

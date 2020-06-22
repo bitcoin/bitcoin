@@ -14,6 +14,7 @@
 #include <pubkey.h>
 #include <univalue.h>
 #include <script/standard.h>
+#include <key_io.h>
 class CBlockIndex;
 
 class CProRegTx
