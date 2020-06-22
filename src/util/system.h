@@ -73,7 +73,7 @@ int64_t GetStartupTime();
 
 extern const char * const SYSCOIN_CONF_FILENAME;
 // SYSCOIN
-void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
+void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
 void SetupEnvironment();
 bool SetupNetworking();
 
