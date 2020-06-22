@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         Lookup(ip.c_str(), smle.service, i, false);
 
         smle.pubKeyOperator.SetHex(strprintf("%040x", i));
-        smle.keyIDVoting.SetHex(strprintf("%040x", i));
+        smle.keyIDVoting = WitnessV0KeyHash(std::vector<unsigned char>(strprintf("%040x", i)));
         smle.isValid = true;
 
         entries.emplace_back(smle);

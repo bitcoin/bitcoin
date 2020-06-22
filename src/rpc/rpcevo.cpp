@@ -151,12 +151,12 @@ static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, b
     return key;
 }
 
-static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
+static WitnessV0KeyHash ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
     CTxDestination dest = DecodeDestination(strAddress);
-    const CKeyID *keyID = boost::get<CKeyID>(&dest);
+    const CKeyID *keyID = boost::get<WitnessV0KeyHash>(&dest);
     if (!keyID) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PKH/P2PWKH address, not %s", paramName, strAddress));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PWKH address, not %s", paramName, strAddress));
     }
     return *keyID;
 }
@@ -464,7 +464,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-    CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
+    WitnessV0KeyHash keyIDVoting = WitnessV0KeyHash(keyOwner.GetPubKey().GetID());
     if (request.params[paramIdx + 3].get_str() != "") {
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
@@ -483,7 +483,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
     }
 
-    ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
+    ptx.keyIDOwner = WitnessV0KeyHash(keyOwner.GetPubKey().GetID());
     ptx.pubKeyOperator = pubKeyOperator;
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
@@ -752,7 +752,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     CKey keyOwner;
-    if (!spk_man->GetKey(dmn->pdmnState->keyIDOwner, keyOwner)) {
+    if (!spk_man->GetKey(CKeyID(dmn->pdmnState->keyIDOwner), keyOwner)) {
         throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(dmn->pdmnState->keyIDOwner)));
     }
 

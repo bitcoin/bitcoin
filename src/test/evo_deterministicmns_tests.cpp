@@ -101,9 +101,9 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
-    proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
+    proTx.keyIDOwner = WitnessV0KeyHash(ownerKeyRet.GetPubKey().GetID());
     proTx.pubKeyOperator = operatorKeyRet.GetPubKey().GetID();
-    proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
+    proTx.keyIDVoting = WitnessV0KeyHash(ownerKeyRet.GetPubKey().GetID());
     proTx.scriptPayout = scriptPayout;
 
     CMutableTransaction tx;

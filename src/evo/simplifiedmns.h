@@ -28,7 +28,7 @@ public:
     uint256 confirmedHash;
     CService service;
     CBLSLazyPublicKey pubKeyOperator;
-    CKeyID keyIDVoting;
+    WitnessV0KeyHash keyIDVoting;
     bool isValid;
 
 public:

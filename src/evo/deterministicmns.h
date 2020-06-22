@@ -45,9 +45,9 @@ public:
     // please note that this is NOT a double-sha256 hash
     uint256 confirmedHashWithProRegTxHash;
 
-    CKeyID keyIDOwner;
+    WitnessV0KeyHash keyIDOwner;
     CBLSLazyPublicKey pubKeyOperator;
-    CKeyID keyIDVoting;
+    WitnessV0KeyHash keyIDVoting;
     CService addr;
     CScript scriptPayout;
     CScript scriptOperatorPayout;
