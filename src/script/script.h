@@ -514,7 +514,7 @@ public:
 
     bool IsPayToScriptHash() const;
     // SYSCOIN
-    bool IsPayToPublicKeyHash() const
+    bool IsPayToPublicKeyHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
