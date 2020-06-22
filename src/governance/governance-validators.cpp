@@ -10,7 +10,7 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
-
+#include <key_io.h>
 const size_t MAX_DATA_SIZE = 512;
 const size_t MAX_NAME_SIZE = 40;
 
