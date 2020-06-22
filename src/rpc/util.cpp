@@ -118,10 +118,10 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
     return "> bitcoin-cli " + methodname + " " + args + "\n";
 }
 
-std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
+std::string HelpExampleRpc(const std::string& methodname, const std::string& args, const std::string& path)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "]}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+           "\"method\": \"" + methodname + "\", \"params\": [" + args + "]}' -H 'content-type: text/plain;' http://127.0.0.1:8332/" + path + "\n";
 }
 
 // Converts a hex string to a public key if possible

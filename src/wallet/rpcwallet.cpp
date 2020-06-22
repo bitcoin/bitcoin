@@ -244,7 +244,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("getnewaddress", "")
-            + HelpExampleRpc("getnewaddress", "")
+            + HelpExampleRpc("getnewaddress", "", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -292,7 +292,7 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("getrawchangeaddress", "")
-            + HelpExampleRpc("getrawchangeaddress", "")
+            + HelpExampleRpc("getrawchangeaddress", "", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -333,7 +333,7 @@ static UniValue setlabel(const JSONRPCRequest& request)
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\" \"tabby\"")
-            + HelpExampleRpc("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\", \"tabby\"")
+            + HelpExampleRpc("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\", \"tabby\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -422,7 +422,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"\" \"\" true")
             + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"\" \"\" false true 0.00002 " + (CURRENCY_UNIT + "/kB"))
             + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"\" \"\" false true 2 " + (CURRENCY_ATOM + "/B"))
-            + HelpExampleRpc("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\", 0.1, \"donation\", \"seans outpost\"")
+            + HelpExampleRpc("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\", 0.1, \"donation\", \"seans outpost\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -498,7 +498,7 @@ static UniValue listaddressgroupings(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("listaddressgroupings", "")
-            + HelpExampleRpc("listaddressgroupings", "")
+            + HelpExampleRpc("listaddressgroupings", "", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -554,7 +554,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
             "\nVerify the signature\n"
             + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"signature\" \"my message\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"my message\"")
+            + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"my message\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -655,7 +655,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
             "\nThe amount with at least 6 confirmations\n"
             + HelpExampleCli("getreceivedbyaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 6") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("getreceivedbyaddress", "\"" + EXAMPLE_ADDRESS[0] + "\", 6")
+            + HelpExampleRpc("getreceivedbyaddress", "\"" + EXAMPLE_ADDRESS[0] + "\", 6", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -692,7 +692,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
             "\nThe amount with at least 6 confirmations\n"
             + HelpExampleCli("getreceivedbylabel", "\"tabby\" 6") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("getreceivedbylabel", "\"tabby\", 6")
+            + HelpExampleRpc("getreceivedbylabel", "\"tabby\", 6", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -731,7 +731,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
             "\nThe total amount in the wallet with at least 6 confirmations\n"
             + HelpExampleCli("getbalance", "\"*\" 6") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("getbalance", "\"*\", 6")
+            + HelpExampleRpc("getbalance", "\"*\", 6", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -826,7 +826,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
             "\nSend two amounts to two different addresses, subtract fee from amount:\n"
             + HelpExampleCli("sendmany", "\"\" \"{\\\"" + EXAMPLE_ADDRESS[0] + "\\\":0.01,\\\"" + EXAMPLE_ADDRESS[1] + "\\\":0.02}\" 1 \"\" \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("sendmany", "\"\", {\"" + EXAMPLE_ADDRESS[0] + "\":0.01,\"" + EXAMPLE_ADDRESS[1] + "\":0.02}, 6, \"testing\"")
+            + HelpExampleRpc("sendmany", "\"\", {\"" + EXAMPLE_ADDRESS[0] + "\":0.01,\"" + EXAMPLE_ADDRESS[1] + "\":0.02}, 6, \"testing\"", "wallet/wallet_name")
                 },
     }.Check(request);
 
@@ -938,7 +938,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
             "\nAdd a multisig address from 2 addresses\n"
             + HelpExampleCli("addmultisigaddress", "2 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"")
+            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1177,8 +1177,8 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("listreceivedbyaddress", "")
             + HelpExampleCli("listreceivedbyaddress", "6 true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"" + EXAMPLE_ADDRESS[0] + "\"")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true", "wallet/wallet_name")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"" + EXAMPLE_ADDRESS[0] + "\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1219,7 +1219,7 @@ static UniValue listreceivedbylabel(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("listreceivedbylabel", "")
             + HelpExampleCli("listreceivedbylabel", "6 true")
-            + HelpExampleRpc("listreceivedbylabel", "6, true, true")
+            + HelpExampleRpc("listreceivedbylabel", "6, true, true", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1398,7 +1398,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "\nList transactions 100 to 120\n"
             + HelpExampleCli("listtransactions", "\"*\" 20 100") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("listtransactions", "\"*\", 20, 100")
+            + HelpExampleRpc("listtransactions", "\"*\", 20, 100", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1514,7 +1514,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("listsinceblock", "")
             + HelpExampleCli("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6")
-            + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
+            + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1653,7 +1653,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                     HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
             + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" true")
             + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" false true")
-            + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1725,7 +1725,7 @@ static UniValue abandontransaction(const JSONRPCRequest& request)
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-            + HelpExampleRpc("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1762,7 +1762,7 @@ static UniValue backupwallet(const JSONRPCRequest& request)
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("backupwallet", "\"backup.dat\"")
-            + HelpExampleRpc("backupwallet", "\"backup.dat\"")
+            + HelpExampleRpc("backupwallet", "\"backup.dat\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1796,7 +1796,7 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("keypoolrefill", "")
-            + HelpExampleRpc("keypoolrefill", "")
+            + HelpExampleRpc("keypoolrefill", "", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1848,7 +1848,7 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
+            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1934,7 +1934,7 @@ static UniValue walletpassphrasechange(const JSONRPCRequest& request)
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
-            + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
+            + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -1986,7 +1986,7 @@ static UniValue walletlock(const JSONRPCRequest& request)
             "\nClear the passphrase since we are done before 2 minutes is up\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("walletlock", "")
+            + HelpExampleRpc("walletlock", "", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -2029,7 +2029,7 @@ static UniValue encryptwallet(const JSONRPCRequest& request)
             "\nNow lock the wallet again by removing the passphrase\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
+            + HelpExampleRpc("encryptwallet", "\"my pass phrase\"","wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -2100,7 +2100,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
             "\nUnlock the transaction again\n"
             + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("lockunspent", "false, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"")
+            + HelpExampleRpc("lockunspent", "false, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -2213,7 +2213,7 @@ static UniValue listlockunspent(const JSONRPCRequest& request)
             "\nUnlock the transaction again\n"
             + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("listlockunspent", "")
+            + HelpExampleRpc("listlockunspent", "", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -2252,7 +2252,7 @@ static UniValue settxfee(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("settxfee", "0.00001")
-            + HelpExampleRpc("settxfee", "0.00001")
+            + HelpExampleRpc("settxfee", "0.00001", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -2305,7 +2305,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
             },
         RPCExamples{
             HelpExampleCli("getbalances", "") +
-            HelpExampleRpc("getbalances", "")},
+            HelpExampleRpc("getbalances", "", "wallet/wallet_name")},
     }.Check(request);
 
     std::shared_ptr<CWallet> const rpc_wallet = GetWalletForJSONRPCRequest(request);
@@ -2377,7 +2377,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("getwalletinfo", "")
-            + HelpExampleRpc("getwalletinfo", "")
+            + HelpExampleRpc("getwalletinfo", "", "wallet/wallet_name")
                 },
     }.Check(request);
 
@@ -2568,7 +2568,7 @@ static UniValue setwalletflag(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("setwalletflag", "avoid_reuse")
-                  + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"")
+                  + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -2697,6 +2697,7 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("unloadwallet", "wallet_name")
             + HelpExampleRpc("unloadwallet", "wallet_name")
+            + HelpExampleRpc("unloadwallet", "", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -2779,9 +2780,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("listunspent", "")
             + HelpExampleCli("listunspent", "6 9999999 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"")
-            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"")
+            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"", "wallet/wallet_name")
             + HelpExampleCli("listunspent", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
-            + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
+            + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -3203,7 +3204,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"")
-            + HelpExampleRpc("signrawtransactionwithwallet", "\"myhex\"")
+            + HelpExampleRpc("signrawtransactionwithwallet", "\"myhex\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -3433,7 +3434,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("rescanblockchain", "100000 120000")
-            + HelpExampleRpc("rescanblockchain", "100000, 120000")
+            + HelpExampleRpc("rescanblockchain", "100000, 120000", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -3662,7 +3663,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("getaddressinfo", "\"" + EXAMPLE_ADDRESS[0] + "\"") +
-                    HelpExampleRpc("getaddressinfo", "\"" + EXAMPLE_ADDRESS[0] + "\"")
+                    HelpExampleRpc("getaddressinfo", "\"" + EXAMPLE_ADDRESS[0] + "\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -3749,7 +3750,7 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("getaddressesbylabel", "\"tabby\"")
-            + HelpExampleRpc("getaddressesbylabel", "\"tabby\"")
+            + HelpExampleRpc("getaddressesbylabel", "\"tabby\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -3809,7 +3810,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
             "\nList labels that have sending addresses\n"
             + HelpExampleCli("listlabels", "send") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("listlabels", "receive")
+            + HelpExampleRpc("listlabels", "receive", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -3861,7 +3862,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
                     HelpExampleCli("sethdseed", "")
             + HelpExampleCli("sethdseed", "false")
             + HelpExampleCli("sethdseed", "true \"wifkey\"")
-            + HelpExampleRpc("sethdseed", "true, \"wifkey\"")
+            + HelpExampleRpc("sethdseed", "true, \"wifkey\"", "wallet/wallet_name")
                 },
             }.Check(request);
 
@@ -4111,7 +4112,7 @@ static UniValue upgradewallet(const JSONRPCRequest& request)
         RPCResults{},
         RPCExamples{
             HelpExampleCli("upgradewallet", "169900")
-            + HelpExampleRpc("upgradewallet", "169900")
+            + HelpExampleRpc("upgradewallet", "169900", "wallet/wallet_name")
         }
     }.Check(request);
 

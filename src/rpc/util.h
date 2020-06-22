@@ -79,7 +79,7 @@ extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKe
 
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
-extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
+extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args, const std::string& path = "");
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in);
