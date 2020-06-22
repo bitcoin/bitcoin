@@ -112,7 +112,7 @@ public: // Types
 
 private:
     /// critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     /// Object typecode
     int nObjectType;

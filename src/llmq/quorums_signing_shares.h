@@ -356,7 +356,7 @@ class CSigSharesManager : public CRecoveredSigsListener
     const size_t MAX_MSGS_SIG_SHARES = 32;
 
 private:
-    CCriticalSection cs;
+    RecursiveMutex cs;
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;

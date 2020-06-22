@@ -28,7 +28,7 @@ private:
     CEvoDB& evoDb;
     CConnman& connman;
     // TODO cleanup
-    CCriticalSection minableCommitmentsCs;
+    RecursiveMutex minableCommitmentsCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum;
     std::map<uint256, CFinalCommitment> minableCommitments;
 

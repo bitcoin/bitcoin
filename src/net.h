@@ -965,7 +965,7 @@ public:
 
     // SYSCOIN
     // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
-    mutable CCriticalSection cs_mnauth;
+    mutable RecursiveMutex cs_mnauth;
     uint256 sentMNAuthChallenge;
     uint256 receivedMNAuthChallenge;
     uint256 verifiedProRegTxHash;
