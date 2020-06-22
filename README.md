@@ -1,3 +1,6 @@
+# EXPERIMENTAL 0.20 BRANCH  
+# DO NOT USE IN PRODUCTION
+
 Omni Core (beta) integration/staging tree
 =========================================
 
