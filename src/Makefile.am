@@ -242,6 +242,7 @@ SYSCOIN_CORE_H = \
   rpc/request.h \
   rpc/server.h \
   rpc/util.h \
+  saltedhasher.h \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
@@ -620,6 +621,7 @@ libsyscoin_common_a_SOURCES = \
   policy/feerate.cpp \
   policy/policy.cpp \
   protocol.cpp \
+  saltedhasher.cpp \
   psbt.cpp \
   rpc/rawtransaction_util.cpp \
   rpc/util.cpp \
