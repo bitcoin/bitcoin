@@ -35,7 +35,7 @@ private:
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher> hasMinedCommitmentCache;
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman &_connman) : evoDb(_evoDb), connman(_connman{}
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman &_connman) : evoDb(_evoDb), connman(_connman){}
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
