@@ -12,7 +12,7 @@
 #include <netmessagemaker.h>
 #include <ui_interface.h>
 #include <evo/deterministicmns.h>
-
+#include <shutdown.h>
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 

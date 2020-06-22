@@ -19,7 +19,7 @@
 #include <util/system.h>
 #include <validation.h>
 #include <validationinterface.h>
-
+#include <shutdown.h>
 CGovernanceManager governance;
 
 int nSubmittedFinalBudget;

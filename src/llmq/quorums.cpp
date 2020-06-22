@@ -18,7 +18,7 @@
 #include <masternode/masternode-sync.h>
 #include <univalue.h>
 #include <validation.h>
-
+#include <shutdown.h>
 #include <cxxtimer.hpp>
 
 namespace llmq

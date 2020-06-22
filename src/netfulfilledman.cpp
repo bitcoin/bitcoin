@@ -6,7 +6,7 @@
 #include <init.h>
 #include <netfulfilledman.h>
 #include <util/system.h>
-
+#include <shutdown.h>
 CNetFulfilledRequestManager netfulfilledman;
 
 void CNetFulfilledRequestManager::AddFulfilledRequest(const CService& addr, const std::string& strRequest)

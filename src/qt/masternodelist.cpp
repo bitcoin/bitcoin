@@ -125,7 +125,7 @@ void MasternodeList::updateDIP3ListScheduled()
     TRY_LOCK(cs_dip3list, fLockAcquired);
     if (!fLockAcquired) return;
 
-    if (!clientModel || ShutdownRequested()) {
+    if (!clientModel || clientModel->node().shutdownRequested()) {
         return;
     }
 
@@ -152,7 +152,7 @@ void MasternodeList::updateDIP3ListScheduled()
 
 void MasternodeList::updateDIP3List()
 {
-    if (!clientModel || ShutdownRequested()) {
+    if (!clientModel || clientModel->node().shutdownRequested()) {
         return;
     }
 
