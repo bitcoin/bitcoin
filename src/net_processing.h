@@ -97,7 +97,6 @@ struct CNodeStateStats {
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 // SYSCOIN
 void EraseTxRequest(NodeId nodeId, const uint256& hash);
-void RequestTx(CNodeState* state, const CInv& inv, std::chrono::microseconds current_time);
 /** Relay transaction to every node */
 void RelayTransaction(const uint256&, const CConnman& connman);
 #endif // SYSCOIN_NET_PROCESSING_H

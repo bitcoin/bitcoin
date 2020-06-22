@@ -154,7 +154,7 @@ public: // Types
         {
         }
 
-        SERIALIZE_METHODS(CRateCheckBuffer, obj)
+        SERIALIZE_METHODS(last_object_rec, obj)
         {
             READWRITE(obj.triggerBuffer, obj.fStatusOK);
         }
