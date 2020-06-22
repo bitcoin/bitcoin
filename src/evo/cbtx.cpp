@@ -58,7 +58,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
 
     CCbTx cbTx;
     if (!GetTxPayload(*block.vtx[0], cbTx)) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,, "bad-cbtx-payload");
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
     }
 
     int64_t nTime2 = GetTimeMicros(); nTimePayload += nTime2 - nTime1;
@@ -71,7 +71,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
             return false;
         }
         if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,, "bad-cbtx-mnmerkleroot");
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-mnmerkleroot");
         }
 
         int64_t nTime3 = GetTimeMicros(); nTimeMerkleMNL += nTime3 - nTime2;
@@ -83,7 +83,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
             return false;
         }
         if (calculatedMerkleRoot != cbTx.merkleRootQuorums) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,, "bad-cbtx-quorummerkleroot");
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-quorummerkleroot");
         }
         
 
@@ -127,7 +127,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         if (sml.mnList == smlCached.mnList) {
             merkleRootRet = merkleRootCached;
             if (mutatedCached) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,, "mutated-cached-calc-cb-mnmerkleroot");
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mutated-cached-calc-cb-mnmerkleroot");
             }
             return true;
         }
@@ -143,7 +143,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         mutatedCached = mutated;
 
         if (mutated) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,, "mutated-calc-cb-mnmerkleroot");
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mutated-calc-cb-mnmerkleroot");
         }
 
         return true;

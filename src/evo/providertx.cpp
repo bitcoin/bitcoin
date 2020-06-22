@@ -278,7 +278,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS,, "bad-protx-type");
+        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
     }
 
     CProUpRegTx ptx;

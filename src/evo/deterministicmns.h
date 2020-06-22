@@ -71,7 +71,7 @@ public:
     SERIALIZE_METHODS(CDeterministicMNState, obj)
     {
          READWRITE(obj.nRegisteredHeight, obj.nLastPaidHeight, obj.nPoSePenalty, obj.nPoSeRevivedHeight, obj.nPoSeBanHeight,
-         obj.nRevocationReason, obj.confirmedHash, obj.confirmedHashWithProRegTxHash,, obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting,
+         obj.nRevocationReason, obj.confirmedHash, obj.confirmedHashWithProRegTxHash, obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting,
          obj.addr, obj.scriptPayout, obj.scriptOperatorPayout, obj.nCollateralHeight);
     }
 
@@ -157,7 +157,7 @@ public:
     }
     SERIALIZE_METHODS(CDeterministicMNStateDiff, obj) {
         READWRITE(VARINT(obj.fields));
-        #define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) READWRITE(obj.state.f);
+        #define DMN_STATE_DIFF_LINE(f) if (obj.fields & Field_##f) READWRITE(obj.state.f);
         DMN_STATE_DIFF_ALL_FIELDS
         #undef DMN_STATE_DIFF_LINE
     }
@@ -282,7 +282,8 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        NCONST_PTR(this)->SerializationOpBase(s, CSerActionSerialize());
+        s << *this;
+        //NCONST_PTR(this)->SerializationOpBase(s, CSerActionSerialize());
         // Serialize the map as a vector
         WriteCompactSize(s, mnMap.size());
         for (const auto& p : mnMap) {
@@ -295,8 +296,8 @@ public:
         mnMap = MnMap();
         mnUniquePropertyMap = MnUniquePropertyMap();
         mnInternalIdMap = MnInternalIdMap();
-
-        SerializationOpBase(s, CSerActionUnserialize());
+        s >> *this;
+        //SerializationOpBase(s, CSerActionUnserialize());
 
         size_t cnt = ReadCompactSize(s);
         for (size_t i = 0; i < cnt; i++) {
