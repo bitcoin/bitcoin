@@ -40,8 +40,12 @@ BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
 
     RecursiveMutex rmutex1, rmutex2;
     TestPotentialDeadLockDetected(rmutex1, rmutex2);
+    // The second test ensures that lock tracking data have not been broken by exception.
+    TestPotentialDeadLockDetected(rmutex1, rmutex2);
 
     Mutex mutex1, mutex2;
+    TestPotentialDeadLockDetected(mutex1, mutex2);
+    // The second test ensures that lock tracking data have not been broken by exception.
     TestPotentialDeadLockDetected(mutex1, mutex2);
 
     #ifdef DEBUG_LOCKORDER
