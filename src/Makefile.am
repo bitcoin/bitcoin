@@ -192,7 +192,6 @@ SYSCOIN_CORE_H = \
   llmq/quorums.h \
   llmq/quorums_blockprocessor.h \
   llmq/quorums_commitment.h \
-  llmq/quorums_chainlocks.h \
   llmq/quorums_debug.h \
   llmq/quorums_dkgsessionhandler.h \
   llmq/quorums_dkgsessionmgr.h \
@@ -382,7 +381,6 @@ libsyscoin_server_a_SOURCES = \
   llmq/quorums.cpp \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_commitment.cpp \
-  llmq/quorums_chainlocks.cpp \
   llmq/quorums_debug.cpp \
   llmq/quorums_dkgsessionhandler.cpp \
   llmq/quorums_dkgsessionmgr.cpp \
