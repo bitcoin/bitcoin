@@ -2671,7 +2671,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         if (!pfrom->fMasternode) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
-            // e.g. InstantSend locks or ChainLocks. SPV nodes should not send this message
+            // SPV nodes should not send this message
             // as they are usually only interested in the higher level messages
             connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
         }
