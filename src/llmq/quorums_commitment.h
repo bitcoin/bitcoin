@@ -58,10 +58,8 @@ public:
 
 public:
     SERIALIZE_METHODS(CFinalCommitment, obj) {
-        READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash);
-        READWRITE(DYNBITSET(obj.signers));
-        READWRITE(DYNBITSET(obj.validMembers));
-        READWRITE(obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
+        READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers), 
+        obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
     }
 
 public:

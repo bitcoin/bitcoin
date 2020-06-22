@@ -879,16 +879,16 @@ template<typename Stream, typename K, typename T, typename Pred, typename A> voi
 
 
 /**
- * If none of the specialized versions above matched, default to calling member function.
+ * SYSCOIN If none of the specialized versions above matched and T is a class, default to calling member function.
  */
-template<typename Stream, typename T>
+template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
 inline void Serialize(Stream& os, const T& a)
 {
     a.Serialize(os);
 }
 
-template<typename Stream, typename T>
-inline void Unserialize(Stream& is, T&& a)
+template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
+inline void Unserialize(Stream& is, T& a)
 {
     a.Unserialize(is);
 }
