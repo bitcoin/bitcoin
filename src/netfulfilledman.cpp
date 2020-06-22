@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <init.h>
 #include <netfulfilledman.h>
+#include <util.h>
 
 CNetFulfilledRequestManager netfulfilledman;
 
