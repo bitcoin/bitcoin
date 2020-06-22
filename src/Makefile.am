@@ -148,6 +148,7 @@ SYSCOIN_CORE_H = \
   auxpow.h \
   banman.h \
   base58.h \
+  batchedlogger.h \
   bech32.h \
   bloom.h \
   blockencodings.h \
@@ -405,6 +406,7 @@ libsyscoin_server_a_SOURCES = \
   spork.cpp \
   addrdb.cpp \
   addrman.cpp \
+  batchedlogger.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
