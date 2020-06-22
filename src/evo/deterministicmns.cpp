@@ -847,6 +847,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
             break;
         }
+        }
     }
 
     // we skip the coinbase
