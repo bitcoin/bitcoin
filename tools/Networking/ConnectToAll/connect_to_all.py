@@ -2,6 +2,7 @@ import json
 import os
 import random
 import time
+import re
 
 # Send commands to the Bitcoin Core Console
 def bitcoin(cmd):
@@ -24,6 +25,7 @@ file.close()
 random.shuffle(addresses)
 
 for i, address in enumerate(addresses):
+	if not re.match(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]+', address): continue
 	print(f'{i}: Connecting to {address}')
 	bitcoin(f'addnode {address} onetry')
 	#time.sleep(0.01)
