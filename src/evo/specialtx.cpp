@@ -81,7 +81,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         }
 
         int64_t nTime2 = GetTimeMicros(); nTimeLoop += nTime2 - nTime1;
-        LogPrint(BCLog::BENCH, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
+        LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
 
         if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state)) {
             // pass the state returned by the function above
@@ -89,7 +89,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         }
 
         int64_t nTime3 = GetTimeMicros(); nTimeQuorum += nTime3 - nTime2;
-        LogPrint(BCLog::BENCH, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
+        LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
 
         if (!deterministicMNManager->ProcessBlock(block, pindex, state)) {
             // pass the state returned by the function above
@@ -97,7 +97,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         }
 
         int64_t nTime4 = GetTimeMicros(); nTimeDMN += nTime4 - nTime3;
-        LogPrint(BCLog::BENCH, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
+        LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
         if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state)) {
             // pass the state returned by the function above
@@ -105,7 +105,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         }
 
         int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
-        LogPrint(BCLog::BENCH, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
+        LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
     } catch (const std::exception& e) {
         LogPrintf(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-procspectxsinblock");
