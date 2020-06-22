@@ -731,14 +731,6 @@ fs::path GetConfigFile(const std::string& confPath)
 {
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
-// SYSCOIN
-fs::path GetMasternodeConfigFile()
-{
-    fs::path pathConfigFile(gArgs.GetArg("-mnconf", "masternode.conf"));
-    if (!pathConfigFile.is_absolute())
-        pathConfigFile = GetDataDir() / pathConfigFile;
-    return pathConfigFile;
-}
 
 static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
 {

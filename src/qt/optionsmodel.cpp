@@ -22,10 +22,6 @@
 #include <QDebug>
 #include <QSettings>
 #include <QStringList>
-// SYSCOIN
-#ifdef ENABLE_WALLET
-#include <masternodeconfig.h>
-#endif
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
 static const QString GetDefaultProxyAddress();
@@ -117,8 +113,6 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bSpendZeroConfChange", true);
     if (!m_node.softSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
-    if (!settings.contains("fShowMasternodesTab"))
-        settings.setValue("fShowMasternodesTab", masternodeConfig.getCount());  
 #endif
 
     // Network

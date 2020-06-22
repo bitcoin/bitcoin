@@ -26,8 +26,6 @@
 #include <functional>
 
 #include <stdio.h>
-// SYSCOIN
-#include <masternodeconfig.h>
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
@@ -102,12 +100,6 @@ static bool AppInit(int argc, char* argv[])
             if (!IsSwitchChar(argv[i][0])) {
                 return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see syscoind -h for a list of options.\n", argv[i])));
             }
-        }
-        // SYSCOIN parse masternode.conf
-        std::string strErr;
-        if(!masternodeConfig.read(strErr)) {
-            tfm::format(std::cerr,"Error reading masternode configuration file: %s\n", strErr.c_str());
-            return false;
         }
         // -server defaults to true for syscoind but not for the GUI so do this here
         gArgs.SoftSetBoolArg("-server", true);
