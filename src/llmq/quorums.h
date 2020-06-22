@@ -106,7 +106,7 @@ public:
 
 private:
     // all private methods here are cs_main-free
-    void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexNew);
+    void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexNew, CConnman& connman);
 
     bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, const uint256& minedBlockHash, std::shared_ptr<CQuorum>& quorum) const;
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;

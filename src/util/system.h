@@ -37,6 +37,7 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 // SYSCOIN
+#include <ctpl.h>
 class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool bGethTestnet;
@@ -71,7 +72,8 @@ meminfo_t parse_meminfo();
 int64_t GetStartupTime();
 
 extern const char * const SYSCOIN_CONF_FILENAME;
-
+// SYSCOIN
+void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
 void SetupEnvironment();
 bool SetupNetworking();
 

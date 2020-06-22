@@ -144,7 +144,7 @@ public:
     }
 };
 
-bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, fJustCheck);
+bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck);
 
 } // namespace llmq
 

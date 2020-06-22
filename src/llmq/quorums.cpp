@@ -20,7 +20,7 @@
 #include <validation.h>
 #include <shutdown.h>
 #include <cxxtimer.hpp>
-
+#include <net.h>
 namespace llmq
 {
 
@@ -32,7 +32,7 @@ CQuorumManager* quorumManager;
 static uint256 MakeQuorumKey(const CQuorum& q)
 {
     CHashWriter hw(SER_NETWORK, 0);
-    hw << q.params.type;
+    SerializeEnum(hw, q.params.type);
     hw << q.qc.quorumHash;
     for (const auto& dmn : q.members) {
         hw << dmn->proTxHash;
@@ -145,7 +145,7 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     // this thread will exit after some time
     // when then later some other thread tries to get keys, it will be much faster
     _this->cachePopulatorThread = std::thread([_this, t]() {
-        RenameThread("dash-q-cachepop");
+        util::ThreadRename("syscoin-q-cachepop");
         for (size_t i = 0; i < _this->members.size() && !_this->stopCachePopulatorThread && !ShutdownRequested(); i++) {
             if (_this->qc.validMembers[i]) {
                 _this->GetPubKeyShare(i);
