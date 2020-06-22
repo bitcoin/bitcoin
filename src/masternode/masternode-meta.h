@@ -44,7 +44,7 @@ public:
     {
     }
     SERIALIZE_METHODS(CMasternodeMetaInfo, obj) {
-        LOCK(cs);
+        LOCK(obj.cs);
         READWRITE(obj.proTxHash, obj.mapGovernanceObjectsVotedOn, obj.lastOutboundAttempt, obj.lastOutboundSuccess);
     }
 
@@ -97,7 +97,7 @@ public:
         std::string strVersion;
         Clear();
         s >> strVersion;
-        if (strVersion != SERIALIZATION_VERSION_STRING) {
+        if (strVersion != SERIALIZATION_VERSION_STRING)
             return;
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
         s >> tmpMetaInfo;
