@@ -829,6 +829,15 @@ void RequestTx(CNodeState* state, const CInv& inv, std::chrono::microseconds cur
 
     peer_download_state.m_tx_process_time.emplace(process_time, inv);
 }  
+size_t GetRequestedTxCount(NodeId nodeId)
+{
+    AssertLockHeld(cs_main);
+    auto* state = State(nodeId);
+    if (!state) {
+        return 0;
+    }
+    return state->m_tx_download.m_tx_process_time.size();
+}
 } // namespace
 /// SYSCOIN
 void EraseTxRequest(CNodeState* nodestate, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)

@@ -7,7 +7,7 @@
 #include <init.h>
 #include <masternode/masternode-sync.h>
 #include <validation.h>
-
+#include <shutdown.h>
 struct CompareScoreMN
 {
     bool operator()(const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t1,

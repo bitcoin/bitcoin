@@ -103,4 +103,5 @@ void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCL
 void EraseTxRequest(NodeId nodeId, const uint256& hash);
 /** Relay transaction to every node */
 void RelayTransaction(const uint256&, const CConnman& connman);
+size_t GetRequestedTxCount(NodeId nodeId);
 #endif // SYSCOIN_NET_PROCESSING_H
