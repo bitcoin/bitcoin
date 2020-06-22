@@ -459,6 +459,7 @@ void SetupServerArgs(NodeContext& node)
 
     // Overrides maxconnections
     gArgs.AddArg("-numconnections=<n>", strprintf("Maintain <n> connections to peers (default: %u)", -1), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION); // Cybersecurity Lab
+    gArgs.AddArg("-numblocksonlyconnections=<n>", strprintf("Maintain <n> blocks-only connection to peers (default: %u)", -1), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION); // Cybersecurity Lab
 #ifdef USE_UPNP
 #if USE_UPNP
     gArgs.AddArg("-upnp", "Use UPnP to map the listening port (default: 1 when listening and no -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -884,7 +885,7 @@ void InitLogging()
 namespace { // Variables internal to initialization process only
 
 int nMaxConnections;
-int numConnections; // Cybersecurity Lab
+int numConnections, numBlocksOnlyConnections; // Cybersecurity Lab
 int nUserMaxConnections;
 int nFD;
 ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
@@ -1026,6 +1027,7 @@ bool AppInitParameterInteraction()
 
     // Cybersecurity Lab
     numConnections = std::max((int)gArgs.GetArg("-numconnections", -1), -1);
+    numBlocksOnlyConnections = std::max((int)gArgs.GetArg("-numblocksonlyconnections", -1), -1);
 
     // Trim requested connection counts, to fit into system limitations
     // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
@@ -1895,12 +1897,25 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     connOptions.m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, connOptions.nMaxConnections);
     connOptions.m_max_outbound_block_relay = std::min(MAX_BLOCKS_ONLY_CONNECTIONS, connOptions.nMaxConnections-connOptions.m_max_outbound_full_relay);
     // Cybersecurity Lab
-    if(numConnections != -1) {
+    if(numConnections != -1 && numBlocksOnlyConnections == -1) {
       LogPrintf("\n !!!!!! numconnections = %d set, overriding maxconnections\n", numConnections);
       connOptions.nMaxConnections = numConnections;
       connOptions.m_max_outbound_full_relay = numConnections;
       connOptions.m_max_outbound_block_relay = 0;
     }
+    if(numBlocksOnlyConnections != -1 && numConnections == -1) {
+      LogPrintf("\n !!!!!! numblocksonlyconnections = %d set, overriding maxconnections\n", numBlocksOnlyConnections);
+      connOptions.nMaxConnections = numBlocksOnlyConnections;
+      connOptions.m_max_outbound_full_relay = 0;
+      connOptions.m_max_outbound_block_relay = numBlocksOnlyConnections;
+    }
+    if(numBlocksOnlyConnections != -1 && numConnections != -1) {
+      LogPrintf("\n !!!!!! numconnections = %d set, and numblocksonlyconnections = %d set, overriding maxconnections\n", numConnections, numBlocksOnlyConnections);
+      connOptions.nMaxConnections = numConnections + numBlocksOnlyConnections;
+      connOptions.m_max_outbound_full_relay = numConnections;
+      connOptions.m_max_outbound_block_relay = numBlocksOnlyConnections;
+    }
+
     connOptions.nMaxAddnode = MAX_ADDNODE_CONNECTIONS;
     connOptions.nMaxFeeler = MAX_FEELER_CONNECTIONS;
     connOptions.nBestHeight = chain_active_height;
