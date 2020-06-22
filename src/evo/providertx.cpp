@@ -125,7 +125,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
-    if (ptx.addr != CService() && !CheckService(tx.GetHash(), ptx, state)) {
+    if (ptx.addr != CService() && !CheckService(tx.GetHash(), ptx, state, fJustCheck)) {
         // pass the state returned by the function above
         return false;
     }
@@ -141,7 +141,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         Coin coin;
         if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || coin.out.nValue != 100000 * COIN) {
-            return state.Invalid(TTxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
         }
 
         if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
@@ -158,7 +158,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         collateralOutpoint = ptx.collateralOutpoint;
     } else {
         if (ptx.collateralOutpoint.n >= tx.vout.size()) {
-            return state.Invalid(TTxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral-index");
+            return FormatSyscoinErrorMessage(state, "bad-protx-collateral-index", fJustCheck);
         }
         if (tx.vout[ptx.collateralOutpoint.n].nValue != 100000 * COIN) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
@@ -232,7 +232,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
         return FormatSyscoinErrorMessage(state, "bad-protx-version", fJustCheck);
     }
 
-    if (!CheckService(ptx.proTxHash, ptx, state)) {
+    if (!CheckService(ptx.proTxHash, ptx, state, fJustCheck)) {
         // pass the state returned by the function above
         return false;
     }
@@ -278,7 +278,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
-        return state.Invalid(fJustCheck? TxValidationResult::TX_CONFLICT:BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
+        return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
     }
 
     CProUpRegTx ptx;
@@ -352,7 +352,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state, fJustCheck)) {
+        if (!CheckHashSig(ptx, CKeyID(dmn->pdmnState->keyIDOwner), state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
