@@ -47,7 +47,7 @@ public:
     template<typename Stream>
     inline void SerializeWithoutSig(Stream& s) const
     {
-        s << llmqType;
+        SerializeEnum(s, llmqType);
         s << quorumHash;
         s << proTxHash;
         s << *vvec;
@@ -64,8 +64,7 @@ public:
     {
         BLSVerificationVector tmp1;
         CBLSIESMultiRecipientObjects<CBLSSecretKey> tmp2;
-
-        s >> llmqType;
+        UnserializeEnum(s, llmqType);
         s >> quorumHash;
         s >> proTxHash;
         s >> tmp1;
