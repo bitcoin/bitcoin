@@ -56,16 +56,6 @@ inline T& REF(const T& val)
     return const_cast<T&>(val);
 }
 
-/**
- * Used to acquire a non-const pointer "this" to generate bodies
- * of const serialization operations from a template
- */
-template<typename T>
-inline T* NCONST_PTR(const T* val)
-{
-    return const_cast<T*>(val);
-}
-
 //! Safely convert odd char pointer types to standard ones.
 inline char* CharCast(char* c) { return c; }
 inline char* CharCast(unsigned char* c) { return (char*)c; }
