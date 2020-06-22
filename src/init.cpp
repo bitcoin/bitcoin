@@ -1896,28 +1896,34 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     connOptions.nMaxConnections = nMaxConnections;
     connOptions.m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, connOptions.nMaxConnections);
     connOptions.m_max_outbound_block_relay = std::min(MAX_BLOCKS_ONLY_CONNECTIONS, connOptions.nMaxConnections-connOptions.m_max_outbound_full_relay);
+
+    connOptions.nMaxAddnode = MAX_ADDNODE_CONNECTIONS;
+    connOptions.nMaxFeeler = MAX_FEELER_CONNECTIONS;
+
     // Cybersecurity Lab
     if(numConnections != -1 && numBlocksOnlyConnections == -1) {
       LogPrintf("\n !!!!!! numconnections = %d set, overriding maxconnections\n", numConnections);
       connOptions.nMaxConnections = numConnections;
       connOptions.m_max_outbound_full_relay = numConnections;
       connOptions.m_max_outbound_block_relay = 0;
+      connOptions.nMaxFeeler = 0;
     }
     if(numBlocksOnlyConnections != -1 && numConnections == -1) {
       LogPrintf("\n !!!!!! numblocksonlyconnections = %d set, overriding maxconnections\n", numBlocksOnlyConnections);
       connOptions.nMaxConnections = numBlocksOnlyConnections;
       connOptions.m_max_outbound_full_relay = 0;
       connOptions.m_max_outbound_block_relay = numBlocksOnlyConnections;
+      connOptions.nMaxFeeler = 0;
     }
     if(numBlocksOnlyConnections != -1 && numConnections != -1) {
       LogPrintf("\n !!!!!! numconnections = %d set, and numblocksonlyconnections = %d set, overriding maxconnections\n", numConnections, numBlocksOnlyConnections);
       connOptions.nMaxConnections = numConnections + numBlocksOnlyConnections;
       connOptions.m_max_outbound_full_relay = numConnections;
       connOptions.m_max_outbound_block_relay = numBlocksOnlyConnections;
+      connOptions.nMaxFeeler = 0;
     }
 
-    connOptions.nMaxAddnode = MAX_ADDNODE_CONNECTIONS;
-    connOptions.nMaxFeeler = MAX_FEELER_CONNECTIONS;
+
     connOptions.nBestHeight = chain_active_height;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
