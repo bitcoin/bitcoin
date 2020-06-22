@@ -1070,7 +1070,54 @@ void Unserialize(Stream& is, std::pair<K, T>& item)
     Unserialize(is, item.second);
 }
 
+// SYSCOIN
+/**
+ * tuple
+ */
+template<typename Stream, int index, typename... Ts>
+struct SerializeTuple {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        SerializeTuple<Stream, index - 1, Ts...>{}(s, t);
+        s << std::get<index>(t);
+    }
+};
 
+template<typename Stream, typename... Ts>
+struct SerializeTuple<Stream, 0, Ts...> {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        s << std::get<0>(t);
+    }
+};
+
+template<typename Stream, int index, typename... Ts>
+struct DeserializeTuple {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        DeserializeTuple<Stream, index - 1, Ts...>{}(s, t);
+        s >> std::get<index>(t);
+    }
+};
+
+template<typename Stream, typename... Ts>
+struct DeserializeTuple<Stream, 0, Ts...> {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        s >> std::get<0>(t);
+    }
+};
+
+
+template<typename Stream, typename... Elements>
+void Serialize(Stream& os, const std::tuple<Elements...>& item)
+{
+    const auto size = std::tuple_size<std::tuple<Elements...>>::value;
+    SerializeTuple<Stream, size - 1, Elements...>{}(os, const_cast<std::tuple<Elements...>&>(item));
+}
+
+template<typename Stream, typename... Elements>
+void Unserialize(Stream& is, std::tuple<Elements...>& item)
+{
+    const auto size = std::tuple_size<std::tuple<Elements...>>::value;
+    DeserializeTuple<Stream, size - 1, Elements...>{}(is, item);
+}
 
 /**
  * map
