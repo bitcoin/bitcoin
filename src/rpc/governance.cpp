@@ -569,7 +569,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
 
         CKey key;
-        if (spk_man->GetKey(dmn->pdmnState->keyIDVoting, key)) {
+        if (spk_man->GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
             votingKeys.emplace(dmn->proTxHash, key);
         }
     });
@@ -633,7 +633,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     CKey key;
-    if (!spk_man->GetKey(dmn->pdmnState->keyIDVoting, key)) {
+    if (!spk_man->GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(dmn->pdmnState->keyIDVoting)));
     }
 

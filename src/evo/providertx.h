@@ -29,7 +29,7 @@ public:
     CService addr;
     CKeyID keyIDOwner;
     CBLSPublicKey pubKeyOperator;
-    CKeyID keyIDVoting;
+    WitnessV0KeyHash keyIDVoting;
     uint16_t nOperatorReward{0};
     CScript scriptPayout;
     uint256 inputsHash; // replay protection
@@ -58,8 +58,8 @@ public:
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString());
-        obj.pushKV("ownerAddress", EncodeDestination(CTxDestination(keyIDOwner)));
-        obj.pushKV("votingAddress", EncodeDestination(CTxDestination(keyIDVoting)));
+        obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
+        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
 
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
@@ -121,7 +121,7 @@ public:
     uint256 proTxHash;
     uint16_t nMode{0}; // only 0 supported for now
     CBLSPublicKey pubKeyOperator;
-    CKeyID keyIDVoting;
+    WitnessV0KeyHash keyIDVoting;
     CScript scriptPayout;
     uint256 inputsHash; // replay protection
     std::vector<unsigned char> vchSig;

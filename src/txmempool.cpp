@@ -712,7 +712,7 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
 }
 // SYSCOIN
 
-void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId)
+void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const WitnessV0KeyHash &keyId)
 {
     if (mapProTxPubKeyIDs.count(keyId)) {
         uint256 conflictHash = mapProTxPubKeyIDs[keyId];

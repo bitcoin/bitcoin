@@ -572,7 +572,7 @@ private:
     // SYSCOIN
     std::multimap<uint256, uint256> mapProTxRefs; // proTxHash -> transaction (all TXs that refer to an existing proTx)
     std::map<CService, uint256> mapProTxAddresses;
-    std::map<CKeyID, uint256> mapProTxPubKeyIDs;
+    std::map<WitnessV0KeyHash, uint256> mapProTxPubKeyIDs;
     std::map<uint256, uint256> mapProTxBlsPubKeyHashes;
     std::map<COutPoint, uint256> mapProTxCollaterals;
 public:
