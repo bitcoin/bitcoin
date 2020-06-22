@@ -16,12 +16,11 @@
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
-
+class CConnman;
 namespace llmq
 {
 
 class CDKGSessionManager;
-class CConnman;
 
 /**
  * An object of this class represents a quorum which was mined on-chain (through a quorum commitment)
