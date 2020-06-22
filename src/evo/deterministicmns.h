@@ -519,12 +519,12 @@ public:
         s << addedMNs;
         WriteCompactSize(s, updatedMNs.size());
         for (const auto& p : updatedMNs) {
-            WriteVarInt(s, VarIntMode::DEFAULT, p.first);
+            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, p.first);
             s << p.second;
         }
         WriteCompactSize(s, removedMns.size());
         for (const auto& p : removedMns) {
-            WriteVarInt(s, VarIntMode::DEFAULT, p);
+            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, p);
         }
     }
 
