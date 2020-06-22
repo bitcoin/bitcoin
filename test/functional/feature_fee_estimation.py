@@ -126,9 +126,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.num_nodes = 3
         # mine non-standard txs (e.g. txs with "dust" outputs)
         self.extra_args = [
-            ["-acceptnonstdtxn=1", "-maxorphantxsize=1000", "-whitelist=127.0.0.1"],
-            ["-acceptnonstdtxn=1", "-blockmaxsize=17000", "-maxorphantxsize=1000", "-whitelist=127.0.0.1"],
-            ["-acceptnonstdtxn=1", "-blockmaxsize=8000", "-maxorphantxsize=1000", "-whitelist=127.0.0.1"]
+            ["-acceptnonstdtxn=1", "-maxorphantxsize=1000", "-whitelist=127.0.0.1", "-wallet="],
+            ["-acceptnonstdtxn=1", "-blockmaxsize=17000", "-maxorphantxsize=1000", "-whitelist=127.0.0.1", "-wallet="],
+            ["-acceptnonstdtxn=1", "-blockmaxsize=8000", "-maxorphantxsize=1000", "-whitelist=127.0.0.1", "-wallet="]
         ]
 
     def skip_test_if_missing_module(self):
