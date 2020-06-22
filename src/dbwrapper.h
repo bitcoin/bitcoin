@@ -573,7 +573,7 @@ public:
         if (it->second) {
             memoryUsage -= ssKey.size() + it->second->memoryUsage;
         }
-        it->second = MakeUnique<ValueHolderImpl<V>>(v, valueMemoryUsage);
+        it->second = std::make_unique<ValueHolderImpl<V>>(v, valueMemoryUsage);
 
         memoryUsage += ssKey.size() + valueMemoryUsage;
     }
@@ -672,7 +672,7 @@ public:
         return new CDBTransactionIterator<CDBTransaction>(*this);
     }
     std::unique_ptr<CDBTransactionIterator<CDBTransaction>> NewIteratorUniquePtr() {
-        return MakeUnique<CDBTransactionIterator<CDBTransaction>>(*this);
+        return std::make_unique<CDBTransactionIterator<CDBTransaction>>(*this);
     }
 };
 
