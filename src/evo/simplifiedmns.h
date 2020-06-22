@@ -11,7 +11,7 @@
 #include <pubkey.h>
 #include <serialize.h>
 #include <version.h>
-
+#include <script/standard.h>
 class UniValue;
 class CDeterministicMNList;
 class CDeterministicMN;

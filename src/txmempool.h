@@ -30,6 +30,7 @@
 // SYSCOIN
 #include <pubkey.h>
 #include <bls/bls.h>
+#include <script/standard.h>
 class CBlockIndex;
 extern RecursiveMutex cs_main;
 

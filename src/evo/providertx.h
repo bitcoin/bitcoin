@@ -13,7 +13,7 @@
 #include <netaddress.h>
 #include <pubkey.h>
 #include <univalue.h>
-
+#include <script/standard.h>
 class CBlockIndex;
 
 class CProRegTx

@@ -18,7 +18,7 @@
 #include <immer/map_transient.hpp>
 
 #include <unordered_map>
-
+#include <script/standard.h>
 class CBlock;
 class CBlockIndex;
 class CValidationState;
