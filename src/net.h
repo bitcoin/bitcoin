@@ -35,6 +35,8 @@
 #include <arpa/inet.h>
 #endif
 
+// SYSCOIN
+#include <consensus/params.h>
 
 class CScheduler;
 class CNode;

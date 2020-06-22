@@ -60,14 +60,14 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         const CBlockIndex* pquorumIndex;
         {
             LOCK(cs_main);
-            if (!mapBlockIndex.count(qc.quorumHash)) {
+            pquorumIndex = LookupBlockIndex(qc.quorumHash);
+            if (!pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
                         qc.quorumHash.ToString(), pfrom->GetId());
                 // can't really punish the node here, as we might simply be the one that is on the wrong chain or not
                 // fully synced
                 return;
             }
-            pquorumIndex = mapBlockIndex[qc.quorumHash];
             if (::ChainActive().Tip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
@@ -210,7 +210,10 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-height");
     }
 
-    auto quorumIndex = mapBlockIndex.at(qc.quorumHash);
+    auto quorumIndex = LookupBlockIndex(qc.quorumHash);
+    if(!quorumIndex) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block-index");
+    }
     auto members = CLLMQUtils::GetAllQuorumMembers(params.type, quorumIndex);
 
     if (!qc.Verify(members, true)) {
