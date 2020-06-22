@@ -49,7 +49,7 @@ public:
     std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction()
     {
         LOCK(cs);
-        return MakeUnique<CEvoDBScopedCommitter>(*this);
+        return std::make_unique<CEvoDBScopedCommitter>(*this);
     }
 
     CurTransaction& GetCurTransaction()
