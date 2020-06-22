@@ -6,7 +6,7 @@
 #include <hash.h>
 #include <serialize.h>
 
-#include <util.h>
+#include <util/system.h>
 
 template <typename T>
 bool VerifyVectorHelper(const std::vector<T>& vec, size_t start, size_t count)

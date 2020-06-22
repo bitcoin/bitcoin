@@ -15,7 +15,7 @@
 #include <net.h>
 #include <sync.h>
 #include <timedata.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <evo/deterministicmns.h>
 

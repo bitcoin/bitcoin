@@ -15,7 +15,7 @@
 #include <masternode/masternode-sync.h>
 #include <messagesigner.h>
 #include <rpc/server.h>
-#include <util.h>
+#include <util/system.h>
 #include <utilmoneystr.h>
 #include <wallet/rpcwallet.h>
 #ifdef ENABLE_WALLET

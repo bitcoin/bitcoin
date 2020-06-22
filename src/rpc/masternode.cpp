@@ -8,7 +8,7 @@
 #include <init.h>
 #include <netbase.h>
 #include <validation.h>
-#include <util.h>
+#include <util/system.h>
 #include <utilmoneystr.h>
 #include <txmempool.h>
 
