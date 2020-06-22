@@ -86,7 +86,7 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     CConnman &connman;
-    CCriticalSection quorumsCacheCs;
+    RecursiveMutex quorumsCacheCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, CQuorumPtr> quorumsCache;
     unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, std::vector<CQuorumCPtr>, StaticSaltedHasher, 32> scanQuorumsCache;
 

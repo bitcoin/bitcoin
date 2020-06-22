@@ -35,7 +35,7 @@ namespace llmq
 // - commit-omit
 // - commit-lie
 
-static CCriticalSection cs_simDkgError;
+static RecursiveMutex cs_simDkgError;
 static std::map<std::string, double> simDkgErrorMap;
 
 void SetSimulatedDKGErrorRate(const std::string& type, double rate)

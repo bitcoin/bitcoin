@@ -53,7 +53,7 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
     CScript scriptData;
     scriptData << OP_RETURN << std::vector<unsigned char>(ds.begin(), ds.end());
     // if opreturn exists update payload
-	if (GetSyscoinData(tx, vchData, nOut))
+	if (GetSyscoinData(CTransaction(tx), vchData, nOut))
         tx.vout[nOut].scriptPubKey = scriptData;
     // otherwise add a new output with opreturn
     else

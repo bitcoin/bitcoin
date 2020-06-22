@@ -146,7 +146,7 @@ private:
     std::unordered_map<SporkId, CSporkDef*> sporkDefsById;
     std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
 
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     std::unordered_map<uint256, CSporkMessage> mapSporksByHash;
     std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive;
 

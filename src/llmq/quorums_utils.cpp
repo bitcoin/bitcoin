@@ -138,7 +138,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
 {
     static uint256 qwatchConnectionSeed;
     static std::atomic<bool> qwatchConnectionSeedGenerated{false};
-    static CCriticalSection qwatchConnectionSeedCs;
+    static RecursiveMutex qwatchConnectionSeedCs;
     if (!qwatchConnectionSeedGenerated) {
         LOCK(qwatchConnectionSeedCs);
         if (!qwatchConnectionSeedGenerated) {
