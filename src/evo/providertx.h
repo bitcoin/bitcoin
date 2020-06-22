@@ -27,7 +27,7 @@ public:
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
-    CKeyID keyIDOwner;
+    WitnessV0KeyHash keyIDOwner;
     CBLSPublicKey pubKeyOperator;
     WitnessV0KeyHash keyIDVoting;
     uint16_t nOperatorReward{0};
