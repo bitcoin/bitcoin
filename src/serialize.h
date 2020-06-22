@@ -45,6 +45,26 @@ static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
  */
 struct deserialize_type {};
 constexpr deserialize_type deserialize {};
+// SYSCOIN
+/**
+ * Used to bypass the rule against non-const reference to temporary
+ * where it makes sense with wrappers such as CFlatData or CTxDB
+ */
+template<typename T>
+inline T& REF(const T& val)
+{
+    return const_cast<T&>(val);
+}
+
+/**
+ * Used to acquire a non-const pointer "this" to generate bodies
+ * of const serialization operations from a template
+ */
+template<typename T>
+inline T* NCONST_PTR(const T* val)
+{
+    return const_cast<T*>(val);
+}
 
 //! Safely convert odd char pointer types to standard ones.
 inline char* CharCast(char* c) { return c; }
@@ -260,6 +280,8 @@ template<typename Stream> inline void Unserialize(Stream& s, Span<unsigned char>
 template<typename Stream> inline void Serialize(Stream& s, bool a)    { char f=a; ser_writedata8(s, f); }
 template<typename Stream> inline void Unserialize(Stream& s, bool& a) { char f=ser_readdata8(s); a=f; }
 
+// SYSCOIN
+template <typename S, typename T> size_t GetSerializeSize(const S& s, const T& t);
 
 
 
@@ -577,7 +599,7 @@ public:
                 break;
             }
             int32_t idx = last + offset;
-            if (idx >= size) {
+            if (idx >= (int32_t)size) {
                 throw std::ios_base::failure("out of bounds index");
             }
             if (last != -1 && idx <= last) {

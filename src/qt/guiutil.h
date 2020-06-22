@@ -139,8 +139,6 @@ namespace GUIUtil
 
     // Open debug.log
     void openDebugLogfile();
-    // SYSCOIN Open masternode.conf
-    void openMNConfigfile();    
     // Open the config file
     bool openSyscoinConf();
 

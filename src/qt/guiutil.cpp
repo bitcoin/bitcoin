@@ -425,14 +425,6 @@ bool openSyscoinConf()
 
     return res;
 }
-void openMNConfigfile()
-{
-    const fs::path &pathConfig = GetMasternodeConfigFile();
-
-    /* Open masternode.conf with the associated application */
-   if (fs::exists(pathConfig))
-        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
-}
 ToolTipToRichTextFilter::ToolTipToRichTextFilter(int _size_threshold, QObject *parent) :
     QObject(parent),
     size_threshold(_size_threshold)
