@@ -11,7 +11,7 @@ from threading import Timer
 
 startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
-rowsPerNodeReset = 10		# Number of rows for cach numconnections file
+rowsPerNodeReset = 6000		# Number of rows for cach numconnections file
 
 # These numbers of peers are repeated
 connectionSequence = [1, 2, 4, 8, 16, 32, 64, 128];
@@ -581,9 +581,9 @@ def fetch(now):
 				return ''
 
 
-		if waitForConnectionNum and numPeers != maxConnections:
+		if waitForConnectionNum and numPeers != connectionSequence[maxConnections]:
 			numSkippedSamples += 1
-			print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
+			print(f'Connections at {numPeers}, waiting for it to reach {connectionSequence[maxConnections]}, attempt #{numSkippedSamples}')
 			if numSkippedSamples == 1800: resetNode() # After 1800 seconds / 30 minutes, just reset
 			return ''
 		messages = json.loads(bitcoin('getmsginfo'))
@@ -766,7 +766,7 @@ def log(file, targetDateTime, count):
 		now = datetime.datetime.now()
 		line = fetch(now)
 		if len(line) != 0:
-			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {maxConnections}, Off by {(now - targetDateTime).total_seconds()} seconds.')
+			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {connectionSequence[maxConnections]}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
 			#if count >= 3600:
@@ -809,9 +809,9 @@ def getFileName():
 	if eclipsing:
 		return f'Sample {fileSampleNumber}, genuine = {eclipse_real_numpeers}, fake = {eclipse_fake_numpeers}, drop = {eclipse_drop_rate}, minutes = {minutes}.csv'
 	elif waitForConnectionNum:
-		return f'Sample {fileSampleNumber}, numConnections = {maxConnections}, minutes = {minutes}.csv'
+		return f'Sample {fileSampleNumber}, numConnections = {connectionSequence[maxConnections]}, minutes = {minutes}.csv'
 	else:
-		return f'Sample {fileSampleNumber}, maxConnections = {maxConnections}, minutes = {minutes}.csv'
+		return f'Sample {fileSampleNumber}, maxConnections = {connectionSequence[maxConnections]}, minutes = {minutes}.csv'
 
 def init():
 	global fileSampleNumber, maxConnections
@@ -853,7 +853,7 @@ def init():
 		print(f'Fake connections: {eclipse_fake_numpeers}')
 		print(f'Packet drop rate: {eclipse_drop_rate}')
 	print(f'Maximum connections: {maxConnections}')
-	print(f'Pause if connections don\'t equal {maxConnections}: {waitForConnectionNum}')
+	print(f'Pause if connections don\'t equal {connectionSequence[maxConnections]}: {waitForConnectionNum}')
 	print()
 	confirm = input(f'Does all of this look correct? (y/n) ').lower() in ['y', 'yes']
 	if not confirm:
