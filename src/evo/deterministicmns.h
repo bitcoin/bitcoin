@@ -519,12 +519,12 @@ public:
         s << addedMNs;
         WriteCompactSize(s, updatedMNs.size());
         for (const auto& p : updatedMNs) {
-            WriteVarInt(s, p.first);
+            WriteVarInt(s, VarIntMode::DEFAULT, p.first);
             s << p.second;
         }
         WriteCompactSize(s, removedMns.size());
         for (const auto& p : removedMns) {
-            WriteVarInt(s, p);
+            WriteVarInt(s, VarIntMode::DEFAULT, p);
         }
     }
 
