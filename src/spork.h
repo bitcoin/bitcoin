@@ -91,9 +91,21 @@ public:
         nTimeSigned(0)
         {}
 
-    SERIALIZE_METHODS(CSporkMessage, obj)
+    template<typename Stream>
+    inline void Serialize(Stream& s) const
     {
-         READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);
+        SerializeEnum(s, nSporkID);
+        s << nValue;
+        s << nTimeSigned;
+        s << vchSig;
+    }
+    template<typename Stream>
+    inline void Unserialize(Stream& s)
+    {
+        UnserializeEnum(s, nSporkID);
+        s >> nValue;
+        s >> nTimeSigned;
+        s >> vchSig;
     }
     /**
      * GetHash returns the double-sha256 hash of the serialized spork message.
