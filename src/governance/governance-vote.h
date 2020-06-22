@@ -114,7 +114,7 @@ public:
     uint256 GetSignatureHash() const;
 
     std::string ToString() const;
-        template<typename Stream>
+    template<typename Stream>
     void Serialize(Stream& s) const
     {
         s << masternodeOutpoint;
