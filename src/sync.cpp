@@ -149,12 +149,17 @@ static void push_lock(void* c, const CLockLocation& locklocation)
         const LockPair p1 = std::make_pair(i.first, c);
         if (lockdata.lockorders.count(p1))
             continue;
-        lockdata.lockorders.emplace(p1, lock_stack);
 
         const LockPair p2 = std::make_pair(c, i.first);
+        if (lockdata.lockorders.count(p2)) {
+            auto lock_stack_copy = lock_stack;
+            lock_stack.pop_back();
+            potential_deadlock_detected(p1, lockdata.lockorders[p2], lock_stack_copy);
+            // potential_deadlock_detected() does not return.
+        }
+
+        lockdata.lockorders.emplace(p1, lock_stack);
         lockdata.invlockorders.insert(p2);
-        if (lockdata.lockorders.count(p2))
-            potential_deadlock_detected(p1, lockdata.lockorders[p2], lockdata.lockorders[p1]);
     }
 }
 
