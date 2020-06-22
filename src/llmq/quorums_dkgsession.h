@@ -125,9 +125,7 @@ public:
 
 public:
     SERIALIZE_METHODS(CDKGJustification, obj) {
-        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash);
-        READWRITE(DYNBITSET(obj.contributions));
-        READWRITE(obj.sig);
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
     }
 
     uint256 GetSignHash() const
