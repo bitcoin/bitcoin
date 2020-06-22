@@ -878,21 +878,6 @@ template<typename Stream, typename K, typename T, typename Pred, typename A> voi
 template<typename Stream, typename K, typename T, typename Pred, typename A> void Unserialize(Stream& is, std::unordered_map<K, T, Pred, A>& m);
 
 
-/**
- * SYSCOIN If none of the specialized versions above matched and T is a class, default to calling member function.
- */
-template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
-inline void Serialize(Stream& os, const T& a)
-{
-    a.Serialize(os);
-}
-
-template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
-inline void Unserialize(Stream& is, T& a)
-{
-    a.Unserialize(is);
-}
-
 /** Default formatter. Serializes objects as themselves.
  *
  * The vector/prevector serialization code passes this to VectorFormatter
@@ -1231,7 +1216,20 @@ void Unserialize(Stream& is, std::shared_ptr<const T>& p)
 }
 
 // SYSCOIN
+/**
+ * If none of the specialized versions above matched and T is a class, default to calling member function.
+ */
+template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
+inline void Serialize(Stream& os, const T& a)
+{
+    a.Serialize(os);
+}
 
+template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
+inline void Unserialize(Stream& is, T& a)
+{
+    a.Unserialize(is);
+}
 /**
  * If none of the specialized versions above matched and T is an enum, default to calling
  * Serialize/Unserialze with the underlying type. This is only allowed when a specialized struct of is_serializable_enum<Enum>
