@@ -535,7 +535,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     AssertLockHeld(cs_main);
 
     const auto& consensusParams = Params().GetConsensus();
-    bool fDIP0003Active = pindex->nHeight >= consensusParams.DIP0003Height;
+    bool fDIP0003Active = pindex->nHeight >= consensusParams.nUTXOAssetsBlock;
     if (!fDIP0003Active) {
         return true;
     }
@@ -585,15 +585,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     if (diff.HasChanges()) {
         GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff);
         uiInterface.NotifyMasternodeListChanged(newList);
-    }
-
-    if (nHeight == consensusParams.DIP0003EnforcementHeight) {
-        if (!consensusParams.DIP0003EnforcementHash.IsNull() && consensusParams.DIP0003EnforcementHash != pindex->GetBlockHash()) {
-            LogPrintf("CDeterministicMNManager::%s -- DIP3 enforcement block has wrong hash: hash=%s, expected=%s, nHeight=%d\n", __func__,
-                    pindex->GetBlockHash().ToString(), consensusParams.DIP0003EnforcementHash.ToString(), nHeight);
-            return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-dip3-enf-block");
-        }
-        LogPrintf("CDeterministicMNManager::%s -- DIP3 is enforced now. nHeight=%d\n", __func__, nHeight);
     }
 
     LOCK(cs);
@@ -1035,7 +1026,7 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
         nHeight = tipIndex->nHeight;
     }
 
-    return nHeight >= Params().GetConsensus().DIP0003EnforcementHeight;
+    return nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
 }
 
 void CDeterministicMNManager::CleanupCache(int nHeight)
