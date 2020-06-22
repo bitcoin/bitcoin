@@ -12,7 +12,7 @@
 #include <masternode/masternode-sync.h>
 #include <messagesigner.h>
 #include <spork.h>
-#include <util.h>
+#include <util/system.h>
 #include <validation.h>
 
 #include <string>
