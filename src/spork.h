@@ -182,12 +182,12 @@ public:
     {
         std::string strVersion;
         strVersion = SERIALIZATION_VERSION_STRING;
-        READWRITE(strVersion);
+        s << strVersion;
         // we don't serialize pubkey ids because pubkeys should be
         // hardcoded or be setted with cmdline or options, should
         // not reuse pubkeys from previous syscoind run
-        READWRITE(mapSporksByHash);
-        READWRITE(mapSporksActive);
+        s << mapSporksByHash;
+        s << mapSporksActive;
         // we don't serialize private key to prevent its leakage
     }
 
@@ -195,15 +195,15 @@ public:
     void Unserialize(Stream& s)
     {
         std::string strVersion;
-        READWRITE(strVersion);
+        s >> strVersion;
         if (strVersion != SERIALIZATION_VERSION_STRING) {
             return;
         }
         // we don't serialize pubkey ids because pubkeys should be
         // hardcoded or be setted with cmdline or options, should
         // not reuse pubkeys from previous syscoind run
-        READWRITE(mapSporksByHash);
-        READWRITE(mapSporksActive);
+        s >> mapSporksByHash;
+        s >> mapSporksActive;
         // we don't serialize private key to prevent its leakage
     }
 
