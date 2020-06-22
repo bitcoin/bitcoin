@@ -56,7 +56,7 @@ public:
 
    void Serialize(Stream& s) const
     {
-        s << llmqType;
+        SerializeEnum(s, llmqType);
         s << quorumHash;
         s << quorumMember;
         s << id;
@@ -67,7 +67,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        s >> llmqType;
+        UnserializeEnum(s, llmqType);
         s >> quorumHash;
         s >> quorumMember;
         s >> id;
