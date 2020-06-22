@@ -981,8 +981,8 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
         vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
 
     FastRandomContext insecure_rand;
-    std::random_shuffle(vTriggerObjHashes.begin(), vTriggerObjHashes.end(), insecure_rand);
-    std::random_shuffle(vOtherObjHashes.begin(), vOtherObjHashes.end(), insecure_rand);
+    std::shuffle(vTriggerObjHashes.begin(), vTriggerObjHashes.end(), insecure_rand);
+    std::shuffle(vOtherObjHashes.begin(), vOtherObjHashes.end(), insecure_rand);
 
     for (int i = 0; i < nMaxObjRequestsPerNode; ++i) {
         uint256 nHashGovobj;
@@ -1004,7 +1004,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // stop early to prevent setAskFor overflow
             {
                 LOCK(cs_main);
-                size_t nProjectedSize = GetRequestedObjectCount(pnode->GetId()) + nProjectedVotes;
+                size_t nProjectedSize = GetRequestedTxCount(pnode->GetId()) + nProjectedVotes;
                 if (nProjectedSize > MAX_INV_SZ) continue;
                 // to early to ask the same node
                 if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
