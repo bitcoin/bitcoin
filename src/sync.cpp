@@ -105,7 +105,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
 {
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
-    for (const LockStackItem& i : s2) {
+    for (const LockStackItem& i : s1) {
         if (i.first == mismatch.first) {
             LogPrintf(" (1)"); /* Continued */
         }
@@ -115,7 +115,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
         LogPrintf(" %s\n", i.second.ToString());
     }
     LogPrintf("Current lock order is:\n");
-    for (const LockStackItem& i : s1) {
+    for (const LockStackItem& i : s2) {
         if (i.first == mismatch.first) {
             LogPrintf(" (1)"); /* Continued */
         }
