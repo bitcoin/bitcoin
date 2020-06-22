@@ -17,7 +17,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool fJustCheck)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
 
     try {
@@ -62,7 +62,7 @@ bool IsSpecialTx(const CTransaction& tx)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck, bool fCheckCbTxMerleRoots)
+bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
     static int64_t nTimeLoop = 0;
     static int64_t nTimeQuorum = 0;
@@ -74,9 +74,9 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
         for (size_t i = 0; i < block.vtx.size(); i++) {
             const CTransaction& tx = *block.vtx[i];
-            if (!CheckSpecialTx(tx, pindex->pprev, state, false)) {
-                // pass the state returned by the function above
-                return false;
+            TxValidationState txstate;
+            if (!CheckSpecialTx(tx, pindex->pprev, txstate, false)) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason());
             }
         }
 

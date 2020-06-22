@@ -301,7 +301,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         // payload itself. This means, we need to rely on script verification, which takes the hash of the extra payload
         // into account
         auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
-        CValidationState dummyState;
+        TxValidationState dummyState;
         // Technically, the payload is still valid...
         BOOST_ASSERT(CheckProRegTx(tx, ::ChainActive().Tip(), dummyState, false));
         BOOST_ASSERT(CheckProRegTx(tx2, ::ChainActive().Tip(), dummyState, false));
@@ -405,7 +405,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
     auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
-    CValidationState dummyState;
+    TxValidationState dummyState;
     BOOST_ASSERT(CheckProUpRegTx(tx, ::ChainActive().Tip(), dummyState));
     BOOST_ASSERT(!CheckProUpRegTx(tx2, ::ChainActive().Tip(), dummyState));
     BOOST_ASSERT(CheckTransactionSignature(tx));
