@@ -8,7 +8,8 @@
 
 #include <uint256.h>
 #include <limits>
-
+// SYSCOIN
+#include <map>
 namespace Consensus {
 
 enum DeploymentPos
