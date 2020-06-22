@@ -89,9 +89,23 @@ public:
     uint256 id;
     uint256 msgHash;
 
-    SERIALIZE_METHODS(CSigSesAnn, obj) {
-        READWRITE(VARINT(obj.sessionId), obj.llmqType, obj.quorumHash,
-        obj.id, obj.msgHash);
+    template<typename Stream>
+    inline void Serialize(Stream& s) const
+    {
+        s << VARINT(obj.sessionId);
+        SerializeEnum(s, llmqType);
+        s << quorumHash;
+        s << id;
+        s << msgHash;
+    }
+    template<typename Stream>
+    inline void Unserialize(Stream& s)
+    {
+        s >> VARINT(obj.sessionId);
+        UnserializeEnum(s, llmqType);
+        s >> quorumHash;
+        s >> id;
+        s >> msgHash;
     }
 
     std::string ToString() const;

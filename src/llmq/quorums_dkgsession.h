@@ -99,8 +99,25 @@ public:
     CDKGComplaint() {}
     explicit CDKGComplaint(const Consensus::LLMQParams& params);
 
-    SERIALIZE_METHODS(CDKGComplaint, obj) {
-        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.badMembers), DYNBITSET(obj.complainForMembers), obj.sig);
+    template<typename Stream>
+    inline void Serialize(Stream& s) const
+    {
+        SerializeEnum(s, llmqType);
+        s << quorumHash;
+        s << proTxHash;
+        s << DYNBITSET(badMembers);
+        s << DYNBITSET(complainForMembers);
+        s << sig;
+    }
+    template<typename Stream>
+    inline void Unserialize(Stream& s)
+    {
+        UnserializeEnum(s, llmqType);
+        s >> quorumHash;
+        s >> proTxHash;
+        s >> DYNBITSET(badMembers);
+        s >> DYNBITSET(complainForMembers);
+        s >> sig;
     }
 
     uint256 GetSignHash() const
@@ -121,8 +138,23 @@ public:
     CBLSSignature sig;
 
 public:
-    SERIALIZE_METHODS(CDKGJustification, obj) {
-        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
+    template<typename Stream>
+    inline void Serialize(Stream& s) const
+    {
+        SerializeEnum(s, llmqType);
+        s << quorumHash;
+        s << proTxHash;
+        s << contributions;
+        s << sig;
+    }
+    template<typename Stream>
+    inline void Unserialize(Stream& s)
+    {
+        UnserializeEnum(s, llmqType);
+        s >> quorumHash;
+        s >> proTxHash;
+        s >> contributions;
+        s >> sig;
     }
 
     uint256 GetSignHash() const
@@ -161,8 +193,29 @@ public:
     }
 
 public:
-    SERIALIZE_METHODS(CDKGPrematureCommitment, obj) {
-        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.validMembers), obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.sig);
+    template<typename Stream>
+    inline void Serialize(Stream& s) const
+    {
+        SerializeEnum(s, llmqType);
+        s << quorumHash;
+        s << proTxHash;
+        s << DYNBITSET(validMembers);
+        s << quorumPublicKey;
+        s << quorumVvecHash;
+        s << quorumSig;
+        s << sig;
+    }
+    template<typename Stream>
+    inline void Unserialize(Stream& s)
+    {
+        UnserializeEnum(s, llmqType);
+        s >> quorumHash;
+        s >> proTxHash;
+        s >> DYNBITSET(validMembers);
+        s >> quorumPublicKey;
+        s >> quorumVvecHash;
+        s >> quorumSig;
+        s >> sig;
     }
     uint256 GetSignHash() const
     {

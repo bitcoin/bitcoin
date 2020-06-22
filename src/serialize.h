@@ -878,6 +878,21 @@ template<typename Stream, typename K, typename T, typename Pred, typename A> voi
 template<typename Stream, typename K, typename T, typename Pred, typename A> void Unserialize(Stream& is, std::unordered_map<K, T, Pred, A>& m);
 
 
+/**
+ * If none of the specialized versions above matched, default to calling member function.
+ */
+template<typename Stream, typename T>
+inline void Serialize(Stream& os, const T& a)
+{
+    a.Serialize(os);
+}
+
+template<typename Stream, typename T>
+inline void Unserialize(Stream& is, T&& a)
+{
+    a.Unserialize(is);
+}
+
 /** Default formatter. Serializes objects as themselves.
  *
  * The vector/prevector serialization code passes this to VectorFormatter
@@ -1216,20 +1231,7 @@ void Unserialize(Stream& is, std::shared_ptr<const T>& p)
 }
 
 // SYSCOIN
-/**
- * If none of the specialized versions above matched and T is a class, default to calling member function.
- */
-template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
-inline void Serialize(Stream& os, const T& a)
-{
-    a.Serialize(os);
-}
 
-template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
-inline void Unserialize(Stream& is, T& a)
-{
-    a.Unserialize(is);
-}
 /**
  * If none of the specialized versions above matched and T is an enum, default to calling
  * Serialize/Unserialze with the underlying type. This is only allowed when a specialized struct of is_serializable_enum<Enum>
@@ -1241,7 +1243,7 @@ template<typename T> struct is_serializable_enum;
 template<typename T> struct is_serializable_enum : std::false_type {};
 
 template<typename Stream, typename T, typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
-inline void Serialize(Stream& s, T a )
+inline void SerializeEnum(Stream& s, T a )
 {
     // If you ever get into this situation, it usaully means you forgot to declare is_serializable_enum for the desired enum type
     static_assert(is_serializable_enum<T>::value, "Missing declararion of is_serializable_enum");
@@ -1252,7 +1254,7 @@ inline void Serialize(Stream& s, T a )
 }
 
 template<typename Stream, typename T, typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
-inline void Unserialize(Stream& s, T& a )
+inline void UnserializeEnum(Stream& s, T& a )
 {
     // If you ever get into this situation, it usaully means you forgot to declare is_serializable_enum for the desired enum type
     static_assert(is_serializable_enum<T>::value, "Missing declararion of is_serializable_enum");
