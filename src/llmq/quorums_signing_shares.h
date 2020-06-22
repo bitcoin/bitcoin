@@ -90,9 +90,8 @@ public:
     uint256 msgHash;
 
     SERIALIZE_METHODS(CSigSesAnn, obj) {
-        READWRITE(VARINT(obj.sessionId), obj.llmqType, obj.quorumHash);
-        READWRITE(DYNBITSET(obj.id));
-        READWRITE(obj.msgHash);
+        READWRITE(VARINT(obj.sessionId), obj.llmqType, obj.quorumHash,
+        obj.id, obj.msgHash);
     }
 
     std::string ToString() const;
