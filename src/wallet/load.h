@@ -17,10 +17,10 @@ class Chain;
 } // namespace interfaces
 
 //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
-bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files);
+bool VerifyWallets(interfaces::Chain& chain);
 
 //! Load wallet databases.
-bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files);
+bool LoadWallets(interfaces::Chain& chain);
 
 //! Complete startup of wallets.
 void StartWallets(CScheduler& scheduler, const ArgsManager& args);
