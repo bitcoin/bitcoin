@@ -427,13 +427,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
         return false;
     }
-
-    #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif   
-   
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
@@ -462,11 +456,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->first;
-    #if __cplusplus > 201402 
-    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif     
+    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));   
 
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
@@ -503,11 +493,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->first;
-    #if __cplusplus > 201402 
     mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif 
     return true;  
 }
 
@@ -537,11 +523,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
     CAsset dbAsset;
-    #if __cplusplus > 201402 
-    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif  
+    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset)); 
     auto mapAsset = result.first;
     const bool & mapAssetNotFound = result.second;    
     if (mapAssetNotFound) {
@@ -800,12 +782,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             }
             EthereumTxRoot txRoot;
             pcursor->GetValue(txRoot);
-            #if __cplusplus > 201402 
-            mapTxRoots.try_emplace(std::move(nKey), std::move(txRoot));
-            #else
-            mapTxRoots.emplace(std::piecewise_construct,  std::forward_as_tuple(nKey), std::forward_as_tuple(txRoot));
-            #endif            
-            
+            mapTxRoots.try_emplace(std::move(nKey), std::move(txRoot));    
             pcursor->Next();
         }
         catch (std::exception &e) {
