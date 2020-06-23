@@ -1016,7 +1016,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
             // SYSCOIN
             if (pnode->fInbound) 
             {
-                Inbound++;
+                nInbound++;
                 if (!pnode->verifiedProRegTxHash.IsNull()) {
                     nVerifiedInboundMasternodes++;
                 }
@@ -1940,6 +1940,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
 
         addrman.ResolveCollisions();
+        // SYSCOIN
+        auto mnList = deterministicMNManager->GetListAtChainTip();
 
         int64_t nANow = GetAdjustedTime();
         int nTries = 0;
@@ -2901,7 +2903,7 @@ size_t CConnman::GetNodeCount(NumConnections flags)
 // SYSCOIN
 size_t CConnman::GetMaxOutboundNodeCount()
 {
-    return nMaxOutbound;
+    return m_max_outbound_full_relay;
 }
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
 {
