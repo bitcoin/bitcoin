@@ -31,6 +31,7 @@
 #include <pubkey.h>
 #include <bls/bls.h>
 #include <script/standard.h>
+#include <netaddress.h>
 class CBlockIndex;
 extern RecursiveMutex cs_main;
 

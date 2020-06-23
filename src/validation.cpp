@@ -2403,7 +2403,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
         LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s",
-                     pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+                     pindex->GetBlockHash().ToString(), state.ToString());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
     }
 
@@ -4690,7 +4690,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
     TxValidationState state;
     if (!ProcessSpecialTxsInBlock(block, pindex, state, false /*fJustCheck*/, false /*fScriptChecks*/)) {
         return error("%s: ProcessSpecialTxsInBlock for block %s failed with %s", __func__,
-            pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+            pindex->GetBlockHash().ToString(), state.ToString());
     }
     return true;
 }

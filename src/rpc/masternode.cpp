@@ -29,7 +29,7 @@
 #include <fstream>
 #include <iomanip>
 #include <univalue.h>
-
+#include <rpc/util.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 
 void masternode_list_help()
@@ -93,10 +93,12 @@ UniValue masternode_connect(const JSONRPCRequest& request)
     CService addr;
     if (!Lookup(strAddress.c_str(), addr, 0, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
-
+  NodeContext& node = EnsureNodeContext(request.context);
+  if(!node.connman)
+      throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     // TODO: Pass CConnman instance somehow and don't use global variable.
-    connman.OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!connman.IsConnected(CAddress(addr, NODE_NETWORK), AllNodes))
+    node.connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+    if (!node.connman->IsConnected(CAddress(addr, NODE_NETWORK), AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 
     return "successfully connected";
@@ -217,7 +219,7 @@ void masternode_outputs_help()
 
 UniValue masternode_outputs(const JSONRPCRequest& request)
 {
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp)
         masternode_outputs_help();
 
@@ -228,9 +230,7 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
     std::vector<COutput> vPossibleCoins;
     {
         LOCK(pwallet->cs_wallet);
-        // Find possible candidates
-        auto locked_chain = pwallet->chain().lock();
-        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, nullptr, 100000 * COIN, 100000 * COIN, MAX_MONEY, 0, true);
+        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, 100000 * COIN, 100000 * COIN, MAX_MONEY, 0, true);
     }
 
     UniValue obj(UniValue::VOBJ);

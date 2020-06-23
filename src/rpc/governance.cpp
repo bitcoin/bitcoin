@@ -21,7 +21,8 @@
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
-
+#include <rpc/util.h>
+#include <net.h>
 void gobject_count_help()
 {
     throw std::runtime_error(
@@ -137,7 +138,7 @@ void gobject_prepare_help(CWallet* const pwallet)
 
 UniValue gobject_prepare(const JSONRPCRequest& request)
 {
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
         gobject_prepare_help(pwallet);
 
@@ -202,7 +203,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     outpoint.SetNull();
     if (!request.params[6].isNull() && !request.params[7].isNull()) {
         uint256 collateralHash = ParseHashV(request.params[6], "outputHash");
-        int32_t collateralIndex = ParseInt32V(request.params[7], "outputIndex");
+        int32_t collateralIndex = request.params[7].get_int();
         if (collateralHash.IsNull() || collateralIndex < 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }
@@ -223,9 +224,9 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
 
     LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
-                govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), wtx.GetHash().ToString());
+                govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());
 
-    return tx.GetHash().ToString();
+    return tx->GetHash().ToString();
 }
 #endif // ENABLE_WALLET
 
@@ -529,7 +530,7 @@ void gobject_vote_many_help(CWallet* const pwallet)
 
 UniValue gobject_vote_many(const JSONRPCRequest& request)
 {
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_many_help(pwallet);
 
@@ -569,7 +570,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
 
         CKey key;
-        if (spk_man->GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
+        if (spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
             votingKeys.emplace(dmn->proTxHash, key);
         }
     });
@@ -593,7 +594,7 @@ void gobject_vote_alias_help(CWallet* const pwallet)
 
 UniValue gobject_vote_alias(const JSONRPCRequest& request)
 {
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 5)
         gobject_vote_alias_help(pwallet);
 
@@ -633,7 +634,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     CKey key;
-    if (!spk_man->GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
+    if (!spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(dmn->pdmnState->keyIDVoting)));
     }
 
