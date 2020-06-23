@@ -124,7 +124,7 @@ void gobject_prepare_help(CWallet* const pwallet)
     throw std::runtime_error(
                 "gobject prepare <parent-hash> <revision> <time> <data-hex>\n"
                 "Prepare governance object by signing and creating tx\n"
-                + HelpRequiringPassphrase(pwallet) + "\n"
+                + HELP_REQUIRING_PASSPHRASE,
                 "\nArguments:\n"
                 "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
                 "2. revision      (numeric, required) object revision in the system\n"
@@ -138,7 +138,7 @@ void gobject_prepare_help(CWallet* const pwallet)
 
 UniValue gobject_prepare(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
         gobject_prepare_help(pwallet);
 
@@ -520,7 +520,7 @@ void gobject_vote_many_help(CWallet* const pwallet)
     throw std::runtime_error(
                 "gobject vote-many <governance-hash> <vote> <vote-outcome>\n"
                 "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
-                + HelpRequiringPassphrase(pwallet) + "\n"
+                + HELP_REQUIRING_PASSPHRASE,
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
@@ -530,7 +530,7 @@ void gobject_vote_many_help(CWallet* const pwallet)
 
 UniValue gobject_vote_many(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_many_help(pwallet);
 
@@ -583,7 +583,7 @@ void gobject_vote_alias_help(CWallet* const pwallet)
     throw std::runtime_error(
                 "gobject vote-alias <governance-hash> <vote> <vote-outcome> <protx-hash>\n"
                 "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
-                + HelpRequiringPassphrase(pwallet) + "\n"
+                + HELP_REQUIRING_PASSPHRASE,
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
@@ -594,7 +594,7 @@ void gobject_vote_alias_help(CWallet* const pwallet)
 
 UniValue gobject_vote_alias(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 5)
         gobject_vote_alias_help(pwallet);
 

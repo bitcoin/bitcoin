@@ -219,7 +219,7 @@ void masternode_outputs_help()
 
 UniValue masternode_outputs(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp)
         masternode_outputs_help();
 

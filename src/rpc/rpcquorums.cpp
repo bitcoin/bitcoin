@@ -15,6 +15,7 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <rpc/util.h>
+#include <net.h>
 void quorum_list_help()
 {
     throw std::runtime_error(
@@ -193,7 +194,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
-            node.connman->ForEachNode([](CNode* pnode) {
+            node.connman->ForEachNode([&](CNode* pnode) {
                 if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {
                     foundConnections.emplace(pnode->verifiedProRegTxHash, pnode->addr);
                 }

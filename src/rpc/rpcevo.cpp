@@ -309,7 +309,7 @@ void protx_register_fund_help(CWallet* const pwallet)
             "masternode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
             "is fully deployed.\n"
-            + HelpRequiringPassphrase(pwallet) + "\n"
+            + HELP_REQUIRING_PASSPHRASE,
             "\nArguments:\n"
             + GetHelpString(1, "collateralAddress")
             + GetHelpString(2, "ipAndPort")
@@ -333,7 +333,7 @@ void protx_register_help(CWallet* const pwallet)
             "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
             "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
-            + HelpRequiringPassphrase(pwallet) + "\n"
+            + HELP_REQUIRING_PASSPHRASE,
             "\nArguments:\n"
             + GetHelpString(1, "collateralHash")
             + GetHelpString(2, "collateralIndex")
@@ -386,7 +386,7 @@ void protx_register_submit_help(CWallet* const pwallet)
             "protx register_submit \"tx\" \"sig\"\n"
             "\nSubmits the specified ProTx to the network. This command will also sign the inputs of the transaction\n"
             "which were previously added by \"protx register_prepare\" to cover transaction fees\n"
-            + HelpRequiringPassphrase(pwallet) + "\n"
+            + HELP_REQUIRING_PASSPHRASE,
             "\nArguments:\n"
             "1. \"tx\"                 (string, required) The serialized transaction previously returned by \"protx register_prepare\"\n"
             "2. \"sig\"                (string, required) The signature signed with the collateral key. Must be in base64 format.\n"
@@ -400,7 +400,7 @@ void protx_register_submit_help(CWallet* const pwallet)
 // handles register, register_prepare and register_fund in one method
 UniValue protx_register(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     bool isExternalRegister = request.params[0].get_str() == "register";
     bool isFundRegister = request.params[0].get_str() == "register_fund";
     bool isPrepareRegister = request.params[0].get_str() == "register_prepare";
@@ -553,7 +553,7 @@ UniValue protx_register(const JSONRPCRequest& request)
             LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
             CKey key;
-            if (!spk_man.GetKey(*keyID, key)) {
+            if (!spk_man.GetKey(keyID, key)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
             }
             SignSpecialTxPayloadByString(tx, ptx, key);
@@ -565,7 +565,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
 UniValue protx_register_submit(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 3) {
         protx_register_submit_help(pwallet);
     }
@@ -604,7 +604,7 @@ void protx_update_service_help(CWallet* const pwallet)
             "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
             "of a masternode.\n"
             "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
-            + HelpRequiringPassphrase(pwallet) + "\n"
+            + HELP_REQUIRING_PASSPHRASE,
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
             + GetHelpString(2, "ipAndPort")
@@ -620,7 +620,7 @@ void protx_update_service_help(CWallet* const pwallet)
 
 UniValue protx_update_service(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() < 4 || request.params.size() > 6))
         protx_update_service_help(pwallet);
 
@@ -699,7 +699,7 @@ void protx_update_registrar_help(CWallet* const pwallet)
             "\nCreates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
             "address of the masternode specified by \"proTxHash\".\n"
             "The owner key of the masternode must be known to your wallet.\n"
-            + HelpRequiringPassphrase(pwallet) + "\n"
+            + HELP_REQUIRING_PASSPHRASE,
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
             + GetHelpString(2, "operatorPubKey_update")
@@ -715,7 +715,7 @@ void protx_update_registrar_help(CWallet* const pwallet)
 
 UniValue protx_update_registrar(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6)) {
         protx_update_registrar_help(pwallet);
     }
@@ -791,7 +791,7 @@ void protx_revoke_help(CWallet* const pwallet)
             "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
             "to the masternode owner.\n"
-            + HelpRequiringPassphrase(pwallet) + "\n"
+            + HELP_REQUIRING_PASSPHRASE,
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
             + GetHelpString(2, "operatorKey")
@@ -806,7 +806,7 @@ void protx_revoke_help(CWallet* const pwallet)
 
 UniValue protx_revoke(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() < 3 || request.params.size() > 5)) {
         protx_revoke_help(pwallet);
     }
@@ -966,7 +966,7 @@ UniValue protx_list(const JSONRPCRequest& request)
     }
 
 #ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
 #else
     CWallet* const pwallet = nullptr;
 #endif
@@ -1064,7 +1064,7 @@ UniValue protx_info(const JSONRPCRequest& request)
     }
 
 #ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
 #else
     CWallet* const pwallet = nullptr;
 #endif
