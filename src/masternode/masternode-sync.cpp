@@ -87,7 +87,7 @@ bilingual_str CMasternodeSync::GetSyncStatus()
         case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
         case MASTERNODE_SYNC_FAILED:        return _("Synchronization failed");
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished");
-        default:                            return "";
+        default:                            return _("Unknown State");
     }
 }
 

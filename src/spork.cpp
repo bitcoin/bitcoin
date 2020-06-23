@@ -12,7 +12,7 @@
 #include <netmessagemaker.h>
 #include <util/message.h>
 #include <string>
-
+#include <key_io.h>
 const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
 #define MAKE_SPORK_DEF(name, defaultValue) CSporkDef{name, defaultValue, #name}
@@ -277,17 +277,17 @@ bool CSporkManager::SetSporkAddress(const std::string& strAddress) {
     LOCK(cs);
     CTxDestination dest = DecodeDestination(strAddress);
     CKeyID keyID;
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {	
         keyID = CKeyID(*witness_id);
     }	
-    else if (auto key_id = boost::get<PKHash>(&txDest)) {	
+    else if (auto key_id = boost::get<PKHash>(&dest)) {	
         keyID = CKeyID(*key_id);
     }	
     if (keyID.IsNull()) {
         LogPrintf("CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
         return false;
     }
-    setSporkPubKeyIDs.insert(*keyID);
+    setSporkPubKeyIDs.insert(keyID);
     return true;
 }
 
