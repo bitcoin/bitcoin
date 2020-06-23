@@ -229,7 +229,33 @@ public:
 
     CDBWrapper(const CDBWrapper&) = delete;
     CDBWrapper& operator=(const CDBWrapper&) = delete;
+    // SYSCOIN
+    template <typename K>
+    bool ReadDataStream(const K& key, CDataStream& ssValue) const
+    {
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey << key;
+        return ReadDataStream(ssKey, ssValue);
+    }
 
+    bool ReadDataStream(const CDataStream& ssKey, CDataStream& ssValue) const
+    {
+        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+
+        std::string strValue;
+        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
+        if (!status.ok()) {
+            if (status.IsNotFound())
+                return false;
+            LogPrintf("LevelDB read failure: %s\n", status.ToString());
+            dbwrapper_private::HandleError(status);
+        }
+        CDataStream ssValueTmp(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+        ssValueTmp.Xor(obfuscate_key);
+        ssValue = std::move(ssValueTmp);
+        return true;
+    }
     template <typename K, typename V>
     bool Read(const K& key, V& value) const
     {

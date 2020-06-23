@@ -8,6 +8,7 @@
 class CDBWrapper;
 class CEvoDB;
 class CConnman;
+class Banman;
 namespace llmq
 {
 
@@ -15,7 +16,7 @@ namespace llmq
 static const bool DEFAULT_WATCH_QUORUMS = false;
 
 // Init/destroy LLMQ globals
-void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe = false);
+void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, CConnman& connman, Banman& banman, bool fWipe = false);
 void DestroyLLMQSystem();
 
 // Manage scheduled tasks, threads, listeners etc.
