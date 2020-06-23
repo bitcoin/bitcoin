@@ -195,7 +195,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 
     if (qc.IsNull()) {
         if (!qc.VerifyNull()) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS "bad-qc-invalid-null");
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid-null");
         }
         return true;
     }
@@ -272,7 +272,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
     AssertLockHeld(cs_main);
 
     auto& consensus = Params().GetConsensus();
-    bool fDIP0003Active = pindex->nHeight >= consensus.DIP0003Height;
+    bool fDIP0003Active = pindex->nHeight >= consensus.nUTXOAssetsBlock;
 
     ret.clear();
 

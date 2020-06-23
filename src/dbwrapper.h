@@ -477,8 +477,7 @@ public:
 private:
     void SkipDeletedAndOverwritten() {
         while (parentIt->Valid()) {
-            parentKey = parentIt->GetKey();
-            if (!transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {
+            if (!parentIt->GetKey(parentKey) && !transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {
                 break;
             }
             parentIt->Next();
