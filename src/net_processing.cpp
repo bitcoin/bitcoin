@@ -494,12 +494,12 @@ static void PushNodeVersion(CNode& pnode, CConnman* connman, int64_t nTime)
     uint256 mnauthChallenge;
     GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
     {
-        LOCK(pnode->cs_mnauth);
-        pnode->sentMNAuthChallenge = mnauthChallenge;
+        LOCK(pnode.cs_mnauth);
+        pnode.sentMNAuthChallenge = mnauthChallenge;
     }
 
     connman->PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode.m_tx_relay != nullptr, mnauthChallenge, pnode->fMasternode));
+            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode.m_tx_relay != nullptr, mnauthChallenge, pnode.fMasternode));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -801,10 +801,10 @@ std::chrono::microseconds GetObjectRandomDelay(int invType)
     }
     return {};
 }
-std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chrono::microseconds current_time, bool use_inbound_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds CalculateTxGetDataTime(const CInv& inv, std::chrono::microseconds current_time, bool use_inbound_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::chrono::microseconds process_time;
-    const auto last_request_time = GetTxRequestTime(txid);
+    const auto last_request_time = GetTxRequestTime(inv.hash);
     // First time requesting this tx
     if (last_request_time.count() == 0) {
         process_time = current_time;
@@ -835,7 +835,7 @@ void RequestTx(CNodeState* state, const CInv& inv, std::chrono::microseconds cur
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
-    const auto process_time = CalculateTxGetDataTime(inv.hash, current_time, !state->fPreferredDownload);
+    const auto process_time = CalculateTxGetDataTime(inv, current_time, !state->fPreferredDownload);
 
     peer_download_state.m_tx_process_time.emplace(process_time, inv);
 }  
@@ -866,7 +866,7 @@ void EraseTxRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED
     if (!state) {
         return;
     }
-    EraseTxRequest(state, inv);
+    EraseTxRequest(state, hash);
 }
 
 // This function is used for testing the stale tip eviction logic, see
@@ -1533,9 +1533,8 @@ void RelayTransaction(const uint256& txid, const CConnman& connman)
     connman.ForEachNode([&inv](CNode* pnode)
     {
         // SYSCOIN only relay to outbound masternodes for efficiency
-        if (pnode->fMasternode)
-            continue;
-        pnode->PushInventory(inv);
+        if (!pnode->fMasternode)
+            pnode->PushInventory(inv);
     });
 }
 
@@ -1781,117 +1780,120 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
     // possible, since they're common and it's efficient to batch process
     // them.
     // SYSCOIN
-    while (it != pfrom.vRecvGetData.end() && it->IsKnownType()) {
+    while (it != pfrom.vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || it->IsMnType())) {
         if (interruptMsgProc) return;
         // The send buffer provides backpressure. If there's no space in
         // the buffer, pause processing until the next call.
         if (pfrom.fPauseSend) break;
 
         const CInv &inv = *it++;
-        if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK) {
-            break;
-        }
-        if(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
-            if (pfrom.m_tx_relay == nullptr) {
-                // Ignore GETDATA requests for transactions from blocks-only peers.
-                continue;
-            }
+        // SYSCOIN
+        if(pfrom->m_tx_relay != nullptr && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)) {
             CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, mempool_req, longlived_mempool_time);
             if (tx) {
-                if(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
-                    int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-                    connman->PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
-                    mempool.RemoveUnbroadcastTx(inv.hash);
-                } 
+                int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
+                connman->PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
+                mempool.RemoveUnbroadcastTx(inv.hash);
             } else {
                 vNotFound.push_back(inv);
             }
         } else {
             // SYSCOIN
             bool push = false;
-            if (inv.type == MSG_SPORK) {
-                CSporkMessage spork;
-                if(sporkManager.GetSporkByHash(inv.hash, spork)) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
-                    push = true;
+            switch(inv.type) {
+                case(MSG_SPORK): {
+                    CSporkMessage spork;
+                    if(sporkManager.GetSporkByHash(inv.hash, spork)) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
+                        push = true;
+                    }
+                    break;
                 }
-            }
-            else if (inv.type == MSG_GOVERNANCE_OBJECT) {
-                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
-                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
-                bool topush = false;
-                {
-                    if(governance.HaveObjectForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeObjectForHash(inv.hash, ss)) {
-                            topush = true;
+                case(MSG_GOVERNANCE_OBJECT): {
+                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
+                    CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
+                    bool topush = false;
+                    {
+                        if(governance.HaveObjectForHash(inv.hash)) {
+                            ss.reserve(1000);
+                            if(governance.SerializeObjectForHash(inv.hash, ss)) {
+                                topush = true;
+                            }
                         }
                     }
+                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
+                    if(topush) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                        push = true;
+                    }
+                    break;
                 }
-                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
-                if(topush) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
-                    push = true;
-                }
-            }
-            else if (inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
-                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
-                bool topush = false;
-                {
-                    if(governance.HaveVoteForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeVoteForHash(inv.hash, ss)) {
-                            topush = true;
+                case(MSG_GOVERNANCE_OBJECT_VOTE): {
+                    CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
+                    bool topush = false;
+                    {
+                        if(governance.HaveVoteForHash(inv.hash)) {
+                            ss.reserve(1000);
+                            if(governance.SerializeVoteForHash(inv.hash, ss)) {
+                                topush = true;
+                            }
                         }
                     }
+                    if(topush) {
+                        LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
+                        push = true;
+                    }
+                    break;
                 }
-                if(topush) {
-                    LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
-                    push = true;
+                case(MSG_QUORUM_FINAL_COMMITMENT): {
+                    llmq::CFinalCommitment o;
+                    if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
+                        push = true;
+                    }
+                    break;
                 }
-            }
-            else if (inv.type == MSG_QUORUM_FINAL_COMMITMENT) {
-                llmq::CFinalCommitment o;
-                if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
-                    push = true;
-                }
-            }
 
-            else if (inv.type == MSG_QUORUM_CONTRIB) {
-                llmq::CDKGContribution o;
-                if (llmq::quorumDKGSessionManager->GetContribution(inv.hash, o)) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
-                    push = true;
+                case(MSG_QUORUM_CONTRIB): {
+                    llmq::CDKGContribution o;
+                    if (llmq::quorumDKGSessionManager->GetContribution(inv.hash, o)) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
+                        push = true;
+                    }
+                    break;
                 }
-            }
-            else if (inv.type == MSG_QUORUM_COMPLAINT) {
-                llmq::CDKGComplaint o;
-                if (llmq::quorumDKGSessionManager->GetComplaint(inv.hash, o)) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
-                    push = true;
+                case(MSG_QUORUM_COMPLAINT) {
+                    llmq::CDKGComplaint o;
+                    if (llmq::quorumDKGSessionManager->GetComplaint(inv.hash, o)) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
+                        push = true;
+                    }
+                    break;
                 }
-            }
-            else if (inv.type == MSG_QUORUM_JUSTIFICATION) {
-                llmq::CDKGJustification o;
-                if (llmq::quorumDKGSessionManager->GetJustification(inv.hash, o)) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
-                    push = true;
+                case(MSG_QUORUM_JUSTIFICATION) {
+                    llmq::CDKGJustification o;
+                    if (llmq::quorumDKGSessionManager->GetJustification(inv.hash, o)) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
+                        push = true;
+                    }
+                    break;
                 }
-            }
-            else if (inv.type == MSG_QUORUM_PREMATURE_COMMITMENT) {
-                llmq::CDKGPrematureCommitment o;
-                if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
-                    push = true;
+                case(MSG_QUORUM_PREMATURE_COMMITMENT) {
+                    llmq::CDKGPrematureCommitment o;
+                    if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
+                        push = true;
+                    }
+                    break;
                 }
-            }
-            else if (inv.type == MSG_QUORUM_RECOVERED_SIG) {
-                llmq::CRecoveredSig o;
-                if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
-                    connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
-                    push = true;
+                case(MSG_QUORUM_RECOVERED_SIG) {
+                    llmq::CRecoveredSig o;
+                    if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
+                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
+                        push = true;
+                    }
+                    break;
                 }
             }
             if (!push) {
@@ -2511,19 +2513,19 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             vRecv >> fRelay;
         // SYSCOIN
         if (!vRecv.empty()) {
-            LOCK(pfrom->cs_mnauth);
-            vRecv >> pfrom->receivedMNAuthChallenge;
+            LOCK(pfrom.cs_mnauth);
+            vRecv >> pfrom.receivedMNAuthChallenge;
         }
         if (!vRecv.empty()) {
             bool fOtherMasternode = false;
             vRecv >> fOtherMasternode;
-            if (pfrom->fInbound) {
-                pfrom->fMasternode = fOtherMasternode;
+            if (pfrom.fInbound) {
+                pfrom.fMasternode = fOtherMasternode;
                 if (fOtherMasternode) {
                     LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom->GetId());
                     if (!fMasternodeMode) {
                         LogPrint(BCLog::NET, "but we're not a masternode, disconnecting\n");
-                        pfrom->fDisconnect = true;
+                        pfrom.fDisconnect = true;
                         return true;
                     }
                 }
@@ -2662,7 +2664,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         }
         // SYSCOIN
         if (!pfrom->fMasternodeProbe) {
-            CMNAuth::PushMNAUTH(pfrom, *connman);
+            CMNAuth::PushMNAUTH(&pfrom, *connman);
         }
 
         if (pfrom.nVersion >= SENDHEADERS_VERSION) {
@@ -2708,15 +2710,15 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         return false;
     }
     // SYSCOIN
-    if (pfrom->nTimeFirstMessageReceived == 0) {
+    if (pfrom.nTimeFirstMessageReceived == 0) {
         // First message after VERSION/VERACK
-        pfrom->nTimeFirstMessageReceived = GetTimeMicros();
-        pfrom->fFirstMessageIsMNAUTH = strCommand == NetMsgType::MNAUTH;
+        pfrom.nTimeFirstMessageReceived = GetTimeMicros();
+        pfrom.fFirstMessageIsMNAUTH = msg_type == NetMsgType::MNAUTH;
         // Note: do not break the flow here
 
-        if (pfrom->fMasternodeProbe && !pfrom->fFirstMessageIsMNAUTH) {
+        if (pfrom.fMasternodeProbe && !pfrom.fFirstMessageIsMNAUTH) {
             LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d", pfrom->GetId());
-            pfrom->fDisconnect = true;
+            pfrom.fDisconnect = true;
             return false;
         }
     }
@@ -2804,10 +2806,10 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
     // SYSCOIN
 
-    if (strCommand == NetMsgType::QSENDRECSIGS) {
+    if (msg_type == NetMsgType::QSENDRECSIGS) {
         bool b;
         vRecv >> b;
-        pfrom->fSendRecSigs = b;
+        pfrom.fSendRecSigs = b;
         return true;
     }
     if (msg_type == NetMsgType::INV) {
@@ -2862,7 +2864,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
                 static std::set<int> allowWhileInIBDObjs = {
                         MSG_SPORK
                 };
-                if (fBlocksOnly && !(inv.type >= MSG_SPORK && inv.type <= MSG_MASTERNODE_VERIFY)) {
+                if (fBlocksOnly && !inv.IsMnType()) {
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
                     pfrom.fDisconnect = true;
                     return true;
@@ -2870,7 +2872,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
                 } else if (!fAlreadyHave) {
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
                     if (allowWhileInIBD || (!fImporting && !fReindex && !::ChainstateActive().IsInitialBlockDownload())) {
-                        RequestTx(State(pfrom->GetId()), inv, current_time);
+                        RequestTx(State(pfrom.GetId()), inv, current_time);
                     }
                 }
             }
@@ -3131,8 +3133,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         LOCK2(cs_main, g_cs_orphans);
 
         TxValidationState state;
-        // SYSCOIN
-        EraseTxRequest(pfrom->GetId(), inv);
+        EraseTxRequest(pfrom->GetId(), inv.hash);
 
         std::list<CTransactionRef> lRemovedTxn;
 
@@ -3837,7 +3838,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         return true;
     }
     // SYSCOIN
-    if (strCommand == NetMsgType::GETMNLISTDIFF) {
+    if (msg_type == NetMsgType::GETMNLISTDIFF) {
         CGetSimplifiedMNListDiff cmd;
         vRecv >> cmd;
 
@@ -3855,7 +3856,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
 
-    if (strCommand == NetMsgType::MNLISTDIFF) {
+    if (msg_type == NetMsgType::MNLISTDIFF) {
         // we have never requested this
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom->GetId()));
@@ -3869,7 +3870,8 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         vRecv >> vInv;
         if (vInv.size() <= MAX_PEER_TX_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv : vInv) {
-                if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX || (inv.type >= MSG_SPORK && inv.type <= MSG_MASTERNODE_VERIFY)) {
+                // SYSCOIN
+                if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX || inv.IsMnType()) {
                     // If we receive a NOTFOUND message for a txid we requested, erase
                     // it from our data structures for this peer.
                     auto in_flight_it = state->m_tx_download.m_tx_in_flight.find(inv.hash);
@@ -4473,7 +4475,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     } else {
                         // Use half the delay for regular outbound peers, as there is less privacy concern for them.
                         // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
-                        pto->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> !pto->verifiedProRegTxHash.IsNull()});
+                        pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> !pto->verifiedProRegTxHash.IsNull()});
                     }
                 }
 
@@ -4735,7 +4737,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // (with a slight delay for inbound peers, to prefer
                     // requests to outbound peers).
                     // SYSCOIN
-                    const auto next_process_time = CalculateTxGetDataTime(inv.hash, current_time, !state.fPreferredDownload);
+                    const auto next_process_time = CalculateTxGetDataTime(inv, current_time, !state.fPreferredDownload);
                     tx_process_time.emplace(next_process_time, inv);
                 }
             } else {
