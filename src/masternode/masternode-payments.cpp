@@ -21,41 +21,6 @@
 
 CMasternodePayments mnpayments;
 
-bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blockReward, std::string& strErrorRet) {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-    bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
-
-    if (nBlockHeight >= consensusParams.nSuperblockStartBlock) {
-        strErrorRet = strprintf("Incorrect block %d, old budgets are no longer active", nBlockHeight);
-        return false;
-    }
-
-    // we are still using budgets, but we have no data about them anymore,
-    // all we know is predefined budget cycle and window
-
-    int nOffset = nBlockHeight % consensusParams.nBudgetPaymentsCycleBlocks;
-    if(nOffset < consensusParams.nBudgetPaymentsWindowBlocks) {
-        // NOTE: old budget system is disabled since 12.1
-        if(masternodeSync.IsSynced()) {
-            // no old budget blocks should be accepted here on mainnet,
-            // testnet/devnet/regtest should produce regular blocks only
-            LogPrint(BCLog::GOBJECT, "%s -- WARNING: Client synced but old budget system is disabled, checking block value against block reward\n", __func__);
-            if(!isBlockRewardValueMet) {
-                strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, old budgets are disabled",
-                                        nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
-            }
-            return isBlockRewardValueMet;
-        }
-        // when not synced, rely on online nodes (all networks)
-        LogPrint(BCLog::GOBJECT, "%s -- WARNING: Skipping old budget block value checks, accepting block\n", __func__);
-        return true;
-    }
-    if(!isBlockRewardValueMet) {
-        strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, block is not in old budget cycle window",
-                                nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
-    }
-    return isBlockRewardValueMet;
-}
 
 /**
 * IsBlockValueValid
@@ -74,12 +39,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
     strErrorRet = "";
-
-    if (nBlockHeight < consensusParams.nSuperblockStartBlock) {
-        // superblocks are not enabled yet, check if we can pass old budget rules
-        return IsOldBudgetBlockValueValid(block, nBlockHeight, blockReward, strErrorRet);
-    }
-
+    
     LogPrint(BCLog::MNPAYMENTS, "block.vtx[0]->GetValueOut() %lld <= blockReward %lld\n", block.vtx[0]->GetValueOut(), blockReward);
 
     CAmount nSuperblockMaxValue =  blockReward + CSuperblock::GetPaymentsLimit(nBlockHeight);
