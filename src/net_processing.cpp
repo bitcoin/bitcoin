@@ -1509,10 +1509,10 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LO
         CSporkMessage spork;
         return sporkManager.GetSporkByHash(inv.hash, spork);
     }
-
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
         return !governance.ConfirmInventoryRequest(inv);
+
     case MSG_QUORUM_FINAL_COMMITMENT:
         return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
     case MSG_QUORUM_CONTRIB:
@@ -3896,14 +3896,17 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         }
     }
 
-    if (found)
+   if (found)
     {
         //probably one the extensions
-        mnodeman.ProcessMessage(&pfrom, msg_type, vRecv, *connman);
-        mnpayments.ProcessMessage(&pfrom, msg_type, vRecv,*connman);
         sporkManager.ProcessSpork(&pfrom, msg_type, vRecv, *connman);
         masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);
-        governance.ProcessMessage(&pfrom, msg_type, vRecv,*connman);
+        governance.ProcessMessage(&pfrom, msg_type, vRecv, *connman);
+        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, *connman);
+        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
+        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
+        llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
+        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
         return true;
     }
         
