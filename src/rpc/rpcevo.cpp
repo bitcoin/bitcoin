@@ -416,8 +416,6 @@ UniValue protx_register(const JSONRPCRequest& request)
     }
 
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (isExternalRegister || isFundRegister) {
         EnsureWalletIsUnlocked(pwallet);
@@ -575,9 +573,6 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
     }
 
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
     EnsureWalletIsUnlocked(pwallet);
 
     CMutableTransaction tx;
@@ -630,9 +625,6 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     if (request.fHelp || (request.params.size() < 4 || request.params.size() > 6))
         protx_update_service_help(pwallet);
 
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -729,9 +721,6 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     }
 
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
     EnsureWalletIsUnlocked(pwallet);
 
     CProUpRegTx ptx;
@@ -821,9 +810,6 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         protx_revoke_help(pwallet);
     }
 
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     EnsureWalletIsUnlocked(pwallet);
 
