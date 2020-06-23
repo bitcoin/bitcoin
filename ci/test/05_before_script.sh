@@ -15,11 +15,14 @@ fi
 
 DOCKER_EXEC mkdir -p ${DEPENDS_DIR}/SDKs ${DEPENDS_DIR}/sdk-sources
 
-if [ -n "$OSX_SDK" ] && [ ! -f ${DEPENDS_DIR}/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then
-  curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o ${DEPENDS_DIR}/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz
+OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
+OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_BASENAME}"
+
+if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
+  curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
 fi
-if [ -n "$OSX_SDK" ] && [ -f ${DEPENDS_DIR}/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then
-  DOCKER_EXEC tar -C ${DEPENDS_DIR}/SDKs -xf ${DEPENDS_DIR}/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz
+if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
+  DOCKER_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\)
