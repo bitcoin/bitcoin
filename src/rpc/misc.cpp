@@ -48,8 +48,9 @@ UniValue mnsync(const JSONRPCRequest& request)
                 }
             }.ToString());
 
-    std::string strMode = request.params[0].get_str();
     NodeContext& node = EnsureNodeContext(request.context);
+    std::string strMode = request.params[0].get_str();
+
     if(strMode == "status") {
         UniValue objStatus(UniValue::VOBJ);
         objStatus.pushKV("AssetID", masternodeSync.GetAssetID());
@@ -57,8 +58,6 @@ UniValue mnsync(const JSONRPCRequest& request)
         objStatus.pushKV("AssetStartTime", masternodeSync.GetAssetStartTime());
         objStatus.pushKV("Attempt", masternodeSync.GetAttempt());
         objStatus.pushKV("IsBlockchainSynced", masternodeSync.IsBlockchainSynced());
-        objStatus.pushKV("IsMasternodeListSynced", masternodeSync.IsMasternodeListSynced());
-        objStatus.pushKV("IsWinnersListSynced", masternodeSync.IsWinnersListSynced());
         objStatus.pushKV("IsSynced", masternodeSync.IsSynced());
         objStatus.pushKV("IsFailed", masternodeSync.IsFailed());
         return objStatus;
@@ -130,7 +129,7 @@ UniValue spork(const JSONRPCRequest& request)
     } else {
         // advanced mode, update spork values
         int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
-        if(nSporkID == -1)
+        if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
         if (!node.connman)
