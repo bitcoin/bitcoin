@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
 		avgConnectionTime /= numPeers
 
-		line = os.path.basename(file) + ',' # File Name
+		line = '"' + os.path.basename(file) + '",' # File Name
 		line += str(loggingTime) + ',' # Logging Time
 		line += str(numDisconnections) + ',' # Num Disconnections
 		line += str(avgNumPeers) + ',' # Avg Num Peers
