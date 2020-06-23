@@ -10,7 +10,7 @@
 #include <messagesigner.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
-
+#include <util/message.h>
 #include <string>
 
 const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
@@ -429,7 +429,7 @@ bool CSporkMessage::GetSignerKeyID(CKeyID &retKeyidSporkSigner, bool fSporkSixAc
     } else {
         std::string strMessage = std::to_string(nSporkID) + std::to_string(nValue) + std::to_string(nTimeSigned);
         CHashWriter ss(SER_GETHASH, 0);
-        ss << strMessageMagic;
+        ss << MESSAGE_MAGIC;
         ss << strMessage;
         if (!pubkeyFromSig.RecoverCompact(ss.GetHash(), vchSig)) {
             return false;
