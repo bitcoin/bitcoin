@@ -1748,7 +1748,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6(strDBName, "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
-        return InitError(strprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / strDBName).string())));
+        return InitError(strprintf(_("Failed to load sporks cache from %s\n"), (pathDB / strDBName).string()));
     }
     
     fReindex = gArgs.GetBoolArg("-reindex", false);
