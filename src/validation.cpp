@@ -4670,14 +4670,10 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                 inputs.SpendCoin(txin.prevout);
             }
             // SYSCOIN
-            const uint256& txHash = tx->GetHash(); 
-            const bool &hasAssets = tx->HasAssets();
-      
-            // SYSCOIN
-            if(hasAssets){
-                BlockValidationState tx_state;
+            if(tx->HasAssets()){
+                TxValidationState tx_state;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, *tx, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys)){
+                if (!CheckSyscoinInputs(ibd, *tx, tx->GetHash(), tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys)) {
                     return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx->GetHash().ToString(), tx_state.ToString());
                 }
             }

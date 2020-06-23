@@ -1517,7 +1517,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
     const CWallet& wallet = *pwallet;
