@@ -9,7 +9,7 @@
 #include <netbase.h>
 #include <validation.h>
 #include <util/system.h>
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
 #include <txmempool.h>
 
 #include <evo/specialtx.h>
