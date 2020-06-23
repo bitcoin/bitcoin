@@ -79,7 +79,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
     BumpAssetLastTime("CMasternodeSync::SwitchToNextAsset");
 }
 
-std::string CMasternodeSync::GetSyncStatus()
+bilingual_str CMasternodeSync::GetSyncStatus()
 {
     switch (masternodeSync.nCurrentAsset) {
         case MASTERNODE_SYNC_INITIAL:       return _("Synchronizing blockchain...");

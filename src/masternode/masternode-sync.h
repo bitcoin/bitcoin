@@ -6,7 +6,7 @@
 
 #include <chain.h>
 #include <net.h>
-
+#include <util/translation.h>
 class CMasternodeSync;
 
 static const int MASTERNODE_SYNC_FAILED          = -1;
@@ -56,7 +56,7 @@ public:
     void BumpAssetLastTime(const std::string& strFuncName);
     int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
     std::string GetAssetName();
-    std::string GetSyncStatus();
+    bilingual_str GetSyncStatus();
 
     void Reset();
     void SwitchToNextAsset(CConnman& connman);
