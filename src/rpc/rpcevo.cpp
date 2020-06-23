@@ -519,10 +519,10 @@ UniValue protx_register(const JSONRPCRequest& request)
         ExtractDestination(coin.out.scriptPubKey, txDest);
         CKeyID keyID;
         if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-            keyID = CKeyID(*witness_id);
+            keyID = ToKeyID(*witness_id);
         }	
         else if (auto key_id = boost::get<PKHash>(&txDest)) {	
-            keyID = CKeyID(*key_id);
+            keyID = ToKeyID(*key_id);
         }	
         if (keyID.IsNull()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
@@ -751,7 +751,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
         LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-        if (!spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDOwner), keyOwner)) {
+        if (!spk_man.GetKey(ToKeyID(dmn->pdmnState->keyIDOwner), keyOwner)) {
             throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(dmn->pdmnState->keyIDOwner)));
         }
     }
