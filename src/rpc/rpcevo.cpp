@@ -320,7 +320,7 @@ void protx_register_fund_help(const JSONRPCRequest& request)
             + GetHelpString(8, "fundAddress"),
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -344,7 +344,7 @@ void protx_register_help(const JSONRPCRequest& request)
             + GetHelpString(9, "feeSourceAddress"),
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -367,7 +367,7 @@ void protx_register_prepare_help(const JSONRPCRequest& request)
             + GetHelpString(9, "feeSourceAddress"),
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -383,7 +383,7 @@ void protx_register_submit_help(const JSONRPCRequest& request)
             "2. \"sig\"                (string, required) The signature signed with the collateral key. Must be in base64 format.\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -602,7 +602,7 @@ void protx_update_service_help(const JSONRPCRequest& request)
             + GetHelpString(5, "feeSourceAddress"),
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -695,7 +695,7 @@ void protx_update_registrar_help(const JSONRPCRequest& request)
             + GetHelpString(5, "feeSourceAddress"),
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -784,7 +784,7 @@ void protx_revoke_help(const JSONRPCRequest& request)
             + GetHelpString(4, "feeSourceAddress"),
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -870,7 +870,7 @@ void protx_list_help(const JSONRPCRequest& request)
 #endif,
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -1037,7 +1037,7 @@ void protx_info_help(const JSONRPCRequest& request)
             + GetHelpString(1, "proTxHash"),
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -1072,7 +1072,7 @@ void protx_diff_help(const JSONRPCRequest& request)
             "2. \"block\"               (numeric, required) The ending block height.\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -1136,7 +1136,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
             "  diff              - Calculate a diff and a proof between two masternode lists\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -1182,7 +1182,7 @@ void bls_generate_help(const JSONRPCRequest& request)
         "Returns a BLS secret/public key pair",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -1210,7 +1210,7 @@ void bls_fromsecret_help(const JSONRPCRequest& request)
             "1. \"secret\"                (string, required) The BLS secret key\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -1244,7 +1244,7 @@ UniValue bls_fromsecret(const JSONRPCRequest& request)
         "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }

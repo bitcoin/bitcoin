@@ -33,7 +33,7 @@ void gobject_count_help(const JSONRPCRequest& request)
     "1. \"mode\"   (string, optional, default: \"json\") Output format: json (\"json\") or string in free form (\"all\")\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 
@@ -64,7 +64,7 @@ void gobject_deserialize_help(const JSONRPCRequest& request)
     "1. \"hex_data\"   (string, required) data in hex string form\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -93,7 +93,7 @@ void gobject_check_help(const JSONRPCRequest& request)
         "1. \"hex_data\"   (string, required) data in hex string form\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -146,7 +146,7 @@ void gobject_prepare_help(const JSONRPCRequest& request)
                 "7. outputIndex   (numeric, optional) The output index.\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);
 }
@@ -257,7 +257,7 @@ void gobject_submit_help(const JSONRPCRequest& request)
             "5. fee-txid      (string, optional) fee-tx id, required for all objects except triggers",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -370,7 +370,7 @@ void gobject_vote_conf_help(const JSONRPCRequest& request)
                 "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -547,7 +547,7 @@ void gobject_vote_many_help(const JSONRPCRequest& request)
             "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -614,7 +614,7 @@ void gobject_vote_alias_help(const JSONRPCRequest& request)
             "4. protx-hash        (string, required) masternode's proTxHash",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);     
 }
@@ -736,7 +736,7 @@ void gobject_list_help(const JSONRPCRequest& request)
             "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -772,7 +772,7 @@ void gobject_diff_help(const JSONRPCRequest& request)
             "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -807,7 +807,7 @@ void gobject_get_help(const JSONRPCRequest& request)
             "1. governance-hash   (string, required) object id\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -898,7 +898,7 @@ void gobject_getcurrentvotes_help(const JSONRPCRequest& request)
             "3. vout              (string, optional) masternode collateral output index, required if <txid> presents\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -968,7 +968,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 #endif // ENABLE_WALLET
     ,{
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -1036,7 +1036,7 @@ UniValue voteraw(const JSONRPCRequest& request)
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n",
         {
         },
-        RPCResult{""},
+        RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
         }.Check(request);  
     }
@@ -1123,7 +1123,7 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
             "}\n",
         {
         },
-        RPCResult{""},
+        RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
         }.Check(request);
     }
@@ -1156,7 +1156,7 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
             "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n",
         {
         },
-        RPCResult{""},
+        RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
         }.Check(request);
     }
