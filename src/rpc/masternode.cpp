@@ -227,9 +227,6 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
     if (request.fHelp)
         masternode_outputs_help();
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     {

@@ -146,8 +146,6 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
         gobject_prepare_help(pwallet);
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -540,8 +538,6 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_many_help(pwallet);
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -606,8 +602,6 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 5)
         gobject_vote_alias_help(pwallet);
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
