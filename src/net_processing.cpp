@@ -143,6 +143,7 @@ struct COrphanTx {
 };
 RecursiveMutex g_cs_orphans;
 std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
+std::set<uint256> g_orphan_work_set GUARDED_BY(g_cs_orphans);
 
 void EraseOrphansFor(NodeId peer);
 
@@ -2832,7 +2833,7 @@ void ProcessMessage(
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
-                        pfrom.orphan_work_set.insert(elem->first);
+                        g_orphan_work_set.insert(elem->first);
                     }
                 }
             }
@@ -2845,7 +2846,8 @@ void ProcessMessage(
                 mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(connman, mempool, pfrom.orphan_work_set, lRemovedTxn);
+            ProcessOrphanTx(connman, mempool, g_orphan_work_set, lRemovedTxn);
+
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
@@ -3607,22 +3609,12 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(*pfrom, chainparams, connman, m_mempool, interruptMsgProc);
 
-    if (!pfrom->orphan_work_set.empty()) {
-        std::list<CTransactionRef> removed_txn;
-        LOCK2(cs_main, g_cs_orphans);
-        ProcessOrphanTx(connman, m_mempool, pfrom->orphan_work_set, removed_txn);
-        for (const CTransactionRef& removedTx : removed_txn) {
-            AddToCompactExtraTransactions(removedTx);
-        }
-    }
-
     if (pfrom->fDisconnect)
         return false;
 
     // this maintains the order of responses
     // and prevents vRecvGetData to grow unbounded
     if (!pfrom->vRecvGetData.empty()) return true;
-    if (!pfrom->orphan_work_set.empty()) return true;
 
     // Don't bother if send buffer is too full to respond anyway
     if (pfrom->fPauseSend)
@@ -3689,7 +3681,20 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
 
 bool PeerLogicValidation::ProcessGlobalTasks(std::atomic<bool>& interruptMsgProc)
 {
-    // No tasks to process!
+    // Reconsider orphan transactions that may now have parents
+    {
+        LOCK2(cs_main, g_cs_orphans);
+        if (!g_orphan_work_set.empty()) {
+            std::list<CTransactionRef> removed_txn;
+            ProcessOrphanTx(connman, m_mempool, g_orphan_work_set, removed_txn);
+            for (const CTransactionRef& removedTx : removed_txn) {
+                AddToCompactExtraTransactions(removedTx);
+            }
+            if (!g_orphan_work_set.empty()) return true;
+        }
+    }
+
+    // No more tasks to process!
     return false;
 }
 
