@@ -35,6 +35,16 @@
 #include <governance/governance.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
+#include <masternode/masternode-meta.h>
+#include <evo/deterministicmns.h>
+#include <evo/mnauth.h>
+#include <evo/simplifiedmns.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_dkgsessionmgr.h>
+#include <llmq/quorums_init.h>
+#include <llmq/quorums_signing.h>
+#include <llmq/quorums_signing_shares.h>
 #include <typeinfo>
 
 #if defined(NDEBUG)
