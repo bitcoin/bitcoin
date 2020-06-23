@@ -25,20 +25,24 @@
 #include <net.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-void gobject_count_help()
+void gobject_count_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject count (\"mode\")\n"
-                "Count governance objects and votes\n"
-                "\nArguments:\n"
-                "1. \"mode\"   (string, optional, default: \"json\") Output format: json (\"json\") or string in free form (\"all\")\n"
-                );
+    RPCHelpMan{"gobject count",
+    "Count governance objects and votes\n"
+    "\nArguments:\n"
+    "1. \"mode\"   (string, optional, default: \"json\") Output format: json (\"json\") or string in free form (\"all\")\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);
+
 }
 
 UniValue gobject_count(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
-        gobject_count_help();
+        gobject_count_help(request);
 
     std::string strMode{"json"};
 
@@ -47,25 +51,28 @@ UniValue gobject_count(const JSONRPCRequest& request)
     }
 
     if (strMode != "json" && strMode != "all")
-        gobject_count_help();
+        gobject_count_help(request);
 
     return strMode == "json" ? governance.ToJson() : governance.ToString();
 }
 
-void gobject_deserialize_help()
+void gobject_deserialize_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject deserialize \"hex_data\"\n"
-                "Deserialize governance object from hex string to JSON\n"
-                "\nArguments:\n"
-                "1. \"hex_data\"   (string, required) data in hex string form\n"
-                );
+    RPCHelpMan{"gobject deserialize",
+    "Deserialize governance object from hex string to JSON\n"
+    "\nArguments:\n"
+    "1. \"hex_data\"   (string, required) data in hex string form\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue gobject_deserialize(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
-        gobject_deserialize_help();
+        gobject_deserialize_help(request);
 
     std::string strHex = request.params[1].get_str();
 
@@ -78,20 +85,23 @@ UniValue gobject_deserialize(const JSONRPCRequest& request)
     return u.write().c_str();
 }
 
-void gobject_check_help()
+void gobject_check_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject check \"hex_data\"\n"
-                "Validate governance object data (proposal only)\n"
-                "\nArguments:\n"
-                "1. \"hex_data\"   (string, required) data in hex string form\n"
-                );
+    RPCHelpMan{"gobject check",
+        "Validate governance object data (proposal only)\n"
+        "\nArguments:\n"
+        "1. \"hex_data\"   (string, required) data in hex string form\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue gobject_check(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
-        gobject_check_help();
+        gobject_check_help(request);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -121,11 +131,10 @@ UniValue gobject_check(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-void gobject_prepare_help(CWallet* const pwallet)
+void gobject_prepare_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject prepare <parent-hash> <revision> <time> <data-hex>\n"
-                "Prepare governance object by signing and creating tx\n"
+    RPCHelpMan{"gobject prepare",
+               "Prepare governance object by signing and creating tx\n"
                 + HELP_REQUIRING_PASSPHRASE,
                 "\nArguments:\n"
                 "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
@@ -134,8 +143,12 @@ void gobject_prepare_help(CWallet* const pwallet)
                 "4. data-hex      (string, required)  data in hex string form\n"
                 "5. use-IS        (boolean, optional, default=false) Deprecated and ignored\n"
                 "6. outputHash    (string, optional) the single output to submit the proposal fee from\n"
-                "7. outputIndex   (numeric, optional) The output index.\n"
-                );
+                "7. outputIndex   (numeric, optional) The output index.\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue gobject_prepare(const JSONRPCRequest& request)
@@ -144,7 +157,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
-        gobject_prepare_help(pwallet);
+        gobject_prepare_help(request);
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -232,24 +245,27 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 }
 #endif // ENABLE_WALLET
 
-void gobject_submit_help()
+void gobject_submit_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject submit <parent-hash> <revision> <time> <data-hex> <fee-txid>\n"
-                "Submit governance object to network\n"
-                "\nArguments:\n"
-                "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
-                "2. revision      (numeric, required) object revision in the system\n"
-                "3. time          (numeric, required) time this object was created\n"
-                "4. data-hex      (string, required) data in hex string form\n"
-                "5. fee-txid      (string, optional) fee-tx id, required for all objects except triggers"
-                );
+    RPCHelpMan{"gobject submit",
+            "Submit governance object to network\n"
+            "\nArguments:\n"
+            "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
+            "2. revision      (numeric, required) object revision in the system\n"
+            "3. time          (numeric, required) time this object was created\n"
+            "4. data-hex      (string, required) data in hex string form\n"
+            "5. fee-txid      (string, optional) fee-tx id, required for all objects except triggers",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue gobject_submit(const JSONRPCRequest& request)
 {
     if (request.fHelp || ((request.params.size() < 5) || (request.params.size() > 6)))
-        gobject_submit_help();
+        gobject_submit_help(request);
 
     if(!masternodeSync.IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
@@ -344,22 +360,25 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     return govobj.GetHash().ToString();
 }
 
-void gobject_vote_conf_help()
+void gobject_vote_conf_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject vote-conf <governance-hash> <vote> <vote-outcome>\n"
+    RPCHelpMan{"gobject vote-conf",
                 "Vote on a governance object by masternode configured in syscoin.conf\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-                "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-                );
+                "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue gobject_vote_conf(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 4)
-        gobject_vote_conf_help();
+        gobject_vote_conf_help(request);
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -517,17 +536,20 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
 }
 
 #ifdef ENABLE_WALLET
-void gobject_vote_many_help(CWallet* const pwallet)
+void gobject_vote_many_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject vote-many <governance-hash> <vote> <vote-outcome>\n"
-                "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
-                + HELP_REQUIRING_PASSPHRASE,
-                "\nArguments:\n"
-                "1. governance-hash   (string, required) hash of the governance object\n"
-                "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-                "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-                );
+    RPCHelpMan{"gobject vote-many",
+            "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
+            + HELP_REQUIRING_PASSPHRASE,
+            "\nArguments:\n"
+            "1. governance-hash   (string, required) hash of the governance object\n"
+            "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
+            "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue gobject_vote_many(const JSONRPCRequest& request)
@@ -536,7 +558,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
     if (request.fHelp || request.params.size() != 4)
-        gobject_vote_many_help(pwallet);
+        gobject_vote_many_help(request);
 
 
     NodeContext& node = EnsureNodeContext(request.context);
@@ -580,18 +602,21 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
 }
 
-void gobject_vote_alias_help(CWallet* const pwallet)
+void gobject_vote_alias_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject vote-alias <governance-hash> <vote> <vote-outcome> <protx-hash>\n"
-                "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
-                + HELP_REQUIRING_PASSPHRASE,
-                "\nArguments:\n"
-                "1. governance-hash   (string, required) hash of the governance object\n"
-                "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-                "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-                "4. protx-hash        (string, required) masternode's proTxHash"
-                );
+     RPCHelpMan{"gobject vote-alias",
+            "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
+            + HELP_REQUIRING_PASSPHRASE,
+            "\nArguments:\n"
+            "1. governance-hash   (string, required) hash of the governance object\n"
+            "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
+            "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
+            "4. protx-hash        (string, required) masternode's proTxHash",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);     
 }
 
 UniValue gobject_vote_alias(const JSONRPCRequest& request)
@@ -600,7 +625,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
     if (request.fHelp || request.params.size() != 5)
-        gobject_vote_alias_help(pwallet);
+        gobject_vote_alias_help(request);
 
 
     NodeContext& node = EnsureNodeContext(request.context);
@@ -702,21 +727,24 @@ UniValue ListObjects(const std::string& strCachedSignal, const std::string& strT
     return objResult;
 }
 
-void gobject_list_help()
+void gobject_list_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject list ( <signal> <type> )\n"
-                "List governance objects (can be filtered by signal and/or object type)\n"
-                "\nArguments:\n"
-                "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
-                "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n"
-                );
+    RPCHelpMan{"gobject list",
+            "List governance objects (can be filtered by signal and/or object type)\n"
+            "\nArguments:\n"
+            "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
+            "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue gobject_list(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3)
-        gobject_list_help();
+        gobject_list_help(request);
 
     std::string strCachedSignal = "valid";
     if (!request.params[1].isNull()) {
@@ -735,21 +763,24 @@ UniValue gobject_list(const JSONRPCRequest& request)
     return ListObjects(strCachedSignal, strType, 0);
 }
 
-void gobject_diff_help()
+void gobject_diff_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject diff ( <signal> <type> )\n"
-                "List differences since last diff or list\n"
-                "\nArguments:\n"
-                "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
-                "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n"
-                );
+    RPCHelpMan{"gobject diff",
+            "List differences since last diff or list\n"
+            "\nArguments:\n"
+            "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
+            "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue gobject_diff(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3)
-        gobject_diff_help();
+        gobject_diff_help(request);
 
     std::string strCachedSignal = "valid";
     if (!request.params[1].isNull()) {
@@ -768,20 +799,23 @@ UniValue gobject_diff(const JSONRPCRequest& request)
     return ListObjects(strCachedSignal, strType, governance.GetLastDiffTime());
 }
 
-void gobject_get_help()
+void gobject_get_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject get <governance-hash>\n"
-                "Get governance object by hash\n"
-                "\nArguments:\n"
-                "1. governance-hash   (string, required) object id\n"
-                );
+    RPCHelpMan{"gobject get",
+            "Get governance object by hash\n"
+            "\nArguments:\n"
+            "1. governance-hash   (string, required) object id\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue gobject_get(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
-        gobject_get_help();
+        gobject_get_help(request);
 
     // COLLECT VARIABLES FROM OUR USER
     uint256 hash = ParseHashV(request.params[1], "GovObj hash");
@@ -854,22 +888,25 @@ UniValue gobject_get(const JSONRPCRequest& request)
     return objResult;
 }
 
-void gobject_getcurrentvotes_help()
+void gobject_getcurrentvotes_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-                "gobject getcurrentvotes <governance-hash> (<txid> <vout>)\n"
-                "Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
-                "\nArguments:\n"
-                "1. governance-hash   (string, required) object id\n"
-                "2. txid              (string, optional) masternode collateral txid\n"
-                "3. vout              (string, optional) masternode collateral output index, required if <txid> presents\n"
-                );
+    RPCHelpMan{"gobject getcurrentvotes",
+            "Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
+            "\nArguments:\n"
+            "1. governance-hash   (string, required) object id\n"
+            "2. txid              (string, optional) masternode collateral txid\n"
+            "3. vout              (string, optional) masternode collateral output index, required if <txid> presents\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 2 && request.params.size() != 4))
-        gobject_getcurrentvotes_help();
+        gobject_getcurrentvotes_help(request);
 
     // COLLECT PARAMETERS FROM USER
 
@@ -908,8 +945,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 
 [[ noreturn ]] void gobject_help()
 {
-    throw std::runtime_error(
-            "gobject \"command\" ...\n"
+    RPCHelpMan{"gobject",
             "Set of commands to manage governance objects.\n"
             "\nAvailable commands:\n"
             "  check              - Validate governance object data (proposal only)\n"
@@ -929,8 +965,12 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  vote-conf          - Vote on a governance object by masternode configured in syscoin.conf\n"
 #ifdef ENABLE_WALLET
             "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
-#endif // ENABLE_WALLET
-            );
+#endif // ENABLE_WALLET,
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue gobject(const JSONRPCRequest& request)
@@ -990,11 +1030,16 @@ UniValue gobject(const JSONRPCRequest& request)
 
 UniValue voteraw(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 7)
-        throw std::runtime_error(
+    if (request.fHelp || request.params.size() != 7){
+        RPCHelpMan{"voteraw",
                 "voteraw <mn-collateral-tx-hash> <mn-collateral-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
-                "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
-                );
+                "Compile and relay a governance vote with provided external signature instead of signing vote internally\n",
+        {
+        },
+        RPCResult{""},
+        RPCExamples{""},
+        }.Check(request);  
+    }
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -1066,8 +1111,7 @@ UniValue voteraw(const JSONRPCRequest& request)
 UniValue getgovernanceinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
-        throw std::runtime_error(
-            "getgovernanceinfo\n"
+        RPCHelpMan{"getgovernanceinfo",
             "Returns an object containing governance parameters.\n"
             "\nResult:\n"
             "{\n"
@@ -1076,11 +1120,12 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
             "  \"superblockcycle\": xxxxx,               (numeric) the number of blocks between superblocks\n"
             "  \"lastsuperblock\": xxxxx,                (numeric) the block number of the last superblock\n"
             "  \"nextsuperblock\": xxxxx,                (numeric) the block number of the next superblock\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getgovernanceinfo", "")
-            + HelpExampleRpc("getgovernanceinfo", "")
-            );
+            "}\n",
+        {
+        },
+        RPCResult{""},
+        RPCExamples{""},
+        }.Check(request);
     }
 
     LOCK(cs_main);
@@ -1103,17 +1148,17 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
 UniValue getsuperblockbudget(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
-            "getsuperblockbudget index\n"
+        RPCHelpMan{"getsuperblockbudget",
             "\nReturns the absolute maximum sum of superblock payments allowed.\n"
             "\nArguments:\n"
             "1. index         (numeric, required) The block index\n"
             "\nResult:\n"
-            "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getsuperblockbudget", "1000")
-            + HelpExampleRpc("getsuperblockbudget", "1000")
-        );
+            "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n",
+        {
+        },
+        RPCResult{""},
+        RPCExamples{""},
+        }.Check(request);
     }
 
     int nBlockHeight = request.params[0].get_int();
