@@ -44,6 +44,7 @@ public:
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
+    bool IsMnType() const;
     bool IsValid(const MessageStartChars& messageStart) const;
 
     SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchCommand, obj.nMessageSize, obj.pchChecksum); }
