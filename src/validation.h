@@ -77,6 +77,8 @@ static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
+/** SYSCOIN Default for -syncmempool */
+static const bool DEFAULT_SYNC_MEMPOOL = true;
 /** Default for using fee filter */
 static const bool DEFAULT_FEEFILTER = true;
 /** Default for -stopatheight */
