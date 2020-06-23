@@ -28,7 +28,7 @@ public:
 
 public:
     uint16_t nVersion{CURRENT_VERSION};
-    Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
+    uint8_t llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
     std::vector<bool> signers;
     std::vector<bool> validMembers;
@@ -57,31 +57,9 @@ public:
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
 public:
-    template<typename Stream>
-    inline void Serialize(Stream& s) const
-    {
-        s << nVersion;
-        SerializeEnum(s, llmqType);
-        s << quorumHash;
-        s << DYNBITSET(signers);
-        s << DYNBITSET(validMembers);
-        s << quorumPublicKey;
-        s << quorumVvecHash;
-        s << quorumSig;
-        s << membersSig;
-    }
-    template<typename Stream>
-    inline void Unserialize(Stream& s)
-    {
-        s >> nVersion;
-        UnserializeEnum(s, llmqType);
-        s >> quorumHash;
-        s >> DYNBITSET(signers);
-        s >> DYNBITSET(validMembers);
-        s >> quorumPublicKey;
-        s >> quorumVvecHash;
-        s >> quorumSig;
-        s >> membersSig;
+    SERIALIZE_METHODS(CFinalCommitment, obj) {
+        READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers), 
+        obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
     }
 
 public:

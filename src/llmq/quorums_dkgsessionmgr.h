@@ -26,11 +26,11 @@ private:
     CConnman& connman;
     ctpl::thread_pool messageHandlerPool;
 
-    std::map<Consensus::LLMQType, CDKGSessionHandler> dkgSessionHandlers;
+    std::map<uint8_t, CDKGSessionHandler> dkgSessionHandlers;
 
     RecursiveMutex contributionsCacheCs;
     struct ContributionsCacheKey {
-        Consensus::LLMQType llmqType;
+        uint8_t llmqType;
         uint256 quorumHash;
         uint256 proTxHash;
         bool operator<(const ContributionsCacheKey& r) const
@@ -64,10 +64,10 @@ public:
     bool GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const;
 
     // Verified contributions are written while in the DKG
-    void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec);
-    void WriteVerifiedSkContribution(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution);
-    bool GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet);
-    bool GetVerifiedContribution(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, BLSVerificationVectorPtr& vvecRet, CBLSSecretKey& skContributionRet);
+    void WriteVerifiedVvecContribution(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec);
+    void WriteVerifiedSkContribution(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution);
+    bool GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet);
+    bool GetVerifiedContribution(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, BLSVerificationVectorPtr& vvecRet, CBLSSecretKey& skContributionRet);
 
 private:
     void CleanupCache();

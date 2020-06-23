@@ -36,7 +36,7 @@ public:
 class CDKGContribution
 {
 public:
-    Consensus::LLMQType llmqType;
+    uint8_t llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     BLSVerificationVectorPtr vvec;
@@ -47,7 +47,7 @@ public:
     template<typename Stream>
     inline void SerializeWithoutSig(Stream& s) const
     {
-        SerializeEnum(s, llmqType);
+        s << llmqType;
         s << quorumHash;
         s << proTxHash;
         s << *vvec;
@@ -64,7 +64,7 @@ public:
     {
         BLSVerificationVector tmp1;
         CBLSIESMultiRecipientObjects<CBLSSecretKey> tmp2;
-        UnserializeEnum(s, llmqType);
+        s >> llmqType;
         s >> quorumHash;
         s >> proTxHash;
         s >> tmp1;
@@ -87,7 +87,7 @@ public:
 class CDKGComplaint
 {
 public:
-    Consensus::LLMQType llmqType;
+    uint8_t llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<bool> badMembers;
@@ -98,25 +98,8 @@ public:
     CDKGComplaint() {}
     explicit CDKGComplaint(const Consensus::LLMQParams& params);
 
-    template<typename Stream>
-    inline void Serialize(Stream& s) const
-    {
-        SerializeEnum(s, llmqType);
-        s << quorumHash;
-        s << proTxHash;
-        s << DYNBITSET(badMembers);
-        s << DYNBITSET(complainForMembers);
-        s << sig;
-    }
-    template<typename Stream>
-    inline void Unserialize(Stream& s)
-    {
-        UnserializeEnum(s, llmqType);
-        s >> quorumHash;
-        s >> proTxHash;
-        s >> DYNBITSET(badMembers);
-        s >> DYNBITSET(complainForMembers);
-        s >> sig;
+    SERIALIZE_METHODS(CDKGComplaint, obj) {
+            READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.badMembers), DYNBITSET(obj.complainForMembers), obj.sig);
     }
 
     uint256 GetSignHash() const
@@ -130,30 +113,15 @@ public:
 class CDKGJustification
 {
 public:
-    Consensus::LLMQType llmqType;
+    uint8_t llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<std::pair<uint32_t, CBLSSecretKey>> contributions;
     CBLSSignature sig;
 
 public:
-    template<typename Stream>
-    inline void Serialize(Stream& s) const
-    {
-        SerializeEnum(s, llmqType);
-        s << quorumHash;
-        s << proTxHash;
-        s << contributions;
-        s << sig;
-    }
-    template<typename Stream>
-    inline void Unserialize(Stream& s)
-    {
-        UnserializeEnum(s, llmqType);
-        s >> quorumHash;
-        s >> proTxHash;
-        s >> contributions;
-        s >> sig;
+    SERIALIZE_METHODS(CDKGJustification, obj) {
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
     }
 
     uint256 GetSignHash() const
@@ -171,7 +139,7 @@ public:
 class CDKGPrematureCommitment
 {
 public:
-    Consensus::LLMQType llmqType;
+    uint8_t llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<bool> validMembers;
@@ -192,29 +160,8 @@ public:
     }
 
 public:
-    template<typename Stream>
-    inline void Serialize(Stream& s) const
-    {
-        SerializeEnum(s, llmqType);
-        s << quorumHash;
-        s << proTxHash;
-        s << DYNBITSET(validMembers);
-        s << quorumPublicKey;
-        s << quorumVvecHash;
-        s << quorumSig;
-        s << sig;
-    }
-    template<typename Stream>
-    inline void Unserialize(Stream& s)
-    {
-        UnserializeEnum(s, llmqType);
-        s >> quorumHash;
-        s >> proTxHash;
-        s >> DYNBITSET(validMembers);
-        s >> quorumPublicKey;
-        s >> quorumVvecHash;
-        s >> quorumSig;
-        s >> sig;
+    SERIALIZE_METHODS(CDKGPrematureCommitment, obj) {
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.validMembers), obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.sig);
     }
     uint256 GetSignHash() const
     {

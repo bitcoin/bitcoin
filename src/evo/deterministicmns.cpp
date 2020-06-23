@@ -885,7 +885,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(llmq::CFinalCommitment& qc,
 {
     // The commitment has already been validated at this point so it's safe to use members of it
 
-    auto members = llmq::CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, pindexQuorum);
+    auto members = llmq::CLLMQUtils::GetAllQuorumMembers((uint8_t)qc.llmqType, pindexQuorum);
 
     for (size_t i = 0; i < members.size(); i++) {
         if (!mnList.HasMN(members[i]->proTxHash)) {

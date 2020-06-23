@@ -31,11 +31,11 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
         return false;
     }
 
-    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)llmqType)) {
+    if (!Params().GetConsensus().llmqs.count((uint8_t)llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
         return false;
     }
-    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)llmqType);
+    const auto& params = Params().GetConsensus().llmqs.at((uint8_t)llmqType);
 
     if (!VerifySizes(params)) {
         return false;
@@ -105,11 +105,11 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
 
 bool CFinalCommitment::VerifyNull() const
 {
-    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)llmqType)) {
+    if (!Params().GetConsensus().llmqs.count((uint8_t)llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
         return false;
     }
-    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)llmqType);
+    const auto& params = Params().GetConsensus().llmqs.at((uint8_t)llmqType);
 
     if (!IsNull() || !VerifySizes(params)) {
         return false;
@@ -155,10 +155,10 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
     }
 
-    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)qcTx.commitment.llmqType)) {
+    if (!Params().GetConsensus().llmqs.count((uint8_t)qcTx.commitment.llmqType)) {
         return FormatSyscoinErrorMessage(state, "bad-qc-type", fJustCheck);
     }
-    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qcTx.commitment.llmqType);
+    const auto& params = Params().GetConsensus().llmqs.at((uint8_t)qcTx.commitment.llmqType);
 
     if (qcTx.commitment.IsNull()) {
         if (!qcTx.commitment.VerifyNull()) {

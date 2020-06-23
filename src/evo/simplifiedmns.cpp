@@ -101,8 +101,8 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
     auto baseQuorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex);
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(blockIndex);
 
-    std::set<std::pair<Consensus::LLMQType, uint256>> baseQuorumHashes;
-    std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
+    std::set<std::pair<uint8_t, uint256>> baseQuorumHashes;
+    std::set<std::pair<uint8_t, uint256>> quorumHashes;
     for (auto& p : baseQuorums) {
         for (auto& p2 : p.second) {
             baseQuorumHashes.emplace(p.first, p2->GetBlockHash());

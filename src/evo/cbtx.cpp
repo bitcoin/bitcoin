@@ -162,12 +162,12 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
     int64_t nTime1 = GetTimeMicros();
 
-    static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorumsCached;
-    static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashesCached;
+    static std::map<uint8_t, std::vector<const CBlockIndex*>> quorumsCached;
+    static std::map<uint8_t, std::vector<uint256>> qcHashesCached;
 
     // The returned quorums are in reversed order, so the most recent one is at index 0
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
-    std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
+    std::map<uint8_t, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
 
     int64_t nTime2 = GetTimeMicros(); nTimeMinedAndActive += nTime2 - nTime1;
@@ -209,7 +209,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
                 continue;
             }
             auto qcHash = ::SerializeHash(qc.commitment);
-            const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qc.commitment.llmqType);
+            const auto& params = Params().GetConsensus().llmqs.at((uint8_t)qc.commitment.llmqType);
             auto& v = qcHashes[params.type];
             if (v.size() == params.signingActiveQuorumCount) {
                 // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock

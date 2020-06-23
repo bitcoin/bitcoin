@@ -20,7 +20,7 @@ class CSporkManager;
     Don't ever reuse these IDs for other sporks
     - This would result in old clients getting confused about which spork is for what
 */
-enum SporkId : int32_t {
+enum {
     SPORK_6_NEW_SIGS                                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014,
@@ -28,22 +28,9 @@ enum SporkId : int32_t {
     SPORK_21_QUORUM_ALL_CONNECTED                          = 10020,
     SPORK_INVALID                                          = -1,
 };
-template<> struct is_serializable_enum<SporkId> : std::true_type {};
-
-namespace std
-{
-    template<> struct hash<SporkId>
-    {
-        std::size_t operator()(SporkId const& id) const noexcept
-        {
-            return std::hash<int>{}(id);
-        }
-    };
-}
-
 struct CSporkDef
 {
-    SporkId sporkId{SPORK_INVALID};
+    int32_t sporkId{SPORK_INVALID};
     int64_t defaultValue{0};
     std::string name;
 };
@@ -75,37 +62,24 @@ private:
     std::vector<unsigned char> vchSig;
 
 public:
-    SporkId nSporkID;
+    int32_t nSporkID;
     int64_t nValue;
     int64_t nTimeSigned;
 
-    CSporkMessage(SporkId nSporkID, int64_t nValue, int64_t nTimeSigned) :
+    CSporkMessage(int32_t nSporkID, int64_t nValue, int64_t nTimeSigned) :
         nSporkID(nSporkID),
         nValue(nValue),
         nTimeSigned(nTimeSigned)
         {}
 
     CSporkMessage() :
-        nSporkID((SporkId)0),
+        nSporkID((int32_t)0),
         nValue(0),
         nTimeSigned(0)
         {}
 
-    template<typename Stream>
-    inline void Serialize(Stream& s) const
-    {
-        SerializeEnum(s, nSporkID);
-        s << nValue;
-        s << nTimeSigned;
-        s << vchSig;
-    }
-    template<typename Stream>
-    inline void Unserialize(Stream& s)
-    {
-        UnserializeEnum(s, nSporkID);
-        s >> nValue;
-        s >> nTimeSigned;
-        s >> vchSig;
+    SERIALIZE_METHODS(CSporkMessage, obj) {
+        READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);
     }
     /**
      * GetHash returns the double-sha256 hash of the serialized spork message.
@@ -155,12 +129,12 @@ class CSporkManager
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    std::unordered_map<SporkId, CSporkDef*> sporkDefsById;
+    std::unordered_map<int32_t, CSporkDef*> sporkDefsById;
     std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
 
     mutable RecursiveMutex cs;
     std::unordered_map<uint256, CSporkMessage, StaticSaltedHasher> mapSporksByHash;
-    std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive;
+    std::unordered_map<int32_t, std::map<CKeyID, CSporkMessage> > mapSporksActive;
 
     std::set<CKeyID> setSporkPubKeyIDs;
     int nMinSporkKeys;
@@ -170,7 +144,7 @@ private:
      * SporkValueIsActive is used to get the value agreed upon by the majority
      * of signed spork messages for a given Spork ID.
      */
-    bool SporkValueIsActive(SporkId nSporkID, int64_t& nActiveValueRet) const;
+    bool SporkValueIsActive(int32_t nSporkID, int64_t& nActiveValueRet) const;
 
 public:
 
@@ -238,7 +212,7 @@ public:
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
      * and broadcast the spork message.
      */
-    bool UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& connman);
+    bool UpdateSpork(int32_t nSporkID, int64_t nValue, CConnman& connman);
 
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used
@@ -249,23 +223,23 @@ public:
      * instead, and therefore this method doesn't make sense and should not be
      * used.
      */
-    bool IsSporkActive(SporkId nSporkID);
+    bool IsSporkActive(int32_t nSporkID);
 
     /**
      * GetSporkValue returns the spork value given a Spork ID. If no active spork
      * message has yet been received by the node, it returns the default value.
      */
-    int64_t GetSporkValue(SporkId nSporkID);
+    int64_t GetSporkValue(int32_t nSporkID);
 
     /**
      * GetSporkIDByName returns the internal Spork ID given the spork name.
      */
-    SporkId GetSporkIDByName(const std::string& strName);
+    int32_t GetSporkIDByName(const std::string& strName);
 
     /**
      * GetSporkNameByID returns the spork name as a string, given a Spork ID.
      */
-    std::string GetSporkNameByID(SporkId nSporkID);
+    std::string GetSporkNameByID(int32_t nSporkID);
 
     /**
      * GetSporkByHash returns a spork message given a hash of the spork message.
