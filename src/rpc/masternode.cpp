@@ -31,6 +31,7 @@
 #include <univalue.h>
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
+#include <node/context.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 
 void masternode_list_help()

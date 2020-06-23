@@ -24,6 +24,7 @@
 #include <rpc/util.h>
 #include <net.h>
 #include <rpc/blockchain.h>
+#include <node/context.h>
 void gobject_count_help()
 {
     throw std::runtime_error(

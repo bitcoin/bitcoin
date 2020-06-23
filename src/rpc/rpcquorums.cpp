@@ -17,6 +17,7 @@
 #include <rpc/util.h>
 #include <net.h>
 #include <rpc/blockchain.h>
+#include <node/context.h>
 void quorum_list_help()
 {
     throw std::runtime_error(
