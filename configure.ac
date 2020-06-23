@@ -14,6 +14,12 @@ AC_CONFIG_HEADERS([src/config/syscoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
+m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR([PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh])])
+PKG_PROG_PKG_CONFIG
+if test "x$PKG_CONFIG" = x; then
+  AC_MSG_ERROR([pkg-config not found])
+fi
+
 SYSCOIN_DAEMON_NAME=syscoind
 SYSCOIN_GUI_NAME=syscoin-qt
 SYSCOIN_CLI_NAME=syscoin-cli
@@ -671,12 +677,6 @@ case $host in
      TARGET_OS=linux
      ;;
 esac
-
-m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR([PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh])])
-PKG_PROG_PKG_CONFIG
-if test "x$PKG_CONFIG" = x; then
-  AC_MSG_ERROR([pkg-config not found])
-fi
 
 if test x$use_extended_functional_tests != xno; then
   AC_SUBST(EXTENDED_FUNCTIONAL_TESTS, --extended)
