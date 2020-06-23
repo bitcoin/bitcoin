@@ -182,7 +182,7 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 
 //////////////////////
 
-CSigSharesManager::CSigSharesManager(CConnman& _connman): connman(_connman)
+CSigSharesManager::CSigSharesManager(CConnman& _connman, Banman& _banman): connman(_connman), banman(_banman)
 {
     workInterrupt.reset();
 }
@@ -1446,7 +1446,7 @@ void CSigSharesManager::RemoveBannedNodeStates()
     LOCK2(cs_main, cs);
     std::unordered_set<NodeId> toRemove;
     for (auto it = nodeStates.begin(); it != nodeStates.end();) {
-        if (IsBanned(it->first)) {
+        if (banman.IsBanned(it->first)) {
             // re-request sigshares from other nodes
             it->second.requestedSigShares.ForEach([&](const SigShareKey& k, int64_t) {
                 sigSharesRequested.Erase(k);

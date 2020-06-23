@@ -25,6 +25,7 @@
 class CEvoDB;
 class CScheduler;
 class CConnman;
+class Banman;
 namespace llmq
 {
 // <signHash, quorumMember>
@@ -53,8 +54,8 @@ public:
         assert(!key.first.IsNull());
         return key.first;
     }
-
-   void Serialize(Stream& s) const
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
         s << llmqType;
         s << quorumHash;
@@ -104,8 +105,8 @@ public:
 
 public:
     SERIALIZE_METHODS(CSigSharesInv, obj) {
-        uint64_t invSize = inv.size();
-        READWRITE(VARINT(obj.sessionId), COMPACTSIZE(obj.invSize), AUTOBITSET(obj.inv, (size_t)invSize));
+        uint64_t invSize = obj.inv.size();
+        READWRITE(VARINT(obj.sessionId), COMPACTSIZE(invSize), AUTOBITSET(obj.inv, (size_t)invSize));
     }
 
     void Init(size_t size);
@@ -378,9 +379,10 @@ private:
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};
     CConnman& connman;
+    Banman& banman;
 
 public:
-    CSigSharesManager(CConnman& connman);
+    CSigSharesManager(CConnman& connman, Banman& banman);
     ~CSigSharesManager();
 
     void StartWorkerThread();

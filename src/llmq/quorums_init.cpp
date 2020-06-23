@@ -21,7 +21,7 @@ CBLSWorker* blsWorker;
 
 CDBWrapper* llmqDb;
 
-void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe, CConnman& connman)
+void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe, CConnman& connman, Banman& banman)
 {
     llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
@@ -30,7 +30,7 @@ void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe, CConnman& connman
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
     quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker, connman);
     quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager, connman);
-    quorumSigSharesManager = new CSigSharesManager(connman);
+    quorumSigSharesManager = new CSigSharesManager(connman, banman);
     quorumSigningManager = new CSigningManager(*llmqDb, unitTests, connman);
 }
 
