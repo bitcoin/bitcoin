@@ -2146,7 +2146,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         OpenMasternodeConnection(CAddress(connectToDmn->pdmnState->addr, NODE_NETWORK), isProbe);
         // should be in the list now if connection was opened
-        bool connected = ForNode(connectToDmn->pdmnState->addr, CConnman::AllNodes, [&](CNode* pnode) {
+        bool connected = ForNode(connectToDmn->pdmnState->addr, AllNodes, [&](CNode* pnode) {
             if (pnode->fDisconnect) {
                 return false;
             }
