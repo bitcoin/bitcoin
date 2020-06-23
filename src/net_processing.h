@@ -73,6 +73,14 @@ public:
     */
     bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
+    /**
+    * Process global tasks that aren't attached to a specific peer
+    *
+    * @param[in]   interrupt       Interrupt condition for processing threads
+    * @returns     bool            true if there's more work to do
+    */
+    bool ProcessGlobalTasks(std::atomic<bool>& interrupt) override;
+
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode& pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound */

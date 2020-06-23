@@ -2107,6 +2107,8 @@ void CConnman::ThreadMessageHandler()
                 return;
         }
 
+        fMoreWork |= m_msgproc->ProcessGlobalTasks(flagInterruptMsgProc);
+
         {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodesCopy)
@@ -2120,11 +2122,6 @@ void CConnman::ThreadMessageHandler()
         fMsgProcWake = false;
     }
 }
-
-
-
-
-
 
 bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError, NetPermissionFlags permissions)
 {

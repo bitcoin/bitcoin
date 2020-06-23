@@ -3687,6 +3687,12 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     return fMoreWork;
 }
 
+bool PeerLogicValidation::ProcessGlobalTasks(std::atomic<bool>& interruptMsgProc)
+{
+    // No tasks to process!
+    return false;
+}
+
 void PeerLogicValidation::ConsiderEviction(CNode& pto, int64_t time_in_seconds)
 {
     AssertLockHeld(cs_main);
