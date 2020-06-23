@@ -980,7 +980,7 @@ UniValue gobject(const JSONRPCRequest& request)
         strCommand = request.params[0].get_str();
 
     if (request.fHelp && strCommand.empty()) {
-        gobject_help();
+        gobject_help(request);
     }
 
     if (strCommand == "count") {
@@ -1024,7 +1024,7 @@ UniValue gobject(const JSONRPCRequest& request)
         // GET VOTES FOR SPECIFIC GOVERNANCE OBJECT
         return gobject_getcurrentvotes(request);
     } else {
-        gobject_help();
+        gobject_help(request);
     }
 }
 

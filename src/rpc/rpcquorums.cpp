@@ -18,32 +18,24 @@
 #include <net.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-void quorum_list_help()
+void quorum_list_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum list ( count )\n"
+    RPCHelpMan{"quorum list",
             "List of on-chain quorums\n"
             "\nArguments:\n"
             "1. count           (number, optional) Number of quorums to list. Will list active quorums\n"
-            "                   if \"count\" is not specified.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"quorumName\" : [                    (array of strings) List of quorum hashes per some quorum type.\n"
-            "     \"quorumHash\"                     (string) Quorum hash. Note: most recent quorums come first.\n"
-            "     ,...\n"
-            "  ],\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("quorum", "list")
-            + HelpExampleCli("quorum", "list 10")
-            + HelpExampleRpc("quorum", "list, 10")
-    );
+            "                   if \"count\" is not specified.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue quorum_list(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
-        quorum_list_help();
+        quorum_list_help(request);
 
     LOCK(cs_main);
 
@@ -72,16 +64,19 @@ UniValue quorum_list(const JSONRPCRequest& request)
     return ret;
 }
 
-void quorum_info_help()
+void quorum_info_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum info llmqType \"quorumHash\" ( includeSkShare )\n"
+    RPCHelpMan{"quorum info",
             "Return information about a quorum\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"quorumHash\"          (string, required) Block hash of quorum.\n"
-            "3. includeSkShare        (boolean, optional) Include secret key share in output.\n"
-    );
+            "3. includeSkShare        (boolean, optional) Include secret key share in output.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
@@ -123,7 +118,7 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
 UniValue quorum_info(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4))
-        quorum_info_help();
+        quorum_info_help(request);
 
     LOCK(cs_main);
 
@@ -148,22 +143,25 @@ UniValue quorum_info(const JSONRPCRequest& request)
     return BuildQuorumInfo(quorum, true, includeSkShare);
 }
 
-void quorum_dkgstatus_help()
+void quorum_dkgstatus_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum dkgstatus ( detail_level )\n"
+    RPCHelpMan{"quorum dkgstatus",
             "Return the status of the current DKG process.\n"
             "Works only when SPORK_17_QUORUM_DKG_ENABLED spork is ON.\n"
             "\nArguments:\n"
             "1. detail_level         (number, optional, default=0) Detail level of output.\n"
-            "                        0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes.\n"
-    );
+            "                        0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() < 1 || request.params.size() > 2)) {
-        quorum_dkgstatus_help();
+        quorum_dkgstatus_help(request);
     }
 
     int detailLevel = 0;
@@ -231,22 +229,25 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     return ret;
 }
 
-void quorum_memberof_help()
+void quorum_memberof_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum memberof \"proTxHash\" (quorumCount)\n"
+    RPCHelpMan{"quorum memberof",
             "Checks which quorums the given masternode is a member of.\n"
             "\nArguments:\n"
             "1. \"proTxHash\"                (string, required) ProTxHash of the masternode.\n"
             "2. scanQuorumsCount           (number, optional) Number of quorums to scan for. If not specified,\n"
-            "                              the active quorum count for each specific quorum type is used."
-    );
+            "                              the active quorum count for each specific quorum type is used.",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue quorum_memberof(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() < 2 || request.params.size() > 3)) {
-        quorum_memberof_help();
+        quorum_memberof_help(request);
     }
 
     uint256 protxHash = ParseHashV(request.params[1], "proTxHash");
@@ -292,53 +293,65 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
     return result;
 }
 
-void quorum_sign_help()
+void quorum_sign_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum sign llmqType \"id\" \"msgHash\" ( \"quorumHash\" )\n"
+    RPCHelpMan{"quorum sign",
             "Threshold-sign a message\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
             "3. \"msgHash\"             (string, required) Message hash.\n"
-            "4. \"quorumHash\"          (string, optional) The quorum identifier.\n"
-    );
+            "4. \"quorumHash\"          (string, optional) The quorum identifier.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
-void quorum_hasrecsig_help()
+void quorum_hasrecsig_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum hasrecsig llmqType \"id\" \"msgHash\"\n"
+    RPCHelpMan{"quorum hasrecsig",
             "Test if a valid recovered signature is present\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
-            "3. \"msgHash\"             (string, required) Message hash.\n"
-    );
+            "3. \"msgHash\"             (string, required) Message hash.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
-void quorum_getrecsig_help()
+void quorum_getrecsig_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum getrecsig llmqType \"id\" \"msgHash\"\n"
+    RPCHelpMan{"quorum getrecsig",
             "Get a recovered signature\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
-            "3. \"msgHash\"             (string, required) Message hash.\n"
-    );
+            "3. \"msgHash\"             (string, required) Message hash.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
-void quorum_isconflicting_help()
+void quorum_isconflicting_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum isconflicting llmqType \"id\" \"msgHash\"\n"
+    RPCHelpMan{"quorum isconflicting",
             "Test if a conflict exists\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
-            "3. \"msgHash\"             (string, required) Message hash.\n"
-    );
+            "3. \"msgHash\"             (string, required) Message hash.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
@@ -347,14 +360,14 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
     if (request.fHelp || (request.params.size() != 4)) {
         if (cmd == "sign") {
             if ((request.params.size() < 4) || (request.params.size() > 5)) {
-                quorum_sign_help();
+                quorum_sign_help(request);
             }
         } else if (cmd == "hasrecsig") {
-            quorum_hasrecsig_help();
+            quorum_hasrecsig_help(request);
         } else if (cmd == "getrecsig") {
-            quorum_getrecsig_help();
+            quorum_getrecsig_help(request);
         } else if (cmd == "isconflicting") {
-            quorum_isconflicting_help();
+            quorum_isconflicting_help(request);
         } else {
             // shouldn't happen as it's already handled by the caller
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid cmd");
@@ -400,21 +413,24 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
     }
 }
 
-void quorum_selectquorum_help()
+void quorum_selectquorum_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum selectquorum llmqType \"id\"\n"
+    RPCHelpMan{"quorum selectquorum",
             "Returns the quorum that would/should sign a request\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
-            "2. \"id\"                  (string, required) Request id.\n"
-    );
+            "2. \"id\"                  (string, required) Request id.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue quorum_selectquorum(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3) {
-        quorum_selectquorum_help();
+        quorum_selectquorum_help(request);
     }
 
     uint8_t llmqType = (uint8_t)request.params[1].get_int();
@@ -448,23 +464,26 @@ UniValue quorum_selectquorum(const JSONRPCRequest& request)
     return ret;
 }
 
-void quorum_dkgsimerror_help()
+void quorum_dkgsimerror_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum dkgsimerror \"type\" rate\n"
+    RPCHelpMan{"quorum dkgsimerror",
             "This enables simulation of errors and malicious behaviour in the DKG. Do NOT use this on mainnet\n"
             "as you will get yourself very likely PoSe banned for this.\n"
             "\nArguments:\n"
             "1. \"type\"                (string, required) Error type.\n"
-            "2. rate                  (number, required) Rate at which to simulate this error type.\n"
-    );
+            "2. rate                  (number, required) Rate at which to simulate this error type.\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
 {
     auto cmd = request.params[0].get_str();
     if (request.fHelp || (request.params.size() != 3)) {
-        quorum_dkgsimerror_help();
+        quorum_dkgsimerror_help(request);
     }
 
     std::string type = request.params[1].get_str();
@@ -480,10 +499,9 @@ UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
 }
 
 
-void quorum_help()
+void quorum_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "quorum \"command\" ...\n"
+    RPCHelpMan{"quorum",
             "Set of commands for quorums/LLMQs.\n"
             "To get help on individual commands, use \"help quorum command\".\n"
             "\nArguments:\n"
@@ -498,14 +516,18 @@ void quorum_help()
             "  hasrecsig         - Test if a valid recovered signature is present\n"
             "  getrecsig         - Get a recovered signature\n"
             "  isconflicting     - Test if a conflict exists\n"
-            "  selectquorum      - Return the quorum that would/should sign a request\n"
-    );
+            "  selectquorum      - Return the quorum that would/should sign a request\n",
+    {
+    },
+    RPCResult{RPCResult::Type::NONE, "", ""},
+    RPCExamples{""},
+    }.Check(request);
 }
 
 UniValue quorum(const JSONRPCRequest& request)
 {
     if (request.fHelp && request.params.empty()) {
-        quorum_help();
+        quorum_help(request);
     }
 
     std::string command;
@@ -528,7 +550,7 @@ UniValue quorum(const JSONRPCRequest& request)
     } else if (command == "dkgsimerror") {
         return quorum_dkgsimerror(request);
     } else {
-        quorum_help();
+        quorum_help(request);
     }
 }
 
