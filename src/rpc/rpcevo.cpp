@@ -308,7 +308,7 @@ void protx_register_fund_help(const JSONRPCRequest& request)
             "masternode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
             "is fully deployed.\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             + GetHelpString(1, "collateralAddress")
             + GetHelpString(2, "ipAndPort")
@@ -331,7 +331,7 @@ void protx_register_help(const JSONRPCRequest& request)
             "Same as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
             "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             + GetHelpString(1, "collateralHash")
             + GetHelpString(2, "collateralIndex")
@@ -377,7 +377,7 @@ void protx_register_submit_help(const JSONRPCRequest& request)
     RPCHelpMan{"protx register_submit",
             "Submits the specified ProTx to the network. This command will also sign the inputs of the transaction\n"
             "which were previously added by \"protx register_prepare\" to cover transaction fees\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             "1. \"tx\"                 (string, required) The serialized transaction previously returned by \"protx register_prepare\"\n"
             "2. \"sig\"                (string, required) The signature signed with the collateral key. Must be in base64 format.\n",
@@ -593,7 +593,7 @@ void protx_update_service_help(const JSONRPCRequest& request)
             "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
             "of a masternode.\n"
             "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
             + GetHelpString(2, "ipAndPort")
@@ -686,7 +686,7 @@ void protx_update_registrar_help(const JSONRPCRequest& request)
            "Creates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
             "address of the masternode specified by \"proTxHash\".\n"
             "The owner key of the masternode must be known to your wallet.\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
             + GetHelpString(2, "operatorPubKey_update")
@@ -776,7 +776,7 @@ void protx_revoke_help(const JSONRPCRequest& request)
             "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
             "to the masternode owner.\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
             + GetHelpString(2, "operatorKey")
