@@ -9,7 +9,7 @@
 #include <validation.h>
 
 #include <evo/specialtx.h>
-
+#include <logging.h>
 namespace llmq
 {
 
