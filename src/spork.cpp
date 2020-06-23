@@ -279,10 +279,10 @@ bool CSporkManager::SetSporkAddress(const std::string& strAddress) {
     CTxDestination dest = DecodeDestination(strAddress);
     CKeyID keyID;
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {	
-        keyID = CKeyID(*witness_id);
+        keyID = ToKeyID(*witness_id);
     }	
     else if (auto key_id = boost::get<PKHash>(&dest)) {	
-        keyID = CKeyID(*key_id);
+        keyID = ToKeyID(*key_id);
     }	
     if (keyID.IsNull()) {
         LogPrintf("CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
