@@ -682,13 +682,14 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman& connman)
 {
     auto llmqType = (uint8_t)recoveredSig.llmqType;
-
+    const uint256& hash = recoveredSig.GetHash();
+    CInv inv(MSG_QUORUM_RECOVERED_SIG, hash);
     {
         LOCK(cs_main);
-        EraseTxRequest(nodeId, recoveredSig.GetHash());
+        EraseTxRequest(nodeId, inv);
     }
 
-    if (db.HasRecoveredSigForHash(recoveredSig.GetHash())) {
+    if (db.HasRecoveredSigForHash(hash)) {
         return;
     }
 
@@ -726,10 +727,10 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
         db.WriteRecoveredSig(recoveredSig);
 
-        pendingReconstructedRecoveredSigs.erase(recoveredSig.GetHash());
+        pendingReconstructedRecoveredSigs.erase(hash);
     }
 
-    CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash());
+    
     connman.ForEachNode([&](CNode* pnode) {
         if (pnode->fSendRecSigs) {
             pnode->PushInventory(inv);
