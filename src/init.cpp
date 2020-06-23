@@ -91,7 +91,6 @@
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>
-#include <flatdatabase.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
@@ -494,7 +493,7 @@ void SetupServerArgs(NodeContext& node)
         -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
-    gArgs.AddArg("-syncmempool", strprintf("Sync mempool from other nodes on start (default: %u)"), DEFAULT_SYNC_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-syncmempool", strprintf("Sync mempool from other nodes on start (default: %u)", DEFAULT_SYNC_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", SYSCOIN_PID_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
@@ -1175,7 +1174,7 @@ bool AppInitParameterInteraction()
     // Basic filters are the only supported filters. The basic filters index must be enabled
     // to serve compact filters
     if (gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS) &&
-        g_enabled_filter_types.count(BlockFilterType::BASIC) != 1) {
+        g_enabled_filter_types.count(BlockFilterType::BASIC_FILTER) != 1) {
         return InitError(_("Cannot set -peerblockfilters without -blockfilterindex."));
     }
 
@@ -1743,10 +1742,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     bool fRegTest = gArgs.GetBoolArg("-regtest", false);
     fLiteMode = gArgs.GetBoolArg("-litemode", fRegTest);
     
-    uiInterface.InitMessage(_("Loading sporks cache..."));
+    uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
-        return InitError(_("Failed to load sporks cache from") + "\n" + (GetDataDir() / "sporks.dat").string());
+        return InitError(sprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / "sporks.dat").string());
     }
     
     fReindex = gArgs.GetBoolArg("-reindex", false);

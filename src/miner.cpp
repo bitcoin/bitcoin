@@ -161,8 +161,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, nHeight, qcTx)) {
             pblock->vtx.emplace_back(qcTx);
             pblocktemplate->vTxFees.emplace_back(0);
-            pblocktemplate->vTxSigOps.emplace_back(0);
-            nBlockSize += qcTx->GetTotalSize();
+            pblocktemplate->vTxSigOpsCost.emplace_back(0);
+            nBlockWeight += WITNESS_SCALE_FACTOR * qcTx->GetTotalSize();
             ++nBlockTx;
         }
     }
@@ -202,7 +202,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
     }
     if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state)) {
-        throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
+        throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
     }
     SetTxPayload(coinbaseTx, cbTx);
 
