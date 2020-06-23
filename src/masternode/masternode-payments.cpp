@@ -224,7 +224,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
     }
 
     const CAmount &nHalfFee = fees / 2;
-    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, nHalfFee, voutMasternodePaymentsRet)) {
+    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
     }
 	// miner takes 25% of the reward and half fees
@@ -300,11 +300,11 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 *   Get masternode payment tx outputs
 */
 
-bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, const CAmount &nHalfFee, std::vector<CTxOut>& voutMasternodePaymentsRet, CAmount& nMNSeniorityRet) const
+bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee) const
 {
     // make sure it's not filled yet
     voutMasternodePaymentsRet.clear();
-
+    CAmount nMNSeniorityRet;
     if(!GetBlockTxOuts(nBlockHeight, blockReward, nHalfFee, voutMasternodePaymentsRet, nMNSeniorityRet)) {
         LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
         return false;
@@ -340,7 +340,7 @@ CAmount GetBlockMNSubsidy(const CAmount nBlockReward, unsigned int nHeight, cons
     }
     return nSubsidy;
 }
-bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, const CAmount &nHalfFee, std::vector<CTxOut>& voutMasternodePaymentsRet, CAmount& nMNSeniorityRet) const
+bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, CAmount& nMNSeniorityRet) const
 {
     voutMasternodePaymentsRet.clear();
 
