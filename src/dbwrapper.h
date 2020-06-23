@@ -153,7 +153,11 @@ public:
         }
         return true;
     }
-
+    // SYSCOIN
+    CDataStream GetKey() {
+        leveldb::Slice slKey = piter->key();
+        return CDataStream(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+    }
     template<typename V> bool GetValue(V& value) {
         leveldb::Slice slValue = piter->value();
         try {
@@ -477,7 +481,8 @@ public:
 private:
     void SkipDeletedAndOverwritten() {
         while (parentIt->Valid()) {
-            if (!parentIt->GetKey(parentKey) && !transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {
+            parentKey = parentIt->GetKey();	            
+            if (!transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {	
                 break;
             }
             parentIt->Next();
