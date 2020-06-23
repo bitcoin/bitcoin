@@ -135,7 +135,7 @@ void gobject_prepare_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject prepare",
                "Prepare governance object by signing and creating tx\n"
-                + HELP_REQUIRING_PASSPHRASE,
+                + HELP_REQUIRING_PASSPHRASE +
                 "\nArguments:\n"
                 "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
                 "2. revision      (numeric, required) object revision in the system\n"
@@ -540,7 +540,7 @@ void gobject_vote_many_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject vote-many",
             "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             "1. governance-hash   (string, required) hash of the governance object\n"
             "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
@@ -606,7 +606,7 @@ void gobject_vote_alias_help(const JSONRPCRequest& request)
 {
      RPCHelpMan{"gobject vote-alias",
             "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
-            + HELP_REQUIRING_PASSPHRASE,
+            + HELP_REQUIRING_PASSPHRASE +
             "\nArguments:\n"
             "1. governance-hash   (string, required) hash of the governance object\n"
             "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
