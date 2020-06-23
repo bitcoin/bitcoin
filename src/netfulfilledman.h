@@ -22,7 +22,7 @@ private:
 
     //keep track of what node has/was asked for and when
     fulfilledreqmap_t mapFulfilledRequests;
-    RecursiveMutex cs_mapFulfilledRequests;
+    mutable RecursiveMutex cs_mapFulfilledRequests;
 
     void RemoveFulfilledRequest(const CService& addr, const std::string& strRequest);
 
