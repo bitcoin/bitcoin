@@ -1446,7 +1446,7 @@ void CSigSharesManager::RemoveBannedNodeStates()
     LOCK2(cs_main, cs);
     std::unordered_set<NodeId> toRemove;
     for (auto it = nodeStates.begin(); it != nodeStates.end();) {
-        if (banman.IsBanned(it->first)) {
+        if (IsBanned(it->first, banman)) {
             // re-request sigshares from other nodes
             it->second.requestedSigShares.ForEach([&](const SigShareKey& k, int64_t) {
                 sigSharesRequested.Erase(k);

@@ -955,7 +955,15 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     }
     return true;
 }
-
+// SYSCOIN
+bool IsBanned(NodeId nodeid, BanMan& banman) {
+    LOCK(cs_main);
+    CNodeState *state = State(nodeid);
+    if (state == nullptr)
+        return false;
+    
+    return banman.IsBanned(state->address);
+}
 //////////////////////////////////////////////////////////////////////////////
 //
 // mapOrphanTransactions
