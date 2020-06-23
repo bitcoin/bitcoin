@@ -170,8 +170,8 @@ std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 void EraseOrphansFor(NodeId peer);
 
-/** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+/** SYSCOIN Increase a node's misbehavior score. */
+//void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 // Internal stuff
 namespace {
