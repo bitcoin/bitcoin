@@ -96,7 +96,7 @@ UniValue masternode_connect(const JSONRPCRequest& request)
 
     // TODO: Pass CConnman instance somehow and don't use global variable.
     connman.OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!connman.IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+    if (!connman.IsConnected(CAddress(addr, NODE_NETWORK), AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 
     return "successfully connected";

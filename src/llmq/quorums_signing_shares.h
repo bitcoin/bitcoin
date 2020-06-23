@@ -25,7 +25,7 @@
 class CEvoDB;
 class CScheduler;
 class CConnman;
-class Banman;
+class BanMan;
 namespace llmq
 {
 // <signHash, quorumMember>
@@ -379,10 +379,10 @@ private:
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};
     CConnman& connman;
-    Banman& banman;
+    BanMan& banman;
 
 public:
-    CSigSharesManager(CConnman& connman, Banman& banman);
+    CSigSharesManager(CConnman& connman, BanMan& banman);
     ~CSigSharesManager();
 
     void StartWorkerThread();

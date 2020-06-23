@@ -182,7 +182,7 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 
 //////////////////////
 
-CSigSharesManager::CSigSharesManager(CConnman& _connman, Banman& _banman): connman(_connman), banman(_banman)
+CSigSharesManager::CSigSharesManager(CConnman& _connman, BanMan& _banman): connman(_connman), banman(_banman)
 {
     workInterrupt.reset();
 }
