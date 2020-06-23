@@ -14,6 +14,7 @@
 #include <unordered_lru_cache.h>
 
 #include <unordered_map>
+#include <streams.h>
 namespace llmq
 {
 

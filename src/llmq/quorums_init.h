@@ -19,7 +19,7 @@ void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe = false);
 void DestroyLLMQSystem();
 
 // Manage scheduled tasks, threads, listeners etc.
-void StartLLMQSystem(CConnman &connman);
+void StartLLMQSystem();
 void StopLLMQSystem();
 void InterruptLLMQSystem();
 } // namespace llmq

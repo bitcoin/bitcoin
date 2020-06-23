@@ -54,13 +54,13 @@ void DestroyLLMQSystem()
     llmqDb = nullptr;
 }
 
-void StartLLMQSystem(CConnman &connman)
+void StartLLMQSystem()
 {
     if (blsWorker) {
         blsWorker->Start();
     }
     if (quorumDKGSessionManager) {
-        quorumDKGSessionManager->StartMessageHandlerPool(connman);
+        quorumDKGSessionManager->StartMessageHandlerPool();
     }
     if (quorumSigSharesManager) {
         quorumSigSharesManager->RegisterAsRecoveredSigsListener();

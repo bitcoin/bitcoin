@@ -2235,6 +2235,7 @@ fs::path pathDB = GetDataDir();
     if (!fLiteMode) {
         node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance)), std::chrono::minutes{5});
     }
+    llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
 
     int chain_active_height;
@@ -2310,7 +2311,6 @@ fs::path pathDB = GetDataDir();
     if (!node.connman->Start(*node.scheduler, connOptions)) {
         return false;
     }
-    llmq::StartLLMQSystem(node.connman);
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
