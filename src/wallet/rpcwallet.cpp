@@ -44,7 +44,6 @@
 extern bool ListTransactionSyscoinInfo(const CWalletTx& wtx, const CAssetCoinInfo assetInfo, const std::string strCategory, UniValue& output);
 using interfaces::FoundBlock;
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
-static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
 static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValue& param) {
     bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
@@ -1518,7 +1517,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
     const CWallet& wallet = *pwallet;
