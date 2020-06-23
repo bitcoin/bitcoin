@@ -1742,11 +1742,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // ********************************************************* Step 7: load block chain
     bool fRegTest = gArgs.GetBoolArg("-regtest", false);
     fLiteMode = gArgs.GetBoolArg("-litemode", fRegTest);
-    
+    std::string strDBName;
+
+    strDBName = "mncache.dat";
     uiInterface.InitMessage(_("Loading sporks cache...").translated);
-    CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+    CFlatDB<CSporkManager> flatdb6(strDBName, "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
-        return InitError(strprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / "sporks.dat").string())));
+        return InitError(strprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / strDBName).string())));
     }
     
     fReindex = gArgs.GetBoolArg("-reindex", false);
@@ -2189,7 +2191,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
     bool fLoadCacheFiles = !(fReindex || fReindexChainState);
     fs::path pathDB = GetDataDir();
-    std::string strDBName;
 
     strDBName = "mncache.dat";
     uiInterface.InitMessage(_("Loading masternode cache...").translated);

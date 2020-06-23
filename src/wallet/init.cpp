@@ -31,7 +31,7 @@ public:
     //! Add wallets that should be opened to list of chain clients.
     void Construct(NodeContext& node) const override;
     // SYSCOIN
-    void AutoLockMasternodeCollaterals() override;
+    void AutoLockMasternodeCollaterals() const override;
 };
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
@@ -128,7 +128,7 @@ void WalletInit::Construct(NodeContext& node) const
     node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet")));
 }
 // SYSCOIN
-void WalletInit::AutoLockMasternodeCollaterals()
+void WalletInit::AutoLockMasternodeCollaterals() const
 {
     for (CWallet* pwallet : GetWallets()) {
         pwallet->AutoLockMasternodeCollaterals();
