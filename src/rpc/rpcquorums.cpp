@@ -16,6 +16,7 @@
 #include <llmq/quorums_signing_shares.h>
 #include <rpc/util.h>
 #include <net.h>
+#include <rpc/blockchain.h>
 void quorum_list_help()
 {
     throw std::runtime_error(

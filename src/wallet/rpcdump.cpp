@@ -718,7 +718,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
     CWallet& wallet = *pwallet;

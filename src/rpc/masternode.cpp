@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <univalue.h>
 #include <rpc/util.h>
+#include <rpc/blockchain.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 
 void masternode_list_help()
@@ -219,7 +220,9 @@ void masternode_outputs_help()
 
 UniValue masternode_outputs(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     if (request.fHelp)
         masternode_outputs_help();
 
