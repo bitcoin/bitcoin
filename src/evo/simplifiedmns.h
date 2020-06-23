@@ -101,7 +101,7 @@ public:
     std::vector<CSimplifiedMNListEntry> mnList;
 
     // we also transfer changes in active quorums
-    std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
+    std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<uint8_t, quorumHash>
     std::vector<llmq::CFinalCommitment> newQuorums;
 
 public:
