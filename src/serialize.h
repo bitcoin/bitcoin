@@ -570,7 +570,7 @@ public:
         int32_t last = -1;
         for (int32_t i = 0; i < (int32_t)vec.size(); i++) {
             if (vec[i]) {
-                WriteVarInt<Stream, uint32_t>(s, (uint32_t)(i - last));
+                WriteVarInt<Stream, VarIntMode::DEFAULT, uint32_t>(s, (uint32_t)(i - last));
                 last = i;
             }
         }
@@ -584,7 +584,7 @@ public:
 
         int32_t last = -1;
         while(true) {
-            uint32_t offset = ReadVarInt<Stream, uint32_t>(s);
+            uint32_t offset = ReadVarInt<Stream, VarIntMode::DEFAULT, uint32_t>(s);
             if (offset == 0) {
                 break;
             }
