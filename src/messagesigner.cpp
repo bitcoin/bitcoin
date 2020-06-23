@@ -9,6 +9,7 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <key_io.h>
+#include <util/message.h>
 bool CMessageSigner::GetKeysFromSecret(const std::string& strSecret, CKey& keyRet, CPubKey& pubkeyRet)
 {
     keyRet = DecodeSecret(strSecret);
@@ -18,7 +19,7 @@ bool CMessageSigner::GetKeysFromSecret(const std::string& strSecret, CKey& keyRe
 bool CMessageSigner::SignMessage(const std::string& strMessage, std::vector<unsigned char>& vchSigRet, const CKey& key)
 {
     CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
+    ss << MESSAGE_MAGIC;
     ss << strMessage;
 
     return CHashSigner::SignHash(ss.GetHash(), key, vchSigRet);
@@ -32,7 +33,7 @@ bool CMessageSigner::VerifyMessage(const CPubKey& pubkey, const std::vector<unsi
 bool CMessageSigner::VerifyMessage(const CKeyID& keyID, const std::vector<unsigned char>& vchSig, const std::string& strMessage, std::string& strErrorRet)
 {
     CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
+    ss << MESSAGE_MAGIC;
     ss << strMessage;
 
     return CHashSigner::VerifyHash(ss.GetHash(), keyID, vchSig, strErrorRet);
