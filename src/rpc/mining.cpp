@@ -39,6 +39,7 @@
 #include <memory>
 #include <stdint.h>
 // SYSCOIN
+#include <spork.h>
 #include <boost/thread.hpp>
 #include <governance/governance-classes.h>
 #include <masternode/masternode-payments.h>
@@ -914,7 +915,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     }
 
     result.pushKV("masternode", masternodeObj);
-    result.pushKV("masternode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock);
+    result.pushKV("masternode_payments_started", true);
     result.pushKV("masternode_payments_enforced", true);
 
     UniValue superblockObjArray(UniValue::VARR);
@@ -934,7 +935,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED));
     std::vector<unsigned char> vchData;
 	int nOut;
-	if (GetSyscoinData(tx, vchData, nOut))
+	if (GetSyscoinData(pblock->vtx[0], vchData, nOut))
         result.pushKV("coinbase_payload", HexStr(vchData));
     return result;
 }
