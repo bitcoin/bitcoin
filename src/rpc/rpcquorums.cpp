@@ -480,7 +480,7 @@ UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
 }
 
 
-[[ noreturn ]] void quorum_help()
+void quorum_help()
 {
     throw std::runtime_error(
             "quorum \"command\" ...\n"

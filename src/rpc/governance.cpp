@@ -943,7 +943,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     return bResult;
 }
 
-[[ noreturn ]] void gobject_help()
+void gobject_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject",
             "Set of commands to manage governance objects.\n"
