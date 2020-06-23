@@ -662,7 +662,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
     // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
     std::vector<CTxOut> voutMasternodePayments;
-    mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments);
+    CAmount mnRet;
+    mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments, 0, mnRet);
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)

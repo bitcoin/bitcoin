@@ -574,7 +574,7 @@ public:
                 last = i;
             }
         }
-        WriteVarInt(s, VarIntMode::DEFAULT, 0); // stopper
+        WriteVarInt<Stream, VarIntMode::DEFAULT, uint32_t>(s, 0); // stopper
     }
 
     template<typename Stream>
