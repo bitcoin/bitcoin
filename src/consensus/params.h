@@ -194,7 +194,7 @@ struct Params {
         return static_cast<int> (nHeight) < nLegacyBlocksBefore;
     }
     // SYSCOIN
-    std::map<LLMQType, LLMQParams> llmqs;
+    std::map<uint8_t, LLMQParams> llmqs;
 };
 } // namespace Consensus
 #endif // SYSCOIN_CONSENSUS_PARAMS_H
