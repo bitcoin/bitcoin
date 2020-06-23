@@ -2845,12 +2845,7 @@ void ProcessMessage(
                 tx.GetHash().ToString(),
                 mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
-            // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(connman, mempool, g_orphan_work_set, lRemovedTxn);
-
-        }
-        else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
-        {
+        } else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
             for (const CTxIn& txin : tx.vin) {
                 if (recentRejects->contains(txin.prevout.hash)) {
