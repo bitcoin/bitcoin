@@ -860,13 +860,13 @@ void EraseTxRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQU
         nodestate->m_tx_download.m_tx_in_flight.erase(inv);
     }
 }
-void EraseTxRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseTxRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CNodeState *nodestate = State(nodeId);
     if (!nodestate) {
         return;
     }
-    EraseTxRequest(nodestate, hash);
+    EraseTxRequest(nodestate, inv);
 }
 
 // This function is used for testing the stale tip eviction logic, see
@@ -3133,7 +3133,8 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         LOCK2(cs_main, g_cs_orphans);
 
         TxValidationState state;
-        EraseTxRequest(pfrom.GetId(), inv.hash);
+        // SYSCOIN use inv not hash
+        EraseTxRequest(pfrom.GetId(), inv);
 
         std::list<CTransactionRef> lRemovedTxn;
 
@@ -3859,7 +3860,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     if (msg_type == NetMsgType::MNLISTDIFF) {
         // we have never requested this
         LOCK(cs_main);
-        Misbehaving(pfrom.GetId(), 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom->GetId()));
+        Misbehaving(pfrom.GetId(), 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom.GetId()));
         return true;
     }
     if (msg_type == NetMsgType::NOTFOUND) {
