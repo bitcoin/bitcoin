@@ -60,7 +60,7 @@ void masternode_list_help(const JSONRPCRequest& request)
             "  votingaddress  - Print the masternode voting Syscoin address\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request);  
 }
@@ -86,7 +86,7 @@ void masternode_connect_help(const JSONRPCRequest& request)
             "1. \"address\"      (string, required) The address of the masternode to connect\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -127,7 +127,7 @@ void masternode_count_help(const JSONRPCRequest& request)
             "  all           - all above in one string",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -193,7 +193,7 @@ void masternode_winner_help(const JSONRPCRequest& request)
             "Print info on next masternode winner to vote for\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -212,7 +212,7 @@ void masternode_current_help(const JSONRPCRequest& request)
             "Print info on current masternode winner to be paid the next block (calculated locally)\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -232,7 +232,7 @@ void masternode_outputs_help(const JSONRPCRequest& request)
             "Print masternode compatible outputs\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -268,7 +268,7 @@ void masternode_status_help(const JSONRPCRequest& request)
             "Print masternode status outputs\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -311,7 +311,7 @@ void masternode_winners_help(const JSONRPCRequest& request)
             "2. filter       (string, optional) filter for returned winners\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
@@ -368,7 +368,7 @@ UniValue masternode_winners(const JSONRPCRequest& request)
         "  winners      - Print list of masternode winners\n",
     {
     },
-    RPCResult{""},
+    RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
     }.Check(request); 
 }
