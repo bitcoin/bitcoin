@@ -1746,7 +1746,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
-        return InitError(sprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / "sporks.dat").string())));
+        return InitError(strprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / "sporks.dat").string())));
     }
     
     fReindex = gArgs.GetBoolArg("-reindex", false);
@@ -2237,7 +2237,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         return false;
     }
 
-    node.scheduler->scheduleEvery([&] { netfulfilledman.DoMaintenance(*node.connman); }, std::chrono::seconds{1});
+    node.scheduler->scheduleEvery([&] { netfulfilledman.DoMaintenance(); }, std::chrono::seconds{1});
     node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     if (!fLiteMode) {
