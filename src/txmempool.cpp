@@ -20,6 +20,8 @@
 #include <validationinterface.h>
 // SYSCOIN
 #include <util/rbf.h>
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
 extern EthereumMintTxMap mapMintKeysMempool;
 extern std::set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
