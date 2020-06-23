@@ -4670,15 +4670,15 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                 inputs.SpendCoin(txin.prevout);
             }
             // SYSCOIN
-            const uint256& txHash = tx.GetHash(); 
-            const bool &hasAssets = tx.HasAssets();
+            const uint256& txHash = tx->GetHash(); 
+            const bool &hasAssets = tx->HasAssets();
       
             // SYSCOIN
             if(hasAssets){
-                TxValidationState tx_state;
+                BlockValidationState tx_state;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys)){
-                    return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), tx_state.ToString());
+                if (!CheckSyscoinInputs(ibd, *tx, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys)){
+                    return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx->GetHash().ToString(), tx_state.ToString());
                 }
             }
 
@@ -4687,7 +4687,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
         AddCoins(inputs, *tx, pindex->nHeight, true);
     }
     // SYSCOIN
-    TxValidationState state;
+    BlockValidationState state;
     if (!ProcessSpecialTxsInBlock(block, pindex, state, false /*fJustCheck*/, false /*fScriptChecks*/)) {
         return error("%s: ProcessSpecialTxsInBlock for block %s failed with %s", __func__,
             pindex->GetBlockHash().ToString(), state.ToString());
