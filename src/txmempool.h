@@ -134,8 +134,8 @@ public:
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
     mutable uint64_t m_epoch; //!< epoch when last touched, useful for graph algorithms
     // SYSCOIN
-    // If this is a proTx, this will be the key for which this ProTx was valid
-    mutable CKeyID validForProTxKey;
+    // If this is a proTx, this will be the hash of the key for which this ProTx was valid
+    mutable uint256 validForProTxKey;
     mutable bool isKeyChangeProTx{false};
 };
 
@@ -606,7 +606,7 @@ public:
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     // SYSCOIN
-    void removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId);
+    void removeProTxPubKeyConflicts(const CTransaction &tx, const WitnessV0KeyHash &keyId);
     void removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSPublicKey &pubKey);
     void removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint);
     void removeProTxSpentCollateralConflicts(const CTransaction &tx);

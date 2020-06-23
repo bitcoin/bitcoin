@@ -116,7 +116,7 @@ bool CBloomFilter::IsWithinSizeConstraints() const
 bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &tx)
 {
     switch(tx.nVersion) {
-    case(SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER): {
+    case(SYSCOIN_TX_VERSION_MN_REGISTER): {
         CProRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
             if(contains(proTx.collateralOutpoint) ||

@@ -107,7 +107,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     proTx.scriptPayout = scriptPayout;
 
     CMutableTransaction tx;
-    tx.nVersion = SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
     FundTransaction(tx, utxos, scriptPayout, 100000 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, proTx);

@@ -22,7 +22,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVal
 
     try {
         switch (tx.nVersion) {
-        case SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER:
+        case SYSCOIN_TX_VERSION_MN_REGISTER:
             return CheckProRegTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE:
             return CheckProUpServTx(tx, pindexPrev, state, fJustCheck);
@@ -48,7 +48,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVal
 bool IsSpecialTx(const CTransaction& tx)
 {
     switch (tx.nVersion) {
-    case SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER:
+    case SYSCOIN_TX_VERSION_MN_REGISTER:
     case SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE:
     case SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR:
     case SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE:

@@ -417,7 +417,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     CAmount collateralAmount = 100000 * COIN;
 
     CMutableTransaction tx;
-    tx.nVersion = SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER;
+    tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
 
     CProRegTx ptx;
     ptx.nVersion = CProRegTx::CURRENT_VERSION;
@@ -570,7 +570,7 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
     if (!DecodeHexTx(tx, request.params[1].get_str())) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "transaction not deserializable");
     }
-    if (tx.nVersion != SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (tx.nVersion != SYSCOIN_TX_VERSION_MN_REGISTER) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "transaction not a ProRegTx");
     }
     CProRegTx ptx;
