@@ -135,7 +135,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     }
 
     CTxDestination collateralTxDest;
-    const CKeyID *keyForPayloadSig = nullptr;
+    CKeyID keyForPayloadSig;
     COutPoint collateralOutpoint;
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
@@ -156,7 +156,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         else if (auto key_id = boost::get<PKHash>(&collateralTxDest)) {	
             keyForPayloadSig = CKeyID(*key_id);
         }	
-        if (!keyForPayloadSig) {
+        if (keyForPayloadSig.IsNull()) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-pkh", fJustCheck);
         }
 
@@ -206,9 +206,9 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         return false;
     }
 
-    if (keyForPayloadSig) {
+    if (!keyForPayloadSig.IsNull()) {
         // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
-        if (!CheckStringSig(ptx, *keyForPayloadSig, state, fJustCheck)) {
+        if (!CheckStringSig(ptx, keyForPayloadSig, state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }

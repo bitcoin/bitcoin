@@ -525,14 +525,14 @@ UniValue protx_register(const JSONRPCRequest& request)
         }
         CTxDestination txDest;
         ExtractDestination(coin.out.scriptPubKey, txDest);
-        const CKeyID *keyID = nullptr;
+        CKeyID keyID;
         if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
             keyID = CKeyID(*witness_id);
         }	
         else if (auto key_id = boost::get<PKHash>(&txDest)) {	
             keyID = CKeyID(*key_id);
         }	
-        if (!keyID) {
+        if (keyID.IsNull()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
         }
 
