@@ -21,6 +21,7 @@
 #include <shutdown.h>
 #include <cxxtimer.hpp>
 #include <net.h>
+#include <shutdown.h>
 namespace llmq
 {
 
