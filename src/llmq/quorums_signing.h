@@ -31,7 +31,7 @@ public:
     uint256 hash;
 
 public:
-
+   template<typename Stream>
    void Serialize(Stream& s) const
     {
         s << llmqType;
