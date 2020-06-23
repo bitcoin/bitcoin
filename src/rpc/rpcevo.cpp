@@ -951,7 +951,7 @@ UniValue protx_list(const JSONRPCRequest& request)
     if (request.fHelp) {
         protx_list_help(request);
     }
-    CWallet* const pwallet;
+    CWallet* pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -1050,7 +1050,7 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help(request);
     }
-    CWallet* const pwallet;
+    CWallet* pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -1117,7 +1117,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] void protx_help(const JSONRPCRequest& request)
+void protx_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx",
             "Set of commands to execute ProTx related actions.\n"
@@ -1177,7 +1177,7 @@ UniValue protx(const JSONRPCRequest& request)
     } else if (command == "diff") {
         return protx_diff(request);
     } else {
-        protx_help();
+        protx_help(request);
     }
 }
 
@@ -1237,7 +1237,7 @@ UniValue bls_fromsecret(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] void bls_help(const JSONRPCRequest& request)
+void bls_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"bls",
         "Set of commands to execute BLS related actions.\n"

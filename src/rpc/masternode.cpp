@@ -350,7 +350,7 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     return obj;
 }
 
-[[ noreturn ]] void masternode_help(const JSONRPCRequest& request)
+void masternode_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"masternode",
         "Set of commands to execute masternode related actions\n"
