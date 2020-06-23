@@ -53,7 +53,7 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
         if (!key.IsCompressed()) return PKHash(key);
-        CTxDestination witdest = WitnessV0KeyHash(PKHash(key));
+        CTxDestination witdest = WitnessV0KeyHash(key);
         CScript witprog = GetScriptForDestination(witdest);
         if (type == OutputType::P2SH_SEGWIT) {
             return ScriptHash(witprog);

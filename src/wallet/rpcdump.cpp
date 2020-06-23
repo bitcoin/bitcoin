@@ -297,7 +297,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             pwallet->ImportScripts(scripts, 0 /* timestamp */);
 
             if (fP2SH) {
-                scripts.insert(GetScriptForDestination(ScriptHash(CScriptID(redeem_script))));
+                scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
             }
 
             pwallet->ImportScriptPubKeys(strLabel, scripts, false /* have_solving_data */, true /* apply_label */, 1 /* timestamp */);

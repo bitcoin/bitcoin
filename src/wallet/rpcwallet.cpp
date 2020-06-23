@@ -2918,13 +2918,12 @@ static UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
-void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options)
+void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    CCoinControl coinControl;
     change_position = -1;
     bool lockUnspents = false;
     UniValue subtractFeeFromOutputs;
@@ -2939,6 +2938,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         RPCTypeCheckArgument(options, UniValue::VOBJ);
         RPCTypeCheckObj(options,
             {
+                {"add_inputs", UniValueType(UniValue::VBOOL)},
                 {"changeAddress", UniValueType(UniValue::VSTR)},
                 {"changePosition", UniValueType(UniValue::VNUM)},
                 {"change_type", UniValueType(UniValue::VSTR)},
@@ -2951,6 +2951,10 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
             true, true);
+
+        if (options.exists("add_inputs") ) {
+            coinControl.m_add_inputs = options["add_inputs"].get_bool();
+        }
 
         if (options.exists("changeAddress")) {
             CTxDestination dest = DecodeDestination(options["changeAddress"].get_str());
@@ -3039,8 +3043,8 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
 static UniValue fundrawtransaction(const JSONRPCRequest& request)
 {
     RPCHelpMan{"fundrawtransaction",
-                "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
-                "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
+                "\nIf the transaction has no inputs, they will be automatically selected to meet its out value.\n"
+                "It will add at most one change output to the outputs.\n"
                 "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
                 "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
                 "The inputs added will not be signed, use signrawtransactionwithkey\n"
@@ -3054,6 +3058,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}",
                         {
+                            {"add_inputs", RPCArg::Type::BOOL, /* default */ "true", "For a transaction with existing inputs, automatically include more if they are not enough."},
                             {"changeAddress", RPCArg::Type::STR, /* default */ "pool address", "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
@@ -3123,7 +3128,10 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
 
     CAmount fee;
     int change_position;
-    FundTransaction(pwallet, tx, fee, change_position, request.params[1]);
+    CCoinControl coin_control;
+    // Automatically select (additional) coins. Can be overriden by options.add_inputs.
+    coin_control.m_add_inputs = true;
+    FundTransaction(pwallet, tx, fee, change_position, request.params[1], coin_control);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(CTransaction(tx)));
@@ -3517,7 +3525,7 @@ public:
 
     UniValue operator()(const PKHash& pkhash) const
     {
-        CKeyID keyID(pkhash);
+        CKeyID keyID{ToKeyID(pkhash)};
         UniValue obj(UniValue::VOBJ);
         CPubKey vchPubKey;
         if (provider && provider->GetPubKey(keyID, vchPubKey)) {
@@ -3542,7 +3550,7 @@ public:
     {
         UniValue obj(UniValue::VOBJ);
         CPubKey pubkey;
-        if (provider && provider->GetPubKey(CKeyID(id), pubkey)) {
+        if (provider && provider->GetPubKey(ToKeyID(id), pubkey)) {
             obj.pushKV("pubkey", HexStr(pubkey));
         }
         return obj;
@@ -3623,12 +3631,10 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                         {RPCResult::Type::STR_HEX, "pubkey", /* optional */ true, "The hex value of the raw public key for single-key addresses (possibly embedded in P2SH or P2WSH)."},
                         {RPCResult::Type::OBJ, "embedded", /* optional */ true, "Information about the address embedded in P2SH or P2WSH, if relevant and known.",
                         {
-                            {RPCResult::Type::ELISION, "", "Includes all\n"
-            "                                                         getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath,\n"
-                            "hdseedid) and relation to the wallet (ismine, iswatchonly)."},
+                            {RPCResult::Type::ELISION, "", "Includes all getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath, hdseedid)\n"
+                            "and relation to the wallet (ismine, iswatchonly)."},
                         }},
                         {RPCResult::Type::BOOL, "iscompressed", /* optional */ true, "If the pubkey is compressed."},
-                        {RPCResult::Type::STR, "label", "DEPRECATED. The label associated with the address. Defaults to \"\". Replaced by the labels array below."},
                         {RPCResult::Type::NUM_TIME, "timestamp", /* optional */ true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
                         {RPCResult::Type::STR, "hdkeypath", /* optional */ true, "The HD keypath, if the key is HD and available."},
                         {RPCResult::Type::STR_HEX, "hdseedid", /* optional */ true, "The Hash160 of the HD seed."},
@@ -3636,12 +3642,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                         {RPCResult::Type::ARR, "labels", "Array of labels associated with the address. Currently limited to one label but returned\n"
                             "as an array to keep the API stable if multiple labels are enabled in the future.",
                         {
-                            {RPCResult::Type::STR, "label name", "The label name. Defaults to \"\"."},
-                            {RPCResult::Type::OBJ, "", "label data, DEPRECATED, will be removed in 0.21. To re-enable, launch bitcoind with `-deprecatedrpc=labelspurpose`",
-                            {
-                                {RPCResult::Type::STR, "name", "The label name. Defaults to \"\"."},
-                                {RPCResult::Type::STR, "purpose", "The purpose of the associated address (send or receive)."},
-                            }},
+                            {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
                         }},
                     }
                 },
@@ -3687,14 +3688,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
 
-    // DEPRECATED: Return label field if existing. Currently only one label can
-    // be associated with an address, so the label should be equivalent to the
-    // value of the name key/value pair in the labels array below.
-    const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
-    if (pwallet->chain().rpcEnableDeprecated("label") && address_book_entry) {
-        ret.pushKV("label", address_book_entry->GetLabel());
-    }
-
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
 
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
@@ -3715,14 +3708,9 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // stable if we allow multiple labels to be associated with an address in
     // the future.
     UniValue labels(UniValue::VARR);
+    const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
     if (address_book_entry) {
-        // DEPRECATED: The previous behavior of returning an array containing a
-        // JSON object of `name` and `purpose` key/value pairs is deprecated.
-        if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
-            labels.push_back(AddressBookDataToJSON(*address_book_entry, true));
-        } else {
-            labels.push_back(address_book_entry->GetLabel());
-        }
+        labels.push_back(address_book_entry->GetLabel());
     }
     ret.pushKV("labels", std::move(labels));
 
@@ -3976,16 +3964,16 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
 UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
 {
             RPCHelpMan{"walletcreatefundedpsbt",
-                "\nCreates and funds a transaction in the Partially Signed Transaction format. Inputs will be added if supplied inputs are not enough\n"
+                "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator and Updater roles.\n",
                 {
-                    {"inputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The inputs",
+                    {"inputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The inputs. Leave empty to add inputs automatically. See add_inputs option.",
                         {
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                 {
                                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
                                     {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
-                                    {"sequence", RPCArg::Type::NUM, RPCArg::Optional::NO, "The sequence number"},
+                                    {"sequence", RPCArg::Type::NUM, /* default */ "depends on the value of the 'locktime' and 'options.replaceable' arguments", "The sequence number"},
                                 },
                             },
                         },
@@ -4010,6 +3998,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                     {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
+                            {"add_inputs", RPCArg::Type::BOOL, /* default */ "false", "If inputs are specified, automatically include more if they are not enough."},
                             {"changeAddress", RPCArg::Type::STR_HEX, /* default */ "pool address", "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
@@ -4071,7 +4060,11 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
         rbf = replaceable_arg.isTrue();
     }
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
-    FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
+    CCoinControl coin_control;
+    // Automatically select coins, unless at least one is manually selected. Can
+    // be overriden by options.add_inputs.
+    coin_control.m_add_inputs = rawTx.vin.size() == 0;
+    FundTransaction(pwallet, rawTx, fee, change_position, request.params[3], coin_control);
 
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx);

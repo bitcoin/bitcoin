@@ -444,50 +444,6 @@ def connect_nodes(from_connection, node_num):
     wait_until(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
 
 
-def sync_blocks(rpc_connections, *, wait=1, timeout=60):
-    """
-    Wait until everybody has the same tip.
-
-    sync_blocks needs to be called with an rpc_connections set that has least
-    one node already synced to the latest, stable tip, otherwise there's a
-    chance it might return before all nodes are stably synced.
-    """
-    stop_time = time.time() + timeout
-    while time.time() <= stop_time:
-        best_hash = [x.getbestblockhash() for x in rpc_connections]
-        if best_hash.count(best_hash[0]) == len(rpc_connections):
-            return
-        # Check that each peer has at least one connection
-        assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
-        time.sleep(wait)
-    raise AssertionError("Block sync timed out after {}s:{}".format(
-        timeout,
-        "".join("\n  {!r}".format(b) for b in best_hash),
-    ))
-
-
-def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
-    """
-    Wait until everybody has the same transactions in their memory
-    pools
-    """
-    stop_time = time.time() + timeout
-    while time.time() <= stop_time:
-        pool = [set(r.getrawmempool()) for r in rpc_connections]
-        if pool.count(pool[0]) == len(rpc_connections):
-            if flush_scheduler:
-                for r in rpc_connections:
-                    r.syncwithvalidationinterfacequeue()
-            return
-        # Check that each peer has at least one connection
-        assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
-        time.sleep(wait)
-    raise AssertionError("Mempool sync timed out after {}s:{}".format(
-        timeout,
-        "".join("\n  {!r}".format(m) for m in pool),
-    ))
-
-
 # Transaction/Block functions
 #############################
 
