@@ -130,7 +130,7 @@ void WalletInit::Construct(NodeContext& node) const
 // SYSCOIN
 void WalletInit::AutoLockMasternodeCollaterals() const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->AutoLockMasternodeCollaterals();
     }
 }

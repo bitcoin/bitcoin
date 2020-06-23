@@ -3856,7 +3856,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
     // SYSCOIN
-    if(block.vtx[0].nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
+    if(block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-cb-type", strprintf("%s : Incorrect version of coinbase transaction", __func__));
     }
     for (const auto& txRef : block.vtx)
@@ -4621,7 +4621,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
     if(passetdb != nullptr){
         if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
-            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
+            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
         }
     }
     // store block count as we move pindex at check level >= 4
@@ -4752,7 +4752,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
     if(passetdb != nullptr){
         if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
-            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
+            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexOld->GetBlockHash().ToString());
         }
     }
     mapAssets.clear();
@@ -4772,7 +4772,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     cache.Flush();
     if(passetdb != nullptr){
         if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
-            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
+            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexOld->GetBlockHash().ToString());
         }
     }
     dbTx->Commit();
