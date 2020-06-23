@@ -25,11 +25,6 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, const CAm
     const Consensus::Params& consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
-    if (nBlockHeight < consensusParams.nBudgetPaymentsStartBlock) {
-        strErrorRet = strprintf("Incorrect block %d, old budgets are not activated yet", nBlockHeight);
-        return false;
-    }
-
     if (nBlockHeight >= consensusParams.nSuperblockStartBlock) {
         strErrorRet = strprintf("Incorrect block %d, old budgets are no longer active", nBlockHeight);
         return false;
@@ -39,8 +34,7 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, const CAm
     // all we know is predefined budget cycle and window
 
     int nOffset = nBlockHeight % consensusParams.nBudgetPaymentsCycleBlocks;
-    if(nBlockHeight >= consensusParams.nBudgetPaymentsStartBlock &&
-       nOffset < consensusParams.nBudgetPaymentsWindowBlocks) {
+    if(nOffset < consensusParams.nBudgetPaymentsWindowBlocks) {
         // NOTE: old budget system is disabled since 12.1
         if(masternodeSync.IsSynced()) {
             // no old budget blocks should be accepted here on mainnet,
@@ -81,14 +75,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
 
     strErrorRet = "";
 
-    if (nBlockHeight < consensusParams.nBudgetPaymentsStartBlock) {
-        // old budget system is not activated yet, just make sure we do not exceed the regular block reward
-        if(!isBlockRewardValueMet) {
-            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, old budgets are not activated yet",
-                                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
-        }
-        return isBlockRewardValueMet;
-    } else if (nBlockHeight < consensusParams.nSuperblockStartBlock) {
+    if (nBlockHeight < consensusParams.nSuperblockStartBlock) {
         // superblocks are not enabled yet, check if we can pass old budget rules
         return IsOldBudgetBlockValueValid(block, nBlockHeight, blockReward, strErrorRet);
     }
@@ -186,10 +173,10 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
     if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
-                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d", __func__, nBlockHeight);
                 // continue validation, should also pay MN
             } else {
-                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d", __func__, nBlockHeight); /* Continued */
                 // should NOT allow such superblocks, when superblocks are enabled
                 return false;
             }
@@ -205,11 +192,11 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
 
     // Check for correct masternode payment
     if(mnpayments.IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
-        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d", __func__, nBlockHeight);
         return true;
     }
 
-    LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+    LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d", __func__, nBlockHeight); /* Continued */
     return false;
 }
 
@@ -242,8 +229,8 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
         voutMasternodeStr += txout.ToString();
     }
 
-    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutMasternodePaymentsRet \"%s\" txNew %s", __func__,
-                            nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
+    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutMasternodePaymentsRet \"%s\"", __func__,
+                            nBlockHeight, blockReward, voutMasternodeStr);
 }
 
 std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
@@ -305,7 +292,7 @@ bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &b
     // make sure it's not filled yet
     voutMasternodePaymentsRet.clear();
     CAmount nMNSeniorityRet;
-    if(!GetBlockTxOuts(nBlockHeight, blockReward, nHalfFee, voutMasternodePaymentsRet, nMNSeniorityRet)) {
+    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee, nMNSeniorityRet)) {
         LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
         return false;
     }
