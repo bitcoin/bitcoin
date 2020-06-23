@@ -670,7 +670,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         const CTransaction& tx = *block.vtx[i];
 
         switch(tx.nVersion) {
-        case(SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER): {
+        case(SYSCOIN_TX_VERSION_MN_REGISTER): {
             CProRegTx proTx;
             if (!GetTxPayload(tx, proTx)) {
                 return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
@@ -999,7 +999,7 @@ CDeterministicMNList CDeterministicMNManager::GetListAtChainTip()
 
 bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n)
 {
-    if (tx->nVersion != SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (tx->nVersion != SYSCOIN_TX_VERSION_MN_REGISTER) {
         return false;
     }
     CProRegTx proTx;

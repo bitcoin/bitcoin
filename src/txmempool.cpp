@@ -22,6 +22,7 @@
 #include <util/rbf.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
+#include <evo/deterministicmns.h>
 extern EthereumMintTxMap mapMintKeysMempool;
 extern std::set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
@@ -408,7 +409,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Invalid ProTxes should never get this far because transactions should be
     // fully checked by AcceptToMemoryPool() at this point, so we just assume that
     // everything is fine here.
-    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
         CProRegTx proTx;
         bool ok = GetTxPayload(tx, proTx);
         assert(ok);
@@ -495,7 +496,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         }
     };
 
-    if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
             assert(false);
@@ -802,7 +803,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
 {
     removeProTxSpentCollateralConflicts(tx);
 
-    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
@@ -1141,7 +1142,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         return false;
     };
 
-    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());

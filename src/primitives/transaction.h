@@ -609,7 +609,7 @@ static inline CTransactionRef MakeTransactionRef() { return std::make_shared<con
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 // SYSCOIN
 
-const int SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER = 80;
+const int SYSCOIN_TX_VERSION_MN_REGISTER = 80;
 const int SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE = 81;
 const int SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR = 82;
 const int SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE = 83;

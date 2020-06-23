@@ -85,7 +85,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, TxValida
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
-    if (tx.nVersion != SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (tx.nVersion != SYSCOIN_TX_VERSION_MN_REGISTER) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
     }
 

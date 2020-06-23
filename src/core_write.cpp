@@ -394,7 +394,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     }
     entry.pushKV("vout", vout);
     // SYSCOIN
-    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_PROVIDER_REGISTER) {
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
         CProRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
