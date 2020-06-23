@@ -44,7 +44,6 @@ public:
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
-    bool IsMnType() const;
     bool IsValid(const MessageStartChars& messageStart) const;
 
     SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchCommand, obj.nMessageSize, obj.pchChecksum); }
@@ -447,7 +446,8 @@ public:
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
     friend bool operator<(const CInv& a, const CInv& b);
-
+    // SYSCOIN
+    bool IsMnType() const;
     std::string GetCommand() const;
     std::string ToString() const;
 

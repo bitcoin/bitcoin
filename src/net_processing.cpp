@@ -862,11 +862,11 @@ void EraseTxRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQU
 }
 void EraseTxRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    auto* state = State(nodeId);
-    if (!state) {
+    CNodeState *nodestate = State(nodeId);
+    if (!nodestate) {
         return;
     }
-    EraseTxRequest(state, hash);
+    EraseTxRequest(nodestate, hash);
 }
 
 // This function is used for testing the stale tip eviction logic, see
@@ -1788,7 +1788,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
 
         const CInv &inv = *it++;
         // SYSCOIN
-        if(pfrom->m_tx_relay != nullptr && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)) {
+        if(pfrom.m_tx_relay != nullptr && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)) {
             CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, mempool_req, longlived_mempool_time);
             if (tx) {
                 int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
@@ -1863,7 +1863,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     }
                     break;
                 }
-                case(MSG_QUORUM_COMPLAINT) {
+                case(MSG_QUORUM_COMPLAINT): {
                     llmq::CDKGComplaint o;
                     if (llmq::quorumDKGSessionManager->GetComplaint(inv.hash, o)) {
                         connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
@@ -1871,7 +1871,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     }
                     break;
                 }
-                case(MSG_QUORUM_JUSTIFICATION) {
+                case(MSG_QUORUM_JUSTIFICATION): {
                     llmq::CDKGJustification o;
                     if (llmq::quorumDKGSessionManager->GetJustification(inv.hash, o)) {
                         connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
@@ -1879,7 +1879,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     }
                     break;
                 }
-                case(MSG_QUORUM_PREMATURE_COMMITMENT) {
+                case(MSG_QUORUM_PREMATURE_COMMITMENT): {
                     llmq::CDKGPrematureCommitment o;
                     if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
                         connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
@@ -1887,7 +1887,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     }
                     break;
                 }
-                case(MSG_QUORUM_RECOVERED_SIG) {
+                case(MSG_QUORUM_RECOVERED_SIG): {
                     llmq::CRecoveredSig o;
                     if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
                         connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
@@ -2522,7 +2522,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             if (pfrom.fInbound) {
                 pfrom.fMasternode = fOtherMasternode;
                 if (fOtherMasternode) {
-                    LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom->GetId());
+                    LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom.GetId());
                     if (!fMasternodeMode) {
                         LogPrint(BCLog::NET, "but we're not a masternode, disconnecting\n");
                         pfrom.fDisconnect = true;
@@ -2663,7 +2663,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
                       pfrom.m_tx_relay == nullptr ? "block-relay" : "full-relay");
         }
         // SYSCOIN
-        if (!pfrom->fMasternodeProbe) {
+        if (!pfrom.fMasternodeProbe) {
             CMNAuth::PushMNAUTH(&pfrom, *connman);
         }
 
@@ -2688,7 +2688,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
         // SYSCOIN
-        if (!pfrom->fMasternode) {
+        if (!pfrom.fMasternode) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // SPV nodes should not send this message
@@ -2696,7 +2696,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
         }
 
-        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom->fMasternode) {
+        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.fMasternode) {
             connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
         pfrom.fSuccessfullyConnected = true;
@@ -2717,7 +2717,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         // Note: do not break the flow here
 
         if (pfrom.fMasternodeProbe && !pfrom.fFirstMessageIsMNAUTH) {
-            LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d", pfrom->GetId());
+            LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d", pfrom.GetId());
             pfrom.fDisconnect = true;
             return false;
         }
@@ -3133,7 +3133,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         LOCK2(cs_main, g_cs_orphans);
 
         TxValidationState state;
-        EraseTxRequest(pfrom->GetId(), inv.hash);
+        EraseTxRequest(pfrom.GetId(), inv.hash);
 
         std::list<CTransactionRef> lRemovedTxn;
 
@@ -3850,7 +3850,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
         } else {
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
-            Misbehaving(pfrom->GetId(), 1, strError);
+            Misbehaving(pfrom.GetId(), 1, strError);
         }
         return true;
     }
@@ -3859,7 +3859,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     if (msg_type == NetMsgType::MNLISTDIFF) {
         // we have never requested this
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom->GetId()));
+        Misbehaving(pfrom.GetId(), 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom->GetId()));
         return true;
     }
     if (msg_type == NetMsgType::NOTFOUND) {
