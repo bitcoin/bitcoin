@@ -1365,12 +1365,10 @@ dnl libmultiprocess library check
 
 libmultiprocess_found=no
 if test "x$with_libmultiprocess" = xyes || test "x$with_libmultiprocess" = xauto; then
-  if test "x$use_pkgconfig" = xyes; then
-    m4_ifdef([PKG_CHECK_MODULES], [PKG_CHECK_MODULES([LIBMULTIPROCESS], [libmultiprocess], [
-       libmultiprocess_found=yes;
-       libmultiprocess_prefix=`$PKG_CONFIG --variable=prefix libmultiprocess`;
-    ], [true])])
-  fi
+  m4_ifdef([PKG_CHECK_MODULES], [PKG_CHECK_MODULES([LIBMULTIPROCESS], [libmultiprocess], [
+     libmultiprocess_found=yes;
+     libmultiprocess_prefix=`$PKG_CONFIG --variable=prefix libmultiprocess`;
+  ], [true])])
 elif test "x$with_libmultiprocess" != xno; then
   AC_MSG_ERROR([--with-libmultiprocess=$with_libmultiprocess value is not yes, auto, or no])
 fi
