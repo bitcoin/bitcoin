@@ -534,7 +534,7 @@ UniValue protx_register(const JSONRPCRequest& request)
             SetTxPayload(tx, ptx);
 
             UniValue ret(UniValue::VOBJ);
-            ret.pushKV("tx", EncodeHexTx(tx));
+            ret.pushKV("tx", EncodeHexTx(CTransaction(tx)));
             ret.pushKV("collateralAddress", EncodeDestination(txDest));
             ret.pushKV("signMessage", ptx.MakeSignString());
             return ret;
@@ -560,7 +560,7 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
     if (request.fHelp || request.params.size() != 3) {
-        protx_register_submit_help(pwallet);
+        protx_register_submit_help(request);
     }
 
 
@@ -867,8 +867,8 @@ void protx_list_help(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
             "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
             "                 This will also include ProTx which failed PoSe verfication.\n"
-#endif,
-    {
+#endif
+    ,{
     },
     RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
@@ -885,7 +885,7 @@ static bool CheckWalletOwnsKey(CWallet* pwallet, const WitnessV0KeyHash& keyID) 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
 
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-    return spk_man.IsMine(CTxDestination(keyID));
+    return spk_man.IsMine(GetScriptForDestination(CTxDestination(keyID)));
 #endif
 }
 
@@ -951,12 +951,15 @@ UniValue protx_list(const JSONRPCRequest& request)
     if (request.fHelp) {
         protx_list_help(request);
     }
-    CWallet* const pwallet = nullptr;
+    CWallet* const pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     pwallet = wallet.get();
+#else
+    pwallet = nullptr;
 #endif
+
 
     std::string type = "registered";
     if (!request.params[1].isNull()) {
@@ -1047,11 +1050,13 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help(request);
     }
-    CWallet* const pwallet = nullptr;
+    CWallet* const pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     pwallet = wallet.get();
+#else
+    pwallet = nullptr;
 #endif
 
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
@@ -1112,7 +1117,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] void protx_help()
+[[ noreturn ]] void protx_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx",
             "Set of commands to execute ProTx related actions.\n"
@@ -1232,7 +1237,7 @@ UniValue bls_fromsecret(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] void bls_help()
+[[ noreturn ]] void bls_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"bls",
         "Set of commands to execute BLS related actions.\n"
