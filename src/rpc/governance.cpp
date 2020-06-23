@@ -965,8 +965,8 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  vote-conf          - Vote on a governance object by masternode configured in syscoin.conf\n"
 #ifdef ENABLE_WALLET
             "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
-#endif // ENABLE_WALLET,
-    {
+#endif // ENABLE_WALLET
+    ,{
     },
     RPCResult{""},
     RPCExamples{""},
