@@ -526,16 +526,6 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
 {
     if (reply.code == 250) {
         LogPrint(BCLog::TOR, "tor: Authentication successful\n");
-
-        // Now that we know Tor is running setup the proxy for onion addresses
-        // if -onion isn't set to something else.
-        if (gArgs.GetArg("-onion", "") == "") {
-            CService resolved(LookupNumeric("127.0.0.1", 9050));
-            proxyType addrOnion = proxyType(resolved, true);
-            SetProxy(NET_ONION, addrOnion);
-            SetReachable(NET_ONION, true);
-        }
-
         // Finally - now create the service
         if (private_key.empty()) // No private key, generate one
             private_key = "NEW:RSA1024"; // Explicitly request RSA1024 - see issue #9214
