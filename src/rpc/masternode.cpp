@@ -34,10 +34,9 @@
 #include <node/context.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 
-void masternode_list_help()
+void masternode_list_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternodelist ( \"mode\" \"filter\" )\n"
+    RPCHelpMan{"masternodelist",
             "Get a list of masternodes in different modes. This call is identical to 'masternode list' call.\n"
             "\nArguments:\n"
             "1. \"mode\"      (string, optional/required to use filter, defaults = json) The mode to run list in\n"
@@ -58,14 +57,18 @@ void masternode_list_help()
             "  pubKeyOperator - Print the masternode operator public key\n"
             "  status         - Print masternode status: ENABLED / POSE_BANNED\n"
             "                   (can be additionally filtered, partial match)\n"
-            "  votingaddress  - Print the masternode voting Syscoin address\n"
-        );
+            "  votingaddress  - Print the masternode voting Syscoin address\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request);  
 }
 
 UniValue masternode_list(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        masternode_list_help();
+        masternode_list_help(request);
     JSONRPCRequest newRequest = request;
     newRequest.params.setArray();
     // forward params but skip "list"
@@ -75,20 +78,23 @@ UniValue masternode_list(const JSONRPCRequest& request)
     return masternodelist(newRequest);
 }
 
-void masternode_connect_help()
+void masternode_connect_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternode connect \"address\"\n"
+    RPCHelpMan{"masternode connect",
             "Connect to given masternode\n"
             "\nArguments:\n"
-            "1. \"address\"      (string, required) The address of the masternode to connect\n"
-        );
+            "1. \"address\"      (string, required) The address of the masternode to connect\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode_connect(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2)
-        masternode_connect_help();
+        masternode_connect_help(request);
 
     std::string strAddress = request.params[1].get_str();
 
@@ -106,10 +112,9 @@ UniValue masternode_connect(const JSONRPCRequest& request)
     return "successfully connected";
 }
 
-void masternode_count_help()
+void masternode_count_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternode count (\"mode\")\n"
+    RPCHelpMan{"masternode count",
             "  Get information about number of masternodes. Mode\n"
             "  usage is depricated, call without mode params returns\n"
             "  all values in JSON format.\n"
@@ -119,14 +124,18 @@ void masternode_count_help()
             "  total         - total number of masternodes"
             "  enabled       - number of enabled masternodes"
             "  qualify       - number of qualified masternodes"
-            "  all           - all above in one string"
-        );
+            "  all           - all above in one string",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode_count(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
-        masternode_count_help();
+        masternode_count_help(request);
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
     int total = mnList.GetAllMNsCount();
@@ -178,45 +187,54 @@ UniValue GetNextMasternodeForPayment(int heightShift)
     return obj;
 }
 
-void masternode_winner_help()
+void masternode_winner_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternode winner\n"
-            "Print info on next masternode winner to vote for\n"
-        );
+    RPCHelpMan{"masternode winner",
+            "Print info on next masternode winner to vote for\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode_winner(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        masternode_winner_help();
+        masternode_winner_help(request);
 
     return GetNextMasternodeForPayment(10);
 }
 
-void masternode_current_help()
+void masternode_current_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternode current\n"
-            "Print info on current masternode winner to be paid the next block (calculated locally)\n"
-        );
+    RPCHelpMan{"masternode current",
+            "Print info on current masternode winner to be paid the next block (calculated locally)\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode_current(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        masternode_current_help();
+        masternode_current_help(request);
 
     return GetNextMasternodeForPayment(1);
 }
 
 #ifdef ENABLE_WALLET
-void masternode_outputs_help()
+void masternode_outputs_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternode outputs\n"
-            "Print masternode compatible outputs\n"
-        );
+    RPCHelpMan{"masternode outputs",
+            "Print masternode compatible outputs\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode_outputs(const JSONRPCRequest& request)
@@ -225,7 +243,7 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
     if (request.fHelp)
-        masternode_outputs_help();
+        masternode_outputs_help(request);
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
@@ -244,18 +262,21 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
 
 #endif // ENABLE_WALLET
 
-void masternode_status_help()
+void masternode_status_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternode status\n"
-            "Print masternode status information\n"
-        );
+    RPCHelpMan{"masternode status",
+            "Print masternode status outputs\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode_status(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        masternode_status_help();
+        masternode_status_help(request);
 
     if (!fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
@@ -281,21 +302,24 @@ UniValue masternode_status(const JSONRPCRequest& request)
     return mnObj;
 }
 
-void masternode_winners_help()
+void masternode_winners_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            "masternode winners ( count \"filter\" )\n"
+    RPCHelpMan{"masternode winners",
             "Print list of masternode winners\n"
             "\nArguments:\n"
             "1. count        (numeric, optional) number of last winners to return\n"
-            "2. filter       (string, optional) filter for returned winners\n"
-        );
+            "2. filter       (string, optional) filter for returned winners\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode_winners(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3)
-        masternode_winners_help();
+        masternode_winners_help(request);
 
     int nHeight;
     {
@@ -326,10 +350,9 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     return obj;
 }
 
-[[ noreturn ]] void masternode_help()
+[[ noreturn ]] void masternode_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        "masternode \"command\" ...\n"
+    RPCHelpMan{"masternode",
         "Set of commands to execute masternode related actions\n"
         "\nArguments:\n"
         "1. \"command\"        (string or set of strings, required) The command to execute\n"
@@ -342,8 +365,12 @@ UniValue masternode_winners(const JSONRPCRequest& request)
         "  status       - Print masternode status information\n"
         "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
         "  winner       - Print info on next masternode winner to vote for\n"
-        "  winners      - Print list of masternode winners\n"
-        );
+        "  winners      - Print list of masternode winners\n",
+    {
+    },
+    RPCResult{""},
+    RPCExamples{""},
+    }.Check(request); 
 }
 
 UniValue masternode(const JSONRPCRequest& request)
@@ -354,7 +381,7 @@ UniValue masternode(const JSONRPCRequest& request)
     }
 
     if (request.fHelp && strCommand.empty()) {
-        masternode_help();
+        masternode_help(request);
     }
 
     if (strCommand == "list") {
