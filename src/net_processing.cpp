@@ -409,7 +409,7 @@ struct CNodeState {
         std::set<uint256> m_tx_announced;
 
         //! Store transactions which were requested by us, with timestamp
-        std::map<uint256, std::chrono::microseconds> m_tx_in_flight;
+        std::map<CInv, std::chrono::microseconds> m_tx_in_flight;
 
         //! Periodically check for stuck getdata requests
         std::chrono::microseconds m_check_expiry_timer{0};
@@ -850,14 +850,14 @@ size_t GetRequestedTxCount(NodeId nodeId)
 }
 } // namespace
 /// SYSCOIN
-void EraseTxRequest(CNodeState* nodestate, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseTxRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     LogPrint(BCLog::NET, "%s -- inv=(%s)\n", __func__, inv.ToString());
-    g_already_asked_for.erase(hash);
+    g_already_asked_for.erase(inv.hash);
 
     if (nodestate) {
-        nodestate->m_tx_download.m_tx_announced.erase(hash);
-        nodestate->m_tx_download.m_tx_in_flight.erase(hash);
+        nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
+        nodestate->m_tx_download.m_tx_in_flight.erase(inv);
     }
 }
 void EraseTxRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -3874,7 +3874,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
                 if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX || inv.IsMnType()) {
                     // If we receive a NOTFOUND message for a txid we requested, erase
                     // it from our data structures for this peer.
-                    auto in_flight_it = state->m_tx_download.m_tx_in_flight.find(inv.hash);
+                    auto in_flight_it = state->m_tx_download.m_tx_in_flight.find(inv);
                     if (in_flight_it == state->m_tx_download.m_tx_in_flight.end()) {
                         // Skip any further work if this is a spurious NOTFOUND
                         // message.
@@ -4702,7 +4702,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 // SYSCOIN
                 if (it->second <= current_time - GetObjectExpiryInterval(it->first.type)) {
                     LogPrint(BCLog::NET, "timeout of inflight tx %s from peer=%d\n", it->first.ToString(), pto->GetId());
-                    state.m_tx_download.m_tx_announced.erase(it->first);
+                    state.m_tx_download.m_tx_announced.erase(it->first.hash);
                     state.m_tx_download.m_tx_in_flight.erase(it++);
                 } else {    
                     ++it;
@@ -4733,7 +4733,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         vGetData.clear();
                     }
                     UpdateTxRequestTime(inv.hash, current_time);
-                    state.m_tx_download.m_tx_in_flight.emplace(inv.hash, current_time);
+                    // SYSCOIN
+                    state.m_tx_download.m_tx_in_flight.emplace(inv, current_time);
                 } else {
                     // This transaction is in flight from someone else; queue
                     // up processing to happen after the download times out
@@ -4746,7 +4747,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             } else {
                 // We have already seen this transaction, no need to download.
                 state.m_tx_download.m_tx_announced.erase(inv.hash);
-                state.m_tx_download.m_tx_in_flight.erase(inv.hash);
+                // SYSCOIN
+                state.m_tx_download.m_tx_in_flight.erase(inv);
             }
         }
 
