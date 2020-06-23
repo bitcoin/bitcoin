@@ -87,6 +87,7 @@
 #include <governance/governance.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
+#include <masternode/masternode-meta.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>
@@ -95,6 +96,8 @@
 #include <services/asset.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <util/executable_path/include/boost/executable_path.hpp>
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 #include <flat-database.h>
@@ -270,7 +273,8 @@ void Shutdown(NodeContext& node)
     node.banman.reset();
 
     // SYSCOIN
-    if (!fRPCInWarmup) {
+    std::string status;
+    if (!RPCIsInWarmup(&status)) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
         CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
         flatdb1.Dump(mmetaman);
@@ -490,7 +494,7 @@ void SetupServerArgs(NodeContext& node)
         -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
-    gArgs.AddArg("-syncmempool", strprintf("Sync mempool from other nodes on start (default: %u)"), DEFAULT_SYNC_MEMPOOL)), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-syncmempool", strprintf("Sync mempool from other nodes on start (default: %u)"), DEFAULT_SYNC_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", SYSCOIN_PID_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
@@ -871,9 +875,14 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
 
     if (fMasternodeMode) {
         assert(activeMasternodeManager);
-        activeMasternodeManager->Init();
+        const CBlockIndex* pindexTip;
+        {
+            LOCK(cs_main);
+            pindexTip = ::ChainActive().Tip();
+        }
+        activeMasternodeManager->Init(pindexTip);
     }
-    g_wallet_init_interface->AutoLockMasternodeCollaterals();
+    g_wallet_init_interface.AutoLockMasternodeCollaterals();
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
         LogPrintf("Stopping after block import\n");
@@ -945,7 +954,7 @@ void InitParameterInteraction()
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -listen=1\n", __func__);
         #ifdef ENABLE_WALLET
         // masternode should not have wallet enabled
-        gArgs.ForceSetArg("-disablewallet", true);
+        gArgs.ForceSetArg("-disablewallet", "0");
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
         #endif // ENABLE_WALLET
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
@@ -954,19 +963,17 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
         }
     }
-    if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST) {
+    if (Params().NetworkIDString() == CBaseChainParams::REGTEST) {
         if (gArgs.IsArgSet("-llmqtestparams")) {
             std::string s = gArgs.GetArg("-llmqtestparams", "");
             std::vector<std::string> v;
             boost::split(v, s, boost::is_any_of(":"));
             int size, threshold;
-            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
-                return InitError("Invalid -llmqtestparams specified");
+            if (v.size() == 2 && ParseInt32(v[0], &size) && ParseInt32(v[1], &threshold)) {
+                 UpdateLLMQTestParams(size, threshold);
             }
-            UpdateLLMQTestParams(size, threshold);
+           
         }
-    } else if (gArgs.IsArgSet("-llmqtestparams")) {
-        return InitError("LLMQ test params can only be overridden on regtest.");
     }
     if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
@@ -1363,16 +1370,16 @@ bool AppInitParameterInteraction()
     }
     if (gArgs.IsArgSet("-masternodeblsprivkey")) {
         if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) && Params().RequireRoutableExternalIP()) {
-            return InitError("Masternode must accept connections from outside, set -listen=1");
+            return InitError(Untranslated("Masternode must accept connections from outside, set -listen=1"));
         }
         if (!gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
-            return InitError("Masternode must have bloom filters enabled, set -peerbloomfilters=1");
+            return InitError(Untranslated("Masternode must have bloom filters enabled, set -peerbloomfilters=1"));
         }
         if (gArgs.GetArg("-prune", 0) > 0) {
-            return InitError("Masternode must have no pruning enabled, set -prune=0");
+            return InitError(Untranslated("Masternode must have no pruning enabled, set -prune=0"));
         }
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
-            return InitError(strprintf("Masternode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
+            return InitError(strprintf(Untranslated("Masternode must be able to handle at least %d connections, set -maxconnections=%d"), DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
         if (gArgs.GetBoolArg("-litemode", false)) {
             return InitError(_("You can not start a masternode in lite mode."));
@@ -2185,57 +2192,56 @@ fs::path pathDB = GetDataDir();
     std::string strDBName;
 
     strDBName = "mncache.dat";
-    uiInterface.InitMessage(_("Loading masternode cache..."));
+    uiInterface.InitMessage(_("Loading masternode cache...").translated);
     CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
     if (fLoadCacheFiles) {
         if(!flatdb1.Load(mmetaman)) {
-            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to load masternode cache from %s\n"), (pathDB / strDBName).string());
         }
     } else {
         CMasternodeMetaMan mmetamanTmp;
         if(!flatdb1.Dump(mmetamanTmp)) {
-            return InitError(_("Failed to clear masternode cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to clear masternode cache at %s\n"), (pathDB / strDBName).string());
         }
     }
 
     strDBName = "governance.dat";
-    uiInterface.InitMessage(_("Loading governance cache..."));
+    uiInterface.InitMessage(_("Loading governance cache...").translated);
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
     if (fLoadCacheFiles && !fLiteMode) {
         if(!flatdb3.Load(governance)) {
-            return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to load governance cache from %s\n"), (pathDB / strDBName).string());
         }
         governance.InitOnLoad();
     } else {
         CGovernanceManager governanceTmp;
         if(!flatdb3.Dump(governanceTmp)) {
-            return InitError(_("Failed to clear governance cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to clear governance cache at %s\n"), (pathDB / strDBName).string());
         }
     }
 
     strDBName = "netfulfilled.dat";
-    uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
+    uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
     CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
     if (fLoadCacheFiles) {
         if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s\n"), (pathDB / strDBName).string());
         }
     } else {
         CNetFulfilledRequestManager netfulfilledmanTmp;
         if(!flatdb4.Dump(netfulfilledmanTmp)) {
-            return InitError(_("Failed to clear fulfilled requests cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), (pathDB / strDBName).string());
         }
     } 
     if (ShutdownRequested()) {
         return false;
     }
 
-    
-    node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(mnpayments)), std::chrono::minutes{1});
-    node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync)), std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
+    node.scheduler->scheduleEvery([netfulfilledman] { netfulfilledman.DoMaintenance(); }, std::chrono::seconds{1});
+    node.scheduler->scheduleEvery([masternodeSync] { masternodeSync.DoMaintenance(); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(CMasternodeUtils::DoMaintenance, std::chrono::minutes{1});
     if (!fLiteMode) {
-        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance)), std::chrono::minutes{5});
+        node.scheduler->scheduleEvery([governance] { governance.DoMaintenance(); }, std::chrono::minutes{5});
     }
     llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
