@@ -151,10 +151,10 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
         // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
         if (auto witness_id = boost::get<WitnessV0KeyHash>(&collateralTxDest)) {	
-            keyForPayloadSig = CKeyID(witness_id);
+            keyForPayloadSig = CKeyID(*witness_id);
         }	
         else if (auto key_id = boost::get<PKHash>(&collateralTxDest)) {	
-            keyForPayloadSig = CKeyID(key_id);
+            keyForPayloadSig = CKeyID(*key_id);
         }	
         if (!keyForPayloadSig) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-pkh", fJustCheck);
