@@ -525,7 +525,13 @@ UniValue protx_register(const JSONRPCRequest& request)
         }
         CTxDestination txDest;
         ExtractDestination(coin.out.scriptPubKey, txDest);
-        const CKeyID *keyID = boost::get<CKeyID>(&txDest);
+        const CKeyID *keyID = nullptr;
+        if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+            keyID = CKeyID(witness_id);
+        }	
+        else if (auto key_id = boost::get<PKHash>(&txDest)) {	
+            keyID = CKeyID(key_id);
+        }	
         if (!keyID) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
         }
@@ -881,14 +887,17 @@ void protx_list_help()
     );
 }
 
-static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
+static bool CheckWalletOwnsKey(CWallet* pwallet, const WitnessV0KeyHash& keyID) {
 #ifndef ENABLE_WALLET
     return false;
 #else
     if (!pwallet) {
         return false;
     }
-    return pwallet->HaveKey(keyID);
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+    return spk_man.IsMine(CTxDestination(keyID));
 #endif
 }
 
@@ -899,14 +908,10 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
     if (!pwallet) {
         return false;
     }
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
 
-    CTxDestination dest;
-    if (ExtractDestination(script, dest)) {
-        if ((boost::get<CKeyID>(&dest) && pwallet->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && pwallet->HaveCScript(*boost::get<CScriptID>(&dest)))) {
-            return true;
-        }
-    }
-    return false;
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+    return spk_man.IsMine(script);
 #endif
 }
 
