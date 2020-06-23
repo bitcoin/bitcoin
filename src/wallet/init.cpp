@@ -30,6 +30,8 @@ public:
 
     //! Add wallets that should be opened to list of chain clients.
     void Construct(NodeContext& node) const override;
+    // SYSCOIN
+    void AutoLockMasternodeCollaterals() override;
 };
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
