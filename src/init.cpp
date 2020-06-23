@@ -88,6 +88,7 @@
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
 #include <masternode/masternode-meta.h>
+#include <masternode/masternode-utils.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>
@@ -1745,7 +1746,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
-        return InitError(sprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / "sporks.dat").string());
+        return InitError(sprintf(_("Failed to load sporks cache from %s\n", (GetDataDir() / "sporks.dat").string())));
     }
     
     fReindex = gArgs.GetBoolArg("-reindex", false);
@@ -1809,7 +1810,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 pethereumtxmintdb.reset();
                 llmq::DestroyLLMQSystem();
                 evoDb.reset();
-                evoDb = new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState);
+                evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
                 llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, fReset || fReindexChainState);
@@ -2187,7 +2188,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
     bool fLoadCacheFiles = !(fReindex || fReindexChainState);
-fs::path pathDB = GetDataDir();
+    fs::path pathDB = GetDataDir();
     std::string strDBName;
 
     strDBName = "mncache.dat";
@@ -2195,12 +2196,12 @@ fs::path pathDB = GetDataDir();
     CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
     if (fLoadCacheFiles) {
         if(!flatdb1.Load(mmetaman)) {
-            return InitError(strprintf(_("Failed to load masternode cache from %s\n"), (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to load masternode cache from %s\n"), (pathDB / strDBName).string()));
         }
     } else {
         CMasternodeMetaMan mmetamanTmp;
         if(!flatdb1.Dump(mmetamanTmp)) {
-            return InitError(strprintf(_("Failed to clear masternode cache at %s\n"), (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to clear masternode cache at %s\n"), (pathDB / strDBName).string()));
         }
     }
 
@@ -2209,13 +2210,13 @@ fs::path pathDB = GetDataDir();
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
     if (fLoadCacheFiles && !fLiteMode) {
         if(!flatdb3.Load(governance)) {
-            return InitError(strprintf(_("Failed to load governance cache from %s\n"), (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to load governance cache from %s\n"), (pathDB / strDBName).string()));
         }
         governance.InitOnLoad();
     } else {
         CGovernanceManager governanceTmp;
         if(!flatdb3.Dump(governanceTmp)) {
-            return InitError(strprintf(_("Failed to clear governance cache at %s\n"), (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to clear governance cache at %s\n"), (pathDB / strDBName).string()));
         }
     }
 
@@ -2224,23 +2225,23 @@ fs::path pathDB = GetDataDir();
     CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
     if (fLoadCacheFiles) {
         if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s\n"), (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s\n"), (pathDB / strDBName).string()));
         }
     } else {
         CNetFulfilledRequestManager netfulfilledmanTmp;
         if(!flatdb4.Dump(netfulfilledmanTmp)) {
-            return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), (pathDB / strDBName).string());
+            return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), (pathDB / strDBName).string()));
         }
     } 
     if (ShutdownRequested()) {
         return false;
     }
 
-    node.scheduler->scheduleEvery([netfulfilledman] { netfulfilledman.DoMaintenance(); }, std::chrono::seconds{1});
-    node.scheduler->scheduleEvery([masternodeSync] { masternodeSync.DoMaintenance(); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
-    node.scheduler->scheduleEvery(CMasternodeUtils::DoMaintenance, std::chrono::minutes{1});
+    node.scheduler->scheduleEvery([&] { netfulfilledman.DoMaintenance(*node.connman); }, std::chrono::seconds{1});
+    node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
+    node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     if (!fLiteMode) {
-        node.scheduler->scheduleEvery([governance] { governance.DoMaintenance(); }, std::chrono::minutes{5});
+        node.scheduler->scheduleEvery([&] { governance.DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     }
     llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
