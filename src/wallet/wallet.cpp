@@ -39,7 +39,6 @@
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
 #include <services/asset.h> // ReserializeAssetCommitment
-#include <masternodeconfig.h>
 #include <evo/deterministicmns.h>
 using interfaces::FoundBlock;
 
