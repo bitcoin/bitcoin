@@ -40,7 +40,7 @@ struct BIP9Deployment {
     static constexpr int64_t ALWAYS_ACTIVE = -1;
 };
 
-enum LLMQType : uint8_t
+enum
 {
     LLMQ_NONE = 0xff,
 
@@ -51,14 +51,12 @@ enum LLMQType : uint8_t
     // for testing only
     LLMQ_TEST = 100, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
 
-    // for devnets only
-    LLMQ_DEVNET = 101, // 10 members, 6 (60%) threshold, one per hour. Params might differ when -llmqdevnetparams is used
 };
 
 // Configures a LLMQ and its DKG
 // See https://github.com/dashpay/dips/blob/master/dip-0006.md for more details
 struct LLMQParams {
-    LLMQType type;
+    uint8_t type;
 
     // not consensus critical, only used in logging, RPC and UI
     std::string name;
@@ -199,9 +197,4 @@ struct Params {
     std::map<LLMQType, LLMQParams> llmqs;
 };
 } // namespace Consensus
-// SYSCOIN
-// This must be outside of all namespaces. We must also duplicate the forward declaration of is_serializable_enum to
-// avoid inclusion of serialize.h here.
-template<typename T> struct is_serializable_enum;
-template<> struct is_serializable_enum<Consensus::LLMQType> : std::true_type {};
 #endif // SYSCOIN_CONSENSUS_PARAMS_H

@@ -2792,7 +2792,7 @@ bool CConnman::AddPendingMasternode(const uint256& proTxHash)
     return true;
 }
 
-void CConnman::SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
+void CConnman::SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
     auto it = masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
@@ -2801,13 +2801,13 @@ void CConnman::SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint
     }
 }
 
-bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
+bool CConnman::HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
     return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
 }
 
-std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
+std::set<uint256> CConnman::GetMasternodeQuorums(uint8_t llmqType)
 {
     LOCK(cs_vPendingMasternodes);
     std::set<uint256> result;
@@ -2820,7 +2820,7 @@ std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
     return result;
 }
 
-std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const
+std::set<NodeId> CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash) const
 {
     LOCK2(cs_vNodes, cs_vPendingMasternodes);
     auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
@@ -2842,7 +2842,7 @@ std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType
     return nodes;
 }
 
-void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
+void CConnman::RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
     masternodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));

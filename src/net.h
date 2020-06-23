@@ -343,12 +343,12 @@ public:
     bool RemoveAddedNode(const std::string& node);
     // SYSCOIN
     bool AddPendingMasternode(const uint256& proTxHash);
-    void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
-    bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
+    void SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    bool HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
+    std::set<uint256> GetMasternodeQuorums(uint8_t llmqType);
     // also returns QWATCH nodes
-    std::set<NodeId> GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
-    void RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    std::set<NodeId> GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash) const;
+    void RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
     bool IsMasternodeQuorumNode(const CNode* pnode);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
@@ -506,7 +506,7 @@ private:
     RecursiveMutex cs_vAddedNodes;
     // SYSCOIN
     std::vector<uint256> vPendingMasternodes GUARDED_BY(cs_vPendingMasternodes);
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
+    std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
     std::set<uint256> masternodePendingProbes;
     RecursiveMutex cs_vPendingMasternodes;
     

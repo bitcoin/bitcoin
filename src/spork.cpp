@@ -34,7 +34,7 @@ CSporkManager::CSporkManager()
     }
 }
 
-bool CSporkManager::SporkValueIsActive(SporkId nSporkID, int64_t &nActiveValueRet) const
+bool CSporkManager::SporkValueIsActive(int32_t nSporkID, int64_t &nActiveValueRet) const
 {
     LOCK(cs);
 
@@ -188,7 +188,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
 
 }
 
-bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& connman)
+bool CSporkManager::UpdateSpork(int32_t nSporkID, int64_t nValue, CConnman& connman)
 {
     CSporkMessage spork = CSporkMessage(nSporkID, nValue, GetAdjustedTime());
 
@@ -215,13 +215,13 @@ bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& conn
     return true;
 }
 
-bool CSporkManager::IsSporkActive(SporkId nSporkID)
+bool CSporkManager::IsSporkActive(int32_t nSporkID)
 {
     int64_t nSporkValue = GetSporkValue(nSporkID);
     return nSporkValue < GetAdjustedTime();
 }
 
-int64_t CSporkManager::GetSporkValue(SporkId nSporkID)
+int64_t CSporkManager::GetSporkValue(int32_t nSporkID)
 {
     LOCK(cs);
 
@@ -239,7 +239,7 @@ int64_t CSporkManager::GetSporkValue(SporkId nSporkID)
     return -1;
 }
 
-SporkId CSporkManager::GetSporkIDByName(const std::string& strName)
+int32_t CSporkManager::GetSporkIDByName(const std::string& strName)
 {
     auto it = sporkDefsByName.find(strName);
     if (it == sporkDefsByName.end()) {
@@ -249,7 +249,7 @@ SporkId CSporkManager::GetSporkIDByName(const std::string& strName)
     return it->second->sporkId;
 }
 
-std::string CSporkManager::GetSporkNameByID(SporkId nSporkID)
+std::string CSporkManager::GetSporkNameByID(int32_t nSporkID)
 {
     auto it = sporkDefsById.find(nSporkID);
     if (it == sporkDefsById.end()) {

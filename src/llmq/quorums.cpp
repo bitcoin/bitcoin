@@ -32,7 +32,7 @@ CQuorumManager* quorumManager;
 static uint256 MakeQuorumKey(const CQuorum& q)
 {
     CHashWriter hw(SER_NETWORK, 0);
-    SerializeEnum(hw, q.params.type);
+    hw << q.params.type;
     hw << q.qc.quorumHash;
     for (const auto& dmn : q.members) {
         hw << dmn->proTxHash;
@@ -174,7 +174,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     }
 }
 
-void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexNew, CConnman &connman)
+void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexNew, CConnman &connman)
 {
     const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
@@ -210,7 +210,7 @@ bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, const
     assert(pindexQuorum);
     assert(qc.quorumHash == pindexQuorum->GetBlockHash());
 
-    auto members = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, pindexQuorum);
+    auto members = CLLMQUtils::GetAllQuorumMembers((uint8_t)qc.llmqType, pindexQuorum);
 
     quorum->Init(qc, pindexQuorum, minedBlockHash, members);
 
@@ -241,7 +241,7 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitment& fqc, std::
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
     BLSSecretKeyVector skContributions;
-    if (!dkgManager.GetVerifiedContributions((Consensus::LLMQType)fqc.llmqType, quorum->pindexQuorum, fqc.validMembers, memberIndexes, vvecs, skContributions)) {
+    if (!dkgManager.GetVerifiedContributions((uint8_t)fqc.llmqType, quorum->pindexQuorum, fqc.validMembers, memberIndexes, vvecs, skContributions)) {
         return false;
     }
 
@@ -272,12 +272,12 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitment& fqc, std::
     return true;
 }
 
-bool CQuorumManager::HasQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash)
+bool CQuorumManager::HasQuorum(uint8_t llmqType, const uint256& quorumHash)
 {
     return quorumBlockProcessor->HasMinedCommitment(llmqType, quorumHash);
 }
 
-std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqType, size_t maxCount)
+std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, size_t maxCount)
 {
     const CBlockIndex* pindex;
     {
@@ -287,7 +287,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     return ScanQuorums(llmqType, pindex, maxCount);
 }
 
-std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex* pindexStart, size_t maxCount)
+std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t maxCount)
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
@@ -335,7 +335,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     return result;
 }
 
-CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash)
+CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHash)
 {
     CBlockIndex* pindexQuorum;
     {
@@ -349,7 +349,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint25
     return GetQuorum(llmqType, pindexQuorum);
 }
 
-CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum)
+CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum)
 {
     assert(pindexQuorum);
 
