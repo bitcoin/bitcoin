@@ -214,7 +214,7 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     // SYSCOIN
-    void OpenMasternodeConnection(const CAddress& addrConnect);
+    void OpenMasternodeConnection(const CAddress& addrConnect, bool isProbe = false);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool block_relay_only = false, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
 
     bool CheckIncomingNonce(uint64_t nonce);
@@ -533,7 +533,7 @@ private:
     std::vector<uint256> vPendingMasternodes GUARDED_BY(cs_vPendingMasternodes);
     std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
     std::set<uint256> masternodePendingProbes;
-    RecursiveMutex cs_vPendingMasternodes;
+    mutable RecursiveMutex cs_vPendingMasternodes;
     
     std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
     std::list<CNode*> vNodesDisconnected;
@@ -729,6 +729,9 @@ public:
     // Bind address of our side of the connection
     CAddress addrBind;
     uint32_t m_mapped_as;
+    // SYSCOIN In case this is a verified MN, this value is the proTx of the MN
+    uint256 verifiedProRegTxHash;
+    bool fMasternode;
 };
 
 
