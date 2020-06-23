@@ -139,7 +139,6 @@ SYSCOIN_CORE_H = \
   flat-database.h \
   messagesigner.h \
   netfulfilledman.h \
-  flatdatabase.h \
   cachemap.h \
   cachemultimap.h \
   addrdb.h \

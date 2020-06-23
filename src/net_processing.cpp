@@ -32,7 +32,7 @@
 #include <memory>
 // SYSCOIN
 #include <spork.h>
-#include <governance.h>
+#include <governance/governance.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
 #include <typeinfo>
@@ -2226,7 +2226,7 @@ static bool PrepareBlockFilterRequest(CNode& pfrom, const CChainParams& chain_pa
                                       BlockFilterIndex*& filter_index)
 {
     const bool supported_filter_type =
-        (filter_type == BlockFilterType::BASIC &&
+        (filter_type == BlockFilterType::BASIC_FILTER &&
          gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS));
     if (!supported_filter_type) {
         LogPrint(BCLog::NET, "peer %d requested unsupported block filter type: %d\n",

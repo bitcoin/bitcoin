@@ -125,3 +125,10 @@ void WalletInit::Construct(NodeContext& node) const
     gArgs.SoftSetArg("-wallet", "");
     node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet")));
 }
+// SYSCOIN
+void WalletInit::AutoLockMasternodeCollaterals()
+{
+    for (CWallet* pwallet : GetWallets()) {
+        pwallet->AutoLockMasternodeCollaterals();
+    }
+}
