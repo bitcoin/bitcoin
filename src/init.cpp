@@ -1439,7 +1439,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     const CChainParams& chainparams = Params();
     // SYSCOIN
     std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
-	fMasternodeMode = strMasterNodeBLSPrivKey.empty();
+	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
     // ********************************************************* Step 4a: application initialization
     if (!CreatePidFile()) {
         // Detailed error printed inside CreatePidFile().
