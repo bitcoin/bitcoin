@@ -107,7 +107,20 @@ bool CBloomFilter::IsWithinSizeConstraints() const
 }
 
 // SYSCOIN
-
+// Match if the filter contains any arbitrary script data element in script
+bool CBloomFilter::CheckScript(const CScript &script) const
+{
+    CScript::const_iterator pc = script.begin();
+    std::vector<unsigned char> data;
+    while (pc < script.end()) {
+        opcodetype opcode;
+        if (!script.GetOp(pc, opcode, data))
+            break;
+        if (data.size() != 0 && contains(data))
+            return true;
+    }
+    return false;
+}
 // If the transaction is a special transaction that has a registration
 // transaction hash, test the registration transaction hash.
 // If the transaction is a special transaction with any public keys or any
@@ -123,7 +136,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
     case(SYSCOIN_TX_VERSION_MN_REGISTER): {
         CProRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
-            if(contains(proTx.collateralOutpoint) ||
+            if(contains(proTx.collateralOutpoint)) ||
                     contains(proTx.keyIDOwner) ||
                     contains(proTx.keyIDVoting) ||
                     CheckScript(proTx.scriptPayout)) {
@@ -345,11 +358,16 @@ bool CRollingBloomFilter::contains(const uint256& hash) const
     std::vector<unsigned char> vData(hash.begin(), hash.end());
     return contains(vData);
 }
-
 void CRollingBloomFilter::reset()
 {
     nTweak = GetRand(std::numeric_limits<unsigned int>::max());
     nEntriesThisGeneration = 0;
     nGeneration = 1;
     std::fill(data.begin(), data.end(), 0);
+}
+// SYSCOIN
+bool CBloomFilter::contains(const uint160& hash) const
+{
+    std::vector<unsigned char> data(hash.begin(), hash.end());
+    return contains(data);
 }

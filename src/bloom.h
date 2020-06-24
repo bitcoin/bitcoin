@@ -51,6 +51,8 @@ private:
 
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
     // SYSCOIN
+    // Check matches for arbitrary script data elements
+    bool CheckScript(const CScript& script) const;
     // Check additional matches for special transactions
     bool CheckSpecialTransactionMatchesAndUpdate(const CTransaction& tx);
 public:
