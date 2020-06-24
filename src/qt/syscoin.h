@@ -10,6 +10,7 @@
 #endif
 
 #include <QApplication>
+#include <QStringList>
 #include <memory>
 
 class SyscoinGUI;
@@ -38,6 +39,8 @@ public:
 public Q_SLOTS:
     void initialize();
     void shutdown();
+    // SYSCOIN
+    void restart(QStringList args);
 
 Q_SIGNALS:
     void initializeResult(bool success);
@@ -99,6 +102,8 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void requestedInitialize();
+    // SYSCOIN
+    void requestedRestart(QStringList args);
     void requestedShutdown();
     void splashFinished();
     void windowShown(SyscoinGUI* window);
