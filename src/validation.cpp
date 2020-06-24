@@ -2202,6 +2202,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(hashPrevBlock == view.GetBestBlock());
     // SYSCOIN
     if (pindex->pprev) {
+        printf("evo check %s\n", pindex->pprev->GetBlockHash().GetHex().c_str());
         bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash());
         if (!fHasBestBlock) {
             // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
@@ -2431,7 +2432,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
     // SYSCOIN
     evoDb->WriteBestBlock(pindex->GetBlockHash());
-
+    printf("evo write %s\n", pindex->GetBlockHash().GetHex().c_str());
     int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
     LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
 
