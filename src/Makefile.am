@@ -393,10 +393,6 @@ libsyscoin_server_a_SOURCES = \
   masternode/masternode-sync.cpp \
   masternode/masternode-utils.cpp \
   messagesigner.cpp \
-  rpc/masternode.cpp \
-  rpc/governance.cpp \
-  rpc/rpcevo.cpp \
-  rpc/rpcquorums.cpp \
   spork.cpp \
   addrdb.cpp \
   addrman.cpp \
@@ -439,6 +435,10 @@ libsyscoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/masternode.cpp \
+  rpc/governance.cpp \
+  rpc/rpcevo.cpp \
+  rpc/rpcquorums.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   timedata.cpp \
@@ -491,6 +491,7 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
   rpc/governance.cpp \
+  rpc/rawtransaction.cpp \
   rpc/rpcevo.cpp \
   rpc/masternode.cpp \
   rpc/auxpow_miner.cpp \
