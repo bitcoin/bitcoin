@@ -411,6 +411,9 @@ void SyscoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &SyscoinGUI::openClicked);
+        // SYSCOIN
+        connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
+
         connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
             m_open_wallet_menu->clear();
             for (const std::pair<const std::string, bool>& i : m_wallet_controller->listWalletDir()) {
@@ -478,11 +481,11 @@ void SyscoinGUI::createMenuBar()
         file->addAction(m_open_wallet_action);
         file->addAction(m_close_wallet_action);
         file->addSeparator();
-        file->addAction(openRepairAction);
         file->addAction(openAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
+        file->addAction(openRepairAction);
         file->addAction(m_load_psbt_action);
         file->addSeparator();
     }
@@ -817,6 +820,7 @@ void SyscoinGUI::createTrayIconMenu()
     }
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openRPCConsoleAction);
+    trayIconMenu->addAction(openRepairAction);
 #ifndef Q_OS_MAC // This is built-in on macOS
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
@@ -859,7 +863,12 @@ void SyscoinGUI::showDebugWindow()
     GUIUtil::bringToFront(rpcConsole);
     Q_EMIT consoleShown(rpcConsole);
 }
-
+// SYSCOIN
+void SyscoinGUI::showRepair()
+{
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::TAB_REPAIR);
+    showDebugWindow();
+}
 void SyscoinGUI::showDebugWindowActivateConsole()
 {
     rpcConsole->setTabFocus(RPCConsole::TabTypes::CONSOLE);
