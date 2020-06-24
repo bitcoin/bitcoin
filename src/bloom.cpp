@@ -15,7 +15,11 @@
 #include <stdlib.h>
 
 #include <algorithm>
-
+// SYSCOIN
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
+#include <evo/cbtx.h>
+#include <llmq/quorums_commitment.h>
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
 #define LN2 0.6931471805599453094172321214581765680755001343602552
 
@@ -167,10 +171,10 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
         return false;
     }
     case(SYSCOIN_TX_VERSION_MN_COINBASE):
-        // No aditional checks for this transaction types
+    case(SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT):
+        // No aditional checks for these transaction types
         return false;
     }
-
     return false;
 }
 bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)

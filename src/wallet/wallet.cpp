@@ -3797,7 +3797,7 @@ void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
                 if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
-                    vOutpts.emplace_back(o);
+                    vOutpts.emplace_back(COutPoint(pair.first, i));
                 }
             }
         }
@@ -4394,7 +4394,6 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef tx, uint256 hash, CAmo
     int nChangePosRet = -1;
     CAmount nFeeRequired = 0;
     bilingual_str error;
-    CTransactionRef tx;
     return CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coinControl);
 }
 
