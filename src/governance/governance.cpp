@@ -124,7 +124,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(NetMsgType::MSG_GOVERNANCE_OBJECT, nHash));
+            EraseTxRequest(pfrom->GetId(), CInv(MSG_GOVERNANCE_OBJECT, nHash));
         }
 
         if (!masternodeSync.IsBlockchainSynced()) {
@@ -193,7 +193,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(NetMsgType::MNGOVERNANCEOBJECTVOTE, nHash));
+            EraseTxRequest(pfrom->GetId(), CInv(MSG_GOVERNANCE_OBJECT_VOTE, nHash));
         }
 
 
