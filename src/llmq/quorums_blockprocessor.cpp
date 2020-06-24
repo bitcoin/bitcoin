@@ -36,7 +36,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         auto hash = ::SerializeHash(qc);
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(QFCOMMITMENT, nHash));
+            EraseTxRequest(pfrom->GetId(), CInv(NetMsgType::QFCOMMITMENT, nHash));
         }
 
         if (qc.IsNull()) {
