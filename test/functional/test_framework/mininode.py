@@ -26,6 +26,7 @@ import threading
 
 from test_framework.messages import (
     CBlockHeader,
+    MAX_HEADERS_RESULTS,
     MIN_VERSION_SUPPORTED,
     msg_addr,
     msg_block,
@@ -553,7 +554,6 @@ class P2PDataStore(P2PInterface):
             return
 
         headers_list = [self.block_store[self.last_block_hash]]
-        maxheaders = 2000
         while headers_list[-1].sha256 not in locator.vHave:
             # Walk back through the block store, adding headers to headers_list
             # as we go.
@@ -569,7 +569,7 @@ class P2PDataStore(P2PInterface):
                 break
 
         # Truncate the list if there are too many headers
-        headers_list = headers_list[:-maxheaders - 1:-1]
+        headers_list = headers_list[:-MAX_HEADERS_RESULTS - 1:-1]
         response = msg_headers(headers_list)
 
         if response is not None:
