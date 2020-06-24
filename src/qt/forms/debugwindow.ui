@@ -1565,7 +1565,6 @@
        </item>
       </layout>
      </widget>
-    </widget>
     <widget class="QWidget" name="tab_repair">
       <attribute name="title">
        <string>&amp;Wallet Repair</string>
