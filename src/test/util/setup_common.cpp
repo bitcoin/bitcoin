@@ -33,7 +33,11 @@
 #include <validationinterface.h>
 
 #include <functional>
-
+// SYSCOIN
+#include <evo/specialtx.h>
+#include <evo/deterministicmns.h>
+#include <evo/cbtx.h>
+#include <llmq/quorums_init.h>
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 
@@ -97,6 +101,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     LogInstance().StartLogging();
     SHA256AutoDetect();
     ECC_Start();
+    BLSInit();
     SetupEnvironment();
     SetupNetworking();
     InitSignatureCache();
@@ -107,10 +112,16 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         noui_connect();
         noui_connected = true;
     }
+    // SYSCOIN
+    evoDb.reset(new CEvoDB(1 << 20, true, true));
+    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
 }
 
 BasicTestingSetup::~BasicTestingSetup()
 {
+    // SYSCOIN
+    deterministicMNManager.reset();
+    evoDb.reset();
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
     gArgs.ClearArgs();
@@ -141,6 +152,9 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     assert(!::ChainstateActive().CanFlushToDisk());
     ::ChainstateActive().InitCoinsCache();
     assert(::ChainstateActive().CanFlushToDisk());
+    // SYSCOIN
+    m_node.chainman = &::g_chainman;
+    llmq::InitLLMQSystem(*evoDb, true, m_node.connman, m_node.banman);
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
@@ -171,6 +185,9 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
 TestingSetup::~TestingSetup()
 {
+    // SYSCOIN
+    llmq::InterruptLLMQSystem();
+    llmq::StopLLMQSystem();
     if (m_node.scheduler) m_node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
@@ -182,6 +199,8 @@ TestingSetup::~TestingSetup()
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
     UnloadBlockIndex();
+    // SYSCOIN
+    llmq::DestroyLLMQSystem();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
@@ -213,11 +232,39 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     const CChainParams& chainparams = Params();
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
+    // SYSCOIN
+    std::vector<CTransactionRef> llmqCommitments;
+    for (const auto& tx : block.vtx) {
+        if (tx->nVersion == SYSCOIN_TX_MN_QUORUM_COMMITMENT) {
+            llmqCommitments.emplace_back(tx);
+        }
+    }
 
     // Replace mempool-selected txns with just coinbase plus passed-in txns:
     block.vtx.resize(1);
+    // Re-add quorum commitments
+    block.vtx.insert(block.vtx.end(), llmqCommitments.begin(), llmqCommitments.end());
     for (const CMutableTransaction& tx : txns)
         block.vtx.push_back(MakeTransactionRef(tx));
+
+    // Manually update CbTx as we modified the block here
+    if (block.vtx[0]->nVersion == SYSCOIN_TX_MN_COINBASE) {
+        LOCK(cs_main);
+        CCbTx cbTx;
+        if (!GetTxPayload(*block.vtx[0], cbTx)) {
+            BOOST_ASSERT(false);
+        }
+        CValidationState state;
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state)) {
+            BOOST_ASSERT(false);
+        }
+        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
+            BOOST_ASSERT(false);
+        }
+        CMutableTransaction tmpTx = *block.vtx[0];
+        SetTxPayload(tmpTx, cbTx);
+        block.vtx[0] = MakeTransactionRef(tmpTx);
+    }
     // IncrementExtraNonce creates a valid coinbase and merkleRoot
     {
         LOCK(cs_main);
