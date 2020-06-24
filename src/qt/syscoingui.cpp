@@ -395,7 +395,7 @@ void SyscoinGUI::createActions()
     connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
 
     // Get restart command-line parameters and handle restart
-    connect(rpcConsole, &RPCConsole::handleRestart, this, &SyscoinGUI::handleRestart);
+    connect(rpcConsole, &RPCConsole::handleRestart(QStringList), this, &SyscoinGUI::handleRestart(QStringList));
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
