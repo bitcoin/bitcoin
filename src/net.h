@@ -1159,7 +1159,12 @@ public:
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
 };
-
+// SYSCOIN
+class CExplicitNetCleanup
+{
+public:
+    static void callCleanup();
+};
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 int64_t PoissonNextSend(int64_t now, int average_interval_seconds);
 
