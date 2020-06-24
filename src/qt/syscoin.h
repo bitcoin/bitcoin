@@ -10,7 +10,6 @@
 #endif
 
 #include <QApplication>
-#include <QStringList>
 #include <memory>
 
 class SyscoinGUI;
@@ -21,12 +20,14 @@ class PaymentServer;
 class PlatformStyle;
 class WalletController;
 class WalletModel;
-
 namespace interfaces {
 class Handler;
 class Node;
 } // namespace interfaces
-
+QT_BEGIN_NAMESPACE
+// SYSCOIN
+class QStringList;
+QT_END_NAMESPACE
 /** Class encapsulating Syscoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
@@ -40,7 +41,7 @@ public Q_SLOTS:
     void initialize();
     void shutdown();
     // SYSCOIN
-    void restart(QStringList args);
+    void restart(QStringList &args);
 
 Q_SIGNALS:
     void initializeResult(bool success);
@@ -103,7 +104,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void requestedInitialize();
     // SYSCOIN
-    void requestedRestart(QStringList args);
+    void requestedRestart(QStringList &args);
     void requestedShutdown();
     void splashFinished();
     void windowShown(SyscoinGUI* window);

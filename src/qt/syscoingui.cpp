@@ -65,7 +65,7 @@
 // SYSCOIN
 #include <masternode/masternode-sync.h>
 #include <qt/masternodelist.h>
-
+#include <QStringList>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
         "macosx"
@@ -395,7 +395,7 @@ void SyscoinGUI::createActions()
     connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
 
     // Get restart command-line parameters and handle restart
-    connect(rpcConsole, &RPCConsole::handleRestart(QStringList), this, &SyscoinGUI::handleRestart(QStringList));
+    connect(rpcConsole, &RPCConsole::handleRestart, this, &SyscoinGUI::handleRestart);
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -1520,7 +1520,7 @@ static bool ThreadSafeMessageBox(SyscoinGUI* gui, const bilingual_str& message, 
 }
 
 /** Get restart command-line parameters and request restart */
-void SyscoinGUI::handleRestart(QStringList args)
+void SyscoinGUI::handleRestart(QStringList &args)
 {
     if (!m_node.shutdownRequested())
         Q_EMIT requestedRestart(args);
