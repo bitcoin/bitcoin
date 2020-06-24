@@ -235,7 +235,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     // SYSCOIN
     std::vector<CTransactionRef> llmqCommitments;
     for (const auto& tx : block.vtx) {
-        if (tx->nVersion == SYSCOIN_TX_MN_QUORUM_COMMITMENT) {
+        if (tx->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
             llmqCommitments.emplace_back(tx);
         }
     }
@@ -248,13 +248,13 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         block.vtx.push_back(MakeTransactionRef(tx));
 
     // Manually update CbTx as we modified the block here
-    if (block.vtx[0]->nVersion == SYSCOIN_TX_MN_COINBASE) {
+    if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
         LOCK(cs_main);
         CCbTx cbTx;
         if (!GetTxPayload(*block.vtx[0], cbTx)) {
             BOOST_ASSERT(false);
         }
-        CValidationState state;
+        BlockValidationState state;
         if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state)) {
             BOOST_ASSERT(false);
         }
