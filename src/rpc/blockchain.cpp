@@ -1978,7 +1978,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
     ret_all.pushKV("outs", outputs);
     // SYSCOIN
     CAmount nTotalRewardWithMasternodes;
-    ret_all.pushKV("subsidy", GetBlockSubsidy(pindex->nHeight, Params().GetConsensus(), nTotalRewardWithMasternodes));
+    ret_all.pushKV("subsidy", GetBlockSubsidy(pindex->nHeight, Params(), nTotalRewardWithMasternodes));
     ret_all.pushKV("swtotal_size", swtotal_size);
     ret_all.pushKV("swtotal_weight", swtotal_weight);
     ret_all.pushKV("swtxs", swtxs);
