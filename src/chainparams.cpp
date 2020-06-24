@@ -646,3 +646,7 @@ void SetSYSXAssetForUnitTests (uint32_t asset)
   auto* params = const_cast<CChainParams*> (globalChainParams.get ());
   params->SetSYSXAssetForUnitTests (asset);
 }
+void UpdateLLMQTestParams(int size, int threshold)
+{
+    globalChainParams->UpdateLLMQTestParams(size, threshold);
+}
