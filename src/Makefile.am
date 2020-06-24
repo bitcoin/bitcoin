@@ -393,8 +393,6 @@ libsyscoin_server_a_SOURCES = \
   masternode/masternode-sync.cpp \
   masternode/masternode-utils.cpp \
   messagesigner.cpp \
-  netfulfilledman.cpp \
-  net_processing.cpp \
   rpc/masternode.cpp \
   rpc/governance.cpp \
   rpc/rpcevo.cpp \
@@ -420,6 +418,7 @@ libsyscoin_server_a_SOURCES = \
   dbwrapper.cpp \
   miner.cpp \
   net.cpp \
+  netfulfilledman.cpp \
   net_processing.cpp \
   node/coin.cpp \
   node/coinstats.cpp \
