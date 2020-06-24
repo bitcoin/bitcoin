@@ -283,7 +283,7 @@ static void BannedListChanged(ClientModel *clientmodel)
 static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
 {
     QMetaObject::invokeMethod(clientmodel, "setMasternodeList", Qt::QueuedConnection,
-                            Q_ARG(CDeterministicMNList&, newList));
+                            Q_ARG(const CDeterministicMNList&, newList));
     //clientmodel->setMasternodeList(newList);
 }
 
@@ -333,7 +333,7 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, true));
     // SYSCOIN
     m_handler_additional_data_sync_progress_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(std::bind(NotifyAdditionalDataSyncProgressChanged, this, std::placeholders::_1));
-    m_handler_masternodelist_changed = m_node.handleMasternodeListChanged(std::bind(NotifyMasternodeListChanged, this, std::placeholders::_1));
+    m_handler_masternodelist_changed = m_node.handleNotifyMasternodeListChanged(std::bind(NotifyMasternodeListChanged, this, std::placeholders::_1));
    
 }
 
