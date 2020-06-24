@@ -630,11 +630,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN   
     if (tx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         // quorum commitment is not allowed outside of blocks
-        return state.Invalid(TxValidationResult::TX_CONFLICT, "qc-not-allowed");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "qc-not-allowed");
     }
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
-        return state.Invalid(TxValidationResult::TX_CONFLICT, "coinbase");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
@@ -903,7 +903,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // SYSCOIN
         if (setConflicts.count(hashAncestor) || setConflictsAsset.count(hashAncestor))
         {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "bad-txns-spends-conflicting-tx",
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx",
                     strprintf("%s spends conflicting transaction %s",
                         hash.ToString(),
                         hashAncestor.ToString()));
@@ -2203,7 +2203,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(hashPrevBlock == view.GetBestBlock());
     // SYSCOIN
     if (pindex->pprev) {
-        printf("evo check %s\n", pindex->pprev->GetBlockHash().GetHex().c_str());
         bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
         bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash());
         if (fDIP0003Active && !fHasBestBlock) {
@@ -2434,7 +2433,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
     // SYSCOIN
     evoDb->WriteBestBlock(pindex->GetBlockHash());
-    printf("evo write %s\n", pindex->GetBlockHash().GetHex().c_str());
+
     int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
     LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
 
