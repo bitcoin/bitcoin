@@ -183,7 +183,7 @@ static void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &sa
     CHKDF_HMAC_SHA256_L32 hkdf32(initial_key_material.data(), initial_key_material.size(), salt_stringified);
     unsigned char out[32];
     hkdf32.Expand32(info_stringified, out);
-    BOOST_CHECK(HexStr(out, out + 32) == okm_check_hex);
+    BOOST_CHECK(HexStr(out) == okm_check_hex);
 }
 
 static std::string LongTestString()
