@@ -143,8 +143,6 @@ public Q_SLOTS:
     void updateNetworkActive(bool networkActive);
     void updateAlert();
     void updateBanlist();
-    // SYSCOIN
-    void updateMnTimer();
 };
 
 #endif // SYSCOIN_QT_CLIENTMODEL_H
