@@ -136,6 +136,8 @@ public:
         return m_wallet->SignMessage(message, pkhash, str_sig);
     }
     bool isSpendable(const CTxDestination& dest) override { return m_wallet->IsMine(dest) & ISMINE_SPENDABLE; }
+    // SYSCOIN
+    bool IsSpendable(const CScript& script) override { return m_wallet->IsMine(script) & ISMINE_SPENDABLE; }
     bool haveWatchOnly() override
     {
         auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
