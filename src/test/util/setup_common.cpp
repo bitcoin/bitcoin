@@ -261,7 +261,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
-        CMutableTransaction tmpTx = *block.vtx[0];
+        CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
         SetTxPayload(tmpTx, cbTx);
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }
