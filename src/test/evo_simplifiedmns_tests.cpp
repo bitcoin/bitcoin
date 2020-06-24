@@ -2,10 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_syscoin.h"
+#include <test/test_syscoin.h>
 
-#include "evo/simplifiedmns.h"
-#include "netbase.h"
+#include <bls/bls.h>
+#include <evo/simplifiedmns.h>
+#include <netbase.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,7 +23,13 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         std::string ip = strprintf("%d.%d.%d.%d", 0, 0, 0, i);
         Lookup(ip.c_str(), smle.service, i, false);
 
-        smle.pubKeyOperator.SetHex(strprintf("%040x", i));
+        uint8_t skBuf[CBLSSecretKey::SerSize];
+        memset(skBuf, 0, sizeof(skBuf));
+        skBuf[0] = (uint8_t)i;
+        CBLSSecretKey sk;
+        sk.SetBuf(skBuf, sizeof(skBuf));
+
+        smle.pubKeyOperator.Set(sk.GetPublicKey());
         smle.keyIDVoting = WitnessV0KeyHash(std::vector<unsigned char>(strprintf("%040x", i)));
         smle.isValid = true;
 
