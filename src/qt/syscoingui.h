@@ -212,6 +212,9 @@ Q_SIGNALS:
     /** Signal raised when RPC console shown */
     void consoleShown(RPCConsole* console);
     void setPrivacy(bool privacy);
+    // SYSCOIN
+    /** Restart handling */
+    void requestedRestart(QStringList args);
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */

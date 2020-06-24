@@ -828,7 +828,7 @@ void RPCConsole::buildParameterlist(QString arg)
     // Append repair parameter to command line.
     args.append(arg);
 
-    // Send command-line arguments to BitcoinGUI::handleRestart()
+    // Send command-line arguments to SyscoinGUI::handleRestart()
     Q_EMIT handleRestart(args);
 }
 void RPCConsole::clear(bool clearHistory)
