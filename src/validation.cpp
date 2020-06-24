@@ -1416,8 +1416,8 @@ CAmount GetBlockSubsidyRegtest(int nHeight, const CChainParams& params)
 CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool fSuperblockPartOnly)
 {
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) {
-        return GetBlockSubsidyRegtest(nHeight, consensusParams);
+    if(params.NetworkIDString() == CBaseChainParams::REGTEST) {
+        return GetBlockSubsidyRegtest(nHeight, params);
     }
     if (nHeight == 0)
         return 50*COIN;
