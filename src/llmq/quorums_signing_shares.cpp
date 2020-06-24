@@ -1028,7 +1028,7 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::v
         proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
     }
 
-    auto curTime = GetTime();
+    auto curTime = GetTime<std::chrono::milliseconds>().count();
 
     for (auto& p : signedSessions) {
         if (p.second.attempt > p.second.quorum->params.recoveryMembers) {
@@ -1036,7 +1036,9 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::v
         }
 
         if (curTime >= p.second.nextAttemptTime) {
-            p.second.nextAttemptTime = curTime + SEND_FOR_RECOVERY_TIMEOUT;
+            int64_t waitTime = exp2(p.second.attempt) * EXP_SEND_FOR_RECOVERY_TIMEOUT;
+            waitTime = std::min(MAX_SEND_FOR_RECOVERY_TIMEOUT, waitTime);
+            p.second.nextAttemptTime = curTime + waitTime;
             auto dmn = SelectMemberForRecovery(p.second.quorum, p.second.sigShare.id, p.second.attempt);
             p.second.attempt++;
 
