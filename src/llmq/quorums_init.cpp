@@ -21,7 +21,7 @@ CBLSWorker* blsWorker;
 
 CDBWrapper* llmqDb;
 
-void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe, CConnman& connman, BanMan& banman)
+void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, CConnman& connman, BanMan& banman, bool fWipe)
 {
     llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
