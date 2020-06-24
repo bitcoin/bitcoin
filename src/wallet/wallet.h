@@ -964,7 +964,8 @@ public:
                   bool& complete,
                   int sighash_type = 1 /* SIGHASH_ALL */,
                   bool sign = true,
-                  bool bip32derivs = true) const;
+                  bool bip32derivs = true,
+                  size_t* n_signed = nullptr) const;
 
     /**
      * Create a new transaction paying the recipients with a set of coins

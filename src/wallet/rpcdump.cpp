@@ -297,7 +297,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             pwallet->ImportScripts(scripts, 0 /* timestamp */);
 
             if (fP2SH) {
-                scripts.insert(GetScriptForDestination(ScriptHash(CScriptID(redeem_script))));
+                scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
             }
 
             pwallet->ImportScriptPubKeys(strLabel, scripts, false /* have_solving_data */, true /* apply_label */, 1 /* timestamp */);
@@ -817,7 +817,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             create_time = FormatISO8601DateTime(it->second.nCreateTime);
         }
         if(spk_man.GetCScript(scriptid, script)) {
-            file << strprintf("%s %s script=1", HexStr(script.begin(), script.end()), create_time);
+            file << strprintf("%s %s script=1", HexStr(script), create_time);
             file << strprintf(" # addr=%s\n", address);
         }
     }
@@ -1193,7 +1193,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         // Check whether we have any work to do
         for (const CScript& script : script_pub_keys) {
             if (pwallet->IsMine(script) & ISMINE_SPENDABLE) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script (\"" + HexStr(script.begin(), script.end()) + "\")");
+                throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script (\"" + HexStr(script) + "\")");
             }
         }
 

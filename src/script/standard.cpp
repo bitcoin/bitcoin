@@ -16,11 +16,27 @@ typedef std::vector<unsigned char> valtype;
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
 unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
 
-CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
+CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in.begin(), in.end())) {}
+CScriptID::CScriptID(const ScriptHash& in) : BaseHash(static_cast<uint160>(in)) {}
 
-ScriptHash::ScriptHash(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
+ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in.begin(), in.end())) {}
+ScriptHash::ScriptHash(const CScriptID& in) : BaseHash(static_cast<uint160>(in)) {}
 
-PKHash::PKHash(const CPubKey& pubkey) : uint160(pubkey.GetID()) {}
+PKHash::PKHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
+PKHash::PKHash(const CKeyID& pubkey_id) : BaseHash(pubkey_id) {}
+
+WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
+WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash(static_cast<uint160>(pubkey_hash)) {}
+
+CKeyID ToKeyID(const PKHash& key_hash)
+{
+    return CKeyID{static_cast<uint160>(key_hash)};
+}
+
+CKeyID ToKeyID(const WitnessV0KeyHash& key_hash)
+{
+    return CKeyID{static_cast<uint160>(key_hash)};
+}
 
 WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
 {
@@ -241,59 +257,47 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 
 namespace
 {
-class CScriptVisitor : public boost::static_visitor<bool>
+class CScriptVisitor : public boost::static_visitor<CScript>
 {
-private:
-    CScript *script;
 public:
-    explicit CScriptVisitor(CScript *scriptin) { script = scriptin; }
-
-    bool operator()(const CNoDestination &dest) const {
-        script->clear();
-        return false;
-    }
-
-    bool operator()(const PKHash &keyID) const {
-        script->clear();
-        *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
-        return true;
-    }
-
-    bool operator()(const ScriptHash &scriptID) const {
-        script->clear();
-        *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
-        return true;
-    }
-
-    bool operator()(const WitnessV0KeyHash& id) const
+    CScript operator()(const CNoDestination& dest) const
     {
-        script->clear();
-        *script << OP_0 << ToByteVector(id);
-        return true;
+        return CScript();
     }
 
-    bool operator()(const WitnessV0ScriptHash& id) const
+    CScript operator()(const PKHash& keyID) const
     {
-        script->clear();
-        *script << OP_0 << ToByteVector(id);
-        return true;
+        return CScript() << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
-    bool operator()(const WitnessUnknown& id) const
+    CScript operator()(const ScriptHash& scriptID) const
     {
-        script->clear();
-        *script << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
-        return true;
+        return CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
+    }
+
+    CScript operator()(const WitnessV0KeyHash& id) const
+    {
+        return CScript() << OP_0 << ToByteVector(id);
+    }
+
+    CScript operator()(const WitnessV0ScriptHash& id) const
+    {
+        return CScript() << OP_0 << ToByteVector(id);
+    }
+
+    CScript operator()(const WitnessUnknown& id) const
+    {
+        return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
     }
 };
+
+const CScriptVisitor g_script_visitor;
+
 } // namespace
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
-    CScript script;
-
-    boost::apply_visitor(CScriptVisitor(&script), dest);
-    return script;
+    return boost::apply_visitor(::g_script_visitor, dest);
 }
 
 CScript GetScriptForRawPubKey(const CPubKey& pubKey)
@@ -319,7 +323,7 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     if (typ == TX_PUBKEY) {
         return GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0].begin(), vSolutions[0].end())));
     } else if (typ == TX_PUBKEYHASH) {
-        return GetScriptForDestination(WitnessV0KeyHash(vSolutions[0]));
+        return GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
     }
     return GetScriptForDestination(WitnessV0ScriptHash(redeemscript));
 }

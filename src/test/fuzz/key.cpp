@@ -108,7 +108,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(pubkey.IsCompressed());
         assert(pubkey.IsValid());
         assert(pubkey.IsFullyValid());
-        assert(HexToPubKey(HexStr(pubkey.begin(), pubkey.end())) == pubkey);
+        assert(HexToPubKey(HexStr(pubkey)) == pubkey);
         assert(GetAllDestinationsForKey(pubkey).size() == 3);
     }
 

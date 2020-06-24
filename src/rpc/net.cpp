@@ -1049,7 +1049,7 @@ static UniValue sendMessage(std::string msg, std::string rawArgs, bool printResu
       data.push_back(' ');
     }
     std::stringstream output;
-    output << netMsg.command << " was sent:\n" << outputMessage << "\nRaw data: " << data << "\n\nThat took " << std::to_string(elapsed_time) << " clocks (internal).";
+    output << netMsg.m_type << " was sent:\n" << outputMessage << "\nRaw data: " << data << "\n\nThat took " << std::to_string(elapsed_time) << " clocks (internal).";
     return  output.str(); //NullUniValue;
 }
 

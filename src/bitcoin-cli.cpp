@@ -11,6 +11,7 @@
 #include <clientversion.h>
 #include <optional.h>
 #include <rpc/client.h>
+#include <rpc/mining.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <util/strencodings.h>
@@ -39,6 +40,9 @@ static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 
+/** Default number of blocks to generate for RPC generatetoaddress. */
+static const std::string DEFAULT_NBLOCKS = "1";
+
 static void SetupCliArgs()
 {
     SetupHelpOptions(gArgs);
@@ -50,6 +54,7 @@ static void SetupCliArgs()
     gArgs.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     SetupChainParamsBaseOptions();
     gArgs.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -286,6 +291,28 @@ public:
     }
 };
 
+/** Process RPC generatetoaddress request. */
+class GenerateToAddressRequestHandler : public BaseRequestHandler
+{
+public:
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        address_str = args.at(1);
+        UniValue params{RPCConvertValues("generatetoaddress", args)};
+        return JSONRPCRequestObj("generatetoaddress", params, 1);
+    }
+
+    UniValue ProcessReply(const UniValue &reply) override
+    {
+        UniValue result(UniValue::VOBJ);
+        result.pushKV("address", address_str);
+        result.pushKV("blocks", reply.get_obj()["result"]);
+        return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+protected:
+    std::string address_str;
+};
+
 /** Process default single requests */
 class DefaultRequestHandler: public BaseRequestHandler {
 public:
@@ -453,6 +480,34 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     return response;
 }
 
+/** Parse UniValue result to update the message to print to std::cout. */
+static void ParseResult(const UniValue& result, std::string& strPrint)
+{
+    if (result.isNull()) return;
+    strPrint = result.isStr() ? result.get_str() : result.write(2);
+}
+
+/** Parse UniValue error to update the message to print to std::cerr and the code to return. */
+static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
+{
+    if (error.isObject()) {
+        const UniValue& err_code = find_value(error, "code");
+        const UniValue& err_msg = find_value(error, "message");
+        if (!err_code.isNull()) {
+            strPrint = "error code: " + err_code.getValStr() + "\n";
+        }
+        if (err_msg.isStr()) {
+            strPrint += ("error message:\n" + err_msg.get_str());
+        }
+        if (err_code.isNum() && err_code.get_int() == RPC_WALLET_NOT_SPECIFIED) {
+            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+        }
+    } else {
+        strPrint = "error: " + error.write();
+    }
+    nRet = abs(error["code"].get_int());
+}
+
 /**
  * GetWalletBalances calls listwallets; if more than one wallet is loaded, it then
  * fetches mine.trusted balances for each loaded wallet and pushes them to `result`.
@@ -475,6 +530,34 @@ static void GetWalletBalances(UniValue& result)
         balances.pushKV(wallet_name, balance);
     }
     result.pushKV("balances", balances);
+}
+
+/**
+ * Call RPC getnewaddress.
+ * @returns getnewaddress response as a UniValue object.
+ */
+static UniValue GetNewAddress()
+{
+    Optional<std::string> wallet_name{};
+    if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+    std::unique_ptr<BaseRequestHandler> rh{MakeUnique<DefaultRequestHandler>()};
+    return ConnectAndCallRPC(rh.get(), "getnewaddress", /* args=*/{}, wallet_name);
+}
+
+/**
+ * Check bounds and set up args for RPC generatetoaddress params: nblocks, address, maxtries.
+ * @param[in] address  Reference to const string address to insert into the args.
+ * @param     args     Reference to vector of string args to modify.
+ */
+static void SetGenerateToAddressArgs(const std::string& address, std::vector<std::string>& args)
+{
+    if (args.size() > 2) throw std::runtime_error("too many arguments (maximum 2 for nblocks and maxtries)");
+    if (args.size() == 0) {
+        args.emplace_back(DEFAULT_NBLOCKS);
+    } else if (args.at(0) == "0") {
+        throw std::runtime_error("the first argument (number of blocks to generate, default: " + DEFAULT_NBLOCKS + ") must be an integer value greater than zero");
+    }
+    args.emplace(args.begin() + 1, address);
 }
 
 static int CommandLineRPC(int argc, char *argv[])
@@ -535,6 +618,15 @@ static int CommandLineRPC(int argc, char *argv[])
         std::string method;
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
+        } else if (gArgs.GetBoolArg("-generate", false)) {
+            const UniValue getnewaddress{GetNewAddress()};
+            const UniValue& error{find_value(getnewaddress, "error")};
+            if (error.isNull()) {
+                SetGenerateToAddressArgs(find_value(getnewaddress, "result").get_str(), args);
+                rh.reset(new GenerateToAddressRequestHandler());
+            } else {
+                ParseError(error, strPrint, nRet);
+            }
         } else {
             rh.reset(new DefaultRequestHandler());
             if (args.size() < 1) {
@@ -543,40 +635,22 @@ static int CommandLineRPC(int argc, char *argv[])
             method = args[0];
             args.erase(args.begin()); // Remove trailing method name from arguments vector
         }
-        Optional<std::string> wallet_name{};
-        if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
-        const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
+        if (nRet == 0) {
+            // Perform RPC call
+            Optional<std::string> wallet_name{};
+            if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+            const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 
-        // Parse reply
-        UniValue result = find_value(reply, "result");
-        const UniValue& error = find_value(reply, "error");
-        if (!error.isNull()) {
-            // Error
-            strPrint = "error: " + error.write();
-            nRet = abs(error["code"].get_int());
-            if (error.isObject()) {
-                const UniValue& errCode = find_value(error, "code");
-                const UniValue& errMsg = find_value(error, "message");
-                strPrint = errCode.isNull() ? "" : ("error code: " + errCode.getValStr() + "\n");
-
-                if (errMsg.isStr()) {
-                    strPrint += ("error message:\n" + errMsg.get_str());
+            // Parse reply
+            UniValue result = find_value(reply, "result");
+            const UniValue& error = find_value(reply, "error");
+            if (error.isNull()) {
+                if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
+                    GetWalletBalances(result); // fetch multiwallet balances and append to result
                 }
-                if (errCode.isNum() && errCode.get_int() == RPC_WALLET_NOT_SPECIFIED) {
-                    strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
-                }
-            }
-        } else {
-            if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
-                GetWalletBalances(result); // fetch multiwallet balances and append to result
-            }
-            // Result
-            if (result.isNull()) {
-                strPrint = "";
-            } else if (result.isStr()) {
-                strPrint = result.get_str();
+                ParseResult(result, strPrint);
             } else {
-                strPrint = result.write(2);
+                ParseError(error, strPrint, nRet);
             }
         }
     } catch (const std::exception& e) {

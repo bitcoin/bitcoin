@@ -27,8 +27,6 @@ from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
     assert_equal,
-    sync_blocks,
-    sync_mempools,
 )
 
 
@@ -65,7 +63,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
 
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # Sanity check the test framework:
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
@@ -90,17 +88,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Create a confirmed transaction, receiving coins
         address = wallet.getnewaddress()
         self.nodes[0].sendtoaddress(address, 10)
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         # Create a conflicting transaction using RBF
         return_address = self.nodes[0].getnewaddress()
         tx1_id = self.nodes[1].sendtoaddress(return_address, 1)
         tx2_id = self.nodes[1].bumpfee(tx1_id)["txid"]
         # Confirm the transaction
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         # Create another conflicting transaction using RBF
         tx3_id = self.nodes[1].sendtoaddress(return_address, 1)
         tx4_id = self.nodes[1].bumpfee(tx3_id)["txid"]
@@ -313,11 +311,18 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.start_node(4)
 
         # Open most recent wallet in v0.16 (no loadwallet RPC)
-        self.stop_node(5)
-        self.start_node(5, extra_args=["-wallet=w2"])
+        self.restart_node(5, extra_args=["-wallet=w2"])
         wallet = node_v16.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
         assert info['keypoolsize'] == 1
+
+        # Create upgrade wallet in v0.16
+        self.restart_node(-1, extra_args=["-wallet=u1_v16"])
+        wallet = node_v16.get_wallet_rpc("u1_v16")
+        v16_addr = wallet.getnewaddress('', "bech32")
+        v16_info = wallet.validateaddress(v16_addr)
+        v16_pubkey = v16_info['pubkey']
+        self.stop_node(-1)
 
         self.log.info("Test wallet upgrade path...")
         # u1: regular wallet, created with v0.17
@@ -327,6 +332,30 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         v17_info = wallet.getaddressinfo(address)
         hdkeypath = v17_info["hdkeypath"]
         pubkey = v17_info["pubkey"]
+
+        # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
+        shutil.copyfile(
+            os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
+            os.path.join(node_master_wallets_dir, "u1_v16")
+        )
+        load_res = node_master.loadwallet("u1_v16")
+        # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
+        assert_equal(load_res['warning'], '')
+        wallet = node_master.get_wallet_rpc("u1_v16")
+        info = wallet.getaddressinfo(v16_addr)
+        descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + v16_pubkey + ")"
+        assert_equal(info["desc"], descsum_create(descriptor))
+
+        # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
+        os.remove(os.path.join(node_v16_wallets_dir, "wallets/u1_v16"))
+        shutil.copyfile(
+            os.path.join(node_master_wallets_dir, "u1_v16"),
+            os.path.join(node_v16_wallets_dir, "wallets/u1_v16")
+        )
+        self.start_node(-1, extra_args=["-wallet=u1_v16"])
+        wallet = node_v16.get_wallet_rpc("u1_v16")
+        info = wallet.validateaddress(v16_addr)
+        assert_equal(info, v16_info)
 
         # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
         node_v17.unloadwallet("u1_v17")

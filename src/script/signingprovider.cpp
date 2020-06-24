@@ -180,10 +180,10 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
     // Only supports destinations which map to single public keys, i.e. P2PKH,
     // P2WPKH, and P2SH-P2WPKH.
     if (auto id = boost::get<PKHash>(&dest)) {
-        return CKeyID(*id);
+        return ToKeyID(*id);
     }
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
-        return CKeyID(*witness_id);
+        return ToKeyID(*witness_id);
     }
     if (auto script_hash = boost::get<ScriptHash>(&dest)) {
         CScript script;
@@ -191,7 +191,7 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
         CTxDestination inner_dest;
         if (store.GetCScript(script_id, script) && ExtractDestination(script, inner_dest)) {
             if (auto inner_witness_id = boost::get<WitnessV0KeyHash>(&inner_dest)) {
-                return CKeyID(*inner_witness_id);
+                return ToKeyID(*inner_witness_id);
             }
         }
     }

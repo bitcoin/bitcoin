@@ -579,6 +579,9 @@ bool PSBTInputSigned(const PSBTInput& input);
 /** Signs a PSBTInput, verifying that all provided data matches what is being signed. */
 bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool use_dummy = false);
 
+/** Counts the unsigned inputs of a PSBT. */
+size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt);
+
 /** Updates a PSBTOutput with information from provider.
  *
  * This fills in the redeem_script, witness_script, and hd_keypaths where possible.

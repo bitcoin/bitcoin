@@ -79,7 +79,7 @@ public Q_SLOTS:
     void gotoVerifyMessageTab(QString addr = "");
 
     /** Load Partially Signed Bitcoin Transaction */
-    void gotoLoadPSBT();
+    void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Encrypt the wallet */
     void encryptWallet(bool status);

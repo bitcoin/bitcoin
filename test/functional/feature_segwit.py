@@ -559,8 +559,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
 
             # Assert it is properly saved
-            self.stop_node(1)
-            self.start_node(1)
+            self.restart_node(1)
             assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
             assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
 
