@@ -7,7 +7,8 @@
 
 #include <validation.h>
 #include <util/system.h>
-
+#include <governance/governance-vote.h>
+#include <governance/governance-object.h>
 void zmqError(const char *str)
 {
     LogPrint(BCLog::ZMQ, "zmq: Error: %s, errno=%s\n", str, zmq_strerror(errno));
