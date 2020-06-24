@@ -119,6 +119,10 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
 bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state)
 {
     AssertLockHeld(cs_main);
+    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
+    if (!fDIP0003Active) {
+        return true;
+    }
 
 
     std::map<uint8_t, CFinalCommitment> qcs;
