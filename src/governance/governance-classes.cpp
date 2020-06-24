@@ -462,7 +462,8 @@ void CSuperblock::GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuper
 
 CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
 {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CChainParams& chainParams = Params();
+    const Consensus::Params& consensusParams = chainParams.GetConsensus();
 
     if(!IsValidBlockHeight(nBlockHeight)) {
         return 0;
@@ -471,7 +472,7 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     CAmount nPaymentsLimit = 0;
     if(nSuperblock > 120){
     	// some part of all blocks issued during the cycle goes to superblock, see GetBlockSubsidy
-    	const CAmount &nSuperblockPartOfSubsidy = GetBlockSubsidy(nBlockHeight, consensusParams, true);
+    	const CAmount &nSuperblockPartOfSubsidy = GetBlockSubsidy(nBlockHeight, chainParams, true);
     	nPaymentsLimit = nSuperblockPartOfSubsidy * consensusParams.nSuperblockCycle;
     }
     // bootstrapping period
