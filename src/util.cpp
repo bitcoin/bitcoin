@@ -619,7 +619,7 @@ public:
     /* Special test for -testnet and -regtest args, because we
      * don't want to be confused by craziness like "[regtest] testnet=1"
      */
-    static inline bool GetNetBoolArg(const ArgsManager &am, const std::string& net_arg)
+    static inline bool GetNetBoolArg(const ArgsManager &am, const std::string& net_arg, bool interpret_bool)
     {
         std::pair<bool,std::string> found_result(false,std::string());
         found_result = GetArgHelper(am.m_override_args, net_arg, true);
@@ -629,7 +629,7 @@ public:
                 return false; // not set
             }
         }
-        return InterpretBool(found_result.second); // is set, so evaluate
+        return !interpret_bool || InterpretBool(found_result.second); // is set, so evaluate
     }
 };
 
@@ -1030,9 +1030,9 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 
 std::string ArgsManager::GetChainName() const
 {
-    bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest");
-    bool fDevNet = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet");
-    bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet");
+    bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest", true);
+    bool fDevNet = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
+    bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet", true);
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
     if (nameParamsCount > 1)
