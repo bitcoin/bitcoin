@@ -842,11 +842,11 @@ void RequestTx(CNodeState* state, const CInv& inv, std::chrono::microseconds cur
 size_t GetRequestedTxCount(NodeId nodeId)
 {
     AssertLockHeld(cs_main);
-    auto* state = State(nodeId);
-    if (!state) {
+    CNodeState *nodestate = State(nodeId);
+    if (!nodestate) {
         return 0;
     }
-    return state->m_tx_download.m_tx_process_time.size();
+    return nodestate->m_tx_download.m_tx_process_time.size();
 }
 } // namespace
 /// SYSCOIN
