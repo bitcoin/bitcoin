@@ -1420,7 +1420,7 @@ size_t GetSerializeSize(const T& t, int nVersion = 0)
 template <typename S, typename T>
 size_t GetSerializeSize(const S& s, const T& t)
 {
-    return (CSizeComputer(s.GetType(), s.GetVersion()) << t).size();
+    return (CSizeComputer(s.GetVersion()) << t).size();
 }
 
 template <typename... T>
