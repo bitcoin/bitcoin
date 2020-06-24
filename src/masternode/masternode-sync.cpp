@@ -156,7 +156,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
 
-    for (auto& pnode : vNodesCopy)
+    for (CNode* pnode : vNodesCopy)
     {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
