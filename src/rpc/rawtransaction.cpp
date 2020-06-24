@@ -305,7 +305,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
     CDataStream ssMB(SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     CMerkleBlock mb(block, setTxids);
     ssMB << mb;
-    std::string strHex = HexStr(ssMB.begin(), ssMB.end());
+    std::string strHex = HexStr(ssMB);
     return strHex;
 }
 
@@ -1186,7 +1186,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         if (!input.final_script_witness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
             for (const auto& item : input.final_script_witness.stack) {
-                txinwitness.push_back(HexStr(item.begin(), item.end()));
+                txinwitness.push_back(HexStr(item));
             }
             in.pushKV("final_scriptwitness", txinwitness);
         }

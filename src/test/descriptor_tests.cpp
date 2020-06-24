@@ -216,7 +216,7 @@ void DoCheck(const std::string& prv, const std::string& pub, int flags, const st
 
             // For each of the produced scripts, verify solvability, and when possible, try to sign a transaction spending it.
             for (size_t n = 0; n < spks.size(); ++n) {
-                BOOST_CHECK_EQUAL(ref[n], HexStr(spks[n].begin(), spks[n].end()));
+                BOOST_CHECK_EQUAL(ref[n], HexStr(spks[n]));
                 BOOST_CHECK_EQUAL(IsSolvable(Merge(key_provider, script_provider), spks[n]), (flags & UNSOLVABLE) == 0);
 
                 if (flags & SIGNABLE) {
