@@ -41,7 +41,7 @@ public Q_SLOTS:
     void initialize();
     void shutdown();
     // SYSCOIN
-    void restart(QStringList &args);
+    void restart(const QStringList &args);
 
 Q_SIGNALS:
     void initializeResult(bool success);
@@ -103,8 +103,6 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void requestedInitialize();
-    // SYSCOIN
-    void requestedRestart(QStringList &args);
     void requestedShutdown();
     void splashFinished();
     void windowShown(SyscoinGUI* window);

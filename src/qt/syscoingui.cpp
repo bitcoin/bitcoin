@@ -1520,7 +1520,7 @@ static bool ThreadSafeMessageBox(SyscoinGUI* gui, const bilingual_str& message, 
 }
 
 /** Get restart command-line parameters and request restart */
-void SyscoinGUI::handleRestart(QStringList &args)
+void SyscoinGUI::handleRestart(const QStringList &args)
 {
     if (!m_node.shutdownRequested())
         Q_EMIT requestedRestart(args);
