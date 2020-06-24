@@ -19,7 +19,7 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QtGui/QClipboard>
-#include <node/context.h>
+#include <interfaces/node.h>
 int GetOffsetFromUtc()
 {
 #if QT_VERSION < 0x050200
