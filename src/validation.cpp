@@ -1911,8 +1911,9 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys)
 {
     // SYSCOIN
+    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
     bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->GetBlockHash());
-    if (!fHasBestBlock) {
+    if (fDIP0003Active && !fHasBestBlock) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
         AbortNode("Found EvoDB inconsistency, you must reindex to continue");
         return DISCONNECT_FAILED;
@@ -2203,8 +2204,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // SYSCOIN
     if (pindex->pprev) {
         printf("evo check %s\n", pindex->pprev->GetBlockHash().GetHex().c_str());
+        bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
         bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash());
-        if (!fHasBestBlock) {
+        if (fDIP0003Active && !fHasBestBlock) {
             // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
             return AbortNode(state, "Found EvoDB inconsistency, you must reindex to continue");
         }
