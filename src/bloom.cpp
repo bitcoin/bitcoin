@@ -136,7 +136,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
     case(SYSCOIN_TX_VERSION_MN_REGISTER): {
         CProRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
-            if(contains(proTx.collateralOutpoint)) ||
+            if(contains(proTx.collateralOutpoint) ||
                     contains(proTx.keyIDOwner) ||
                     contains(proTx.keyIDVoting) ||
                     CheckScript(proTx.scriptPayout)) {
