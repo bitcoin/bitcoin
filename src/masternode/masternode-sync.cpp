@@ -303,7 +303,6 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
     CBloomFilter filter;
-    filter.clear();
 
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
     
