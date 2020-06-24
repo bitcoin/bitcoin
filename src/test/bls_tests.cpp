@@ -4,7 +4,7 @@
 
 #include <bls/bls.h>
 #include <bls/bls_batchverifier.h>
-#include <test/test_syscoin.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
