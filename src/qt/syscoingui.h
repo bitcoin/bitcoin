@@ -24,7 +24,8 @@
 #endif
 
 #include <memory>
-
+// SYSCOIN
+#include <QStringList>
 class ClientModel;
 class NetworkStyle;
 class Notificator;
