@@ -117,9 +117,9 @@ class LLMQSigningTest(DashTestFramework):
             # Make sure node0 has received qsendrecsigs from the previously isolated node
             mn.node.ping()
             wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
-            # Let 1 second pass so that the next node is used for recovery, which should succeed
-            self.bump_mocktime(1)
-            wait_for_sigs(True, False, True, 5)
+            # Let 2 seconds pass so that the next node is used for recovery, which should succeed
+            self.bump_mocktime(2)
+            wait_for_sigs(True, False, True, 2)
 
 if __name__ == '__main__':
     LLMQSigningTest().main()
