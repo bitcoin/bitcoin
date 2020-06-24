@@ -3279,7 +3279,7 @@ void PeerManagerImpl::ProcessMessage(
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
         {
-            Misbehaving(pfrom.GetId(), 20, strprintf("message inv size() = %u", vInv.size()));
+            Misbehaving(pfrom.GetId(), 20, strprintf("inv message size = %u", vInv.size()));
             return;
         }
 
@@ -3374,7 +3374,8 @@ void PeerManagerImpl::ProcessMessage(
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
         {
-            Misbehaving(pfrom.GetId(), 20, strprintf("message getdata size() = %u", vInv.size()));
+
+            Misbehaving(pfrom.GetId(), 20, strprintf("getdata message size = %u", vInv.size()));
             return;
         }
 
