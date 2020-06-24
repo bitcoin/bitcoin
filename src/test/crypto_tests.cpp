@@ -533,19 +533,19 @@ BOOST_AUTO_TEST_CASE(pbkdf2_hmac_sha512_test) {
 
     strcpy((char *)s, "salt");
     PKCS5_PBKDF2_HMAC("password", 8, s, 4, 1, EVP_sha512(), 64, k);
-    BOOST_CHECK(HexStr(k, k + 64) == "867f70cf1ade02cff3752599a3a53dc4af34c7a669815ae5d513554e1c8cf252c02d470a285a0501bad999bfe943c08f050235d7d68b1da55e63f73b60a57fce");
+    BOOST_CHECK(HexStr(k) == "867f70cf1ade02cff3752599a3a53dc4af34c7a669815ae5d513554e1c8cf252c02d470a285a0501bad999bfe943c08f050235d7d68b1da55e63f73b60a57fce");
 
     strcpy((char *)s, "salt");
     PKCS5_PBKDF2_HMAC("password", 8, s, 4, 2, EVP_sha512(), 64, k);
-    BOOST_CHECK(HexStr(k, k + 64) == "e1d9c16aa681708a45f5c7c4e215ceb66e011a2e9f0040713f18aefdb866d53cf76cab2868a39b9f7840edce4fef5a82be67335c77a6068e04112754f27ccf4e");
+    BOOST_CHECK(HexStr(k) == "e1d9c16aa681708a45f5c7c4e215ceb66e011a2e9f0040713f18aefdb866d53cf76cab2868a39b9f7840edce4fef5a82be67335c77a6068e04112754f27ccf4e");
 
     strcpy((char *)s, "salt");
     PKCS5_PBKDF2_HMAC("password", 8, s, 4, 4096, EVP_sha512(), 64, k);
-    BOOST_CHECK(HexStr(k, k + 64) == "d197b1b33db0143e018b12f3d1d1479e6cdebdcc97c5c0f87f6902e072f457b5143f30602641b3d55cd335988cb36b84376060ecd532e039b742a239434af2d5");
+    BOOST_CHECK(HexStr(k) == "d197b1b33db0143e018b12f3d1d1479e6cdebdcc97c5c0f87f6902e072f457b5143f30602641b3d55cd335988cb36b84376060ecd532e039b742a239434af2d5");
 
     strcpy((char *)s, "saltSALTsaltSALTsaltSALTsaltSALTsalt");
     PKCS5_PBKDF2_HMAC("passwordPASSWORDpassword", 3*8, s, 9*4, 4096, EVP_sha512(), 64, k);
-    BOOST_CHECK(HexStr(k, k + 64) == "8c0511f4c6e597c6ac6315d8f0362e225f3c501495ba23b868c005174dc4ee71115b59f9e60cd9532fa33e0f75aefe30225c583a186cd82bd4daea9724a3d3b8");
+    BOOST_CHECK(HexStr(k) == "8c0511f4c6e597c6ac6315d8f0362e225f3c501495ba23b868c005174dc4ee71115b59f9e60cd9532fa33e0f75aefe30225c583a186cd82bd4daea9724a3d3b8");
 }
 
 

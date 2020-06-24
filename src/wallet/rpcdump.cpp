@@ -44,7 +44,7 @@ std::string static EncodeDumpString(const std::string &str) {
     std::stringstream ret;
     for (unsigned char c : str) {
         if (c <= 32 || c >= 128 || c == '%') {
-            ret << '%' << HexStr(&c, &c + 1);
+            ret << '%' << HexStr(Span<const unsigned char>(&c, 1));
         } else {
             ret << c;
         }

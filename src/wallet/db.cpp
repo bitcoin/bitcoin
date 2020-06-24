@@ -42,7 +42,7 @@ void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filena
     for (const auto& item : env.m_fileids) {
         if (fileid == item.second && &fileid != &item.second) {
             throw std::runtime_error(strprintf("BerkeleyBatch: Can't open database %s (duplicates fileid %s from %s)", filename,
-                HexStr(std::begin(item.second.value), std::end(item.second.value)), item.first));
+            HexStr(item.second.value), item.first));
         }
     }
 }
