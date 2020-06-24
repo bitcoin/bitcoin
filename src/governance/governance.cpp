@@ -20,7 +20,6 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <shutdown.h>
-#include <protocol.h>
 CGovernanceManager governance;
 
 int nSubmittedFinalBudget;
@@ -125,7 +124,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(MSG_GOVERNANCE_OBJECT, nHash));
+            EraseTxRequest(pfrom->GetId(), CInv(NetMsgType::MSG_GOVERNANCE_OBJECT, nHash));
         }
 
         if (!masternodeSync.IsBlockchainSynced()) {
@@ -194,7 +193,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(MNGOVERNANCEOBJECTVOTE, nHash));
+            EraseTxRequest(pfrom->GetId(), CInv(NetMsgType::MNGOVERNANCEOBJECTVOTE, nHash));
         }
 
 
