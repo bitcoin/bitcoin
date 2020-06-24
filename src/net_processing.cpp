@@ -839,9 +839,8 @@ void RequestTx(CNodeState* state, const CInv& inv, std::chrono::microseconds cur
 
     peer_download_state.m_tx_process_time.emplace(process_time, inv);
 }  
-size_t GetRequestedTxCount(NodeId nodeId)
+size_t GetRequestedTxCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     CNodeState *nodestate = State(nodeId);
     if (!nodestate) {
         return 0;
