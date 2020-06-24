@@ -403,7 +403,7 @@ UniValue masternode(const JSONRPCRequest& request)
     } else if (strCommand == "winners") {
         return masternode_winners(request);
     } else {
-        masternode_help();
+        masternode_help(request);
     }
 }
 
@@ -424,7 +424,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 strMode != "payee" && strMode != "pubkeyoperator" &&
                 strMode != "status"))
     {
-        masternode_list_help();
+        masternode_list_help(request);
     }
 
     UniValue obj(UniValue::VOBJ);

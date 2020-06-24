@@ -3787,7 +3787,7 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 }
 
 // SYSCOIN
-void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
 
@@ -4384,9 +4384,6 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef tx, uint256 hash, CAmo
     CScript scriptChange;
     scriptChange << OP_RETURN << ToByteVector(hash);
 
-    CAmount nFeeRet = 0;
-    int nChangePosRet = -1;
-    std::string strFail = "";
     std::vector< CRecipient > vecSend;
     vecSend.push_back((CRecipient){scriptChange, amount, false});
 
@@ -4394,16 +4391,11 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef tx, uint256 hash, CAmo
     if (!outpoint.IsNull()) {
         coinControl.Select(outpoint);
     }
-    CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
+    CAmount nFeeRequired = 0;
     bilingual_str error;
     CTransactionRef tx;
-    bool fCreated = pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control);
-    if (!fCreated)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-
-
-    return true;
+    return CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coinControl);
 }
 
 void CWallet::postInitProcess()
