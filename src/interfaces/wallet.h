@@ -92,7 +92,7 @@ public:
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CTxDestination& dest) = 0;
     // SYSCOIN
-    virtual bool IsSpendable(const CScript& script) = 0;
+    virtual bool isSpendable(const CScript& script) = 0;
 
     //! Return whether wallet has watch only keys.
     virtual bool haveWatchOnly() = 0;
