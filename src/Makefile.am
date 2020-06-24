@@ -394,6 +394,7 @@ libsyscoin_server_a_SOURCES = \
   masternode/masternode-utils.cpp \
   messagesigner.cpp \
   netfulfilledman.cpp \
+  net_processing.cpp \
   rpc/masternode.cpp \
   rpc/governance.cpp \
   rpc/rpcevo.cpp \
