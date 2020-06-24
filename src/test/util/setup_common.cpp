@@ -152,9 +152,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     assert(!::ChainstateActive().CanFlushToDisk());
     ::ChainstateActive().InitCoinsCache();
     assert(::ChainstateActive().CanFlushToDisk());
-    // SYSCOIN
     m_node.chainman = &::g_chainman;
-    llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman);
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
@@ -181,6 +179,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         options.m_msgproc = m_node.peer_logic.get();
         m_node.connman->Init(options);
     }
+    // SYSCOIN
+    llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman);
 }
 
 TestingSetup::~TestingSetup()
