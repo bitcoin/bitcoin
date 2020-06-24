@@ -256,7 +256,7 @@ public:
         obj.pushKV("isscript", false);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", 0);
-        obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
+        obj.pushKV("witness_program", HexStr(id));
         return obj;
     }
 
@@ -266,7 +266,7 @@ public:
         obj.pushKV("isscript", true);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", 0);
-        obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
+        obj.pushKV("witness_program", HexStr(id));
         return obj;
     }
 

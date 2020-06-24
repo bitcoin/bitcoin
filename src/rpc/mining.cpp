@@ -899,7 +899,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
     result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
     if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
-        result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
+        result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment));
     }
     // SYSCOIN
     UniValue masternodeObj(UniValue::VARR);
