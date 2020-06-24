@@ -31,8 +31,8 @@
 #include <rpc/util.h>
 #include <util/translation.h>
 #ifdef ENABLE_WALLET
-extern UniValue signrawtransaction(const JSONRPCRequest& request);
-extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+extern UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
+extern UniValue sendrawtransactionwithwallet(const JSONRPCRequest& request);
 #endif//ENABLE_WALLET
 
 std::string GetHelpString(int nParamNum, std::string strParamName)
@@ -292,7 +292,7 @@ static std::string SignAndSendSpecialTx(const util::Ref& context, const CMutable
     JSONRPCRequest signRequest(context);
     signRequest.params.setArray();
     signRequest.params.push_back(HexStr(ds.begin(), ds.end()));
-    UniValue signResult = signrawtransaction(signRequest);
+    UniValue signResult = signrawtransactionwithwallet(signRequest);
 
     JSONRPCRequest sendRequest(context);
     sendRequest.params.setArray();
