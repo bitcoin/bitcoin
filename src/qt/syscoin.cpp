@@ -174,7 +174,7 @@ void SyscoinCore::initialize()
     }
 }
 // SYSCOIN
-void SyscoinCore::restart(QStringList &args)
+void SyscoinCore::restart(const QStringList &args)
 {
     static bool executing_restart{false};
 
@@ -308,7 +308,7 @@ void SyscoinApplication::startThread()
     connect(this, &SyscoinApplication::requestedInitialize, executor, &SyscoinCore::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, executor, &SyscoinCore::shutdown);
     // SYSCOIN
-    connect(window, &SyscoinApplication::requestedRestart, executor, &SyscoinCore::restart);
+    connect(window, &SyscoinGui::requestedRestart, executor, &SyscoinCore::restart);
     /*  make sure executor object is deleted in its own thread */
     connect(coreThread, &QThread::finished, executor, &QObject::deleteLater);
 
