@@ -839,6 +839,8 @@ void RequestTx(CNodeState* state, const CInv& inv, std::chrono::microseconds cur
 
     peer_download_state.m_tx_process_time.emplace(process_time, inv);
 }  
+} // namespace
+/// SYSCOIN
 size_t GetRequestedTxCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CNodeState *nodestate = State(nodeId);
@@ -847,8 +849,6 @@ size_t GetRequestedTxCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     }
     return nodestate->m_tx_download.m_tx_process_time.size();
 }
-} // namespace
-/// SYSCOIN
 void EraseTxRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     LogPrint(BCLog::NET, "%s -- inv=(%s)\n", __func__, inv.ToString());
