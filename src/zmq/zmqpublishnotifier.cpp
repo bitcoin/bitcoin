@@ -9,7 +9,8 @@
 #include <validation.h>
 #include <util/system.h>
 #include <rpc/server.h>
-
+#include <governance/governance-vote.h>
+#include <governance/governance-object.h>
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
 static const char *MSG_HASHBLOCK = "hashblock";
