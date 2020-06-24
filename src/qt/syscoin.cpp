@@ -190,7 +190,7 @@ void SyscoinCore::restart(QStringList args)
             qDebug() << __func__ << ": Restart initiated...";
             QApplication::quit();
         } catch (...) {
-            handleRunawayException(std::current_exception());
+            handleRunawayException(nullptr);
         }
     }
 }
