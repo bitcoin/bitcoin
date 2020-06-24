@@ -127,7 +127,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CBlockIndex* pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
-
+    bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock;
     const int32_t nChainId = chainparams.GetConsensus ().nAuxpowChainId;
     // FIXME: Active version bits after the always-auxpow fork!
     //const int32_t nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
@@ -156,14 +156,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
     // SYSCOIN
-    for (auto& p : chainparams.GetConsensus().llmqs) {
-        CTransactionRef qcTx;
-        if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, nHeight, qcTx)) {
-            pblock->vtx.emplace_back(qcTx);
-            pblocktemplate->vTxFees.emplace_back(0);
-            pblocktemplate->vTxSigOpsCost.emplace_back(0);
-            nBlockWeight += WITNESS_SCALE_FACTOR * qcTx->GetTotalSize();
-            ++nBlockTx;
+    if (fDIP0003Active_context) {
+        for (auto& p : chainparams.GetConsensus().llmqs) {
+            CTransactionRef qcTx;
+            if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, nHeight, qcTx)) {
+                pblock->vtx.emplace_back(qcTx);
+                pblocktemplate->vTxFees.emplace_back(0);
+                pblocktemplate->vTxSigOpsCost.emplace_back(0);
+                nBlockWeight += WITNESS_SCALE_FACTOR * qcTx->GetTotalSize();
+                ++nBlockTx;
+            }
         }
     }
     int nPackagesSelected = 0;
