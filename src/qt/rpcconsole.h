@@ -146,7 +146,7 @@ Q_SIGNALS:
     // For RPC command executor
     void cmdRequest(const QString &command, const WalletModel* wallet_model);
     /** SYSCOIN Get restart command-line parameters and handle restart */
-    void handleRestart(QStringList args);
+    void handleRestart(QStringList &args);
 private:
     void startExecutor();
     void setTrafficGraphRange(int mins);

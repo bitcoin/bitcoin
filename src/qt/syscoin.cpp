@@ -60,6 +60,7 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 // SYSCOIN
 #include <QProcess>
+#include <QStringList>
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
@@ -173,7 +174,7 @@ void SyscoinCore::initialize()
     }
 }
 // SYSCOIN
-void SyscoinCore::restart(QStringList args)
+void SyscoinCore::restart(QStringList &args)
 {
     static bool executing_restart{false};
 
