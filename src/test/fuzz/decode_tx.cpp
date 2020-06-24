@@ -14,7 +14,7 @@
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
-    const std::string tx_hex = HexStr(std::string{buffer.begin(), buffer.end()});
+    const std::string tx_hex = HexStr(buffer);
     CMutableTransaction mtx;
     const bool result_none = DecodeHexTx(mtx, tx_hex, false, false);
     const bool result_try_witness = DecodeHexTx(mtx, tx_hex, false, true);
