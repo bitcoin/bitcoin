@@ -154,7 +154,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     assert(::ChainstateActive().CanFlushToDisk());
     // SYSCOIN
     m_node.chainman = &::g_chainman;
-    llmq::InitLLMQSystem(*evoDb, true, m_node.connman.get(), m_node.banman.get());
+    llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman);
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
