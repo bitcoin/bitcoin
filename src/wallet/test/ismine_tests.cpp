@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
-        CScript witnessscript = GetScriptForDestination(WitnessV0KeyHash(PKHash(pubkeys[0])));
+        CScript witnessscript = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
         scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessscript));
 
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript));
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
 
-        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(PKHash(pubkeys[0])));
+        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
 
         // Keystore implicitly has key and P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
 
-        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(PKHash(uncompressedPubkey)));
+        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uncompressedPubkey));
 
         // Keystore has key, but no P2SH redeemScript
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);

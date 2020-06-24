@@ -43,6 +43,12 @@ class P2PPermissionsTests(BitcoinTestFramework):
             True)
 
         self.checkpermission(
+            # no permission (even with forcerelay)
+            ["-whitelist=@127.0.0.1", "-whitelistforcerelay=1"],
+            [],
+            False)
+
+        self.checkpermission(
             # relay permission removed (no specific permissions)
             ["-whitelist=127.0.0.1", "-whitelistrelay=0"],
             ["noban", "mempool"],

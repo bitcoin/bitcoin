@@ -31,8 +31,6 @@ from .util import (
     disconnect_nodes,
     get_datadir_path,
     initialize_datadir,
-    sync_blocks,
-    sync_mempools,
 )
 
 
@@ -355,9 +353,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # See fPreferredDownload in net_processing.
         #
         # If further outbound connections are needed, they can be added at the beginning of the test with e.g.
-        # connect_nodes(self.nodes[1], 2)
+        # self.connect_nodes(1, 2)
         for i in range(self.num_nodes - 1):
-            connect_nodes(self.nodes[i + 1], i)
+            self.connect_nodes(i + 1, i)
         self.sync_all()
 
     def setup_nodes(self):
@@ -534,11 +532,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
 
+    def connect_nodes(self, a, b):
+        connect_nodes(self.nodes[a], b)
+
+    def disconnect_nodes(self, a, b):
+        disconnect_nodes(self.nodes[a], b)
+
     def split_network(self):
         """
         Split the network of four nodes into nodes 0/1 and 2/3.
         """
-        disconnect_nodes(self.nodes[1], 2)
+        self.disconnect_nodes(1, 2)
         self.sync_all(self.nodes[:2])
         self.sync_all(self.nodes[2:])
 
@@ -546,18 +550,57 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         Join the (previously split) network halves together.
         """
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(1, 2)
         self.sync_all()
 
-    def sync_blocks(self, nodes=None, **kwargs):
-        sync_blocks(nodes or self.nodes, **kwargs)
+    def sync_blocks(self, nodes=None, wait=1, timeout=60):
+        """
+        Wait until everybody has the same tip.
+        sync_blocks needs to be called with an rpc_connections set that has least
+        one node already synced to the latest, stable tip, otherwise there's a
+        chance it might return before all nodes are stably synced.
+        """
+        rpc_connections = nodes or self.nodes
+        timeout = int(timeout * self.options.timeout_factor)
+        stop_time = time.time() + timeout
+        while time.time() <= stop_time:
+            best_hash = [x.getbestblockhash() for x in rpc_connections]
+            if best_hash.count(best_hash[0]) == len(rpc_connections):
+                return
+            # Check that each peer has at least one connection
+            assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            time.sleep(wait)
+        raise AssertionError("Block sync timed out after {}s:{}".format(
+            timeout,
+            "".join("\n  {!r}".format(b) for b in best_hash),
+        ))
 
-    def sync_mempools(self, nodes=None, **kwargs):
-        sync_mempools(nodes or self.nodes, **kwargs)
+    def sync_mempools(self, nodes=None, wait=1, timeout=60, flush_scheduler=True):
+        """
+        Wait until everybody has the same transactions in their memory
+        pools
+        """
+        rpc_connections = nodes or self.nodes
+        timeout = int(timeout * self.options.timeout_factor)
+        stop_time = time.time() + timeout
+        while time.time() <= stop_time:
+            pool = [set(r.getrawmempool()) for r in rpc_connections]
+            if pool.count(pool[0]) == len(rpc_connections):
+                if flush_scheduler:
+                    for r in rpc_connections:
+                        r.syncwithvalidationinterfacequeue()
+                return
+            # Check that each peer has at least one connection
+            assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            time.sleep(wait)
+        raise AssertionError("Mempool sync timed out after {}s:{}".format(
+            timeout,
+            "".join("\n  {!r}".format(m) for m in pool),
+        ))
 
-    def sync_all(self, nodes=None, **kwargs):
-        self.sync_blocks(nodes, **kwargs)
-        self.sync_mempools(nodes, **kwargs)
+    def sync_all(self, nodes=None):
+        self.sync_blocks(nodes)
+        self.sync_mempools(nodes)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 

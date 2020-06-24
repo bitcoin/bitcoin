@@ -14,55 +14,44 @@ When complete, it will have produced `Bitcoin-Qt.dmg`.
 
 ## SDK Extraction
 
-Our current macOS SDK (`macOSX10.14.sdk`) can be extracted from
-[Xcode_10.2.1.xip](https://download.developer.apple.com/Developer_Tools/Xcode_10.2.1/Xcode_10.2.1.xip).
+### Step 1: Obtaining `Xcode.app`
+
+Our current macOS SDK
+(`Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz`) can be
+extracted from
+[Xcode_11.3.1.xip](https://download.developer.apple.com/Developer_Tools/Xcode_11.3.1/Xcode_11.3.1.xip).
 An Apple ID is needed to download this.
 
-`Xcode.app` is packaged in a `.xip` archive.
-This makes the SDK less-trivial to extract on non-macOS machines.
-One approach (tested on Debian Buster) is outlined below:
+After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip`
+archive. This makes the SDK less-trivial to extract on non-macOS machines. One
+approach (tested on Debian Buster) is outlined below:
 
 ```bash
+# Install/clone tools needed for extracting Xcode.app
+apt install cpio
+git clone https://github.com/bitcoin-core/apple-sdk-tools.git
 
-apt install clang cpio git liblzma-dev libxml2-dev libssl-dev make
-
-git clone https://github.com/tpoechtrager/xar
-pushd xar/xar
-./configure
-make
-make install
-popd
-
-git clone https://github.com/NiklasRosenstein/pbzx
-pushd pbzx
-clang -llzma -lxar pbzx.c -o pbzx -Wl,-rpath=/usr/local/lib
-popd
-
-xar -xf Xcode_10.2.1.xip -C .
-
-./pbzx/pbzx -n Content | cpio -i
-
-find Xcode.app -type d -name MacOSX.sdk -exec sh -c 'tar --transform="s/MacOSX.sdk/MacOSX10.14.sdk/" -c -C$(dirname {}) MacOSX.sdk/ | gzip -9n > MacOSX10.14.sdk.tar.gz' \;
+# Unpack Xcode_11.3.1.xip and place the resulting Xcode.app in your current
+# working directory
+python3 apple-sdk-tools/extract_xcode.py -f Xcode_11.3.1.xip | cpio -d -i
 ```
 
-on macOS the process is more straightforward:
+On macOS the process is more straightforward:
 
 ```bash
-xip -x Xcode_10.2.1.xip
-tar -s "/MacOSX.sdk/MacOSX10.14.sdk/" -C Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.14.sdk.tar.gz MacOSX.sdk
+xip -x Xcode_11.3.1.xip
 ```
 
-Our previously used macOS SDK (`MacOSX10.11.sdk`) can be extracted from
-[Xcode 7.3.1 dmg](https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/Xcode_7.3.1/Xcode_7.3.1.dmg).
-The script [`extract-osx-sdk.sh`](./extract-osx-sdk.sh) automates this. First
-ensure the DMG file is in the current directory, and then run the script. You
-may wish to delete the `intermediate 5.hfs` file and `MacOSX10.11.sdk` (the
-directory) when you've confirmed the extraction succeeded.
+### Step 2: Generating `Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz` from `Xcode.app`
+
+To generate `Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz`, run
+the script [`gen-sdk`](./gen-sdk) with the path to `Xcode.app` (extracted in the
+previous stage) as the first argument.
 
 ```bash
-apt-get install p7zip-full sleuthkit
-contrib/macdeploy/extract-osx-sdk.sh
-rm -rf 5.hfs MacOSX10.11.sdk
+# Generate a Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz from
+# the supplied Xcode.app
+./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
 ```
 
 ## Deterministic macOS DMG Notes
@@ -91,13 +80,13 @@ and its `libLTO.so` rather than those from `llvmgcc`, as it was originally done 
 
 To complicate things further, all builds must target an Apple SDK. These SDKs are free to
 download, but not redistributable. To obtain it, register for an Apple Developer Account,
-then download [Xcode 10.2.1](https://download.developer.apple.com/Developer_Tools/Xcode_10.2.1/Xcode_10.2.1.xip).
+then download [Xcode_11.3.1](https://download.developer.apple.com/Developer_Tools/Xcode_11.3.1/Xcode_11.3.1.xip).
 
 This file is many gigabytes in size, but most (but not all) of what we need is
 contained only in a single directory:
 
 ```bash
-Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk
+Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
 ```
 
 See the SDK Extraction notes above for how to obtain it.
