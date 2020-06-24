@@ -38,4 +38,5 @@ LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_cr
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
+UniValue sendrawtransaction(const JSONRPCRequest& request);
 #endif //SYSCOIN_WALLET_RPCWALLET_H
