@@ -40,7 +40,14 @@
 #include <QTime>
 #include <QTimer>
 
-
+// SYSCOIN
+// Repair parameters
+const QString SALVAGEWALLET("-salvagewallet");
+const QString RESCAN("-rescan");
+const QString ZAPTXES1("-zapwallettxes=1 -persistmempool=0");
+const QString ZAPTXES2("-zapwallettxes=2 -persistmempool=0");
+const QString UPGRADEWALLET("-upgradewallet");
+const QString REINDEX("-reindex");
 const int CONSOLE_HISTORY = 50;
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
 const QSize FONT_RANGE(4, 40);
@@ -467,7 +474,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->lineEdit->installEventFilter(this);
     ui->messagesWidget->installEventFilter(this);
 
-    connect(ui->clearButton, &QPushButton::clicked, this, &QPushButton::clickedclear);
+    connect(ui->clearButton, &QPushButton::clicked, this, &RPCConsole::clear);
     connect(ui->fontBiggerButton, &QPushButton::clicked, this, &RPCConsole::fontBigger);
     connect(ui->fontSmallerButton, &QPushButton::clicked, this, &RPCConsole::fontSmaller);
     connect(ui->btnClearTrafficGraph, &QPushButton::clicked, ui->trafficGraph, &TrafficGraphWidget::clear);
@@ -477,11 +484,11 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     // SYSCOIN Wallet Repair Buttons
     ui->btn_salvagewallet->setEnabled(false);
-    connect(ui->btn_rescan, &QPushButton::clicked, this, &QPushButton::walletRescan);
-    connect(ui->btn_zapwallettxes1, &QPushButton::clicked, this, &QPushButton::walletZaptxes1);
-    connect(ui->btn_zapwallettxes2, &QPushButton::clicked, this, &QPushButton::walletZaptxes2);
-    connect(ui->btn_upgradewallet, &QPushButton::clicked, this, &QPushButton::walletUpgrade);
-    connect(ui->btn_reindex, &QPushButton::clicked, this, &QPushButton::walletReindex);
+    connect(ui->btn_rescan, &QPushButton::clicked, this, &RPCConsole::walletRescan);
+    connect(ui->btn_zapwallettxes1, &QPushButton::clicked, this, &RPCConsole::walletZaptxes1);
+    connect(ui->btn_zapwallettxes2, &QPushButton::clicked, this, &RPCConsole::walletZaptxes2);
+    connect(ui->btn_upgradewallet, &QPushButton::clicked, this, &RPCConsole::walletUpgrade);
+    connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
     // set library version labels
 #ifdef ENABLE_WALLET
