@@ -1093,7 +1093,7 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
     evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
     dbTx->Commit();
 
-    evoDb.GetRawDB().CompactRange(nullptr, nullptr);
+    evoDb.GetRawDB().CompactFull();
 
     return true;
 }
