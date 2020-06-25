@@ -60,7 +60,7 @@ code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
 
-Translations.
+Translations;
 ------------
 
 Changes to translations as well as new translations can be submitted to
