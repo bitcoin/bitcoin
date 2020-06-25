@@ -61,12 +61,6 @@ public:
     template <typename O, typename std::enable_if<std::is_convertible<O (*)[], C (*)[]>::value, int>::type = 0>
     constexpr Span(const Span<O>& other) noexcept : m_data(other.m_data), m_size(other.m_size) {}
 
-    /** Default copy constructor. */
-    constexpr Span(const Span&) noexcept = default;
-
-    /** Default assignment operator. */
-    Span& operator=(const Span& other) noexcept = default;
-
     /** Construct a Span from an array. This matches the corresponding C++20 std::span constructor. */
     template <int N>
     constexpr Span(C (&a)[N]) noexcept : m_data(a), m_size(N) {}
