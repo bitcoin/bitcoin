@@ -48,7 +48,21 @@ MAX_BLOCK_SIGOPS = 20000
 # Genesis block time (regtest)
 # SYSCOIN
 TIME_GENESIS_BLOCK = 1553040331
+SYSCOIN_TX_VERSION_MN_REGISTER = 80
+SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE = 81
+SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR = 82
+SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE = 83
+SYSCOIN_TX_VERSION_MN_COINBASE = 84
+SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT = 85
 
+SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128
+SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 129
+SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 130
+SYSCOIN_TX_VERSION_ASSET_UPDATE = 131
+SYSCOIN_TX_VERSION_ASSET_SEND = 132
+SYSCOIN_TX_VERSION_ALLOCATION_MINT = 133
+SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM = 134
+SYSCOIN_TX_VERSION_ALLOCATION_SEND = 135
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
@@ -102,8 +116,8 @@ def script_BIP34_coinbase_height(height):
         return CScript([res, OP_1])
     return CScript([CScriptNum(height)])
 
-
-def create_coinbase(height, pubkey=None):
+# SYSCOIN
+def create_coinbase(height, pubkey=None, dip4_activated=False):
     """Create a coinbase transaction, assuming no miner fees.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -119,6 +133,11 @@ def create_coinbase(height, pubkey=None):
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [coinbaseoutput]
+    # SYSCOIN
+    if dip4_activated:
+        coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE
+        cbtx_payload = CCbTx(2, height, 0, 0)
+        coinbase.vout.append(CTxOut(0, CScript([OP_RETURN] + list(CScript(cbtx_payload.serialize())))))
     coinbase.calc_sha256()
     return coinbase
 
