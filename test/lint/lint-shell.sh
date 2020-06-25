@@ -25,7 +25,6 @@ disabled=(
 disabled_gitian=(
     SC2094 # Make sure not to read and write the same file in the same pipeline.
     SC2129 # Consider using { cmd1; cmd2; } >> file instead of individual redirects.
-    SC2230 # which is non-standard. Use builtin 'command -v' instead.
 )
 
 EXIT_CODE=0
