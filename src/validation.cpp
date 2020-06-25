@@ -5046,11 +5046,14 @@ bool LoadMempool(CTxMemPool& pool)
             file >> nFeeDelta;
 
             CAmount amountdelta = nFeeDelta;
+            if (!MoneyRange(amountdelta)) {
+                return false;
+            }
             if (amountdelta) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             TxValidationState state;
-            if (nTime + nExpiryTimeout > nNow) {
+            if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
                 AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
                                            nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
@@ -5078,6 +5081,9 @@ bool LoadMempool(CTxMemPool& pool)
         file >> mapDeltas;
 
         for (const auto& i : mapDeltas) {
+            if (!MoneyRange(i.second)) {
+                return false;
+            }
             pool.PrioritiseTransaction(i.first, i.second);
         }
 
