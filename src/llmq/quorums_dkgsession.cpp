@@ -446,7 +446,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions()
 {
-    if (!sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+    if (!CLLMQUtils::IsAllMembersConnectedEnabled(params.type)) {
         return;
     }
 
