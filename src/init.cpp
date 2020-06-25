@@ -1744,7 +1744,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     fLiteMode = gArgs.GetBoolArg("-litemode", fRegTest);
     std::string strDBName;
 
-    strDBName = "mncache.dat";
+    strDBName = "sporks.dat";
     uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6(strDBName, "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
