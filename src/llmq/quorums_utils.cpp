@@ -44,6 +44,18 @@ uint256 CLLMQUtils::BuildSignHash(Consensus::LLMQType llmqType, const uint256& q
     return h.GetHash();
 }
 
+bool CLLMQUtils::IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType)
+{
+    auto spork21 = sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED);
+    if (spork21 == 0) {
+        return true;
+    }
+    if (spork21 == 1 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
+        return true;
+    }
+    return false;
+}
+
 uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
 {
     // We need to deterministically select who is going to initiate the connection. The naive way would be to simply
@@ -70,7 +82,7 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+    if (IsAllMembersConnectedEnabled(llmqType)) {
         auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
         std::set<uint256> result;
 

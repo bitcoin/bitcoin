@@ -31,6 +31,7 @@ public:
         return BuildSignHash((Consensus::LLMQType)s.llmqType, s.quorumHash, s.id, s.msgHash);
     }
 
+    static bool IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType);
     static uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
     static std::set<uint256> GetQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);
     static std::set<uint256> GetQuorumRelayMembers(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);
