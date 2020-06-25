@@ -61,6 +61,9 @@ from test_framework.messages import (
     NODE_NETWORK,
     NODE_WITNESS,
     sha256,
+    # Syscoin Specific
+    msg_getmnlistd,
+    msg_mnlistdiff,
 )
 from test_framework.util import wait_until
 
