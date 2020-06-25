@@ -2215,8 +2215,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
-        if (!fJustCheck)
+        if (!fJustCheck) {
             view.SetBestBlock(pindex->GetBlockHash());
+            // SYSCOIN
+            evoDb->WriteBestBlock(pindex->GetBlockHash());
+        }
         return true;
     }
 
