@@ -34,6 +34,10 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidati
         return FormatSyscoinErrorMessage(state, "bad-cbtx-version", fJustCheck);
     }
 
+    if (pindexPrev && pindexPrev->nHeight + 1 != cbTx.nHeight) {
+        return FormatSyscoinErrorMessage(state, "bad-cbtx-height", fJustCheck);
+    }
+
     if (pindexPrev) {
         if (cbTx.nVersion < 2) {
             return FormatSyscoinErrorMessage(state, "bad-cbtx-version", fJustCheck);
@@ -253,6 +257,6 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
 std::string CCbTx::ToString() const
 {
-    return strprintf("CCbTx(nVersion=%d, merkleRootMNList=%s, merkleRootQuorums=%s)",
-        nVersion, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
+    return strprintf("CCbTx(nHeight=%d, nVersion=%d, merkleRootMNList=%s, merkleRootQuorums=%s)",
+        nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
 }
