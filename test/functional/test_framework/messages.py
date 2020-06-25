@@ -1033,16 +1033,14 @@ class CCbTx:
         self.version = struct.unpack("<H", f.read(2))[0]
         self.height = struct.unpack("<i", f.read(4))[0]
         self.merkleRootMNList = deser_uint256(f)
-        if self.version >= 2:
-            self.merkleRootQuorums = deser_uint256(f)
+        self.merkleRootQuorums = deser_uint256(f)
 
     def serialize(self):
         r = b""
         r += struct.pack("<H", self.version)
         r += struct.pack("<i", self.height)
         r += ser_uint256(self.merkleRootMNList)
-        if self.version >= 2:
-            r += ser_uint256(self.merkleRootQuorums)
+        r += ser_uint256(self.merkleRootQuorums)
         return r
 
 

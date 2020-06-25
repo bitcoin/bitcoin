@@ -402,12 +402,14 @@ class DIP3Test(SyscoinTestFramework):
 
         # We can't really use this one as it would result in invalid merkle roots for masternode lists
         if len(bt['coinbase_payload']) != 0:
-            cbtx = FromHex(CCbTx(version=1), bt['coinbase_payload'])
+            cbtx = FromHex(CCbTx(version=2), bt['coinbase_payload'])
             if use_mnmerkleroot_from_tip:
                 if 'cbTx' in tip_block:
                     cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
+                    cbtx.merkleRootQuorums = int(tip_block['cbTx']["merkleRootQuorums"], 16)
                 else:
                     cbtx.merkleRootMNList = 0
+                    cbtx.merkleRootQuorums = 0
             coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE # CbTx
             coinbase.vout.append(CTxOut(0, CScript([OP_RETURN] + list(CScript(cbtx.serialize())))))
 
