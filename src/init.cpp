@@ -2090,7 +2090,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
         return false;
     }
-
+    // SYSCOIN
+    if (!deterministicMNManager->UpgradeDBIfNeeded()) {
+        strLoadError = _("Error upgrading evo database");
+        break;
+    }
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;

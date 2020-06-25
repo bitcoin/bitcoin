@@ -2204,13 +2204,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
     // SYSCOIN
-    if (pindex->pprev) {
-        bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
-        bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash());
-        if (fDIP0003Active && !fHasBestBlock) {
-            // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
-            return AbortNode(state, "Found EvoDB inconsistency, you must reindex to continue");
-        }
+    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
+    bool fHasBestBlock = evoDb->VerifyBestBlock(hashPrevBlock);
+    if (fDIP0003Active && !fHasBestBlock) {
+        // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
+        return AbortNode(state, "Found EvoDB inconsistency, you must reindex to continue");
     }
     nBlocksTotal++;
 
