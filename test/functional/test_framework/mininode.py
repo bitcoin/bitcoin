@@ -95,6 +95,14 @@ MESSAGEMAP = {
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
+    # Syscoin Specific
+    b"getmnlistd": msg_getmnlistd,
+    b"getsporks": None,
+    b"govsync": None,
+    b"mnlistdiff": msg_mnlistdiff,
+    b"qfcommit": None,
+    b"qsendrecsigs": None,
+    b"spork": None,
 }
 
 MAGIC_BYTES = {
@@ -203,6 +211,9 @@ class P2PConnection(asyncio.Protocol):
                 self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
                 if msgtype not in MESSAGEMAP:
                     raise ValueError("Received unknown msgtype from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, msgtype, repr(msg)))
+                if MESSAGEMAP[command] is None:
+                    # Command is known but we don't want/need to handle it
+                    continue
                 f = BytesIO(msg)
                 t = MESSAGEMAP[msgtype]()
                 t.deserialize(f)

@@ -1076,24 +1076,3 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
         mnListDiffsCache.erase(h);
     }
 }
-bool CDeterministicMNManager::UpgradeDBIfNeeded()
-{
-    LOCK(cs_main);
-
-    if (::ChainActive().Tip() == nullptr) {
-        return true;
-    }
-
-    if (evoDb.GetRawDB().Exists(EVODB_BEST_BLOCK)) {
-        return true;
-    }
-
-    // Writing EVODB_BEST_BLOCK (which is b_b2 now) marks the DB as upgraded
-    auto dbTx = evoDb.BeginTransaction();
-    evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
-    dbTx->Commit();
-
-    evoDb.GetRawDB().CompactFull();
-
-    return true;
-}
