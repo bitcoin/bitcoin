@@ -40,7 +40,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     libxcb-xinerama0 \
     libxcb-xkb1 \
     libxkbcommon-x11-0 \
-    mypy \
     wget \
     unzip \
     m4 \
@@ -78,6 +77,7 @@ RUN pip3 install \
     lief==0.12.1 \
     pyzmq \
     vulture==2.3 \
+    mypy==0.781 \
     yq \
     multiprocess
 
