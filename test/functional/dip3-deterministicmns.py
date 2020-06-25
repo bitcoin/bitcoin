@@ -404,9 +404,8 @@ class DIP3Test(SyscoinTestFramework):
                     cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
                 else:
                     cbtx.merkleRootMNList = 0
-            coinbase.nVersion = 3
-            coinbase.nType = 5 # CbTx
-            coinbase.vExtraPayload = cbtx.serialize()
+            coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE # CbTx
+            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN] + list(CScript(cbtx.serialize())))))
 
         coinbase.calc_sha256()
 
