@@ -9,11 +9,16 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 {
     int nPeriod = Period(params);
     int nThreshold = Threshold(params);
-    int64_t nTimeStart = BeginTime(params);
-    int64_t nTimeTimeout = EndTime(params);
+    int height_start = StartHeight(params);
+    int height_timeout = TimeoutHeight(params);
+
+    // Check if this deployment is never active.
+    if (height_start == Consensus::BIP9Deployment::NEVER_ACTIVE && height_timeout == Consensus::BIP9Deployment::NEVER_ACTIVE) {
+        return ThresholdState::DEFINED;
+    }
 
     // Check if this deployment is always active.
-    if (nTimeStart == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
+    if (height_start == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
         return ThresholdState::ACTIVE;
     }
 
@@ -30,8 +35,10 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
-        if (pindexPrev->GetMedianTimePast() < nTimeStart) {
-            // Optimization: don't recompute down further, as we know every earlier block will be before the start time
+
+        // We track state by previous-block, so the height we should be comparing is +1
+        if (pindexPrev->nHeight + 1 < height_start) {
+            // Optimization: don't recompute down further, as we know every earlier block will be before the start height
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
@@ -49,20 +56,17 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
         pindexPrev = vToCompute.back();
         vToCompute.pop_back();
 
+        // We track state by previous-block, so the height we should be comparing is +1
+        const int64_t height = pindexPrev->nHeight + 1;
+
         switch (state) {
             case ThresholdState::DEFINED: {
-                if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = ThresholdState::FAILED;
-                } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
+                if (height >= height_start) {
                     stateNext = ThresholdState::STARTED;
                 }
                 break;
             }
             case ThresholdState::STARTED: {
-                if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = ThresholdState::FAILED;
-                    break;
-                }
                 // We need to count
                 const CBlockIndex* pindexCount = pindexPrev;
                 int count = 0;
@@ -74,6 +78,8 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                 }
                 if (count >= nThreshold) {
                     stateNext = ThresholdState::LOCKED_IN;
+                } else if (height >= height_timeout) {
+                    stateNext = ThresholdState::FAILED;
                 }
                 break;
             }
@@ -125,8 +131,8 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
 
 int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
-    int64_t start_time = BeginTime(params);
-    if (start_time == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
+    int height_start = StartHeight(params);
+    if (height_start == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
         return 0;
     }
 
@@ -168,8 +174,8 @@ private:
     const Consensus::DeploymentPos id;
 
 protected:
-    int64_t BeginTime(const Consensus::Params& params) const override { return params.vDeployments[id].nStartTime; }
-    int64_t EndTime(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeout; }
+    int StartHeight(const Consensus::Params& params) const override { return params.vDeployments[id].startheight; }
+    int TimeoutHeight(const Consensus::Params& params) const override { return params.vDeployments[id].timeoutheight; }
     int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params) const override { return params.vDeployments[id].threshold; }
 
