@@ -244,14 +244,6 @@ public:
         static_assert(WIDTH >= 2, "Assertion WIDTH >= 2 failed (WIDTH = BITS / 32). BITS is a template parameter.");
         return pn[0] | (uint64_t)pn[1] << 32;
     }
-    // SYSCOIN
-    bool operator!() const
-    {
-        for (int i = 0; i < WIDTH; i++)
-            if (pn[i] != 0)
-                return false;
-        return true;
-    }
     uint32_t GetLow32() const
     {
         static_assert(WIDTH >= 1, "Assertion WIDTH >= 1 failed (WIDTH = BITS / 32). BITS is a template parameter.");

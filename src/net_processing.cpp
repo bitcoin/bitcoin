@@ -1787,7 +1787,11 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
 
         const CInv &inv = *it++;
         // SYSCOIN
-        if(pfrom.m_tx_relay != nullptr && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)) {
+        if(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
+            if (pfrom.m_tx_relay == nullptr) {
+                // Ignore GETDATA requests for transactions from blocks-only peers.
+                continue;	
+            }
             CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, mempool_req, longlived_mempool_time);
             if (tx) {
                 int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
