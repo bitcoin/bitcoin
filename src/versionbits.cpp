@@ -9,11 +9,16 @@ ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexP
 {
     int nPeriod = m_period;
     int nThreshold = m_dep.threshold;
-    int64_t nTimeStart = m_dep.nStartTime;
-    int64_t nTimeTimeout = m_dep.nTimeout;
+    int64_t height_start = m_dep.startheight;
+    int64_t height_timeout = m_dep.timeoutheight;
+
+    // Check if this deployment is never active.
+    if (height_start == Consensus::VBitsDeployment::NEVER_ACTIVE && height_timeout == Consensus::VBitsDeployment::NEVER_ACTIVE) {
+        return ThresholdState::DEFINED;
+    }
 
     // Check if this deployment is always active.
-    if (nTimeStart == Consensus::VBitsDeployment::ALWAYS_ACTIVE) {
+    if (height_start == Consensus::VBitsDeployment::ALWAYS_ACTIVE) {
         return ThresholdState::ACTIVE;
     }
 
@@ -30,8 +35,10 @@ ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexP
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
-        if (pindexPrev->GetMedianTimePast() < nTimeStart) {
-            // Optimization: don't recompute down further, as we know every earlier block will be before the start time
+
+        // We track state by previous-block, so the height we should be comparing is +1
+        if (pindexPrev->nHeight + 1 < height_start) {
+            // Optimization: don't recompute down further, as we know every earlier block will be before the start height
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
@@ -49,20 +56,19 @@ ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexP
         pindexPrev = vToCompute.back();
         vToCompute.pop_back();
 
+        // We track state by previous-block, so the height we should be comparing is +1
+        const int64_t height = pindexPrev->nHeight + 1;
+
         switch (state) {
             case ThresholdState::DEFINED: {
-                if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
+                if (height >= height_timeout) {
                     stateNext = ThresholdState::FAILED;
-                } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
+                } else if (height >= height_start) {
                     stateNext = ThresholdState::STARTED;
                 }
                 break;
             }
             case ThresholdState::STARTED: {
-                if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = ThresholdState::FAILED;
-                    break;
-                }
                 // We need to count
                 const CBlockIndex* pindexCount = pindexPrev;
                 int count = 0;
@@ -74,6 +80,8 @@ ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexP
                 }
                 if (count >= nThreshold) {
                     stateNext = ThresholdState::LOCKED_IN;
+                } else if (height >= height_timeout) {
+                    stateNext = ThresholdState::FAILED;
                 }
                 break;
             }
@@ -101,14 +109,17 @@ VBitsStats ThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* p
     stats.period = m_period;
     stats.threshold = m_dep.threshold;
 
-    if (pindexPrev == nullptr || (pindexPrev->nHeight + 1) < stats.period) {
+    // We track state by previous-block, so the height we should be comparing is +1
+    const int64_t height = pindexPrev ? pindexPrev->nHeight + 1 : 0;
+
+    if (pindexPrev == nullptr || height < stats.period) {
         // genesis block or first retarget period is DEFINED, and will
         // not give a valid pindexEndOfPrevPeriod
         return stats;
     }
 
     // Find end of previous period -- may be pindexPrev itself
-    const CBlockIndex* pindexEndOfPrevPeriod = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % stats.period));
+    const CBlockIndex* pindexEndOfPrevPeriod = pindexPrev->GetAncestor(pindexPrev->nHeight - (height % stats.period));
 
     stats.elapsed = pindexPrev->nHeight - pindexEndOfPrevPeriod->nHeight;
 
@@ -129,8 +140,8 @@ VBitsStats ThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* p
 
 int ThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
 {
-    int64_t start_time = m_dep.nStartTime;
-    if (start_time == Consensus::VBitsDeployment::ALWAYS_ACTIVE) {
+    int64_t height_start = m_dep.startheight;
+    if (height_start == Consensus::VBitsDeployment::ALWAYS_ACTIVE) {
         return 0;
     }
 

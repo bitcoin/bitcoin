@@ -35,12 +35,12 @@ protected:
     Consensus::VBitsDeployment m_dep_storage;
 
 public:
-    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 1000)
+    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 10)
     {
         m_dep_storage.bit = 8;
-        m_dep_storage.nStartTime = TestTime(10000);
-        m_dep_storage.nTimeout = TestTime(20000);
-        m_dep_storage.threshold = 900;
+        m_dep_storage.startheight = 100;
+        m_dep_storage.timeoutheight = 200;
+        m_dep_storage.threshold = 9;
     }
 
     TestConditionChecker& operator=(const TestConditionChecker& other)
@@ -63,7 +63,7 @@ class TestAlwaysActiveConditionChecker : public TestConditionChecker
 public:
     TestAlwaysActiveConditionChecker() : TestConditionChecker()
     {
-        m_dep_storage.nStartTime = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
+        m_dep_storage.startheight = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
     }
 };
 
@@ -72,8 +72,8 @@ class TestNeverActiveConditionChecker : public TestConditionChecker
 public:
     TestNeverActiveConditionChecker() : TestConditionChecker()
     {
-        m_dep_storage.nStartTime = 0;
-        m_dep_storage.nTimeout = 1230768000;
+        m_dep_storage.startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        m_dep_storage.timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
     }
 };
 
@@ -178,65 +178,40 @@ BOOST_FIXTURE_TEST_SUITE(versionbits_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(versionbits_test)
 {
     for (int i = 0; i < 64; i++) {
-        // DEFINED -> FAILED
-        VersionBitsTester().TestDefined().TestStateSinceHeight(0)
-                           .Mine(1, TestTime(1), 0x100).TestDefined().TestStateSinceHeight(0)
-                           .Mine(11, TestTime(11), 0x100).TestDefined().TestStateSinceHeight(0)
-                           .Mine(989, TestTime(989), 0x100).TestDefined().TestStateSinceHeight(0)
-                           .Mine(999, TestTime(20000), 0x100).TestDefined().TestStateSinceHeight(0)
-                           .Mine(1000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(1000)
-                           .Mine(1999, TestTime(30001), 0x100).TestFailed().TestStateSinceHeight(1000)
-                           .Mine(2000, TestTime(30002), 0x100).TestFailed().TestStateSinceHeight(1000)
-                           .Mine(2001, TestTime(30003), 0x100).TestFailed().TestStateSinceHeight(1000)
-                           .Mine(2999, TestTime(30004), 0x100).TestFailed().TestStateSinceHeight(1000)
-                           .Mine(3000, TestTime(30005), 0x100).TestFailed().TestStateSinceHeight(1000)
-
         // DEFINED -> STARTED -> FAILED
-                           .Reset().TestDefined().TestStateSinceHeight(0)
+        VersionBitsTester().TestDefined().TestStateSinceHeight(0)
                            .Mine(1, TestTime(1), 0).TestDefined().TestStateSinceHeight(0)
-                           .Mine(1000, TestTime(10000) - 1, 0x100).TestDefined().TestStateSinceHeight(0) // One second more and it would be defined
-                           .Mine(2000, TestTime(10000), 0x100).TestStarted().TestStateSinceHeight(2000) // So that's what happens the next period
-                           .Mine(2051, TestTime(10010), 0).TestStarted().TestStateSinceHeight(2000) // 51 old blocks
-                           .Mine(2950, TestTime(10020), 0x100).TestStarted().TestStateSinceHeight(2000) // 899 new blocks
-                           .Mine(3000, TestTime(20000), 0).TestFailed().TestStateSinceHeight(3000) // 50 old blocks (so 899 out of the past 1000)
-                           .Mine(4000, TestTime(20010), 0x100).TestFailed().TestStateSinceHeight(3000)
-
-        // DEFINED -> STARTED -> FAILED while threshold reached
-                           .Reset().TestDefined().TestStateSinceHeight(0)
-                           .Mine(1, TestTime(1), 0).TestDefined().TestStateSinceHeight(0)
-                           .Mine(1000, TestTime(10000) - 1, 0x101).TestDefined().TestStateSinceHeight(0) // One second more and it would be defined
-                           .Mine(2000, TestTime(10000), 0x101).TestStarted().TestStateSinceHeight(2000) // So that's what happens the next period
-                           .Mine(2999, TestTime(30000), 0x100).TestStarted().TestStateSinceHeight(2000) // 999 new blocks
-                           .Mine(3000, TestTime(30000), 0x100).TestFailed().TestStateSinceHeight(3000) // 1 new block (so 1000 out of the past 1000 are new)
-                           .Mine(3999, TestTime(30001), 0).TestFailed().TestStateSinceHeight(3000)
-                           .Mine(4000, TestTime(30002), 0).TestFailed().TestStateSinceHeight(3000)
-                           .Mine(14333, TestTime(30003), 0).TestFailed().TestStateSinceHeight(3000)
-                           .Mine(24000, TestTime(40000), 0).TestFailed().TestStateSinceHeight(3000)
+                           .Mine(99, TestTime(10000) - 1, 0x100).TestDefined().TestStateSinceHeight(0) // One block more and it would be defined
+                           .Mine(100, TestTime(10000), 0x100).TestStarted().TestStateSinceHeight(100) // So that's what happens the next period
+                           .Mine(101, TestTime(10010), 0).TestStarted().TestStateSinceHeight(100) // 1 old block
+                           .Mine(109, TestTime(10020), 0x100).TestStarted().TestStateSinceHeight(100) // 8 new blocks
+                           .Mine(110, TestTime(10020), 0).TestStarted().TestStateSinceHeight(100) // 1 old block (so 8 out of the past 10 are new)
+                           .Mine(151, TestTime(10020), 0).TestStarted().TestStateSinceHeight(100)
+                           .Mine(200, TestTime(20000), 0).TestFailed().TestStateSinceHeight(200)
+                           .Mine(300, TestTime(20010), 0x100).TestFailed().TestStateSinceHeight(200)
 
         // DEFINED -> STARTED -> LOCKEDIN at the last minute -> ACTIVE
                            .Reset().TestDefined()
                            .Mine(1, TestTime(1), 0).TestDefined().TestStateSinceHeight(0)
-                           .Mine(1000, TestTime(10000) - 1, 0x101).TestDefined().TestStateSinceHeight(0) // One second more and it would be defined
-                           .Mine(2000, TestTime(10000), 0x101).TestStarted().TestStateSinceHeight(2000) // So that's what happens the next period
-                           .Mine(2050, TestTime(10010), 0x200).TestStarted().TestStateSinceHeight(2000) // 50 old blocks
-                           .Mine(2950, TestTime(10020), 0x100).TestStarted().TestStateSinceHeight(2000) // 900 new blocks
-                           .Mine(2999, TestTime(19999), 0x200).TestStarted().TestStateSinceHeight(2000) // 49 old blocks
-                           .Mine(3000, TestTime(29999), 0x200).TestLockedIn().TestStateSinceHeight(3000) // 1 old block (so 900 out of the past 1000)
-                           .Mine(3999, TestTime(30001), 0).TestLockedIn().TestStateSinceHeight(3000)
-                           .Mine(4000, TestTime(30002), 0).TestActive().TestStateSinceHeight(4000)
-                           .Mine(14333, TestTime(30003), 0).TestActive().TestStateSinceHeight(4000)
-                           .Mine(24000, TestTime(40000), 0).TestActive().TestStateSinceHeight(4000)
+                           .Mine(99, TestTime(10000) - 1, 0x101).TestDefined().TestStateSinceHeight(0) // One second more and it would be started
+                           .Mine(100, TestTime(10000), 0x101).TestStarted().TestStateSinceHeight(100) // So that's what happens the next period
+                           .Mine(109, TestTime(10020), 0x100).TestStarted().TestStateSinceHeight(100) // 9 new blocks
+                           .Mine(110, TestTime(29999), 0x200).TestLockedIn().TestStateSinceHeight(110) // 1 old block (so 9 out of the past 10)
+                           .Mine(119, TestTime(30001), 0).TestLockedIn().TestStateSinceHeight(110)
+                           .Mine(120, TestTime(30002), 0).TestActive().TestStateSinceHeight(120)
+                           .Mine(200, TestTime(30003), 0).TestActive().TestStateSinceHeight(120)
+                           .Mine(300, TestTime(40000), 0).TestActive().TestStateSinceHeight(120)
 
         // DEFINED multiple periods -> STARTED multiple periods -> FAILED
                            .Reset().TestDefined().TestStateSinceHeight(0)
-                           .Mine(999, TestTime(999), 0).TestDefined().TestStateSinceHeight(0)
-                           .Mine(1000, TestTime(1000), 0).TestDefined().TestStateSinceHeight(0)
-                           .Mine(2000, TestTime(2000), 0).TestDefined().TestStateSinceHeight(0)
-                           .Mine(3000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(3000)
-                           .Mine(4000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(3000)
-                           .Mine(5000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(3000)
-                           .Mine(6000, TestTime(20000), 0).TestFailed().TestStateSinceHeight(6000)
-                           .Mine(7000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(6000);
+                           .Mine(9, TestTime(999), 0).TestDefined().TestStateSinceHeight(0)
+                           .Mine(10, TestTime(1000), 0).TestDefined().TestStateSinceHeight(0)
+                           .Mine(20, TestTime(2000), 0).TestDefined().TestStateSinceHeight(0)
+                           .Mine(100, TestTime(10000), 0).TestStarted().TestStateSinceHeight(100)
+                           .Mine(103, TestTime(10000), 0).TestStarted().TestStateSinceHeight(100)
+                           .Mine(105, TestTime(10000), 0).TestStarted().TestStateSinceHeight(100)
+                           .Mine(200, TestTime(20000), 0).TestFailed().TestStateSinceHeight(200)
+                           .Mine(300, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(200);
     }
 }
 
@@ -265,8 +240,8 @@ void sanity_check_params(const Consensus::Params& params)
         // overlap.)
         for (int j=i+1; j<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; j++) {
             if (static_cast<uint32_t>(VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(j))) == bitmask) {
-                BOOST_CHECK(params.vDeployments[j].nStartTime > params.vDeployments[i].nTimeout ||
-                        params.vDeployments[i].nStartTime > params.vDeployments[j].nTimeout);
+                BOOST_CHECK(params.vDeployments[j].startheight > params.vDeployments[i].timeoutheight ||
+                        params.vDeployments[i].startheight > params.vDeployments[j].timeoutheight);
             }
         }
     }
@@ -284,100 +259,67 @@ BOOST_AUTO_TEST_CASE(versionbits_params)
 BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 {
     // Check that ComputeBlockVersion will set the appropriate bit correctly
-    // on mainnet.
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    const auto period = CreateChainParams(*m_node.args, CBaseChainParams::REGTEST)->GetConsensus().nMinerConfirmationWindow;
+    gArgs.ForceSetArg("-vbparams", strprintf("testdummy:@%s:@%s", period, period * 2));
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::REGTEST);
     const Consensus::Params &mainnetParams = chainParams->GetConsensus();
 
     // Use the TESTDUMMY deployment for testing purposes.
     int64_t bit = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit;
-    int64_t nStartTime = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime;
-    int64_t nTimeout = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout;
+    int64_t startheight = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight;
+    int64_t timeoutheight = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight;
+    const int64_t nTime = TestTime(startheight);
 
-    assert(nStartTime < nTimeout);
+    assert(startheight < timeoutheight);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
     // LOCKED-IN, and then no longer set while ACTIVE.
     VersionBitsTester firstChain, secondChain;
 
-    // Start generating blocks before nStartTime
-    int64_t nTime = nStartTime - 1;
-
-    // Before MedianTimePast of the chain has crossed nStartTime, the bit
-    // should not be set.
+    // Start generating blocks before startheight
+    // Before the chain has reached startheight-1, the bit should not be set.
     CBlockIndex *lastBlock = nullptr;
-    lastBlock = firstChain.Mine(mainnetParams.nMinerConfirmationWindow, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = firstChain.Mine(startheight - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
 
-    // Mine more blocks (4 less than the adjustment period) at the old time, and check that CBV isn't setting the bit yet.
-    for (uint32_t i = 1; i < mainnetParams.nMinerConfirmationWindow - 4; i++) {
-        lastBlock = firstChain.Mine(mainnetParams.nMinerConfirmationWindow + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        // This works because VERSIONBITS_LAST_OLD_BLOCK_VERSION happens
-        // to be 4, and the bit we're testing happens to be bit 28.
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
-    }
-    // Now mine 5 more blocks at the start time -- MTP should not have passed yet, so
-    // CBV should still not yet set the bit.
-    nTime = nStartTime;
-    for (uint32_t i = mainnetParams.nMinerConfirmationWindow - 4; i <= mainnetParams.nMinerConfirmationWindow; i++) {
-        lastBlock = firstChain.Mine(mainnetParams.nMinerConfirmationWindow + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
-    }
-
-    // Advance to the next period and transition to STARTED,
-    lastBlock = firstChain.Mine(mainnetParams.nMinerConfirmationWindow * 3, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    // Advance to the next block and transition to STARTED,
+    lastBlock = firstChain.Mine(startheight, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     // so ComputeBlockVersion should now set the bit,
     BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
     // and should also be using the VERSIONBITS_TOP_BITS.
     BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
 
-    // Check that ComputeBlockVersion will set the bit until nTimeout
-    nTime += 600;
-    uint32_t blocksToMine = mainnetParams.nMinerConfirmationWindow * 2; // test blocks for up to 2 time periods
-    uint32_t nHeight = mainnetParams.nMinerConfirmationWindow * 3;
-    // These blocks are all before nTimeout is reached.
-    while (nTime < nTimeout && blocksToMine > 0) {
-        lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
-        blocksToMine--;
-        nTime += 600;
-        nHeight += 1;
-    }
+    // Check that ComputeBlockVersion will set the bit until timeoutheight
+    // These blocks are all before timeoutheight is reached.
+    lastBlock = firstChain.Mine(timeoutheight - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
+    BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
 
-    nTime = nTimeout;
-    // FAILED is only triggered at the end of a period, so CBV should be setting
-    // the bit until the period transition.
-    for (uint32_t i = 0; i < mainnetParams.nMinerConfirmationWindow - 1; i++) {
-        lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
-        nHeight += 1;
-    }
     // The next block should trigger no longer setting the bit.
-    lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = firstChain.Mine(timeoutheight, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
 
     // On a new chain:
     // verify that the bit will be set after lock-in, and then stop being set
     // after activation.
-    nTime = nStartTime;
 
-    // Mine one period worth of blocks, and check that the bit will be on for the
+    // Mine up until startheight-1, and check that the bit will be on for the
     // next period.
-    lastBlock = secondChain.Mine(mainnetParams.nMinerConfirmationWindow, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = secondChain.Mine(startheight, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
 
-    // Mine another period worth of blocks, signaling the new bit.
-    lastBlock = secondChain.Mine(mainnetParams.nMinerConfirmationWindow * 2, nTime, VERSIONBITS_TOP_BITS | (1<<bit)).Tip();
+    // Mine another block, signaling the new bit.
+    lastBlock = secondChain.Mine(startheight + mainnetParams.nMinerConfirmationWindow, nTime, VERSIONBITS_TOP_BITS | (1<<bit)).Tip();
     // After one period of setting the bit on each block, it should have locked in.
     // We keep setting the bit for one more period though, until activation.
     BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
 
     // Now check that we keep mining the block until the end of this period, and
     // then stop at the beginning of the next period.
-    lastBlock = secondChain.Mine((mainnetParams.nMinerConfirmationWindow * 3) - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = secondChain.Mine(startheight + (mainnetParams.nMinerConfirmationWindow * 2) - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1 << bit)) != 0);
-    lastBlock = secondChain.Mine(mainnetParams.nMinerConfirmationWindow * 3, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = secondChain.Mine(startheight + (mainnetParams.nMinerConfirmationWindow * 2), nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
 
     // Finally, verify that after a soft fork has activated, CBV no longer uses

@@ -1843,8 +1843,8 @@ public:
         m_params{params}
     {
         m_dep_storage.bit = bitIn;
-        m_dep_storage.nStartTime = 0;
-        m_dep_storage.nTimeout = std::numeric_limits<int64_t>::max();
+        m_dep_storage.startheight = 0;
+        m_dep_storage.timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
         m_dep_storage.threshold = params.nRuleChangeActivationThreshold;
     }
 
