@@ -25,13 +25,13 @@ private:
     const Consensus::Params dummy_params{};
 
 public:
-    const int64_t m_begin = 0;
-    const int64_t m_end = 0;
+    const int m_begin = 0;
+    const int m_end = 0;
     const int m_period = 0;
     const int m_threshold = 0;
     const int m_bit = 0;
 
-    TestConditionChecker(int64_t begin, int64_t end, int period, int threshold, int bit)
+    TestConditionChecker(int begin, int end, int period, int threshold, int bit)
         : m_begin{begin}, m_end{end}, m_period{period}, m_threshold{threshold}, m_bit{bit}
     {
         assert(m_period > 0);
@@ -40,8 +40,8 @@ public:
     }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
-    int64_t BeginTime(const Consensus::Params& params) const override { return m_begin; }
-    int64_t EndTime(const Consensus::Params& params) const override { return m_end; }
+    int StartHeight(const Consensus::Params& params) const override { return m_begin; }
+    int TimeoutHeight(const Consensus::Params& params) const override { return m_end; }
     int Period(const Consensus::Params& params) const override { return m_period; }
     int Threshold(const Consensus::Params& params) const override { return m_threshold; }
 
@@ -62,14 +62,12 @@ class Blocks
 {
 private:
     std::vector<std::unique_ptr<CBlockIndex>> m_blocks;
-    const uint32_t m_start_time;
-    const uint32_t m_interval;
     const int32_t m_signal;
     const int32_t m_no_signal;
 
 public:
-    Blocks(uint32_t start_time, uint32_t interval, int32_t signal, int32_t no_signal)
-        : m_start_time{start_time}, m_interval{interval}, m_signal{signal}, m_no_signal{no_signal} {}
+    Blocks(int32_t signal, int32_t no_signal)
+        : m_signal{signal}, m_no_signal{no_signal} {}
 
     size_t size() const { return m_blocks.size(); }
 
@@ -82,7 +80,6 @@ public:
     {
         CBlockHeader header;
         header.nVersion = signal ? m_signal : m_no_signal;
-        header.nTime = m_start_time + m_blocks.size() * m_interval;
         header.nBits = 0x1d00ffff;
 
         auto current_block = std::make_unique<CBlockIndex>(header);
@@ -99,8 +96,6 @@ void initialize()
     SelectParams(CBaseChainParams::MAIN);
 }
 } // namespace
-
-constexpr uint32_t MAX_TIME = 4102444800; // 2100-01-01
 
 FUZZ_TARGET_INIT(versionbits, initialize)
 {
@@ -120,12 +115,6 @@ FUZZ_TARGET_INIT(versionbits, initialize)
     const int threshold = fuzzed_data_provider.ConsumeIntegralInRange(1, period);
     assert(0 < threshold && threshold <= period); // must be able to both pass and fail threshold!
 
-    // too many blocks at 10min each might cause uint32_t time to overflow if
-    // block_start_time is at the end of the range above
-    assert(std::numeric_limits<uint32_t>::max() - MAX_TIME > interval * max_blocks);
-
-    const int64_t block_start_time = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(params.GenesisBlock().nTime, MAX_TIME);
-
     // what values for version will we use to signal / not signal?
     const int32_t ver_signal = fuzzed_data_provider.ConsumeIntegral<int32_t>();
     const int32_t ver_nosignal = fuzzed_data_provider.ConsumeIntegral<int32_t>();
@@ -135,38 +124,25 @@ FUZZ_TARGET_INIT(versionbits, initialize)
 
     bool always_active_test = false;
     bool never_active_test = false;
-    int64_t start_time;
-    int64_t timeout;
+    int startheight;
+    int timeoutheight;
     if (fuzzed_data_provider.ConsumeBool()) {
         // pick the timestamp to switch based on a block
-        // note states will change *after* these blocks because mediantime lags
-        int start_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 3));
-        int end_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(start_block, period * (max_periods - 3));
-
-        start_time = block_start_time + start_block * interval;
-        timeout = block_start_time + end_block * interval;
-
-        assert(start_time <= timeout);
-
-        // allow for times to not exactly match a block
-        if (fuzzed_data_provider.ConsumeBool()) start_time += interval / 2;
-        if (fuzzed_data_provider.ConsumeBool()) timeout += interval / 2;
-
-        // this may make timeout too early; if so, don't run the test
-        if (start_time > timeout) return;
+        startheight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 2));
+        timeoutheight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 2));
     } else {
         if (fuzzed_data_provider.ConsumeBool()) {
-            start_time = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
-            timeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+            startheight = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+            timeoutheight = Consensus::BIP9Deployment::NO_TIMEOUT;
             always_active_test = true;
         } else {
-            start_time = 1199145601; // January 1, 2008
-            timeout = 1230767999;    // December 31, 2008
+            startheight = Consensus::BIP9Deployment::NEVER_ACTIVE;
+            timeoutheight = Consensus::BIP9Deployment::NEVER_ACTIVE;
             never_active_test = true;
         }
     }
 
-    TestConditionChecker checker(start_time, timeout, period, threshold, bit);
+    TestConditionChecker checker(startheight, timeoutheight, period, threshold, bit);
 
     // Early exit if the versions don't signal sensibly for the deployment
     if (!checker.Condition(ver_signal)) return;
@@ -177,7 +153,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
     assert(ver_signal > 0);
 
     // Now that we have chosen time and versions, setup to mine blocks
-    Blocks blocks(block_start_time, interval, ver_signal, ver_nosignal);
+    Blocks blocks(ver_signal, ver_nosignal);
 
     /* Strategy:
      *  * we will mine a final period worth of blocks, with
@@ -261,6 +237,9 @@ FUZZ_TARGET_INIT(versionbits, initialize)
     CBlockIndex* current_block = blocks.mine_block(signal);
     assert(checker.Condition(current_block) == signal);
 
+    // All states are for the next block
+    int height = current_block->nHeight + 1;
+
     // GetStateStatistics is safe on a period boundary
     // and has progressed to a new period
     const BIP9Stats stats = checker.GetStateStatisticsFor(current_block);
@@ -276,11 +255,11 @@ FUZZ_TARGET_INIT(versionbits, initialize)
 
     // since is straightforward:
     assert(since % period == 0);
-    assert(0 <= since && since <= current_block->nHeight + 1);
+    assert(0 <= since && since <= height);
     if (state == exp_state) {
         assert(since == exp_since);
     } else {
-        assert(since == current_block->nHeight + 1);
+        assert(since == height);
     }
 
     // state is where everything interesting is
@@ -288,13 +267,12 @@ FUZZ_TARGET_INIT(versionbits, initialize)
     case ThresholdState::DEFINED:
         assert(since == 0);
         assert(exp_state == ThresholdState::DEFINED);
-        assert(current_block->GetMedianTimePast() < checker.m_begin);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
+        assert(never_active_test || height < checker.m_begin);
         break;
     case ThresholdState::STARTED:
-        assert(current_block->GetMedianTimePast() >= checker.m_begin);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
+        assert(height >= checker.m_begin);
         if (exp_state == ThresholdState::STARTED) {
+            assert(height < checker.m_end);
             assert(blocks_sig < threshold);
         } else {
             assert(exp_state == ThresholdState::DEFINED);
@@ -302,21 +280,21 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         break;
     case ThresholdState::LOCKED_IN:
         assert(exp_state == ThresholdState::STARTED);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
         assert(blocks_sig >= threshold);
         break;
     case ThresholdState::ACTIVE:
         assert(exp_state == ThresholdState::ACTIVE || exp_state == ThresholdState::LOCKED_IN);
         break;
     case ThresholdState::FAILED:
-        assert(current_block->GetMedianTimePast() >= checker.m_end);
-        assert(exp_state != ThresholdState::LOCKED_IN && exp_state != ThresholdState::ACTIVE);
+        assert(height >= checker.m_begin);
+        assert(height >= checker.m_end);
+        assert(exp_state == ThresholdState::FAILED || exp_state == ThresholdState::STARTED);
         break;
     default:
         assert(false);
     }
 
-    if (blocks.size() >= max_periods * period) {
+    if (!never_active_test && blocks.size() >= max_periods * period) {
         // we chose the timeout (and block times) so that by the time we have this many blocks it's all over
         assert(state == ThresholdState::ACTIVE || state == ThresholdState::FAILED);
     }
@@ -334,12 +312,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
 
     // "never active" does too
     if (never_active_test) {
-        assert(state == ThresholdState::FAILED);
-        assert(since == period);
-        if (exp_since == 0) {
-            assert(exp_state == ThresholdState::DEFINED);
-        } else {
-            assert(exp_state == ThresholdState::FAILED);
-        }
+        assert(state == ThresholdState::DEFINED);
+        assert(since == 0);
     }
 }

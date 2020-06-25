@@ -25,21 +25,24 @@ enum DeploymentPos
 struct BIP9Deployment {
     /** Bit position to select the particular bit in nVersion. */
     int bit;
-    /** Start MedianTime for version bits miner confirmation. Can be a date in the past */
-    int64_t nStartTime;
-    /** Timeout/expiry MedianTime for the deployment attempt. */
-    int64_t nTimeout;
+    /** Start block height for version bits miner confirmation. Must be a retarget block, can be in the past. */
+    int startheight;
+    /** Timeout/expiry block height for the deployment attempt. Must be a retarget block. */
+    int timeoutheight;
     /** Threshold for activation */
     int threshold;
 
-    /** Constant for nTimeout very far in the future. */
-    static constexpr int64_t NO_TIMEOUT = std::numeric_limits<int64_t>::max();
+    /** Constant for timeoutheight very far in the future. */
+    static constexpr int NO_TIMEOUT = std::numeric_limits<int>::max();
 
-    /** Special value for nStartTime indicating that the deployment is always active.
+    /** Special value for startheight indicating that the deployment is always active.
      *  This is useful for testing, as it means tests don't need to deal with the activation
      *  process (which takes at least 3 BIP9 intervals). Only tests that specifically test the
      *  behaviour during activation cannot use this. */
-    static constexpr int64_t ALWAYS_ACTIVE = -1;
+    static constexpr int ALWAYS_ACTIVE = -1;
+    /** Special value for startheight and timeoutheight (both must be set) indicating that the
+     *  deployment is entirely disabled. */
+    static constexpr int NEVER_ACTIVE = -2;
 };
 
 /**
