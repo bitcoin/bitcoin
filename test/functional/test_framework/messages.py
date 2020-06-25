@@ -1575,6 +1575,70 @@ class msg_blocktxn:
         return "msg_blocktxn(block_transactions=%s)" % (repr(self.block_transactions))
 
 
+class msg_getmnlistd():
+    command = b"getmnlistd"
+
+    def __init__(self, baseBlockHash=0, blockHash=0):
+        self.baseBlockHash = baseBlockHash
+        self.blockHash = blockHash
+
+    def deserialize(self, f):
+        self.baseBlockHash = deser_uint256(f)
+        self.blockHash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.baseBlockHash)
+        r += ser_uint256(self.blockHash)
+        return r
+
+    def __repr__(self):
+        return "msg_getmnlistd(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
+
+QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
+
+class msg_mnlistdiff():
+    command = b"mnlistdiff"
+
+    def __init__(self):
+        self.baseBlockHash = 0
+        self.blockHash = 0
+        self.merkleProof = CPartialMerkleTree()
+        self.cbTx = None
+        self.deletedMNs = []
+        self.mnList = []
+        self.deletedQuorums = []
+        self.newQuorums = []
+
+    def deserialize(self, f):
+        self.baseBlockHash = deser_uint256(f)
+        self.blockHash = deser_uint256(f)
+        self.merkleProof.deserialize(f)
+        self.cbTx = CTransaction()
+        self.cbTx.deserialize(f)
+        self.cbTx.rehash()
+        self.deletedMNs = deser_uint256_vector(f)
+        self.mnList = []
+        for i in range(deser_compact_size(f)):
+            e = CSimplifiedMNListEntry()
+            e.deserialize(f)
+            self.mnList.append(e)
+
+        self.deletedQuorums = []
+        for i in range(deser_compact_size(f)):
+            llmqType = struct.unpack("<B", f.read(1))[0]
+            quorumHash = deser_uint256(f)
+            self.deletedQuorums.append(QuorumId(llmqType, quorumHash))
+        self.newQuorums = []
+        for i in range(deser_compact_size(f)):
+            qc = CFinalCommitment()
+            qc.deserialize(f)
+            self.newQuorums.append(qc)
+
+    def __repr__(self):
+        return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
+
+
 class msg_no_witness_blocktxn(msg_blocktxn):
     __slots__ = ()
 

@@ -375,11 +375,6 @@ public:
         leveldb::Slice slKey2(ssKey2.data(), ssKey2.size());
         pdb->CompactRange(&slKey1, &slKey2);
     }
-    // SYSCOIN
-    void CompactFull() const
-    {
-        pdb->CompactRange(nullptr, nullptr);
-    }
 
 };
 // SYSCOIN
