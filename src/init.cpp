@@ -2092,8 +2092,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     }
     // SYSCOIN
     if (!deterministicMNManager->UpgradeDBIfNeeded()) {
-        strLoadError = _("Error upgrading evo database");
-        break;
+        InitError(_("Error upgrading evo database"));
+        return false;
     }
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
