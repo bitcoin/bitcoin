@@ -27,6 +27,7 @@ from .messages import (
     ser_uint256,
     sha256,
     uint256_from_str,
+    CCbTx,
 )
 from .script import (
     CScript,
