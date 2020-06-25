@@ -332,22 +332,27 @@ void Shutdown(NodeContext& node)
     // up with our current chain to avoid any strange pruning edge cases and make
     // next startup faster by avoiding rescan.
     // SYSCOIN
-    FlushSyscoinDBs();
-    passetdb.reset();
-    pethereumtxrootsdb.reset();
-    pethereumtxmintdb.reset();
-    llmq::DestroyLLMQSystem();
-    deterministicMNManager.reset();
-    evoDb.reset();
-    if (node.chainman) {
+    {
         LOCK(cs_main);
-        for (CChainState* chainstate : node.chainman->GetAll()) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
+    
+        if (node.chainman) {
+            
+            for (CChainState* chainstate : node.chainman->GetAll()) {
+                if (chainstate->CanFlushToDisk()) {
+                    chainstate->ForceFlushStateToDisk();
+                    chainstate->ResetCoinsViews();
+                }
             }
+            pblocktree.reset();
         }
-        pblocktree.reset();
+        // SYSCOIN
+        FlushSyscoinDBs();
+        passetdb.reset();
+        pethereumtxrootsdb.reset();
+        pethereumtxmintdb.reset();
+        llmq::DestroyLLMQSystem();
+        deterministicMNManager.reset();
+        evoDb.reset();
     }
     for (const auto& client : node.chain_clients) {
         client->stop();
