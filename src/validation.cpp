@@ -2391,7 +2391,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
     const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams);
-    CAmount nMNSeniorityRet;
+    CAmount nMNSeniorityRet = 0;
     // detect MN was paid properly, accounting for seniority which is added to subsidy
     if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nFees, nMNSeniorityRet)) {
         LogPrintf("ERROR: ConnectBlock(): couldn't find masternode or superblock payments\n");
