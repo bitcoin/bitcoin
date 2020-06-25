@@ -190,6 +190,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     // SYSCOIN
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !chainparams.MineBlocksOnDemand()) {
+        if (masternodeSync.IsFailed()) {	
+            throw std::runtime_error("Masternode information has failed to sync, please restart your node!");	
+        }	
+        if (!masternodeSync.IsSynced()) {	
+            throw std::runtime_error("Masternode information has not synced, please wait until it finishes before mining!");	
+        }
         if(fGethSyncStatus != "synced"){
             throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
         }
@@ -213,7 +219,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST)
+        FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
     
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));

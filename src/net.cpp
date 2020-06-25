@@ -1965,7 +1965,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
                 break;
 
-            if (!addr.IsValid() && IsLocal(addr))
+            if (!addr.IsValid() || IsLocal(addr))
                 break;
 
 
