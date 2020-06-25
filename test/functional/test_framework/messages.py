@@ -1175,10 +1175,10 @@ class msg_version:
         return r
 
     def __repr__(self):
-        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X strSubVer=%s nStartingHeight=%i nRelay=%i)' \
+        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X strSubVer=%s nStartingHeight=%i nRelay=%i, receivedMNAuthChallenge=%064x, fOtherMasternode=%i)' \
             % (self.nVersion, self.nServices, time.ctime(self.nTime),
                repr(self.addrTo), repr(self.addrFrom), self.nNonce,
-               self.strSubVer, self.nStartingHeight, self.nRelay)
+               self.strSubVer, self.nStartingHeight, self.nRelay, self.receivedMNAuthChallenge, self.fOtherMasternode)
 
 
 class msg_verack:
