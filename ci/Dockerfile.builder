@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install $APT_ARGS python3-pip python3-setuptools &
 # Python stuff
 RUN pip3 install pyzmq # really needed?
 RUN pip3 install jinja2
-RUN pip3 install flake8==3.7.8
-RUN pip3 install codespell==1.15.0
+RUN pip3 install flake8==3.8.3
+RUN pip3 install codespell==1.17.1
 RUN pip3 install vulture==2.3
 RUN pip3 install yq
 
@@ -43,8 +43,8 @@ RUN apt-get update && apt-get install $APT_ARGS python3-zmq && rm -rf /var/lib/a
 RUN apt-get update && apt-get install $APT_ARGS cppcheck && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install $APT_ARGS imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools && rm -rf /var/lib/apt/lists/*
 
-ARG SHELLCHECK_VERSION=v0.6.0
-RUN curl -s "https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
+ARG SHELLCHECK_VERSION=v0.7.1
+RUN curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
 ENV PATH "/tmp/shellcheck-${SHELLCHECK_VERSION}:${PATH}"
 
 # This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
