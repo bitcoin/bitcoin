@@ -6,10 +6,8 @@
 #
 # Test deterministic masternodes
 #
-import sys
-
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
-from test_framework.mininode import CTransaction, ToHex, FromHex, CTxOut, COIN, CCbTx
+from test_framework.messages import CTransaction, ToHex, FromHex, COIN, CCbTx
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 
@@ -37,7 +35,7 @@ class DIP3Test(SyscoinTestFramework):
         self.start_node(0, extra_args=self.extra_args)
         for i in range(1, self.num_nodes):
             if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None:
-                connect_nodes_bi(self.nodes, 0, i)
+                connect_nodes(self.nodes[i], 0)
 
     def stop_controller_node(self):
         self.log.info("stopping controller node")
@@ -50,7 +48,7 @@ class DIP3Test(SyscoinTestFramework):
     def run_test(self):
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 100000:
-            self.nodes[0].generate(1) # generate enough for collaterals
+            self.nodes[0].generate(10) # generate enough for collaterals
         self.log.info("controller node has {} syscoin".format(self.nodes[0].getbalance()))
 
         # Make sure we're below block 135 (which activates dip3)
@@ -66,15 +64,15 @@ class DIP3Test(SyscoinTestFramework):
         mns.append(before_dip3_mn)
 
         # block 150 starts enforcing DIP3 MN payments
-        while self.nodes[0].getblockcount() < 150:
-            self.nodes[0].generate(1)
+        self.nodes[0].generate(150 - self.nodes[0].getblockcount())
+        assert(self.nodes[0].getblockcount() == 150)
 
         self.log.info("mining final block for DIP3 activation")
         self.nodes[0].generate(1)
 
         # We have hundreds of blocks to sync here, give it more time
         self.log.info("syncing blocks for all nodes")
-        sync_blocks(self.nodes, timeout=120)
+        self.sync_blocks(self.nodes, timeout=120)
 
         # DIP3 is fully enforced here
 
@@ -146,7 +144,15 @@ class DIP3Test(SyscoinTestFramework):
             self.test_protx_update_service(mn)
 
         self.log.info("testing P2SH/multisig for payee addresses")
-        multisig = self.nodes[0].createmultisig(1, [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()])['address']
+
+        # Create 1 of 2 multisig
+        addr1 = self.nodes[0].getnewaddress()
+        addr2 = self.nodes[0].getnewaddress()
+
+        addr1Obj = self.nodes[0].validateaddress(addr1)
+        addr2Obj = self.nodes[0].validateaddress(addr2)
+
+        multisig = self.nodes[0].createmultisig(1, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
         self.update_mn_payee(mns[0], multisig)
         found_multisig_payee = False
         for i in range(len(mns)):
@@ -209,13 +215,13 @@ class DIP3Test(SyscoinTestFramework):
         mn.alias = alias
         mn.is_protx = True
         mn.p2p_port = p2p_port(mn.idx)
-        mnKey = node.getnewaddress()
-        priv_key = node.dumpprivkey(mnKey)
+
+        blsKey = node.bls('generate')
         mn.fundsAddr = node.getnewaddress()
         mn.ownerAddr = node.getnewaddress()
-        mn.operatorAddr = node.getnewaddress()
+        mn.operatorAddr = blsKey['public']
         mn.votingAddr = mn.ownerAddr
-        mn.mnkey = priv_key
+        mn.blsMnkey = blsKey['secret']
 
         return mn
 
@@ -260,13 +266,11 @@ class DIP3Test(SyscoinTestFramework):
     def start_mn(self, mn):
         while len(self.nodes) <= mn.idx:
             self.add_nodes(1)
-        extra_args = ['-masternodeprivkey=%s' % mn.mnkey]
+        extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         force_finish_mnsync(self.nodes[mn.idx])
-        for i in range(0, len(self.nodes)):
-            if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None and i != mn.idx:
-                connect_nodes_bi(self.nodes, mn.idx, i)
         mn.node = self.nodes[mn.idx]
+        connect_nodes(mn.node, 0)
         self.sync_all()
 
     def spend_mn_collateral(self, mn, with_dummy_input_output=False):
@@ -282,7 +286,7 @@ class DIP3Test(SyscoinTestFramework):
 
     def test_protx_update_service(self, mn):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.mnkey, "", mn.fundsAddr)
+        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
         for node in self.nodes:
@@ -292,7 +296,7 @@ class DIP3Test(SyscoinTestFramework):
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
         # undo
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.mnkey, "", mn.fundsAddr)
+        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
 
     def assert_mnlists(self, mns):
@@ -411,6 +415,12 @@ class DIP3Test(SyscoinTestFramework):
 
         block = create_block(int(tip_hash, 16), coinbase)
         block.vtx += vtx
+
+        # Add quorum commitments from template
+        for tx in bt['transactions']:
+            tx2 = FromHex(CTransaction(), tx['data'])
+            if tx2.nType == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT:
+                block.vtx.append(tx2)
 
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
