@@ -29,7 +29,7 @@ import time
 
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
-
+from collections import namedtuple
 MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70014  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
