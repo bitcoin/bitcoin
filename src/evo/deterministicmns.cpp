@@ -1080,7 +1080,7 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
 {
     LOCK(cs_main);
 
-    if (chainActive.Tip() == nullptr) {
+    if (::ChainActive().Tip() == nullptr) {
         return true;
     }
 
@@ -1093,7 +1093,7 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
     evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
     dbTx->Commit();
 
-    evoDb.GetRawDB().CompactFull();
+    evoDb.GetRawDB().CompactRange(nullptr, nullptr);
 
     return true;
 }
