@@ -2049,8 +2049,8 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
     std::set<NodeId> setMisbehaving;
-    bool done = false;
-    while (!done && !orphan_work_set.empty()) {
+
+    while (!orphan_work_set.empty()) {
         const uint256 orphanHash = *orphan_work_set.begin();
         orphan_work_set.erase(orphan_work_set.begin());
 
@@ -2078,7 +2078,7 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
                 }
             }
             EraseOrphanTx(orphanHash);
-            done = true;
+            break;
         } else if (orphan_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (orphan_state.IsInvalid()) {
                 // Punish peer that gave us an invalid orphan tx
@@ -2124,10 +2124,10 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
                 }
             }
             EraseOrphanTx(orphanHash);
-            done = true;
+            break;
         }
-        m_mempool.check(&::ChainstateActive().CoinsTip());
     }
+    m_mempool.check(&::ChainstateActive().CoinsTip());
 }
 
 /**
