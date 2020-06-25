@@ -2048,7 +2048,6 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
-    std::set<NodeId> setMisbehaving;
 
     while (!orphan_work_set.empty()) {
         const uint256 orphanHash = *orphan_work_set.begin();
@@ -2065,7 +2064,6 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
         // that relayed the previous transaction).
         TxValidationState orphan_state;
 
-        if (setMisbehaving.count(fromPeer)) continue;
         if (AcceptToMemoryPool(m_mempool, orphan_state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), m_connman);
@@ -2081,14 +2079,12 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
             break;
         } else if (orphan_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (orphan_state.IsInvalid()) {
-                // Punish peer that gave us an invalid orphan tx
-                if (MaybePunishNodeForTx(fromPeer, orphan_state)) {
-                    setMisbehaving.insert(fromPeer);
-                }
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
                     orphanHash.ToString(),
                     fromPeer,
                     orphan_state.ToString());
+                // Maybe punish peer that gave us an invalid orphan tx
+                MaybePunishNodeForTx(fromPeer, orphan_state);
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
