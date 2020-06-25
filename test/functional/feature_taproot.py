@@ -1200,7 +1200,7 @@ class TaprootTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         # Node 0 has Taproot inactive, Node 1 active.
-        self.extra_args = [["-par=1", "-vbparams=taproot:1:1"], ["-par=1"]]
+        self.extra_args = [["-par=1", "-vbparams=taproot:@1:@1"], ["-par=1"]]
 
     def block_submit(self, node, txs, msg, err_msg, cb_pubkey=None, fees=0, sigops_weight=0, witness=False, accept=False):
 
