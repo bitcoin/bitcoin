@@ -628,7 +628,7 @@ public:
     bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
     bool IsDIP3Enforced(int nHeight = -1);
-    
+    bool UpgradeDBIfNeeded();
 
 private:
     void CleanupCache(int nHeight);
