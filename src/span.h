@@ -18,6 +18,12 @@
 #define ASSERT_IF_DEBUG(x)
 #endif
 
+#if defined(__clang__) && __has_attribute(lifetimebound)
+#define SPAN_ATTR_LIFETIMEBOUND [[clang::lifetimebound]]
+#else
+#define SPAN_ATTR_LIFETIMEBOUND
+#endif
+
 /** A Span is an object that can refer to a contiguous sequence of objects.
  *
  * It implements a subset of C++20's std::span.
@@ -73,7 +79,7 @@ public:
      * Note that this restriction does not exist when converting arrays or other Spans (see above).
      */
     template <typename V, typename std::enable_if<(std::is_const<C>::value || std::is_lvalue_reference<V>::value) && std::is_convertible<typename std::remove_pointer<decltype(std::declval<V&>().data())>::type (*)[], C (*)[]>::value && std::is_convertible<decltype(std::declval<V&>().size()), std::size_t>::value, int>::type = 0>
-    constexpr Span(V&& v) noexcept : m_data(v.data()), m_size(v.size()) {}
+    constexpr Span(V&& v SPAN_ATTR_LIFETIMEBOUND) noexcept : m_data(v.data()), m_size(v.size()) {}
 
     constexpr C* data() const noexcept { return m_data; }
     constexpr C* begin() const noexcept { return m_data; }
