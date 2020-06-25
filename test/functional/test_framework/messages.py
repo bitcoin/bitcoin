@@ -1117,7 +1117,7 @@ class CFinalCommitment:
 # Objects that correspond to messages on the wire
 class msg_version:
     __slots__ = ("addrFrom", "addrTo", "nNonce", "nRelay", "nServices",
-                 "nStartingHeight", "nTime", "nVersion", "strSubVer")
+                 "nStartingHeight", "nTime", "nVersion", "strSubVer", "receivedMNAuthChallenge", "fOtherMasternode")
     msgtype = b"version"
 
     def __init__(self):
@@ -1130,6 +1130,9 @@ class msg_version:
         self.strSubVer = MY_SUBVERSION
         self.nStartingHeight = -1
         self.nRelay = MY_RELAY
+        self.receivedMNAuthChallenge = 0
+        self.fOtherMasternode = 0
+
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -1153,6 +1156,8 @@ class msg_version:
                 self.nRelay = 0
         else:
             self.nRelay = 0
+        self.receivedMNAuthChallenge = deser_uint256(f)
+        self.fOtherMasternode = struct.unpack("<b", f.read(1))[0]
 
     def serialize(self):
         r = b""
@@ -1165,6 +1170,8 @@ class msg_version:
         r += ser_string(self.strSubVer)
         r += struct.pack("<i", self.nStartingHeight)
         r += struct.pack("<b", self.nRelay)
+        r += ser_uint256(self.receivedMNAuthChallenge)
+        r += struct.pack("<b", self.fOtherMasternode)
         return r
 
     def __repr__(self):
