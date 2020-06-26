@@ -79,6 +79,9 @@ public:
     {
         return m_hash.size();
     }
+
+    unsigned char* data() { return m_hash.data(); }
+    const unsigned char* data() const { return m_hash.data(); }
 };
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
