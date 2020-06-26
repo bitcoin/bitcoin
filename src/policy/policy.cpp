@@ -138,8 +138,14 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         }
     }
 
-    // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
+    // only one OP_RETURN txout is permitted is not one with mn coinbase output otherwise its two allowed
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
+        if (nDataOut > 2) {
+            reason = "multi-op-return";
+            return false;
+        }
+    }
+    else if (nDataOut > 1) {
         reason = "multi-op-return";
         return false;
     }
