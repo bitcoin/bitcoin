@@ -852,12 +852,11 @@ size_t GetRequestedTxCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 void EraseTxRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     LogPrint(BCLog::NET, "%s -- inv=(%s)\n", __func__, inv.ToString());
-    g_already_asked_for.erase(inv.hash);
-
     if (nodestate) {
         nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
         nodestate->m_tx_download.m_tx_in_flight.erase(inv);
     }
+    g_already_asked_for.erase(inv.hash);
 }
 void EraseTxRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
