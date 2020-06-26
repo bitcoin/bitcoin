@@ -222,15 +222,7 @@ namespace {
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
 
-    struct IteratorComparator
-    {
-        template<typename I>
-        bool operator()(const I& a, const I& b) const
-        {
-            return &(*a) < &(*b);
-        }
-    };
-    std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
+    std::map<COutPoint, std::set<std::reference_wrapper<const uint256>>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
 
     std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans); //! For random eviction
 
@@ -925,7 +917,7 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
     assert(ret.second);
     g_orphan_list.push_back(ret.first);
     for (const CTxIn& txin : tx->vin) {
-        mapOrphanTransactionsByPrev[txin.prevout].insert(ret.first);
+        mapOrphanTransactionsByPrev[txin.prevout].insert(hash);
     }
 
     AddToCompactExtraTransactions(tx);
@@ -945,7 +937,7 @@ int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
         auto itPrev = mapOrphanTransactionsByPrev.find(txin.prevout);
         if (itPrev == mapOrphanTransactionsByPrev.end())
             continue;
-        itPrev->second.erase(it);
+        itPrev->second.erase(hash);
         if (itPrev->second.empty())
             mapOrphanTransactionsByPrev.erase(itPrev);
     }
@@ -1209,10 +1201,8 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
             for (const auto& txin : tx.vin) {
                 auto itByPrev = mapOrphanTransactionsByPrev.find(txin.prevout);
                 if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
-                for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
-                    const CTransaction& orphanTx = *(*mi)->second.tx;
-                    const uint256& orphanHash = orphanTx.GetHash();
-                    vOrphanErase.push_back(orphanHash);
+                for (const uint256& hash : itByPrev->second) {
+                    vOrphanErase.push_back(hash);
                 }
             }
         }
@@ -1955,8 +1945,8 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
             for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(orphanHash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
-                    for (const auto& elem : it_by_prev->second) {
-                        orphan_work_set.insert(elem->first);
+                    for (const uint256& hash : it_by_prev->second) {
+                        orphan_work_set.insert(hash);
                     }
                 }
             }
@@ -2831,8 +2821,8 @@ void ProcessMessage(
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
-                    for (const auto& elem : it_by_prev->second) {
-                        pfrom.orphan_work_set.insert(elem->first);
+                    for (const uint256& hash : it_by_prev->second) {
+                        pfrom.orphan_work_set.insert(hash);
                     }
                 }
             }
