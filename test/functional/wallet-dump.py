@@ -6,8 +6,6 @@
 import os
 import sys
 
-import os
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
