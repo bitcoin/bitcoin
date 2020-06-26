@@ -164,12 +164,12 @@ class TestNode():
     def __del__(self):
         # Ensure that we don't leave any bitcoind processes lying around after
         # the test ends
-        if self.process and self.cleanup_on_exit:
+        if self.cleanup_on_exit:
             # Should only happen on test failure
             # Avoid using logger, as that may have already been shutdown when
             # this destructor is called.
             print(self._node_msg("Cleaning up leftover process"))
-            self.process.kill()
+            self.kill_node()
 
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
@@ -336,6 +336,13 @@ class TestNode():
         self.stderr.close()
 
         del self.p2ps[:]
+
+    def kill_node(self, wait=True):
+        if self.process:
+            self.process.kill()
+            if wait:
+                self.process.wait()
+        self.process = None
 
     def is_node_stopped(self):
         """Checks whether the node has stopped.
