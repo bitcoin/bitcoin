@@ -11,12 +11,17 @@ configure Tor.
 The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all
 outgoing connections, but more is possible.
 
-	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
+	-proxy=ip:port  Set a proxy server. If SOCKS5 is selected (default), this proxy
 	                server will be used to try to reach .onion addresses as well.
+	                You have to use -noonion or -onion=0 to explicitly disable
+	                outbound access to onion services.
 
 	-onion=ip:port  Set the proxy server to use for Tor onion services. You do not
-	                need to set this if it's the same as -proxy. You can use -noonion
+	                need to set this if it's the same as -proxy. You can use -onion=0
 	                to explicitly disable access to onion services.
+	                Note: Only the -proxy option will set the proxy used for DNS requests.
+	                With this option these will not route over Tor.
+	                So please use -proxy if you have privacy concerns with this.
 
 	-listen         When using -proxy, listening is disabled by default. If you want
 	                to run an onion service (see next section), you'll need to enable
@@ -29,8 +34,13 @@ outgoing connections, but more is possible.
 
 	-onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
 	                connections are not affected by this option. This option can be
-	                specified multiple times to allow multiple network types, e.g.
-	                ipv4, ipv6, or onion.
+	                specified multiple times to define a set of general allowed network
+	                types, e.g. ipv4, ipv6 or onion. If you use this option
+	                with other values than onion you can *not* disable onion connections.
+	                Onion outbound connections will be enabled when you use the -proxy
+	                or the -onion option.
+	                Please use -noonion or -onion=0 if you want to be sure to have no
+	                outbound onion connections over the default proxy or your defined proxy..
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
