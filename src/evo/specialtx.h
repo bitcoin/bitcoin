@@ -39,7 +39,7 @@ inline bool GetTxPayload(const CTransaction& tx, T& obj)
 {
     std::vector<unsigned char> vchData;
 	int nOut;
-	if (!GetSyscoinData(tx, vchData, nOut))
+	if (!GetSyscoinData(tx, vchData, nOut, SYSCOIN_TX_VERSION_MN_COINBASE))
 		return false;
     return GetTxPayload(vchData, obj);
 }
@@ -54,7 +54,7 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
     CScript scriptData;
     scriptData << OP_RETURN << std::vector<unsigned char>(ds.begin(), ds.end());
     // if opreturn exists update payload
-	if (GetSyscoinData(CTransaction(tx), vchData, nOut))
+	if (GetSyscoinData(CTransaction(tx), vchData, nOut, SYSCOIN_TX_VERSION_MN_COINBASE))
         tx.vout[nOut].scriptPubKey = scriptData;
     // otherwise add a new output with opreturn
     else

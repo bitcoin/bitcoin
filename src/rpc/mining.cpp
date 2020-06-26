@@ -935,7 +935,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED));
     std::vector<unsigned char> vchData;
 	int nOut;
-	if (GetSyscoinData(*pblock->vtx[0], vchData, nOut))
+	if (GetSyscoinData(*pblock->vtx[0], vchData, nOut, SYSCOIN_TX_MN_VERSION_MN_COINBASE))
         result.pushKV("coinbase_payload", HexStr(vchData));
     return result;
 }
