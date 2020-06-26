@@ -54,9 +54,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             (void)sha512.Write(data.data(), data.size());
             (void)sip_hasher.Write(data.data(), data.size());
 
-            (void)Hash(data.begin(), data.end());
+            (void)Hash(data);
             (void)Hash160(data);
-            (void)Hash160(data.begin(), data.end());
             (void)sha512.Size();
             break;
         }

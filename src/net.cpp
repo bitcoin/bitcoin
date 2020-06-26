@@ -736,7 +736,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageSta
 
 void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) {
     // create dbl-sha256 checksum
-    uint256 hash = Hash(msg.data.begin(), msg.data.end());
+    uint256 hash = Hash(msg.data);
 
     // create header
     CMessageHeader hdr(Params().MessageStart(), msg.m_type.c_str(), msg.data.size());

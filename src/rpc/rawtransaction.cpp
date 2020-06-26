@@ -601,7 +601,7 @@ static UniValue decodescript(const JSONRPCRequest& request)
             UniValue sr(UniValue::VOBJ);
             CScript segwitScr;
             if (which_type == TxoutType::PUBKEY) {
-                segwitScr = GetScriptForDestination(WitnessV0KeyHash(Hash160(solutions_data[0].begin(), solutions_data[0].end())));
+                segwitScr = GetScriptForDestination(WitnessV0KeyHash(Hash160(solutions_data[0])));
             } else if (which_type == TxoutType::PUBKEYHASH) {
                 segwitScr = GetScriptForDestination(WitnessV0KeyHash(uint160{solutions_data[0]}));
             } else {

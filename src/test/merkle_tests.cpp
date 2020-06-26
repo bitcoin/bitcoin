@@ -13,9 +13,9 @@ static uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vecto
     uint256 hash = leaf;
     for (std::vector<uint256>::const_iterator it = vMerkleBranch.begin(); it != vMerkleBranch.end(); ++it) {
         if (nIndex & 1) {
-            hash = Hash(it->begin(), it->end(), hash.begin(), hash.end());
+            hash = Hash(*it, hash);
         } else {
-            hash = Hash(hash.begin(), hash.end(), it->begin(), it->end());
+            hash = Hash(hash, *it);
         }
         nIndex >>= 1;
     }
@@ -144,8 +144,7 @@ static uint256 BlockBuildMerkleTree(const CBlock& block, bool* fMutated, std::ve
                 // Two identical hashes at the end of the list at a particular level.
                 mutated = true;
             }
-            vMerkleTree.push_back(Hash(vMerkleTree[j+i].begin(), vMerkleTree[j+i].end(),
-                                       vMerkleTree[j+i2].begin(), vMerkleTree[j+i2].end()));
+            vMerkleTree.push_back(Hash(vMerkleTree[j+i], vMerkleTree[j+i2]));
         }
         j += nSize;
     }
