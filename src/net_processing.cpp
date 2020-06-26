@@ -2461,6 +2461,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::VERSION) {
+         LogPrintf("got version\n");
         // Each connection can only send one version message
         if (pfrom.nVersion != 0)
         {
@@ -2488,13 +2489,14 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         {
             connman->SetServices(pfrom.addr, nServices);
         }
+        LogPrintf("got version0\n");
         if (!pfrom.fInbound && !pfrom.fFeeler && !pfrom.m_manual_connection && !HasAllDesirableServiceFlags(nServices))
         {
             LogPrint(BCLog::NET, "peer=%d does not offer the expected services (%08x offered, %08x expected); disconnecting\n", pfrom.GetId(), nServices, GetDesirableServiceFlags(nServices));
             pfrom.fDisconnect = true;
             return false;
         }
-
+        LogPrintf("got version1\n");
         if (nVersion < MIN_PEER_PROTO_VERSION) {
             // disconnect from peers older than this proto version
             LogPrint(BCLog::NET, "peer=%d using obsolete version %i; disconnecting\n", pfrom.GetId(), nVersion);
@@ -2515,6 +2517,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         if (!vRecv.empty())
             vRecv >> fRelay;
         // SYSCOIN
+        LogPrintf("got version2\n");
         if (!vRecv.empty()) {
             LOCK(pfrom.cs_mnauth);
             vRecv >> pfrom.receivedMNAuthChallenge;
@@ -2529,11 +2532,13 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
                     if (!fMasternodeMode) {
                         LogPrint(BCLog::NET, "but we're not a masternode, disconnecting\n");
                         pfrom.fDisconnect = true;
+                        LogPrintf("got version2a\n");
                         return true;
                     }
                 }
             }
         }
+        LogPrintf("got version3\n");
         // Disconnect if we connected to ourself
         if (pfrom.fInbound && !connman->CheckIncomingNonce(nNonce))
         {
@@ -2552,7 +2557,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
 
         connman->PushMessage(&pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERACK));
-
+        LogPrintf("got version4\n");
         pfrom.nServices = nServices;
         pfrom.SetAddrLocal(addrMe);
         {
@@ -2587,7 +2592,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         LOCK(cs_main);
         UpdatePreferredDownload(pfrom, State(pfrom.GetId()));
         }
-
+        LogPrintf("got version5\n");
         if (!pfrom.fInbound && pfrom.IsAddrRelayPeer())
         {
             // Advertise our address
@@ -2614,7 +2619,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             }
             connman->MarkAddressGood(pfrom.addr);
         }
-
+        LogPrintf("got version6\n");
         std::string remoteAddr;
         if (fLogIPs)
             remoteAddr = ", peeraddr=" + pfrom.addr.ToString();
@@ -2639,6 +2644,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             assert(pfrom.fInbound == false);
             pfrom.fDisconnect = true;
         }
+        LogPrintf("got version7\n");
         return true;
     }
 
