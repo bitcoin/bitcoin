@@ -21,8 +21,6 @@
 #include <uint256.h>
 #include <ui_interface.h>
 
-#include <openssl/sha.h>
-
 #include <stdint.h>
 #include <limits>
 #include <string>
