@@ -1060,7 +1060,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         return;
     }
     // SYSCOIN
-    while ((nInbound - nVerifiedInboundMasternodes) >= nMaxInbound)
+    if ((nInbound - nVerifiedInboundMasternodes) >= nMaxInbound)
     {
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
