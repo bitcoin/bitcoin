@@ -1248,8 +1248,8 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     }
 
     UniValue rv(UniValue::VOBJ);
-    rv.pushKV("type", "bip9");
-    rv.pushKV("bip9", bip9);
+    rv.pushKV("type", "bip8");
+    rv.pushKV("bip8", bip9);
     if (ThresholdState::ACTIVE == thresholdState) {
         rv.pushKV("height", since_height);
     }
@@ -1284,24 +1284,24 @@ RPCHelpMan getblockchaininfo()
                         {
                             {RPCResult::Type::OBJ, "xxxx", "name of the softfork",
                             {
-                                {RPCResult::Type::STR, "type", "one of \"buried\", \"bip9\""},
-                                {RPCResult::Type::OBJ, "bip9", "status of bip9 softforks (only for \"bip9\" type)",
+                                {RPCResult::Type::STR, "type", "one of \"buried\", \"bip8\""},
+                                {RPCResult::Type::OBJ, "bip8", "status of BIP 8 softforks (only for \"bip8\" type)",
                                 {
                                     {RPCResult::Type::STR, "status", "one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\""},
                                     {RPCResult::Type::NUM, "bit", "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)"},
                                     {RPCResult::Type::NUM, "startheight", "the minimum height of a block at which the bit gains its meaning"},
                                     {RPCResult::Type::NUM, "timeoutheight", "the height of a block at which the deployment is considered failed if not yet locked in"},
                                     {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
-                                    {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)",
+                                    {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP8 signalling for a softfork (only for \"started\" status)",
                                     {
-                                        {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},
+                                        {RPCResult::Type::NUM, "period", "the length in blocks of the BIP8 signalling period"},
                                         {RPCResult::Type::NUM, "threshold", "the number of blocks with the version bit set required to activate the feature"},
                                         {RPCResult::Type::NUM, "elapsed", "the number of blocks elapsed since the beginning of the current period"},
                                         {RPCResult::Type::NUM, "count", "the number of blocks with the version bit set in the current period"},
                                         {RPCResult::Type::BOOL, "possible", "returns false if there are not enough blocks left in this period to pass activation threshold"},
                                     }},
                                 }},
-                                {RPCResult::Type::NUM, "height", "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
+                                {RPCResult::Type::NUM, "height", "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip8\" type with \"active\" status)"},
                                 {RPCResult::Type::BOOL, "active", "true if the rules are enforced for the mempool and the next block"},
                             }},
                         }},

@@ -512,10 +512,10 @@ static RPCHelpMan getblocktemplate()
     return RPCHelpMan{"getblocktemplate",
                 "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
                 "It returns data needed to construct a block to work on.\n"
-                "For full specification, see BIPs 22, 23, 9, and 145:\n"
+                "For full specification, see BIPs 22, 23, 8, and 145:\n"
                 "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
                 "    https://github.com/bitcoin/bips/blob/master/bip-0023.mediawiki\n"
-                "    https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n"
+                "    https://github.com/bitcoin/bips/blob/master/bip-0008.mediawiki#getblocktemplate_changes\n"
                 "    https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki\n",
                 {
                     {"template_request", RPCArg::Type::OBJ, "{}", "Format of the template",
@@ -541,9 +541,9 @@ static RPCHelpMan getblocktemplate()
                         {RPCResult::Type::NUM, "version", "The preferred block version"},
                         {RPCResult::Type::ARR, "rules", "specific block rules that are to be enforced",
                             {
-                                {RPCResult::Type::STR, "", "name of a rule the client must understand to some extent; see BIP 9 for format"},
+                                {RPCResult::Type::STR, "", "name of a rule the client must understand to some extent; see BIP 8 for format"},
                             }},
-                        {RPCResult::Type::OBJ_DYN, "vbavailable", "set of pending, supported versionbit (BIP 9) softfork deployments",
+                        {RPCResult::Type::OBJ_DYN, "vbavailable", "set of pending, supported versionbit softfork deployments",
                             {
                                 {RPCResult::Type::NUM, "rulename", "identifies the bit number as indicating acceptance and readiness for the named softfork rule"},
                             }},
