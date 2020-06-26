@@ -326,8 +326,14 @@ class RPCHelpMan
 {
 public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
+    using RPCMethodImpl = std::function<UniValue(const RPCHelpMan&, const JSONRPCRequest&)>;
+    RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
 
     std::string ToString() const;
+    UniValue HandleRequest(const JSONRPCRequest& request)
+    {
+        return m_fun(*this, request);
+    }
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
     /**
@@ -340,8 +346,12 @@ public:
         }
     }
 
-private:
+    std::vector<std::string> GetArgNames() const;
+
     const std::string m_name;
+
+private:
+    const RPCMethodImpl m_fun;
     const std::string m_description;
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;
