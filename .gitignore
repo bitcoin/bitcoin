@@ -13,6 +13,7 @@ src/dash-tx
 src/test/test_dash
 src/test/test_dash_fuzzy
 src/qt/test/test_dash-qt
+src/qt/res/css/colors/*
 src/bench/bench_dash
 
 # autoreconf

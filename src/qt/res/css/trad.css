@@ -1,29 +1,68 @@
-/* MODAL OVERLAY */
+/**
+Copyright (c) 2020 The Dash Core developers
+Distributed under the MIT/X11 software license, see the accompanying
+file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-QWidget#bgWidget { /* The 'frame' overlaying the overview-page */
-background: rgba(0,0,0,220);
+---------------------------------------------------------------------
+
+This file contains all changes for the dash theme "Traditional".
+
+NOTE: This file gets not appended to the general.css. The Traditional
+theme is a standalone theme which just fixes some bugs in the OS default
+depiction of the Qt elements.
+
+Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
+**/
+
+/* do not modify! section updated by update-css-files.py
+<colors>
+
+# Used colors in trad.css for commit 3bebd1a5c
+
+#fff
+#ccfafafa
+
+</colors>
+*/
+
+/******************************************************
+ModalOverlay
+******************************************************/
+
+QWidget#bgWidget { /* The frame overlaying the overview-page */
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: #ccfafafa;
 }
 
 QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
-background: rgba(255,255,255,240);
-border-radius: 6px;
+    background-color: #fff;
+    margin: 0;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border: 1px solid;
+    border-radius: 6px;
 }
 
-/* OVERVIEW SCREEN */
+/******************************************************
+OverviewPage
+******************************************************/
 
 QWidget .QFrame#frame .QLabel#labelWalletStatus, /* Wallet Sync Status */
 QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendSyncStatus, /* PrivateSend Sync Status */
 QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
-color: red;
+    color: red;
 }
 
-/* SEND DIALOG */
+/******************************************************
+SendCoinsDialog
+******************************************************/
 
 QDialog#SendCoinsDialog QLabel#labelBalance {
-margin-left:0px;
-padding-left:0px;
+    margin-left: 0px;
+    padding-left: 0px;
 }
 
 QDialog#SendCoinsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffFunds { /* Insufficient Funds Label */
-color: red;
+    color: red;
 }
