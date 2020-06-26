@@ -364,7 +364,8 @@ class CSigSharesManager : public CRecoveredSigsListener
     // 400 is the maximum quorum size, so this is also the maximum number of sigs we need to support
     const size_t MAX_MSGS_TOTAL_BATCHED_SIGS = 400;
 
-    const int64_t SEND_FOR_RECOVERY_TIMEOUT = 1;
+    const int64_t EXP_SEND_FOR_RECOVERY_TIMEOUT = 2000;
+    const int64_t MAX_SEND_FOR_RECOVERY_TIMEOUT = 10000;
     const size_t MAX_MSGS_SIG_SHARES = 32;
 
 private:
@@ -449,7 +450,7 @@ private:
     bool SendMessages();
     void CollectSigSharesToRequest(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToRequest);
     void CollectSigSharesToSend(std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>>& sigSharesToSend);
-    void CollectSigSharesToSend(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes);
+    void CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes);
     void CollectSigSharesToAnnounce(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToAnnounce);
     bool SignPendingSigShares();
     void WorkThreadMain();

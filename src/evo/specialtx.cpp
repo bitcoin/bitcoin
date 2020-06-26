@@ -104,9 +104,11 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         for (int i = 0; i < (int)block.vtx.size(); i++) {
             const CTransaction& tx = *block.vtx[i];
             if (!CheckSpecialTx(tx, pindex->pprev, state)) {
+                // pass the state returned by the function above
                 return false;
             }
             if (!ProcessSpecialTx(tx, pindex, state)) {
+                // pass the state returned by the function above
                 return false;
             }
         }
@@ -115,6 +117,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
 
         if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state)) {
+            // pass the state returned by the function above
             return false;
         }
 
@@ -122,6 +125,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
 
         if (!deterministicMNManager->ProcessBlock(block, pindex, state, fJustCheck)) {
+            // pass the state returned by the function above
             return false;
         }
 
@@ -129,13 +133,15 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
         if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state)) {
+            // pass the state returned by the function above
             return false;
         }
 
         int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
     } catch (const std::exception& e) {
-        return error(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
+        LogPrintf(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
+        return state.DoS(100, false, REJECT_INVALID, "failed-procspectxsinblock");
     }
 
     return true;

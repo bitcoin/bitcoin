@@ -739,7 +739,7 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
 
     // prepare node set for direct-push in case this is our sig share
     std::set<NodeId> quorumNodes;
-    if (!sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+    if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
         if (sigShare.quorumMember == quorum->GetMemberIndex(activeMasternodeInfo.proTxHash)) {
             quorumNodes = connman.GetMasternodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
         }
@@ -755,7 +755,9 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
         if (!sigShares.Add(sigShare.GetKey(), sigShare)) {
             return;
         }
-        sigSharesToAnnounce.Add(sigShare.GetKey(), true);
+        if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
+            sigSharesToAnnounce.Add(sigShare.GetKey(), true);
+        }
 
         // Update the time we've seen the last sigShare
         timeSeenForSessions[sigShare.GetSignHash()] = GetAdjustedTime();
@@ -909,6 +911,10 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
             auto& signHash = p2.first;
             auto& session = p2.second;
 
+            if (CLLMQUtils::IsAllMembersConnectedEnabled(session.llmqType)) {
+                continue;
+            }
+
             if (quorumSigningManager->HasRecoveredSigForSession(signHash)) {
                 continue;
             }
@@ -982,6 +988,10 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::u
             auto& signHash = p2.first;
             auto& session = p2.second;
 
+            if (CLLMQUtils::IsAllMembersConnectedEnabled(session.llmqType)) {
+                continue;
+            }
+
             if (quorumSigningManager->HasRecoveredSigForSession(signHash)) {
                 continue;
             }
@@ -1016,7 +1026,7 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::u
     }
 }
 
-void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes)
+void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes)
 {
     AssertLockHeld(cs);
 
@@ -1028,15 +1038,21 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::v
         proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
     }
 
-    auto curTime = GetTime();
+    auto curTime = GetTime<std::chrono::milliseconds>().count();
 
     for (auto& p : signedSessions) {
+        if (!CLLMQUtils::IsAllMembersConnectedEnabled(p.second.quorum->params.type)) {
+            continue;
+        }
+
         if (p.second.attempt > p.second.quorum->params.recoveryMembers) {
             continue;
         }
 
         if (curTime >= p.second.nextAttemptTime) {
-            p.second.nextAttemptTime = curTime + SEND_FOR_RECOVERY_TIMEOUT;
+            int64_t waitTime = exp2(p.second.attempt) * EXP_SEND_FOR_RECOVERY_TIMEOUT;
+            waitTime = std::min(MAX_SEND_FOR_RECOVERY_TIMEOUT, waitTime);
+            p.second.nextAttemptTime = curTime + waitTime;
             auto dmn = SelectMemberForRecovery(p.second.quorum, p.second.sigShare.id, p.second.attempt);
             p.second.attempt++;
 
@@ -1137,13 +1153,10 @@ bool CSigSharesManager::SendMessages()
 
     {
         LOCK(cs);
-        if (!sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
-            CollectSigSharesToRequest(sigSharesToRequest);
-            CollectSigSharesToSend(sigShareBatchesToSend);
-            CollectSigSharesToAnnounce(sigSharesToAnnounce);
-        } else {
-            CollectSigSharesToSend(sigSharesToSend, vNodesCopy);
-        }
+        CollectSigSharesToRequest(sigSharesToRequest);
+        CollectSigSharesToSend(sigShareBatchesToSend);
+        CollectSigSharesToAnnounce(sigSharesToAnnounce);
+        CollectSigSharesToSendConcentrated(sigSharesToSend, vNodesCopy);
 
         for (auto& p : sigSharesToRequest) {
             for (auto& p2 : p.second) {
@@ -1583,7 +1596,7 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
               signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), quorum->params.type, quorum->qc.quorumHash.ToString(), t.count());
     ProcessSigShare(-1, sigShare, *g_connman, quorum);
 
-    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+    if (CLLMQUtils::IsAllMembersConnectedEnabled(quorum->params.type)) {
         LOCK(cs);
         auto& session = signedSessions[sigShare.GetSignHash()];
         session.sigShare = sigShare;
@@ -1596,6 +1609,10 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
 // causes all known sigShares to be re-announced
 void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
 {
+    if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
+        return;
+    }
+
     LOCK(cs);
     auto signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, msgHash);
     auto sigs = sigShares.GetAllForSignHash(signHash);

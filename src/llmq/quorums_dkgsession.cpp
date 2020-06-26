@@ -125,6 +125,7 @@ bool CDKGSession::Init(const CBlockIndex* _pindexQuorum, const std::vector<CDete
 
     if (!myProTxHash.IsNull()) {
         quorumDKGDebugManager->InitLocalSessionStatus(params.type, pindexQuorum->GetBlockHash(), pindexQuorum->nHeight);
+        relayMembers = CLLMQUtils::GetQuorumRelayMembers(params.type, pindexQuorum, myProTxHash, true);
     }
 
     if (myProTxHash.IsNull()) {
@@ -445,7 +446,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions()
 {
-    if (!sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+    if (!CLLMQUtils::IsAllMembersConnectedEnabled(params.type)) {
         return;
     }
 
@@ -1314,7 +1315,7 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
         bool relay = false;
         if (pnode->qwatch) {
             relay = true;
-        } else if (!pnode->verifiedProRegTxHash.IsNull() && membersMap.count(pnode->verifiedProRegTxHash)) {
+        } else if (!pnode->verifiedProRegTxHash.IsNull() && relayMembers.count(pnode->verifiedProRegTxHash)) {
             relay = true;
         }
         if (relay) {

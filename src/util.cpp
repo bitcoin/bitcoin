@@ -589,7 +589,7 @@ public:
         std::pair<bool,std::string> found_result(false, std::string());
 
         // We pass "true" to GetArgHelper in order to return the last
-        // argument value seen from the command line (so "bitcoind -foo=bar
+        // argument value seen from the command line (so "dashd -foo=bar
         // -foo=baz" gives GetArg(am,"foo")=={true,"baz"}
         found_result = GetArgHelper(am.m_override_args, arg, true);
         if (found_result.first) {
@@ -619,7 +619,7 @@ public:
     /* Special test for -testnet and -regtest args, because we
      * don't want to be confused by craziness like "[regtest] testnet=1"
      */
-    static inline bool GetNetBoolArg(const ArgsManager &am, const std::string& net_arg)
+    static inline bool GetNetBoolArg(const ArgsManager &am, const std::string& net_arg, bool interpret_bool)
     {
         std::pair<bool,std::string> found_result(false,std::string());
         found_result = GetArgHelper(am.m_override_args, net_arg, true);
@@ -629,7 +629,7 @@ public:
                 return false; // not set
             }
         }
-        return InterpretBool(found_result.second); // is set, so evaluate
+        return !interpret_bool || InterpretBool(found_result.second); // is set, so evaluate
     }
 };
 
@@ -1030,9 +1030,9 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 
 std::string ArgsManager::GetChainName() const
 {
-    bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest");
-    bool fDevNet = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet");
-    bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet");
+    bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest", true);
+    bool fDevNet = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
+    bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet", true);
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
     if (nameParamsCount > 1)
@@ -1370,6 +1370,10 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
 {
     std::string strCopyrightHolders = strPrefix + strprintf(" %u-%u ", nStartYear, nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
 
+    // Check for untranslated substitution to make sure Dash Core copyright is not removed by accident
+    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Dash Core") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2014, nEndYear) + "The Dash Core developers";
+    }
     // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
         strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2009, nEndYear) + "The Bitcoin Core developers";
