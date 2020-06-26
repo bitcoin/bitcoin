@@ -5,6 +5,7 @@
 #include <key.h>
 
 #include <key_io.h>
+#include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/strencodings.h>
@@ -218,6 +219,49 @@ BOOST_AUTO_TEST_CASE(key_key_negation)
     key.Sign(hash, vch_sig_cmp);
     BOOST_CHECK(vch_sig_cmp == vch_sig);
     BOOST_CHECK(key.GetPubKey().data()[0] == 0x03);
+}
+
+static CPubKey UnserializePubkey(const std::vector<uint8_t>& data)
+{
+    CDataStream stream{SER_NETWORK, INIT_PROTO_VERSION};
+    stream << data;
+    CPubKey pubkey;
+    stream >> pubkey;
+    return pubkey;
+}
+
+static unsigned int GetLen(unsigned char chHeader)
+{
+    if (chHeader == 2 || chHeader == 3)
+        return CPubKey::COMPRESSED_SIZE;
+    if (chHeader == 4 || chHeader == 6 || chHeader == 7)
+        return CPubKey::SIZE;
+    return 0;
+}
+
+static void CmpSerializationPubkey(const CPubKey& pubkey)
+{
+    CDataStream stream{SER_NETWORK, INIT_PROTO_VERSION};
+    stream << pubkey;
+    CPubKey pubkey2;
+    stream >> pubkey2;
+    BOOST_CHECK(pubkey == pubkey2);
+}
+
+BOOST_AUTO_TEST_CASE(pubkey_unserialize)
+{
+    for (uint8_t i = 2; i <= 7; ++i) {
+        CPubKey key = UnserializePubkey({0x02});
+        BOOST_CHECK(!key.IsValid());
+        CmpSerializationPubkey(key);
+        key = UnserializePubkey(std::vector<uint8_t>(GetLen(i), i));
+        CmpSerializationPubkey(key);
+        if (i == 5) {
+            BOOST_CHECK(!key.IsValid());
+        } else {
+            BOOST_CHECK(key.IsValid());
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
