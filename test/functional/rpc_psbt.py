@@ -187,9 +187,53 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
-        self.log.info("Test feeRate of 0.1 BTC / KB produces a total fee slightly below -maxtxfee (~0.05280000)")
+        self.log.info("Test feeRate of 0.1 BTC / KB produces a total fee at or slightly below -maxtxfee (~0.05290000)")
         res = self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"feeRate": 0.1, "add_inputs": True})
         assert_approx(res["fee"], 0.055, 0.005)
+
+        self.log.info("Test passing walletcreatefundedpsbt explicit feerate with fee_rate and estimate_mode")
+        for unit, feerate in {"btc/kb": 0.1, "sat/b": 10000}.items():
+            fee = self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"fee_rate": feerate, "estimate_mode": unit, "add_inputs": True})["fee"]
+            self.log.info("- fee_rate {}, estimate_mode {} produces fee {} at or slightly below -maxtxfee (~0.05290000)".format(feerate, unit, fee))
+            assert_approx(fee, vexp=0.055, vspan=0.005)
+
+        self.log.info("Test walletcreatefundedpsbt raises RPC error if both fee_rate and conf_target are passed")
+        assert_raises_rpc_error(
+            -8, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.",
+            lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"fee_rate": 0.1, "conf_target": 0.1, "add_inputs": True}))
+        self.log.info("Test walletcreatefundedpsbt raises RPC error if both fee_rate and estimate_mode=conservative are passed")
+        assert_raises_rpc_error(
+            -8, "Must specify an explicit-fee estimate_mode to set fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee mode.",
+            lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"fee_rate": 0.1, "estimate_mode": "conservative", "add_inputs": True}))
+
+        self.log.info("Test walletcreatefundedpsbt with invalid estimate_mode settings")
+        for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
+            assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": v, "conf_target": 0.1, "add_inputs": True}))
+        for mode in ["foo", Decimal("3.141592")]:
+            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter",
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": mode, "conf_target": 0.1, "add_inputs": True}))
+
+        self.log.info("Test walletcreatefundedpsbt with invalid conf_target settings")
+        for mode in ["unset", "economical", "conservative"]:
+            self.log.debug("{}".format(mode))
+            for k, v in {"string": "", "object": {"foo": "bar"}}.items():
+                assert_raises_rpc_error(-3, "Expected type number for conf_target, got {}".format(k),
+                    lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": mode, "conf_target": v, "add_inputs": True}))
+            for n in [-1, 0, 1009]:
+                assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 - 1008",
+                    lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": mode, "conf_target": n, "add_inputs": True}))
+        for mode in ["btc/kb", "sat/b"]:
+            self.log.debug("{}".format(mode))
+            assert_raises_rpc_error(-3, "Invalid amount",
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": mode, "fee_rate": "", "add_inputs": True}))
+            for k, v in {"object": {"foo": "bar"}}.items():
+                assert_raises_rpc_error(-3, "Amount is not a number or string",
+                    lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": mode, "fee_rate": v, "add_inputs": True}))
+            assert_raises_rpc_error(-3, "Amount out of range",
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": mode, "fee_rate": -1, "add_inputs": True}))
+            assert_raises_rpc_error(-8, "Invalid fee_rate 0.00000000 BTC/kB (must be greater than 0)",
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, addr, 0, {"estimate_mode": mode, "fee_rate": 0, "add_inputs": True}))
 
         self.log.info("Test feeRate of 10 BTC/KB produces total fee well above -maxtxfee and raises RPC error")
         # previously this was silently capped at -maxtxfee
