@@ -733,6 +733,13 @@ class MasternodeInfo:
 
 
 class DashTestFramework(SyscoinTestFramework):
+    # Methods to override in subclass test scripts.
+    def run_test(self):
+        """Tests must override this method to define test logic"""
+        raise NotImplementedError
+    def set_test_params(self):
+        """Tests must this method to change default values for number of nodes, topology, etc"""
+        raise NotImplementedError
     def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
