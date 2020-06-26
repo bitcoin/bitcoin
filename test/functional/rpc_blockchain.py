@@ -135,8 +135,8 @@ class BlockchainTest(BitcoinTestFramework):
             'csv': {'type': 'buried', 'active': False, 'height': 432},
             'segwit': {'type': 'buried', 'active': True, 'height': 0},
             'testdummy': {
-                'type': 'bip9',
-                'bip9': {
+                'type': 'bip8',
+                'bip8': {
                     'status': 'started',
                     'bit': 28,
                     'startheight': 144,
@@ -153,8 +153,8 @@ class BlockchainTest(BitcoinTestFramework):
                 'active': False
             },
             'taproot': {
-                'type': 'bip9',
-                'bip9': {
+                'type': 'bip8',
+                'bip8': {
                     'status': 'active',
                     'startheight': -1,
                     'timeoutheight': 0x7fffffff,
