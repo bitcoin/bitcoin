@@ -9,7 +9,7 @@ Version 2 compact blocks are post-segwit (wtxids)
 """
 import random
 
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.blocktools import create_block, NORMAL_GBT_REQUEST_PARAMS, add_witness_commitment
 from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, HeaderAndShortIDs, msg_no_witness_block, msg_no_witness_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, msg_block, msg_blocktxn, MSG_BLOCK, MSG_CMPCT_BLOCK, MSG_WITNESS_FLAG, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ser_uint256, ToHex
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript, OP_TRUE, OP_DROP
@@ -104,11 +104,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def build_block_on_tip(self, node, segwit=False):
-        height = node.getblockcount()
-        tip = node.getbestblockhash()
-        mtp = node.getblockheader(tip)['mediantime']
-        block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
-        block.nVersion = 4
+        block = create_block(tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         if segwit:
             add_witness_commitment(block)
         block.solve()
@@ -789,6 +785,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def run_test(self):
+        # Get the nodes out of IBD
+        self.nodes[0].generate(1)
+
         # Setup the p2p connections
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
         self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=1), services=NODE_NETWORK)
