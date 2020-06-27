@@ -217,7 +217,7 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Selected estimate_mode requires a fee rate");
         }
         if (&conf_target_param != &fee_rate_param && !conf_target_param.isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "conf_target can't be set with fee_rate");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
         }
 
         CAmount fee_rate = AmountFromValue(fee_rate_param);
@@ -3387,7 +3387,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
         "All inputs in the original transaction will be included in the replacement transaction.\n"
         "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
-        "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
+        "By default, the new fee will be calculated automatically using the estimatesmartfee RPC.\n"
         "The user can specify a confirmation target for estimatesmartfee.\n"
         "Alternatively, the user can specify a fee_rate (" + CURRENCY_UNIT + " per kB) for the new transaction.\n"
         "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"

@@ -168,24 +168,63 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
 
 
 def test_feerate_args(self, rbf_node, peer_node, dest_address):
-    self.log.info('Test fee_rate args')
+    self.log.info('Test feerate args')
     rbfid = spend_one_input(rbf_node, dest_address)
     self.sync_mempools((rbf_node, peer_node))
     assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
 
-    assert_raises_rpc_error(-8, "conf_target can't be set with fee_rate", rbf_node.bumpfee, rbfid, {"fee_rate": NORMAL, "confTarget": 1})
-
     assert_raises_rpc_error(-3, "Unexpected key totalFee", rbf_node.bumpfee, rbfid, {"totalFee": NORMAL})
-    assert_raises_rpc_error(-8, "conf_target can't be set with fee_rate", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001, "confTarget": 1})
 
     # Bumping to just above minrelay should fail to increase total fee enough, at least
     assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, rbfid, {"fee_rate": INSUFFICIENT})
-
     assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate": -1})
-
     assert_raises_rpc_error(-4, "is too high (cannot be higher than", rbf_node.bumpfee, rbfid, {"fee_rate": TOO_HIGH})
-    self.clear_mempool()
 
+    self.log.info("Test explicit feerate raises RPC error if estimate_mode is passed without a fee_rate")
+    assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate", rbf_node.bumpfee, rbfid, {"estimate_mode": BTC_MODE})
+    assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate", rbf_node.bumpfee, rbfid, {"estimate_mode": SAT_MODE})
+
+    self.log.info("Test explicit feerate raises RPC error if both fee_rate and conf_target are passed")
+    msg = "Cannot specify both conf_target and fee_rate. Please provide either a confirmation " \
+          "target in blocks for automatic fee estimation, or an explicit fee rate."
+    assert_raises_rpc_error(-8, msg, rbf_node.bumpfee, rbfid, {"conf_target": NORMAL, "fee_rate": NORMAL})
+
+    self.log.info("Test invalid conf_target settings")
+    for field in ["confTarget", "conf_target"]:
+        assert_raises_rpc_error(-8, msg, rbf_node.bumpfee, rbfid, {field: 1, "fee_rate": NORMAL})
+    too_high = "is too high (cannot be higher than -maxtxfee"
+    assert_raises_rpc_error(-4, too_high, lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": BTC_MODE, "fee_rate": 2009}))
+    assert_raises_rpc_error(-4, too_high, lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": SAT_MODE, "fee_rate": 2009 * 10000}))
+
+    self.log.info("Test invalid estimate_mode settings")
+    for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
+        assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
+                                lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": v, "fee_rate": NORMAL}))
+    for mode in ["foo", Decimal("3.141592")]:
+        assert_raises_rpc_error(-8, "Invalid estimate_mode parameter",
+                                lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": mode, "fee_rate": NORMAL}))
+
+    self.log.info("Test invalid fee_rate settings")
+    for mode in ["unset", "economical", "conservative"]:
+        self.log.debug("{}".format(mode))
+        for k, v in {"string": "", "object": {"foo": "bar"}}.items():
+            assert_raises_rpc_error(-3, "Expected type number for fee_rate, got {}".format(k),
+                                    lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": mode, "fee_rate": v}))
+        assert_raises_rpc_error(-8, "Must specify an explicit-fee estimate_mode to set fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee mode.",
+                                lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": mode, "fee_rate": -1}))
+        assert_raises_rpc_error(-8, "Must specify an explicit-fee estimate_mode to set fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee mode.",
+                                lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": mode, "fee_rate": 0}))
+    for mode in [BTC_MODE, SAT_MODE]:
+        self.log.debug("{}".format(mode))
+        for k, v in {"string": "", "object": {"foo": "bar"}}.items():
+            assert_raises_rpc_error(-3, "Expected type number for fee_rate, got {}".format(k),
+                                    lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": mode, "fee_rate": v}))
+        assert_raises_rpc_error(-3, "Amount out of range",
+                                lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": mode, "fee_rate": -1}))
+        assert_raises_rpc_error(-8, "Invalid fee_rate 0.00000000 BTC/kB (must be greater than 0)",
+                                lambda: rbf_node.bumpfee(rbfid, {"estimate_mode": mode, "fee_rate": 0}))
+
+    self.clear_mempool()
 
 def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     self.log.info('Test that segwit-sourcing bumpfee works')
