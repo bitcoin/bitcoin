@@ -829,7 +829,13 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             "Note that if your wallet contains keys which are not derived from your HD seed (e.g. imported keys), these are not covered by\n"
             "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n"
             "\nArguments:\n"
-            "1. \"filename\"    (string, required) The filename\n"
+            "1. \"filename\"    (string, required) The filename with path (either absolute or relative to dashd)\n"
+            "\nResult:\n"
+            "{                           (json object)\n"
+            "  \"keys\" : {            (int) The number of keys contained in the wallet dump\n"
+            "  \"filename\" : {        (string) The filename with full absolute path\n"
+            "  \"warning\" : {         (string) A warning about not sharing the wallet dump with anyone\n"
+            "}\n"
             "\nExamples:\n"
             + HelpExampleCli("dumpwallet", "\"test\"")
             + HelpExampleRpc("dumpwallet", "\"test\"")
@@ -969,7 +975,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!"), request.params[0].get_str().c_str());
     obj.pushKV("keys", int(vKeyBirth.size()));
-    obj.pushKV("file", request.params[0].get_str().c_str());
+    obj.pushKV("filename", filepath.string());
     obj.pushKV("warning", strWarning);
 
     return obj;

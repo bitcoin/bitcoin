@@ -26,6 +26,10 @@ benchmark::BenchRunner::RunAll(benchmark::duration elapsedTimeForOne)
     if (std::ratio_less_equal<benchmark::clock::period, std::micro>::value) {
         std::cerr << "WARNING: Clock precision is worse than microsecond - benchmarks may be less accurate!\n";
     }
+#ifdef DEBUG
+    std::cerr << "WARNING: This is a debug build - may result in slower benchmarks.\n";
+#endif
+
     std::cout << "#Benchmark" << "," << "count" << "," << "min(ns)" << "," << "max(ns)" << "," << "average(ns)" << ","
               << "min_cycles" << "," << "max_cycles" << "," << "average_cycles" << "\n";
 

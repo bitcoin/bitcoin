@@ -689,10 +689,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return rec->status.label;
     case AmountRole:
         return qint64(rec->credit + rec->debit);
-    case TxIDRole:
-        return rec->getTxID();
     case TxHashRole:
-        return QString::fromStdString(rec->hash.ToString());
+        return rec->getTxHash();
     case TxHexRole:
         return priv->getTxHex(rec);
     case TxPlainTextRole:

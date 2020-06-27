@@ -7,7 +7,10 @@ import os
 import sys
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal, assert_raises_rpc_error)
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 
 def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
@@ -87,7 +90,8 @@ class WalletDumpTest(BitcoinTestFramework):
         self.start_nodes()
 
     def run_test (self):
-        tmpdir = self.options.tmpdir
+        wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
+        wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 
         # generate 20 addresses to compare against the dump
         test_addr_count = 20
@@ -104,10 +108,11 @@ class WalletDumpTest(BitcoinTestFramework):
         script_addrs = [multisig_addr]
 
         # dump unencrypted wallet
-        self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+        result = self.nodes[0].dumpwallet(wallet_unenc_dump)
+        assert_equal(result['filename'], wallet_unenc_dump)
 
         found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
-            read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, script_addrs, None)
+            read_dump(wallet_unenc_dump, addrs, script_addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
         # This is 1, not 2 because we aren't testing for witness scripts
         assert_equal(found_script_addr, 1)  # all scripts must be in the dump
@@ -120,10 +125,10 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].walletpassphrase('test', 30)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()
-        self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump")
+        self.nodes[0].dumpwallet(wallet_enc_dump)
 
         found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
-            read_dump(tmpdir + "/node0/wallet.encrypted.dump", addrs, script_addrs, hd_master_addr_unenc)
+            read_dump(wallet_enc_dump, addrs, script_addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
         # This is 1, not 2 because we aren't testing for witness scripts
         assert_equal(found_script_addr, 1)
@@ -132,7 +137,7 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_addr_rsv, 180)  # keypool size
 
         # Overwriting should fail
-        assert_raises_rpc_error(-8, "already exists", self.nodes[0].dumpwallet, tmpdir + "/node0/wallet.unencrypted.dump")
+        assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))
 
         # Restart node with new wallet, and test importwallet
         self.stop_node(0)
@@ -142,11 +147,11 @@ class WalletDumpTest(BitcoinTestFramework):
         result = self.nodes[0].validateaddress(multisig_addr)
         assert(result['ismine'] == False)
 
-        self.nodes[0].importwallet(os.path.abspath(tmpdir + "/node0/wallet.unencrypted.dump"))
+        self.nodes[0].importwallet(wallet_unenc_dump)
 
         # Now check IsMine is true
         result = self.nodes[0].validateaddress(multisig_addr)
         assert(result['ismine'] == True)
 
 if __name__ == '__main__':
-    WalletDumpTest().main ()
+    WalletDumpTest().main()

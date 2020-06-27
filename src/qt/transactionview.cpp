@@ -423,7 +423,7 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
     writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
     writer.addColumn(BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedAmountRole);
-    writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
+    writer.addColumn(tr("ID"), 0, TransactionTableModel::TxHashRole);
 
     if(!writer.write()) {
         Q_EMIT message(tr("Exporting Failed"), tr("There was an error trying to save the transaction history to %1.").arg(filename),
@@ -490,7 +490,7 @@ void TransactionView::copyAmount()
 
 void TransactionView::copyTxID()
 {
-    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxIDRole);
+    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxHashRole);
 }
 
 void TransactionView::copyTxHex()
