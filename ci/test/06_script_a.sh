@@ -42,7 +42,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   # using the Linux getrandom syscall. Avoid using getrandom by undefining
   # HAVE_SYS_GETRANDOM. See https://github.com/google/sanitizers/issues/852 for
   # details.
-  DOCKER_EXEC 'grep -v HAVE_SYS_GETRANDOM src/config/bitcoin-config.h > src/config/bitcoin-config.h.tmp && mv src/config/bitcoin-config.h.tmp src/config/bitcoin-config.h'
+  DOCKER_EXEC 'grep -v HAVE_SYS_GETRANDOM src/config/syscoin-config.h > src/config/syscoin-config.h.tmp && mv src/config/syscoin-config.h.tmp src/config/syscoin-config.h'
 fi
 
 BEGIN_FOLD build

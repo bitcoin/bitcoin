@@ -45,7 +45,7 @@ extern bool ListTransactionSyscoinInfo(const CWalletTx& wtx, const CAssetCoinInf
 using interfaces::FoundBlock;
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
-static const uint32_t WALLET_BTC_KB_TO_SAT_B = COIN / 1000; // 1 sat / B = 0.00001 BTC / kB
+static const uint32_t WALLET_SYS_KB_TO_SAT_B = COIN / 1000; // 1 sat / B = 0.00001 BTC / kB
 
 static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValue& param) {
     bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
@@ -214,14 +214,14 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
         }
     }
 
-    if (cc.m_fee_mode == FeeEstimateMode::BTC_KB || cc.m_fee_mode == FeeEstimateMode::SAT_B) {
+    if (cc.m_fee_mode == FeeEstimateMode::SYS_KB || cc.m_fee_mode == FeeEstimateMode::SAT_B) {
         if (estimate_param.isNull()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Selected estimate_mode requires a fee rate");
         }
 
         CAmount fee_rate = AmountFromValue(estimate_param);
         if (cc.m_fee_mode == FeeEstimateMode::SAT_B) {
-            fee_rate /= WALLET_BTC_KB_TO_SAT_B;
+            fee_rate /= WALLET_SYS_KB_TO_SAT_B;
         }
 
         cc.m_feerate = CFeeRate(fee_rate);
