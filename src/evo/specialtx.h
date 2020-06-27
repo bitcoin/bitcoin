@@ -39,7 +39,7 @@ inline bool GetTxPayload(const CTransaction& tx, T& obj)
 {
     std::vector<unsigned char> vchData;
 	int nOut;
-	if (!GetSyscoinData(tx, vchData, nOut, tx.nVersion))
+	if (!GetSyscoinData(tx, vchData, nOut))
 		return false;
     return GetTxPayload(vchData, obj);
 }
