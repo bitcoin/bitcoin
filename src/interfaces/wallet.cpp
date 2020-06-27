@@ -438,7 +438,6 @@ public:
     bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
-    OutputType getDefaultChangeType() override { return m_wallet->m_default_change_type; }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
