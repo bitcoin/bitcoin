@@ -1078,12 +1078,6 @@
                 <height>426</height>
                </rect>
               </property>
-              <property name="minimumSize">
-               <size>
-                <width>300</width>
-                <height>0</height>
-               </size>
-              </property>
               <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1">
                <item row="0" column="0">
                 <widget class="QLabel" name="label_30">
