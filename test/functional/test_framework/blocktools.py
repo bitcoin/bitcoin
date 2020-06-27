@@ -138,7 +138,7 @@ def create_coinbase(height, pubkey=None, dip4_activated=False):
     if dip4_activated:
         coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE
         cbtx_payload = CCbTx(2, height, 0, 0)
-        coinbase.vout.append(CTxOut(0, CScript([OP_RETURN] + list(CScript(cbtx_payload.serialize())))))
+        coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, cbtx_payload.serialize()])))
     coinbase.calc_sha256()
     return coinbase
 

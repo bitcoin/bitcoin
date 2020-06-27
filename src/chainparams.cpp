@@ -99,7 +99,7 @@ static Consensus::LLMQParams llmq_test = {
         .minSize = 2,
         .threshold = 2,
 
-        .dkgInterval = 60, // one DKG per hour
+        .dkgInterval = 24, // one DKG per hour
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
@@ -119,7 +119,7 @@ static Consensus::LLMQParams llmq50_60 = {
         .minSize = 40,
         .threshold = 30,
 
-        .dkgInterval = 60, // one DKG per hour
+        .dkgInterval = 24, // one DKG per hour
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
