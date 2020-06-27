@@ -219,24 +219,24 @@ class WalletTest(SyscoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
 
-        # Sendmany with explicit fee (BTC/kB)
+        # Sendmany with explicit fee (SYS/kB)
         # Throw if no conf_target provided
         assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
-            estimate_mode='bTc/kB')
+            estimate_mode='SYS/kB')
         # Throw if negative feerate
         assert_raises_rpc_error(-3, "Amount out of range",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
             conf_target=-1,
-            estimate_mode='bTc/kB')
+            estimate_mode='SYS/kB')
         fee_per_kb = 0.0002500
         explicit_fee_per_byte = Decimal(fee_per_kb) / 1000
         txid = self.nodes[2].sendmany(
             amounts={ address: 10 },
             conf_target=fee_per_kb,
-            estimate_mode='bTc/kB',
+            estimate_mode='SYS/kB',
         )
         self.nodes[2].generate(1)
         self.sync_all(self.nodes[0:3])
@@ -403,8 +403,8 @@ class WalletTest(SyscoinTestFramework):
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
 
-            # send with explicit btc/kb fee
-            self.log.info("test explicit fee (sendtoaddress as btc/kb)")
+            # send with explicit SYS/kB fee
+            self.log.info("test explicit fee (sendtoaddress as SYS/kB)")
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
             prebalance = self.nodes[2].getbalance()
@@ -415,19 +415,19 @@ class WalletTest(SyscoinTestFramework):
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
-                estimate_mode='BTc/Kb')
+                estimate_mode='SYS/kB')
             # Throw if negative feerate
             assert_raises_rpc_error(-3, "Amount out of range",
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
                 conf_target=-1,
-                estimate_mode='btc/kb')
+                estimate_mode='SYS/kB')
             txid = self.nodes[2].sendtoaddress(
                 address=address,
                 amount=1.0,
                 conf_target=0.00002500,
-                estimate_mode='btc/kb',
+                estimate_mode='SYS/kB',
             )
             tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
             self.sync_all(self.nodes[0:3])
