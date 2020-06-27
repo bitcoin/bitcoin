@@ -227,6 +227,7 @@ BASE_SCRIPTS = [
     'wallet_coinbase_category.py',
     'feature_filelock.py',
     'feature_loadblock.py',
+    'p2p_invalidateblock.py',
     'p2p_dos_header_tree.py',
     'p2p_unrequested_blocks.py',
     'p2p_blockfilters.py',
