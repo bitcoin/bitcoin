@@ -90,9 +90,11 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
+     * @param[out] reason      If return is false, contains the first non-standard input's reason for being judged non-standard
+     * @param[out] debug       If return is false, contains additional debug info related to the invalid input, including its index
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason, std::string& debug);
     /**
      * Check if the transaction is over standard P2WSH resources limit:
      * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements

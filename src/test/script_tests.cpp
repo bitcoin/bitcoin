@@ -1022,6 +1022,16 @@ BOOST_AUTO_TEST_CASE(script_cltv_truncated)
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_INVALID_STACK_OPERATION);
 }
 
+BOOST_AUTO_TEST_CASE(script_EvalScript_error)
+{
+    static const unsigned char op_return[] = { OP_RETURN }; // SCRIPT_ERR_OP_RETURN
+
+    ScriptError err;
+    std::vector<std::vector<unsigned char>> op_return_stack;
+    BOOST_CHECK(!EvalScript(op_return_stack, CScript(op_return, op_return + sizeof(op_return)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OP_RETURN, ScriptErrorString(err));
+}
+
 static CScript
 sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, const CTransaction& transaction)
 {

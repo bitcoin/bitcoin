@@ -43,9 +43,10 @@ static void CCoinsCaching(benchmark::State& state)
     t1.vout[0].scriptPubKey << OP_1;
 
     // Benchmark.
+    std::string reason, debug;
     const CTransaction tx_1(t1);
     while (state.KeepRunning()) {
-        bool success = AreInputsStandard(tx_1, coins);
+        bool success = AreInputsStandard(tx_1, coins, reason, debug);
         assert(success);
     }
     ECC_Stop();
