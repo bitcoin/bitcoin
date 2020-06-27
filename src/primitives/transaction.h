@@ -144,33 +144,35 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
-    /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
-    s >> tx.vin;
-    if (tx.vin.size() == 0 && fAllowWitness) {
-        /* We read a dummy or an empty vin. */
-        s >> flags;
-        if (flags != 0) {
-            s >> tx.vin;
+    if(tx.nVersion != SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+        /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
+        s >> tx.vin;
+        if (tx.vin.size() == 0 && fAllowWitness) {
+            /* We read a dummy or an empty vin. */
+            s >> flags;
+            if (flags != 0) {
+                s >> tx.vin;
+                s >> tx.vout;
+            }
+        } else {
+            /* We read a non-empty vin. Assume a normal vout follows. */
             s >> tx.vout;
         }
-    } else {
-        /* We read a non-empty vin. Assume a normal vout follows. */
-        s >> tx.vout;
-    }
-    if ((flags & 1) && fAllowWitness) {
-        /* The witness flag is present, and we support witnesses. */
-        flags ^= 1;
-        for (size_t i = 0; i < tx.vin.size(); i++) {
-            s >> tx.vin[i].scriptWitness.stack;
+        if ((flags & 1) && fAllowWitness) {
+            /* The witness flag is present, and we support witnesses. */
+            flags ^= 1;
+            for (size_t i = 0; i < tx.vin.size(); i++) {
+                s >> tx.vin[i].scriptWitness.stack;
+            }
+            if (!tx.HasWitness()) {
+                /* It's illegal to encode witnesses when all witness stacks are empty. */
+                throw std::ios_base::failure("Superfluous witness record");
+            }
         }
-        if (!tx.HasWitness()) {
-            /* It's illegal to encode witnesses when all witness stacks are empty. */
-            throw std::ios_base::failure("Superfluous witness record");
+        if (flags) {
+            /* Unknown flag in the serialization */
+            throw std::ios_base::failure("Unknown transaction optional data");
         }
-    }
-    if (flags) {
-        /* Unknown flag in the serialization */
-        throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
     // SYSCOIN
