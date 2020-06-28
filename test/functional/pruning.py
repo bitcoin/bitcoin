@@ -37,10 +37,10 @@ class PruneTest(BitcoinTestFramework):
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [self.full_node_default_args,
                            self.full_node_default_args,
-                           ["-litemode","-txindex=0","-maxreceivebuffer=20000","-prune=550"],
-                           ["-litemode","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
-                           ["-litemode","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
-                           ["-litemode","-txindex=0","-prune=550"]]
+                           ["-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-prune=550"],
+                           ["-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
+                           ["-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
+                           ["-disablegovernance","-txindex=0","-prune=550"]]
 
     def setup_network(self):
         self.setup_nodes()
@@ -223,14 +223,14 @@ class PruneTest(BitcoinTestFramework):
 
     def manual_test(self, node_number, use_timestamp):
         # at this point, node has 995 blocks and has not yet run in prune mode
-        self.start_node(node_number, extra_args=["-litemode", "-txindex=0"])
+        self.start_node(node_number, extra_args=["-disablegovernance", "-txindex=0"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "not in prune mode", node.pruneblockchain, 500)
 
         # now re-start in manual pruning mode
         self.stop_node(node_number)
-        self.start_node(node_number, extra_args=["-litemode", "-txindex=0", "-prune=1"])
+        self.start_node(node_number, extra_args=["-disablegovernance", "-txindex=0", "-prune=1"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
 
@@ -312,7 +312,7 @@ class PruneTest(BitcoinTestFramework):
 
         # stop node, start back up with auto-prune at 550MB, make sure still runs
         self.stop_node(node_number)
-        self.start_node(node_number, extra_args=["-litemode", "-txindex=0", "-prune=550"])
+        self.start_node(node_number, extra_args=["-disablegovernance", "-txindex=0", "-prune=550"])
 
         self.log.info("Success")
 
@@ -320,7 +320,7 @@ class PruneTest(BitcoinTestFramework):
         # check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
         self.stop_node(2)
-        self.start_node(2, extra_args=["-litemode", "-txindex=0", "-prune=550"])
+        self.start_node(2, extra_args=["-disablegovernance", "-txindex=0", "-prune=550"])
         self.log.info("Success")
 
         # check that wallet loads successfully when restarting a pruned node after IBD.
@@ -330,7 +330,7 @@ class PruneTest(BitcoinTestFramework):
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
         self.stop_node(5) #stop and start to trigger rescan
-        self.start_node(5, extra_args=["-litemode", "-txindex=0", "-prune=550"])
+        self.start_node(5, extra_args=["-disablegovernance", "-txindex=0", "-prune=550"])
         self.log.info("Success")
 
     def run_test(self):

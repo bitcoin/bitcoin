@@ -278,7 +278,7 @@ void PrepareShutdown()
         flatdb4.Dump(netfulfilledman);
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
         flatdb6.Dump(sporkManager);
-        if (!fLiteMode) {
+        if (!fDisableGovernance) {
             CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
             flatdb3.Dump(governance);
         }
@@ -614,7 +614,7 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     AppendParamsHelpMessages(strUsage, showDebug);
-    strUsage += HelpMessageOpt("-litemode", strprintf(_("Disable governance validation (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-disablegovernance", strprintf(_("Disable governance validation (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-sporkaddr=<dashaddress>", strprintf(_("Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
     strUsage += HelpMessageOpt("-minsporkkeys=<n>", strprintf(_("Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
 
@@ -1196,6 +1196,14 @@ bool AppInitParameterInteraction()
     if (gArgs.IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
 
+    if (gArgs.GetBoolArg("-litemode", false)) {
+        InitWarning(_("Warning: -litemode is deprecated, please use -disablegovernance.\n"));
+        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
+            LogPrintf("%s: parameter interaction: -litemode=true -> setting -disablegovernance=true\n", __func__);
+        }
+        gArgs.ForceRemoveArg("-litemode");
+    }
+
     // Checkmempool and checkblockindex default to true in regtest mode
     int ratio = std::min<int>(std::max<int>(gArgs.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
@@ -1502,8 +1510,8 @@ bool AppInitParameterInteraction()
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             return InitError(strprintf("Masternode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
-        if (gArgs.GetBoolArg("-litemode", false)) {
-            return InitError(_("You can not start a masternode in lite mode."));
+        if (gArgs.GetBoolArg("-disablegovernance", false)) {
+            return InitError(_("You can not disable governance validation on a masternode."));
         }
     }
 
@@ -1779,11 +1787,11 @@ bool AppInitMain()
     // ********************************************************* Step 7a: check lite mode and load sporks
 
     // lite mode disables governance validation
-    fLiteMode = gArgs.GetBoolArg("-litemode", false);
-    LogPrintf("fLiteMode %d\n", fLiteMode);
+    fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
+    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
-    if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, governance validation is disabled."));
+    if(fDisableGovernance) {
+        InitWarning(_("You are starting with governance validation disabled."));
     }
 
     uiInterface.InitMessage(_("Loading sporks cache..."));
@@ -1863,9 +1871,9 @@ bool AppInitMain()
                     break;
                 }
 
-                if (!fLiteMode && !fTxIndex
+                if (!fDisableGovernance && !fTxIndex
                    && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
-                    return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
+                    return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index."));
                 }
 
                 // If the loaded chain has a wrong genesis, bail out immediately
@@ -2131,7 +2139,7 @@ bool AppInitMain()
     strDBName = "governance.dat";
     uiInterface.InitMessage(_("Loading governance cache..."));
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-    if (fLoadCacheFiles && !fLiteMode) {
+    if (fLoadCacheFiles && !fDisableGovernance) {
         if(!flatdb3.Load(governance)) {
             return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
         }
@@ -2163,7 +2171,7 @@ bool AppInitMain()
     scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
     scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
 
-    if (!fLiteMode) {
+    if (!fDisableGovernance) {
         scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_connman)), 60 * 5 * 1000);
     }
 
