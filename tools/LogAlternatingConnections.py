@@ -831,13 +831,12 @@ def init():
 	print()
 	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')
 	print()
-	print()
-	useBitcoinConf = input('Use bitcoin.conf to modify the number of connections? (y/n) ').lower() in ['y', 'yes']
+	useBitcoinConf = input('Would you like to use bitcoin.conf to modify the number of connections? (y/n) ').lower() in ['y', 'yes']
 	print()
 	if useBitcoinConf:
-		print('Would you like to use the new "numconnections" in bitcoin.conf instead of "maxconnections"?')
-		print(' - maxconnections: The default, used to lightly enforce an upper bound on the number of peers')
-		print(' - numconnections: New command to strictly enforce a specific number of peers')
+		print('Use the new "numconnections" in bitcoin.conf instead of "maxconnections"?')
+		print(' - maxconnections: Lightly enforces an upper bound to numpeers')
+		print(' - numconnections: New command; strictly enforces numpeers')
 		useNumconnections = input('(y/n) ').lower() in ['y', 'yes']
 		numconnectionsString = 'numconnections' if useNumconnections else 'maxconnections'
 	else:
