@@ -90,7 +90,7 @@ def get_witness_script(witness_root, witness_nonce, extraData=None):
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
     if extraData is None:
         return CScript([OP_RETURN, output_data])
-    else
+    else:
         return CScript([OP_RETURN, output_data, extraData])
 
 def add_witness_commitment(block, nonce=0):
