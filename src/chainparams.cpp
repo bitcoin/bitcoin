@@ -416,7 +416,7 @@ public:
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in functional tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in functional tests)
         consensus.CSVHeight = 432; // CSV activated on regtest (Used in rpc activation tests)
-        consensus.SegwitHeight = 0; // SEGWIT is always activated on regtest unless overridden
+        consensus.SegwitHeight = 432; // SEGWIT is always activated on regtest unless overridden
         consensus.nSubsidyHalvingInterval = 150;
         // 35% increase after 1 hr, 100% increase after 2.5 hr
         consensus.nSeniorityHeight1 = 60;
