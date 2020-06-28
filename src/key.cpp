@@ -44,7 +44,7 @@ static int ec_seckey_import_der(const secp256k1_context* ctx, unsigned char *out
         return 0;
     }
     ptrdiff_t lenb = *seckey & ~0x80u; seckey++;
-    if (lenb < 1 || lenb > 2) {
+    if ((lenb < 1) || (lenb > 2)) {
         return 0;
     }
     if (end - seckey < lenb) {
