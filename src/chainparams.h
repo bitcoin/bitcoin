@@ -98,7 +98,6 @@ public:
     /** How long to wait until we allow retrying of a LLMQ connection  */
     int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
-    void UpdateLLMQTestParams(int size, int threshold);
 protected:
     CChainParams() {}
 
@@ -161,9 +160,4 @@ void SetSYSXAssetForUnitTests(uint32_t asset);
  * Allows modifying the DIP3 activation and enforcement height
  */
 void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
-
-/**
- * Allows modifying parameters of the test LLMQ
- */
-void UpdateLLMQTestParams(int size, int threshold);
 #endif // SYSCOIN_CHAINPARAMS_H
