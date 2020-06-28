@@ -11,22 +11,22 @@
 #include <netbase.h>
 #include <messagesigner.h>
 #include <policy/policy.h>
+#include <script/signingprovider.h>
 #include <keystore.h>
 #include <spork.h>
 
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
-#include <script/signingprovider.h>
 #include <boost/test/unit_test.hpp>
 
 typedef std::map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
 
-static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransaction>& txs)
+static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
 {
     SimpleUTXOMap utxos;
     for (size_t i = 0; i < txs.size(); i++) {
-        auto& tx = txs[i];
+        auto& tx = *txs[i];
         for (size_t j = 0; j < tx.vout.size(); j++) {
             utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
         }
@@ -78,7 +78,7 @@ static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const
 
 static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
 {
-    FillableSigningProvider keystore;
+    FillableSigningProvider tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
@@ -127,7 +127,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE;
-    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()), 1 * COIN);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -149,7 +149,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR;
-    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()), 1 * COIN);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
     SetTxPayload(tx, proTx);
@@ -168,7 +168,7 @@ static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256&
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
-    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()), 1 * COIN);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -185,7 +185,7 @@ static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
 
     CKey key;
     key.MakeNewKey(true);
-    proTx.scriptPayout = GetScriptForDestination(PKHash(key.GetPubKey());
+    proTx.scriptPayout = GetScriptForDestination(PKHash(key.GetPubKey()));
 
     CMutableTransaction tx2 = tx;
     SetTxPayload(tx2, proTx);
@@ -197,7 +197,7 @@ static CScript GenerateRandomAddress()
 {
     CKey key;
     key.MakeNewKey(true);
-    return GetScriptForDestination(PKHash(key.GetPubKey());
+    return GetScriptForDestination(PKHash(key.GetPubKey()));
 }
 
 static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
@@ -243,13 +243,12 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     CBLSSecretKey operatorKey;
     CTxDestination payoutDest = DecodeDestination("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
     auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutDest), coinbaseKey, ownerKey, operatorKey);
-    std::vector<CMutableTransaction> txns = {tx};
+    std::vector<CMutableTransaction> txns = std::vector<CMutableTransaction>{tx};
 
     int nHeight = ::ChainActive().Height();
 
     // We start one block before DIP3 activation, so mining a block with a DIP3 transaction should fail
-    auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-    ProcessNewBlock(Params(), block, true, nullptr);
+    auto block = std::make_shared<CBlock>(CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
     BOOST_ASSERT(::ChainActive().Height() == nHeight);
     BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
@@ -259,8 +258,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 
     // Mining a block with a DIP3 transaction should succeed now
-    block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-    ProcessNewBlock(Params(), block, true, nullptr);
+    block = std::make_shared<CBlock>(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
     BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
