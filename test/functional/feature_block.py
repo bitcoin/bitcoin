@@ -1335,9 +1335,7 @@ class FullBlockTest(SyscoinTestFramework):
             block_time = self.tip.nTime + 1
         # First create the coinbase
         height = self.block_heights[base_block_hash] + 1
-        # Syscoin
-        dip4_activated = height >= 432
-        coinbase = create_coinbase(height, self.coinbase_pubkey, dip4_activated=dip4_activated)
+        coinbase = create_coinbase(height, self.coinbase_pubkey)
         coinbase.vout[0].nValue += additional_coinbase_value
         coinbase.rehash()
         if spend is None:
