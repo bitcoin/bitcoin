@@ -7,7 +7,7 @@
 #include <bls/bls.h>
 #include <evo/simplifiedmns.h>
 #include <netbase.h>
-
+#include <tinyformat.h>
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(evo_simplifiedmns_tests, BasicTestingSetup)
