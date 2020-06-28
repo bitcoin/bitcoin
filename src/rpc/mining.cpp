@@ -367,7 +367,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
     // Add transactions
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
     // SYSCOIN
-    RegenerateCommitments(block, blocktemplate.vchCoinbaseCommitmentExtra);
+    RegenerateCommitments(block, blocktemplate->vchCoinbaseCommitmentExtra);
 
     {
         LOCK(cs_main);
