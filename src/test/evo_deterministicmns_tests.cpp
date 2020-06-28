@@ -17,7 +17,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
-
+#include <script/signingprovider.h>
 #include <boost/test/unit_test.hpp>
 
 typedef std::map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 
 BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
     CTxDestination payoutDest = DecodeDestination("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
@@ -255,7 +255,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
 
     // This block should activate DIP3
-    CreateAndProcessBlock({}, coinbaseKey);
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 
     // Mining a block with a DIP3 transaction should succeed now
@@ -271,11 +271,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 {
     CKey sporkKey;
     sporkKey.MakeNewKey(true);
-    CBitcoinSecret sporkSecret(sporkKey);
     sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
-    sporkManager.SetPrivKey(sporkSecret.ToString());
+    sporkManager.SetPrivKey(EncodeSecret(sporkKey));
 
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
     int nHeight = ::ChainActive().Height();
     int port = 1;
@@ -306,7 +305,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         BOOST_ASSERT(CheckTransactionSignature(tx));
         BOOST_ASSERT(!CheckTransactionSignature(tx2));
 
-        CreateAndProcessBlock({tx}, coinbaseKey);
+        CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
 
         BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
@@ -317,7 +316,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
     const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = ::ChainActive().Height() + 1;
-    CreateAndProcessBlock({}, coinbaseKey);
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     nHeight++;
 
@@ -325,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     for (size_t i = 0; i < 20; i++) {
         auto dmnExpectedPayee = deterministicMNManager->GetListAtChainTip().GetMNPayee();
 
-        CBlock block = CreateAndProcessBlock({}, coinbaseKey);
+        CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(!block.vtx.empty());
 
@@ -348,7 +347,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
             operatorKeys.emplace(tx.GetHash(), operatorKey);
             txns.emplace_back(tx);
         }
-        CreateAndProcessBlock(txns, coinbaseKey);
+        CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 
@@ -361,7 +360,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     // test ProUpServTx
     auto tx = CreateProUpServTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], 1000, CScript(), coinbaseKey);
-    CreateAndProcessBlock({tx}, coinbaseKey);
+    CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
     nHeight++;
@@ -371,7 +370,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     // test ProUpRevTx
     tx = CreateProUpRevTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], coinbaseKey);
-    CreateAndProcessBlock({tx}, coinbaseKey);
+    CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
     nHeight++;
@@ -384,7 +383,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         auto dmnExpectedPayee = deterministicMNManager->GetListAtChainTip().GetMNPayee();
         BOOST_ASSERT(dmnExpectedPayee->proTxHash != dmnHashes[0]);
 
-        CBlock block = CreateAndProcessBlock({}, coinbaseKey);
+        CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(!block.vtx.empty());
 
@@ -408,13 +407,13 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     BOOST_ASSERT(CheckTransactionSignature(tx));
     BOOST_ASSERT(!CheckTransactionSignature(tx2));
     // now process the block
-    CreateAndProcessBlock({tx}, coinbaseKey);
+    CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
     nHeight++;
 
     tx = CreateProUpServTx(utxos, dmnHashes[0], newOperatorKey, 100, CScript(), coinbaseKey);
-    CreateAndProcessBlock({tx}, coinbaseKey);
+    CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
     nHeight++;
@@ -431,7 +430,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
             foundRevived = true;
         }
 
-        CBlock block = CreateAndProcessBlock({}, coinbaseKey);
+        CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(!block.vtx.empty());
 
