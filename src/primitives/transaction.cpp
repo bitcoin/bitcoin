@@ -334,11 +334,11 @@ bool CMutableTransaction::HasAssets() const
 }
 bool CTransaction::IsMnTx() const
 {
-    return IsMnTx(nVersion);
+    return IsMasternodeTx(nVersion);
 }
 bool CMutableTransaction::IsMnTx() const
 {
-    return IsMnTx(nVersion);
+    return IsMasternodeTx(nVersion);
 }
 void CMutableTransaction::LoadAssets()
 {
@@ -438,7 +438,7 @@ bool IsZdagTx(const int &nVersion) {
 bool IsSyscoinTx(const int &nVersion) {
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
-bool IsMnTx(const int &nVersion) {
+bool IsMasternodeTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_MN_COINBASE ||
      nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT ||
      nVersion == SYSCOIN_TX_VERSION_MN_REGISTER ||

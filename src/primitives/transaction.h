@@ -731,7 +731,7 @@ public:
 };
 
 bool IsSyscoinTx(const int &nVersion);
-bool IsMnTx(const int &nVersion);
+bool IsMasternodeTx(const int &nVersion);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsZdagTx(const int &nVersion);
 bool IsSyscoinWithNoInputTx(const int &nVersion);
