@@ -63,7 +63,7 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, 
     return selectedUtxos;
 }
 
-static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const CScript& scriptPayout, CAmount amount, const CKey& coinbaseKey)
+static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const CScript& scriptPayout, CAmount amount)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utoxs, amount, change);
@@ -107,7 +107,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
-    FundTransaction(tx, utxos, scriptPayout, 100000 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, scriptPayout, 100000 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
@@ -127,7 +127,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE;
-    FundTransaction(tx, utxos, GetScriptForDestination(CTxDestination(coinbaseKey.GetPubKey().GetID())), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()), 1 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -149,7 +149,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR;
-    FundTransaction(tx, utxos, GetScriptForDestination(CTxDestination(coinbaseKey.GetPubKey().GetID())), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()), 1 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
     SetTxPayload(tx, proTx);
@@ -168,7 +168,7 @@ static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256&
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
-    FundTransaction(tx, utxos, GetScriptForDestination(CTxDestination(coinbaseKey.GetPubKey().GetID())), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()), 1 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -185,7 +185,7 @@ static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
 
     CKey key;
     key.MakeNewKey(true);
-    proTx.scriptPayout = GetScriptForDestination(CTxDestination((key.GetPubKey().GetID())));
+    proTx.scriptPayout = GetScriptForDestination(PKHash(key.GetPubKey());
 
     CMutableTransaction tx2 = tx;
     SetTxPayload(tx2, proTx);
@@ -197,7 +197,7 @@ static CScript GenerateRandomAddress()
 {
     CKey key;
     key.MakeNewKey(true);
-    return GetScriptForDestination(CTxDestination(key.GetPubKey().GetID()));
+    return GetScriptForDestination(PKHash(key.GetPubKey());
 }
 
 static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
