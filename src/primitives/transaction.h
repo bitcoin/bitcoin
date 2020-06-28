@@ -602,6 +602,7 @@ struct CMutableTransaction
     }
     // SYSCOIN
     bool HasAssets() const;
+    bool IsMnTx() const;
     void LoadAssets();
 };
 
