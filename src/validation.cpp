@@ -1908,7 +1908,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys)
 {
     // SYSCOIN
-    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
+    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
     bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->GetBlockHash());
     if (fDIP0003Active && !fHasBestBlock) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
@@ -2200,7 +2200,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(hashPrevBlock == view.GetBestBlock());
     // SYSCOIN
     if(pindex->pprev) {
-        bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().nUTXOAssetsBlock;
+        bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
         bool fHasBestBlock = evoDb->VerifyBestBlock(hashPrevBlock);
         if (fDIP0003Active && !fHasBestBlock) {
             // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
@@ -3861,7 +3861,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
     // SYSCOIN
-    bool fDIP0003Active_context = nHeight >= consensusParams.nUTXOAssetsBlock;
+    bool fDIP0003Active_context = nHeight >= consensusParams.DIP0003Height;
     if(fDIP0003Active_context && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-cb-type", strprintf("%s : Incorrect version of coinbase transaction", __func__));
     }

@@ -194,6 +194,10 @@ struct Params {
         return static_cast<int> (nHeight) < nLegacyBlocksBefore;
     }
     // SYSCOIN
+    /** Block height at which DIP0003 becomes active */
+    int DIP0003Height;
+    /** Block height at which DIP0003 becomes enforced */
+    int DIP0003EnforcementHeight;
     std::map<uint8_t, LLMQParams> llmqs;
 };
 } // namespace Consensus

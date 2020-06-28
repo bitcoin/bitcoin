@@ -968,18 +968,6 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
         }
     }
-    if (Params().NetworkIDString() == CBaseChainParams::REGTEST) {
-        if (gArgs.IsArgSet("-llmqtestparams")) {
-            std::string s = gArgs.GetArg("-llmqtestparams", "");
-            std::vector<std::string> v;
-            boost::split(v, s, boost::is_any_of(":"));
-            int size, threshold;
-            if (v.size() == 2 && ParseInt32(v[0], &size) && ParseInt32(v[1], &threshold)) {
-                 UpdateLLMQTestParams(size, threshold);
-            }
-           
-        }
-    }
     if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         if (gArgs.SoftSetBoolArg("-dnsseed", false))
@@ -1357,6 +1345,41 @@ bool AppInitParameterInteraction()
     fAcceptDatacarrier = gArgs.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
     nMaxDatacarrierBytes = gArgs.GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
+    // SYSCOIN
+    if (gArgs.IsArgSet("-dip3params")) {
+        // Allow overriding budget parameters for testing
+        if (!chainparams.MineBlocksOnDemand()) {
+            return InitError("DIP3 parameters may only be overridden on regtest.");
+        }
+        std::string strDIP3Params = gArgs.GetArg("-dip3params", "");
+        std::vector<std::string> vDIP3Params;
+        boost::split(vDIP3Params, strDIP3Params, boost::is_any_of(":"));
+        if (vDIP3Params.size() != 2) {
+            return InitError("DIP3 parameters malformed, expecting DIP3ActivationHeight:DIP3EnforcementHeight");
+        }
+        int nDIP3ActivationHeight, nDIP3EnforcementHeight;
+        if (!ParseInt32(vDIP3Params[0], &nDIP3ActivationHeight)) {
+            return InitError(strprintf("Invalid nDIP3ActivationHeight (%s)", vDIP3Params[0]));
+        }
+        if (!ParseInt32(vDIP3Params[1], &nDIP3EnforcementHeight)) {
+            return InitError(strprintf("Invalid nDIP3EnforcementHeight (%s)", vDIP3Params[1]));
+        }
+        UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
+    }
+    if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST) {
+        if (gArgs.IsArgSet("-llmqtestparams")) {
+            std::string s = gArgs.GetArg("-llmqtestparams", "");
+            std::vector<std::string> v;
+            boost::split(v, s, boost::is_any_of(":"));
+            int size, threshold;
+            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
+                return InitError("Invalid -llmqtestparams specified");
+            }
+            UpdateLLMQTestParams(size, threshold);
+        }
+    } else if (gArgs.IsArgSet("-llmqtestparams")) {
+        return InitError("LLMQ test params can only be overridden on regtest.");
+    }
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(gArgs.GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
 

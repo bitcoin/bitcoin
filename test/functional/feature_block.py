@@ -82,7 +82,8 @@ class FullBlockTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [['-acceptnonstdtxn=1']]  # This is a consensus block test, we don't care about tx policy
+        # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
+        self.extra_args = [['-dip3params=2000:2000', '-acceptnonstdtxn=1']]  # This is a consensus block test, we don't care about tx policy
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
