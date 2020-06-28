@@ -640,7 +640,7 @@ def fetch(now):
 	line += str(numPeers) + ','
 	line += resourceUsage['cpu_percent'] + '%,'
 	line += resourceUsage['memory_percent'] + '%,'
-	line += '"' + json.dumps(resourceUsage, separators = (',', ':')).replace('"', '""') + '",'
+	line += '"' + json.dumps(resourceUsage).replace(' ', '').replace('"', '""') + '",'
 	line += '"' + getpeerinfo_raw.replace('"', '""') + '",'
 
 
@@ -858,8 +858,8 @@ def init():
 		for i, v in enumerate(connectionSequence):
 			print(f'Option {i + 1}: {v} connections')
 		maxConnections = -1
-		while maxConnections < 1 or maxConnections > len(connectionSequence):
-			maxConnections = int(input(f'(pick an option number): '))
+		while maxConnections < 0 or maxConnections >= len(connectionSequence):
+			maxConnections = int(input(f'(pick an option number): ')) - 1
 		print()
 		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {connectionSequence[maxConnections]}? (y/n) ').lower() in ['y', 'yes']
 
