@@ -11,9 +11,20 @@ from threading import Timer
 
 startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
-rowsPerNodeReset = 3000000000		# Number of rows for cach numconnections file
+rowsPerNodeReset = 6000		# Number of rows for cach numconnections file
+
+# These numbers of peers are repeated
+connectionSequence = [1, 2, 4, 8, 16, 32, 64, 128];
 
 os.system('clear')
+
+while True:
+	print()
+	print('Number of connections order: ' + str(connectionSequence))
+	modifyConnectionSequence = input('Would you like to modify the ordering? ').lower() in ['y', 'yes']
+	if modifyConnectionSequence:
+		connectionSequence = input('Enter a new connection sequence (separated by spaces): ').split()
+	else: break
 
 datadir = os.path.expanduser('~/.bitcoin') # Virtual machine shared folder
 if os.path.exists('/media/sf_Bitcoin/blocks'):
@@ -26,11 +37,38 @@ elif os.path.exists('/media/sim/BITCOIN/blocks'):
 	datadir = ' -datadir=/media/sim/BITCOIN'
 numSkippedSamples = 0
 
+# Fetch the external IP from myexternalip.com
 #def getmyIP():
 #	return os.popen('curl \'http://myexternalip.com/raw\'').read() + ':8333'
 
+# Send a command to the linux terminal
+def terminal(cmd):
+	return os.popen(cmd).read()
+
+# Send a command to the Bitcoin console
 def bitcoin(cmd):
-	return os.popen('./../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
+	return terminal('./../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd)
+
+# Uses "top" to log the amount of resources that Bitcoin is using up, returns blank stings if the process is not running
+def getCPUData():
+	raw = terminal('top -b -n 1 |grep bitcoind').strip().split()
+	while len(raw) < 12: raw.append('')
+	output = {
+		'process_ID': raw[0],
+		'user': raw[1],
+		'priority': raw[2],
+		'nice_value': raw[3],
+		'virtual_memory': raw[4],
+		'memory': raw[5],
+		'shared_memory': raw[6],
+		'state': raw[7],
+		'cpu_percent': raw[8],
+		'memory_percent': raw[9],
+		'time': raw[10],
+		'process_name': raw[11],
+
+	}
+	return output
 
 # Send commands to the Victim's Bitcoin Core Console
 def bitcoinVictim(cmd):
@@ -54,10 +92,10 @@ def fetchHeader():
 	line = 'Timestamp,'
 	line += 'Timestamp (Seconds),'
 	line += 'NumPeers,'
-	line += 'InactivePeers,'
-	line += 'AvgPingTime,'
-	line += 'TotalBanScore,'
-	line += 'Connections,'
+	line += 'CPU %,'
+	line += 'Memory %,'
+	line += 'Resource usage,'
+	line += 'GetPeerInfo,'
 
 	line += 'BlockHeight,'
 	line += 'Num AcceptedBlocks PerSec,'
@@ -265,10 +303,10 @@ def fetchHeader():
 	line += 'The time in which the sample was taken (in human readable format),' # Timestamp
 	line += 'The time in which the sample was taken (in number of seconds since 1/01/1970),' # Timestamp (Seconds)
 	line += 'The current number of peer connections,' # NumPeers
-	line += 'Number of peers that have not responded to the ping message,' # InactivePeers
-	line += 'The average network latency of the peer,' # AvgPingTime
-	line += 'The misbehavior score of each peer summed together,' # TotalBanScore
-	line += 'A list of the current peer connections,' # Connections
+	line += 'The percentage of CPU usage of bitcoind for each core summed together (which means that it may exceed 100%),' # CPU %
+	line += 'The percentage of memory usage of bitcoind,' # Memory %
+	line += 'Contains the output from the "top" instruction for the bitcoind process,' # Resource usage
+	line += 'A list of the current peer connections,' # GetPeerInfo
 	line += 'The block height of this particular full node,' # BlockHeight
 	line += 'The number of unconfirmed transactions currently in the mempool,' # MempoolSize
 	line += 'The number of bytes that the mempool is currently taking up,' # MempoolBytes
@@ -559,8 +597,8 @@ def fetch(now):
 	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	numPeers = 0
 	try:
-		peerinfo = json.loads(bitcoin('getpeerinfo'))
-		numPeers = len(peerinfo)
+		raw_getpeerinfo = bitcoin('getpeerinfo')
+		numPeers = len(json.loads(raw_getpeerinfo))
 
 		# If eclipse attack, verify that the read-to-fake ratio is correct
 		if eclipsing:
@@ -578,50 +616,27 @@ def fetch(now):
 				return ''
 
 
-		if waitForConnectionNum and numPeers != maxConnections:
+		if waitForConnectionNum and numPeers != connectionSequence[maxConnections]:
 			numSkippedSamples += 1
-			print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
+			print(f'Connections at {numPeers}, waiting for it to reach {connectionSequence[maxConnections]}, attempt #{numSkippedSamples}')
 			if numSkippedSamples == 1800: resetNode() # After 1800 seconds / 30 minutes, just reset
 			return ''
 		messages = json.loads(bitcoin('getmsginfo'))
 		blockcount = int(bitcoin('getblockcount').strip())
 		mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
+		resourceUsage = getCPUData()
 	except Exception as e:
 		raise Exception('Unable to access Bitcoin console...')
 
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 
-	addresses = ''
-	totalBanScore = 0
-	totalPingTime = 0
-	numPingTimes = 0
-	noResponsePings = 0
-	for peer in peerinfo:
-		if addresses != '':
-			addresses += ' '
-		try:
-			addresses += peer['addr']
-			totalBanScore += peer['banscore']
-		except:
-			pass
-		try:
-			totalPingTime += peer['pingtime']
-			numPingTimes += 1
-		except:
-			noResponsePings += 1
-
-
-	if numPingTimes != 0:
-		avgPingTime = totalPingTime / numPingTimes
-	else:
-		avgPingTime = '0'
 	line = str(now) + ','
 	line += str(seconds) + ','
 	line += str(numPeers) + ','
-	line += str(noResponsePings) + ','
-	line += str(avgPingTime) + ','
-	line += str(totalBanScore) + ','
-	line += addresses + ','
+	line += resourceUsage['cpu_percent'] + ','
+	line += resourceUsage['memory_percent'] + ','
+	line += json.dumps(resourceUsage) + ','
+	line += str(raw_getpeerinfo) + ','
 
 
 	# Compute the blocks per second and tx per second
@@ -702,27 +717,17 @@ def newFile(file):
 	return file
 
 def fixBitcoinConf():
-	global datadir, maxConnections
-	try:
-		with open(datadir + '/bitcoin.conf', 'r') as configFile:
-			configData = configFile.read()
-		configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
-		if maxConnections != 10: configData += '\n' + 'maxconnections=' + str(maxConnections)
-		print(configData)
-		with open(datadir + '/bitcoin.conf', 'w') as configFile:
-			configFile.write(configData)
-	except:
-		print('ERROR: Failed to update bitcoin.conf')
-		try:
-			with open(datadir + '/bitcoin.conf', 'r') as configFile:
-				configData = configFile.read()
-			configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
-			if maxConnections != 10: configData += '\n' + 'maxconnections=' + str(maxConnections)
-			print(configData)
-			with open(datadir + '/bitcoin.conf', 'w') as configFile:
-				configFile.write(configData)
-		except:
-			pass
+	global datadir, maxConnections, numconnectionsString, useBitcoinConf
+	with open(datadir + '/bitcoin.conf', 'r') as configFile:
+		configData = configFile.read()
+	configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
+	configData = re.sub(r'\s*numconnections\s*=\s*[0-9]+', '', configData)
+	configData = re.sub(r'\s*numblocksonlyconnections\s*=\s*[0-9]+', '', configData)
+	if useBitcoinConf: # If the user specified to not use bitcoin.conf, add in the connections limit
+		configData += '\n' + numconnectionsString + '=' + str(connectionSequence[maxConnections])
+	print(configData)
+	with open(datadir + '/bitcoin.conf', 'w') as configFile:
+		configFile.write(configData)
 
 
 def resetNode():
@@ -731,12 +736,13 @@ def resetNode():
 		try:
 			print('Stopping bitcoin...')
 			bitcoin('stop')
+			time.sleep(3)
+			fixBitcoinConf()
 			success = True
 		except:
 			pass
 		time.sleep(3)
 
-	fixBitcoinConf()
 
 	success = False
 	while not success:
@@ -746,8 +752,8 @@ def resetNode():
 			success = True
 		except:
 			pass
-
 		time.sleep(3)
+
 	if startupDelay > 0:
 		print(f'Startup delay for {startupDelay} seconds...')
 		time.sleep(startupDelay)
@@ -759,7 +765,7 @@ def log(file, targetDateTime, count):
 		now = datetime.datetime.now()
 		line = fetch(now)
 		if len(line) != 0:
-			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {maxConnections}, Off by {(now - targetDateTime).total_seconds()} seconds.')
+			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {connectionSequence[maxConnections]}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
 			#if count >= 3600:
@@ -767,7 +773,7 @@ def log(file, targetDateTime, count):
 			#	return
 			if(count % rowsPerNodeReset == 0):
 				if not eclipsing: # If eclipse attack, max connections does not increase
-					maxConnections = 1 + maxConnections % 10 # Bound the max connections to 10 peers
+					maxConnections = 1 + maxConnections % len(connectionSequence)
 				try:
 					file = newFile(file)
 					resetNode()
@@ -802,12 +808,12 @@ def getFileName():
 	if eclipsing:
 		return f'Sample {fileSampleNumber}, genuine = {eclipse_real_numpeers}, fake = {eclipse_fake_numpeers}, drop = {eclipse_drop_rate}, minutes = {minutes}.csv'
 	elif waitForConnectionNum:
-		return f'Sample {fileSampleNumber}, numConnections = {maxConnections}, minutes = {minutes}.csv'
+		return f'Sample {fileSampleNumber}, numConnections = {connectionSequence[maxConnections]}, minutes = {minutes}.csv'
 	else:
-		return f'Sample {fileSampleNumber}, maxConnections = {maxConnections}, minutes = {minutes}.csv'
+		return f'Sample {fileSampleNumber}, maxConnections = {connectionSequence[maxConnections]}, minutes = {minutes}.csv'
 
 def init():
-	global fileSampleNumber, maxConnections
+	global fileSampleNumber, maxConnections, numconnectionsString, useBitcoinConf
 	global waitForConnectionNum, eclipsing, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate
 
 	fileSampleNumber = 0		# File number to start at
@@ -821,6 +827,18 @@ def init():
 	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')
 	print()
 	print()
+	useBitcoinConf = input('Use bitcoin.conf to modify the number of connections? (y/n) ').lower() in ['y', 'yes']
+	print()
+	if useBitcoinConf:
+		print('  - maxconnections: The default, used to lightly enforce an upper bound on the number of peers')
+		print('  - numconnections: New command to strictly enforce a specific number of peers')
+		useNumconnections = input('Would you like to use the new "numconnections" in bitcoin.conf instead of "maxconnections"? (y/n) ').lower() in ['y', 'yes']
+		numconnectionsString = 'numconnections' if useNumconnections else 'maxconnections'
+	else:
+		print('WARNING: bitcoin.conf will not be used to change the number of peers, so the default number of peers will be used')
+		numconnectionsString = 'maxconnections'
+	print()
+
 	eclipsing = input('Is this an eclipse attack? (y/n) ').lower() in ['y', 'yes']
 	if eclipsing:
 		eclipse_fake_numpeers = int(input(f'How many FAKE connections would you like? '))
@@ -830,18 +848,27 @@ def init():
 		print(f'Total number of connections: {maxConnections}')
 		waitForConnectionNum = True
 	else:
-		maxConnections = int(input(f'How many connections should be initially made? (From 1 to 10)\nPreferably start with 1 connection: '))
-		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {maxConnections}? (y/n) ').lower() in ['y', 'yes']
+		for i, v in enumerate(connectionSequence):
+			print(f'Option {i + 1}: {v} connections')
+		maxConnections = -1
+		while maxConnections < 1 or maxConnections > len(connectionSequence):
+			maxConnections = int(input(f'How many connections should be initially made? (pick an option number): '))
+		maxConnections -= 1
+		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {connectionSequence[maxConnections]}? (y/n) ').lower() in ['y', 'yes']
 
 	print()
 	print()
 	print(f'Starting file name: {getFileName()}')
+	print(f'Number of seconds per file: {rowsPerNodeReset}')
+	print(f'Number of connections sequence: {connectionSequence}')
+	print(f'Use bitcoin.conf: {useBitcoinConf}')
+	print(f'Use maxconnections or numconnections: {numconnectionsString}')
 	if eclipsing:
 		print(f'Real connections: {eclipse_real_numpeers}')
 		print(f'Fake connections: {eclipse_fake_numpeers}')
 		print(f'Packet drop rate: {eclipse_drop_rate}')
-	print(f'Maximum connections: {maxConnections}')
-	print(f'Pause if connections don\'t equal {maxConnections}: {waitForConnectionNum}')
+	print(f'Connections: {maxConnections}')
+	print(f'Pause if connections don\'t equal {connectionSequence[maxConnections]}: {waitForConnectionNum}')
 	print()
 	confirm = input(f'Does all of this look correct? (y/n) ').lower() in ['y', 'yes']
 	if not confirm:
