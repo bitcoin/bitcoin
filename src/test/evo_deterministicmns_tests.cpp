@@ -127,7 +127,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE;
-    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(CTxDestination(coinbaseKey.GetPubKey().GetID())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -149,7 +149,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR;
-    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(CTxDestination(coinbaseKey.GetPubKey().GetID())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
     SetTxPayload(tx, proTx);
@@ -168,7 +168,7 @@ static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256&
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
-    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, GetScriptForDestination(CTxDestination(coinbaseKey.GetPubKey().GetID())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
@@ -185,7 +185,7 @@ static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
 
     CKey key;
     key.MakeNewKey(true);
-    proTx.scriptPayout = GetScriptForDestination(key.GetPubKey().GetID());
+    proTx.scriptPayout = GetScriptForDestination(CTxDestination((key.GetPubKey().GetID())));
 
     CMutableTransaction tx2 = tx;
     SetTxPayload(tx2, proTx);
@@ -197,7 +197,7 @@ static CScript GenerateRandomAddress()
 {
     CKey key;
     key.MakeNewKey(true);
-    return GetScriptForDestination(key.GetPubKey().GetID());
+    return GetScriptForDestination(CTxDestination(key.GetPubKey().GetID()));
 }
 
 static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
