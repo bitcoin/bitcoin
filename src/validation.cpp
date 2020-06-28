@@ -3682,19 +3682,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
             CTxOut out;
             out.nValue = 0;
-            // SYSCOIN calculate how big the scriptPubKey will grow exactly based on extra data size
-            int nExtraByteSize;
-            const size_t &nExtraDataSize = vchExtraData.size();
-            if (nExtraDataSize < OP_PUSHDATA1)
-                nExtraByteSize = 0;
-            else if (nExtraDataSize <= 0xff)
-                nExtraByteSize = 1;
-            else if (nExtraDataSize <= 0xffff)
-                nExtraByteSize = 2;
-            else
-                nExtraByteSize = 4;
-
-            out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + nExtraByteSize + nExtraDataSize);
+            out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
             out.scriptPubKey[0] = OP_RETURN;
             out.scriptPubKey[1] = 0x24;
             out.scriptPubKey[2] = 0xaa;
