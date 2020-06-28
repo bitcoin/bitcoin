@@ -127,7 +127,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CBlockIndex* pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
-    bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock;
+    bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
     const int32_t nChainId = chainparams.GetConsensus ().nAuxpowChainId;
     // FIXME: Active version bits after the always-auxpow fork!
     //const int32_t nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());

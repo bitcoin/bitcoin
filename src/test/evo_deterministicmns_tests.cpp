@@ -315,8 +315,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         nHeight++;
     }
 
-    int DIP0003EnforcementHeightBackup = Params().GetConsensus().nUTXOAssetsBlock;
-    const_cast<Consensus::Params&>(Params().GetConsensus()).nUTXOAssetsBlock = ::ChainActive().Height() + 1;
+    int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
+    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = ::ChainActive().Height() + 1;
     CreateAndProcessBlock({}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     nHeight++;
@@ -443,6 +443,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
     BOOST_ASSERT(foundRevived);
 
-    const_cast<Consensus::Params&>(Params().GetConsensus()).nUTXOAssetsBlock = DIP0003EnforcementHeightBackup;
+    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = DIP0003EnforcementHeightBackup;
 }
 BOOST_AUTO_TEST_SUITE_END()
