@@ -78,7 +78,7 @@ static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const
 
 static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
 {
-    CBasicKeyStore tempKeystore;
+    FillableSigningProvider keystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
@@ -108,7 +108,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
     FundTransaction(tx, utxos, scriptPayout, 100000 * COIN, coinbaseKey);
-    proTx.inputsHash = CalcTxInputsHash(tx);
+    proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
 
@@ -128,7 +128,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-    proTx.inputsHash = CalcTxInputsHash(tx);
+    proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
@@ -150,7 +150,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-    proTx.inputsHash = CalcTxInputsHash(tx);
+    proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
@@ -169,7 +169,7 @@ static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256&
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-    proTx.inputsHash = CalcTxInputsHash(tx);
+    proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
@@ -227,7 +227,7 @@ static bool CheckTransactionSignature(const CMutableTransaction& tx)
         BOOST_ASSERT(GetTransaction(txin.prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
 
         CAmount amount = txFrom->vout[txin.prevout.n].nValue;
-        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, amount))) {
+        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, nullptr, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, amount))) {
             return false;
         }
     }
