@@ -61,14 +61,14 @@ class AssumeValidTest(SyscoinTestFramework):
         self.num_nodes = 3
         self.rpc_timeout = 120
         # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only
-        self.extra_args = [['-dip3params=9000:9000'],['-dip3params=9000:9000'],['-dip3params=9000:9000']]
+        self.extra_args = ['-dip3params=9000:9000']
 
     def setup_network(self):
-        self.add_nodes(3, extra_args=self.extra_args)
+        self.add_nodes(3)
         # Start node0. We don't start the other nodes yet since
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.
-        self.start_node(0)
+        self.start_node(0, extra_args=self.extra_args)
 
     def send_blocks_until_disconnected(self, p2p_conn):
         """Keep sending blocks to the node until we're disconnected."""
