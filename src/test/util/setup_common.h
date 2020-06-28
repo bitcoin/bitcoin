@@ -98,6 +98,7 @@ struct RegTestingSetup : public TestingSetup {
         : TestingSetup{CBaseChainParams::REGTEST} {}
 };
 
+
 class CBlock;
 struct CMutableTransaction;
 class CScript;
@@ -107,7 +108,7 @@ class CScript;
 // 100-block REGTEST-mode block chain
 //
 struct TestChain100Setup : public RegTestingSetup {
-    TestChain100Setup();
+    TestChain100Setup(int count = COINBASE_MATURITY);
 
     // Create a new block with just given transactions, coinbase paying to
     // scriptPubKey, and try to add it to the current chain.
@@ -118,6 +119,24 @@ struct TestChain100Setup : public RegTestingSetup {
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
+};
+
+//
+// Testing fixture that pre-creates a
+// 100-block REGTEST-mode block chain
+//
+struct TestChain100Setup : public TestChain100Setup {
+    TestChain100Setup() : TestChain100Setup(100) {}
+};
+
+struct TestChainDIP3Setup : public TestChain100Setup
+{
+    TestChainDIP3Setup() : TestChain100Setup(431) {}
+};
+
+struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
+{
+    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(430) {}
 };
 
 class CTxMemPoolEntry;

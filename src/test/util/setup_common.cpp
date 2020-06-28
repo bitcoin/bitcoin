@@ -206,8 +206,8 @@ TestingSetup::~TestingSetup()
     m_node.chainman = nullptr;
     pblocktree.reset();
 }
-
-TestChain100Setup::TestChain100Setup()
+// SYSCOIN
+TestChain100Setup::TestChain100Setup(int count)
 {
     // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
     // TODO: fix the code to support SegWit blocks.
@@ -218,7 +218,7 @@ TestChain100Setup::TestChain100Setup()
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < COINBASE_MATURITY; i++)
+    for (int i = 0; i < count; i++)
     {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
