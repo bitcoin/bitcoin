@@ -295,7 +295,10 @@ QTextEdit {
 QToolBar / QToolButton
 ******************************************************/
 
-/***** No dark.css specific coloring here yet *****/
+QToolBar > QToolButton:checked {
+    background-color: #444;
+    color: #ccc;
+}
 
 /******************************************************
 QTreeWidget
