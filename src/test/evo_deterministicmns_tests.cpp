@@ -94,9 +94,6 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
 
-    CAmount change;
-    auto inputs = SelectUTXOs(utxos, 100000 * COIN, change);
-
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
@@ -117,9 +114,6 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
 
 static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
 {
-    CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
-
     CProUpServTx proTx;
     proTx.proTxHash = proTxHash;
     proTx.addr = LookupNumeric("1.1.1.1", port);
@@ -138,8 +132,6 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
 
 static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const WitnessV0KeyHash& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
-    CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
 
     CProUpRegTx proTx;
     proTx.proTxHash = proTxHash;
@@ -160,9 +152,6 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
 
 static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
 {
-    CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
-
     CProUpRevTx proTx;
     proTx.proTxHash = proTxHash;
 
@@ -241,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
-    CTxDestination payoutDest = DecodeDestination("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
+    CTxDestination payoutDest = DecodeDestination("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
     auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutDest), coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = std::vector<CMutableTransaction>{tx};
 
