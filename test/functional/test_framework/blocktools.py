@@ -88,7 +88,10 @@ def create_block(hashprev, coinbase, ntime=None, *, version=1):
 def get_witness_script(witness_root, witness_nonce, extraData=None):
     witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
-    return CScript([OP_RETURN, output_data, extraData])
+    if extraData is None:
+        return CScript([OP_RETURN, output_data])
+    else
+        return CScript([OP_RETURN, output_data, extraData])
 
 def add_witness_commitment(block, nonce=0):
     """Add a witness commitment to the block's coinbase transaction.
