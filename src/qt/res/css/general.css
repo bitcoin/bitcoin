@@ -626,35 +626,41 @@ QToolBar / QToolButton
 
 QToolBar {
     background-color: #008de4;
-    border: 0;
+    border: none;
+    width: 100%;
     padding: 0;
     margin: 0;
+    spacing: 0;
+    min-height: 50px;
+    max-height: 50px;
 }
 
 QToolBar > QToolButton {
-    background-color: #008de4;
-    border: 0;
-    font-size: 14px;
-    min-width: 70px;
-    min-height: 48%;
-    max-height: 48%;
-    padding: 0 10px;
-    margin: 0;
-    color: #f5f5f5;
+    background-color: transparent;
+    border: none;
+    min-height: 50px;
+    max-height: 50px;
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: #ffffff;
+    width: 100%;
+    padding: 1px;
+    text-align: center;
 }
 
-QToolBar > QToolButton:checked {
-    border: 0;
-    font-weight: bold;
+QToolBar > QToolButton:hover:!checked {
+    background-color: #005e98;
+    color: #DCDCDC;
 }
 
 QToolBar > QToolButton:disabled {
     color: #444;
 }
 
-QToolBar > QLabel {
-    border: 0;
-    margin: 10px 0 0 0;
+QToolBar QLabel#lblToolbarLogo {
+    padding: 12px;
+    image: url(':/images/dash_logo_toolbar');
+    height: 2.5em;
 }
 
 /******************************************************

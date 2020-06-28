@@ -40,6 +40,7 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QProgressBar;
 class QProgressDialog;
+class QToolButton;
 QT_END_NAMESPACE
 
 /**
@@ -95,20 +96,20 @@ private:
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
-    QAction *overviewAction;
-    QAction *historyAction;
-    QAction *masternodeAction;
+    QToolButton *overviewAction;
+    QToolButton *historyAction;
+    QToolButton *masternodeAction;
     QAction *quitAction;
-    QAction *sendCoinsAction;
+    QToolButton *sendCoinsAction;
     QAction *sendCoinsMenuAction;
-    QAction *privateSendCoinsAction;
+    QToolButton *privateSendCoinsAction;
     QAction *privateSendCoinsMenuAction;
     QAction *usedSendingAddressesAction;
     QAction *usedReceivingAddressesAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
-    QAction *receiveCoinsAction;
+    QToolButton *receiveCoinsAction;
     QAction *receiveCoinsMenuAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
@@ -136,6 +137,7 @@ private:
     RPCConsole *rpcConsole;
     HelpMessageDialog *helpMessageDialog;
     ModalOverlay *modalOverlay;
+    QButtonGroup *tabGroup;
 
 #ifdef Q_OS_MAC
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
@@ -251,6 +253,9 @@ private Q_SLOTS:
 
     /** Show open dialog */
     void openClicked();
+
+    /** Highlight checked tab button */
+    void highlightTabButton(QAbstractButton *button, bool checked);
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
