@@ -151,7 +151,7 @@ class AssumeValidTest(SyscoinTestFramework):
         # Bury the assumed valid block 2100 deep
         for i in range(2100):
             # Syscoin
-            dip4_activated = height + 1 >= 432
+            dip4_activated = height >= 432
             block = create_block(self.tip, create_coinbase(height, dip4_activated=dip4_activated), self.block_time)
             block.set_base_version(4)
             block.solve()
