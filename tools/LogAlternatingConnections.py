@@ -12,7 +12,7 @@ import traceback
 
 startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
-rowsPerNodeReset = 6		# Number of rows for cach numconnections file
+rowsPerNodeReset = 6000		# Number of rows for cach numconnections file
 
 
 # These numbers of peers are repeated
