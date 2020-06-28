@@ -524,7 +524,8 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-masternodeblsprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
-    
+    gArgs.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
+    gArgs.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
