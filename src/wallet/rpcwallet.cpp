@@ -3503,7 +3503,7 @@ public:
     {
         // Always present: script type and redeemscript
         std::vector<std::vector<unsigned char>> solutions_data;
-        txnouttype which_type = Solver(subscript, solutions_data);
+        TxoutType which_type = Solver(subscript, solutions_data);
         obj.pushKV("script", GetTxnOutputType(which_type));
         obj.pushKV("hex", HexStr(subscript));
 
@@ -3520,7 +3520,7 @@ public:
             // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
             if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
             obj.pushKV("embedded", std::move(subobj));
-        } else if (which_type == TX_MULTISIG) {
+        } else if (which_type == TxoutType::MULTISIG) {
             // Also report some information on multisig scripts (which do not have a corresponding address).
             // TODO: abstract out the common functionality between this logic and ExtractDestinations.
             obj.pushKV("sigsrequired", solutions_data[0][0]);

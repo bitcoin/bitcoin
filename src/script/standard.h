@@ -99,11 +99,11 @@ static const unsigned int MAX_OP_RETURN_RELAY = 83;
 
 /**
  * A data carrying output is an unspendable output containing data. The script
- * type is designated as TX_NULL_DATA.
+ * type is designated as TxoutType::NULL_DATA.
  */
 extern bool fAcceptDatacarrier;
 
-/** Maximum size of TX_NULL_DATA scripts that this node considers standard. */
+/** Maximum size of TxoutType::NULL_DATA scripts that this node considers standard. */
 extern unsigned nMaxDatacarrierBytes;
 
 /**
@@ -116,18 +116,17 @@ extern unsigned nMaxDatacarrierBytes;
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
-enum txnouttype
-{
-    TX_NONSTANDARD,
+enum class TxoutType {
+    NONSTANDARD,
     // 'standard' transaction types:
-    TX_PUBKEY,
-    TX_PUBKEYHASH,
-    TX_SCRIPTHASH,
-    TX_MULTISIG,
-    TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
-    TX_WITNESS_V0_SCRIPTHASH,
-    TX_WITNESS_V0_KEYHASH,
-    TX_WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
+    PUBKEY,
+    PUBKEYHASH,
+    SCRIPTHASH,
+    MULTISIG,
+    NULL_DATA, //!< unspendable OP_RETURN script that carries data
+    WITNESS_V0_SCRIPTHASH,
+    WITNESS_V0_KEYHASH,
+    WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };
 
 class CNoDestination {
@@ -200,11 +199,11 @@ struct WitnessUnknown
 /**
  * A txout script template with a specific destination. It is either:
  *  * CNoDestination: no destination set
- *  * PKHash: TX_PUBKEYHASH destination (P2PKH)
- *  * ScriptHash: TX_SCRIPTHASH destination (P2SH)
- *  * WitnessV0ScriptHash: TX_WITNESS_V0_SCRIPTHASH destination (P2WSH)
- *  * WitnessV0KeyHash: TX_WITNESS_V0_KEYHASH destination (P2WPKH)
- *  * WitnessUnknown: TX_WITNESS_UNKNOWN destination (P2W???)
+ *  * PKHash: TxoutType::PUBKEYHASH destination (P2PKH)
+ *  * ScriptHash: TxoutType::SCRIPTHASH destination (P2SH)
+ *  * WitnessV0ScriptHash: TxoutType::WITNESS_V0_SCRIPTHASH destination (P2WSH)
+ *  * WitnessV0KeyHash: TxoutType::WITNESS_V0_KEYHASH destination (P2WPKH)
+ *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W???)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
 typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
@@ -212,8 +211,8 @@ typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
 
-/** Get the name of a txnouttype as a C string, or nullptr if unknown. */
-std::string GetTxnOutputType(txnouttype t);
+/** Get the name of a TxoutType as a string */
+std::string GetTxnOutputType(TxoutType t);
 
 /**
  * Parse a scriptPubKey and identify script type for standard scripts. If
@@ -223,9 +222,9 @@ std::string GetTxnOutputType(txnouttype t);
  *
  * @param[in]   scriptPubKey   Script to parse
  * @param[out]  vSolutionsRet  Vector of parsed pubkeys and hashes
- * @return                     The script type. TX_NONSTANDARD represents a failed solve.
+ * @return                     The script type. TxoutType::NONSTANDARD represents a failed solve.
  */
-txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet);
+TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet);
 
 /**
  * Parse a standard scriptPubKey for the destination address. Assigns result to
@@ -246,7 +245,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  * encodable as an address) with key identifiers (of keys involved in a
  * CScript), and its use should be phased out.
  */
-bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
+bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 
 /**
  * Generate a Bitcoin scriptPubKey for the given CTxDestination. Returns a P2PKH
