@@ -598,7 +598,7 @@ def parseMessage(message, string, time):
 
 
 def fetch(now):
-	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
+	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount, numPeers
 	numPeers = 0
 	try:
 		numPeers = int(bitcoin('getconnectioncount').strip())
@@ -765,12 +765,12 @@ def resetNode():
 		print('Startup delay complete.')
 
 def log(file, targetDateTime, count):
-	global maxConnections, fileSampleNumber
+	global maxConnections, fileSampleNumber, numPeers
 	try:
 		now = datetime.datetime.now()
 		line = fetch(now)
 		if len(line) != 0:
-			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {connectionSequence[maxConnections]}, Off by {(now - targetDateTime).total_seconds()} seconds.')
+			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {numPeers}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
 			#if count >= 3600:
