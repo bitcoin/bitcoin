@@ -332,7 +332,14 @@ bool CMutableTransaction::HasAssets() const
 {
     return IsSyscoinTx(nVersion);
 }
-
+bool CTransaction::IsMnTx() const
+{
+    return IsMnTx(nVersion);
+}
+bool CMutableTransaction::IsMnTx() const
+{
+    return IsMnTx(nVersion);
+}
 void CMutableTransaction::LoadAssets()
 {
     if(HasAssets()) {

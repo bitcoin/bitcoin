@@ -74,7 +74,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     const bool &isSysTx = tx.HasAssets();
-    const bool &isMNTx = IsMNTx(tx.nVersion);
+    const bool &isMNTx = tx.IsMNTx();
     if(!isSysTx && !isMNTx){
         if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
             reason = "version";
