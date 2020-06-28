@@ -231,7 +231,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus(), pblocktemplate->vchCoinbaseCommitmentExtra);
     // add coinbase payload if not witness commitment which would append it after witness data, in this case we can assume no witness commitment
     if(pblocktemplate->vchCoinbaseCommitment.empty() && !pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
-        SetTxPayload(coinBaseTx, pblocktemplate->vchCoinbaseCommitmentExtra);
+        SetTxPayload(coinbaseTx, pblocktemplate->vchCoinbaseCommitmentExtra);
     }
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
