@@ -76,7 +76,8 @@ class BIP66Test(SyscoinTestFramework):
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
-        block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
+        # Syscoin
+        block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1, dip4_activated=True), block_time)
         block.set_base_version(2)
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -91,7 +92,7 @@ class BIP66Test(SyscoinTestFramework):
         self.log.info("Test that blocks must now be at least version 3")
         tip = block.sha256
         block_time += 1
-        block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
+        block = create_block(tip, create_coinbase(DERSIG_HEIGHT, dip4_activated=True), block_time)
         block.set_base_version(2)
         block.rehash()
         block.solve()
