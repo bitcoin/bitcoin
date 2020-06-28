@@ -64,7 +64,7 @@ class AssumeValidTest(SyscoinTestFramework):
         self.extra_args = [['-dip3params=9000:9000']]
 
     def setup_network(self):
-        self.add_nodes(3)
+        self.add_nodes(3, extra_args=self.extra_args)
         # Start node0. We don't start the other nodes yet since
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.
