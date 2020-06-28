@@ -213,10 +213,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         }
         
         if(coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
-            ds >> cbTx;
+            ds << cbTx;
         } else {
             qc.cbTx = cbTx;
-            ds >> qc;
+            ds << qc;
         }
     }
 
@@ -225,15 +225,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if(Params().NetworkIDString() != CBaseChainParams::REGTEST)
         FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
     
-
+    pblock->vtx[0] = MakeTransactionRef(coinbaseTx);
     // SYSCOIN
     pblocktemplate->vchCoinbaseCommitmentExtra = std::vector<unsigned char>(ds.begin(), ds.end());
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus(), pblocktemplate->vchCoinbaseCommitmentExtra);
     // add coinbase payload if not witness commitment which would append it after witness data, in this case we can assume no witness commitment
     if(pblocktemplate->vchCoinbaseCommitment.empty() && !pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
         SetTxPayload(coinbaseTx, pblocktemplate->vchCoinbaseCommitmentExtra);
+        pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     }
-    pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
     LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
