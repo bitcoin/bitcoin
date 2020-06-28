@@ -47,6 +47,7 @@ void SetTxPayload(CMutableTransaction& tx, const std::vector<unsigned char>& vch
 {
     std::vector<unsigned char> vchData;
 	int nOut;
+    CScript scriptData;
     scriptData << OP_RETURN << vchPayload;
     // if opreturn exists update payload
 	if (GetSyscoinData(CTransaction(tx), vchData, nOut))

@@ -3704,7 +3704,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
             // SYSCOIN push extra data to stack
             if(!vchExtraData.empty())
-                out.scriptPubKey = out.scriptPubKey << vchExtraData;
+                out.scriptPubKey << vchExtraData;
             commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
             CMutableTransaction tx(*block.vtx[0]);
             tx.vout.push_back(out);
