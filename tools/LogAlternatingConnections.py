@@ -1,17 +1,18 @@
+from threading import Timer
+import datetime
+import glob
+import json
 import os
 import re
-import json
-import time
-import datetime
 import subprocess
-import glob
+import sys
+import time
 import traceback
-from threading import Timer
 
 
 startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
-rowsPerNodeReset = 6000		# Number of rows for cach numconnections file
+rowsPerNodeReset = 6		# Number of rows for cach numconnections file
 
 
 # These numbers of peers are repeated
@@ -21,13 +22,11 @@ os.system('clear')
 
 print(f'Number of seconds per file: {rowsPerNodeReset}')
 
-while True:
-	print()
-	print('Number of connections order: ' + str(connectionSequence))
-	modifyConnectionSequence = input('Would you like to modify the ordering? ').lower() in ['y', 'yes']
-	if modifyConnectionSequence:
-		connectionSequence = input('Enter a new connection sequence (separated by spaces): ').split()
-	else: break
+print()
+print('Number of connections order: ' + str(connectionSequence))
+modifyConnectionSequence = input('Would you like to modify the ordering? ').lower() in ['y', 'yes']
+if modifyConnectionSequence:
+	connectionSequence = input('Enter a new connection sequence (separated by spaces): ').split()
 print()
 
 datadir = os.path.expanduser('~/.bitcoin') # Virtual machine shared folder
@@ -710,15 +709,21 @@ def fetch(now):
 def newFile(file):
 	global fileSampleNumber
 	fileSampleNumber += 1
-	try:
-		file.close()
-	except:
-		pass
-	try:
-		file = open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/{getFileName()}'), 'w+')
-		file.write(fetchHeader() + '\n')
-	except:
-		print('ERROR: Failed to create new file.')
+	success = False
+	while not success:
+		try:
+			file.close()
+		except:
+			pass
+		try:
+			file = open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/{getFileName()}'), 'w+')
+			file.write(fetchHeader() + '\n')
+			success = True
+		except Exception as e:
+			print('ERROR: Failed to create new file')
+			print(e)
+			print('Retrying...')
+			time.sleep(3)
 	return file
 
 def fixBitcoinConf():
@@ -778,7 +783,7 @@ def log(file, targetDateTime, count):
 			#	return
 			if(count % rowsPerNodeReset == 0):
 				if not eclipsing: # If eclipse attack, max connections does not increase
-					maxConnections = 1 + maxConnections % len(connectionSequence)
+					maxConnections = (maxConnections + 1) % len(connectionSequence)
 				try:
 					file = newFile(file)
 					resetNode()
@@ -831,17 +836,23 @@ def init():
 	print()
 	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')
 	print()
-	useBitcoinConf = input('Would you like to use bitcoin.conf to modify the number of connections? (y/n) ').lower() in ['y', 'yes']
-	print()
-	if useBitcoinConf:
-		print('Use the new "numconnections" in bitcoin.conf instead of "maxconnections"?')
-		print(' - maxconnections: Lightly enforces an upper bound to numpeers')
-		print(' - numconnections: New command; strictly enforces numpeers')
-		useNumconnections = input('(y/n) ').lower() in ['y', 'yes']
-		numconnectionsString = 'numconnections' if useNumconnections else 'maxconnections'
+	
+	print('Use the new "numconnections" in bitcoin.conf instead of "maxconnections"?')
+	print('y: numconnections: New command; strictly enforces numpeers')
+	print('n: maxconnections: Lightly enforces an upper bound to numpeers')
+	useNumconnections = input('(y/n) ').lower() in ['y', 'yes']
+	numconnectionsString = 'numconnections' if useNumconnections else 'maxconnections'
+
+	if not useNumconnections:
+		print()
+		useBitcoinConf = input('Should bitcoin.conf be used for maxconnections? (otherwise the default 10 peers) (y/n) ').lower() in ['y', 'yes']
+		if not useBitcoinConf:
+			print()
+			print('WARNING: bitcoin.conf will not be used to change the number of peers, so the default number of peers will be used')
+			numconnectionsString = 'maxconnections'
 	else:
-		print('WARNING: bitcoin.conf will not be used to change the number of peers, so the default number of peers will be used')
-		numconnectionsString = 'maxconnections'
+		useBitcoinConf = True
+
 	print()
 
 	eclipsing = input('Is this an eclipse attack? (y/n) ').lower() in ['y', 'yes']
