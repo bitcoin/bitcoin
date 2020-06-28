@@ -74,8 +74,8 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     const bool &isSysTx = tx.HasAssets();
-    const bool &isMNTx = tx.IsMNTx();
-    if(!isSysTx && !isMNTx){
+    const bool &IsMnTx = tx.IsMnTx();
+    if(!isSysTx && !IsMnTx){
         if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
             reason = "version";
             return false;
@@ -123,7 +123,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         if (whichType == TX_NULL_DATA){
             // SYSCOIN if not syscoin tx and opreturn size is bigger than maxcarrier bytes, return false
             // we need this because if it is a sys tx then we allow MAX_SCRIPT_SIZE bytes.
-            if (!isSysTx && !isMNTx && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
+            if (!isSysTx && !IsMnTx && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
             {
                 reason = "scriptpubkey";
                 return false;

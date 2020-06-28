@@ -11,7 +11,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
     // SYSCOIN
     const bool &isSysTx = tx.HasAssets();
-    const bool &isMNTx = tx.IsMNTx();
+    const bool &IsMnTx = tx.IsMnTx();
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vin-empty");
@@ -33,7 +33,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
         if (!MoneyRange(nValueOut))
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-txouttotal-toolarge");
 
-        if ((isSysTx || isMNTx) && txout.scriptPubKey.size() > 0 && txout.scriptPubKey[0] == OP_RETURN && txout.scriptPubKey.size() > MAX_SCRIPT_SIZE)
+        if ((isSysTx || IsMnTx) && txout.scriptPubKey.size() > 0 && txout.scriptPubKey[0] == OP_RETURN && txout.scriptPubKey.size() > MAX_SCRIPT_SIZE)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-opreturn-toolarge");
     }
 
