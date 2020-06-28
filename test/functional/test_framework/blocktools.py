@@ -118,7 +118,7 @@ def script_BIP34_coinbase_height(height):
     return CScript([CScriptNum(height)])
 
 # SYSCOIN
-def create_coinbase(height, pubkey=None, dip4_activated=False, witness=witness):
+def create_coinbase(height, pubkey=None, dip4_activated=False, witness=None):
     """Create a coinbase transaction, assuming no miner fees.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -138,7 +138,7 @@ def create_coinbase(height, pubkey=None, dip4_activated=False, witness=witness):
     if dip4_activated:
         coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE
         cbtx_payload = CCbTx(2, height, 0, 0)
-        if witness:
+        if witness is not None:
             coinbase.extraData = cbtx_payload.serialize()
         else:
             coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, cbtx_payload.serialize()])))
