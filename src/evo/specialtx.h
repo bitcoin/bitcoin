@@ -43,19 +43,6 @@ inline bool GetTxPayload(const CTransaction& tx, T& obj)
 		return false;
     return GetTxPayload(vchData, obj);
 }
-void SetTxPayload(CMutableTransaction& tx, const std::vector<unsigned char>& vchPayload)
-{
-    std::vector<unsigned char> vchData;
-	int nOut;
-    CScript scriptData;
-    scriptData << OP_RETURN << vchPayload;
-    // if opreturn exists update payload
-	if (GetSyscoinData(CTransaction(tx), vchData, nOut))
-        tx.vout[nOut].scriptPubKey = scriptData;
-    // otherwise add a new output with opreturn
-    else
-        tx.vout.push_back(CTxOut(0, scriptData));
-}
 template <typename T>
 void SetTxPayload(CMutableTransaction& tx, const T& payload)
 {
