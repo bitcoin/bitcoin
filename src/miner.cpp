@@ -202,10 +202,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
         }
-        CFinalCommitmentTxPayload qc;
+        llmq::CFinalCommitmentTxPayload qc;
         for (auto& p : chainparams.GetConsensus().llmqs) {
             // create commitment payload if quorum commitment is needed
-            CFinalCommitment commitment;
+            llmq::CFinalCommitment commitment;
             if (llmq::quorumBlockProcessor->GetMinableCommitment(p.first, nHeight, commitment)) {
                 coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
                 qc.commitments.push_back(commitment)
