@@ -46,11 +46,28 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidati
 
     return true;
 }
+bool CheckCbTx(const CCbTx &cbTx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+{
+    if (cbTx.nVersion == 0 || cbTx.nVersion > CCbTx::CURRENT_VERSION) {
+        return FormatSyscoinErrorMessage(state, "bad-cbtx-version", fJustCheck);
+    }
 
+    if (pindexPrev && pindexPrev->nHeight + 1 != cbTx.nHeight) {
+        return FormatSyscoinErrorMessage(state, "bad-cbtx-height", fJustCheck);
+    }
+
+    if (pindexPrev) {
+        if (cbTx.nVersion < 2) {
+            return FormatSyscoinErrorMessage(state, "bad-cbtx-version", fJustCheck);
+        }
+    }
+
+    return true;
+}
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
 bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state)
 {
-    if (block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
+    if (block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         return true;
     }
 
@@ -209,22 +226,24 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             if (!GetTxPayload(*tx, qc)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload-calc-cbtx-quorummerkleroot");
             }
-            if (qc.commitment.IsNull()) {
-                continue;
-            }
-            auto qcHash = ::SerializeHash(qc.commitment);
-            const auto& params = Params().GetConsensus().llmqs.at((uint8_t)qc.commitment.llmqType);
-            auto& v = qcHashes[params.type];
-            if (v.size() == params.signingActiveQuorumCount) {
-                // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
-                // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
-                // fact that a block can only contain a single commitment for one LLMQ type
-                v.pop_back();
-            }
-            v.emplace_back(qcHash);
-            hashCount++;
-            if (v.size() > params.signingActiveQuorumCount) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "excess-quorums-calc-cbtx-quorummerkleroot");
+            for(const auto& commitment: qc.commitments) {
+                if (commitment.IsNull()) {
+                    continue;
+                }
+                auto qcHash = ::SerializeHash(commitment);
+                const auto& params = Params().GetConsensus().llmqs.at((uint8_t)commitment.llmqType);
+                auto& v = qcHashes[params.type];
+                if (v.size() == params.signingActiveQuorumCount) {
+                    // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
+                    // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
+                    // fact that a block can only contain a single commitment for one LLMQ type
+                    v.pop_back();
+                }
+                v.emplace_back(qcHash);
+                hashCount++;
+                if (v.size() > params.signingActiveQuorumCount) {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "excess-quorums-calc-cbtx-quorummerkleroot");
+                }
             }
         }
     }

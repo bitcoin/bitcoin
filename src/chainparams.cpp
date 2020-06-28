@@ -131,45 +131,6 @@ static Consensus::LLMQParams llmq50_60 = {
         .recoveryMembers = 25,
 };
 
-static Consensus::LLMQParams llmq400_60 = {
-        .type = Consensus::LLMQ_400_60,
-        .name = "llmq_400_60",
-        .size = 400,
-        .minSize = 300,
-        .threshold = 240,
-
-        .dkgInterval = 60 * 12, // one DKG every 12 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 300,
-
-        .signingActiveQuorumCount = 4, // two days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 100,
-};
-
-// Used for deployment and min-proto-version signalling, so it needs a higher threshold
-static Consensus::LLMQParams llmq400_85 = {
-        .type = Consensus::LLMQ_400_85,
-        .name = "llmq_400_85",
-        .size = 400,
-        .minSize = 350,
-        .threshold = 340,
-
-        .dkgInterval = 60 * 24, // one DKG every 24 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 300,
-
-        .signingActiveQuorumCount = 4, // four days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 100,
-};
-
 void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
     auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
     params.size = size;
@@ -278,8 +239,6 @@ public:
         nMinSporkKeys = 1;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         m_is_test_chain = false;
@@ -414,8 +373,6 @@ public:
         nMinSporkKeys = 1;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
@@ -524,7 +481,6 @@ public:
         nMinSporkKeys = 1; 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
        /* 

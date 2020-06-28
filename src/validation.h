@@ -308,7 +308,9 @@ int GetWitnessCommitmentIndex(const CBlock& block);
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 
 /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
-std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+// SYSCOIN
+static std::vector<unsigned char> emptyVec;
+std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, const std::vector<unsigned char> &vchExtraData = emptyVec);
 /**
  * Check proof-of-work of a block header, taking auxpow into account.
  * @param block The block header.

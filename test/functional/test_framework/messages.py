@@ -431,6 +431,8 @@ class CTransaction:
                  "wit")
 
     def __init__(self, tx=None):
+        # SYSCOIN
+        self.extraData = None
         if tx is None:
             self.nVersion = 1
             self.vin = []
@@ -1042,7 +1044,6 @@ class CCbTx:
         r += ser_uint256(self.merkleRootMNList)
         r += ser_uint256(self.merkleRootQuorums)
         return r
-
 
 class CSimplifiedMNListEntry:
     def __init__(self):

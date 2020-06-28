@@ -349,12 +349,13 @@ static UniValue generateblock(const JSONRPCRequest& request)
 
     CChainParams chainparams(Params());
     CBlock block;
-
+    // SYSCOIN
+    std::unique_ptr<CBlockTemplate> blocktemplate;
     {
         LOCK(cs_main);
 
         CTxMemPool empty_mempool;
-        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(empty_mempool, chainparams).CreateNewBlock(coinbase_script));
+        blocktemplate = BlockAssembler(empty_mempool, chainparams).CreateNewBlock(coinbase_script);
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
@@ -365,7 +366,8 @@ static UniValue generateblock(const JSONRPCRequest& request)
 
     // Add transactions
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
-    RegenerateCommitments(block);
+    // SYSCOIN
+    RegenerateCommitments(block, blocktemplate.vchCoinbaseCommitmentExtra);
 
     {
         LOCK(cs_main);
@@ -899,6 +901,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
     if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
+        result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
     }
     // SYSCOIN
@@ -933,10 +936,10 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("superblock", superblockObjArray);
     result.pushKV("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock);
     result.pushKV("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED));
-    std::vector<unsigned char> vchData;
-	int nOut;
-	if (GetSyscoinData(*pblock->vtx[0], vchData, nOut))
-        result.pushKV("coinbase_payload", HexStr(vchData));
+    if (!pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
+        result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
+        result.pushKV("default_witness_commitment_extra", HexStr(pblocktemplate->vchCoinbaseCommitmentExtra.begin(), pblocktemplate->vchCoinbaseCommitmentExtra.end()));
+    }
     return result;
 }
 

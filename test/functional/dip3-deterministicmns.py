@@ -401,28 +401,17 @@ class DIP3Test(SyscoinTestFramework):
         coinbase.vin = create_coinbase(height).vin
 
         # We can't really use this one as it would result in invalid merkle roots for masternode lists
-        if len(bt['coinbase_payload']) != 0:
-            cbtx = FromHex(CCbTx(version=2), bt['coinbase_payload'])
-            if use_mnmerkleroot_from_tip:
-                if 'cbTx' in tip_block:
-                    cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
-                    cbtx.merkleRootQuorums = int(tip_block['cbTx']["merkleRootQuorums"], 16)
-                else:
-                    cbtx.merkleRootMNList = 0
-                    cbtx.merkleRootQuorums = 0
-            coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE # CbTx
-            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN] + list(CScript(cbtx.serialize())))))
-
+        if len(bt['default_witness_commitment']) != 0:
+            coinbase.nVersion = bt['coinbase_version']
+            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, bt['default_witness_commitment']]))) 
+        elif len(bt['default_witness_commitment_extra']) != 0:
+            coinbase.nVersion = bt['coinbase_version']
+            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, bt['default_witness_commitment_extra']])))
+            
         coinbase.calc_sha256()
 
         block = create_block(int(tip_hash, 16), coinbase)
         block.vtx += vtx
-
-        # Add quorum commitments from template
-        for tx in bt['transactions']:
-            tx2 = FromHex(CTransaction(), tx['data'])
-            if tx2.nType == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT:
-                block.vtx.append(tx2)
 
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()

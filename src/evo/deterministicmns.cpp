@@ -834,16 +834,18 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (!GetTxPayload(tx, qc)) {
                 return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
             }
-            if (!qc.commitment.IsNull()) {
-                const auto& params = Params().GetConsensus().llmqs.at(qc.commitment.llmqType);
-                int quorumHeight = qc.nHeight - (qc.nHeight % params.dkgInterval);
-                auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
-                if (!quorumIndex || quorumIndex->GetBlockHash() != qc.commitment.quorumHash) {
-                    // we should actually never get into this case as validation should have catched it...but lets be sure
-                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
-                }
+            for(const auto& commitment: qc.commitments) {
+                if (!commitment.IsNull()) {
+                    const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
+                    int quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
+                    auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
+                    if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
+                        // we should actually never get into this case as validation should have catched it...but lets be sure
+                        return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
+                    }
 
-                HandleQuorumCommitment(qc.commitment, quorumIndex, newList, debugLogs);
+                    HandleQuorumCommitment(commitment, quorumIndex, newList, debugLogs);
+                }
             }
             break;
         }

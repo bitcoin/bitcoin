@@ -45,14 +45,14 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
     return nNewTime - nOldTime;
 }
-
-void RegenerateCommitments(CBlock& block)
+// SYSCOIN
+void RegenerateCommitments(CBlock& block, const std::vector<unsigned char> &vchExtraData)
 {
     CMutableTransaction tx{*block.vtx.at(0)};
     tx.vout.erase(tx.vout.begin() + GetWitnessCommitmentIndex(block));
     block.vtx.at(0) = MakeTransactionRef(tx);
 
-    GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus());
+    GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus(), vchExtraData);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
@@ -155,19 +155,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // TODO: replace this with a call to main to assess validity of a mempool
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
-    // SYSCOIN
-    if (fDIP0003Active_context) {
-        for (auto& p : chainparams.GetConsensus().llmqs) {
-            CTransactionRef qcTx;
-            if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, nHeight, qcTx)) {
-                pblock->vtx.emplace_back(qcTx);
-                pblocktemplate->vTxFees.emplace_back(0);
-                pblocktemplate->vTxSigOpsCost.emplace_back(0);
-                nBlockWeight += WITNESS_SCALE_FACTOR * qcTx->GetTotalSize();
-                ++nBlockTx;
-            }
-        }
-    }
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
     addPackageTxs(nPackagesSelected, nDescendantsUpdated);
@@ -200,6 +187,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
         }
     }
+    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     BlockValidationState state;
     if(fDIP0003Active_context) {
         // Update coinbase transaction with additional info about masternode and governance payments,
@@ -214,7 +202,22 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
         }
-        SetTxPayload(coinbaseTx, cbTx);
+        CFinalCommitmentTxPayload qc;
+        for (auto& p : chainparams.GetConsensus().llmqs) {
+            // create commitment payload if quorum commitment is needed
+            CFinalCommitment commitment;
+            if (llmq::quorumBlockProcessor->GetMinableCommitment(p.first, nHeight, commitment)) {
+                coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
+                qc.commitments.push_back(commitment)
+            }
+        }
+        
+        if(coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
+            ds >> cbTx;
+        } else {
+            qc.cbTx = cbTx;
+            ds >> qc;
+        }
     }
 
     // Update coinbase transaction with additional info about masternode and governance payments,
@@ -223,8 +226,14 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
     
 
+    // SYSCOIN
+    pblocktemplate->vchCoinbaseCommitmentExtra = std::vector<unsigned char>(ds.begin(), ds.end());
+    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus(), pblocktemplate->vchCoinbaseCommitmentExtra);
+    // add coinbase payload if not witness commitment which would append it after witness data, in this case we can assume no witness commitment
+    if(pblocktemplate->vchCoinbaseCommitment.empty() && !pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
+        SetTxPayload(coinBaseTx, pblocktemplate->vchCoinbaseCommitmentExtra);
+    }
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
     LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 

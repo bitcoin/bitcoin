@@ -104,7 +104,7 @@ class NULLDUMMYTest(SyscoinTestFramework):
     def block_submit(self, node, txs, witness=False, accept=False):
         # Syscoin
         dip4_activated = self.lastblockheight + 1 >= 432
-        block = create_block(self.tip, create_coinbase(self.lastblockheight + 1, dip4_activated=dip4_activated), self.lastblocktime + 1)
+        block = create_block(self.tip, create_coinbase(self.lastblockheight + 1, dip4_activated=dip4_activated, witness=witness), self.lastblocktime + 1)
         block.set_base_version(4)
         for tx in txs:
             tx.rehash()
