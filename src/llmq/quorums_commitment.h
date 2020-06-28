@@ -14,7 +14,7 @@
 #include <bls/bls.h>
 
 #include <univalue.h>
-#include <evo/cbtx.>
+#include <evo/cbtx.h>
 namespace llmq
 {
 
