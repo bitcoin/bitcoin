@@ -428,7 +428,7 @@ class CTxWitness:
 
 class CTransaction:
     __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
-                 "wit")
+                 "wit", "extraData")
 
     def __init__(self, tx=None):
         # SYSCOIN
