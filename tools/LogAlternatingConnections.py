@@ -853,7 +853,6 @@ def init():
 		maxConnections = -1
 		while maxConnections < 1 or maxConnections > len(connectionSequence):
 			maxConnections = int(input(f'How many connections should be initially made? (pick an option number): '))
-		maxConnections -= 1
 		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {connectionSequence[maxConnections]}? (y/n) ').lower() in ['y', 'yes']
 
 	print()
