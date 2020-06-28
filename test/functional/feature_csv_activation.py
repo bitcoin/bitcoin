@@ -170,7 +170,9 @@ class BIP68_112_113Test(SyscoinTestFramework):
         return test_blocks
 
     def create_test_block(self, txs):
-        block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600)
+        # Syscoin
+        dip4_activated = self.tipheight + 1 >= 432
+        block = create_block(self.tip, create_coinbase(self.tipheight + 1, dip4_activated=dip4_activated), self.last_block_time + 600)
         block.set_base_version(4)
         block.vtx.extend(txs)
         block.hashMerkleRoot = block.calc_merkle_root()
