@@ -887,7 +887,7 @@ def init():
 		print(f'Real connections: {eclipse_real_numpeers}')
 		print(f'Fake connections: {eclipse_fake_numpeers}')
 		print(f'Packet drop rate: {eclipse_drop_rate}')
-	print(f'Connections: {maxConnections}')
+	print(f'Connections: {connectionSequence[maxConnections]}')
 	print(f'Pause if connections don\'t equal {connectionSequence[maxConnections]}: {waitForConnectionNum}')
 	print()
 	confirm = input(f'Does all of this look correct? (y/n) ').lower() in ['y', 'yes']
