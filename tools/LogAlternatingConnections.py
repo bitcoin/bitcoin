@@ -13,12 +13,13 @@ startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
 rowsPerNodeReset = 6000		# Number of rows for cach numconnections file
 
-print(f'Number of seconds per file: {rowsPerNodeReset}')
 
 # These numbers of peers are repeated
 connectionSequence = [1, 2, 4, 8, 16, 32, 64, 128];
 
 os.system('clear')
+
+print(f'Number of seconds per file: {rowsPerNodeReset}')
 
 while True:
 	print()
@@ -639,7 +640,7 @@ def fetch(now):
 	line += str(numPeers) + ','
 	line += resourceUsage['cpu_percent'] + '%,'
 	line += resourceUsage['memory_percent'] + '%,'
-	line += '"' + json.dumps(resourceUsage).replace('"', '""') + '",'
+	line += '"' + json.dumps(resourceUsage, separators = (',', ':')).replace('"', '""') + '",'
 	line += '"' + getpeerinfo_raw.replace('"', '""') + '",'
 
 
@@ -854,11 +855,12 @@ def init():
 		print(f'Total number of connections: {maxConnections}')
 		waitForConnectionNum = True
 	else:
+		print('How many connections should be initially made?')
 		for i, v in enumerate(connectionSequence):
 			print(f'Option {i + 1}: {v} connections')
 		maxConnections = -1
 		while maxConnections < 1 or maxConnections > len(connectionSequence):
-			maxConnections = int(input(f'How many connections should be initially made? (pick an option number): '))
+			maxConnections = int(input(f'(pick an option number): '))
 		print()
 		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {connectionSequence[maxConnections]}? (y/n) ').lower() in ['y', 'yes']
 
