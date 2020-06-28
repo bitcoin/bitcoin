@@ -208,7 +208,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             llmq::CFinalCommitment commitment;
             if (llmq::quorumBlockProcessor->GetMinableCommitment(p.first, nHeight, commitment)) {
                 coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
-                qc.commitments.push_back(commitment)
+                qc.commitments.push_back(commitment);
             }
         }
         
