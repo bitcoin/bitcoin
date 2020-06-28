@@ -640,8 +640,8 @@ def fetch(now):
 	line += str(numPeers) + ','
 	line += resourceUsage['cpu_percent'] + '%,'
 	line += resourceUsage['memory_percent'] + '%,'
-	line += '"' + json.dumps(resourceUsage).replace(' ', '').replace('"', '""') + '",'
-	line += '"' + getpeerinfo_raw.replace('"', '""') + '",'
+	line += '"' + re.sub(r'\s', '', json.dumps(resourceUsage)).replace('"', '""') + '",'
+	line += '"' + re.sub(r'\s', '', getpeerinfo_raw).replace('"', '""') + '",'
 
 
 	# Compute the blocks per second and tx per second
