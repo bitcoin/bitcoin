@@ -18,7 +18,8 @@
 #include <type_traits>
 
 #include <boost/thread/thread.hpp>
-
+// SYSCOIN
+#include <consensus/consensus.h>
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
 
