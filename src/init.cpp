@@ -1349,7 +1349,7 @@ bool AppInitParameterInteraction()
     if (gArgs.IsArgSet("-dip3params")) {
         // Allow overriding budget parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
-            return InitError("DIP3 parameters may only be overridden on regtest.");
+            return InitError(Untranslated("DIP3 parameters may only be overridden on regtest."));
         }
         std::string strDIP3Params = gArgs.GetArg("-dip3params", "");
         std::vector<std::string> vDIP3Params;
