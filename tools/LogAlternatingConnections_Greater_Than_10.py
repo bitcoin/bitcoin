@@ -738,12 +738,13 @@ def resetNode():
 		try:
 			print('Stopping bitcoin...')
 			bitcoin('stop')
+			time.sleep(3)
+			fixBitcoinConf()
 			success = True
 		except:
 			pass
 		time.sleep(3)
 
-	fixBitcoinConf()
 
 	success = False
 	while not success:
@@ -753,8 +754,8 @@ def resetNode():
 			success = True
 		except:
 			pass
-
 		time.sleep(3)
+		
 	if startupDelay > 0:
 		print(f'Startup delay for {startupDelay} seconds...')
 		time.sleep(startupDelay)
@@ -840,7 +841,7 @@ def init():
 		for i, v in enumerate(connectionSequence):
 			print(f'Option {i + 1}: {v} connections')
 		maxConnections = -1
-		while maxConnections not in connectionSequence:
+		while maxConnections >= 0 and maxConnections < len(connectionSequence):
 			maxConnections = int(input(f'How many connections should be initially made? (pick an option number): '))
 		maxConnections -= 1
 		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {connectionSequence[maxConnections]}? (y/n) ').lower() in ['y', 'yes']
