@@ -14,7 +14,7 @@
 #include <bls/bls.h>
 
 #include <univalue.h>
-
+#include <evo/cbtx.>
 namespace llmq
 {
 
@@ -98,27 +98,28 @@ public:
 class CFinalCommitmentTxPayload
 {
 public:
-    static const uint16_t CURRENT_VERSION = 1;
-
-public:
-    uint16_t nVersion{CURRENT_VERSION};
-    uint32_t nHeight{(uint32_t)-1};
-    CFinalCommitment commitment;
+    CCbTx cbTx;
+    std::vector<CFinalCommitment> commitments;
 
 public:
     SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj) {
-        READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
+        READWRITE(obj.cbTx, obj.commitments);
     }   
 
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("height", (int)nHeight);
-
-        UniValue qcObj;
-        commitment.ToJson(qcObj);
-        obj.pushKV("commitment", qcObj);
+        UniValue cbObj;
+        cbTx.ToJson(cbObj);
+        obj.pushKV("cbTx", cbTx);
+        UniValue commitmentsArr(UniValue::VARR);
+        for (const auto& commitment : commitments) {
+            UniValue qcObj;
+            commitment.ToJson(qcObj);
+            obj.pushKV("commitment", qcObj);
+            commitmentsArr.push_back(qcObj);
+        }
+        obj.pushKV("commitments", commitmentsArr);
     }
 };
 

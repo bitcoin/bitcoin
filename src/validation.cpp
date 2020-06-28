@@ -627,11 +627,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             return state.Invalid(TxValidationResult::TX_CONFLICT, "bad-syscoin-tx", tx_state.ToString()); 
         } 
     }  
-    // SYSCOIN   
-    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
-        // quorum commitment is not allowed outside of blocks
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "qc-not-allowed");
-    }
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
@@ -3676,7 +3671,7 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
     }
 }
 
-std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
+std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, const std::vector<unsigned char> &vchExtraData)
 {
     std::vector<unsigned char> commitment;
     int commitpos = GetWitnessCommitmentIndex(block);
@@ -3687,7 +3682,19 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
             CTxOut out;
             out.nValue = 0;
-            out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
+            // SYSCOIN calculate how big the scriptPubKey will grow exactly based on extra data size
+            int nExtraByteSize;
+            const size_t &nExtraDataSize = vchExtraData.size();
+            if (nExtraDataSize < OP_PUSHDATA1)
+                nExtraByteSize = 0;
+            else if (nExtraDataSize <= 0xff)
+                nExtraByteSize = 1;
+            else if (nExtraDataSize <= 0xffff)
+                nExtraByteSize = 2;
+            else
+                nExtraByteSize = 4;
+
+            out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + nExtraByteSize + nExtraDataSize);
             out.scriptPubKey[0] = OP_RETURN;
             out.scriptPubKey[1] = 0x24;
             out.scriptPubKey[2] = 0xaa;
@@ -3695,6 +3702,9 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             out.scriptPubKey[4] = 0xa9;
             out.scriptPubKey[5] = 0xed;
             memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
+            // SYSCOIN push extra data to stack
+            if(!vchExtraData.empty())
+                out.scriptPubKey = out.scriptPubKey << vchExtraData;
             commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
             CMutableTransaction tx(*block.vtx[0]);
             tx.vout.push_back(out);
@@ -3864,7 +3874,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
     // SYSCOIN
     bool fDIP0003Active_context = nHeight >= consensusParams.nUTXOAssetsBlock;
-    if(fDIP0003Active_context && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {
+    if(fDIP0003Active_context && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-cb-type", strprintf("%s : Incorrect version of coinbase transaction", __func__));
     }
     for (const auto& txRef : block.vtx)

@@ -431,7 +431,14 @@ bool IsZdagTx(const int &nVersion) {
 bool IsSyscoinTx(const int &nVersion) {
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
-
+bool IsMnTx(const int &nVersion) {
+    return nVersion == SYSCOIN_TX_VERSION_MN_COINBASE ||
+     nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT ||
+     nVersion == SYSCOIN_TX_VERSION_MN_REGISTER ||
+     nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE || 
+     nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR ||
+     nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
+}
 bool IsSyscoinWithNoInputTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
 }
@@ -464,6 +471,16 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 		return false;
 	if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		return false;
+    // if witness script we get the next element which should be our MN data
+    if(vchData[0] == 0x24 &&
+        vchData[1] == 0xaa &&
+        vchData[2] == 0x21 &&
+        vchData[3] == 0xa9 &&
+        vchData[4] == 0xed &&
+        vchData.size() >= 36) {
+        if (!scriptPubKey.GetOp(pc, opcode, vchData))
+		    return false;
+    }
     const unsigned int & nSize = scriptPubKey.size();
     // allow up to 80 bytes of data after our stack on standard asset transactions
     unsigned int nDifferenceAllowed = 83;

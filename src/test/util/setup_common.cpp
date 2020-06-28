@@ -232,18 +232,9 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     const CChainParams& chainparams = Params();
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
-    // SYSCOIN
-    std::vector<CTransactionRef> llmqCommitments;
-    for (const auto& tx : block.vtx) {
-        if (tx->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
-            llmqCommitments.emplace_back(tx);
-        }
-    }
 
     // Replace mempool-selected txns with just coinbase plus passed-in txns:
     block.vtx.resize(1);
-    // Re-add quorum commitments
-    block.vtx.insert(block.vtx.end(), llmqCommitments.begin(), llmqCommitments.end());
     for (const CMutableTransaction& tx : txns)
         block.vtx.push_back(MakeTransactionRef(tx));
 
@@ -263,6 +254,22 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         }
         CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
         SetTxPayload(tmpTx, cbTx);
+        block.vtx[0] = MakeTransactionRef(tmpTx);
+    } else if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+        LOCK(cs_main);
+        CFinalCommitmentTxPayload qc;
+        if (!GetTxPayload(*block.vtx[0], qc)) {
+            BOOST_ASSERT(false);
+        }
+        BlockValidationState state;
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), qc.cbTx.merkleRootMNList, state)) {
+            BOOST_ASSERT(false);
+        }
+        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), qc.cbTx.merkleRootQuorums, state)) {
+            BOOST_ASSERT(false);
+        }
+        CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
+        SetTxPayload(tmpTx, qc);
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }
     // IncrementExtraNonce creates a valid coinbase and merkleRoot

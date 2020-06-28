@@ -10,14 +10,13 @@
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
     // SYSCOIN
-    bool allowEmptyTxIn = false;
-    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
-        allowEmptyTxIn = true;
-    }
-
+    const bool &isSysTx = tx.HasAssets();
+    const bool &isMNTx = IsMNTx(tx.nVersion);
     // Basic checks that don't depend on any context
-    if (!allowEmptyTxIn && tx.vin.empty())
+    if (tx.vin.empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vin-empty");
+    if (tx.vout.empty())
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
     if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-oversize");
@@ -33,6 +32,9 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-txouttotal-toolarge");
+
+        if ((isSysTx || isMNTx) && txout.scriptPubKey.size() > 0 && txout.scriptPubKey[0] == OP_RETURN && txout.scriptPubKey.size() > MAX_SCRIPT_SIZE)
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-opreturn-toolarge");
     }
 
     // Check for duplicate inputs (see CVE-2018-17144)

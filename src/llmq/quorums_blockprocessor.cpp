@@ -287,13 +287,14 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
                 // should not happen as it was verified before processing the block
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
             }
+            for(const auto& commitment: qc.commitments) {
+                // only allow one commitment per type and per block
+                if (ret.count((uint8_t)commitment.llmqType)) {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
+                }
 
-            // only allow one commitment per type and per block
-            if (ret.count((uint8_t)qc.commitment.llmqType)) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
+                ret.emplace((uint8_t)commitment.llmqType, std::move(commitment));
             }
-
-            ret.emplace((uint8_t)qc.commitment.llmqType, std::move(qc.commitment));
         }
     }
 
@@ -511,26 +512,6 @@ bool CQuorumBlockProcessor::GetMinableCommitment(uint8_t llmqType, int nHeight, 
     }
 
     ret = minableCommitments.at(it->second);
-
-    return true;
-}
-
-bool CQuorumBlockProcessor::GetMinableCommitmentTx(uint8_t llmqType, int nHeight, CTransactionRef& ret)
-{
-    AssertLockHeld(cs_main);
-
-    CFinalCommitmentTxPayload qc;
-    if (!GetMinableCommitment(llmqType, nHeight, qc.commitment)) {
-        return false;
-    }
-
-    qc.nHeight = nHeight;
-
-    CMutableTransaction tx;
-    tx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
-    SetTxPayload(tx, qc);
-
-    ret = MakeTransactionRef(tx);
 
     return true;
 }

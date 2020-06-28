@@ -85,10 +85,10 @@ def create_block(hashprev, coinbase, ntime=None, *, version=1):
     block.calc_sha256()
     return block
 
-def get_witness_script(witness_root, witness_nonce):
+def get_witness_script(witness_root, witness_nonce, extraData=None):
     witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
-    return CScript([OP_RETURN, output_data])
+    return CScript([OP_RETURN, output_data, extraData])
 
 def add_witness_commitment(block, nonce=0):
     """Add a witness commitment to the block's coinbase transaction.
@@ -103,8 +103,8 @@ def add_witness_commitment(block, nonce=0):
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
 
-    # witness commitment is the last OP_RETURN output in coinbase
-    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce)))
+    # SYSCOIN witness commitment is the last OP_RETURN output in coinbase
+    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce, extraData=block.vtx[0].extraData)))
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
@@ -118,7 +118,7 @@ def script_BIP34_coinbase_height(height):
     return CScript([CScriptNum(height)])
 
 # SYSCOIN
-def create_coinbase(height, pubkey=None, dip4_activated=False):
+def create_coinbase(height, pubkey=None, dip4_activated=False, witness=witness):
     """Create a coinbase transaction, assuming no miner fees.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -138,7 +138,10 @@ def create_coinbase(height, pubkey=None, dip4_activated=False):
     if dip4_activated:
         coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE
         cbtx_payload = CCbTx(2, height, 0, 0)
-        coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, cbtx_payload.serialize()])))
+        if witness:
+            coinbase.extraData = cbtx_payload.serialize()
+        else:
+            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, cbtx_payload.serialize()])))
     coinbase.calc_sha256()
     return coinbase
 

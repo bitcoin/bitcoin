@@ -46,7 +46,6 @@ public:
     bool HasMinableCommitment(const uint256& hash);
     bool GetMinableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret);
     bool GetMinableCommitment(uint8_t llmqType, int nHeight, CFinalCommitment& ret);
-    bool GetMinableCommitmentTx(uint8_t llmqType, int nHeight, CTransactionRef& ret);
 
     bool HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash);
     bool GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, CFinalCommitment& ret, uint256& retMinedBlockHash);

@@ -64,7 +64,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
         if (m < 1 || m > n)
             return false;
     } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes * 100 )) {
+               (!fAcceptDatacarrier || scriptPubKey.size() > MAX_SCRIPT_SIZE )) {
           return false;
     }
 
@@ -74,7 +74,8 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     const bool &isSysTx = tx.HasAssets();
-    if(!isSysTx){
+    const bool &isMNTx = IsMNTx(tx.nVersion);
+    if(!isSysTx && !isMNTx){
         if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
             reason = "version";
             return false;
@@ -121,8 +122,8 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
 
         if (whichType == TX_NULL_DATA){
             // SYSCOIN if not syscoin tx and opreturn size is bigger than maxcarrier bytes, return false
-            // we need this because if it is a sys tx then we allow 100x maxcarrier bytes.
-            if (!isSysTx && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
+            // we need this because if it is a sys tx then we allow MAX_SCRIPT_SIZE bytes.
+            if (!isSysTx && !isMNTx && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
             {
                 reason = "scriptpubkey";
                 return false;
@@ -138,14 +139,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         }
     }
 
-    // only one OP_RETURN txout is permitted is not one with mn coinbase output otherwise its two allowed
-    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
-        if (nDataOut > 2) {
-            reason = "multi-op-return";
-            return false;
-        }
-    }
-    else if (nDataOut > 1) {
+    if (nDataOut > 1) {
         reason = "multi-op-return";
         return false;
     }
