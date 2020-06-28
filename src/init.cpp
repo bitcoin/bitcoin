@@ -282,7 +282,7 @@ void Shutdown(NodeContext& node)
         flatdb4.Dump(netfulfilledman);
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
         flatdb6.Dump(sporkManager);
-        if (!fLiteMode) {
+        if (!fDisableGovernance) {
             CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
             flatdb3.Dump(governance);
         }
@@ -519,7 +519,7 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> for the relayer (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast or full (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    gArgs.AddArg("-litemode=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1390,8 +1390,8 @@ bool AppInitParameterInteraction()
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             return InitError(strprintf(Untranslated("Masternode must be able to handle at least %d connections, set -maxconnections=%d"), DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
-        if (gArgs.GetBoolArg("-litemode", false)) {
-            return InitError(_("You can not start a masternode in lite mode."));
+        if (gArgs.GetBoolArg("-disablegovernance", false)) {
+            return InitError(_("You can not disable governance validation on a masternode."));
         }
     }
     return true;
@@ -1766,7 +1766,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
     // ********************************************************* Step 7: load block chain
     fRegTest = gArgs.GetBoolArg("-regtest", false);
-    fLiteMode = gArgs.GetBoolArg("-litemode", false);
+    fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
     if(fRegTest) {
         nMNCollateralRequired = gArgs.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
     }
@@ -2159,13 +2159,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
     // if regtest then make sure geth is shown as synced as well
     fGethSynced = fRegTest;
-    if(fLiteMode) {
-        LogPrintf("You are starting in lite mode, all governance validation functionality is disabled.\n");
+    if(fDisableGovernance) {
+        LogPrintf("You are starting with governance validation disabled.\n");
     }
     
 
-    if(fLiteMode && fMasternodeMode) {
-        return InitError(Untranslated("You can not start a masternode in lite mode."));
+    if(fDisableGovernance && fMasternodeMode) {
+        return InitError(Untranslated("You can not disable governance validation on a masternode."));
     }
     activeMasternodeInfo.blsKeyOperator.reset();
     activeMasternodeInfo.blsPubKeyOperator.reset();
@@ -2185,7 +2185,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey());
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
-    LogPrintf("fLiteMode %d\n", fLiteMode);
+    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
 
  
@@ -2212,7 +2212,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     strDBName = "governance.dat";
     uiInterface.InitMessage(_("Loading governance cache...").translated);
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-    if (fLoadCacheFiles && !fLiteMode) {
+    if (fLoadCacheFiles && !fDisableGovernance) {
         if(!flatdb3.Load(governance)) {
             return InitError(strprintf(_("Failed to load governance cache from %s\n"), (pathDB / strDBName).string()));
         }
@@ -2244,7 +2244,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     node.scheduler->scheduleEvery([&] { netfulfilledman.DoMaintenance(); }, std::chrono::seconds{1});
     node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
-    if (!fLiteMode) {
+    if (!fDisableGovernance) {
         node.scheduler->scheduleEvery([&] { governance.DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     }
     llmq::StartLLMQSystem();
