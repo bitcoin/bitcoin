@@ -124,12 +124,8 @@ struct TestChain100Setup : public RegTestingSetup {
 
 //
 // Testing fixture that pre-creates a
-// 100-block REGTEST-mode block chain
+// N-block REGTEST-mode block chain
 //
-struct TestChain100Setup : public TestChain100Setup {
-    TestChain100Setup() : TestChain100Setup(100) {}
-};
-
 struct TestChainDIP3Setup : public TestChain100Setup
 {
     TestChainDIP3Setup() : TestChain100Setup(431) {}
