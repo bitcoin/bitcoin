@@ -61,7 +61,7 @@ class AssumeValidTest(SyscoinTestFramework):
         self.num_nodes = 3
         self.rpc_timeout = 120
         # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only
-        self.extra_args = ['-dip3params=9000:9000']
+        self.extra_args = [['-dip3params=9000:9000'],['-dip3params=9000:9000'],['-dip3params=9000:9000']]
 
     def setup_network(self):
         self.add_nodes(3, extra_args=self.extra_args)
