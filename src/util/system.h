@@ -43,7 +43,7 @@ class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool bGethTestnet;
 extern bool fZMQEthStatus;
-extern bool fLiteMode;
+extern bool fDisableGovernance;
 extern bool fRegTest;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;

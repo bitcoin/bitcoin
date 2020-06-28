@@ -3882,12 +3882,12 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mn-version", "Bad version for non-coinbase masternode transaction");
         }
         if(IsSyscoinMintTx(txRef->nVersion)){
-            // do this check only when not in IBD (initial block download) or litemode
+            // do this check only when not in IBD (initial block download)
             // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
             EthereumTxRoot txRootDB;
             CMintSyscoin mintSyscoin(*txRef);
             if(!mintSyscoin.IsNull()){
-                const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && !fLiteMode && fLoaded && fGethSynced;
+                const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && fLoaded && fGethSynced;
                 {
                     LOCK(cs_setethstatus);
                     // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  

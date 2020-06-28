@@ -60,11 +60,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
-    // do this check only when not in IBD (initial block download) or litemode
+    // do this check only when not in IBD (initial block download)
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
    
-    const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
+    const bool &ethTxRootShouldExist = !ibd && fLoaded && fGethSynced;
     {
         LOCK(cs_setethstatus);
         // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  

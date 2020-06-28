@@ -75,7 +75,7 @@
 #include <ctpl.h>
 bool fMasternodeMode = false;
 bool bGethTestnet = false;
-bool fLiteMode = false;
+bool fDisableGovernance = false;
 bool fRegTest = false;
 bool fZMQEthStatus = false;
 bool fAssetIndex = false;
