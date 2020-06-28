@@ -111,7 +111,7 @@ public:
         obj.setObject();
         UniValue cbObj;
         cbTx.ToJson(cbObj);
-        obj.push_back(cbTx);
+        obj.push_back(cbObj);
         UniValue commitmentsArr(UniValue::VARR);
         for (const auto& commitment : commitments) {
             UniValue qcObj;
