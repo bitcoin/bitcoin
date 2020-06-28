@@ -13,7 +13,7 @@ Do not submit patches solely to modify the style of existing code.
 [src/.clang-format](/src/.clang-format). You can use the provided
 [clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
 tool to clean up patches automatically before submission.
-  - Braces on new lines for namespaces, classes, functions, methods.
+  - Braces on new lines for classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
@@ -48,8 +48,7 @@ Block style example:
 ```c++
 int g_count = 0;
 
-namespace foo
-{
+namespace foo {
 class Class
 {
     std::string m_name;
@@ -512,11 +511,11 @@ Source code organization
 
 ```c++
 namespace mynamespace {
-    ...
+...
 } // namespace mynamespace
 
 namespace {
-    ...
+...
 } // namespace
 ```
 

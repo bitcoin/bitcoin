@@ -17,7 +17,6 @@
 #include <net.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
-#include <rpc/safemode.h>
 #include <rpc/server.h>
 #include <script/script.h>
 #include <script/script_error.h>
@@ -793,8 +792,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("signrawtransaction", "\"myhex\"")
         );
 
-    ObserveSafeMode();
-
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR, UniValue::VARR, UniValue::VSTR}, true);
@@ -1007,8 +1004,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
         );
-
-    ObserveSafeMode();
 
     std::promise<void> promise;
 

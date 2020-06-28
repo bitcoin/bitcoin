@@ -8,7 +8,6 @@
 #endif // ENABLE_WALLET
 #include <privatesend/privatesend-server.h>
 #include <rpc/server.h>
-#include <rpc/safemode.h>
 
 #include <univalue.h>
 
@@ -29,8 +28,6 @@ UniValue privatesend(const JSONRPCRequest& request)
             "  stop        - Stop mixing\n"
             "  reset       - Reset mixing\n"
         );
-
-    ObserveSafeMode();
 
     if (fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
