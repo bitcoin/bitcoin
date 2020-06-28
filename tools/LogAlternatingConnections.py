@@ -13,6 +13,8 @@ startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
 rowsPerNodeReset = 6000		# Number of rows for cach numconnections file
 
+print(f'Number of seconds per file: {rowsPerNodeReset}')
+
 # These numbers of peers are repeated
 connectionSequence = [1, 2, 4, 8, 16, 32, 64, 128];
 
@@ -25,6 +27,7 @@ while True:
 	if modifyConnectionSequence:
 		connectionSequence = input('Enter a new connection sequence (separated by spaces): ').split()
 	else: break
+print()
 
 datadir = os.path.expanduser('~/.bitcoin') # Virtual machine shared folder
 if os.path.exists('/media/sf_Bitcoin/blocks'):
@@ -597,7 +600,7 @@ def fetch(now):
 	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	numPeers = 0
 	try:
-		numPeers = int(bitcoin('getconnectioncount').strip()))
+		numPeers = int(bitcoin('getconnectioncount').strip())
 
 		# If eclipse attack, verify that the read-to-fake ratio is correct
 		if eclipsing:
@@ -831,9 +834,10 @@ def init():
 	useBitcoinConf = input('Use bitcoin.conf to modify the number of connections? (y/n) ').lower() in ['y', 'yes']
 	print()
 	if useBitcoinConf:
-		print('  - maxconnections: The default, used to lightly enforce an upper bound on the number of peers')
-		print('  - numconnections: New command to strictly enforce a specific number of peers')
-		useNumconnections = input('Would you like to use the new "numconnections" in bitcoin.conf instead of "maxconnections"? (y/n) ').lower() in ['y', 'yes']
+		print('Would you like to use the new "numconnections" in bitcoin.conf instead of "maxconnections"?')
+		print(' - maxconnections: The default, used to lightly enforce an upper bound on the number of peers')
+		print(' - numconnections: New command to strictly enforce a specific number of peers')
+		useNumconnections = input('(y/n) ').lower() in ['y', 'yes']
 		numconnectionsString = 'numconnections' if useNumconnections else 'maxconnections'
 	else:
 		print('WARNING: bitcoin.conf will not be used to change the number of peers, so the default number of peers will be used')
@@ -841,6 +845,7 @@ def init():
 	print()
 
 	eclipsing = input('Is this an eclipse attack? (y/n) ').lower() in ['y', 'yes']
+	print()
 	if eclipsing:
 		eclipse_fake_numpeers = int(input(f'How many FAKE connections would you like? '))
 		eclipse_real_numpeers = int(input(f'How many REAL connections would you like? '))
@@ -854,9 +859,12 @@ def init():
 		maxConnections = -1
 		while maxConnections < 1 or maxConnections > len(connectionSequence):
 			maxConnections = int(input(f'How many connections should be initially made? (pick an option number): '))
+		print()
 		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {connectionSequence[maxConnections]}? (y/n) ').lower() in ['y', 'yes']
 
 	print()
+	print()
+	print('OVERVIEW')
 	print()
 	print(f'Starting file name: {getFileName()}')
 	print(f'Number of seconds per file: {rowsPerNodeReset}')
