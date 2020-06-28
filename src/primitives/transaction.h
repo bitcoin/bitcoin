@@ -554,6 +554,7 @@ public:
     }
     // SYSCOIN
     bool HasAssets() const;
+    bool IsMnTx() const;
 };
 
 /** A mutable version of CTransaction. */

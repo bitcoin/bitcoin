@@ -11,7 +11,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
     // SYSCOIN
     const bool &isSysTx = tx.HasAssets();
-    const bool &isMNTx = IsMNTx(tx.nVersion);
+    const bool &isMNTx = tx.IsMNTx();
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vin-empty");
