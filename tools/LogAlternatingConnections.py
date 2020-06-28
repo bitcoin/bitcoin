@@ -597,8 +597,7 @@ def fetch(now):
 	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	numPeers = 0
 	try:
-		raw_getpeerinfo = bitcoin('getpeerinfo')
-		numPeers = len(json.loads(raw_getpeerinfo))
+		numPeers = int(bitcoin('getconnectioncount').strip()))
 
 		# If eclipse attack, verify that the read-to-fake ratio is correct
 		if eclipsing:
@@ -621,6 +620,8 @@ def fetch(now):
 			print(f'Connections at {numPeers}, waiting for it to reach {connectionSequence[maxConnections]}, attempt #{numSkippedSamples}')
 			if numSkippedSamples == 1800: resetNode() # After 1800 seconds / 30 minutes, just reset
 			return ''
+
+		getpeerinfo_raw = bitcoin('getpeerinfo')
 		messages = json.loads(bitcoin('getmsginfo'))
 		blockcount = int(bitcoin('getblockcount').strip())
 		mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
@@ -633,10 +634,10 @@ def fetch(now):
 	line = str(now) + ','
 	line += str(seconds) + ','
 	line += str(numPeers) + ','
-	line += resourceUsage['cpu_percent'] + ','
-	line += resourceUsage['memory_percent'] + ','
-	line += json.dumps(resourceUsage) + ','
-	line += str(raw_getpeerinfo) + ','
+	line += resourceUsage['cpu_percent'] + '%,'
+	line += resourceUsage['memory_percent'] + '%,'
+	line += '"' + json.dumps(resourceUsage).replace('"', '""') + '",'
+	line += '"' + getpeerinfo_raw.replace('"', '""') + '",'
 
 
 	# Compute the blocks per second and tx per second
