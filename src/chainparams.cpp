@@ -545,10 +545,10 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
         }
         int nDIP3ActivationHeight, nDIP3EnforcementHeight;
         if (!ParseInt32(vDIP3Params[0], &nDIP3ActivationHeight)) {
-            throw std::runtime_error("Invalid nDIP3ActivationHeight (%s)"), vDIP3Params[0]);
+            throw std::runtime_error(strprintf("Invalid nDIP3ActivationHeight (%s)"), vDIP3Params[0]);
         }
         if (!ParseInt32(vDIP3Params[1], &nDIP3EnforcementHeight)) {
-            throw std::runtime_error("Invalid nDIP3EnforcementHeight (%s)"), vDIP3Params[1]);
+            throw std::runtime_error(strprintf("Invalid nDIP3EnforcementHeight (%s)"), vDIP3Params[1]);
         }
         UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
     }
