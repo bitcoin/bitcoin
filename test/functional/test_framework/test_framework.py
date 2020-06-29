@@ -33,6 +33,7 @@ from .util import (
     initialize_datadir,
     sync_blocks,
     sync_mempools,
+    set_mock_times,
 )
 
 
@@ -550,6 +551,12 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def sync_all(self, nodes=None, **kwargs):
         self.sync_blocks(nodes, **kwargs)
         self.sync_mempools(nodes, **kwargs)
+
+    # SYSCOIN
+    def bump_mocktime(self, t, nodes=None):
+        old_time = int(time.time())
+        new_time = t + old_time
+        set_node_times(nodes or self.nodes, new_time)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
