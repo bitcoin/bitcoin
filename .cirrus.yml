@@ -1,4 +1,5 @@
-# Global defaults
+### Global defaults
+
 timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
 container:
   # https://cirrus-ci.org/faq/#are-there-any-limits
@@ -12,7 +13,9 @@ env:
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CCACHE_SIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
-# Global task template
+
+### Global task template
+
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 global_task_template: &GLOBAL_TASK_TEMPLATE
   ccache_cache:
@@ -31,6 +34,7 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
   ci_script:
     - ./ci/test_run_all.sh
+
 #task:
 #  name: "Windows"
 #  windows_container:
@@ -46,6 +50,14 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #    VCPKG_COMMIT_ID: 'ed0df8ecc4ed7e755ea03e18aaf285fd9b4b4a74'
 #  install_script:
 #    - choco install python --version=3.7.7 -y
+
+task:
+  name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: thread (TSan), no gui]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
   name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
