@@ -21,6 +21,7 @@ class CSporkManager;
     - This would result in old clients getting confused about which spork is for what
 */
 enum {
+    SPORK_TEST                                             = 10000,
     SPORK_6_NEW_SIGS                                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014,
