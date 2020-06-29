@@ -9,7 +9,6 @@
 #include <netbase.h>
 #include <tinyformat.h>
 #include <boost/test/unit_test.hpp>
-#include <services/asset.h>
 BOOST_FIXTURE_TEST_SUITE(evo_simplifiedmns_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
@@ -30,8 +29,9 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         sk.SetBuf(skBuf, sizeof(skBuf));
 
         smle.pubKeyOperator.Set(sk.GetPublicKey());
-        smle.keyIDVoting = WitnessV0KeyHash(std::vector<unsigned char>(vchFromString(strprintf("%040x", i))));
+        smle.keyIDVoting.SetHex(strprintf("%040x", i));
         smle.isValid = true;
+
 
         entries.emplace_back(smle);
     }
