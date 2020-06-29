@@ -40,7 +40,7 @@ class SporkTest(SyscoinTestFramework):
         assert(self.get_test_spork_state(self.nodes[2]))
 
         # check spork propagation for connected nodes
-        self.set_test_spork_state(self.nodes[0], True)
+        self.set_test_spork_state(self.nodes[0], False)
         time.sleep(0.1)
         wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)
 
