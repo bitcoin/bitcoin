@@ -1095,7 +1095,7 @@ class DashTestFramework(SyscoinTestFramework):
                     all_ok = False
                     break
             return all_ok
-        wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
+        wait_until(check_dkg_comitments, timeout=timeout)
 
     def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None):
         if expected_members is None:
