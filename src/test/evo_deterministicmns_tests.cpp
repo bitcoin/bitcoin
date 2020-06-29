@@ -85,7 +85,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
         coins.emplace(tx.vin[i].prevout, coin);
     }
     std::map<int, std::string> input_errors;
-    BOOST_CHECK(SignTransaction(tx, tempKeystore, coins, SIGHASH_ALL, input_errors));
+    BOOST_CHECK(SignTransaction(tx, &tempKeystore, coins, SIGHASH_ALL, input_errors));
 }
 
 static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
