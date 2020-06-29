@@ -414,7 +414,6 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     size_t paramIdx = 1;
 
-    CAmount collateralAmount = 100000 * COIN;
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
@@ -429,7 +428,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         }
         CScript collateralScript = GetScriptForDestination(collateralDest);
 
-        CTxOut collateralTxOut(collateralAmount, collateralScript);
+        CTxOut collateralTxOut(nMNCollateralRequired, collateralScript);
         tx.vout.emplace_back(collateralTxOut);
 
         paramIdx++;

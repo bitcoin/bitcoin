@@ -15,7 +15,7 @@ class TxValidationState;
 class CAsset;
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 static int32_t DEFAULT_MN_COLLATERAL_REQUIRED = 100000;
-static CAmount nMNCollateralRequired;
+static CAmount nMNCollateralRequired = DEFAULT_MN_COLLATERAL_REQUIRED;
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
