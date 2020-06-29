@@ -744,7 +744,9 @@ static const CRPCCommand commands[] =
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
-
+    /* Syscoin features */
+    { "syscoin",            "mnsync",                 &mnsync,                 {} },
+    { "syscoin",            "spork",                  &spork,                  {"arg0","value"} },
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
     { "hidden",             "mockscheduler",          &mockscheduler,          {"delta_time"}},
