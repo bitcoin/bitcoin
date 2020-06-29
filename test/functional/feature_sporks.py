@@ -34,6 +34,9 @@ class SporkTest(SyscoinTestFramework):
         node.spork('SPORK_9_SUPERBLOCKS_ENABLED', value)
 
     def run_test(self):
+        self.set_test_spork_state(self.nodes[0], False)
+        self.set_test_spork_state(self.nodes[1], False)
+        self.set_test_spork_state(self.nodes[2], False)
         # check test spork default state
         assert(not self.get_test_spork_state(self.nodes[0]))
         assert(not self.get_test_spork_state(self.nodes[1]))
