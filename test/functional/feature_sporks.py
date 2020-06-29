@@ -35,8 +35,8 @@ class SporkTest(SyscoinTestFramework):
 
     def run_test(self):
         self.set_test_spork_state(self.nodes[0], False)
-        self.set_test_spork_state(self.nodes[1], False)
-        self.set_test_spork_state(self.nodes[2], False)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), sleep=0.1, timeout=10)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), sleep=0.1, timeout=10)
         # check test spork default state
         assert(not self.get_test_spork_state(self.nodes[0]))
         assert(not self.get_test_spork_state(self.nodes[1]))
