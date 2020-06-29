@@ -210,12 +210,9 @@ static bool CheckTransactionSignature(const CMutableTransaction& tx)
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const auto& txin = tx.vin[i];
-        CTransactionRef txFrom;
-        uint256 hashBlock;
-        BOOST_ASSERT(GetTransaction(txin.prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
-
-        CAmount amount = txFrom->vout[txin.prevout.n].nValue;
-        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, nullptr, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, amount))) {
+        Coin coin;
+        GetUTXOCoin(txin.prevout, coin);
+        if (!VerifyScript(txin.scriptSig, coin.out.scriptPubKey, nullptr, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, coin.out.nValue))) {
             return false;
         }
     }
@@ -235,18 +232,17 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 
     int nHeight = ::ChainActive().Height();
 
-    // We start one block before DIP3 activation, so mining a block with a DIP3 transaction should fail
+    // We start one block before DIP3 activation, so mining a block with a DIP3 transaction should be no-op
     auto block = std::make_shared<CBlock>(CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
-    BOOST_ASSERT(::ChainActive().Height() == nHeight);
-    BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
+    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
 
-    // This block should activate DIP3
-    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
-
+    // re-create reg tx prev one got mined as no-op
+    tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutDest), coinbaseKey, ownerKey, operatorKey);
+    txns = std::vector<CMutableTransaction>{tx};
     // Mining a block with a DIP3 transaction should succeed now
-    block = std::make_shared<CBlock>(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
+    block = std::make_shared<CBlock>(CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
     BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
