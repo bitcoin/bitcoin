@@ -22,6 +22,7 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_15_DETERMINISTIC_MNS_ENABLED,     0), // ON
     MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED,            0), // ON
     MAKE_SPORK_DEF(SPORK_21_QUORUM_ALL_CONNECTED,          0), // ON
+    MAKE_SPORK_DEF(SPORK_TEST,                             4070908800ULL), // OFF
 };
 
 CSporkManager sporkManager;
