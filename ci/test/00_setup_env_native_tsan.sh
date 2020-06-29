@@ -10,5 +10,6 @@ export CONTAINER_NAME=ci_native_tsan
 export DOCKER_NAME_TAG=ubuntu:20.04
 export PACKAGES="clang llvm libc++abi-dev libc++-dev python3-zmq"
 export DEP_OPTS="CC=clang CXX='clang++ -stdlib=libc++'"
+export TEST_RUNNER_EXTRA="--timeout-factor=4"  # Increase timeout because sanitizers slow down
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --with-gui=no CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' --with-sanitizers=thread CC=clang CXX='clang++ -stdlib=libc++'"
