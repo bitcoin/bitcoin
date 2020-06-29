@@ -595,25 +595,33 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     while (nBytes > 0) {
         // absorb network data
         int handled = m_deserializer->Read(pch, nBytes);
-        if (handled < 0) return false;
+        if (handled < 0) {
+            return false;
+        }
 
         pch += handled;
         nBytes -= handled;
 
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
-            CNetMessage msg = m_deserializer->GetMessage(Params().MessageStart(), time);
+            uint32_t out_err_raw_size{0};
+            Optional<CNetMessage> result{m_deserializer->GetMessage(Params().MessageStart(), time, out_err_raw_size)};
+            if (!result) {
+                // store the size of the corrupt message
+                mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER)->second += out_err_raw_size;
+                continue;
+            }
 
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.m_command);
+            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(result->m_command);
             if (i == mapRecvBytesPerMsgCmd.end())
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += msg.m_raw_message_size;
+            i->second += result->m_raw_message_size;
 
             // push the message to the process queue,
-            vRecvMsg.push_back(std::move(msg));
+            vRecvMsg.push_back(std::move(*result));
 
             complete = true;
         }
@@ -679,37 +687,36 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageStartChars& message_start, const std::chrono::microseconds time)
+Optional<CNetMessage> V1TransportDeserializer::GetMessage(const CMessageHeader::MessageStartChars& message_start, const std::chrono::microseconds time, uint32_t& out_err_raw_size)
 {
     // decompose a single CNetMessage from the TransportDeserializer
-    CNetMessage msg(std::move(vRecv));
+    Optional<CNetMessage> msg(std::move(vRecv));
 
     // store state about valid header, netmagic and checksum
-    msg.m_valid_header = hdr.IsValid(message_start);
-    msg.m_valid_netmagic = (memcmp(hdr.pchMessageStart, message_start, CMessageHeader::MESSAGE_START_SIZE) == 0);
+    msg->m_valid_header = hdr.IsValid(message_start);
+    msg->m_valid_netmagic = (memcmp(hdr.pchMessageStart, message_start, CMessageHeader::MESSAGE_START_SIZE) == 0);
     uint256 hash = GetMessageHash();
 
-    // store command string, payload size
-    msg.m_command = hdr.GetCommand();
-    msg.m_message_size = hdr.nMessageSize;
-    msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+    // store command string, time, and sizes
+    msg->m_command = hdr.GetCommand();
+    msg->m_time = time;
+    msg->m_message_size = hdr.nMessageSize;
+    msg->m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
 
     // We just received a message off the wire, harvest entropy from the time (and the message checksum)
     RandAddEvent(ReadLE32(hash.begin()));
 
-    msg.m_valid_checksum = (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) == 0);
-    if (!msg.m_valid_checksum) {
+    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
         LogPrint(BCLog::NET, "CHECKSUM ERROR (%s, %u bytes), expected %s was %s, peer=%d\n",
-                 SanitizeString(msg.m_command), msg.m_message_size,
+                 SanitizeString(msg->m_command), msg->m_message_size,
                  HexStr(Span<uint8_t>(hash.begin(), hash.begin() + CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
+        out_err_raw_size = msg->m_raw_message_size;
+        msg = nullopt;
     }
 
-    // store receive time
-    msg.m_time = time;
-
-    // reset the network deserializer (prepare for the next message)
+    // Always reset the network deserializer (prepare for the next message)
     Reset();
     return msg;
 }

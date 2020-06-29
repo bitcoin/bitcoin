@@ -14,8 +14,9 @@
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
-#include <netaddress.h>
 #include <net_permissions.h>
+#include <netaddress.h>
+#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -706,7 +707,6 @@ public:
     std::chrono::microseconds m_time{0}; //!< time of message receipt
     bool m_valid_netmagic = false;
     bool m_valid_header = false;
-    bool m_valid_checksum = false;
     uint32_t m_message_size{0};     //!< size of the payload
     uint32_t m_raw_message_size{0}; //!< used wire size of the message (including header/checksum)
     std::string m_command;
@@ -732,7 +732,7 @@ public:
     // read and deserialize data
     virtual int Read(const char *data, unsigned int bytes) = 0;
     // decomposes a message from the context
-    virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, std::chrono::microseconds time) = 0;
+    virtual Optional<CNetMessage> GetMessage(const CMessageHeader::MessageStartChars& message_start, std::chrono::microseconds time, uint32_t& out_err) = 0;
     virtual ~TransportDeserializer() {}
 };
 
@@ -790,7 +790,7 @@ public:
         if (ret < 0) Reset();
         return ret;
     }
-    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, std::chrono::microseconds time) override;
+    Optional<CNetMessage> GetMessage(const CMessageHeader::MessageStartChars& message_start, std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
 };
 
 /** The TransportSerializer prepares messages for the network transport

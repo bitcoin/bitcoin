@@ -3886,17 +3886,8 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
     // Message size
     unsigned int nMessageSize = msg.m_message_size;
 
-    // Checksum
-    CDataStream& vRecv = msg.m_recv;
-    if (!msg.m_valid_checksum)
-    {
-        LogPrint(BCLog::NET, "%s(%s, %u bytes): CHECKSUM ERROR peer=%d\n", __func__,
-           SanitizeString(msg_type), nMessageSize, pfrom->GetId());
-        return fMoreWork;
-    }
-
     try {
-        ProcessMessage(*pfrom, msg_type, vRecv, msg.m_time, interruptMsgProc);
+        ProcessMessage(*pfrom, msg_type, msg.m_recv, msg.m_time, interruptMsgProc);
         if (interruptMsgProc)
             return false;
         if (!pfrom->vRecvGetData.empty())
