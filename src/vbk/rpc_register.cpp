@@ -183,42 +183,43 @@ UniValue getpopdata(const JSONRPCRequest& request)
     return result;
 }
 
+template <typename pop_t>
+std::vector<pop_t> parsePayloads(const UniValue& array)
+{
+    std::vector<pop_t> payloads;
+    LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with %s, amount %d \n", pop_t::name(), array.size());
+    for (uint32_t idx = 0u, size = array.size(); idx < size; ++idx) {
+        auto& vtbhex = array[idx];
+        auto vtb_bytes = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
+        altintegration::ReadStream stream(vtb_bytes);
+        payloads.push_back(pop_t::fromVbkEncoding(stream));
+    }
+
+    return payloads;
+}
+
 UniValue submitpop(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 2)
+    if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
             "submitpop [vtbs] (atv)\n"
             "\nCreates and submits a PoP transaction constructed from the provided ATV and VTBs.\n"
             "\nArguments:\n"
-            "1. atv       (string, required) Hex-encoded ATV record.\n"
+            "1. atvs      (array, required) Array of hex-encoded ATV record.\n"
             "2. vtbs      (array, required) Array of hex-encoded VTB records.\n"
+            "3. vbk_blocks      (array, required) Array of hex-encoded VbkBlock records.\n"
             "\nResult:\n"
-            "             (string) Transaction hash\n"
+            "             (string) MempoolResult\n"
             "\nExamples:\n" +
             HelpExampleCli("submitpop", "ATV_HEX [VTB_HEX VTB_HEX]") + HelpExampleRpc("submitpop", "ATV_HEX [VTB_HEX, VTB_HEX]"));
 
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR});
+    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VARR, UniValue::VARR});
 
-    auto wallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(wallet.get(), request.fHelp)) {
-        return NullUniValue;
-    }
-    wallet->BlockUntilSyncedToCurrentChain();
 
-    CScript script;
-
-    const UniValue& vtb_array = request.params[1].get_array();
-    LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with 1 ATV and %d VTBs\n", vtb_array.size());
     altintegration::PopData popData;
-    for (uint32_t idx = 0u, size = vtb_array.size(); idx < size; ++idx) {
-        auto& vtbhex = vtb_array[idx];
-        auto vtb_bytes = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
-        popData.vtbs.push_back(altintegration::VTB::fromVbkEncoding(vtb_bytes));
-    }
-
-    auto& atvhex = request.params[0];
-    auto atv_bytes = ParseHexV(atvhex, "atv");
-    popData.atvs.push_back(altintegration::ATV::fromVbkEncoding(atv_bytes));
+    popData.atvs = parsePayloads<altintegration::ATV>(request.params[0].get_array());
+    popData.vtbs = parsePayloads<altintegration::VTB>(request.params[1].get_array());
+    popData.context = parsePayloads<altintegration::VbkBlock>(request.params[2].get_array());
 
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
     auto& pop_mempool = pop_service.getMemPool();
