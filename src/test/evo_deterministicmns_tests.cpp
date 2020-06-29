@@ -20,7 +20,7 @@
 #include <evo/deterministicmns.h>
 #include <boost/test/unit_test.hpp>
 
-typedef std::map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
+typedef std::unordered_map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
 
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
 {
@@ -28,38 +28,34 @@ static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
     for (size_t i = 0; i < txs.size(); i++) {
         auto& tx = *txs[i];
         for (size_t j = 0; j < tx.vout.size(); j++) {
-            utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
+            if(tx.vout[j].nValue > 0)
+                utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
         }
     }
     return utxos;
 }
 
-static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, CAmount& changeRet)
+static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utxos, CAmount amount, CAmount& changeRet)
 {
     changeRet = 0;
-
     std::vector<COutPoint> selectedUtxos;
     CAmount selectedAmount = 0;
-    while (!utoxs.empty()) {
-        bool found = false;
-        for (auto it = utoxs.begin(); it != utoxs.end(); ++it) {
-            if (::ChainActive().Height() - it->second.first < 101) {
-                continue;
-            }
-
-            found = true;
-            selectedAmount += it->second.second;
-            selectedUtxos.emplace_back(it->first);
-            utoxs.erase(it);
-            break;
+    auto it = utxos.begin();
+    bool bFound = false;
+    while (it != utxos.end()) {
+        if (::ChainActive().Height() - it->second.first < 101) {
+            continue;
         }
-        BOOST_ASSERT(found);
+        selectedAmount += it->second.second;
+        selectedUtxos.emplace_back(it->first);
+        it = utxos.erase(it);
+        bFound = true;
         if (selectedAmount >= amount) {
             changeRet = selectedAmount - amount;
             break;
         }
     }
-
+    BOOST_ASSERT(bFound);
     return selectedUtxos;
 }
 
