@@ -490,7 +490,9 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
                         }},
                         {RPCResult::Type::BOOL, "localrelay", "true if transaction relay is requested from peers"},
                         {RPCResult::Type::NUM, "timeoffset", "the time offset"},
-                        {RPCResult::Type::NUM, "connections", "the number of connections"},
+                        {RPCResult::Type::NUM, "connections", "the total number of connections"},
+                        {RPCResult::Type::NUM, "connections_in", "the number of inbound connections"},
+                        {RPCResult::Type::NUM, "connections_out", "the number of outbound connections"},
                         {RPCResult::Type::BOOL, "networkactive", "whether p2p networking is enabled"},
                         {RPCResult::Type::ARR, "networks", "information per network",
                         {
@@ -538,7 +540,9 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
+        obj.pushKV("connections", (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
+        obj.pushKV("connections_in", (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_IN));
+        obj.pushKV("connections_out", (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_OUT));
     }
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
