@@ -13,7 +13,7 @@ class SporkTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.setup_clean_chain = True
-        self.extra_args = [["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"], ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"], ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]]
+        self.extra_args = [["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"], [], []]
 
     def setup_network(self):
         self.setup_nodes()
@@ -35,9 +35,7 @@ class SporkTest(SyscoinTestFramework):
 
     def run_test(self):
         self.set_test_spork_state(self.nodes[0], False)
-        self.set_test_spork_state(self.nodes[1], False)
-        self.set_test_spork_state(self.nodes[2], False)
-
+        time.sleep(0.1)
         # check test spork default state
         assert(not self.get_test_spork_state(self.nodes[0]))
         assert(not self.get_test_spork_state(self.nodes[1]))
