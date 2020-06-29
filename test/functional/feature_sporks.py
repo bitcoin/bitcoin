@@ -34,24 +34,23 @@ class SporkTest(SyscoinTestFramework):
         node.spork('SPORK_9_SUPERBLOCKS_ENABLED', value)
 
     def run_test(self):
-        self.set_test_spork_state(self.nodes[0], False)
-        time.sleep(0.1)
         # check test spork default state
-        assert(not self.get_test_spork_state(self.nodes[0]))
-        assert(not self.get_test_spork_state(self.nodes[1]))
+        assert(self.get_test_spork_state(self.nodes[0]))
+        assert(self.get_test_spork_state(self.nodes[1]))
+        assert(self.get_test_spork_state(self.nodes[2]))
 
         # check spork propagation for connected nodes
         self.set_test_spork_state(self.nodes[0], True)
         time.sleep(0.1)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
+        wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)
 
         # restart nodes to check spork persistence
         self.stop_node(0)
         self.stop_node(1)
         self.start_node(0)
         self.start_node(1)
-        assert(self.get_test_spork_state(self.nodes[0]))
-        assert(self.get_test_spork_state(self.nodes[1]))
+        assert(not self.get_test_spork_state(self.nodes[0]))
+        assert(not self.get_test_spork_state(self.nodes[1]))
 
         # Generate one block to kick off masternode sync, which also starts sporks syncing for node2
         self.nodes[1].generate(1)
@@ -59,7 +58,7 @@ class SporkTest(SyscoinTestFramework):
         # connect new node and check spork propagation after restoring from cache
         connect_nodes(self.nodes[1], 2)
         time.sleep(0.1)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
+        wait_until(lambda: not self.get_test_spork_state(self.nodes[2]), timeout=10)
 
 if __name__ == '__main__':
     SporkTest().main()
