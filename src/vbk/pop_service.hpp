@@ -7,8 +7,8 @@
 #define BITCOIN_SRC_VBK_POP_SERVICE_HPP
 
 #include <map>
-#include <vector>
 #include <mutex>
+#include <vector>
 
 #include <consensus/validation.h>
 #include <script/interpreter.h>
@@ -22,10 +22,10 @@ class uint256;
 class CScript;
 
 namespace altintegration {
-struct AltPayloads;
 class ValidationState;
 struct AltTree;
 struct MemPool;
+struct PopData;
 } // namespace altintegration
 
 namespace Consensus {
@@ -52,8 +52,8 @@ struct PopService {
     virtual bool addAllBlockPayloads(const CBlockIndex* prevIndex, const CBlock& fullBlock, BlockValidationState& state) = 0;
     virtual bool setState(const uint256& block, altintegration::ValidationState& state) = 0;
 
-    virtual std::vector<altintegration::PopData> getPopData(const CBlockIndex& currentBlockIndex) = 0;
-    virtual void removePayloadsFromMempool(const std::vector<altintegration::PopData>& v_popData) = 0;
+    virtual altintegration::PopData getPopData(const CBlockIndex& currentBlockIndex) = 0;
+    virtual void removePayloadsFromMempool(const altintegration::PopData& popData) = 0;
 
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
 

@@ -12,13 +12,12 @@
 #include <chain.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
+#include <vbk/log.hpp>
 #include <vbk/util.hpp>
 #include <veriblock/alt-util.hpp>
 #include <veriblock/mempool.hpp>
 #include <veriblock/mock_miner.hpp>
-#include <vbk/log.hpp>
 
-using altintegration::AltPayloads;
 using altintegration::ATV;
 using altintegration::BtcBlock;
 using altintegration::MockMiner;
@@ -29,7 +28,8 @@ using altintegration::VTB;
 struct TestLogger : public altintegration::Logger {
     ~TestLogger() override = default;
 
-    void log(altintegration::LogLevel lvl, const std::string& msg) override {
+    void log(altintegration::LogLevel lvl, const std::string& msg) override
+    {
         fmt::printf("[pop] [%s]\t%s\n", altintegration::LevelToString(lvl), msg);
     }
 };
@@ -114,8 +114,13 @@ struct E2eFixture : public TestChain100Setup {
 
         auto& pop_mempool = pop->getMemPool();
         altintegration::ValidationState state;
-        BOOST_CHECK(pop_mempool.submitATV(atvs, state));
-        BOOST_CHECK(pop_mempool.submitVTB(vtbs, state));
+        for (const auto& atv : atvs) {
+            BOOST_CHECK(pop_mempool.submit(atv, state));
+        }
+
+        for (const auto& vtb : vtbs) {
+            BOOST_CHECK(pop_mempool.submit(vtb, state));
+        }
 
         bool isValid = false;
         return CreateAndProcessBlock({}, prevBlock, cbKey, &isValid);

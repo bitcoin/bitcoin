@@ -27,6 +27,7 @@
 #include "vbk/adaptors/univalue_json.hpp"
 #include "vbk/config.hpp"
 #include "veriblock/entities/test_case_entity.hpp"
+#include "veriblock/mempool_result.hpp"
 
 namespace VeriBlock {
 
@@ -82,15 +83,14 @@ void SaveState(std::string file_name)
 
     for (const auto& index : block_index) {
         auto alt_block = blockToAltBlock(*index);
-        std::vector<altintegration::AltPayloads> payloads;
+        altintegration::PopData popData;
         if (index->pprev) {
             CBlock block;
             if (ReadBlockFromDisk(block, index, Params().GetConsensus())) {
-                bool res = popDataToPayloads(block, *index->pprev, state, payloads);
-                assert(res);
+                popData = block.popData;
             }
         }
-        vbtc_state.alt_tree.push_back(std::make_pair(alt_block, payloads));
+        vbtc_state.alt_tree.push_back(std::make_pair(alt_block, popData));
     }
 
     std::ofstream file(file_name, std::ios::binary);
@@ -209,37 +209,30 @@ UniValue submitpop(const JSONRPCRequest& request)
 
     const UniValue& vtb_array = request.params[1].get_array();
     LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with 1 ATV and %d VTBs\n", vtb_array.size());
-    std::vector<altintegration::VTB> vtbs;
+    altintegration::PopData popData;
     for (uint32_t idx = 0u, size = vtb_array.size(); idx < size; ++idx) {
         auto& vtbhex = vtb_array[idx];
         auto vtb_bytes = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
-        vtbs.push_back(altintegration::VTB::fromVbkEncoding(vtb_bytes));
+        popData.vtbs.push_back(altintegration::VTB::fromVbkEncoding(vtb_bytes));
     }
 
     auto& atvhex = request.params[0];
     auto atv_bytes = ParseHexV(atvhex, "atv");
+    popData.atvs.push_back(altintegration::ATV::fromVbkEncoding(atv_bytes));
+
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
     auto& pop_mempool = pop_service.getMemPool();
 
     {
         LOCK(cs_main);
-        altintegration::ValidationState state;
-        altintegration::ATV atv = altintegration::ATV::fromVbkEncoding(atv_bytes);
-        if (!pop_mempool.submitATV({atv}, state)) {
-            LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
-            return "ivalid ATV";
-        }
-        if (!pop_mempool.submitVTB(vtbs, state)) {
-            LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
-            return "invalid oone of the VTB";
-        }
+        altintegration::MempoolResult result = pop_mempool.submitAll(popData);
 
         const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
-        VeriBlock::p2p::sendPopData<altintegration::ATV>(g_rpc_node->connman.get(), msgMaker, {atv});
-        VeriBlock::p2p::sendPopData<altintegration::VTB>(g_rpc_node->connman.get(), msgMaker, vtbs);
-    }
+        VeriBlock::p2p::sendPopData<altintegration::ATV>(g_rpc_node->connman.get(), msgMaker, popData.atvs);
+        VeriBlock::p2p::sendPopData<altintegration::VTB>(g_rpc_node->connman.get(), msgMaker, popData.vtbs);
 
-    return "successful added";
+        return altintegration::ToJSON<UniValue>(result);
+    }
 }
 
 UniValue debugpop(const JSONRPCRequest& request)

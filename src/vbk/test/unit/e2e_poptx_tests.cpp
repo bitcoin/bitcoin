@@ -12,7 +12,6 @@
 #include <veriblock/alt-util.hpp>
 #include <veriblock/mock_miner.hpp>
 
-using altintegration::AltPayloads;
 using altintegration::BtcBlock;
 using altintegration::MockMiner;
 using altintegration::PublicationData;
@@ -29,7 +28,8 @@ BOOST_FIXTURE_TEST_CASE(ValidBlockIsAccepted, E2eFixture)
 
     // endorse tip
     CBlock block = endorseAltBlockAndMine(tip->GetBlockHash(), 10);
-    BOOST_CHECK(block.v_popData.size() != 0);
+    BOOST_CHECK(block.popData.atvs.size() != 0);
+    BOOST_CHECK(block.popData.vtbs.size() == 10);
     {
         BOOST_REQUIRE(ChainActive().Tip()->GetBlockHash() == block.GetHash());
         auto btc = pop->getLastKnownBTCBlocks(1)[0];
@@ -40,7 +40,7 @@ BOOST_FIXTURE_TEST_CASE(ValidBlockIsAccepted, E2eFixture)
 
     // endorse another tip
     block = endorseAltBlockAndMine(tip->GetBlockHash(), 1);
-    BOOST_CHECK(block.v_popData.size() != 0);
+    BOOST_CHECK(block.popData.atvs.size() != 0);
     auto lastHash = ChainActive().Tip()->GetBlockHash();
     {
         BOOST_REQUIRE(lastHash == block.GetHash());
@@ -53,9 +53,11 @@ BOOST_FIXTURE_TEST_CASE(ValidBlockIsAccepted, E2eFixture)
     // create block that is not on main chain
     auto fork1tip = CreateAndProcessBlock({}, ChainActive().Tip()->pprev->pprev->GetBlockHash(), cbKey);
 
+    CreateAndProcessBlock({}, cbKey);
+
     // endorse block that is not on main chain
     block = endorseAltBlockAndMine(fork1tip.GetHash(), 1);
-    BOOST_CHECK(block.v_popData.size() == 0);
+    BOOST_CHECK(block.popData.atvs.size() == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -174,9 +174,7 @@ static inline int64_t GetTransactionWeight(const CTransaction& tx)
 static inline int64_t GetBlockWeight(const CBlock& block)
 {
     int64_t popDataSize = 0;
-    for (const auto& popData : block.v_popData){
-        popDataSize += VeriBlock::GetPopDataWeight(popData);
-	}
+    popDataSize += VeriBlock::GetPopDataWeight(block.popData);
 
     return ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, PROTOCOL_VERSION) - popDataSize;
 }

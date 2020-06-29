@@ -2608,8 +2608,10 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
     disconnectpool.removeForBlock(blockConnecting.vtx);
 
+
     // VeriBlock: remove from pop_mempool
-    VeriBlock::getService<VeriBlock::PopService>().removePayloadsFromMempool(blockConnecting.v_popData);
+    VeriBlock::getService<VeriBlock::PopService>().removePayloadsFromMempool(blockConnecting.popData);
+
 
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
@@ -3556,13 +3558,6 @@ bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, cons
         return false;
     }
 
-    // do not do stateful validation until the actual fork resolution
-
-    //    // VeriBlock: stateful block validation
-    //    if (!VeriBlock::getService<VeriBlock::PopService>()(block, *pindexPrev, consensusParams, state)) {
-    //        return false;
-    //    }
-
     int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST) ? pindexPrev->GetMedianTimePast() : block.GetBlockTime();
 
     // Check that all transactions are finalized
@@ -3628,9 +3623,15 @@ bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, cons
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
 
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    if (!pop.addAllBlockPayloads(pindexPrev, block, state)) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads", strprintf("Can not add POP payloads to block %s: %s", block.GetHash().ToString(), FormatStateMessage(state)));
+    {
+        LOCK(cs_main);
+        auto &pop = VeriBlock::getService<VeriBlock::PopService>();
+        if (!pop.addAllBlockPayloads(pindexPrev, block, state)) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
+                                 strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
+                                           (pindexPrev->nHeight + 1), block.GetHash().ToString(),
+                                           FormatStateMessage(state)));
+        }
     }
 
     return true;

@@ -14,6 +14,8 @@
 #include <util/system.h> // for gArgs
 #include <veriblock/config.hpp>
 
+#include "vbk/util.hpp"
+
 extern int testnetVBKstartHeight;
 extern std::vector<std::string> testnetVBKblocks;
 
@@ -39,6 +41,11 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
     uint32_t getIdentifier() const noexcept override
     {
         return 0x3ae6ca;
+    }
+
+    std::vector<uint8_t> getHash(const std::vector<uint8_t>& bytes) const noexcept override
+    {
+        return VeriBlock::headerFromBytes(bytes).GetHash().asVector();
     }
 
     altintegration::AltBlock bootstrap;

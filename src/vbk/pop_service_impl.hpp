@@ -61,13 +61,12 @@ public:
     bool addAllBlockPayloads(const CBlockIndex* indexPrev, const CBlock& fullBlock, BlockValidationState& state) override;
     bool setState(const uint256& block, altintegration::ValidationState& state) override;
 
-    std::vector<altintegration::PopData> getPopData(const CBlockIndex& currentBlockIndex) override;
-    void removePayloadsFromMempool(const std::vector<altintegration::PopData>& v_popData) override;
+    altintegration::PopData getPopData(const CBlockIndex& currentBlockIndex) override;
+    void removePayloadsFromMempool(const altintegration::PopData& popData) override;
 
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;
 };
 
-bool popDataToPayloads(const CBlock& block, const CBlockIndex& indexPrev, BlockValidationState& state, std::vector<altintegration::AltPayloads>& payloads);
 bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state);
 } // namespace VeriBlock
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP

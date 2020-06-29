@@ -78,7 +78,7 @@ public:
     // network and disk
     std::vector<CTransactionRef> vtx;
     // VeriBlock  data network and disk
-    std::vector<altintegration::PopData> v_popData;
+    altintegration::PopData popData;
 
     // memory only
     mutable bool fChecked;
@@ -101,7 +101,7 @@ public:
         READWRITEAS(CBlockHeader, *this);
         READWRITE(vtx);
         if (this->nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) {
-            READWRITE(v_popData);
+            READWRITE(popData);
         }
     }
 
@@ -109,7 +109,9 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
-        v_popData.clear();
+        popData.context.clear();
+        popData.vtbs.clear();
+        popData.atvs.clear();
         fChecked = false;
     }
 

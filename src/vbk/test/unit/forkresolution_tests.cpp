@@ -12,11 +12,10 @@
 #include <vbk/config.hpp>
 #include <vbk/pop_service.hpp>
 #include <vbk/service_locator.hpp>
-#include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/e2e_fixture.hpp>
+#include <vbk/test/util/mock.hpp>
 #include <veriblock/mock_miner.hpp>
 
-using altintegration::AltPayloads;
 using altintegration::BtcBlock;
 using altintegration::MockMiner;
 using altintegration::PublicationData;
@@ -177,7 +176,8 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_case_4_test, E2eFixture)
     BOOST_CHECK(pblock3 == ChainActive().Tip());
 }
 
-BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_invalid_1_test, E2eFixture) {
+BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_invalid_1_test, E2eFixture)
+{
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     for (int i = 0; i < config.popconfig.alt->getEndorsementSettlementInterval() + 2; ++i) {
         CreateAndProcessBlock({}, cbKey);

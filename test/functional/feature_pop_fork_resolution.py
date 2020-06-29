@@ -108,8 +108,7 @@ class PopFr(BitcoinTestFramework):
         assert_equal(self.nodes[1].getblock(containinghash[0])['hash'], containingblock['hash'])
 
         tip = self.get_best_block(self.nodes[0])
-        ## TODO check that this pop data contains in the containing block
-        ## assert txid in containingblock['tx'], "pop tx is not in containing block"
+        assert txid in containingblock['pop']['data']['atvs'], "pop tx is not in containing block"
         self.sync_blocks(self.nodes[0:1])
         self.log.info("nodes[0,1] are in sync, pop tx containing block is {}".format(containingblock['height']))
         self.log.info("node0 tip is {}".format(tip['height']))
@@ -123,12 +122,11 @@ class PopFr(BitcoinTestFramework):
         connect_nodes(self.nodes[3], 2)
         self.log.info("node3 started with 0 blocks, connected to nodes[0,2]")
 
-        self.sync_blocks(self.nodes, timeout=120)
+        self.sync_blocks(self.nodes, timeout=30)
         self.log.info("nodes[0,1,2,3] are in sync")
 
         # expected best block hash is fork A (has higher pop score)
         bestblocks = [self.get_best_block(x) for x in self.nodes]
-        print(bestblocks[2]['height'])
         assert_equal(bestblocks[0]['hash'], bestblocks[1]['hash'])
         assert_equal(bestblocks[0]['hash'], bestblocks[2]['hash'])
         assert_equal(bestblocks[0]['hash'], bestblocks[3]['hash'])

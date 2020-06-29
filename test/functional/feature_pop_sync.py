@@ -82,7 +82,7 @@ class PoPSync(BitcoinTestFramework):
 
     def assert_atvs_in_node(self, node, containingblockhash, expected):
         block = node.getblock(containingblockhash)
-        atvs = [x['atv'] for x in block['pop']['data']]
+        atvs = block['pop']['data']['atvs']
 
         for atv in expected:
             assert atv in atvs, "containing block {} does not contain ATV {}".format(containingblockhash, atv)

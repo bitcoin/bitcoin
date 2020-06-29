@@ -38,12 +38,9 @@ inline int GetPopMerkleRootCommitmentIndex(const CBlock& block)
 
 inline uint256 BlockPopDataMerkleRoot(const CBlock& block)
 {
-    std::vector<uint256> leaves(block.v_popData.size());
-    for (size_t i = 0; i < leaves.size(); ++i) {
-        auto bytes = block.v_popData[i].toVbkEncoding();
-        leaves[i] = Hash(bytes.begin(), bytes.end());
-    }
-
+    std::vector<uint256> leaves;
+    auto bytes = block.popData.toVbkEncoding();
+    leaves.push_back(Hash(bytes.begin(), bytes.end()));
 
     return ComputeMerkleRoot(std::move(leaves), nullptr);
 }

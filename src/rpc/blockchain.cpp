@@ -928,13 +928,9 @@ static UniValue getblock(const JSONRPCRequest& request)
         auto index = pop.getAltTree().getBlockIndex(block.GetHash().asVector());
         VBK_ASSERT(index);
         UniValue obj(UniValue::VOBJ);
-        UniValue arr(UniValue::VARR);
-        for(const altintegration::PopData& p: block.v_popData) {
-            arr.push_back(altintegration::ToJSON<UniValue>(p, verbosity >= 2));
-        }
 
         obj.pushKV("state", altintegration::ToJSON<UniValue>(*index));
-        obj.pushKV("data", arr);
+        obj.pushKV("data", altintegration::ToJSON<UniValue>(block.popData, verbosity >= 2));
         json.pushKV("pop", obj);
     }
 

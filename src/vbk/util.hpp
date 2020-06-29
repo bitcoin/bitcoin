@@ -90,44 +90,41 @@ bool FindPayloadInBlock(const CBlock& block, const typename T::id_t& id, T& out)
 template <>
 inline bool FindPayloadInBlock(const CBlock& block, const altintegration::VbkBlock::id_t& id, altintegration::VbkBlock& out)
 {
-    for (auto& p : block.v_popData) {
-        for (auto& blk : p.vbk_context) {
-            if (blk.getShortHash() == id) {
-                out = blk;
-                return true;
-            }
+    for (auto& blk : block.popData.context) {
+        if (blk.getShortHash() == id) {
+            out = blk;
+            return true;
         }
     }
+
     return false;
 }
 
 template <>
 inline bool FindPayloadInBlock(const CBlock& block, const altintegration::VTB::id_t& id, altintegration::VTB& out)
 {
-    for (auto& p : block.v_popData) {
-        for (auto& vtb : p.vtbs) {
-            if (vtb.getId() == id) {
-                out = vtb;
-                return true;
-            }
+    for (auto& vtb : block.popData.vtbs) {
+        if (vtb.getId() == id) {
+            out = vtb;
+            return true;
         }
     }
+
     return false;
 }
 
 template <>
 inline bool FindPayloadInBlock(const CBlock& block, const altintegration::ATV::id_t& id, altintegration::ATV& out)
 {
-    for (auto& p : block.v_popData) {
-        if (p.hasAtv) {
-            if (p.atv.getId() == id) {
-                out = p.atv;
-                return true;
-            }
+    for (auto& atv : block.popData.atvs) {
+        if (atv.getId() == id) {
+            out = atv;
+            return true;
         }
     }
     return false;
 }
+
 
 } // namespace VeriBlock
 #endif
