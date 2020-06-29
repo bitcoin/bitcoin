@@ -769,12 +769,6 @@ class DashTestFramework(SyscoinTestFramework):
         self.llmq_size = 3
         self.llmq_threshold = 2
 
-    def set_dash_dip8_activation(self, activate_after_block):
-        window = int((activate_after_block + 2) / 3)
-        threshold = int((window + 1) / 2)
-        for i in range(0, self.num_nodes):
-            self.extra_args[i].append("-vbparams=dip0008:0:999999999999:%d:%d" % (window, threshold))
-
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
         self.llmq_threshold = llmq_threshold

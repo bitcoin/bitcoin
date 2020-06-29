@@ -15,12 +15,9 @@ Simulate and check DKG errors
 class LLMQDKGErrors(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(4, 3, [["-whitelist=127.0.0.1"]] * 4, fast_dip3_enforcement=True)
-        self.set_dash_dip8_activation(10)
 
     def run_test(self):
 
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
