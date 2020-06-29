@@ -30,7 +30,7 @@ class MultiKeySporkTest(SyscoinTestFramework):
         # address(base58): mjsQJdCwq2vhZrqLYpfvY2HXM8Gsc5s74v
 
         # secret(base58): cTDfsTGAjDyPEEhSP555H1R7T4NxAgm23vt8nrJpF9pK4fkohadX
-        # address(base58): mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT4
+        # address(base58): mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT
 
         # secret(base58): cQadsocTQLUdBc7k8FsS7QNJB5vGe7K4w4RoHPi8jHAfCCn7dtXn
         # address(base58): mkV6NH5NrxZU5mpNzMCTLPqekUqtK9ApHm
@@ -45,35 +45,35 @@ class MultiKeySporkTest(SyscoinTestFramework):
 
         self.start_node(0, ["-sporkkey=cP8CHyqJpBot9W1eVZAfH5jhxACUJbTJrZo5ugyZTudpwtNYStWZ",
                             "-sporkaddr=mkV6NH5NrxZU5mpNzMCTLPqekUqtK9ApHm",
-                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT4",
+                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT",
                             "-sporkaddr=mkPTsmKU99N7QGHTpKZ39LVPSiyHE9PdGe",
                             "-sporkaddr=mjsQJdCwq2vhZrqLYpfvY2HXM8Gsc5s74v",
                             "-sporkaddr=mfwRkVL3upN5Dm69WwG8fuPQMKqUAY2JC8",
                             "-minsporkkeys=3"])
         self.start_node(1, ["-sporkkey=cP8CHyqJpBot9W1eVZAfH5jhxACUJbTJrZo5ugyZTudpwtNYStWZ",
                             "-sporkaddr=mkV6NH5NrxZU5mpNzMCTLPqekUqtK9ApHm",
-                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT4",
+                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT",
                             "-sporkaddr=mkPTsmKU99N7QGHTpKZ39LVPSiyHE9PdGe",
                             "-sporkaddr=mjsQJdCwq2vhZrqLYpfvY2HXM8Gsc5s74v",
                             "-sporkaddr=mfwRkVL3upN5Dm69WwG8fuPQMKqUAY2JC8",
                             "-minsporkkeys=3"])
         self.start_node(2, ["-sporkkey=cP8CHyqJpBot9W1eVZAfH5jhxACUJbTJrZo5ugyZTudpwtNYStWZ",
                             "-sporkaddr=mkV6NH5NrxZU5mpNzMCTLPqekUqtK9ApHm",
-                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT4",
+                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT",
                             "-sporkaddr=mkPTsmKU99N7QGHTpKZ39LVPSiyHE9PdGe",
                             "-sporkaddr=mjsQJdCwq2vhZrqLYpfvY2HXM8Gsc5s74v",
                             "-sporkaddr=mfwRkVL3upN5Dm69WwG8fuPQMKqUAY2JC8",
                             "-minsporkkeys=3"])
         self.start_node(3, ["-sporkkey=cP8CHyqJpBot9W1eVZAfH5jhxACUJbTJrZo5ugyZTudpwtNYStWZ",
                             "-sporkaddr=mkV6NH5NrxZU5mpNzMCTLPqekUqtK9ApHm",
-                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT4",
+                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT",
                             "-sporkaddr=mkPTsmKU99N7QGHTpKZ39LVPSiyHE9PdGe",
                             "-sporkaddr=mjsQJdCwq2vhZrqLYpfvY2HXM8Gsc5s74v",
                             "-sporkaddr=mfwRkVL3upN5Dm69WwG8fuPQMKqUAY2JC8",
                             "-minsporkkeys=3"])
         self.start_node(4, ["-sporkkey=cP8CHyqJpBot9W1eVZAfH5jhxACUJbTJrZo5ugyZTudpwtNYStWZ",
                             "-sporkaddr=mkV6NH5NrxZU5mpNzMCTLPqekUqtK9ApHm",
-                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT4",
+                            "-sporkaddr=mwVjo3D1KJ3AfzekUCQwqJvgm9NJi1MiZT",
                             "-sporkaddr=mkPTsmKU99N7QGHTpKZ39LVPSiyHE9PdGe",
                             "-sporkaddr=mjsQJdCwq2vhZrqLYpfvY2HXM8Gsc5s74v",
                             "-sporkaddr=mfwRkVL3upN5Dm69WwG8fuPQMKqUAY2JC8",
