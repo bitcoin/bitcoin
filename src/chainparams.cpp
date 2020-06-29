@@ -22,7 +22,6 @@
 #include <hash.h>
 #include <streams.h>
 #include <time.h>
-#include <primitives/transaction.h>
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;

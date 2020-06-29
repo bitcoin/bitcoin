@@ -38,6 +38,7 @@
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 // SYSCOIN
 #include <ctpl.h>
+#include <amount.h>
 class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool bGethTestnet;
@@ -52,6 +53,8 @@ extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
 extern bool fAssetIndex;
+extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
+extern CAmount nMNCollateralRequired;
 extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.
