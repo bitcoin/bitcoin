@@ -86,6 +86,8 @@ std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
 bool bb = true;
+int32_t DEFAULT_MN_COLLATERAL_REQUIRED = 100000;
+CAmount nMNCollateralRequired = DEFAULT_MN_COLLATERAL_REQUIRED*COIN;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
 #include <typeinfo>
 #include <univalue.h>
