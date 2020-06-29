@@ -583,7 +583,10 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
     }
 
     UniValue result(UniValue::VOBJ);
-    if (blockindex) result.pushKV("in_active_chain", in_active_chain);
+    if (blockindex) {
+        result.pushKV("in_active_chain", in_active_chain);
+        result.pushKV("blockheight", blockindex->nHeight);
+    }
 
     result.pushKV(name, altintegration::ToJSON<UniValue>(out));
     result.pushKV("blockhash", hash_block.GetHex());
