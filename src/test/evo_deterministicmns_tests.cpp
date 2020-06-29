@@ -20,29 +20,29 @@
 #include <evo/deterministicmns.h>
 #include <boost/test/unit_test.hpp>
 
-typedef std::unordered_map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
+typedef std::vector<std::pair<COutPoint, std::pair<int, CAmount>> > SimpleUTXOVec;
 
-static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
+static SimpleUTXOVec BuildSimpleUTXOVec(const std::vector<CTransactionRef>& txs)
 {
-    SimpleUTXOMap utxos;
+    SimpleUTXOVec utxos;
     for (size_t i = 0; i < txs.size(); i++) {
         auto& tx = *txs[i];
         for (size_t j = 0; j < tx.vout.size(); j++) {
             if(tx.vout[j].nValue > 0)
-                utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
+                utxos.push_back(std::make_pair(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue)));
         }
     }
     return utxos;
 }
 
-static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utxos, CAmount amount, CAmount& changeRet)
+static std::vector<COutPoint> SelectUTXOs(SimpleUTXOVec& utxos, CAmount amount, CAmount& changeRet)
 {
     changeRet = 0;
     std::vector<COutPoint> selectedUtxos;
     CAmount selectedAmount = 0;
-    auto it = utxos.cbegin();
+    auto it = utxos.begin();
     bool bFound = false;
-    while (it != utxos.cend()) {
+    while (it != utxos.end()) {
         if (::ChainActive().Height() - it->second.first < 101) {
             continue;
         }
@@ -59,7 +59,7 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utxos, CAmount amount, 
     return selectedUtxos;
 }
 
-static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const CScript& scriptPayout, CAmount amount)
+static void FundTransaction(CMutableTransaction& tx, SimpleUTXOVec& utoxs, const CScript& scriptPayout, CAmount amount)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utoxs, amount, change);
@@ -85,7 +85,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
     }
 }
 
-static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
+static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
@@ -108,7 +108,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     return tx;
 }
 
-static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpServTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
 {
     CProUpServTx proTx;
     proTx.proTxHash = proTxHash;
@@ -126,7 +126,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
     return tx;
 }
 
-static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const WitnessV0KeyHash& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRegTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const WitnessV0KeyHash& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
 
     CProUpRegTx proTx;
@@ -146,7 +146,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
     return tx;
 }
 
-static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRevTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
 {
     CProUpRevTx proTx;
     proTx.proTxHash = proTxHash;
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 
 BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
-    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
+    auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
     CTxDestination payoutDest = DecodeDestination("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
@@ -257,7 +257,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     sporkManager.SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
     sporkManager.SetPrivKey(EncodeSecret(sporkKey));
 
-    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
+    auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
 
     int nHeight = ::ChainActive().Height();
     int port = 1;
