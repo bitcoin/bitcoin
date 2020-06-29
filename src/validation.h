@@ -799,7 +799,8 @@ public:
     std::vector<CChainState*> GetAll();
 
     //! The most-work chain.
-    CChain& ActiveChain() const;
+    CChainState& ActiveChainstate() const;
+    CChain& ActiveChain() const { return ActiveChainstate().m_chain; }
     int ActiveHeight() const { return ActiveChain().Height(); }
     CBlockIndex* ActiveTip() const { return ActiveChain().Tip(); }
 
@@ -879,13 +880,13 @@ public:
 /** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
 extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
 
-/** @returns the most-work valid chainstate. */
+/** Please prefer the identical ChainstateManager::ActiveChainstate */
 CChainState& ChainstateActive();
 
-/** @returns the most-work chain. */
+/** Please prefer the identical ChainstateManager::ActiveChain */
 CChain& ChainActive();
 
-/** @returns the global block index map. */
+/** Please prefer the identical ChainstateManager::BlockIndex */
 BlockMap& BlockIndex();
 
 /** Global variable that points to the active block tree (protected by cs_main) */
