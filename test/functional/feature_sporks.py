@@ -16,7 +16,6 @@ class SporkTest(SyscoinTestFramework):
         self.extra_args = [["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"], [], []]
 
     def setup_network(self):
-        self.disable_mocktime()
         self.setup_nodes()
         # connect only 2 first nodes at start
         connect_nodes(self.nodes[0], 1)
