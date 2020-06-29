@@ -39,7 +39,6 @@ class SporkTest(SyscoinTestFramework):
         # check test spork default state
         assert(not self.get_test_spork_state(self.nodes[0]))
         assert(not self.get_test_spork_state(self.nodes[1]))
-        assert(not self.get_test_spork_state(self.nodes[2]))
 
         # check spork propagation for connected nodes
         self.set_test_spork_state(self.nodes[0], True)
