@@ -101,9 +101,7 @@ jobs:
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: thread (TSan), no gui]'
-      # Not enough memory on travis machines, so feature_block is excluded for now
       env: >-
-        TEST_RUNNER_EXTRA="--exclude feature_block"
         FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
 
     - stage: test
