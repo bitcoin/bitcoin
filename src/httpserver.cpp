@@ -21,12 +21,14 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 
+#include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
 #include <deque>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_set>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -34,6 +36,7 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/http.h>
+#include <event2/http_struct.h>
 #include <event2/keyvalq_struct.h>
 #include <event2/thread.h>
 #include <event2/util.h>
@@ -146,6 +149,10 @@ static GlobalMutex g_httppathhandlers_mutex;
 static std::vector<HTTPPathHandler> pathHandlers GUARDED_BY(g_httppathhandlers_mutex);
 //! Bound listening sockets
 static std::vector<evhttp_bound_socket *> boundSockets;
+//! Track active requests
+static GlobalMutex g_requests_mutex;
+static std::condition_variable g_requests_cv;
+static std::unordered_set<evhttp_request*> g_requests GUARDED_BY(g_requests_mutex);
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -207,6 +214,17 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
+    // Track requests and notify when a request is completed.
+    {
+        WITH_LOCK(g_requests_mutex, g_requests.insert(req));
+        g_requests_cv.notify_all();
+        evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
+            auto n{WITH_LOCK(g_requests_mutex, return g_requests.erase(req))};
+            assert(n == 1);
+            g_requests_cv.notify_all();
+        }, nullptr);
+    }
+
     // Disable reading to work around a libevent bug, fixed in 2.2.0.
     if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
         evhttp_connection* conn = evhttp_request_get_connection(req);
@@ -459,6 +477,15 @@ void StopHTTPServer()
         evhttp_del_accept_socket(eventHTTP, socket);
     }
     boundSockets.clear();
+    {
+        WAIT_LOCK(g_requests_mutex, lock);
+        if (!g_requests.empty()) {
+            LogPrint(BCLog::HTTP, "Waiting for %d requests to stop HTTP server\n", g_requests.size());
+        }
+        g_requests_cv.wait(lock, []() EXCLUSIVE_LOCKS_REQUIRED(g_requests_mutex) {
+            return g_requests.empty();
+        });
+    }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
         if (g_thread_http.joinable()) g_thread_http.join();
