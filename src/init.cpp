@@ -1880,7 +1880,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!::BlockIndex().empty() &&
+                if (!chainman.BlockIndex().empty() &&
                         !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
@@ -2258,8 +2258,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     //// debug print
     {
         LOCK(cs_main);
-        LogPrintf("block tree size = %u\n", ::BlockIndex().size());
-        chain_active_height = ::ChainActive().Height();
+        LogPrintf("block tree size = %u\n", chainman.BlockIndex().size());
+        chain_active_height = chainman.ActiveChain().Height();
     }
     LogPrintf("nBestHeight = %d\n", chain_active_height);
 
