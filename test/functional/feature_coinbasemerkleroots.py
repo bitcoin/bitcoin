@@ -37,7 +37,6 @@ class TestNode(P2PInterface):
 class LLMQCoinbaseCommitmentsTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
-        self.set_dash_dip8_activation(200)
 
     def run_test(self):
         self.test_node = self.nodes[0].add_p2p_connection(TestNode())
@@ -246,11 +245,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert(cbtx["cbTx"]["version"] == 1)
 
-        assert(self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active")
 
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(4)
-            self.sync_all()
         self.nodes[0].generate(1)
         self.sync_blocks()
 
