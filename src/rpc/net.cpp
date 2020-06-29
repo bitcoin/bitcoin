@@ -414,7 +414,7 @@ static UniValue getnettotals(const JSONRPCRequest& request)
                    {
                        {RPCResult::Type::NUM, "totalbytesrecv", "Total bytes received"},
                        {RPCResult::Type::NUM, "totalbytessent", "Total bytes sent"},
-                       {RPCResult::Type::NUM_TIME, "timemillis", "Current UNIX time in milliseconds"},
+                       {RPCResult::Type::NUM_TIME, "timemillis", "Current " + UNIX_EPOCH_TIME + " in milliseconds"},
                        {RPCResult::Type::OBJ, "uploadtarget", "",
                        {
                            {RPCResult::Type::NUM, "timeframe", "Length of the measuring timeframe in seconds"},
