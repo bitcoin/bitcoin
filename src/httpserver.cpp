@@ -149,6 +149,10 @@ static WorkQueue<HTTPClosure>* workQueue = nullptr;
 static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
 static std::vector<evhttp_bound_socket *> boundSockets;
+//! Track active requests
+static Mutex g_requests_mutex;
+static std::condition_variable g_requests_cv;
+static std::set<evhttp_request*> g_requests GUARDED_BY(g_requests_mutex);
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -213,6 +217,18 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
+    // Track requests and notify when last active request is completed.
+    {
+        LOCK(g_requests_mutex);
+        g_requests.insert(req);
+        evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
+            LOCK(g_requests_mutex);
+            auto n = g_requests.erase(req);
+            assert(n == 1);
+            if (g_requests.empty()) g_requests_cv.notify_all();
+        }, nullptr);
+    }
+
     // Disable reading to work around a libevent bug, fixed in 2.2.0.
     if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
         evhttp_connection* conn = evhttp_request_get_connection(req);
@@ -463,6 +479,12 @@ void StopHTTPServer()
         evhttp_del_accept_socket(eventHTTP, socket);
     }
     boundSockets.clear();
+    {
+        WAIT_LOCK(g_requests_mutex, lock);
+        while (!g_requests.empty()) {
+            g_requests_cv.wait(lock);
+        }
+    }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
         if (g_thread_http.joinable()) g_thread_http.join();
