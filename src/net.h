@@ -739,6 +739,7 @@ public:
 class V1TransportDeserializer final : public TransportDeserializer
 {
 private:
+    const NodeId m_node_id; // Only for logging
     mutable CHash256 hasher;
     mutable uint256 data_hash;
     bool in_data;                   // parsing header (false) or data (true)
@@ -764,8 +765,12 @@ private:
     }
 
 public:
-
-    V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+    V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, const NodeId node_id, int nTypeIn, int nVersionIn)
+        : m_node_id(node_id),
+          hdrbuf(nTypeIn, nVersionIn),
+          hdr(pchMessageStartIn),
+          vRecv(nTypeIn, nVersionIn)
+    {
         Reset();
     }
 
