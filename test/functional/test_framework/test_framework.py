@@ -717,7 +717,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         return self.config["components"].getboolean("ENABLE_ZMQ")
 
 
-MASTERNODE_COLLATERAL = 100000
+MASTERNODE_COLLATERAL = 100
 
 
 class MasternodeInfo:
@@ -756,7 +756,8 @@ class DashTestFramework(SyscoinTestFramework):
         if fast_dip3_enforcement:
             for i in range(0, num_nodes):
                 self.extra_args[i].append("-dip3params=30:50")
-
+        for i in range(0, num_nodes):
+            self.extra_args[i].append("-mncollateral=100")
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2

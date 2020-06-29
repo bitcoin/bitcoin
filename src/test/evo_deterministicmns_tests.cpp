@@ -29,7 +29,7 @@ static SimpleUTXOVec BuildSimpleUTXOVec(const std::vector<CTransactionRef>& txs)
         auto& tx = *txs[i];
         for (size_t j = 0; j < tx.vout.size(); j++) {
             if(tx.vout[j].nValue > 0)
-                utxos.push_back(std::make_pair(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue)));
+                utxos.emplace_back(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
         }
     }
     return utxos;
@@ -101,7 +101,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const 
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
-    FundTransaction(tx, utxos, scriptPayout, 100000 * COIN);
+    FundTransaction(tx, utxos, scriptPayout, 100 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);

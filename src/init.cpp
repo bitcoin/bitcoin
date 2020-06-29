@@ -526,6 +526,7 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
     gArgs.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
     gArgs.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1771,6 +1772,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // ********************************************************* Step 7: load block chain
     bool fRegTest = gArgs.GetBoolArg("-regtest", false);
     fLiteMode = gArgs.GetBoolArg("-litemode", fRegTest);
+    nMNCollateralRequired = gArgs.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
     std::string strDBName;
 
     strDBName = "sporks.dat";
