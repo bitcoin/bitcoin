@@ -22,6 +22,7 @@
 #include <hash.h>
 #include <streams.h>
 #include <time.h>
+#include <transaction.h>
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -532,6 +533,26 @@ public:
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
+    if (gArgs.IsArgSet("-mncollateral")) {
+        uint32_t collateral = gArgs.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED);
+        nMNCollateralRequired = collateral*COIN;
+    }
+    if (gArgs.IsArgSet("-dip3params")) {
+        std::string strDIP3Params = gArgs.GetArg("-dip3params", "");
+        std::vector<std::string> vDIP3Params;
+        boost::split(vDIP3Params, strDIP3Params, boost::is_any_of(":"));
+        if (vDIP3Params.size() != 2) {
+            throw std::runtime_error("DIP3 parameters malformed, expecting DIP3ActivationHeight:DIP3EnforcementHeight");
+        }
+        int nDIP3ActivationHeight, nDIP3EnforcementHeight;
+        if (!ParseInt32(vDIP3Params[0], &nDIP3ActivationHeight)) {
+            throw std::runtime_error("Invalid nDIP3ActivationHeight (%s)"), vDIP3Params[0]);
+        }
+        if (!ParseInt32(vDIP3Params[1], &nDIP3EnforcementHeight)) {
+            throw std::runtime_error("Invalid nDIP3EnforcementHeight (%s)"), vDIP3Params[1]);
+        }
+        UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
+    }
     if (gArgs.IsArgSet("-segwitheight")) {
         int64_t height = gArgs.GetArg("-segwitheight", consensus.SegwitHeight);
         if (height < -1 || height >= std::numeric_limits<int>::max()) {
