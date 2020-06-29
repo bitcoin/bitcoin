@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import copy
 
 from .authproxy import JSONRPCException
 from . import coverage
