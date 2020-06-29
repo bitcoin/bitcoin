@@ -75,15 +75,17 @@ static void FundTransaction(CMutableTransaction& tx, SimpleUTXOVec& utoxs, const
 
 static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
 {
+    LOCK(cs_main);
     FillableSigningProvider tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
-
+    std::map<COutPoint, Coin> coins;
     for (size_t i = 0; i < tx.vin.size(); i++) {
-        CTransactionRef txFrom;
-        uint256 hashBlock;
-        BOOST_ASSERT(GetTransaction(tx.vin[i].prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
-        BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
+        Coin coin;
+        GetUTXOCoin(tx.vin[i].prevout, coin);
+        coins.emplace(tx.vin[i].prevout, coin);
     }
+    std::map<int, std::string> input_errors;
+    BOOST_CHECK(SignTransaction(tx, tempKeystore, coins, SIGHASH_ALL, input_errors));
 }
 
 static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
