@@ -44,6 +44,7 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOVec& utxos, CAmount amount, 
     bool bFound = false;
     while (it != utxos.end()) {
         if (::ChainActive().Height() - it->second.first < 101) {
+            it++;
             continue;
         }
         selectedAmount += it->second.second;
