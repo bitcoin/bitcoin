@@ -29,6 +29,8 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
   def set_test_params (self):
     self.num_nodes = 2
+    # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only
+    self.extra_args = [['-dip3params=9000:9000'],['-dip3params=9000:9000']]
 
   def add_options (self, parser):
     parser.add_argument ("--segwit", dest="segwit", default=False,
