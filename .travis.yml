@@ -100,11 +100,6 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: thread (TSan), no gui]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
-
-    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: memory (MSan)]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_msan.sh"
