@@ -140,7 +140,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         Coin coin;
-        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || coin.out.nValue != 100000 * COIN) {
+        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || coin.out.nValue != nMNCollateralRequired) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
         }
 
@@ -165,7 +165,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         if (ptx.collateralOutpoint.n >= tx.vout.size()) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-index", fJustCheck);
         }
-        if (tx.vout[ptx.collateralOutpoint.n].nValue != 100000 * COIN) {
+        if (tx.vout[ptx.collateralOutpoint.n].nValue != nMNCollateralRequired) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
         }
 
