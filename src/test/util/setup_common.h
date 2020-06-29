@@ -128,12 +128,12 @@ struct TestChain100Setup : public RegTestingSetup {
 //
 struct TestChainDIP3Setup : public TestChain100Setup
 {
-    TestChainDIP3Setup() : TestChain100Setup(431) {}
+    TestChainDIP3Setup() : TestChain100Setup(149) {}
 };
 
 struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
 {
-    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(430) {}
+    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(148) {}
 };
 
 class CTxMemPoolEntry;

@@ -214,6 +214,7 @@ TestChain100Setup::TestChain100Setup(int count)
     gArgs.ForceSetArg("-segwitheight", "432");
     // SYSCOIN
     gArgs.ForceSetArg("-mncollateral", "100");
+    gArgs.ForceSetArg("-dip3params", "150:150");
     // Need to recreate chainparams
     SelectParams(CBaseChainParams::REGTEST);
 
