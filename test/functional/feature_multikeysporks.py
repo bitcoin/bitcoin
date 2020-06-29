@@ -95,7 +95,7 @@ class MultiKeySporkTest(SyscoinTestFramework):
     def run_test(self):
         # check test spork default state
         for node in self.nodes:
-            assert(self.get_test_spork_value(node) == 0)
+            assert(self.get_test_spork_value(node) == 4070908800)
 
         self.bump_mocktime(1)
         # first and second signers set spork value
@@ -110,6 +110,7 @@ class MultiKeySporkTest(SyscoinTestFramework):
         self.set_test_spork_value(self.nodes[2], 1)
         # now spork state is changed
         for node in self.nodes:
+            time.sleep(0.1)
             wait_until(lambda: self.get_test_spork_value(node) == 1, timeout=10)
 
         self.bump_mocktime(1)
@@ -119,6 +120,7 @@ class MultiKeySporkTest(SyscoinTestFramework):
         self.set_test_spork_value(self.nodes[3], 2)
         self.set_test_spork_value(self.nodes[4], 2)
         for node in self.nodes:
+            time.sleep(0.1)
             wait_until(lambda: self.get_test_spork_value(node) == 2, timeout=10)
 
 
