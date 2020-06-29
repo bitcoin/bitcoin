@@ -2,7 +2,7 @@
 # Copyright (c) 2018-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+import time
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import connect_nodes, wait_until
 
@@ -45,6 +45,7 @@ class SporkTest(SyscoinTestFramework):
 
         # check spork propagation for connected nodes
         self.set_test_spork_state(self.nodes[0], True)
+        time.sleep(0.1)
         wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
 
         # restart nodes to check spork persistence
@@ -60,6 +61,7 @@ class SporkTest(SyscoinTestFramework):
 
         # connect new node and check spork propagation after restoring from cache
         connect_nodes(self.nodes[1], 2)
+        time.sleep(0.1)
         wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
 if __name__ == '__main__':
