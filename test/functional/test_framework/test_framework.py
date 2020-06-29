@@ -33,7 +33,7 @@ from .util import (
     initialize_datadir,
     sync_blocks,
     sync_mempools,
-    set_mock_times,
+    set_node_times,
 )
 
 
