@@ -35,8 +35,8 @@ class SporkTest(SyscoinTestFramework):
 
     def run_test(self):
         self.set_test_spork_state(self.nodes[0], False)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), sleep=0.1, timeout=10)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), sleep=0.1, timeout=10)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
         # check test spork default state
         assert(not self.get_test_spork_state(self.nodes[0]))
         assert(not self.get_test_spork_state(self.nodes[1]))
@@ -44,7 +44,7 @@ class SporkTest(SyscoinTestFramework):
 
         # check spork propagation for connected nodes
         self.set_test_spork_state(self.nodes[0], True)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), sleep=0.1, timeout=10)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
 
         # restart nodes to check spork persistence
         self.stop_node(0)
@@ -59,7 +59,7 @@ class SporkTest(SyscoinTestFramework):
 
         # connect new node and check spork propagation after restoring from cache
         connect_nodes(self.nodes[1], 2)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), sleep=0.1, timeout=10)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
 if __name__ == '__main__':
     SporkTest().main()
