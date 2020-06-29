@@ -26,7 +26,6 @@ class DIP3Test(SyscoinTestFramework):
 
 
     def setup_network(self):
-        self.disable_mocktime()
         self.add_nodes(1)
         self.start_controller_node()
 
