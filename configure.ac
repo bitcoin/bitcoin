@@ -850,7 +850,21 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
                  #include <byteswap.h>
                  #endif])
 
-AC_CHECK_DECLS([__builtin_clz, __builtin_clzl, __builtin_clzll])
+AC_MSG_CHECKING(for __builtin_clzl)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+ (void) __builtin_clzl(0);
+  ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_BUILTIN_CLZL, 1, [Define this symbol if you have __builtin_clzl])],
+ [ AC_MSG_RESULT(no)]
+)
+
+AC_MSG_CHECKING(for __builtin_clzll)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+  (void) __builtin_clzll(0);
+  ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_BUILTIN_CLZLL, 1, [Define this symbol if you have __builtin_clzll])],
+ [ AC_MSG_RESULT(no)]
+)
 
 dnl Check for malloc_info (for memory statistics information in getmemoryinfo)
 AC_MSG_CHECKING(for getmemoryinfo)
