@@ -21,7 +21,7 @@ class DIP3Test(SyscoinTestFramework):
         self.setup_clean_chain = True
 
         self.extra_args = ["-budgetparams=10:10:10"]
-        self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
+        self.extra_args += ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
         self.extra_args += ["-dip3params=135:150"]
 
 

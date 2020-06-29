@@ -13,7 +13,7 @@ class SporkTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.setup_clean_chain = True
-        self.extra_args = [["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"], [], []]
+        self.extra_args = [["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"], [], []]
 
     def setup_network(self):
         self.setup_nodes()
