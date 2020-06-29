@@ -40,9 +40,9 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utxos, CAmount amount, 
     changeRet = 0;
     std::vector<COutPoint> selectedUtxos;
     CAmount selectedAmount = 0;
-    auto it = utxos.begin();
+    auto it = utxos.cbegin();
     bool bFound = false;
-    while (it != utxos.end()) {
+    while (it != utxos.cend()) {
         if (::ChainActive().Height() - it->second.first < 101) {
             continue;
         }
