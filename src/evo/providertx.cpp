@@ -195,11 +195,6 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
             return FormatSyscoinErrorMessage(state, "bad-protx-dup-key", fJustCheck);
         }
 
-        if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
-            if (ptx.keyIDOwner != ptx.keyIDVoting) {
-                return FormatSyscoinErrorMessage(state, "bad-protx-key-not-same", fJustCheck);
-            }
-        }
     }
 
     if (!CheckInputsHash(tx, ptx, state, fJustCheck)) {
@@ -344,12 +339,6 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             auto otherDmn = mnList.GetUniquePropertyMN(ptx.pubKeyOperator);
             if (ptx.proTxHash != otherDmn->proTxHash) {
                 return FormatSyscoinErrorMessage(state, "bad-protx-dup-key", fJustCheck);
-            }
-        }
-
-        if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
-            if (dmn->pdmnState->keyIDOwner != ptx.keyIDVoting) {
-                return FormatSyscoinErrorMessage(state, "bad-protx-key-not-same", fJustCheck);
             }
         }
 
