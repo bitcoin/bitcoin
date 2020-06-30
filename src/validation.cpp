@@ -51,6 +51,15 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+
+#include <ctime> // Cybersecurity Lab
+#include <univalue.h> // Cybersecurity Lab
+#include <node/context.h> // Cybersecurity Lab
+#include <rpc/blockchain.h> // Cybersecurity Lab
+#include <rpc/server.h> // Cybersecurity Lab
+#include <rpc/protocol.h> // Cybersecurity Lab
+#include <rpc/util.h> // Cybersecurity Lab
+
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
 #endif
