@@ -895,7 +895,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
             self.bump_mocktime(1)
-            self.nodes[0].generate(10)
+            self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress())
         num_simple_nodes = self.num_nodes - self.mn_count - 1
         self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
         for i in range(0, num_simple_nodes):
@@ -904,7 +904,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Activating DIP3")
         if not self.fast_dip3_enforcement:
             while self.nodes[0].getblockcount() < 500:
-                self.nodes[0].generate(10)
+                self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress())
         self.sync_all()
 
         # create masternodes

@@ -47,7 +47,7 @@ class DIP3Test(SyscoinTestFramework):
     def run_test(self):
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 100:
-            self.nodes[0].generate(10) # generate enough for collaterals
+            self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress()) # generate enough for collaterals
         self.log.info("controller node has {} syscoin".format(self.nodes[0].getbalance()))
 
         # Make sure we're below block 135 (which activates dip3)
