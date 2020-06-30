@@ -478,7 +478,16 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
         "".join("\n  {!r}".format(m) for m in pool),
     ))
 
-
+# SYSCOIN
+def force_finish_mnsync(node):
+    """
+    Masternodes won't accept incoming connections while IsSynced is false.
+    Force them to switch to this state to speed things up.
+    """
+    while True:
+        if node.mnsync("status")['IsSynced']:
+            break
+        node.mnsync("next")
 # Transaction/Block functions
 #############################
 

@@ -37,6 +37,7 @@ from .util import (
     set_node_times,
     p2p_port,
     copy_datadir,
+    force_finish_mnsync,
 )
 from concurrent.futures import ThreadPoolExecutor
 
