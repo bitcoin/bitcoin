@@ -2360,6 +2360,16 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
 // Cybersecurity lab
 static UniValue blocktimeoffset(const JSONRPCRequest& request)
 {
+            /*RPCHelpMan{"savemempool",
+                "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("savemempool", "")
+            + HelpExampleRpc("savemempool", "")
+                },
+            }.Check(request);*/
+
             RPCHelpMan{"blocktimeoffset",
                 "\nReturns the time difference from the moment it was mined, to the moment it was received.\n"
                 {},
