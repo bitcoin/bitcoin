@@ -202,12 +202,12 @@ UniValue submitpop(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
-            "submitpop [vtbs] (atv)\n"
+            "submitpop [vbk_blocks] [vtbs] [atvs]\n"
             "\nCreates and submits a PoP transaction constructed from the provided ATV and VTBs.\n"
             "\nArguments:\n"
-            "1. atvs      (array, required) Array of hex-encoded ATV record.\n"
+            "1. vbk_blocks      (array, required) Array of hex-encoded VbkBlocks records.\n"
             "2. vtbs      (array, required) Array of hex-encoded VTB records.\n"
-            "3. vbk_blocks      (array, required) Array of hex-encoded VbkBlock records.\n"
+            "3. atvs      (array, required) Array of hex-encoded ATV records.\n"
             "\nResult:\n"
             "             (string) MempoolResult\n"
             "\nExamples:\n" +
