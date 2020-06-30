@@ -35,6 +35,7 @@ from .util import (
     sync_blocks,
     sync_mempools,
     set_node_times,
+    p2p_port,
 )
 
 
