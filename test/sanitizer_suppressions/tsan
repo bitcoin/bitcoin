@@ -19,6 +19,7 @@ race:CConnman::ThreadMessageHandler
 race:fHaveGenesis
 race:ProcessNewBlock
 race:ThreadImport
+race:LoadWallet
 race:WalletBatch::WriteHDChain
 race:BerkeleyDatabase
 race:zmq::*
