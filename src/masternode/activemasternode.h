@@ -15,10 +15,7 @@
 #include <evo/providertx.h>
 
 struct CActiveMasternodeInfo;
-class CActiveMasternodeManager;
-
 extern CActiveMasternodeInfo activeMasternodeInfo;
-extern CActiveMasternodeManager* activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
@@ -64,5 +61,5 @@ public:
 private:
     bool GetLocalAddress(CService& addrRet);
 };
-
+extern std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 #endif
