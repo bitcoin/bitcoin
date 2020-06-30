@@ -2150,7 +2150,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
         std::string errorMessage = "";
-        if(!CheckSpecs(errorMessage)){
+        if(!CheckSpecs(errorMessage) && !fRegTest){
             return InitError(Untranslated(errorMessage));
         }
         std::array<char, 128> buffer;
