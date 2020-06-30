@@ -98,9 +98,9 @@ BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
     BOOST_CHECK_EQUAL(vtbs.size(), vtb_params.size());
 
     UniValue atv_empty(UniValue::VARR);
-    request.params.push_back(atv_empty);
-    request.params.push_back(vtb_params);
     request.params.push_back(vbk_blocks_params);
+    request.params.push_back(vtb_params);
+    request.params.push_back(atv_empty);
 
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
 

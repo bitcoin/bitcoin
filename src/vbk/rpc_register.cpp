@@ -217,9 +217,9 @@ UniValue submitpop(const JSONRPCRequest& request)
 
 
     altintegration::PopData popData;
-    popData.atvs = parsePayloads<altintegration::ATV>(request.params[0].get_array());
+    popData.context = parsePayloads<altintegration::VbkBlock>(request.params[0].get_array());
     popData.vtbs = parsePayloads<altintegration::VTB>(request.params[1].get_array());
-    popData.context = parsePayloads<altintegration::VbkBlock>(request.params[2].get_array());
+    popData.atvs = parsePayloads<altintegration::ATV>(request.params[2].get_array());
 
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
     auto& pop_mempool = pop_service.getMemPool();

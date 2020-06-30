@@ -85,7 +85,7 @@ def endorse_block(node, apm, height: int, addr: str) -> str:
     pub.identifier = 0x3ae6ca
     payloads = apm.endorseAltBlock(pub, last_vbk)
     vtbs = [x.toHex() for x in payloads.vtbs]
-    node.submitpop(payloads.atv.toHex(), vtbs)
+    node.submitpop([], vtbs, [payloads.atv.toHex()])
     return payloads.atv.getId()
 
 
