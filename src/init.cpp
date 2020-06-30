@@ -2147,6 +2147,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if(fLiteMode && fMasternodeMode) {
         return InitError(Untranslated("You can not start a masternode in lite mode."));
     }
+    activeMasternodeInfo.blsKeyOperator.reset();
+    activeMasternodeInfo.blsPubKeyOperator.reset();
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
         if(!fRegTest) {
@@ -2184,6 +2186,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         LogPrintf("MASTERNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
         // Create and register activeMasternodeManager, will init later in ThreadImport
+        activeMasternodeManager.reset();
         activeMasternodeManager.reset(new CActiveMasternodeManager(*node.connman));
         RegisterValidationInterface(activeMasternodeManager.get());
     } else {
