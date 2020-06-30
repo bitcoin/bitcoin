@@ -2167,8 +2167,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         if(!result.empty() && !ParseInt32(result, &resultInt))
             return InitError(Untranslated("Could not parse result from pidof"));
 
-        if(resultInt != 1)   
-            return InitError(Untranslated("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...")); 
+        if(resultInt != 1 && !fRegTest)   
+            return InitError(Untranslated("Ensure you are running this masternode in a Unix OS and that only one syscoind is running...")); 
 
         auto binKey = ParseHex(strMasterNodeBLSPrivKey);
         CBLSSecretKey keyOperator;
