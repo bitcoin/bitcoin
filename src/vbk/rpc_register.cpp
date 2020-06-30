@@ -211,7 +211,7 @@ UniValue submitpop(const JSONRPCRequest& request)
             "\nResult:\n"
             "             (string) MempoolResult\n"
             "\nExamples:\n" +
-            HelpExampleCli("submitpop", "ATV_HEX [VTB_HEX VTB_HEX]") + HelpExampleRpc("submitpop", "ATV_HEX [VTB_HEX, VTB_HEX]"));
+            HelpExampleCli("submitpop", " [VBK_HEX VBK_HEX] [VTB_HEX VTB_HEX] [ATV_HEX ATV_HEX]") + HelpExampleRpc("submitpop", "[VBK_HEX] [] [ATV_HEX ATV_HEX]"));
 
     RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VARR, UniValue::VARR});
 
