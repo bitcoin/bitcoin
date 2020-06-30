@@ -2178,20 +2178,18 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         }
         fMasternodeMode = true;
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeMasternodeInfo.blsKeyOperator->GetPublicKey());
+        activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey(keyOperator));
+        activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey(activeMasternodeInfo.blsKeyOperator->GetPublicKey()));
+       
 
         LogPrintf("MASTERNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
         // Create and register activeMasternodeManager, will init later in ThreadImport
         activeMasternodeManager.reset(new CActiveMasternodeManager(*node.connman));
         RegisterValidationInterface(activeMasternodeManager.get());
-    }
-    if (activeMasternodeInfo.blsKeyOperator == nullptr) {
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
-    }
-    if (activeMasternodeInfo.blsPubKeyOperator == nullptr) {
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+    } else {
+        activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey());
+        activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
