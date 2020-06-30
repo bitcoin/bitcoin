@@ -961,7 +961,7 @@ void InitParameterInteraction()
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -listen=1\n", __func__);
         #ifdef ENABLE_WALLET
         // masternode should not have wallet enabled
-        gArgs.ForceSetArg("-disablewallet", "0");
+        gArgs.ForceSetArg("-disablewallet", "1");
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
         #endif // ENABLE_WALLET
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
@@ -1381,9 +1381,6 @@ bool AppInitParameterInteraction()
     if (gArgs.IsArgSet("-masternodeblsprivkey")) {
         if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) && Params().RequireRoutableExternalIP()) {
             return InitError(Untranslated("Masternode must accept connections from outside, set -listen=1"));
-        }
-        if (!gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
-            return InitError(Untranslated("Masternode must have bloom filters enabled, set -peerbloomfilters=1"));
         }
         if (gArgs.GetArg("-prune", 0) > 0) {
             return InitError(Untranslated("Masternode must have no pruning enabled, set -prune=0"));
