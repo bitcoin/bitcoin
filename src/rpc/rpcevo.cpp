@@ -541,9 +541,10 @@ UniValue protx_register(const JSONRPCRequest& request)
         } else {
             CKey key;
             {
-                LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+                
                 // lets prove we own the collateral
                 LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+                LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
                 if (!spk_man.GetKey(keyID, key)) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
                 }
@@ -748,8 +749,8 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 
     CKey keyOwner;
     {
-        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
         if (!spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDOwner), keyOwner)) {
             throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(dmn->pdmnState->keyIDOwner)));
         }
