@@ -86,7 +86,7 @@ const std::vector<std::string> CHECKLEVEL_DOC {
 };
 
 // Cybersecurity Lab: The time difference from when the block was mined, to when it was received
-int64_t blockTimeOffset = 0;
+int64_t blockTimeOffset = INT_MIN;
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
     // First sort by most total work, ...

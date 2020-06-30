@@ -2355,35 +2355,6 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     return result;
 }
 
-/*
-
-static UniValue savemempool(const JSONRPCRequest& request)
-{
-            RPCHelpMan{"savemempool",
-                "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
-                {},
-                RPCResult{RPCResult::Type::NONE, "", ""},
-                RPCExamples{
-                    HelpExampleCli("savemempool", "")
-            + HelpExampleRpc("savemempool", "")
-                },
-            }.Check(request);
-
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
-
-    if (!mempool.IsLoaded()) {
-        throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
-    }
-
-    if (!DumpMempool(mempool)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
-    }
-
-    return NullUniValue;
-}
-
-*/
-
 // Cybersecurity lab
 static UniValue blocktimeoffset(const JSONRPCRequest& request)
 {
@@ -2399,11 +2370,9 @@ static UniValue blocktimeoffset(const JSONRPCRequest& request)
             }.Check(request);
 
     //LOCK(cs_main);
+    if(blockTimeOffset == INT_MIN) return NullUniValue;
     return blockTimeOffset;
 }
-
-
-
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
