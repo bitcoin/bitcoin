@@ -173,6 +173,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
     const CAmount &nHalfFee = fees / 2;
     if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
+        return;
     }
 	// miner takes 25% of the reward and half fees
 	txNew.vout[0].nValue = (blockReward*0.25);
@@ -266,7 +267,7 @@ bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &b
 
     return true;
 }
-CAmount GetBlockMNSubsidy(const CAmount nBlockReward, unsigned int nHeight, const Consensus::Params& consensusParams, unsigned int nStartHeight, CAmount& nMNSeniorityRet)
+CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, const Consensus::Params& consensusParams, unsigned int nStartHeight, CAmount& nMNSeniorityRet)
 {
     CAmount nSubsidy = nBlockReward*0.75;
     if (nHeight > 0 && nStartHeight > 0) {
