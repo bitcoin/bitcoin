@@ -40,20 +40,25 @@ if [ "$1" == "gui" ]; then
 		src/qt/bitcoin-qt -datadir="$dir" -debug=researcher
 	fi
 else
+	
+	# Only open the console if not already open
+	if ! wmctrl -l | grep -q "Custom Bitcoin Console"; then
+		# Find the right terminal
+		if [ -x "$(command -v mate-terminal)" ]; then
+			mate-terminal -t "Custom Bitcoin Console" -- python3 bitcoin_console.py
+		elif [ -x "$(command -v xfce4-terminal)" ]; then
+			xfce4-terminal -t "Custom Bitcoin Console" -- python3 bitcoin_console.py
+		else
+			gnome-terminal -t "Custom Bitcoin Console" -- python3 bitcoin_console.py
+		fi
+	fi
+
 	if [ "$pruned" == "true" ]; then
 		echo "Pruned mode activated, only keeping 550 block transactions"
 		echo
-		# Only open the console if not already open
-		if ! wmctrl -l | grep -q "Custom Bitcoin Console"; then
-			gnome-terminal -t "Custom Bitcoin Console" -- python3 bitcoin_console.py
-		fi
 		src/bitcoind -prune=550 -datadir="$dir" -debug=researcher
 	else
 		echo
-		# Only open the console if not already open
-		if ! wmctrl -l | grep -q "Custom Bitcoin Console"; then
-			gnome-terminal -t "Custom Bitcoin Console" -- python3 bitcoin_console.py
-		fi
 		src/bitcoind -datadir="$dir" -debug=researcher
 	fi
 fi
