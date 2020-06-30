@@ -2355,12 +2355,11 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     return result;
 }
 
+/*
 
-
-// Cybersecurity lab
-static UniValue blocktimeoffset(const JSONRPCRequest& request)
+static UniValue savemempool(const JSONRPCRequest& request)
 {
-            /*RPCHelpMan{"savemempool",
+            RPCHelpMan{"savemempool",
                 "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
                 {},
                 RPCResult{RPCResult::Type::NONE, "", ""},
@@ -2368,10 +2367,28 @@ static UniValue blocktimeoffset(const JSONRPCRequest& request)
                     HelpExampleCli("savemempool", "")
             + HelpExampleRpc("savemempool", "")
                 },
-            }.Check(request);*/
+            }.Check(request);
 
+    const CTxMemPool& mempool = EnsureMemPool(request.context);
+
+    if (!mempool.IsLoaded()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
+    }
+
+    if (!DumpMempool(mempool)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
+    }
+
+    return NullUniValue;
+}
+
+*/
+
+// Cybersecurity lab
+static UniValue blocktimeoffset(const JSONRPCRequest& request)
+{
             RPCHelpMan{"blocktimeoffset",
-                "\nReturns the time difference from the moment it was mined, to the moment it was received.\n"
+                "\nReturns the time difference from the moment it was mined, to the moment it was received.\n",
                 {},
                 RPCResult{
                     RPCResult::Type::NUM_TIME, "", "The time difference"},
