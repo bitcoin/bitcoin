@@ -24,7 +24,7 @@ void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 void RegisterNetProcessingRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 /** Register IP control RPC commands */
 void RegisterNet2RPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
-/** Register validation RPC commands */
+/** Register block time difference RPC command */
 void RegisterValidationRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
