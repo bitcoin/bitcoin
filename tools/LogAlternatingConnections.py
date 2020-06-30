@@ -614,14 +614,14 @@ def fetch(now):
 			if not success:
 				numSkippedSamples += 1
 				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
-				if numSkippedSamples == 1800: resetNode() # After 1800 seconds / 30 minutes, just reset
+				if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 				return ''
 
 
 		if waitForConnectionNum and numPeers != connectionSequence[maxConnections]:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {connectionSequence[maxConnections]}, attempt #{numSkippedSamples}')
-			if numSkippedSamples == 1800: resetNode() # After 1800 seconds / 30 minutes, just reset
+			if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 			return ''
 
 		getpeerinfo_raw = bitcoin('getpeerinfo')
@@ -836,7 +836,7 @@ def init():
 	print()
 	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')
 	print()
-	
+
 	print('Use the new "numconnections" in bitcoin.conf instead of "maxconnections"?')
 	print('y: numconnections: New command; strictly enforces numpeers')
 	print('n: maxconnections: Lightly enforces an upper bound to numpeers')

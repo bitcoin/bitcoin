@@ -85,6 +85,9 @@ const std::vector<std::string> CHECKLEVEL_DOC {
     "each level includes the checks of the previous levels",
 };
 
+// Cybersecurity Lab: The time difference from when the block was mined, to when it was received
+int64_t blockTimeOffset = 0;
+
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
     // First sort by most total work, ...
     if (pa->nChainWork > pb->nChainWork) return false;
@@ -3737,6 +3740,8 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
     }
     if (NotifyHeaderTip()) {
         if (::ChainstateActive().IsInitialBlockDownload() && ppindex && *ppindex) {
+            // Cybersecurity lab: Update the block time offset
+            blockTimeOffset = GetAdjustedTime() - (*ppindex)->GetBlockTime();
             LogPrintf("\nSynchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
         }
     }
@@ -5292,4 +5297,39 @@ void ChainstateManager::Reset()
     m_snapshot_chainstate.reset();
     m_active_chainstate = nullptr;
     m_snapshot_validated = false;
+}
+
+// Cybersecurity lab
+static UniValue blocktimeoffset(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"blocktimeoffset",
+                "\nReturns the time difference from the moment it was mined, to the moment it was received.\n"
+                {},
+                RPCResult{
+                    RPCResult::Type::NUM, "", "The time difference"},
+                RPCExamples{
+                    HelpExampleCli("blocktimeoffset", "")
+            + HelpExampleRpc("blocktimeoffset", "")
+                },
+            }.Check(request);
+
+    LOCK(cs_main);
+    return blockTimeOffset;
+}
+
+
+// Cybersecurity Lab
+// clang-format off
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         argNames
+  //  --------------------- ------------------------  -----------------------  ----------
+  { "z Researcher",          "blocktimeoffset",        &blocktimeoffset,          {} },
+};
+// clang-format on
+
+// Cybersecurity Lab
+void RegisterValidationRPCCommands(CRPCTable &t)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
