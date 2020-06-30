@@ -2355,6 +2355,29 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     return result;
 }
 
+
+
+// Cybersecurity lab
+static UniValue blocktimeoffset(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"blocktimeoffset",
+                "\nReturns the time difference from the moment it was mined, to the moment it was received.\n"
+                {},
+                RPCResult{
+                    RPCResult::Type::NUM, "", "The time difference"},
+                RPCExamples{
+                    HelpExampleCli("blocktimeoffset", "")
+            + HelpExampleRpc("blocktimeoffset", "")
+                },
+            }.Check(request);
+
+    //LOCK(cs_main);
+    return blockTimeOffset;
+}
+
+
+
+
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -2394,6 +2417,8 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitforblockheight",     &waitforblockheight,     {"height","timeout"} },
     { "hidden",             "syncwithvalidationinterfacequeue", &syncwithvalidationinterfacequeue, {} },
     { "hidden",             "dumptxoutset",           &dumptxoutset,           {"path"} },
+
+    { "z Researcher",       "blocktimeoffset",        &blocktimeoffset,        {} },
 };
 // clang-format on
 

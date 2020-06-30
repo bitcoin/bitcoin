@@ -51,13 +51,6 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
-#include <univalue.h> // Cybersecurity Lab
-#include <rpc/blockchain.h> // Cybersecurity Lab
-#include <rpc/server.h> // Cybersecurity Lab
-#include <rpc/protocol.h> // Cybersecurity Lab
-#include <rpc/util.h> // Cybersecurity Lab
-
-
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
 #endif
@@ -5304,39 +5297,4 @@ void ChainstateManager::Reset()
     m_snapshot_chainstate.reset();
     m_active_chainstate = nullptr;
     m_snapshot_validated = false;
-}
-
-// Cybersecurity lab
-static UniValue blocktimeoffset(const JSONRPCRequest& request)
-{
-            RPCHelpMan{"blocktimeoffset",
-                "\nReturns the time difference from the moment it was mined, to the moment it was received.\n"
-                {},
-                RPCResult{
-                    RPCResult::Type::NUM, "", "The time difference"},
-                RPCExamples{
-                    HelpExampleCli("blocktimeoffset", "")
-            + HelpExampleRpc("blocktimeoffset", "")
-                },
-            }.Check(request);
-
-    //LOCK(cs_main);
-    return blockTimeOffset;
-}
-
-
-// Cybersecurity Lab
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-  { "z Researcher",          "blocktimeoffset",        &blocktimeoffset,          {} },
-};
-// clang-format on
-
-// Cybersecurity Lab
-void RegisterValidationRPCCommands(CRPCTable &t)
-{
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
-        t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

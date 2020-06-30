@@ -24,8 +24,6 @@ void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 void RegisterNetProcessingRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 /** Register IP control RPC commands */
 void RegisterNet2RPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
-/** Register block time difference RPC command */
-void RegisterValidationRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -37,7 +35,6 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 
     RegisterNetProcessingRPCCommands(t); // Cybersecurity Lab
     RegisterNet2RPCCommands(t); // Cybersecurity Lab
-    RegisterValidationRPCCommands(t); // Cybersecurity Lab
 }
 
 #endif // BITCOIN_RPC_REGISTER_H
