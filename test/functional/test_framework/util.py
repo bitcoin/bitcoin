@@ -15,6 +15,7 @@ import os
 import random
 import re
 import time
+import shutil
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
