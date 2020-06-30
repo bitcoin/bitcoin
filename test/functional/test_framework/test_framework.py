@@ -36,6 +36,7 @@ from .util import (
     sync_mempools,
     set_node_times,
     p2p_port,
+    copy_datadir,
 )
 
 
