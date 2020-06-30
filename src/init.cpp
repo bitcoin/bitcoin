@@ -882,7 +882,6 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     }
 
     if (fMasternodeMode) {
-        assert(activeMasternodeManager);
         const CBlockIndex* pindexTip;
         {
             LOCK(cs_main);
@@ -2177,7 +2176,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         if (!keyOperator.IsValid()) {
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         }
-        fMasternodeMode = true;
         activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey(keyOperator));
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey(activeMasternodeInfo.blsKeyOperator->GetPublicKey()));
        
