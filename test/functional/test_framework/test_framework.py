@@ -868,7 +868,11 @@ class DashTestFramework(SyscoinTestFramework):
 
         # wait for all nodes to start up
         for job in jobs:
-            job.result()
+            try:
+                job.result()
+            except Exception as e:
+                self.log.exception('Error starting masternode:', repr(e))
+            
         jobs.clear()
 
         # connect nodes in parallel
