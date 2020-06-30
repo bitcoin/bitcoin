@@ -587,7 +587,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     std::map<uint256, CKey> votingKeys;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
+    pwallet->BlockUntilSyncedToCurrentChain();
     auto mnList = deterministicMNManager->GetListAtChainTip();
     mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
@@ -660,7 +660,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     }
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
+    pwallet->BlockUntilSyncedToCurrentChain();
     CKey key;
     {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);

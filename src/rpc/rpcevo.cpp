@@ -409,7 +409,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
+    pwallet->BlockUntilSyncedToCurrentChain();
     if (isExternalRegister || isFundRegister) {
         EnsureWalletIsUnlocked(pwallet);
     }
@@ -712,7 +712,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
+    pwallet->BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(pwallet);
 
     CProUpRegTx ptx;
