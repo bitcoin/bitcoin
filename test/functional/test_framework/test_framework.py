@@ -39,7 +39,6 @@ from .util import (
     copy_datadir,
     force_finish_mnsync,
 )
-from concurrent.futures import ThreadPoolExecutor
 
 class TestStatus(Enum):
     PASSED = 1
@@ -853,38 +852,21 @@ class DashTestFramework(SyscoinTestFramework):
         start_idx = len(self.nodes)
 
         self.add_nodes(self.mn_count)
-        executor = ThreadPoolExecutor(max_workers=20)
-
+    
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
             connect_nodes(self.mninfo[idx].node, 0)
 
-        jobs = []
 
         # start up nodes in parallel
         for idx in range(0, self.mn_count):
             self.mninfo[idx].nodeIdx = idx + start_idx
-            jobs.append(executor.submit(self.start_masternode, self.mninfo[idx]))
+            self.start_masternode(self.mninfo[idx])
 
-        # wait for all nodes to start up
-        for job in jobs:
-            try:
-                job.result()
-            except Exception as e:
-                self.log.exception('Error starting masternode:', repr(e))
-            
-        jobs.clear()
 
-        # connect nodes in parallel
         for idx in range(0, self.mn_count):
-            jobs.append(executor.submit(do_connect, idx))
+            do_connect(idx)
 
-        # wait for all nodes to connect
-        for job in jobs:
-            job.result()
-        jobs.clear()
-
-        executor.shutdown()
 
     def start_masternode(self, mninfo, extra_args=None):
         args = ['-masternodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
