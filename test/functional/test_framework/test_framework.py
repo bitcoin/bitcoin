@@ -763,7 +763,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
             for i in range(0, num_nodes):
-                self.extra_args[i].append("-dip3params=30:50")
+                self.extra_args[i].append("-dip3params=135:150")
         for i in range(0, num_nodes):
             self.extra_args[i].append("-mncollateral=100")
         # LLMQ default test params (no need to pass -llmqtestparams)
