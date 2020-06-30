@@ -694,6 +694,19 @@ int main(int argc, char *argv[])
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
+    // Validate/set font family
+    if (gArgs.IsArgSet("-font-family")) {
+        GUIUtil::FontFamily family;
+        QString strFamily = gArgs.GetArg("-font-family", GUIUtil::fontFamilyToString(GUIUtil::getFontFamilyDefault()).toStdString()).c_str();
+        try {
+            family = GUIUtil::fontFamilyFromString(strFamily);
+        } catch (const std::exception& e) {
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                                  QObject::tr("Error: Specified font-family invalid. Valid values: %1.").arg("SystemDefault, Montserrat"));
+            return EXIT_FAILURE;
+        }
+        GUIUtil::setFontFamily(family);
+    }
     // Validate/set normal font weight
     if (gArgs.IsArgSet("-font-weight-normal")) {
         QFont::Weight weight;
