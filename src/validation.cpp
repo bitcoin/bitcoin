@@ -2487,7 +2487,10 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
         }
         if (nUpgraded > 0)
             AppendWarning(warning_messages, strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
-    }
+
+    // Cybersecurity lab: Update the block time offset
+    blockTimeOffset = GetAdjustedTime() - pindexNew->GetBlockTime();
+
     LogPrintf("\n%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n", __func__,
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
       log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
@@ -3740,8 +3743,6 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
     }
     if (NotifyHeaderTip()) {
         if (::ChainstateActive().IsInitialBlockDownload() && ppindex && *ppindex) {
-            // Cybersecurity lab: Update the block time offset
-            blockTimeOffset = GetAdjustedTime() - (*ppindex)->GetBlockTime();
             LogPrintf("\nSynchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
         }
     }
