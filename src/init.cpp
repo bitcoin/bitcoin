@@ -391,6 +391,7 @@ void Shutdown(NodeContext& node)
     // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
     activeMasternodeInfo.blsKeyOperator.reset();
     activeMasternodeInfo.blsPubKeyOperator.reset();
+    activeMasternodeManager.reset();
     try {
         if (!fs::remove(GetPidFile())) {
             LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
@@ -2183,8 +2184,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         LogPrintf("MASTERNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
         // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = new CActiveMasternodeManager(*node.connman);
-        RegisterValidationInterface(activeMasternodeManager);
+        activeMasternodeManager.reset(new CActiveMasternodeManager(*node.connman));
+        RegisterValidationInterface(activeMasternodeManager.get());
     }
     if (activeMasternodeInfo.blsKeyOperator == nullptr) {
         activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
