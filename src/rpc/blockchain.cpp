@@ -2364,7 +2364,7 @@ static UniValue blocktimeoffset(const JSONRPCRequest& request)
                 "\nReturns the time difference from the moment it was mined, to the moment it was received.\n"
                 {},
                 RPCResult{
-                    RPCResult::Type::NUM, "", "The time difference"},
+                    RPCResult::Type::NUM_TIME, "", "The time difference"},
                 RPCExamples{
                     HelpExampleCli("blocktimeoffset", "")
             + HelpExampleRpc("blocktimeoffset", "")
