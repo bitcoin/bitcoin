@@ -407,7 +407,9 @@ UniValue protx_register(const JSONRPCRequest& request)
     }
 
 
-
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
     if (isExternalRegister || isFundRegister) {
         EnsureWalletIsUnlocked(pwallet);
     }
@@ -441,9 +443,8 @@ UniValue protx_register(const JSONRPCRequest& request)
 
         ptx.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
         paramIdx += 2;
-
         // TODO unlock on failure
-        LOCK(pwallet->cs_wallet);
+        LOCK( pwallet->cs_wallet);
         pwallet->LockCoin(ptx.collateralOutpoint);
     }
 
@@ -538,13 +539,14 @@ UniValue protx_register(const JSONRPCRequest& request)
             ret.pushKV("signMessage", ptx.MakeSignString());
             return ret;
         } else {
-            // lets prove we own the collateral
-            LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-            LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
             CKey key;
-            if (!spk_man.GetKey(keyID, key)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
+            {
+                LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+                // lets prove we own the collateral
+                LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+                if (!spk_man.GetKey(keyID, key)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
+                }
             }
             SignSpecialTxPayloadByString(tx, ptx, key);
             SetTxPayload(tx, ptx);
@@ -708,7 +710,9 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
         protx_update_registrar_help(request);
     }
 
-
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(pwallet);
 
     CProUpRegTx ptx;
@@ -739,13 +743,16 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
         }
         ptx.scriptPayout = GetScriptForDestination(payoutDest);
     }
-
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+    
+    
 
     CKey keyOwner;
-    if (!spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDOwner), keyOwner)) {
-        throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(dmn->pdmnState->keyIDOwner)));
+    {
+        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+        LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+        if (!spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDOwner), keyOwner)) {
+            throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(dmn->pdmnState->keyIDOwner)));
+        }
     }
 
     CMutableTransaction tx;
@@ -882,7 +889,6 @@ static bool CheckWalletOwnsKey(CWallet* pwallet, const WitnessV0KeyHash& keyID) 
         return false;
     }
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
     return spk_man.IsMine(GetScriptForDestination(CTxDestination(keyID)));
 #endif
@@ -896,7 +902,6 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
         return false;
     }
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
     return spk_man.IsMine(script);
 #endif

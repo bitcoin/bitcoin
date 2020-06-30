@@ -585,7 +585,9 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     std::map<uint256, CKey> votingKeys;
-
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
     auto mnList = deterministicMNManager->GetListAtChainTip();
     mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
@@ -656,13 +658,18 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
     }
-
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
     CKey key;
-    if (!spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(dmn->pdmnState->keyIDVoting)));
+    {
+        LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+
+        
+        if (!spk_man.GetKey(CKeyID(dmn->pdmnState->keyIDVoting), key)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(dmn->pdmnState->keyIDVoting)));
+        }
     }
 
     std::map<uint256, CKey> votingKeys;
