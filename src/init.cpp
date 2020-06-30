@@ -372,7 +372,7 @@ void Shutdown(NodeContext& node)
         pdsNotificationInterface = nullptr;
     }
     if (fMasternodeMode) {
-        UnregisterValidationInterface(activeMasternodeManager);
+        UnregisterValidationInterface(activeMasternodeManager.get());
     }
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
