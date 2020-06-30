@@ -4,27 +4,28 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/test/unit_test.hpp>
-#include <fstream>
-#include <thread>
-#include <chrono>
 #include <chainparams.h>
+#include <chrono>
 #include <consensus/merkle.h>
+#include <fstream>
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <test/util/setup_common.h>
+#include <thread>
 #include <univalue.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
 #include <vbk/service_locator.hpp>
-#include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/e2e_fixture.hpp>
+#include <vbk/test/util/mock.hpp>
 
 #include <string>
 #include <vbk/init.hpp>
 #include <vbk/merkle.hpp>
 
 #include "veriblock/entities/test_case_entity.hpp"
+#include <vbk/test/util/e2e_fixture.hpp>
 
 UniValue CallRPC(std::string args);
 
@@ -51,34 +52,64 @@ BOOST_AUTO_TEST_CASE(getpopdata_test)
     //
     //    BOOST_CHECK(find_value(result.get_obj(), "raw_contextinfocontainer").get_str() == HexStr(authedContext.begin(), authedContext.end()));
     //    BOOST_CHECK(find_value(result.get_obj(), "block_header").get_str() == HexStr(ssBlock));
-
 }
 
-BOOST_AUTO_TEST_CASE(submitpop_test)
+BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
 {
-    //    JSONRPCRequest request;
-    //    request.strMethod = "submitpop";
-    //    request.params = UniValue(UniValue::VARR);
-    //    request.fHelp = false;
-    //
-    //    std::vector<uint8_t> atv(100, 1);
-    //    std::vector<uint8_t> vtb(100, 2);
-    //
-    //    UniValue vtbs_params(UniValue::VARR);
-    //    vtbs_params.push_back(HexStr(vtb));
-    //
-    //    request.params.push_back(HexStr(atv));
-    //    request.params.push_back(vtbs_params);
-    //
-    //    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
-    //
-    //    UniValue result;
-    //    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
-    //
-    //    uint256 popTxHash;
-    //    popTxHash.SetHex(result.get_str());
-    //
-    //    BOOST_CHECK(mempool.exists(popTxHash));
+    JSONRPCRequest request;
+    request.strMethod = "submitpop";
+    request.params = UniValue(UniValue::VARR);
+    request.fHelp = false;
+
+    uint32_t generateVtbs = 20;
+    std::vector<VTB> vtbs;
+    vtbs.reserve(generateVtbs);
+    std::generate_n(std::back_inserter(vtbs), generateVtbs, [&]() {
+        return endorseVbkTip();
+    });
+
+    BOOST_CHECK_EQUAL(vtbs.size(), generateVtbs);
+
+    std::vector<altintegration::VbkBlock> vbk_blocks;
+    for (const auto& vtb : vtbs) {
+        for (const auto& b : vtb.context) {
+            vbk_blocks.push_back(b);
+        }
+        vbk_blocks.push_back(vtb.containingBlock);
+    }
+
+    BOOST_CHECK(!vbk_blocks.empty());
+
+    UniValue vbk_blocks_params(UniValue::VARR);
+    for (const auto& b : vbk_blocks) {
+        altintegration::WriteStream stream;
+        b.toVbkEncoding(stream);
+        vbk_blocks_params.push_back(HexStr(stream.data()));
+    }
+
+    UniValue vtb_params(UniValue::VARR);
+    for (const auto& vtb : vtbs) {
+        altintegration::WriteStream stream;
+        vtb.toVbkEncoding(stream);
+        vtb_params.push_back(HexStr(stream.data()));
+    }
+
+    BOOST_CHECK_EQUAL(vbk_blocks.size(), vbk_blocks_params.size());
+    BOOST_CHECK_EQUAL(vtbs.size(), vtb_params.size());
+
+    UniValue atv_empty(UniValue::VARR);
+    request.params.push_back(vbk_blocks_params);
+    request.params.push_back(vtb_params);
+    request.params.push_back(atv_empty);
+
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+
+    UniValue result;
+    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+
+    BOOST_CHECK_EQUAL(result["atvs"].size(), 0);
+    BOOST_CHECK_EQUAL(result["vtbs"].size(), vtbs.size());
+    BOOST_CHECK_EQUAL(result["vbkblocks"].size(), vbk_blocks.size());
 }
 
 BOOST_FIXTURE_TEST_CASE(savepopstate_test, E2eFixture)
@@ -96,7 +127,6 @@ BOOST_FIXTURE_TEST_CASE(savepopstate_test, E2eFixture)
     BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
     block = this->CreateAndProcessBlock({}, cbKey);
     BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
-    auto* newTip = ChainActive().Tip();
 
     ReconsiderTestBlock(oldTip);
 
@@ -110,9 +140,8 @@ BOOST_FIXTURE_TEST_CASE(savepopstate_test, E2eFixture)
         SetRPCWarmupFinished();
     }
 
-    UniValue result;
-    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
-    
+    BOOST_CHECK_NO_THROW(tableRPC.execute(request));
+
     std::ifstream file(file_name, std::ios::binary | std::ios::ate);
     size_t fsize = file.tellg();
     file.seekg(0, std::ios::beg);
