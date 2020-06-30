@@ -86,8 +86,6 @@ bool WalletInit::ParameterInteraction() const
         }
 
         return true;
-    } else if (gArgs.IsArgSet("-masternodeblsprivkey")) {
-        return InitError(_("You can not start a masternode with wallet enabled."));
     }
 
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
