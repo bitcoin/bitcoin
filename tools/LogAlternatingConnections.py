@@ -652,7 +652,7 @@ def fetch(now):
 				return ''
 
 
-		if waitForConnectionNum and numPeers != connectionSequence[maxConnections]:
+		if waitForConnectionNum and numPeers < connectionSequence[maxConnections]:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {connectionSequence[maxConnections]}, attempt #{numSkippedSamples}')
 			if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
