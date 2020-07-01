@@ -179,10 +179,8 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet)
 {
-    LogPrintf("BuildSimplifiedMNListDiff\n");
     AssertLockHeld(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
-    LogPrintf("BuildSimplifiedMNListDiff1\n");
     const CBlockIndex* baseBlockIndex = ::ChainActive().Genesis();
     if (!baseBlockHash.IsNull()) {
         baseBlockIndex = LookupBlockIndex(baseBlockHash);
@@ -191,13 +189,11 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
             return false;
         }
     }
-    LogPrintf("BuildSimplifiedMNListDiff2\n");
     const CBlockIndex* blockIndex = LookupBlockIndex(blockHash);
     if (!blockIndex) {
         errorRet = strprintf("block %s not found", blockHash.ToString());
         return false;
     }
-LogPrintf("BuildSimplifiedMNListDiff3\n");
     if (!::ChainActive().Contains(baseBlockIndex) || !::ChainActive().Contains(blockIndex)) {
         errorRet = strprintf("block %s and %s are not in the same chain", baseBlockHash.ToString(), blockHash.ToString());
         return false;
@@ -206,13 +202,11 @@ LogPrintf("BuildSimplifiedMNListDiff3\n");
         errorRet = strprintf("base block %s is higher then block %s", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }
-LogPrintf("BuildSimplifiedMNListDiff4\n");
     LOCK(deterministicMNManager->cs);
 
     auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockIndex);
     auto dmnList = deterministicMNManager->GetListForBlock(blockIndex);
     mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList);
-LogPrintf("BuildSimplifiedMNListDiff5\n");
     // We need to return the value that was provided by the other peer as it otherwise won't be able to recognize the
     // response. This will usually be identical to the block found in baseBlockIndex. The only difference is when a
     // null block hash was provided to get the diff from the genesis block.
@@ -222,7 +216,6 @@ LogPrintf("BuildSimplifiedMNListDiff5\n");
         errorRet = strprintf("failed to build quorums diff");
         return false;
     }
-LogPrintf("BuildSimplifiedMNListDiff6\n");
     // TODO store coinbase TX in CBlockIndex
     CBlock block;
     if (!ReadBlockFromDisk(block, blockIndex, Params().GetConsensus())) {
@@ -234,7 +227,7 @@ LogPrintf("BuildSimplifiedMNListDiff6\n");
         mnListDiffRet.merkleRootMNList = cbTxPayload.merkleRootMNList;
         mnListDiffRet.merkleRootQuorums = cbTxPayload.merkleRootQuorums;
     }
-LogPrintf("BuildSimplifiedMNListDiff7\n");
+    mnListDiffRet.cbTxHash = block.vtx[0]->GetHash();
 
     std::vector<uint256> vHashes;
     std::vector<bool> vMatch(block.vtx.size(), false);
@@ -243,6 +236,5 @@ LogPrintf("BuildSimplifiedMNListDiff7\n");
     }
     vMatch[0] = true; // only coinbase matches
     mnListDiffRet.cbTxMerkleTree = CPartialMerkleTree(vHashes, vMatch);
-LogPrintf("BuildSimplifiedMNListDiff8\n");
     return true;
 }
