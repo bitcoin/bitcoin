@@ -208,7 +208,9 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         assert_equal(d.blockHash, int(blockHash, 16))
 
         # Check that the merkle proof is valid
-        proof = CMerkleBlock(header, d.merkleProof)
+        proof = CMerkleBlock()
+        proof.header = header
+        proof.txn = d.merkleProof
         proof = proof.serialize().hex()
         assert_equal(self.nodes[0].verifytxoutproof(proof), [d.cbTx.hash])
 
