@@ -23,7 +23,7 @@ import logging
 import struct
 import sys
 import threading
-
+import time
 from test_framework.messages import (
     CBlockHeader,
     MIN_VERSION_SUPPORTED,
@@ -533,7 +533,8 @@ class P2PInterface(P2PConnection):
             if not all_ok and wait_proc is not None:
                 wait_proc()
             return all_ok
-        self.wait_until(check_quorum_connections, timeout=timeout, sleep=1)
+        time.sleep(1)
+        self.wait_until(check_quorum_connections, timeout=timeout)
 
     def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
         def check_probes():
@@ -569,7 +570,8 @@ class P2PInterface(P2PConnection):
                                 return ret()
 
             return True
-        self.wait_until(check_probes, timeout=timeout, sleep=1)
+        time.sleep(1)
+        self.wait_until(check_probes, timeout=timeout)
 
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
         def check_dkg_session():
@@ -597,7 +599,8 @@ class P2PInterface(P2PConnection):
             if all_ok and member_count != expected_member_count:
                 return False
             return all_ok
-        self.wait_until(check_dkg_session, timeout=timeout, sleep=sleep)
+        time.sleep(sleep)
+        self.wait_until(check_dkg_session, timeout=timeout)
 
     def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15):
         def check_dkg_comitments():
@@ -616,7 +619,8 @@ class P2PInterface(P2PConnection):
                     all_ok = False
                     break
             return all_ok
-        self.wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
+        time.sleep(0.1)
+        self.wait_until(check_dkg_comitments, timeout=timeout)
 
     def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None):
         if expected_members is None:
