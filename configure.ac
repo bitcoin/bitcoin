@@ -229,16 +229,6 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=$enableval],
   [use_zmq=yes])
 
-AC_ARG_ENABLE([bip70],
-  [AS_HELP_STRING([--enable-bip70],
-  [BIP70 (payment protocol) support in the GUI (no longer supported)])],
-  [enable_bip70=$enableval],
-  [enable_bip70=no])
-
-if test x$enable_bip70 != xno; then
-  AC_MSG_ERROR([BIP70 is no longer supported!])
-fi
-
 AC_ARG_WITH([libmultiprocess],
   [AS_HELP_STRING([--with-libmultiprocess=yes|no|auto],
   [Build with libmultiprocess library. (default: auto, i.e. detect with pkg-config)])],
