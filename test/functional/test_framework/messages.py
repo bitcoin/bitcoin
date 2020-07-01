@@ -1731,7 +1731,6 @@ class msg_mnlistdiff():
     def __init__(self):
         self.baseBlockHash = 0
         self.blockHash = 0
-        self.cbTxHash = 0
         self.merkleProof = CPartialMerkleTree()
         self.deletedMNs = []
         self.mnList = []
@@ -1761,7 +1760,6 @@ class msg_mnlistdiff():
             qc = CFinalCommitment()
             qc.deserialize(f)
             self.newQuorums.append(qc)
-        self.cbTxHash = deser_uint256(f)
         self.merkleRootMNList = deser_uint256(f)
         self.merkleRootQuorums = deser_uint256(f)
 
