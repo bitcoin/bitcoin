@@ -1446,7 +1446,7 @@ bool AppInitLockDataDirectory()
 
 bool AppInitMain(const util::Ref& context, NodeContext& node)
 {
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     const CChainParams& chainparams = Params();
     // SYSCOIN
     std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
@@ -1459,7 +1459,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         // Detailed error printed inside CreatePidFile().
         return false;
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
         myfile << "2\n";
     myfile.close();
  
@@ -1470,7 +1470,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             LogInstance().ShrinkDebugFile();
         }
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
         myfile << "3\n";
     myfile.close();
 
@@ -1509,7 +1509,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                   "also be data loss if syscoin is started while in a temporary directory.\n",
             gArgs.GetArg("-datadir", ""), fs::current_path().string());
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "4\n";
     myfile.close();
 
@@ -1561,7 +1561,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             return InitError(_("Unable to sign spork message, wrong key?"));
         }
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "5\n";
     myfile.close();
 
@@ -1621,7 +1621,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // until the very end ("start node") as the UTXO/block state
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "6\n";
     myfile.close();
 
@@ -1667,7 +1667,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 SetReachable(net, false);
         }
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "7\n";
     myfile.close();
 
@@ -1754,7 +1754,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     } else {
         LogPrintf("Using /16 prefix for IP bucketing\n");
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "8\n";
     myfile.close();
 
@@ -2060,7 +2060,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             }
         }
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "9\n";
     myfile.close();
 
@@ -2096,7 +2096,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             return false;
         }
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "10\n";
     myfile.close();
 
@@ -2132,7 +2132,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
         return false;
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
         myfile << "11\n";
     myfile.close();
 
@@ -2182,7 +2182,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if(fLiteMode) {
         LogPrintf("You are starting in lite mode, all governance validation functionality is disabled.\n");
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "12\n";
     myfile.close();
 
@@ -2236,7 +2236,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
     LogPrintf("fLiteMode %d\n", fLiteMode);
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "13\n";
     myfile.close();
 
@@ -2299,7 +2299,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if (!fLiteMode) {
         node.scheduler->scheduleEvery([&] { governance.DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
         myfile << "14\n";
     myfile.close();
 
@@ -2325,7 +2325,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if (gArgs.GetBoolArg("-upnp", DEFAULT_UPNP)) {
         StartMapPort();
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "15\n";
     myfile.close();
 
@@ -2391,7 +2391,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     for (const auto& client : node.chain_clients) {
         client->start(*node.scheduler);
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "16\n";
     myfile.close();
 
@@ -2413,7 +2413,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     } else {
         SetSYSXAssetForUnitTests(gArgs.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
     }
-    myfile.open(GetDataDir().string() + "/output.log", std::ofstream::out | std::ofstream::app);
+    myfile.open("output.log");
     myfile << "17\n";
     myfile.close();
     
