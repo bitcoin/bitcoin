@@ -213,8 +213,6 @@ void Shutdown(NodeContext& node)
         node.connman->StopNodes();
     }
 
-    StopTorControl();
-
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue, threadGroup and load block thread.
     if (node.scheduler) node.scheduler->stop();
@@ -222,6 +220,7 @@ void Shutdown(NodeContext& node)
     threadGroup.interrupt_all();
     threadGroup.join_all();
 
+    StopTorControl();
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
     node.peer_logic.reset();
@@ -1316,9 +1315,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     assert(!node.scheduler);
     node.scheduler = MakeUnique<CScheduler>();
 
-    // Start the lightweight task scheduler thread
+    // Start two lightweight task scheduler threads
     CScheduler::Function serviceLoop = [&node]{ node.scheduler->serviceQueue(); };
-    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
+    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler1", serviceLoop));
+    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler2", serviceLoop));
 
     // Gather some entropy once per minute.
     node.scheduler->scheduleEvery([]{
@@ -1874,8 +1874,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     }
     LogPrintf("nBestHeight = %d\n", chain_active_height);
 
-    if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
-        StartTorControl();
+    if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+        std::chrono::system_clock::time_point no_time = std::chrono::system_clock::time_point::min();
+        node.scheduler->schedule([&] { StartTorControl(); }, no_time);
+    }
 
     Discover();
 

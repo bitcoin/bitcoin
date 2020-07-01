@@ -340,7 +340,7 @@ private:
     bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const std::vector<CService>& binds, const std::vector<NetWhitebindPermissions>& whiteBinds);
-    void ThreadOpenAddedConnections();
+    void OpenAddedConnections(CScheduler& scheduler);
     void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
     void ThreadOpenConnections(std::vector<std::string> connect);
@@ -416,6 +416,11 @@ private:
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
+    // Keep track of the current round of opening connections
+    // to added nodes.
+    std::vector<AddedNodeInfo> added_connection_queue;
+    bool connection_was_attempted{false};
+
     /**
      * Services this instance offers.
      *
@@ -464,7 +469,6 @@ private:
 
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
-    std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
 
