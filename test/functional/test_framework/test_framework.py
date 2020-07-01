@@ -976,14 +976,16 @@ class DashTestFramework(SyscoinTestFramework):
                 return node.getrawtransaction(txid)
             except:
                 return False
-        if wait_until(check_tx, timeout=timeout, sleep=0.5, do_assert=expected) and not expected:
+        time.sleep(0.5)
+        if wait_until(check_tx, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
-        wait_until(check_sporks_same, timeout=timeout, sleep=0.5)
+        time.sleep(0.5)
+        wait_until(check_sporks_same, timeout=timeout)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None):
         def check_quorum_connections():
