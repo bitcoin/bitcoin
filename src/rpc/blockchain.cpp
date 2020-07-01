@@ -48,6 +48,7 @@
 // SYSCOIN
 #include <wallet/context.h>
 #include <services/asset.h>
+#include <evo/specialtx.h>
 struct CUpdatedBlock
 {
     uint256 hash;
@@ -215,7 +216,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("tx", txs);
     // SYSCOIN
     CCbTx cbTx;
-    if (GetTxPayload(*block.vtx[0], cbTx) {
+    if (GetTxPayload(*block.vtx[0], cbTx)) {
         UniValue cbTxObj;
         cbTx.ToJson(cbTxObj);
         result.pushKV("cbTx", cbTxObj);
