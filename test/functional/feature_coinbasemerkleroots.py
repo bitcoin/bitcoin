@@ -212,14 +212,13 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         proof.header = header
         proof.txn = d.merkleProof
         proof = proof.serialize().hex()
-        assert_equal(self.nodes[0].verifytxoutproof(proof), [d.cbTx.hash])
+        assert_equal(self.nodes[0].verifytxoutproof(proof), [d.cbTxHash])
 
         # Check if P2P messages match with RPCs
         d2 = self.nodes[0].protx("diff", baseBlockHash, blockHash)
         assert_equal(d2["baseBlockHash"], baseBlockHash)
         assert_equal(d2["blockHash"], blockHash)
         assert_equal(d2["cbTxMerkleTree"], d.merkleProof.serialize().hex())
-        assert_equal(d2["cbTx"], d.cbTx.serialize().hex())
         assert_equal(set([int(e, 16) for e in d2["deletedMNs"]]), set(d.deletedMNs))
         assert_equal(set([int(e["proRegTxHash"], 16) for e in d2["mnList"]]), set([e.proRegTxHash for e in d.mnList]))
         assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["deletedQuorums"]]), set(d.deletedQuorums))
