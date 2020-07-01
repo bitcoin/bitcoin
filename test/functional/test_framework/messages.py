@@ -1686,7 +1686,7 @@ class msg_blocktxn:
 
 
 class msg_getmnlistd():
-    command = b"getmnlistd"
+    msgtype = b"getmnlistd"
 
     def __init__(self, baseBlockHash=0, blockHash=0):
         self.baseBlockHash = baseBlockHash
@@ -1708,7 +1708,7 @@ class msg_getmnlistd():
 QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
 
 class msg_mnlistdiff():
-    command = b"mnlistdiff"
+    msgtype = b"mnlistdiff"
 
     def __init__(self):
         self.baseBlockHash = 0
