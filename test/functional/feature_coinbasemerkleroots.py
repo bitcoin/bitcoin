@@ -5,6 +5,7 @@
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal
+from test_framework.messages import FromHex
 
 '''
 dip4-coinbasemerkleroots.py
@@ -165,15 +166,12 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         for e in d.mnList:
             newMNList[format(e.proRegTxHash, '064x')] = e
 
-        cbtx = CCbTx()
-        cbtx.deserialize(BytesIO(d.cbTx.vExtraPayload))
-
         # Verify that the merkle root matches what we locally calculate
         hashes = []
         for mn in sorted(newMNList.values(), key=lambda mn: ser_uint256(mn.proRegTxHash)):
             hashes.append(hash256(mn.serialize()))
         merkleRoot = CBlock.get_merkle_root(hashes)
-        assert_equal(merkleRoot, cbtx.merkleRootMNList)
+        assert_equal(merkleRoot, d.merkleRootMNList)
 
         return newMNList
 
@@ -191,15 +189,12 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         for e in d.newQuorums:
             newQuorumList[QuorumId(e.llmqType, e.quorumHash)] = e
 
-        cbtx = CCbTx()
-        cbtx.deserialize(BytesIO(d.cbTx.vExtraPayload))
-
         hashes = []
         for qc in newQuorumList.values():
             hashes.append(hash256(qc.serialize()))
         hashes.sort()
         merkleRoot = CBlock.get_merkle_root(hashes)
-        assert_equal(merkleRoot, cbtx.merkleRootQuorums)
+        assert_equal(merkleRoot, d.merkleRootQuorums)
 
         return newQuorumList
 
