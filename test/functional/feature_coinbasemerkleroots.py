@@ -232,14 +232,11 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.wait_for_sporks_same()
 
-            # Mine one quorum before dip8 is activated
-            self.mine_quorum()
-
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
         self.wait_for_sporks_same()
 
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
-        assert(cbtx["cbTx"]["version"] == 1)
+        assert(cbtx["cbTx"]["version"] == 2)
 
 
         self.nodes[0].generate(1)
