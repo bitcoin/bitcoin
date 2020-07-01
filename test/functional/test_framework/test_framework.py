@@ -467,13 +467,13 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
                 timeout_factor=self.options.timeout_factor,
-                syscoind=binary[index],
-                syscoin_cli=binary_cli[index],
-                version=versions[index],
+                syscoind=binary[i],
+                syscoin_cli=binary_cli[i],
+                version=versions[i],
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
-                extra_conf=extra_confs[index],
-                extra_args=extra_args[index],
+                extra_conf=extra_confs[i],
+                extra_args=extra_args[i],
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
@@ -853,8 +853,9 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Starting %d masternodes", self.mn_count)
 
         start_idx = len(self.nodes)
-        # SYSCOIN add offset
-        self.add_nodes(self.mn_count, offset=start_idx)
+        # SYSCOIN add offset and add nodes individually with offset and custom args
+        for idx in range(0, self.mn_count):
+            self.add_nodes(1, offset=idx + start_idx, extra_args=[self.extra_args[idx + start_idx]])
     
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
