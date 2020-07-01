@@ -413,8 +413,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         raise NotImplementedError
 
     # Public helper methods. These can be accessed by the subclass test scripts.
-
-    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
+    # SYSCOIN add offset
+    def add_nodes(self, num_nodes: int, offset = None, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
         """Instantiate TestNode objects.
 
         Should only be called once after the nodes have been specified in
@@ -455,21 +455,25 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         assert_equal(len(versions), num_nodes)
         assert_equal(len(binary), num_nodes)
         assert_equal(len(binary_cli), num_nodes)
+        offsetNum = 0
+        if offset is None:
+            offsetNum = offset
         for i in range(num_nodes):
+            index = i + offsetNum
             self.nodes.append(TestNode(
-                i,
-                get_datadir_path(self.options.tmpdir, i),
+                index,
+                get_datadir_path(self.options.tmpdir, index),
                 chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
                 timeout_factor=self.options.timeout_factor,
-                syscoind=binary[i],
-                syscoin_cli=binary_cli[i],
-                version=versions[i],
+                syscoind=binary[index],
+                syscoin_cli=binary_cli[index],
+                version=versions[index],
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
-                extra_conf=extra_confs[i],
-                extra_args=extra_args[i],
+                extra_conf=extra_confs[index],
+                extra_args=extra_args[index],
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
@@ -837,28 +841,27 @@ class DashTestFramework(SyscoinTestFramework):
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
         self.stop_node(0)
-        self.nodes = []
 
         start_idx = len(self.nodes)
         for idx in range(0, self.mn_count):
             copy_datadir(0, idx + start_idx, self.options.tmpdir)
 
+        # restart faucet node
+        self.start_node(0)
 
     def start_masternodes(self):
         self.log.info("Starting %d masternodes", self.mn_count)
 
-        start_idx = 1
-
-        self.add_nodes(self.num_nodes)
-        # Start control node again and then start MN's
-        self.start_node(0, extra_args=self.extra_args[0])
-        self.sync_all()
+        start_idx = len(self.nodes)
+        # SYSCOIN add offset
+        self.add_nodes(self.mn_count, offset=start_idx)
+    
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
             connect_nodes(self.mninfo[idx].node, 0)
 
 
-        # start up MN's
+        # start up nodes in parallel
         for idx in range(0, self.mn_count):
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.start_masternode(self.mninfo[idx])
