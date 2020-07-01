@@ -23,7 +23,6 @@ class MultiKeySporkTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 5
         self.setup_clean_chain = True
-        self.is_network_split = False
 
     def setup_network(self):
         # secret(base58): cP8CHyqJpBot9W1eVZAfH5jhxACUJbTJrZo5ugyZTudpwtNYStWZ

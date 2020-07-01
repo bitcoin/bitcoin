@@ -755,7 +755,6 @@ class DashTestFramework(SyscoinTestFramework):
         self.num_nodes = num_nodes
         self.mninfo = []
         self.setup_clean_chain = True
-        self.is_network_split = False
         # additional args
         if extra_args is None:
             extra_args = [[]] * num_nodes
@@ -765,7 +764,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
             for i in range(0, num_nodes):
-                self.extra_args[i].append("-dip3params=135:150")
+                self.extra_args[i].append("-dip3params=150:150")
         for i in range(0, num_nodes):
             self.extra_args[i].append("-mncollateral=100")
         # LLMQ default test params (no need to pass -llmqtestparams)
@@ -826,7 +825,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def remove_mastermode(self, idx):
         mn = self.mninfo[idx]
-        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
+        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 99.9999})
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
         self.nodes[0].generate(1)
