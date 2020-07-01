@@ -5,7 +5,7 @@
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal
-from test_framework.messages import FromHex
+from test_framework.messages import FromHex, CMerkleBlock
 
 '''
 dip4-coinbasemerkleroots.py
