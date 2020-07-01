@@ -14,9 +14,9 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <noui.h>
 #include <shutdown.h>
-#include <ui_interface.h>
 #include <util/check.h>
 #include <util/system.h>
 #include <util/strencodings.h>

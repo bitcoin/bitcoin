@@ -15,10 +15,10 @@
 #include <script/standard.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
-#include <ui_interface.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/system.h>
+#include <util/ui_change_type.h>
 #include <validation.h>
 #include <wallet/context.h>
 #include <wallet/fees.h>

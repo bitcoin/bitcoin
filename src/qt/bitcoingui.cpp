@@ -36,9 +36,9 @@
 #include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <node/ui_interface.h>
 #include <qt/governancelist.h>
 #include <qt/masternodelist.h>
-#include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
 

@@ -16,11 +16,11 @@
 #include <psbt.h>
 #include <saltedhasher.h>
 #include <tinyformat.h>
-#include <ui_interface.h>
 #include <util/message.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <util/ui_change_type.h>
 #include <validationinterface.h>
 #include <wallet/coincontrol.h>
 #include <wallet/crypter.h>

@@ -22,8 +22,8 @@
 #include <qt/walletmodel.h>
 
 #include <interfaces/node.h>
+#include <node/ui_interface.h>
 #include <psbt.h>
-#include <ui_interface.h>
 #include <util/strencodings.h>
 
 #include <QAction>

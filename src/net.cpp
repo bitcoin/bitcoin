@@ -20,10 +20,10 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/ui_interface.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
-#include <ui_interface.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/thread.h>

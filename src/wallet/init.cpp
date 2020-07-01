@@ -9,8 +9,8 @@
 #include <interfaces/wallet.h>
 #include <net.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <univalue.h>
-#include <ui_interface.h>
 #include <util/check.h>
 #include <util/error.h>
 #include <util/system.h>
