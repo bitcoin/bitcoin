@@ -14,7 +14,12 @@
 
 typedef std::vector<unsigned char> valtype;
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx_to, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn)
+    : m_txto(tx_to),
+      nIn(nInIn),
+      nHashType(nHashTypeIn),
+      amount(amountIn),
+      checker(&m_txto, nIn, amountIn) {}
 
 bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode, SigVersion sigversion) const
 {
@@ -26,7 +31,7 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     if (sigversion == SigVersion::WITNESS_V0 && !key.IsCompressed())
         return false;
 
-    uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);
+    uint256 hash = SignatureHash(scriptCode, m_txto, nIn, nHashType, amount, sigversion);
     if (!key.Sign(hash, vchSig))
         return false;
     vchSig.push_back((unsigned char)nHashType);
@@ -377,7 +382,7 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 {
     assert(nIn < txTo.vin.size());
 
-    MutableTransactionSignatureCreator creator(&txTo, nIn, amount, nHashType);
+    MutableTransactionSignatureCreator creator(txTo, nIn, amount, nHashType);
 
     SignatureData sigdata;
     bool ret = ProduceSignature(provider, creator, fromPubKey, sigdata);
@@ -490,7 +495,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(mtx, i, amount, nHashType), prevPubKey, sigdata);
         }
 
         UpdateInput(txin, sigdata);
