@@ -38,6 +38,7 @@ from .util import (
     p2p_port,
     copy_datadir,
     force_finish_mnsync,
+    wait_until,
 )
 
 class TestStatus(Enum):
