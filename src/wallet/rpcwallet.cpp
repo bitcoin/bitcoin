@@ -223,7 +223,7 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
         cc.m_feerate = CFeeRate(fee_rate);
 
         // default RBF to true for explicit fee rate modes
-        if (cc.m_signal_bip125_rbf == boost::none) cc.m_signal_bip125_rbf = true;
+        if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
     } else if (!estimate_param.isNull()) {
         cc.m_confirm_target = ParseConfirmTarget(estimate_param, pwallet->chain().estimateMaxBlocks());
     }
