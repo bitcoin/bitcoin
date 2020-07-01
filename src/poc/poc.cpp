@@ -727,12 +727,12 @@ CAmount EvalMiningRatio(int nMiningHeight, int64_t nNetCapacityTB, const Consens
         // Range in [0,20]
         if (nNetCapacityTB > params.BHDIP007MiningRatioStage * 1024 * 1024)
             nNetCapacityTB = params.BHDIP007MiningRatioStage * 1024 * 1024;
-        int nStage = std::max(std::min((int) (std::log2((float) (nNetCapacityTB / params.BHDIP007MiningRatioStage) + 0.000005f) + 0.000005f), 20), 0);
+        int nStage = std::max(std::min((int) (log2((float) (nNetCapacityTB / params.BHDIP007MiningRatioStage) + 0.000005f) + 0.000005f), 20), 0);
         assert(nStage <= 20);
         if (pRatioStage) *pRatioStage = nStage;
 
-        CAmount nStartRatio = RoundPledgeRatio((CAmount) (std::pow(0.666667f, (float) nStage) * params.BHDIP001MiningRatio));
-        CAmount nTargetRatio = RoundPledgeRatio((CAmount) (std::pow(0.666667f, (float) (nStage + 1)) * params.BHDIP001MiningRatio));
+        CAmount nStartRatio = RoundPledgeRatio((CAmount) (pow(0.666667f, (float) nStage) * params.BHDIP001MiningRatio));
+        CAmount nTargetRatio = RoundPledgeRatio((CAmount) (pow(0.666667f, (float) (nStage + 1)) * params.BHDIP001MiningRatio));
         assert (nTargetRatio > ratio_precise && nStartRatio > nTargetRatio);
 
         int64_t nStartCapacityTB = (((int64_t)1) << nStage) * params.BHDIP007MiningRatioStage;
