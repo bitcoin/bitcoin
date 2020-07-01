@@ -12,19 +12,22 @@ import traceback
 
 startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
-rowsPerNodeReset = 6000		# Number of rows for cach numconnections file
+rowsPerFile = 6000		# Number of rows for cach numconnections file
 
 
 # These numbers of peers are repeated
-connectionSequence = [1, 2, 4, 8, 16, 32, 64, 128];
+connectionSequence = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
 
 os.system('clear')
 
-print(f'Number of seconds per file: {rowsPerNodeReset}')
+print(f'Number of seconds per file: {rowsPerFile}')
+modifyNumSecondsPerFile = input('Would you like to modify this? ').lower() in ['y', 'yes']
+if modifyNumSecondsPerFile:
+	rowsPerFile = float(input('Enter the number of seconds per file: '))
 
 print()
 print('Number of connections order: ' + str(connectionSequence))
-modifyConnectionSequence = input('Would you like to modify the ordering? ').lower() in ['y', 'yes']
+modifyConnectionSequence = input('Would you like to modify this? ').lower() in ['y', 'yes']
 if modifyConnectionSequence:
 	connectionSequence = input('Enter a new connection sequence (separated by spaces): ').split()
 print()
@@ -55,15 +58,15 @@ def bitcoin(cmd):
 # Uses "top" to log the amount of resources that Bitcoin is using up, returns blank stings if the process is not running
 def getCPUData():
 	raw = terminal('top -b -n 1 |grep bitcoind').strip().split()
-	while len(raw) < 12: raw.append('')
+	while len(raw) < 12: raw.append('0')
 	output = {
 		'process_ID': raw[0],
 		'user': raw[1],
 		'priority': raw[2],
 		'nice_value': raw[3],
-		'virtual_memory': raw[4],
-		'memory': raw[5],
-		'shared_memory': raw[6],
+		'virtual_memory': str(float(raw[4]) / 1024),
+		'memory': str(float(raw[5]) / 1024),
+		'shared_memory': str(float(raw[6]) / 1024),
 		'state': raw[7],
 		'cpu_percent': raw[8],
 		'memory_percent': raw[9],
@@ -94,13 +97,25 @@ def winexists(target):
 def fetchHeader():
 	line = 'Timestamp,'
 	line += 'Timestamp (Seconds),'
+
 	line += 'NumPeers,'
+	line += "NumInbound,"
+	line += "NumPruned,"
+	line += "NumTXRelayers,"
+	line += "NumAddnode,"
+	line += "NumBloom,"
+	line += "AvgPingTime,"
+	line += "TotalBanScore,"
+	line += "Connections,"
+
 	line += 'CPU %,'
 	line += 'Memory %,'
-	line += 'Resource usage,'
-	line += 'GetPeerInfo,'
+	line += 'Mem (MB),'
+	line += 'VirtualMem (MB),'
+	line += 'SharedMem (MB),'
 
 	line += 'BlockHeight,'
+	line += 'BlockDelay (Seconds),'
 	line += 'Num AcceptedBlocks PerSec,'
 	line += 'Avg AcceptedBlocks PerSec,'
 	line += 'MempoolSize,'
@@ -303,211 +318,225 @@ def fetchHeader():
 
 	line += '\n'
 
-	line += 'The time in which the sample was taken (in human readable format),' # Timestamp
-	line += 'The time in which the sample was taken (in number of seconds since 1/01/1970),' # Timestamp (Seconds)
-	line += 'The current number of peer connections,' # NumPeers
-	line += 'The percentage of CPU usage of bitcoind for each core summed together (which means that it may exceed 100%),' # CPU %
-	line += 'The percentage of memory usage of bitcoind,' # Memory %
-	line += 'Contains the output from the "top" instruction for the bitcoind process,' # Resource usage
-	line += 'A list of the current peer connections,' # GetPeerInfo
-	line += 'The block height of this particular full node,' # BlockHeight
-	line += 'The number of unconfirmed transactions currently in the mempool,' # MempoolSize
-	line += 'The number of bytes that the mempool is currently taking up,' # MempoolBytes
-	line += 'The change in block height over the change in time for the most recent block update,' # AcceptedBlocksPerSec
-	line += 'The average of all previous AcceptedBlocksPerSec values,' # AcceptedBlocksPerSecAvg
-	line += 'The change in mempool size over the change in time for the most recent mempool size update,' # AcceptedTxPerSec
-	line += 'The average of all previous AcceptedTxPerSec values,' # AcceptedTxPerSecAvg
-	line += 'The number of clock cycles that occur each second within Bitcoin Core,' # ClocksPerSec
-	line += 'The total number of VERSION messages received thus far,' # # VERSION Msgs
-	line += 'The change in number of messages over the change in time for the most recent VERSION message received,' # Num VERSION PerSec
-	line += 'The average number of VERSION messages received per second thus far (the average of all previous Num VERSION PerSec values),' # Avg VERSION PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg VERSION
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax VERSION
-	line += 'The average number of bytes that this message took up,' # BytesAvg VERSION
-	line += 'The maximum number of bytes that this message took up,' # BytesMax VERSION
-	line += 'The total number of VERACK messages received thus far,' # # VERACK Msgs
-	line += 'The change in number of messages over the change in time for the most recent VERACK message received,' # Num VERACK PerSec
-	line += 'The average number of VERACK messages received per second thus far (the average of all previous Num VERACK PerSec values),' # Avg VERACK PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg VERACK
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax VERACK
-	line += 'The average number of bytes that this message took up,' # BytesAvg VERACK
-	line += 'The maximum number of bytes that this message took up,' # BytesMax VERACK
-	line += 'The total number of ADDR messages received thus far,' # # ADDR Msgs
-	line += 'The change in number of messages over the change in time for the most recent ADDR message received,' # Num ADDR PerSec
-	line += 'The average number of ADDR messages received per second thus far (the average of all previous Num ADDR PerSec values),' # Avg ADDR PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg ADDR
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax ADDR
-	line += 'The average number of bytes that this message took up,' # BytesAvg ADDR
-	line += 'The maximum number of bytes that this message took up,' # BytesMax ADDR
-	line += 'The total number of INV messages received thus far,' # # INV Msgs
-	line += 'The change in number of messages over the change in time for the most recent INV message received,' # Num INV PerSec
-	line += 'The average number of INV messages received per second thus far (the average of all previous Num INV PerSec values),' # Avg INV PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg INV
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax INV
-	line += 'The average number of bytes that this message took up,' # BytesAvg INV
-	line += 'The maximum number of bytes that this message took up,' # BytesMax INV
-	line += 'The total number of GETDATA messages received thus far,' # # GETDATA Msgs
-	line += 'The change in number of messages over the change in time for the most recent GETDATA message received,' # Num GETDATA PerSec
-	line += 'The average number of GETDATA messages received per second thus far (the average of all previous Num GETDATA PerSec values),' # Avg GETDATA PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg GETDATA
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax GETDATA
-	line += 'The average number of bytes that this message took up,' # BytesAvg GETDATA
-	line += 'The maximum number of bytes that this message took up,' # BytesMax GETDATA
-	line += 'The total number of MERKLEBLOCK messages received thus far,' # # MERKLEBLOCK Msgs
-	line += 'The change in number of messages over the change in time for the most recent MERKLEBLOCK message received,' # Num MERKLEBLOCK PerSec
-	line += 'The average number of MERKLEBLOCK messages received per second thus far (the average of all previous Num MERKLEBLOCK PerSec values),' # Avg MERKLEBLOCK PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg MERKLEBLOCK
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax MERKLEBLOCK
-	line += 'The average number of bytes that this message took up,' # BytesAvg MERKLEBLOCK
-	line += 'The maximum number of bytes that this message took up,' # BytesMax MERKLEBLOCK
-	line += 'The total number of GETBLOCKS messages received thus far,' # # GETBLOCKS Msgs
-	line += 'The change in number of messages over the change in time for the most recent GETBLOCKS message received,' # Num GETBLOCKS PerSec
-	line += 'The average number of GETBLOCKS messages received per second thus far (the average of all previous Num GETBLOCKS PerSec values),' # Avg GETBLOCKS PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg GETBLOCKS
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax GETBLOCKS
-	line += 'The average number of bytes that this message took up,' # BytesAvg GETBLOCKS
-	line += 'The maximum number of bytes that this message took up,' # BytesMax GETBLOCKS
-	line += 'The total number of GETHEADERS messages received thus far,' # # GETHEADERS Msgs
-	line += 'The change in number of messages over the change in time for the most recent GETHEADERS message received,' # Num GETHEADERS PerSec
-	line += 'The average number of GETHEADERS messages received per second thus far (the average of all previous Num GETHEADERS PerSec values),' # Avg GETHEADERS PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg GETHEADERS
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax GETHEADERS
-	line += 'The average number of bytes that this message took up,' # BytesAvg GETHEADERS
-	line += 'The maximum number of bytes that this message took up,' # BytesMax GETHEADERS
-	line += 'The total number of TX messages received thus far,' # # TX Msgs
-	line += 'The change in number of messages over the change in time for the most recent TX message received,' # Num TX PerSec
-	line += 'The average number of TX messages received per second thus far (the average of all previous Num TX PerSec values),' # Avg TX PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg TX
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax TX
-	line += 'The average number of bytes that this message took up,' # BytesAvg TX
-	line += 'The maximum number of bytes that this message took up,' # BytesMax TX
-	line += 'The total number of HEADERS messages received thus far,' # # HEADERS Msgs
-	line += 'The change in number of messages over the change in time for the most recent HEADERS message received,' # Num HEADERS PerSec
-	line += 'The average number of HEADERS messages received per second thus far (the average of all previous Num HEADERS PerSec values),' # Avg HEADERS PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg HEADERS
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax HEADERS
-	line += 'The average number of bytes that this message took up,' # BytesAvg HEADERS
-	line += 'The maximum number of bytes that this message took up,' # BytesMax HEADERS
-	line += 'The total number of BLOCK messages received thus far,' # # BLOCK Msgs
-	line += 'The change in number of messages over the change in time for the most recent BLOCK message received,' # Num BLOCK PerSec
-	line += 'The average number of BLOCK messages received per second thus far (the average of all previous Num BLOCK PerSec values),' # Avg BLOCK PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg BLOCK
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax BLOCK
-	line += 'The average number of bytes that this message took up,' # BytesAvg BLOCK
-	line += 'The maximum number of bytes that this message took up,' # BytesMax BLOCK
-	line += 'The total number of GETADDR messages received thus far,' # # GETADDR Msgs
-	line += 'The change in number of messages over the change in time for the most recent GETADDR message received,' # Num GETADDR PerSec
-	line += 'The average number of GETADDR messages received per second thus far (the average of all previous Num GETADDR PerSec values),' # Avg GETADDR PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg GETADDR
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax GETADDR
-	line += 'The average number of bytes that this message took up,' # BytesAvg GETADDR
-	line += 'The maximum number of bytes that this message took up,' # BytesMax GETADDR
-	line += 'The total number of MEMPOOL messages received thus far,' # # MEMPOOL Msgs
-	line += 'The change in number of messages over the change in time for the most recent MEMPOOL message received,' # Num MEMPOOL PerSec
-	line += 'The average number of MEMPOOL messages received per second thus far (the average of all previous Num MEMPOOL PerSec values),' # Avg MEMPOOL PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg MEMPOOL
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax MEMPOOL
-	line += 'The average number of bytes that this message took up,' # BytesAvg MEMPOOL
-	line += 'The maximum number of bytes that this message took up,' # BytesMax MEMPOOL
-	line += 'The total number of PING messages received thus far,' # # PING Msgs
-	line += 'The change in number of messages over the change in time for the most recent PING message received,' # Num PING PerSec
-	line += 'The average number of PING messages received per second thus far (the average of all previous Num PING PerSec values),' # Avg PING PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg PING
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax PING
-	line += 'The average number of bytes that this message took up,' # BytesAvg PING
-	line += 'The maximum number of bytes that this message took up,' # BytesMax PING
-	line += 'The total number of PONG messages received thus far,' # # PONG Msgs
-	line += 'The change in number of messages over the change in time for the most recent PONG message received,' # Num PONG PerSec
-	line += 'The average number of PONG messages received per second thus far (the average of all previous Num PONG PerSec values),' # Avg PONG PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg PONG
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax PONG
-	line += 'The average number of bytes that this message took up,' # BytesAvg PONG
-	line += 'The maximum number of bytes that this message took up,' # BytesMax PONG
-	line += 'The total number of NOTFOUND messages received thus far,' # # NOTFOUND Msgs
-	line += 'The change in number of messages over the change in time for the most recent NOTFOUND message received,' # Num NOTFOUND PerSec
-	line += 'The average number of NOTFOUND messages received per second thus far (the average of all previous Num NOTFOUND PerSec values),' # Avg NOTFOUND PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg NOTFOUND
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax NOTFOUND
-	line += 'The average number of bytes that this message took up,' # BytesAvg NOTFOUND
-	line += 'The maximum number of bytes that this message took up,' # BytesMax NOTFOUND
-	line += 'The total number of FILTERLOAD messages received thus far,' # # FILTERLOAD Msgs
-	line += 'The change in number of messages over the change in time for the most recent FILTERLOAD message received,' # Num FILTERLOAD PerSec
-	line += 'The average number of FILTERLOAD messages received per second thus far (the average of all previous Num FILTERLOAD PerSec values),' # Avg FILTERLOAD PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg FILTERLOAD
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax FILTERLOAD
-	line += 'The average number of bytes that this message took up,' # BytesAvg FILTERLOAD
-	line += 'The maximum number of bytes that this message took up,' # BytesMax FILTERLOAD
-	line += 'The total number of FILTERADD messages received thus far,' # # FILTERADD Msgs
-	line += 'The change in number of messages over the change in time for the most recent FILTERADD message received,' # Num FILTERADD PerSec
-	line += 'The average number of FILTERADD messages received per second thus far (the average of all previous Num FILTERADD PerSec values),' # Avg FILTERADD PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg FILTERADD
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax FILTERADD
-	line += 'The average number of bytes that this message took up,' # BytesAvg FILTERADD
-	line += 'The maximum number of bytes that this message took up,' # BytesMax FILTERADD
-	line += 'The total number of FILTERCLEAR messages received thus far,' # # FILTERCLEAR Msgs
-	line += 'The change in number of messages over the change in time for the most recent FILTERCLEAR message received,' # Num FILTERCLEAR PerSec
-	line += 'The average number of FILTERCLEAR messages received per second thus far (the average of all previous Num FILTERCLEAR PerSec values),' # Avg FILTERCLEAR PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg FILTERCLEAR
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax FILTERCLEAR
-	line += 'The average number of bytes that this message took up,' # BytesAvg FILTERCLEAR
-	line += 'The maximum number of bytes that this message took up,' # BytesMax FILTERCLEAR
-	line += 'The total number of SENDHEADERS messages received thus far,' # # SENDHEADERS Msgs
-	line += 'The change in number of messages over the change in time for the most recent SENDHEADERS message received,' # Num SENDHEADERS PerSec
-	line += 'The average number of SENDHEADERS messages received per second thus far (the average of all previous Num SENDHEADERS PerSec values),' # Avg SENDHEADERS PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg SENDHEADERS
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax SENDHEADERS
-	line += 'The average number of bytes that this message took up,' # BytesAvg SENDHEADERS
-	line += 'The maximum number of bytes that this message took up,' # BytesMax SENDHEADERS
-	line += 'The total number of FEEFILTER messages received thus far,' # # FEEFILTER Msgs
-	line += 'The change in number of messages over the change in time for the most recent FEEFILTER message received,' # Num FEEFILTER PerSec
-	line += 'The average number of FEEFILTER messages received per second thus far (the average of all previous Num FEEFILTER PerSec values),' # Avg FEEFILTER PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg FEEFILTER
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax FEEFILTER
-	line += 'The average number of bytes that this message took up,' # BytesAvg FEEFILTER
-	line += 'The maximum number of bytes that this message took up,' # BytesMax FEEFILTER
-	line += 'The total number of SENDCMPCT messages received thus far,' # # SENDCMPCT Msgs
-	line += 'The change in number of messages over the change in time for the most recent SENDCMPCT message received,' # Num SENDCMPCT PerSec
-	line += 'The average number of SENDCMPCT messages received per second thus far (the average of all previous Num SENDCMPCT PerSec values),' # Avg SENDCMPCT PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg SENDCMPCT
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax SENDCMPCT
-	line += 'The average number of bytes that this message took up,' # BytesAvg SENDCMPCT
-	line += 'The maximum number of bytes that this message took up,' # BytesMax SENDCMPCT
-	line += 'The total number of CMPCTBLOCK messages received thus far,' # # CMPCTBLOCK Msgs
-	line += 'The change in number of messages over the change in time for the most recent CMPCTBLOCK message received,' # Num CMPCTBLOCK PerSec
-	line += 'The average number of CMPCTBLOCK messages received per second thus far (the average of all previous Num CMPCTBLOCK PerSec values),' # Avg CMPCTBLOCK PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg CMPCTBLOCK
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax CMPCTBLOCK
-	line += 'The average number of bytes that this message took up,' # BytesAvg CMPCTBLOCK
-	line += 'The maximum number of bytes that this message took up,' # BytesMax CMPCTBLOCK
-	line += 'The total number of GETBLOCKTXN messages received thus far,' # # GETBLOCKTXN Msgs
-	line += 'The change in number of messages over the change in time for the most recent GETBLOCKTXN message received,' # Num GETBLOCKTXN PerSec
-	line += 'The average number of GETBLOCKTXN messages received per second thus far (the average of all previous Num GETBLOCKTXN PerSec values),' # Avg GETBLOCKTXN PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg GETBLOCKTXN
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax GETBLOCKTXN
-	line += 'The average number of bytes that this message took up,' # BytesAvg GETBLOCKTXN
-	line += 'The maximum number of bytes that this message took up,' # BytesMax GETBLOCKTXN
-	line += 'The total number of BLOCKTXN messages received thus far,' # # BLOCKTXN Msgs
-	line += 'The change in number of messages over the change in time for the most recent BLOCKTXN message received,' # Num BLOCKTXN PerSec
-	line += 'The average number of BLOCKTXN messages received per second thus far (the average of all previous Num BLOCKTXN PerSec values),' # Avg BLOCKTXN PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg BLOCKTXN
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax BLOCKTXN
-	line += 'The average number of bytes that this message took up,' # BytesAvg BLOCKTXN
-	line += 'The maximum number of bytes that this message took up,' # BytesMax BLOCKTXN
-	line += 'The total number of REJECT messages received thus far,' # # REJECT Msgs
-	line += 'The change in number of messages over the change in time for the most recent REJECT message received,' # Num REJECT PerSec
-	line += 'The average number of REJECT messages received per second thus far (the average of all previous Num REJECT PerSec values),' # Avg REJECT PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg REJECT
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax REJECT
-	line += 'The average number of bytes that this message took up,' # BytesAvg REJECT
-	line += 'The maximum number of bytes that this message took up,' # BytesMax REJECT
-	line += 'The total number of undocumented messages received thus far,' # # [UNDOCUMENTED] Msgs
-	line += 'The change in number of messages over the change in time for the most recent undocumented message received,' # Num [UNDOCUMENTED] PerSec
-	line += 'The average number of undocumented messages received per second thus far (the average of all previous Num [UNDOCUMENTED] PerSec values),' # Avg [UNDOCUMENTED] PerSec
-	line += 'The average number of clocks that it took to process this message,' # ClocksAvg [UNDOCUMENTED]
-	line += 'The maximum number of clocks that it took to process this message,' # ClocksMax [UNDOCUMENTED]
-	line += 'The average number of bytes that this message took up,' # BytesAvg [UNDOCUMENTED]
-	line += 'The maximum number of bytes that this message took up,' # BytesMax [UNDOCUMENTED]
-	line += 'The number of rows that were skipped before this row (because the number of connections was not equal to the correct value),' # NumSkippedSamples
+	line += 'Time in which the sample was taken (in human readable format),' # Timestamp
+	line += 'Time in which the sample was taken (in number of seconds since 1/01/1970),' # Timestamp (Seconds)
+	
+	line += 'Number of peer connections,' # NumPeers
+	line += 'Sum of inbound connections (initiated by the peer),' # NumInbound
+	line += 'Sum of peers that do not have the full blockchain downloaded,' # NumPruned
+	line += 'Sum of peers that relay transactions,' # NumTXRelayers
+	line += 'Sum of peers that were connected through the "addnode command,' # NumAddnode
+	line += 'Sum of peers that have a bloom filter,' # NumBloom
+	line += 'Average round trip time for ping to return a pong,' # AvgPingTime
+	line += 'Sum of all banscores (0 means genuine and 100 means ban),' # TotalBanScore
+	line += 'An array of all peer addresses separated by a space,' # Connections
+
+	line += 'Percentage of CPU usage of bitcoind for each core summed together (i.e. it may exceed 100%),' # CPU %
+	line += 'Percentage of memory usage of bitcoind,' # Memory %
+	line += 'Megabytes of memory being used,' # Mem
+	line += 'Megabytes of available disk extension space for if memory runs out,' # VirtualMem
+	line += 'Megabytes of memory that is shared by other processes,' # SharedMem
+	#line += 'Contains the output from the "top" instruction for the bitcoind process,' # Resource usage
+	#line += 'A list of the current peer connections,' # GetPeerInfo
+	line += 'Block height of the node,' # BlockHeight
+	line += 'Amount of time it took for the block to reach you after being mined,' # BlockDelay
+	line += 'Number of unconfirmed transactions currently in the mempool,' # MempoolSize
+	line += 'Number of bytes that the mempool is currently taking up,' # MempoolBytes
+	line += 'Change in block height over the change in time for the most recent block update,' # AcceptedBlocksPerSec
+	line += 'Average of all previous AcceptedBlocksPerSec values,' # AcceptedBlocksPerSecAvg
+	line += 'Change in mempool size over the change in time for the most recent mempool size update,' # AcceptedTxPerSec
+	line += 'Average of all previous AcceptedTxPerSec values,' # AcceptedTxPerSecAvg
+	line += 'Number of clock cycles that occur each second within Bitcoin Core,' # ClocksPerSec
+	line += 'Total number of VERSION messages received thus far,' # # VERSION Msgs
+	line += 'Change in number of messages over the change in time for the most recent VERSION message received,' # Num VERSION PerSec
+	line += 'Average number of VERSION messages received per second thus far (the average of all previous Num VERSION PerSec values),' # Avg VERSION PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg VERSION
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax VERSION
+	line += 'Average number of bytes that this message took up,' # BytesAvg VERSION
+	line += 'Maximum number of bytes that this message took up,' # BytesMax VERSION
+	line += 'Total number of VERACK messages received thus far,' # # VERACK Msgs
+	line += 'Change in number of messages over the change in time for the most recent VERACK message received,' # Num VERACK PerSec
+	line += 'Average number of VERACK messages received per second thus far (the average of all previous Num VERACK PerSec values),' # Avg VERACK PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg VERACK
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax VERACK
+	line += 'Average number of bytes that this message took up,' # BytesAvg VERACK
+	line += 'Maximum number of bytes that this message took up,' # BytesMax VERACK
+	line += 'Total number of ADDR messages received thus far,' # # ADDR Msgs
+	line += 'Change in number of messages over the change in time for the most recent ADDR message received,' # Num ADDR PerSec
+	line += 'Average number of ADDR messages received per second thus far (the average of all previous Num ADDR PerSec values),' # Avg ADDR PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg ADDR
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax ADDR
+	line += 'Average number of bytes that this message took up,' # BytesAvg ADDR
+	line += 'Maximum number of bytes that this message took up,' # BytesMax ADDR
+	line += 'Total number of INV messages received thus far,' # # INV Msgs
+	line += 'Change in number of messages over the change in time for the most recent INV message received,' # Num INV PerSec
+	line += 'Average number of INV messages received per second thus far (the average of all previous Num INV PerSec values),' # Avg INV PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg INV
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax INV
+	line += 'Average number of bytes that this message took up,' # BytesAvg INV
+	line += 'Maximum number of bytes that this message took up,' # BytesMax INV
+	line += 'Total number of GETDATA messages received thus far,' # # GETDATA Msgs
+	line += 'Change in number of messages over the change in time for the most recent GETDATA message received,' # Num GETDATA PerSec
+	line += 'Average number of GETDATA messages received per second thus far (the average of all previous Num GETDATA PerSec values),' # Avg GETDATA PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg GETDATA
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax GETDATA
+	line += 'Average number of bytes that this message took up,' # BytesAvg GETDATA
+	line += 'Maximum number of bytes that this message took up,' # BytesMax GETDATA
+	line += 'Total number of MERKLEBLOCK messages received thus far,' # # MERKLEBLOCK Msgs
+	line += 'Change in number of messages over the change in time for the most recent MERKLEBLOCK message received,' # Num MERKLEBLOCK PerSec
+	line += 'Average number of MERKLEBLOCK messages received per second thus far (the average of all previous Num MERKLEBLOCK PerSec values),' # Avg MERKLEBLOCK PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg MERKLEBLOCK
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax MERKLEBLOCK
+	line += 'Average number of bytes that this message took up,' # BytesAvg MERKLEBLOCK
+	line += 'Maximum number of bytes that this message took up,' # BytesMax MERKLEBLOCK
+	line += 'Total number of GETBLOCKS messages received thus far,' # # GETBLOCKS Msgs
+	line += 'Change in number of messages over the change in time for the most recent GETBLOCKS message received,' # Num GETBLOCKS PerSec
+	line += 'Average number of GETBLOCKS messages received per second thus far (the average of all previous Num GETBLOCKS PerSec values),' # Avg GETBLOCKS PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg GETBLOCKS
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax GETBLOCKS
+	line += 'Average number of bytes that this message took up,' # BytesAvg GETBLOCKS
+	line += 'Maximum number of bytes that this message took up,' # BytesMax GETBLOCKS
+	line += 'Total number of GETHEADERS messages received thus far,' # # GETHEADERS Msgs
+	line += 'Change in number of messages over the change in time for the most recent GETHEADERS message received,' # Num GETHEADERS PerSec
+	line += 'Average number of GETHEADERS messages received per second thus far (the average of all previous Num GETHEADERS PerSec values),' # Avg GETHEADERS PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg GETHEADERS
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax GETHEADERS
+	line += 'Average number of bytes that this message took up,' # BytesAvg GETHEADERS
+	line += 'Maximum number of bytes that this message took up,' # BytesMax GETHEADERS
+	line += 'Total number of TX messages received thus far,' # # TX Msgs
+	line += 'Change in number of messages over the change in time for the most recent TX message received,' # Num TX PerSec
+	line += 'Average number of TX messages received per second thus far (the average of all previous Num TX PerSec values),' # Avg TX PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg TX
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax TX
+	line += 'Average number of bytes that this message took up,' # BytesAvg TX
+	line += 'Maximum number of bytes that this message took up,' # BytesMax TX
+	line += 'Total number of HEADERS messages received thus far,' # # HEADERS Msgs
+	line += 'Change in number of messages over the change in time for the most recent HEADERS message received,' # Num HEADERS PerSec
+	line += 'Average number of HEADERS messages received per second thus far (the average of all previous Num HEADERS PerSec values),' # Avg HEADERS PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg HEADERS
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax HEADERS
+	line += 'Average number of bytes that this message took up,' # BytesAvg HEADERS
+	line += 'Maximum number of bytes that this message took up,' # BytesMax HEADERS
+	line += 'Total number of BLOCK messages received thus far,' # # BLOCK Msgs
+	line += 'Change in number of messages over the change in time for the most recent BLOCK message received,' # Num BLOCK PerSec
+	line += 'Average number of BLOCK messages received per second thus far (the average of all previous Num BLOCK PerSec values),' # Avg BLOCK PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg BLOCK
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax BLOCK
+	line += 'Average number of bytes that this message took up,' # BytesAvg BLOCK
+	line += 'Maximum number of bytes that this message took up,' # BytesMax BLOCK
+	line += 'Total number of GETADDR messages received thus far,' # # GETADDR Msgs
+	line += 'Change in number of messages over the change in time for the most recent GETADDR message received,' # Num GETADDR PerSec
+	line += 'Average number of GETADDR messages received per second thus far (the average of all previous Num GETADDR PerSec values),' # Avg GETADDR PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg GETADDR
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax GETADDR
+	line += 'Average number of bytes that this message took up,' # BytesAvg GETADDR
+	line += 'Maximum number of bytes that this message took up,' # BytesMax GETADDR
+	line += 'Total number of MEMPOOL messages received thus far,' # # MEMPOOL Msgs
+	line += 'Change in number of messages over the change in time for the most recent MEMPOOL message received,' # Num MEMPOOL PerSec
+	line += 'Average number of MEMPOOL messages received per second thus far (the average of all previous Num MEMPOOL PerSec values),' # Avg MEMPOOL PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg MEMPOOL
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax MEMPOOL
+	line += 'Average number of bytes that this message took up,' # BytesAvg MEMPOOL
+	line += 'Maximum number of bytes that this message took up,' # BytesMax MEMPOOL
+	line += 'Total number of PING messages received thus far,' # # PING Msgs
+	line += 'Change in number of messages over the change in time for the most recent PING message received,' # Num PING PerSec
+	line += 'Average number of PING messages received per second thus far (the average of all previous Num PING PerSec values),' # Avg PING PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg PING
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax PING
+	line += 'Average number of bytes that this message took up,' # BytesAvg PING
+	line += 'Maximum number of bytes that this message took up,' # BytesMax PING
+	line += 'Total number of PONG messages received thus far,' # # PONG Msgs
+	line += 'Change in number of messages over the change in time for the most recent PONG message received,' # Num PONG PerSec
+	line += 'Average number of PONG messages received per second thus far (the average of all previous Num PONG PerSec values),' # Avg PONG PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg PONG
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax PONG
+	line += 'Average number of bytes that this message took up,' # BytesAvg PONG
+	line += 'Maximum number of bytes that this message took up,' # BytesMax PONG
+	line += 'Total number of NOTFOUND messages received thus far,' # # NOTFOUND Msgs
+	line += 'Change in number of messages over the change in time for the most recent NOTFOUND message received,' # Num NOTFOUND PerSec
+	line += 'Average number of NOTFOUND messages received per second thus far (the average of all previous Num NOTFOUND PerSec values),' # Avg NOTFOUND PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg NOTFOUND
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax NOTFOUND
+	line += 'Average number of bytes that this message took up,' # BytesAvg NOTFOUND
+	line += 'Maximum number of bytes that this message took up,' # BytesMax NOTFOUND
+	line += 'Total number of FILTERLOAD messages received thus far,' # # FILTERLOAD Msgs
+	line += 'Change in number of messages over the change in time for the most recent FILTERLOAD message received,' # Num FILTERLOAD PerSec
+	line += 'Average number of FILTERLOAD messages received per second thus far (the average of all previous Num FILTERLOAD PerSec values),' # Avg FILTERLOAD PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg FILTERLOAD
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax FILTERLOAD
+	line += 'Average number of bytes that this message took up,' # BytesAvg FILTERLOAD
+	line += 'Maximum number of bytes that this message took up,' # BytesMax FILTERLOAD
+	line += 'Total number of FILTERADD messages received thus far,' # # FILTERADD Msgs
+	line += 'Change in number of messages over the change in time for the most recent FILTERADD message received,' # Num FILTERADD PerSec
+	line += 'Average number of FILTERADD messages received per second thus far (the average of all previous Num FILTERADD PerSec values),' # Avg FILTERADD PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg FILTERADD
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax FILTERADD
+	line += 'Average number of bytes that this message took up,' # BytesAvg FILTERADD
+	line += 'Maximum number of bytes that this message took up,' # BytesMax FILTERADD
+	line += 'Total number of FILTERCLEAR messages received thus far,' # # FILTERCLEAR Msgs
+	line += 'Change in number of messages over the change in time for the most recent FILTERCLEAR message received,' # Num FILTERCLEAR PerSec
+	line += 'Average number of FILTERCLEAR messages received per second thus far (the average of all previous Num FILTERCLEAR PerSec values),' # Avg FILTERCLEAR PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg FILTERCLEAR
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax FILTERCLEAR
+	line += 'Average number of bytes that this message took up,' # BytesAvg FILTERCLEAR
+	line += 'Maximum number of bytes that this message took up,' # BytesMax FILTERCLEAR
+	line += 'Total number of SENDHEADERS messages received thus far,' # # SENDHEADERS Msgs
+	line += 'Change in number of messages over the change in time for the most recent SENDHEADERS message received,' # Num SENDHEADERS PerSec
+	line += 'Average number of SENDHEADERS messages received per second thus far (the average of all previous Num SENDHEADERS PerSec values),' # Avg SENDHEADERS PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg SENDHEADERS
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax SENDHEADERS
+	line += 'Average number of bytes that this message took up,' # BytesAvg SENDHEADERS
+	line += 'Maximum number of bytes that this message took up,' # BytesMax SENDHEADERS
+	line += 'Total number of FEEFILTER messages received thus far,' # # FEEFILTER Msgs
+	line += 'Change in number of messages over the change in time for the most recent FEEFILTER message received,' # Num FEEFILTER PerSec
+	line += 'Average number of FEEFILTER messages received per second thus far (the average of all previous Num FEEFILTER PerSec values),' # Avg FEEFILTER PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg FEEFILTER
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax FEEFILTER
+	line += 'Average number of bytes that this message took up,' # BytesAvg FEEFILTER
+	line += 'Maximum number of bytes that this message took up,' # BytesMax FEEFILTER
+	line += 'Total number of SENDCMPCT messages received thus far,' # # SENDCMPCT Msgs
+	line += 'Change in number of messages over the change in time for the most recent SENDCMPCT message received,' # Num SENDCMPCT PerSec
+	line += 'Average number of SENDCMPCT messages received per second thus far (the average of all previous Num SENDCMPCT PerSec values),' # Avg SENDCMPCT PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg SENDCMPCT
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax SENDCMPCT
+	line += 'Average number of bytes that this message took up,' # BytesAvg SENDCMPCT
+	line += 'Maximum number of bytes that this message took up,' # BytesMax SENDCMPCT
+	line += 'Total number of CMPCTBLOCK messages received thus far,' # # CMPCTBLOCK Msgs
+	line += 'Change in number of messages over the change in time for the most recent CMPCTBLOCK message received,' # Num CMPCTBLOCK PerSec
+	line += 'Average number of CMPCTBLOCK messages received per second thus far (the average of all previous Num CMPCTBLOCK PerSec values),' # Avg CMPCTBLOCK PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg CMPCTBLOCK
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax CMPCTBLOCK
+	line += 'Average number of bytes that this message took up,' # BytesAvg CMPCTBLOCK
+	line += 'Maximum number of bytes that this message took up,' # BytesMax CMPCTBLOCK
+	line += 'Total number of GETBLOCKTXN messages received thus far,' # # GETBLOCKTXN Msgs
+	line += 'Change in number of messages over the change in time for the most recent GETBLOCKTXN message received,' # Num GETBLOCKTXN PerSec
+	line += 'Average number of GETBLOCKTXN messages received per second thus far (the average of all previous Num GETBLOCKTXN PerSec values),' # Avg GETBLOCKTXN PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg GETBLOCKTXN
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax GETBLOCKTXN
+	line += 'Average number of bytes that this message took up,' # BytesAvg GETBLOCKTXN
+	line += 'Maximum number of bytes that this message took up,' # BytesMax GETBLOCKTXN
+	line += 'Total number of BLOCKTXN messages received thus far,' # # BLOCKTXN Msgs
+	line += 'Change in number of messages over the change in time for the most recent BLOCKTXN message received,' # Num BLOCKTXN PerSec
+	line += 'Average number of BLOCKTXN messages received per second thus far (the average of all previous Num BLOCKTXN PerSec values),' # Avg BLOCKTXN PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg BLOCKTXN
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax BLOCKTXN
+	line += 'Average number of bytes that this message took up,' # BytesAvg BLOCKTXN
+	line += 'Maximum number of bytes that this message took up,' # BytesMax BLOCKTXN
+	line += 'Total number of REJECT messages received thus far,' # # REJECT Msgs
+	line += 'Change in number of messages over the change in time for the most recent REJECT message received,' # Num REJECT PerSec
+	line += 'Average number of REJECT messages received per second thus far (the average of all previous Num REJECT PerSec values),' # Avg REJECT PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg REJECT
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax REJECT
+	line += 'Average number of bytes that this message took up,' # BytesAvg REJECT
+	line += 'Maximum number of bytes that this message took up,' # BytesMax REJECT
+	line += 'Total number of undocumented messages received thus far,' # # [UNDOCUMENTED] Msgs
+	line += 'Change in number of messages over the change in time for the most recent undocumented message received,' # Num [UNDOCUMENTED] PerSec
+	line += 'Average number of undocumented messages received per second thus far (the average of all previous Num [UNDOCUMENTED] PerSec values),' # Avg [UNDOCUMENTED] PerSec
+	line += 'Average number of clocks that it took to process this message,' # ClocksAvg [UNDOCUMENTED]
+	line += 'Maximum number of clocks that it took to process this message,' # ClocksMax [UNDOCUMENTED]
+	line += 'Average number of bytes that this message took up,' # BytesAvg [UNDOCUMENTED]
+	line += 'Maximum number of bytes that this message took up,' # BytesMax [UNDOCUMENTED]
+	line += 'Number of rows that were skipped before this row (because the number of connections was not equal to the correct value),' # NumSkippedSamples
 
 	return line
 
@@ -597,10 +626,15 @@ def parseMessage(message, string, time):
 
 
 def fetch(now):
-	global numPeers, numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
+	global numPeers, disableLog, numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	numPeers = 0
 	try:
 		numPeers = int(bitcoin('getconnectioncount').strip())
+		
+		# Disable all logging messages within bitcoin
+		if disableLog:
+			bitcoin('log')
+			disableLog = False
 
 		# If eclipse attack, verify that the read-to-fake ratio is correct
 		if eclipsing:
@@ -624,23 +658,83 @@ def fetch(now):
 			if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 			return ''
 
-		getpeerinfo_raw = bitcoin('getpeerinfo')
 		messages = json.loads(bitcoin('getmsginfo'))
 		blockcount = int(bitcoin('getblockcount').strip())
+		blockdelay = bitcoin('blocktimeoffset').strip()
 		mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
+		peerinfo = json.loads(bitcoin('getpeerinfo'))
 		resourceUsage = getCPUData()
 	except Exception as e:
 		raise Exception('Unable to access Bitcoin console...')
 
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 
+	addresses = ''
+	totalBanScore = 0
+	totalPingTime = 0
+	numPingTimes = 0
+	numInbound = 0
+	numAddnode = 0
+	numPruned = 0
+	numBloom = 0
+	numTXRelayers = 0
+	for peer in peerinfo:
+		if addresses != '':
+			addresses += ' '
+		try:
+			addresses += peer["addr"]
+			totalBanScore += peer["banscore"]
+		except: pass
+		try:
+			totalPingTime += peer["pingtime"]
+			numPingTimes += 1
+		except: pass
+		try:
+			if peer['inbound'] != 'false':
+				numInbound += 1
+		except: pass
+		try:
+			if 'NETWORK_LIMITED' in peer['servicesnames']:
+				numPruned += 1
+		except: pass
+		try:
+			if peer['relaytxes'] != 'false':
+				numTXRelayers += 1
+		except: pass
+		try:
+			if peer['addnode'] != 'false':
+				numAddnode += 1
+		except: pass
+		try:
+			if 'BLOOM' in peer['servicesnames']:
+				numBloom += 1
+		except: pass
+
+	if numPingTimes != 0:
+		avgPingTime = totalPingTime / numPingTimes
+	else:
+		avgPingTime = '0'
+
 	line = str(now) + ','
 	line += str(seconds) + ','
+
 	line += str(numPeers) + ','
+	line += str(numInbound) + ','
+	line += str(numPruned) + ','
+	line += str(numTXRelayers) + ','
+	line += str(numAddnode) + ','
+	line += str(numBloom) + ','
+	line += str(avgPingTime) + ','
+	line += str(totalBanScore) + ','
+	line += addresses + ','
+
 	line += resourceUsage['cpu_percent'] + '%,'
 	line += resourceUsage['memory_percent'] + '%,'
-	line += '"' + re.sub(r'\s', '', json.dumps(resourceUsage)).replace('"', '""') + '",'
-	line += '"' + re.sub(r'\s', '', getpeerinfo_raw).replace('"', '""') + '",'
+	line += resourceUsage['memory'] + ','
+	line += resourceUsage['virtual_memory'] + ','
+	line += resourceUsage['shared_memory'] + ','
+	#line += '"' + re.sub(r'\s', '', json.dumps(resourceUsage)).replace('"', '""') + '",'
+	#line += '"' + re.sub(r'\s', '', getpeerinfo_raw).replace('"', '""') + '",'
 
 
 	# Compute the blocks per second and tx per second
@@ -664,6 +758,7 @@ def fetch(now):
 	acceptedTxPerSecCount += 1
 
 	line += str(blockcount) + ','
+	line += blockdelay + ','
 	line += str(numAcceptedBlocksPerSec) + ','
 	line += str(acceptedBlocksPerSecSum / acceptedBlocksPerSecCount) + ','
 	line += str(mempoolinfo['size']) + ','
@@ -741,6 +836,7 @@ def fixBitcoinConf():
 
 
 def resetNode():
+	global disableLog
 	success = False
 	while not success or bitcoinUp():
 		try:
@@ -764,6 +860,8 @@ def resetNode():
 			pass
 		time.sleep(3)
 
+	disableLog = True
+
 	if startupDelay > 0:
 		print(f'Startup delay for {startupDelay} seconds...')
 		time.sleep(startupDelay)
@@ -781,7 +879,7 @@ def log(file, targetDateTime, count):
 			#if count >= 3600:
 			#	file.close()
 			#	return
-			if(count % rowsPerNodeReset == 0):
+			if(count % rowsPerFile == 0):
 				if not eclipsing: # If eclipse attack, max connections does not increase
 					maxConnections = (maxConnections + 1) % len(connectionSequence)
 				try:
@@ -813,8 +911,8 @@ def getDelay(time):
 
 # Returns the file name of the current file, given the global configuration variables
 def getFileName():
-	global rowsPerNodeReset, numSecondsPerSample, eclipsing, fileSampleNumber, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate, waitForConnectionNum
-	minutes = rowsPerNodeReset / numSecondsPerSample / 60
+	global rowsPerFile, numSecondsPerSample, eclipsing, fileSampleNumber, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate, waitForConnectionNum
+	minutes = rowsPerFile / numSecondsPerSample / 60
 	if eclipsing:
 		return f'Sample {fileSampleNumber}, genuine = {eclipse_real_numpeers}, fake = {eclipse_fake_numpeers}, drop = {eclipse_drop_rate}, minutes = {minutes}.csv'
 	elif waitForConnectionNum:
@@ -838,10 +936,13 @@ def init():
 	print()
 
 	print('Use the new "numconnections" in bitcoin.conf instead of "maxconnections"?')
-	print('y: numconnections: New command; strictly enforces numpeers')
-	print('n: maxconnections: Lightly enforces an upper bound to numpeers')
-	useNumconnections = input('(y/n) ').lower() in ['y', 'yes']
-	numconnectionsString = 'numconnections' if useNumconnections else 'maxconnections'
+	print('- Option 1: numconnections (New command; strictly enforces numpeers)')
+	print('- Option 2: maxconnections (Lightly enforces an upper bound to numpeers)')
+	print()
+	useNumconnections = ''
+	while useNumconnections.strip() not in ['1', '2']:
+		useNumconnections = input('(pick an option number): ').strip()
+	numconnectionsString = 'numconnections' if useNumconnections == '1' else 'maxconnections'
 
 	if not useNumconnections:
 		print()
@@ -865,12 +966,16 @@ def init():
 		print(f'Total number of connections: {maxConnections}')
 		waitForConnectionNum = True
 	else:
-		print('How many connections should be initially made?')
-		for i, v in enumerate(connectionSequence):
-			print(f'Option {i + 1}: {v} connections')
-		maxConnections = -1
-		while maxConnections < 0 or maxConnections >= len(connectionSequence):
-			maxConnections = int(input(f'(pick an option number): ')) - 1
+		if len(connectionSequence) == 1:
+			maxConnections = 0
+		else:
+			print('How many connections should be initially made?')
+			for i, v in enumerate(connectionSequence):
+				print(f'- Option {i + 1}: {v} connections')
+			print()
+			maxConnections = -1
+			while maxConnections < 0 or maxConnections >= len(connectionSequence):
+				maxConnections = int(input(f'(pick an option number): ')) - 1
 		print()
 		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {connectionSequence[maxConnections]}? (y/n) ').lower() in ['y', 'yes']
 
@@ -879,7 +984,7 @@ def init():
 	print('OVERVIEW')
 	print()
 	print(f'Starting file name: {getFileName()}')
-	print(f'Number of seconds per file: {rowsPerNodeReset}')
+	print(f'Number of seconds per file: {rowsPerFile}')
 	print(f'Number of connections sequence: {connectionSequence}')
 	print(f'Use bitcoin.conf: {useBitcoinConf}')
 	print(f'Use maxconnections or numconnections: {numconnectionsString}')
@@ -895,6 +1000,8 @@ def init():
 		print('Then please restart the script')
 		sys.exit()
 		return
+
+	os.system('clear')
 
 	path = os.path.expanduser('~/Desktop/Logs_AlternatingConnections')
 	if not os.path.exists(path):
