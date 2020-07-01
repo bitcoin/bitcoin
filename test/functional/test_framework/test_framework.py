@@ -879,6 +879,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
+        self.import_deterministic_coinbase_privkeys()
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
