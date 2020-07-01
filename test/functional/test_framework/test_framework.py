@@ -837,27 +837,27 @@ class DashTestFramework(SyscoinTestFramework):
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
         self.stop_node(0)
+        self.nodes = []
 
         start_idx = len(self.nodes)
         for idx in range(0, self.mn_count):
             copy_datadir(0, idx + start_idx, self.options.tmpdir)
 
-        # restart faucet node
-        self.start_node(0)
 
     def start_masternodes(self):
         self.log.info("Starting %d masternodes", self.mn_count)
 
         start_idx = len(self.nodes)
 
-        self.add_nodes(self.mn_count)
-    
+        self.add_nodes(self.num_nodes)
+        # Start control node again and then start MN's
+        self.start_node(0)
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
             connect_nodes(self.mninfo[idx].node, 0)
 
 
-        # start up nodes in parallel
+        # start up MN's
         for idx in range(0, self.mn_count):
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.start_masternode(self.mninfo[idx])
