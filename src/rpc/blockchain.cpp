@@ -48,8 +48,6 @@
 // SYSCOIN
 #include <wallet/context.h>
 #include <services/asset.h>
-#include <evo/specialtx.h>
-#include <evo/cbtx.h>
 struct CUpdatedBlock
 {
     uint256 hash;
@@ -215,13 +213,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
             txs.push_back(tx->GetHash().GetHex());
     }
     result.pushKV("tx", txs);
-    // SYSCOIN
-    CCbTx cbTx;
-    if (GetTxPayload(*block.vtx[0], cbTx)) {
-        UniValue cbTxObj;
-        cbTx.ToJson(cbTxObj);
-        result.pushKV("cbTx", cbTxObj);
-    }
     result.pushKV("time", block.GetBlockTime());
     result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
     result.pushKV("nonce", (uint64_t)block.nNonce);
