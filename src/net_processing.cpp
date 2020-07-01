@@ -3842,24 +3842,19 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
     // SYSCOIN
     if (msg_type == NetMsgType::GETMNLISTDIFF) {
-        LogPrintf("GETMNLISTDIFF\n");
         CGetSimplifiedMNListDiff cmd;
         vRecv >> cmd;
-LogPrintf("GETMNLISTDIFF1\n");
         LOCK(cs_main);
 
         CSimplifiedMNListDiff mnListDiff;
         std::string strError;
         if (BuildSimplifiedMNListDiff(cmd.baseBlockHash, cmd.blockHash, mnListDiff, strError)) {
-            LogPrintf("GETMNLISTDIFF SEND\n");
             connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
         } else {
            
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
-             LogPrintf("GETMNLISTDIFF err %s\n", strError);
             Misbehaving(pfrom.GetId(), 1, strError);
         }
-        LogPrintf("GETMNLISTDIFF2\n");
         return true;
     }
 

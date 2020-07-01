@@ -59,6 +59,17 @@ MSG_CMPCT_BLOCK = 4
 MSG_WITNESS_FLAG = 1 << 30
 MSG_TYPE_MASK = 0xffffffff >> 2
 
+# SYSCOIN
+MSG_SPORK = 11
+MSG_GOVERNANCE_OBJECT = 12
+MSG_GOVERNANCE_OBJECT_VOTE = 13
+MSG_QUORUM_FINAL_COMMITMENT = 14
+MSG_QUORUM_CONTRIB = 15
+MSG_QUORUM_COMPLAINT = 16
+MSG_QUORUM_JUSTIFICATION = 17
+MSG_QUORUM_PREMATURE_COMMITMENT = 18
+MSG_QUORUM_RECOVERED_SIG = 19
+
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
 VERSION_CHAIN_START = (1 << 16)
@@ -260,7 +271,17 @@ class CInv:
         MSG_TX | MSG_WITNESS_FLAG: "WitnessTx",
         MSG_BLOCK | MSG_WITNESS_FLAG: "WitnessBlock",
         MSG_FILTERED_BLOCK: "filtered Block",
-        4: "CompactBlock"
+        4: "CompactBlock",
+        # SYSCOIN message types
+        MSG_SPORK: "spork",
+        MSG_GOVERNANCE_OBJECT: "govobj",
+        MSG_GOVERNANCE_OBJECT_VOTE: "govobjvote",
+        MSG_QUORUM_FINAL_COMMITMENT: "qfcommit",
+        MSG_QUORUM_CONTRIB: "qcontrib",
+        MSG_QUORUM_COMPLAINT: "qcomplaint",
+        MSG_QUORUM_JUSTIFICATION: "qjustify",
+        MSG_QUORUM_PREMATURE_COMMITMENT: "qpcommit",
+        MSG_QUORUM_RECOVERED_SIG: "qsigrec",
     }
 
     def __init__(self, t=0, h=0):
