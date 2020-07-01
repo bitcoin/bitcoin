@@ -847,7 +847,7 @@ class DashTestFramework(SyscoinTestFramework):
     def start_masternodes(self):
         self.log.info("Starting %d masternodes", self.mn_count)
 
-        start_idx = len(self.nodes)
+        start_idx = 1
 
         self.add_nodes(self.num_nodes)
         # Start control node again and then start MN's
