@@ -370,6 +370,8 @@ class P2PInterface(P2PConnection):
     def on_sendheaders(self, message): pass
     def on_tx(self, message): pass
 
+    # SYSCOIN
+    def on_mnlistdiff(self, message): pass
     def on_inv(self, message):
         want = msg_getdata()
         for i in message.inv:
