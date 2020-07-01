@@ -281,7 +281,7 @@ class CInv:
         MSG_QUORUM_COMPLAINT: "qcomplaint",
         MSG_QUORUM_JUSTIFICATION: "qjustify",
         MSG_QUORUM_PREMATURE_COMMITMENT: "qpcommit",
-        MSG_QUORUM_RECOVERED_SIG: "qsigrec",
+        MSG_QUORUM_RECOVERED_SIG: "qsigrec"
     }
 
     def __init__(self, t=0, h=0):
