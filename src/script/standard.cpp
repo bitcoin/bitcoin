@@ -294,7 +294,7 @@ public:
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
-    return boost::apply_visitor(CScriptVisitor{}, dest);
+    return boost::apply_visitor(CScriptVisitor(), dest);
 }
 
 CScript GetScriptForRawPubKey(const CPubKey& pubKey)
