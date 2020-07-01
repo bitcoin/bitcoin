@@ -103,11 +103,13 @@ public:
     // we also transfer changes in active quorums
     std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<uint8_t, quorumHash>
     std::vector<llmq::CFinalCommitment> newQuorums;
+    uint256 merkleRootMNList;
+    uint256 merkleRootQuorums;
 
 public:
     SERIALIZE_METHODS(CSimplifiedMNListDiff, obj) {
         READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx,
-        obj.deletedMNs, obj.mnList, obj.deletedQuorums, obj.newQuorums);
+        obj.deletedMNs, obj.mnList, obj.deletedQuorums, obj.newQuorums, obj.merkleRootMNList, obj.merkleRootQuorums);
     }
 
 public:

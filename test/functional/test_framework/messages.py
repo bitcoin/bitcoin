@@ -1714,19 +1714,17 @@ class msg_mnlistdiff():
         self.baseBlockHash = 0
         self.blockHash = 0
         self.merkleProof = CPartialMerkleTree()
-        self.cbTx = None
         self.deletedMNs = []
         self.mnList = []
         self.deletedQuorums = []
         self.newQuorums = []
+        self.merkleRootMNList = 0
+        self.merkleRootQuorums = 0
 
     def deserialize(self, f):
         self.baseBlockHash = deser_uint256(f)
         self.blockHash = deser_uint256(f)
         self.merkleProof.deserialize(f)
-        self.cbTx = CTransaction()
-        self.cbTx.deserialize(f)
-        self.cbTx.rehash()
         self.deletedMNs = deser_uint256_vector(f)
         self.mnList = []
         for i in range(deser_compact_size(f)):
@@ -1744,6 +1742,8 @@ class msg_mnlistdiff():
             qc = CFinalCommitment()
             qc.deserialize(f)
             self.newQuorums.append(qc)
+        self.merkleRootMNList = deser_uint256(f)
+        self.merkleRootQuorums = deser_uint256(f)
 
     def __repr__(self):
         return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)

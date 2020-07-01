@@ -143,8 +143,6 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
     ssCbTxMerkleTree << cbTxMerkleTree;
     obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end()));
 
-    obj.pushKV("cbTx", EncodeHexTx(*cbTx));
-
     UniValue deletedMNsArr(UniValue::VARR);
     for (const auto& h : deletedMNs) {
         deletedMNsArr.push_back(h.ToString());
@@ -175,12 +173,8 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
         newQuorumsArr.push_back(eObj);
     }
     obj.pushKV("newQuorums", newQuorumsArr);
-
-    CCbTx cbTxPayload;
-    if (GetTxPayload(*cbTx, cbTxPayload)) {
-        obj.pushKV("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString());
-        obj.pushKV("merkleRootQuorums", cbTxPayload.merkleRootQuorums.ToString());
-    }
+    obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
+    obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString()); 
 }
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet)
@@ -233,8 +227,14 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
         errorRet = strprintf("failed to read block %s from disk", blockHash.ToString());
         return false;
     }
+    CCbTx cbTxPayload;
+    if(!GetTxPayload(*block.vtx[0], cbTxPayload)) {
+        errorRet = strprintf("failed to tx payload");
+        return false;
+    }
 
-    mnListDiffRet.cbTx = block.vtx[0];
+    mnListDiffRet.merkleRootMNList = cbTxPayload.merkleRootMNList;
+    mnListDiffRet.merkleRootQuorums = cbTxPayload.merkleRootQuorums;
 
     std::vector<uint256> vHashes;
     std::vector<bool> vMatch(block.vtx.size(), false);
