@@ -456,7 +456,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         assert_equal(len(binary), num_nodes)
         assert_equal(len(binary_cli), num_nodes)
         offsetNum = 0
-        if offset is None:
+        if offset is not None:
             offsetNum = offset
         for i in range(num_nodes):
             index = i + offsetNum
