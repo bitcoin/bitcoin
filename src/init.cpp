@@ -103,9 +103,6 @@
 #include <flat-database.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
-#include <iostream>
-#include <fstream>
-std::ofstream myfile;
 std::string exePath = "";
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
@@ -1446,22 +1443,15 @@ bool AppInitLockDataDirectory()
 
 bool AppInitMain(const util::Ref& context, NodeContext& node)
 {
-    myfile.open("output.log");
     const CChainParams& chainparams = Params();
     // SYSCOIN
     std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
 	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
-    myfile << "1\n";
-    myfile.close();
-    myfile.open("output.log");
     // ********************************************************* Step 4a: application initialization
     if (!CreatePidFile()) {
         // Detailed error printed inside CreatePidFile().
         return false;
     }
-        myfile << "2\n";
-    myfile.close();
-    myfile.open("output.log");
     if (LogInstance().m_print_to_file) {
         if (gArgs.GetBoolArg("-shrinkdebugfile", LogInstance().DefaultShrinkDebugFile())) {
             // Do this first since it both loads a bunch of debug.log into memory,
@@ -1469,9 +1459,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             LogInstance().ShrinkDebugFile();
         }
     }
-        myfile << "3\n";
-    myfile.close();
-    myfile.open("output.log");
     if (!LogInstance().StartLogging()) {
             return InitError(strprintf(Untranslated("Could not open debug log file %s"),
                 LogInstance().m_file_path.string()));
@@ -1507,9 +1494,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                   "also be data loss if syscoin is started while in a temporary directory.\n",
             gArgs.GetArg("-datadir", ""), fs::current_path().string());
     }
-    myfile << "4\n";
-    myfile.close();
-    myfile.open("output.log");
+
     InitSignatureCache();
     InitScriptExecutionCache();
 
@@ -1558,9 +1543,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             return InitError(_("Unable to sign spork message, wrong key?"));
         }
     }
-    myfile << "5\n";
-    myfile.close();
-    myfile.open("output.log");
+
     assert(!node.scheduler);
     node.scheduler = MakeUnique<CScheduler>();
 
@@ -1617,9 +1600,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // until the very end ("start node") as the UTXO/block state
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
-    myfile << "6\n";
-    myfile.close();
-    myfile.open("output.log");
+
     assert(!node.banman);
     node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", &uiInterface, gArgs.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
@@ -1662,9 +1643,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 SetReachable(net, false);
         }
     }
-    myfile << "7\n";
-    myfile.close();
-    myfile.open("output.log");
+
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = gArgs.GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
@@ -1748,9 +1727,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     } else {
         LogPrintf("Using /16 prefix for IP bucketing\n");
     }
-    myfile << "8\n";
-    myfile.close();
-    myfile.open("output.log");
+
 #if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
 
@@ -2053,9 +2030,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             }
         }
     }
-    myfile << "9\n";
-    myfile.close();
-    myfile.open("output.log");
+
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
@@ -2088,9 +2063,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             return false;
         }
     }
-    myfile << "10\n";
-    myfile.close();
-    myfile.open("output.log");
+
     // ********************************************************* Step 10: data directory maintenance
 
     // if pruning, unset the service bit and perform the initial blockstore prune
@@ -2123,9 +2096,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
         return false;
     }
-        myfile << "11\n";
-    myfile.close();
-    myfile.open("output.log");
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;
@@ -2173,9 +2143,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         LogPrintf("You are starting in lite mode, all governance validation functionality is disabled.\n");
     }
     
-    myfile << "12\n";
-    myfile.close();
-    myfile.open("output.log");
+
     if(fLiteMode && fMasternodeMode) {
         return InitError(Untranslated("You can not start a masternode in lite mode."));
     }
@@ -2227,9 +2195,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     }
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
-    myfile << "13\n";
-    myfile.close();
-    myfile.open("output.log");
+
  
     // SYSCOIN ********************************************************* Step 11b: Load cache data
 
@@ -2289,9 +2255,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if (!fLiteMode) {
         node.scheduler->scheduleEvery([&] { governance.DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     }
-        myfile << "14\n";
-    myfile.close();
-    myfile.open("output.log");
     llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
 
@@ -2314,9 +2277,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if (gArgs.GetBoolArg("-upnp", DEFAULT_UPNP)) {
         StartMapPort();
     }
-    myfile << "15\n";
-    myfile.close();
-    myfile.open("output.log");
+
     CConnman::Options connOptions;
     connOptions.nLocalServices = nLocalServices;
     connOptions.nMaxConnections = nMaxConnections;
@@ -2379,9 +2340,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     for (const auto& client : node.chain_clients) {
         client->start(*node.scheduler);
     }
-    myfile << "16\n";
-    myfile.close();
-    myfile.open("output.log");
+
     BanMan* banman = node.banman.get();
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
@@ -2400,8 +2359,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     } else {
         SetSYSXAssetForUnitTests(gArgs.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
     }
-    myfile << "17\n";
-    myfile.close();
-    myfile.open("output.log");
+
     return true;
 }
