@@ -650,6 +650,9 @@ def fetch(now):
 				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
 				if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 				return ''
+		elif numPeers > connectionSequence[maxConnections]:
+			# If not eclipsing, and number of connections is too big, reduce connections
+			bitcoin(f'forcerealfake {connectionSequence[maxConnections]} 0')
 
 
 		if waitForConnectionNum and numPeers < connectionSequence[maxConnections]:
@@ -829,6 +832,8 @@ def fixBitcoinConf():
 	configData = re.sub(r'\s*numconnections\s*=\s*[0-9]+', '', configData)
 	configData = re.sub(r'\s*numblocksonlyconnections\s*=\s*[0-9]+', '', configData)
 	if useBitcoinConf: # If the user specified to not use bitcoin.conf, add in the connections limit
+		if numconnectionsString != 'maxconnections':
+			configData += '\n' + 'maxconnections=' + str(connectionSequence[maxConnections])
 		configData += '\n' + numconnectionsString + '=' + str(connectionSequence[maxConnections])
 	print(configData)
 	with open(datadir + '/bitcoin.conf', 'w') as configFile:
