@@ -984,7 +984,10 @@ class DashTestFramework(SyscoinTestFramework):
         def check_sporks_same():
             sporks = self.nodes[0].spork('show')
             time.sleep(0.5)
-            return all(node.spork('show') == sporks for node in self.nodes[1:])
+            for node in self.nodes[1:]:
+                if node.spork('show') != sporks:
+                    return False
+            return True
         
         wait_until(check_sporks_same, timeout=timeout)
 
