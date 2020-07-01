@@ -212,7 +212,8 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         proof.header = header
         proof.txn = d.merkleProof
         proof = proof.serialize().hex()
-        assert_equal(self.nodes[0].verifytxoutproof(proof), [d.cbTxHash])
+        # merkle proof first hash should be coinbase
+        assert_equal(self.nodes[0].verifytxoutproof(proof), [format(d.merkleProof.vHash[0], '064x')])
 
         # Check if P2P messages match with RPCs
         d2 = self.nodes[0].protx("diff", baseBlockHash, blockHash)
