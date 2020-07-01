@@ -983,8 +983,9 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
             sporks = self.nodes[0].spork('show')
+            time.sleep(0.5)
             return all(node.spork('show') == sporks for node in self.nodes[1:])
-        time.sleep(0.5)
+        
         wait_until(check_sporks_same, timeout=timeout)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None):
