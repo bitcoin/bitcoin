@@ -197,7 +197,25 @@ def ToHex(obj):
     return obj.serialize().hex()
 
 # Objects that map to syscoind objects, which can be serialized/deserialized
+# SYSCOIN
+class CService:
+    __slots__ = ("ip", "port")
+    def __init__(self):
+        self.ip = ""
+        self.port = 0
 
+    def deserialize(self, f):
+        self.ip = socket.inet_ntop(socket.AF_INET6, f.read(16))
+        self.port = struct.unpack(">H", f.read(2))[0]
+
+    def serialize(self):
+        r = b""
+        r += socket.inet_pton(socket.AF_INET6, self.ip)
+        r += struct.pack(">H", self.port)
+        return r
+
+    def __repr__(self):
+        return "CService(ip=%s port=%i)" % (self.ip, self.port)
 
 class CAddress:
     __slots__ = ("ip", "nServices", "pchReserved", "port", "time")
