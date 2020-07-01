@@ -49,6 +49,7 @@
 #include <wallet/context.h>
 #include <services/asset.h>
 #include <evo/specialtx.h>
+#include <evo/cbtx.h>
 struct CUpdatedBlock
 {
     uint256 hash;
