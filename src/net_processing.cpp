@@ -3842,9 +3842,10 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
     // SYSCOIN
     if (msg_type == NetMsgType::GETMNLISTDIFF) {
+        LogPrintf("GETMNLISTDIFF\n");
         CGetSimplifiedMNListDiff cmd;
         vRecv >> cmd;
-
+LogPrintf("GETMNLISTDIFF1\n");
         LOCK(cs_main);
 
         CSimplifiedMNListDiff mnListDiff;
@@ -3855,6 +3856,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
             Misbehaving(pfrom.GetId(), 1, strError);
         }
+        LogPrintf("GETMNLISTDIFF2\n");
         return true;
     }
 
