@@ -851,7 +851,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         self.add_nodes(self.num_nodes)
         # Start control node again and then start MN's
-        self.start_node(0, extra_args=[self.extra_args[0]])
+        self.start_node(0, extra_args=self.extra_args[0])
         self.sync_all()
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
