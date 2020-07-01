@@ -96,7 +96,6 @@ public:
     uint256 baseBlockHash;
     uint256 blockHash;
     CPartialMerkleTree cbTxMerkleTree;
-    CTransactionRef cbTx;
     std::vector<uint256> deletedMNs;
     std::vector<CSimplifiedMNListEntry> mnList;
 
@@ -108,7 +107,7 @@ public:
 
 public:
     SERIALIZE_METHODS(CSimplifiedMNListDiff, obj) {
-        READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx,
+        READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree,
         obj.deletedMNs, obj.mnList, obj.deletedQuorums, obj.newQuorums, obj.merkleRootMNList, obj.merkleRootQuorums);
     }
 
