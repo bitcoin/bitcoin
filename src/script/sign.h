@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGN_H
 #define BITCOIN_SCRIPT_SIGN_H
 
+#include <attributes.h>
 #include <coins.h>
 #include <hash.h>
 #include <pubkey.h>
@@ -34,8 +35,9 @@ public:
 };
 
 /** A signature creator for transactions. */
-class MutableTransactionSignatureCreator : public BaseSignatureCreator {
-    const CMutableTransaction* txTo;
+class MutableTransactionSignatureCreator : public BaseSignatureCreator
+{
+    const CMutableTransaction& m_txto;
     unsigned int nIn;
     int nHashType;
     CAmount amount;
@@ -43,8 +45,8 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator {
     const PrecomputedTransactionData* m_txdata;
 
 public:
-    MutableTransactionSignatureCreator(const CMutableTransaction* tx, unsigned int input_idx, const CAmount& amount, int hash_type);
-    MutableTransactionSignatureCreator(const CMutableTransaction* tx, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type);
+    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, int hash_type);
+    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
