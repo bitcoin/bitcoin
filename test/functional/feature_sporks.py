@@ -3,14 +3,15 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
-from test_framework.test_framework import SyscoinTestFramework
+from test_framework.test_framework import DashTestFramework
 from test_framework.util import connect_nodes, wait_until, force_finish_mnsync
 
 '''
 '''
 
-class SporkTest(SyscoinTestFramework):
+class SporkTest(DashTestFramework):
     def set_test_params(self):
+        self.set_dash_test_params(0, 0)
         self.num_nodes = 3
         self.setup_clean_chain = True
         self.extra_args = [["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"], [], []]
