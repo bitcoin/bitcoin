@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 }
 
 template<typename name>
-void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder)
+void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     BOOST_CHECK_EQUAL(pool.size(), sortedOrder.size());
     typename CTxMemPool::indexed_transaction_set::index<name>::type::iterator it = pool.mapTx.get<name>().begin();
