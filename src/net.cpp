@@ -375,7 +375,9 @@ static CAddress GetBindAddress(SOCKET sock)
 CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool manual_connection, bool block_relay_only)
 {
     if (pszDest == nullptr) {
-        if (IsLocal(addrConnect)) {
+        // SYSCOIN
+        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
+        if (!fAllowLocal && IsLocal(addrConnect)) {
             return nullptr;
         }
 
@@ -1965,10 +1967,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
                 break;
 
-            if (!addr.IsValid() || IsLocal(addr))
+            // SYSCOIN
+            if (!addr.IsValid())
                 break;
 
-
+            bool fAllowLocal = Params().AllowMultiplePorts() && addr.GetPort() != GetListenPort();
+            if (!fAllowLocal && IsLocal(addr))
+                break;
             // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
             // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
             // already-connected network ranges, ...) before trying new addrman addresses.
@@ -1992,8 +1997,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 continue;
             }
 
-            // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
+            // SYSCOIN do not allow non-default ports, unless after 50 invalid addresses selected already
+            if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort() && addr.GetPort() != GetListenPort() && nTries < 50)
                 continue;
 
             addrConnect = addr;
@@ -2255,10 +2260,17 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return;
     }
     if (!pszDest) {
-        if (IsLocal(addrConnect) ||
-            FindNode(static_cast<CNetAddr>(addrConnect)) || (m_banman && m_banman->IsBanned(addrConnect)) ||
-            FindNode(addrConnect.ToStringIPPort()))
+        // banned or exact match?
+        if ((m_banman && m_banman->IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))
             return;
+        // local and not a connection to itself?
+        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
+        if (!fAllowLocal && IsLocal(addrConnect))
+            return;
+        // if multiple ports for same IP are allowed, search for IP:PORT match, otherwise search for IP-only match
+        if ((!Params().AllowMultiplePorts() && FindNode(static_cast<CNetAddr>(addrConnect))) ||
+            (Params().AllowMultiplePorts() && FindNode(static_cast<CService>(addrConnect))))
+            return;mapInfo[nId] = CAddrInf
     } else if (FindNode(std::string(pszDest)))
         return;
 
@@ -2479,8 +2491,8 @@ void CConnman::SetNetworkActive(bool active)
 
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
-
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSeed1(nSeed1In)
+// SYSCOIN
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : addrman(Params().AllowMultiplePorts()), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 
