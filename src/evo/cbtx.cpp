@@ -218,10 +218,10 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
     // now add the commitments from the current block, which are not returned by GetMinedAndActiveCommitmentsUntilBlock
     // due to the use of pindexPrev (we don't have the tip index here)
-    const bool &IsQCIn = qcIn && !qcIn.IsNull();
+    const bool &IsQCIn = qcIn && !qcIn->IsNull();
     if (IsQCIn || block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qc;
-        if(IsQCIn)
+        if(IsQCInqc)
             qc = *qcIn;
         else if (!GetTxPayload(*block.vtx[0], qc)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload-calc-cbtx-quorummerkleroot");

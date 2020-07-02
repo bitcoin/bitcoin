@@ -666,7 +666,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     DecreasePoSePenalties(newList);
 
     // coinbase can be quorum commitments
-    const bool &IsQCIn = qcIn && !qcIn.IsNull();
+    const bool &IsQCIn = qcIn && !qcIn->IsNull();
     if(IsQCIn || block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qc;
         if(IsQCIn)
