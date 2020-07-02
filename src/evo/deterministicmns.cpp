@@ -643,7 +643,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     newList.SetHeight(nHeight);
 
     auto payee = oldList.GetMNPayee();
-    // atleast 2 rounds of payments before registered MN's get  put in list
+    // atleast 2 rounds of payments before registered MN's gets put in list
     const size_t &mnCountThreshold = oldList.GetValidMNsCount()*2;
     // we iterate the oldList here and update the newList
     // this is only valid as long these have not diverged at this point, which is the case as long as we don't add
@@ -656,7 +656,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         // this works on the previous block, so confirmation will happen one block after mnCountThreshold
         // has been reached, but the block hash will then point to the block at mnCountThreshold
         int nConfirmations = pindexPrev->nHeight - dmn->pdmnState->nRegisteredHeight;
-        if (nConfirmations >= 1) {
+        if (nConfirmations >= mnCountThreshold) {
             CDeterministicMNState newState = *dmn->pdmnState;
             newState.UpdateConfirmedHash(dmn->proTxHash, pindexPrev->GetBlockHash());
             newList.UpdateMN(dmn->proTxHash, std::make_shared<CDeterministicMNState>(newState));
