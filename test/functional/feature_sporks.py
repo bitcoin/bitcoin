@@ -50,6 +50,9 @@ class SporkTest(SyscoinTestFramework):
         self.stop_node(1)
         self.start_node(0)
         self.start_node(1)
+        force_finish_mnsync(self.nodes[0])
+        force_finish_mnsync(self.nodes[1])
+        connect_nodes(self.nodes[0], 1)
         assert(self.get_test_spork_state(self.nodes[0]))
         assert(self.get_test_spork_state(self.nodes[1]))
 
