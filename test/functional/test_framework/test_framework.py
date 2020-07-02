@@ -34,7 +34,7 @@ from .util import (
     initialize_datadir,
     sync_blocks,
     sync_mempools,
-    bump_node_times,
+    set_node_times,
     p2p_port,
     copy_datadir,
     force_finish_mnsync,
@@ -560,10 +560,6 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         self.sync_blocks(nodes, **kwargs)
         self.sync_mempools(nodes, **kwargs)
 
-    # SYSCOIN
-    def bump_mocktime(self, t, nodes=None):
-        bump_node_times(nodes or self.nodes, t)
-
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
     def _start_logging(self):
@@ -757,6 +753,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
         self.mninfo = []
+        self.mocktime = None
         self.setup_clean_chain = True
         # additional args
         if extra_args is None:
@@ -773,6 +770,13 @@ class DashTestFramework(SyscoinTestFramework):
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
+
+    def bump_mocktime(self, t, nodes=None):
+        if self.mocktime is None:
+            self.mocktime = int(time.time())
+        else:
+            self.mocktime += t
+        set_node_times(nodes or self.nodes, self.mocktime)
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
