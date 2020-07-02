@@ -631,7 +631,7 @@ void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
     tipIndex = pindex;
 }
 
-bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, CDeterministicMNList& mnListRet, bool debugLogs)
+bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
     AssertLockHeld(cs);
 
@@ -666,9 +666,12 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     DecreasePoSePenalties(newList);
 
     // coinbase can be quorum commitments
-    if(block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+    const bool &IsQCIn = qcIn && !qcIn.IsNull();
+    if(IsQCIn || block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qc;
-        if (!GetTxPayload(*block.vtx[0], qc)) {
+        if(IsQCIn)
+            qc = *qcIn;
+        else if (!GetTxPayload(*block.vtx[0], qc)) {
             return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
         }
         for(const auto& commitment: qc.commitments) {
