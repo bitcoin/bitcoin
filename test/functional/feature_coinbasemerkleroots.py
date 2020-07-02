@@ -238,7 +238,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
-        assert(cbtx["qcTx"]["cbTx"]["version"] == 2)
+        assert(cbtx["cbTx"]["version"] == 2)
 
 
         self.nodes[0].generate(1)
@@ -248,7 +248,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert_equal(cbtx["cbTx"]["version"], 2)
         assert("merkleRootQuorums" in cbtx["cbTx"])
-        merkleRootQuorums = int(cbtx["qcTx"]["cbTx"]["merkleRootQuorums"], 16)
+        merkleRootQuorums = int(cbtx["cbTx"]["merkleRootQuorums"], 16)
 
         if with_initial_quorum:
             assert(merkleRootQuorums != 0)
