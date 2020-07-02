@@ -153,7 +153,7 @@ namespace std {
     {
         std::size_t operator()(const uint256& k) const
         {
-            return (std::size_t)ReadLE64(hash.begin()));
+            return (std::size_t)ReadLE64(hash.begin());
         }
     };
 }
