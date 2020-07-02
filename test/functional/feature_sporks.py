@@ -62,6 +62,7 @@ class SporkTest(SyscoinTestFramework):
         wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
         # turn off and check
+        self.bump_mocktime(1)
         self.set_test_spork_state(self.nodes[0], False)
         time.sleep(0.1)
         wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)

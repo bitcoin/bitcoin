@@ -233,6 +233,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             self.wait_for_sporks_same()
              # Mine one quorum before dip8 is activated
             self.mine_quorum()
+            self.bump_mocktime(1)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
         self.wait_for_sporks_same()
