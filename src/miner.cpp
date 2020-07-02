@@ -207,7 +207,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         }
         // coinbase version must be set prior to these calls which depend on coinbase version to be set for this block
         // later on we override the version anyway but this is to calculate merkleRootMNList/merkleRootQuorums properly
-        pblock->vtx[0].nVersion = coinbaseTx.nVersion;
+        pblock->vtx[0]->nVersion = coinbaseTx.nVersion;
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
