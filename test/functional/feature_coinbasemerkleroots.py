@@ -241,7 +241,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert(cbtx["cbTx"]["version"] == 2)
 
-        self.node[0].generatetoaddress(nblocks=1, address=self.node[0].getnewaddress(label='coinbase'))
+        self.nodes[0].generatetoaddress(nblocks=1, address=self.nodes[0].getnewaddress(label='coinbase'))
         self.sync_blocks()
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
