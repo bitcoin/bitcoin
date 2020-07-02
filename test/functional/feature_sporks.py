@@ -19,6 +19,9 @@ class SporkTest(SyscoinTestFramework):
         self.setup_nodes()
         # connect only 2 first nodes at start
         connect_nodes(self.nodes[0], 1)
+        force_finish_mnsync(self.nodes[0])
+        force_finish_mnsync(self.nodes[1])
+        force_finish_mnsync(self.nodes[2])
 
     def get_test_spork_state(self, node):
         info = node.spork('active')
@@ -52,6 +55,7 @@ class SporkTest(SyscoinTestFramework):
         self.start_node(1)
         force_finish_mnsync(self.nodes[0])
         force_finish_mnsync(self.nodes[1])
+        force_finish_mnsync(self.nodes[2])
         connect_nodes(self.nodes[0], 1)
         assert(self.get_test_spork_state(self.nodes[0]))
         assert(self.get_test_spork_state(self.nodes[1]))
