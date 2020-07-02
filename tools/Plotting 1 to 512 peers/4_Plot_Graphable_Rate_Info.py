@@ -38,9 +38,18 @@ if __name__ == '__main__':
 
 
 		# Check if it's continuing the last plot (multiple lines), or starting new plot
-		if plotNumber == row[1] or plotNumber == '-1':
+		if plotNumber == '-1':
 			if row[2] in titles: plt.title(titles[row[2]])
 			else: plt.title(row[2])
+			plt.clf()
+			plt.plot(x_axis, y_axis, color='black', linewidth=2)
+			plt.xlabel('Number of peer connections')
+			if row[2] in titles: plt.title(titles[row[2]])
+			else: plt.title(row[2])
+			plt.grid(b=True, which='both', axis='y')
+
+
+		if plotNumber == row[1] or plotNumber == '-1':
 			plt.plot(x_axis, y_axis, color='black', linewidth=2)
 		else:
 
