@@ -19,9 +19,17 @@
 
 #include <unordered_map>
 #include <script/standard.h>
+#include <hash.h>
 class CBlock;
 class CBlockIndex;
 class BlockValidationState;
+struct TxIdHasher
+{
+    // this used to call `GetCheapHash()` in uint256, which was later moved; the
+    // cheap hash function simply calls ReadLE64() however, so the end result is
+    // identical
+    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
+};
 
 namespace llmq
 {
@@ -252,9 +260,9 @@ inline void SerReadWrite(Stream& s, immer::map<K, T, Hash, Equal>& obj, CSerActi
 class CDeterministicMNList
 {
 public:
-    typedef immer::map<uint256, CDeterministicMNCPtr> MnMap;
+    typedef immer::map<uint256, CDeterministicMNCPtr, TxIdHasher> MnMap;
     typedef immer::map<uint64_t, uint256> MnInternalIdMap;
-    typedef immer::map<uint256, std::pair<uint256, uint32_t> > MnUniquePropertyMap;
+    typedef immer::map<uint256, std::pair<uint256, uint32_t>, TxIdHasher > MnUniquePropertyMap;
 
 private:
     uint256 blockHash;
