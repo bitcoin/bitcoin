@@ -67,6 +67,10 @@ public:
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;
 };
 
+bool checkPopDataSize(const altintegration::PopData& popData, altintegration::ValidationState& state);
+
+bool popdataStatelessValidation(const altintegration::PopData& popData, altintegration::ValidationState& state);
+
 bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state);
 } // namespace VeriBlock
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP

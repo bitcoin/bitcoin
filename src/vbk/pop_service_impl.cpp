@@ -24,6 +24,8 @@
 #include <veriblock/altintegration.hpp>
 #include <veriblock/finalizer.hpp>
 #include <veriblock/stateless_validation.hpp>
+#include <veriblock/storage/payloads_storage.hpp>
+#include <veriblock/storage/storage_manager.hpp>
 #include <veriblock/validation_state.hpp>
 
 namespace VeriBlock {
@@ -188,7 +190,10 @@ int PopServiceImpl::compareForks(const CBlockIndex& leftForkTip, const CBlockInd
 
 PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
 {
-    payloads_store = std::make_shared<altintegration::PayloadsStorage>();
+    altintegration::StorageManager store_man("");
+
+    payloads_store =
+        std::make_shared<altintegration::PayloadsStorage>(store_man.newPayloadsStorageInmem());
     config.validate();
 
     altTree = altintegration::Altintegration::create(config, *payloads_store);
@@ -213,9 +218,53 @@ void PopServiceImpl::removePayloadsFromMempool(const altintegration::PopData& po
     mempool->removePayloads(popData);
 }
 
+bool checkPopDataSize(const altintegration::PopData& popData, altintegration::ValidationState& state)
+{
+    uint32_t nPopDataSize = ::GetSerializeSize(popData, CLIENT_VERSION);
+    auto& config = getService<Config>();
+
+    if (nPopDataSize >= config.popconfig.alt->getMaxPopDataSize()) {
+        return state.Invalid("popdata-overisize", "popData raw size more than allowed");
+    }
+
+    return true;
+}
+
+bool popdataStatelessValidation(const altintegration::PopData& popData, altintegration::ValidationState& state)
+{
+    auto& config = getService<Config>();
+
+    for (const auto& b : popData.context) {
+        if (!altintegration::checkBlock(b, state, *config.popconfig.vbk.params)) {
+            return state.Invalid("pop-vbkblock-statelessly-invalid");
+        }
+    }
+
+    for (const auto& vtb : popData.vtbs) {
+        if (!altintegration::checkVTB(vtb, state, *config.popconfig.vbk.params, *config.popconfig.btc.params)) {
+            return state.Invalid("pop-vtb-statelessly-invalid");
+        }
+    }
+
+    for (const auto& atv : popData.atvs) {
+        if (!altintegration::checkATV(atv, state, *config.popconfig.alt, *config.popconfig.vbk.params)) {
+            return state.Invalid("pop-atv-statelessly-invalid");
+        }
+    }
+
+    return true;
+}
+
 bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
+
+    altintegration::ValidationState instate;
+
+    /*if (!checkPopDataSize(block.popData, instate) || !popdataStatelessValidation(block.popData, instate)) {
+        return error("[%s] block %s is not accepted by popData: %s", __func__, block.GetHash().ToString(),
+            instate.toString());
+    }*/
 
     int height = 0;
     if (indexPrev != nullptr) {
@@ -223,8 +272,6 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex*
     }
 
     auto containing = VeriBlock::blockToAltBlock(height, block.GetBlockHeader());
-
-    altintegration::ValidationState instate;
 
     if (!tree.acceptBlock(containing, instate)) {
         return error("[%s] block %s is not accepted by altTree: %s", __func__, block.GetHash().ToString(),

@@ -91,7 +91,7 @@ jobs:
       - name: Publish to Registry
         uses: elgohr/Publish-Docker-Github-Action@508d4ee
         with:
-          dockerfile: debug.Dockerfile
+          dockerfile: alpine-debug.Dockerfile
           name: veriblock/vbitcoin
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}

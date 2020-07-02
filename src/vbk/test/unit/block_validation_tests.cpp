@@ -16,6 +16,7 @@
 #include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/util.hpp>
 
+#include <vbk/pop_service_impl.hpp>
 #include <vbk/test/util/e2e_fixture.hpp>
 
 #include <string>
@@ -163,6 +164,66 @@ BOOST_FIXTURE_TEST_CASE(BlockPoPVersion_test, E2eFixture)
     }
 
     auto block = CreateAndProcessBlock({}, ChainActive().Tip()->GetBlockHash(), cbKey);
+}
+
+BOOST_FIXTURE_TEST_CASE(PopData_payloads_stateless_invalid, E2eFixture)
+{
+    altintegration::PopData popData;
+
+    popData.vtbs.push_back(endorseVbkTip());
+
+    BOOST_CHECK_EQUAL(popData.vtbs.size(), 1);
+
+    altintegration::ValidationState state;
+    BOOST_CHECK(VeriBlock::popdataStatelessValidation(popData, state));
+
+    //corrupt vtb
+    popData.vtbs[0].checked = false;
+    popData.vtbs[0].transaction.signature = {1, 2, 3};
+
+    BOOST_CHECK(!VeriBlock::popdataStatelessValidation(popData, state));
+
+    CBlock block;
+    block.popData = popData;
+    block.popData.vtbs[0].checked = false;
+
+    CBlockIndex prevIndex;
+    BlockValidationState blockState;
+    {
+        LOCK(cs_main);
+        auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
+        BOOST_CHECK(!pop_service.addAllBlockPayloads(&prevIndex, block, blockState));
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(PopData_oversized_test, E2eFixture)
+{
+    altintegration::PopData popData;
+
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+
+    uint32_t popDataSize = 0;
+    while (popDataSize < (1.2 * config.popconfig.alt->getMaxPopDataSize())) {
+        altintegration::VTB vtb = endorseVbkTip();
+        popDataSize += vtb.toVbkEncoding().size();
+        popData.vtbs.push_back(vtb);
+    }
+
+    BOOST_CHECK(popDataSize > config.popconfig.alt->getMaxPopDataSize());
+
+    altintegration::ValidationState state;
+    BOOST_CHECK(!VeriBlock::checkPopDataSize(popData, state));
+
+    CBlock block;
+    block.popData = popData;
+
+    CBlockIndex prevIndex;
+    BlockValidationState blockState;
+    {
+        LOCK(cs_main);
+        auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
+        BOOST_CHECK(!pop_service.addAllBlockPayloads(&prevIndex, block, blockState));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

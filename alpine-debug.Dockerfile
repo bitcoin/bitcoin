@@ -4,6 +4,7 @@ FROM alpine as berkeleydb
 RUN apk --no-cache add autoconf
 RUN apk --no-cache add automake
 RUN apk --no-cache add build-base
+RUN apk --no-cache add git
 
 ENV BERKELEYDB_VERSION=db-4.8.30.NC
 ENV BERKELEYDB_PREFIX=/opt/${BERKELEYDB_VERSION}
@@ -38,6 +39,7 @@ RUN apk --no-cache add linux-headers
 RUN apk --no-cache add protobuf-dev
 RUN apk --no-cache add zeromq-dev
 RUN apk --no-cache add cmake
+RUN apk --no-cache add git
 
 RUN set -ex \
   && for key in \
@@ -92,7 +94,7 @@ RUN apk --no-cache add \
   libevent \
   libzmq \
   su-exec \
-  valgrind
+  git
 
 ENV DATA_DIR=/home/vbitcoin/.vbitcoin
 ENV VBITCOIN_PREFIX=/opt/vbitcoin
