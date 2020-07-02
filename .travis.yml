@@ -105,6 +105,11 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
 
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: memory (MSan)]'
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_msan.sh"
+
+    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
