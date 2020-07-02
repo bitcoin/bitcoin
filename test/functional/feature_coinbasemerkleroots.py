@@ -5,7 +5,7 @@
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, wait_until
-from test_framework.messages import FromHex, CMerkleBlock, ser_uint256, hash256, CBlock
+from test_framework.messages import FromHex, CMerkleBlock, ser_uint256, hash256, CBlock, QuorumId
 
 '''
 dip4-coinbasemerkleroots.py

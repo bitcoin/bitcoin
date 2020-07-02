@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 
-from test_framework.test_framework import SyscoinTestFramework
+from test_framework.test_framework import DashTestFramework
 from test_framework.util import connect_nodes, wait_until
 
 '''
@@ -19,10 +19,9 @@ can change it again.
 '''
 
 
-class MultiKeySporkTest(SyscoinTestFramework):
+class MultiKeySporkTest(DashTestFramework):
     def set_test_params(self):
-        self.num_nodes = 5
-        self.setup_clean_chain = True
+        self.set_dash_test_params(5, 0)
 
     def setup_network(self):
         # secret(base58): cP8CHyqJpBot9W1eVZAfH5jhxACUJbTJrZo5ugyZTudpwtNYStWZ
