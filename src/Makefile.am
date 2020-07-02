@@ -315,6 +315,7 @@ libbitcoin_server_a_SOURCES = \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
+  deploymentstatus.cpp \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
