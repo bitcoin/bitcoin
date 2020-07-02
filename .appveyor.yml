@@ -5,7 +5,7 @@ configuration: Release
 platform: x64
 clone_depth: 5
 environment:
-  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  APPVEYOR_SAVE_CACHE_ON_ERROR: false  # Avoid failing pull requests destory the cache
   CLCACHE_SERVER: 1
   PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
   PYTHONUTF8: 1
