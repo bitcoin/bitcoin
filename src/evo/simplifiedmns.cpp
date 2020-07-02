@@ -226,6 +226,9 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     if(GetTxPayload(*block.vtx[0], cbTxPayload)) {
         mnListDiffRet.merkleRootMNList = cbTxPayload.merkleRootMNList;
         mnListDiffRet.merkleRootQuorums = cbTxPayload.merkleRootQuorums;
+    } else {
+        mnListDiffRet.merkleRootMNList.SetNull();
+        mnListDiffRet.merkleRootQuorums.SetNull();
     }
     
     std::vector<uint256> vHashes;
