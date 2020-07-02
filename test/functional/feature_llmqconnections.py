@@ -33,7 +33,7 @@ class LLMQConnections(DashTestFramework):
         assert(total_count < 40)
 
         self.check_reconnects(2)
-        self.bump_mocktime(1, self.nodes[0])
+        self.bump_mocktime(1, [self.nodes[0]])
         self.log.info("activating SPORK_21_QUORUM_ALL_CONNECTED")
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
