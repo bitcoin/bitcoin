@@ -979,7 +979,6 @@ class DashTestFramework(SyscoinTestFramework):
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_sporks_same(self, timeout=30):
-        self.bump_mocktime(10)
         def check_sporks_same():
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
