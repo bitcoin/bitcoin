@@ -43,6 +43,7 @@ class SporkTest(SyscoinTestFramework):
         self.set_test_spork_state(self.nodes[0], True)
         time.sleep(0.1)
         wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[0]), timeout=10)
 
         # restart nodes to check spork persistence
         self.stop_node(0)
