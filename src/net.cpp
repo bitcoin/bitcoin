@@ -2261,7 +2261,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (!pszDest) {
         // banned or exact match?
-        if ((m_banman && m_banman->IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))
+        if ((m_banman && m_banman->IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort())))
             return;
         // local and not a connection to itself?
         bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
@@ -2270,7 +2270,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         // if multiple ports for same IP are allowed, search for IP:PORT match, otherwise search for IP-only match
         if ((!Params().AllowMultiplePorts() && FindNode(static_cast<CNetAddr>(addrConnect))) ||
             (Params().AllowMultiplePorts() && FindNode(static_cast<CService>(addrConnect))))
-            return;mapInfo[nId] = CAddrInf
+            return;
     } else if (FindNode(std::string(pszDest)))
         return;
 
