@@ -433,6 +433,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         llmq::CFinalCommitmentTxPayload qcTx;
         if (GetTxPayload(tx, qcTx)) {
             UniValue obj;
+            UniValue cbObj;
+            qcTx.cbTx.ToJson(cbObj);
+            entry.pushKV("cbTx", cbObj);
             qcTx.ToJson(obj);
             entry.pushKV("qcTx", obj);
         }
