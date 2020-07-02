@@ -263,7 +263,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # Mine quorum and verify that merkleRootQuorums has changed
         quorum = self.mine_quorum()
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
-        assert(int(cbtx["qcTx"]["cbTx"]["merkleRootQuorums"], 16) != merkleRootQuorums)
+        assert(int(cbtx["cbTx"]["merkleRootQuorums"], 16) != merkleRootQuorums)
 
         return quorum
 
