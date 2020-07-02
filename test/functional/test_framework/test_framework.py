@@ -415,7 +415,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
     # Public helper methods. These can be accessed by the subclass test scripts.
     # SYSCOIN add offset
-    def add_nodes(self, num_nodes: int, offset = None, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
+    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None, offset = None):
         """Instantiate TestNode objects.
 
         Should only be called once after the nodes have been specified in
