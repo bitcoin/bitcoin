@@ -1015,11 +1015,18 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
 
 dnl LevelDB platform checks
 AC_MSG_CHECKING(for fdatasync)
+case $host in
+  *netbsd*)
+AC_MSG_RESULT(no because NetBSD will not fdatasync on directories and this breaks leveldb); HAVE_FDATASYNC=0
+     ;;
+  *)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
  [[ fdatasync(0); ]])],
  [ AC_MSG_RESULT(yes); HAVE_FDATASYNC=1 ],
  [ AC_MSG_RESULT(no); HAVE_FDATASYNC=0 ]
 )
+     ;;
+esac
 
 AC_MSG_CHECKING(for F_FULLFSYNC)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
