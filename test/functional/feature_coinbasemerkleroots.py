@@ -125,7 +125,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         prev_block = self.nodes[0].getblock(mined_in_block)["previousblockhash"]
         prev_block2 = self.nodes[0].getblock(prev_block)["previousblockhash"]
         next_block = self.nodes[0].getblock(mined_in_block)["nextblockhash"]
-        next_block2 = self.nodes[0].getblock(mined_in_block)["nextblockhash"]
+        next_block2 = self.nodes[0].getblock(next_block)["nextblockhash"]
         # The 2 block before the quorum was mined should both give an empty diff
         expectedDeleted = []
         expectedNew = []
