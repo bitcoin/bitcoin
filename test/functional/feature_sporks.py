@@ -11,10 +11,7 @@ from test_framework.util import connect_nodes, wait_until, force_finish_mnsync
 
 class SporkTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(0, 0)
-        self.num_nodes = 3
-        self.setup_clean_chain = True
-        self.extra_args = [["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"], [], []]
+        self.set_dash_test_params(3, 0)
 
     def setup_network(self):
         self.setup_nodes()
