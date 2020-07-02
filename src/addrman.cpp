@@ -70,8 +70,8 @@ double CAddrInfo::GetChance(int64_t nNow) const
 
     return fChance;
 }
-
-CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
+// SYSCOIN
+CAddrInfo* CAddrMan::Find(const CService& addr, int* pnId)
 {
     // SYSCOIN
     CService addr2 = addr;

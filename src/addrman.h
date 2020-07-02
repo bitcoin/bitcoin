@@ -220,9 +220,9 @@ protected:
 
     //! Source of random numbers for randomization in inner loops
     FastRandomContext insecure_rand;
-
+    // SYSCOIN
     //! Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CAddrInfo* Find(const CService& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
