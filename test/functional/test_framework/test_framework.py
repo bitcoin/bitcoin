@@ -981,15 +981,12 @@ class DashTestFramework(SyscoinTestFramework):
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_sporks_same(self, timeout=30):
+        self.bump_mocktime(10)
         def check_sporks_same():
-            time.sleep(0.5)
             sporks = self.nodes[0].spork('show')
-            for node in self.nodes[1:]:
-                if node.spork('show') != sporks:
-                    return False
-            return True
-        
-        wait_until(check_sporks_same, timeout=timeout)
+            return all(node.spork('show') == sporks for node in self.nodes[1:])
+        time.sleep(0.5)
+        self.wait_until(check_sporks_same, timeout=timeout)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None):
         def check_quorum_connections():
