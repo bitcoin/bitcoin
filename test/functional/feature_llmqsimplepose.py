@@ -35,7 +35,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.test_banning(isolate_mn, True)
 
         self.repair_masternodes(False)
-        self.bump_mocktime(1, [self.nodes[0]])
+        self.bump_mocktime(1, self.nodes[0])
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
 
