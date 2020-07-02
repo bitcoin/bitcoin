@@ -97,6 +97,8 @@ public:
     bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
     /** How long to wait until we allow retrying of a LLMQ connection  */
     int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
+    /** Allow nodes with the same address and multiple ports */
+    bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
 protected:
     CChainParams() {}
@@ -122,6 +124,7 @@ protected:
     // SYSCOIN
     int nLLMQConnectionRetryTimeout;
     bool fRequireRoutableExternalIP;
+    bool fAllowMultiplePorts;
     int nFulfilledRequestExpireTime;
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
