@@ -205,6 +205,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 qc.commitments.push_back(commitment);
             }
         }
+        if (coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT){
+            qc.cbTx = cbTx;
+        }
         // pass qc pointer here because we want to build merkleRootMNList / merkleRootQuorums which depends on qc if qc is valid
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, &qc)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
@@ -216,7 +219,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if(coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
             ds << cbTx;
         } else {
-            qc.cbTx = cbTx;
             ds << qc;
         }
         // Update coinbase transaction with additional info about masternode and governance payments,
