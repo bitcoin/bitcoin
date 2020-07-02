@@ -116,7 +116,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockV
     return true;
 }
 
-bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state)
+bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
     LOCK(deterministicMNManager->cs);
 
@@ -128,7 +128,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
     try {
         CDeterministicMNList tmpMNList;
-        if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, tmpMNList, false)) {
+        if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, tmpMNList, false, qcIn)) {
             // pass the state returned by the function above
             return false;
         }
@@ -174,7 +174,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
     }
 }
 
-bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state)
+bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
     static int64_t nTimeMinedAndActive = 0;
     static int64_t nTimeMined = 0;
@@ -218,9 +218,12 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
     // now add the commitments from the current block, which are not returned by GetMinedAndActiveCommitmentsUntilBlock
     // due to the use of pindexPrev (we don't have the tip index here)
-    if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+    const bool &IsQCIn = qcIn && !qcIn.IsNull();
+    if (IsQCIn || block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qc;
-        if (!GetTxPayload(*block.vtx[0], qc)) {
+        if(IsQCIn)
+            qc = *qcIn;
+        else if (!GetTxPayload(*block.vtx[0], qc)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload-calc-cbtx-quorummerkleroot");
         }
         for(const auto& commitment: qc.commitments) {

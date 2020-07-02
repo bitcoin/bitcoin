@@ -26,6 +26,7 @@ class BlockValidationState;
 namespace llmq
 {
     class CFinalCommitment;
+    class CFinalCommitmentTxPayload;
 } // namespace llmq
 
 class CDeterministicMNState
@@ -617,7 +618,7 @@ public:
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs);
+    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr);
     void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
     void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
