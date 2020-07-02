@@ -2669,11 +2669,11 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uin
     return locktime;
 }
 
-OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend)
+OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend)
 {
     // If -changetype is specified, always use that change type.
-    if (change_type != OutputType::CHANGE_AUTO) {
-        return change_type;
+    if (change_type) {
+        return *change_type;
     }
 
     // if m_default_address_type is legacy, use legacy address as change (even
@@ -3842,14 +3842,20 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
     }
 
-    if (!gArgs.GetArg("-addresstype", "").empty() && !ParseOutputType(gArgs.GetArg("-addresstype", ""), walletInstance->m_default_address_type)) {
-        error = strprintf(_("Unknown address type '%s'"), gArgs.GetArg("-addresstype", ""));
-        return nullptr;
+    if (!gArgs.GetArg("-addresstype", "").empty()) {
+        if (!ParseOutputType(gArgs.GetArg("-addresstype", ""), walletInstance->m_default_address_type)) {
+            error = strprintf(_("Unknown address type '%s'"), gArgs.GetArg("-addresstype", ""));
+            return nullptr;
+        }
     }
 
-    if (!gArgs.GetArg("-changetype", "").empty() && !ParseOutputType(gArgs.GetArg("-changetype", ""), walletInstance->m_default_change_type)) {
-        error = strprintf(_("Unknown change type '%s'"), gArgs.GetArg("-changetype", ""));
-        return nullptr;
+    if (!gArgs.GetArg("-changetype", "").empty()) {
+        OutputType out_type;
+        if (!ParseOutputType(gArgs.GetArg("-changetype", ""), out_type)) {
+            error = strprintf(_("Unknown change type '%s'"), gArgs.GetArg("-changetype", ""));
+            return nullptr;
+        }
+        walletInstance->m_default_change_type = out_type;
     }
 
     if (gArgs.IsArgSet("-mintxfee")) {
