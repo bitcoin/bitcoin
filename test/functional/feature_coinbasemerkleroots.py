@@ -88,7 +88,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             n.invalidateblock(oldhash)
         self.sync_all()
         first_quorum = self.test_dip8_quorum_merkle_root_activation(False)
-
+        self.bump_mocktime(1)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -241,8 +241,8 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert(cbtx["cbTx"]["version"] == 2)
 
-
-        self.nodes[0].generate(1)
+        self.bump_mocktime(1)
+        self.nodes[0].generate(2)
         self.sync_blocks()
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
