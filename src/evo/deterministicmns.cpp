@@ -665,7 +665,27 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
     DecreasePoSePenalties(newList);
 
-    // we skip the coinbase
+    // coinbase can be quorum commitments
+    if(block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT): {
+        llmq::CFinalCommitmentTxPayload qc;
+        if (!GetTxPayload(*block.vtx[0], qc)) {
+            return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
+        }
+        for(const auto& commitment: qc.commitments) {
+            if (!commitment.IsNull()) {
+                const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
+                int quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
+                auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
+                if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
+                    // we should actually never get into this case as validation should have catched it...but lets be sure
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
+                }
+
+                HandleQuorumCommitment(commitment, quorumIndex, newList, debugLogs);
+            }
+        }
+    }
+    // for all other tx's MN register/update tx handling
     for (int i = 1; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
 
@@ -829,26 +849,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
             break;
         } 
-        case(SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT): {
-            llmq::CFinalCommitmentTxPayload qc;
-            if (!GetTxPayload(tx, qc)) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
-            }
-            for(const auto& commitment: qc.commitments) {
-                if (!commitment.IsNull()) {
-                    const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
-                    int quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
-                    auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
-                    if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
-                        // we should actually never get into this case as validation should have catched it...but lets be sure
-                        return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
-                    }
-
-                    HandleQuorumCommitment(commitment, quorumIndex, newList, debugLogs);
-                }
-            }
-            break;
-        }
         }
     }
 

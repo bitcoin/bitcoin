@@ -3867,6 +3867,9 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
     for (const auto& txRef : block.vtx)
     {
+        if (!txRef->IsCoinBase() && (txRef->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE || txRef->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mn-version", "Bad version for non-coinbase masternode transaction");
+        }
         if(IsSyscoinMintTx(txRef->nVersion)){
             // do this check only when not in IBD (initial block download) or litemode
             // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete

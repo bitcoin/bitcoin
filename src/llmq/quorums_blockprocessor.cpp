@@ -279,24 +279,23 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
     bool fDIP0003Active = pindex->nHeight >= consensus.DIP0003Height;
 
     ret.clear();
-
-    for (const auto& tx : block.vtx) {
-        if (tx->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
-            CFinalCommitmentTxPayload qc;
-            if (!GetTxPayload(*tx, qc)) {
-                // should not happen as it was verified before processing the block
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
+    
+    if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+        CFinalCommitmentTxPayload qc;
+        if (!GetTxPayload(*block.vtx[0], qc)) {
+            // should not happen as it was verified before processing the block
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
+        }
+        for(const auto& commitment: qc.commitments) {
+            // only allow one commitment per type and per block
+            if (ret.count((uint8_t)commitment.llmqType)) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
             }
-            for(const auto& commitment: qc.commitments) {
-                // only allow one commitment per type and per block
-                if (ret.count((uint8_t)commitment.llmqType)) {
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
-                }
 
-                ret.emplace((uint8_t)commitment.llmqType, std::move(commitment));
-            }
+            ret.emplace((uint8_t)commitment.llmqType, std::move(commitment));
         }
     }
+    
 
     if (!fDIP0003Active && !ret.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-premature");
