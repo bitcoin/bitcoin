@@ -61,5 +61,12 @@ class SporkTest(SyscoinTestFramework):
         time.sleep(0.1)
         wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
+        # turn off and check
+        self.set_test_spork_state(self.nodes[0], False)
+        time.sleep(0.1)
+        wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)
+        wait_until(lambda: not self.get_test_spork_state(self.nodes[2]), timeout=10)
+        wait_until(lambda: not self.get_test_spork_state(self.nodes[0]), timeout=10)
+
 if __name__ == '__main__':
     SporkTest().main()
