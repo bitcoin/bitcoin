@@ -666,7 +666,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     DecreasePoSePenalties(newList);
 
     // coinbase can be quorum commitments
-    if(block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT): {
+    if(block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qc;
         if (!GetTxPayload(*block.vtx[0], qc)) {
             return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
