@@ -209,10 +209,6 @@ after_success:
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 # x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: thread (TSan), no gui]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
