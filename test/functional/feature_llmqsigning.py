@@ -82,11 +82,12 @@ class LLMQSigningTest(DashTestFramework):
 
         # fast forward until 0.5 days before cleanup is expected, recovered sig should still be valid
         self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
+        self.bump_scheduler(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         self.bump_mocktime(int(60 * 60 * 24 * 1))
-        self.bump_scheduler(60)
+        self.bump_scheduler(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 
@@ -94,7 +95,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum("sign", 100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
-        self.bump_scheduler(60)
+        self.bump_scheduler(5)
         wait_for_sigs(True, False, True, 15)
 
 
