@@ -14,6 +14,7 @@
 #include <evo/deterministicmns.h>
 #include <shutdown.h>
 #include <util/translation.h>
+#include <system.h>
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 

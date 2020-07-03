@@ -15,6 +15,7 @@
 #include <index/txindex.h>
 #include <core_io.h>
 #include <boost/thread/thread.hpp>
+#include <system.h>
 extern std::string exePath;
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
