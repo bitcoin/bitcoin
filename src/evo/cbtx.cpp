@@ -220,7 +220,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     // due to the use of pindexPrev (we don't have the tip index here)
     const bool &IsQCIn = qcIn && !qcIn->IsNull();
     // qcIn passed in by createnewblock, but connectblock will pass in null, use gettxpayload there if version is for mn quorum
-    if (IsQCIn || (!IsQCIn && block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
+    if (IsQCIn || (block.vtx[0] && block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
         llmq::CFinalCommitmentTxPayload qc;
         if(IsQCIn)
             qc = *qcIn;
