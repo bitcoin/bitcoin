@@ -255,9 +255,6 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             assert_equal(merkleRootQuorums, 0)
 
         self.bump_mocktime(1)
-        force_finish_mnsync(self.nodes[0])
-        force_finish_mnsync(self.nodes[1])
-        force_finish_mnsync(self.nodes[2])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
