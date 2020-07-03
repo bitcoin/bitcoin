@@ -167,7 +167,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         if(pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
-        if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
+        if(fRegTest)
         {
             if (nCurrentAsset == MASTERNODE_SYNC_WAITING) {
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks

@@ -260,7 +260,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
         return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
     }
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if(!fRegTest) {
         if(EncodeDestination(dest) != witnessAddress.ToString()) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
         }
@@ -289,7 +289,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
 }
 
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
+    if(!fRegTest && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;

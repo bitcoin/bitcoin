@@ -498,7 +498,7 @@ static void PushNodeVersion(CNode& pnode, CConnman* connman, int64_t nTime)
         pnode.sentMNAuthChallenge = mnauthChallenge;
     }
     int nProtocolVersion = PROTOCOL_VERSION;
-    if (params.NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
+    if (fRegTest && gArgs.IsArgSet("-pushversion")) {
         nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
 

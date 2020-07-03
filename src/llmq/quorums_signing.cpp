@@ -39,17 +39,7 @@ UniValue CRecoveredSig::ToJson() const
 CRecoveredSigsDb::CRecoveredSigsDb(CDBWrapper& _db) :
     db(_db)
 {
-    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-        // TODO this can be completely removed after some time (when we're pretty sure the conversion has been run on most testnet MNs)
-        if (db.Exists(std::string("rs_upgraded"))) {
-            return;
-        }
 
-        ConvertInvalidTimeKeys();
-        AddVoteTimeKeys();
-
-        db.Write(std::string("rs_upgraded"), (uint8_t)1);
-    }
 }
 
 // This converts time values in "rs_t" from host endiannes to big endiannes, which is required to have proper ordering of the keys
