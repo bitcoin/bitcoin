@@ -12,7 +12,7 @@
 #include <services/asset.h>
 #include <script/standard.h>
 #include <boost/thread/thread.hpp>
-#include <system.h>
+#include <util/system.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
