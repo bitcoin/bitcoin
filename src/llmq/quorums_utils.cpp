@@ -109,6 +109,8 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(uint8_t llmqType, const CBlo
             size_t idx = (i + gap) % mns.size();
             auto& otherDmn = mns[idx];
             if (otherDmn->proTxHash == proTxHash) {
+                gap <<= 1;
+                k++;
                 continue;
             }
             r.emplace(otherDmn->proTxHash);
