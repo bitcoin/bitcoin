@@ -218,6 +218,26 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     {
         WITH_LOCK(g_requests_mutex, g_requests.insert(req));
         g_requests_cv.notify_all();
+        // The EV_READ enablement is off-set by the workaround for the libevent
+        // bug further below. This is why it can only be used with libevent
+        // versions that are not affected by the workaround code.
+        if (event_get_version_number() < 0x02010600 && event_get_version_number() >= 0x02020001) {
+            // Enable EV_READ to detect remote disconnection meaning that the close
+            // callback set below is called.
+            auto conn = evhttp_request_get_connection(req);
+            bufferevent* bev = evhttp_connection_get_bufferevent(conn);
+            bufferevent_enable(bev, EV_READ);
+            // Close callback to clear active but running request.
+            // This is also called if the connection is closed after a successful
+            // request, but complete callback set below already cleared the state.
+            evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
+                auto req = static_cast<evhttp_request*>(arg);
+                LOCK(g_requests_mutex);
+                auto n{g_requests.erase(req)};
+                if (n == 1 && g_requests.empty()) g_requests_cv.notify_all();
+            }, req);
+        }
+        // Clear state after successful request.
         evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
             auto n{WITH_LOCK(g_requests_mutex, return g_requests.erase(req))};
             assert(n == 1);
