@@ -959,8 +959,8 @@ UniValue protx_list(const JSONRPCRequest& request)
     CWallet* pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    pwallet = wallet.get();
+    if (wallet)
+        pwallet = wallet.get();
 #else
     pwallet = nullptr;
 #endif
@@ -1058,8 +1058,8 @@ UniValue protx_info(const JSONRPCRequest& request)
     CWallet* pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    pwallet = wallet.get();
+    if (wallet)
+        pwallet = wallet.get();
 #else
     pwallet = nullptr;
 #endif
