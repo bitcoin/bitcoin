@@ -112,6 +112,8 @@ public:
               fn().GetArgNames(),
               intptr_t(fn))
     {
+        CHECK_NONFATAL(fn().m_name == name_in);
+        CHECK_NONFATAL(fn().GetArgNames() == args_in);
     }
 
     //! Simplified constructor taking plain rpcfn_type function pointer.
