@@ -47,7 +47,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         def close_mn_port(mn):
             self.stop_node(mn.node.index)
-            self.start_masternode(mn, extra_args=["-listen=0"])
+            self.start_masternode(mn, extra_args=["-bind=","-listen=0"])
             connect_nodes(mn.node, 0)
             # Make sure the to-be-banned node is still connected well via outbound connections
             for mn2 in self.mninfo:
@@ -85,7 +85,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 if expect_contribution_to_fail:
                     expected_contributors -= 1
                 # Make sure we do fresh probes
-                self.bump_mocktime(60 * 60)
+                self.bump_mocktime(60 * 24)
                 self.mine_quorum(expected_connections=1, expected_members=len(online_mninfos), expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos=online_mninfos)
 
             assert(self.check_punished(mn) and self.check_banned(mn))
@@ -117,7 +117,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
-        self.bump_mocktime(60 * 60 + 1)
+        self.bump_mocktime(60 * 24 + 1)
         self.sync_all()
 
     def check_punished(self, mn):
