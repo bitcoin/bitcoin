@@ -44,6 +44,7 @@ extern bool fMasternodeMode;
 extern bool bGethTestnet;
 extern bool fZMQEthStatus;
 extern bool fLiteMode;
+extern bool fRegTest;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
