@@ -93,15 +93,15 @@ if __name__ == '__main__':
 
 			# Skip the first row because the difference contains everything before the script execution
 			if prevRow != '':
-				allMsgsDiff = float(row[216]) + float(row[218]) + float(row[220]) + float(row[222]) + float(row[224]) + float(row[226]) + float(row[228]) + float(row[230]) + float(row[232]) + float(row[234]) + float(row[236]) + float(row[238]) + float(row[240]) + float(row[242]) + float(row[244]) + float(row[246]) + float(row[248]) + float(row[250]) + float(row[252]) + float(row[254]) + float(row[256]) + float(row[258]) + float(row[260]) + float(row[262]) + float(row[264]) + float(row[266])
+				allMsgsDiff = max(0, float(row[216]) + float(row[218]) + float(row[220]) + float(row[222]) + float(row[224]) + float(row[226]) + float(row[228]) + float(row[230]) + float(row[232]) + float(row[234]) + float(row[236]) + float(row[238]) + float(row[240]) + float(row[242]) + float(row[244]) + float(row[246]) + float(row[248]) + float(row[250]) + float(row[252]) + float(row[254]) + float(row[256]) + float(row[258]) + float(row[260]) + float(row[262]) + float(row[264]) + float(row[266]))
 				numAllMsgs += allMsgsDiff
 				uniqueTxDiff = max(0, float(row[20]) - float(prevRow[20]))
 				numUniqueTx += uniqueTxDiff
-				allTXDiff = float(row[232])
+				allTXDiff = max(0, float(row[232]))
 				numAllTx += allTXDiff
 				uniqueBlockDiff = max(0, float(row[16]) - float(prevRow[16]))
 				numUniqueBlocks += uniqueBlockDiff
-				allBlocksDiff = float(row[236]) + float(row[260])
+				allBlocksDiff = max(0, float(row[236]) + float(row[260]))
 				numAllBlocks += allBlocksDiff
 				allMsgsPerSec += allMsgsDiff
 				uniqueTxPerSec += uniqueTxDiff
@@ -124,10 +124,10 @@ if __name__ == '__main__':
 		avgBlockDelay /= numRows
 		#numUniqueTx
 		#numAllTx
-		txRatioUniqueAll = numUniqueTx / numAllTx
+		txRatioUniqueAll = (numUniqueTx / numAllTx) if numAllTx != 0 else 0
 		#numUniqueBlocks
 		#numAllBlocks
-		blockRatioUniqueAll = numUniqueBlocks / numAllBlocks
+		blockRatioUniqueAll = (numUniqueBlocks / numAllBlocks) if numAllBlocks != 0 else 0
 		allMsgsPerSec /= numRows
 		uniqueTxPerSec /= numRows
 		allTxPerSec /= numRows
