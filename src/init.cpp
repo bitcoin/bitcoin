@@ -1747,7 +1747,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     }
 
     // ********************************************************* Step 7: load block chain
-    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
+    fRegTest = gArgs.GetBoolArg("-regtest", false);
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
     if(fRegTest) {
         nMNCollateralRequired = gArgs.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
