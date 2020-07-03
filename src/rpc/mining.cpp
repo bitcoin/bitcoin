@@ -581,7 +581,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             }.Check(request);
     // SYSCOIN RPC_MISC_ERROR
     std::string errorMessage = "";
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST && !CheckSpecs(errorMessage, true)){
+    if(!fRegTest && !CheckSpecs(errorMessage, true)){
         throw JSONRPCError(RPC_MISC_ERROR, errorMessage);
     }
     LOCK(cs_main);

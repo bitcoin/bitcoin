@@ -1411,7 +1411,7 @@ CAmount GetBlockSubsidyRegtest(int nHeight, const CChainParams& params)
 CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool fSuperblockPartOnly)
 {
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if(params.NetworkIDString() == CBaseChainParams::REGTEST) {
+    if(fRegTest) {
         return GetBlockSubsidyRegtest(nHeight, params);
     }
     if (nHeight == 0)
@@ -2248,7 +2248,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 //  least as good as the expected chain.
                 // SYSCOIN
                 int64_t timeForWork = 1209600;
-                if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
+                if(fRegTest)
                     timeForWork /= 10;
                 fScriptChecks = (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, chainparams.GetConsensus()) <= timeForWork);
             }
