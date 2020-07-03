@@ -255,6 +255,9 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });
 }
 // SYSCOIN
+void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.SynchronousUpdatedBlockTip(pindexNew, pindexFork, fInitialDownload); });
+}
 void CMainSignals::NotifyGovernanceVote(const CGovernanceVote &vote) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(vote); });
 }

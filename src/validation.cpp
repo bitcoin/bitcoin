@@ -3154,6 +3154,8 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
             if (pindexFork != pindexNewTip) {
                 // Notify ValidationInterface subscribers
+                // SYSCOIN
+                GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
                 GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
 
                 // Always notify the UI if a new block tip was connected
