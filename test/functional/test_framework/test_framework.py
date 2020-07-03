@@ -39,6 +39,7 @@ from .util import (
     copy_datadir,
     force_finish_mnsync,
     wait_until,
+    bump_node_times,
 )
 
 class TestStatus(Enum):
@@ -778,6 +779,9 @@ class DashTestFramework(SyscoinTestFramework):
             self.mocktime += t
         set_node_times(nodes or self.nodes, self.mocktime)
 
+    def bump_scheduler(self, t, nodes=None):
+        bump_node_times(nodes or self.nodes, t)
+        
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
         self.llmq_threshold = llmq_threshold

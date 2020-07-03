@@ -253,7 +253,6 @@ BASE_SCRIPTS = [
     'feature_sporks.py',
     'feature_multikeysporks.py',
     'feature_llmqsigning.py',
-    'feature_llmqsigning.py --spork21',
     'feature_llmqconnections.py',
     'feature_llmqsimplepose.py',
     'feature_llmqdkgerrors.py',
