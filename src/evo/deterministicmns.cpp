@@ -668,7 +668,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     // coinbase can be quorum commitments
     // qcIn passed in by createnewblock, but connectblock will pass in null, use gettxpayload there if version is for mn quorum
     const bool &IsQCIn = qcIn && !qcIn->IsNull();
-    if(IsQCIn || (!IsQCIn && block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
+    if(IsQCIn || (block.vtx[0] && block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
         llmq::CFinalCommitmentTxPayload qc;
         if(IsQCIn)
             qc = *qcIn;
