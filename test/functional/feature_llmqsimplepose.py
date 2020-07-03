@@ -19,6 +19,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
+        self.bind_to_localhost_only = False
 
     def run_test(self):
 
