@@ -22,7 +22,10 @@ class LongpollThread(threading.Thread):
         self.node = get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
 
     def run(self):
-        self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['segwit']})
+        try:
+            self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['segwit']})
+        except:
+            pass
 
 class GetBlockTemplateLPTest(BitcoinTestFramework):
     def set_test_params(self):
