@@ -3350,6 +3350,8 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
     if (pindex_was_in_chain) {
         // Notify external listeners about accepted block header
         GetMainSignals().AcceptedBlockHeader(pindex);
+        // SYSCOIN
+        GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr, IsInitialBlockDownload());
         uiInterface.NotifyBlockTip(GetSynchronizationState(IsInitialBlockDownload()), to_mark_failed->pprev);
     }
     return true;
