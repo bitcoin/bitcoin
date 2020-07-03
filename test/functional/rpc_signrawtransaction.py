@@ -198,10 +198,30 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(spending_tx_signed['complete'], True)
         self.nodes[0].sendrawtransaction(spending_tx_signed['hex'])
 
+    def OP_1NEGATE_test(self):
+        self.log.info("Test OP_1NEGATE (0x4f) satisfies BIP62 minimal push standardness rule")
+        hex_str = (
+            "0200000001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+            "FFFFFFFF00000000044F024F9CFDFFFFFF01F0B9F5050000000023210277777777"
+            "77777777777777777777777777777777777777777777777777777777AC66030000"
+        )
+        prev_txs = [
+            {
+                "txid": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+                "vout": 0,
+                "scriptPubKey": "A914AE44AB6E9AA0B71F1CD2B453B69340E9BFBAEF6087",
+                "redeemScript": "4F9C",
+                "amount": 1,
+            }
+        ]
+        txn = self.nodes[0].signrawtransactionwithwallet(hex_str, prev_txs)
+        assert txn["complete"]
+
     def run_test(self):
         self.successful_signing_test()
         self.script_verification_error_test()
         self.witness_script_test()
+        self.OP_1NEGATE_test()
         self.test_with_lock_outputs()
 
 
