@@ -221,6 +221,21 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     {
         LOCK(g_requests_mutex);
         g_requests.insert(req);
+        // Enable EV_READ to detect remote disconnection meaning that the close
+        // callback set below is called.
+        auto conn = evhttp_request_get_connection(req);
+        bufferevent* bev = evhttp_connection_get_bufferevent(conn);
+        bufferevent_enable(bev, EV_READ);
+        // Close callback to clear active but running request.
+        // This is also called if the connection is closed after a successful
+        // request, but compleate callback set below already cleared the state.
+        evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
+            auto req = static_cast<evhttp_request*>(arg);
+            LOCK(g_requests_mutex);
+            auto n = g_requests.erase(req);
+            if (n == 1 && g_requests.empty()) g_requests_cv.notify_all();
+        }, req);
+        // Clear state after successful request.
         evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
             LOCK(g_requests_mutex);
             auto n = g_requests.erase(req);
@@ -229,16 +244,6 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         }, nullptr);
     }
 
-    // Disable reading to work around a libevent bug, fixed in 2.2.0.
-    if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
-        evhttp_connection* conn = evhttp_request_get_connection(req);
-        if (conn) {
-            bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-            if (bev) {
-                bufferevent_disable(bev, EV_READ);
-            }
-        }
-    }
     std::unique_ptr<HTTPRequest> hreq(new HTTPRequest(req));
 
     // Early address-based allow check
@@ -607,17 +612,6 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
     auto req_copy = req;
     HTTPEvent* ev = new HTTPEvent(eventBase, true, [req_copy, nStatus]{
         evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
-        // Re-enable reading from the socket. This is the second part of the libevent
-        // workaround above.
-        if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
-            evhttp_connection* conn = evhttp_request_get_connection(req_copy);
-            if (conn) {
-                bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-                if (bev) {
-                    bufferevent_enable(bev, EV_READ | EV_WRITE);
-                }
-            }
-        }
     });
     ev->trigger(nullptr);
     replySent = true;
