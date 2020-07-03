@@ -18,7 +18,7 @@
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
     LOCK(cs_main);
-    SynchronousUpdatedBlockTip(::ChainActive().Tip(), nullptr, IsInitialBlockDownload());
+    SynchronousUpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
     UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
 }
 
