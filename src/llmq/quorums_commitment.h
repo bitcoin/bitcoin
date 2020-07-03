@@ -117,7 +117,7 @@ public:
         }
         obj.pushKV("commitments", commitmentsArr);
     }
-    inline bool IsNull() const {return !commitments.empty();}
+    inline bool IsNull() const {return commitments.empty();}
 };
 
 bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck);
