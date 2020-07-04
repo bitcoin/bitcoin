@@ -999,7 +999,7 @@ bool CBlockIndexDB::PruneTxRoots() {
     pcursor->SeekToFirst();
     uint32_t nValue = 0;
     uint32_t cutoffHeight = ::ChainActive().Height() - MAX_BLOCK_INDEX;
-    std::vector<unsigned char> txPos;
+    std::vector<uint256> vecTXIDs;
     while (pcursor->Valid()) {
         try {
             if(pcursor->GetKey(nValue)) {
