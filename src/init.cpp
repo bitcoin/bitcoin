@@ -334,7 +334,8 @@ void Shutdown(NodeContext& node)
     // SYSCOIN
     {
         LOCK(cs_main);
-    
+        // SYSCOIN
+        FlushSyscoinDBs();
         if (node.chainman) {
             
             for (CChainState* chainstate : node.chainman->GetAll()) {
@@ -345,11 +346,11 @@ void Shutdown(NodeContext& node)
             }
             pblocktree.reset();
         }
-        // SYSCOIN
-        FlushSyscoinDBs();
+       
         passetdb.reset();
         pethereumtxrootsdb.reset();
         pethereumtxmintdb.reset();
+        pblockindexdb.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
         evoDb.reset();
@@ -1822,6 +1823,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 passetdb.reset();
                 pethereumtxrootsdb.reset();
                 pethereumtxmintdb.reset();
+                pblockindexdb.reset();
                 llmq::DestroyLLMQSystem();
                 evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
@@ -1832,6 +1834,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
+                pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();

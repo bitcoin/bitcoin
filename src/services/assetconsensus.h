@@ -57,9 +57,20 @@ public:
     }  
     bool Flush(const AssetMap &mapAssets);
 };
+class CBlockIndexDB : public CDBWrapper {
+public:
+    CBlockIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blockindex", nCacheSize, fMemory, fWipe) {}
+    bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
+        return Read(txid, nHeight);
+    }  
+    bool PruneTxRoots();
+    bool FlushErase(const std::vector<uint256> &vecTXIDs);
+    bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
+};
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
+extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);

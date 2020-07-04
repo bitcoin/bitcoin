@@ -14,6 +14,7 @@
 #include <boost/thread/thread.hpp>
 #include <util/system.h>
 std::unique_ptr<CAssetDB> passetdb;
+std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 RecursiveMutex cs_setethstatus;
@@ -918,6 +919,32 @@ bool FlushSyscoinDBs() {
             ret = false;
         } 
      }
+    if (pblockindexdb != nullptr)
+     {
+        if(!pblockindexdb->PruneTxRoots())
+        {
+            LogPrintf("Failed to write to prune block index database!\n");
+            ret = false;
+        }
+        if (!pblockindexdb->Flush()) {
+            LogPrintf("Failed to write to block index database!\n");
+            ret = false;
+        } 
+     }
+    if (passetdb != nullptr)
+     {
+        if (!passetdb->Flush()) {
+            LogPrintf("Failed to write to asset database!\n");
+            ret = false;
+        } 
+     }
+    if (pethereumtxmintdb != nullptr)
+     {
+        if (!pethereumtxmintdb->Flush()) {
+            LogPrintf("Failed to write to asset mint database!\n");
+            ret = false;
+        } 
+     }
 	return ret;
 }
 
@@ -941,4 +968,52 @@ bool CAssetDB::Flush(const AssetMap &mapAssets) {
     }
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
     return WriteBatch(batch);
+}
+bool CBlockIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs) {	
+    if(vecTXIDs.empty())	
+        return true;	
+    
+    CDBBatch batch(*this);	
+    for (const uint256 &txid : vecTXIDs) {	
+        batch.Erase(txid);	
+    }	
+    LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDs.size());	
+    return WriteBatch(batch);	
+}	
+bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &blockIndex){	
+    if(blockIndex.empty())	
+        return true;	
+    CDBBatch batch(*this);	
+    for (const auto &pair : blockIndex) {	
+        batch.Write(pair.first, pair.second);	
+    }	
+    LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());	
+    return WriteBatch(batch);	
+}
+
+bool CBlockIndexDB::PruneTxRoots() {
+    AssertLockHeld(cs_main);
+    if(MAX_BLOCK_INDEX > ::ChainActive().Height())
+        return true;
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    uint32_t nValue = 0;
+    uint32_t cutoffHeight = ::ChainActive().Height() - MAX_BLOCK_INDEX;
+    std::vector<unsigned char> txPos;
+    while (pcursor->Valid()) {
+        try {
+            if(pcursor->GetKey(nValue)) {
+                if (nValue < cutoffHeight) {
+                    uint32_t nKey = 0;
+                    if(pcursor->GetKey(nKey))
+                        vecTXIDs.emplace_back(nKey);
+                }
+            }
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    return FlushErase(vecTXIDs);
 }

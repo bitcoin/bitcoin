@@ -504,31 +504,42 @@ CAmount CGovernanceObject::GetMinCollateralFee() const
 
 bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const
 {
+    AssertLockHeld(cs_main);
     strError = "";
     fMissingConfirmations = false;
     CAmount nMinFee = GetMinCollateralFee();
     uint256 nExpectedHash = GetHash();
 
     CTransactionRef txCollateral;
+    uint32_t nBlockHeight;
     uint256 nBlockHash;
-
     // RETRIEVE TRANSACTION IN QUESTION
-
-    if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash)) {
-        strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
+    if(!pblockindexdb->ReadBlockHeight(nCollateralHash, nBlockHeight)){	    
+        
+        strError = strprintf("Can't find collateral blockhash %s in block index", nCollateralHash.ToString());	
+        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);	
+        return false;   	
+    }
+    CBlockIndex* pindex = ::ChainActive()[nBlockHeight];
+    if (!pindex) {
+        strError = strprintf("pindex was null for collateral height", txCollateral->ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+    }
+    if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, pindex)) {
+        strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
+        LogPrintf(BCLog::GOBJECT,"CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
+    int nConfirmationsIn = ::ChainActive().Height() - pindex->nHeight + 1;
 
     if (nBlockHash == uint256()) {
         strError = strprintf("Collateral tx %s is not mined yet", txCollateral->ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
-        return false;
     }
 
     if (txCollateral->vout.size() < 1) {
         strError = strprintf("tx vout size less than 1 | %d", txCollateral->vout.size());
-        LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        LogPrintf(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
 
@@ -546,7 +557,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
                     output.ToString(), output.nValue, ScriptToAsmStr(output.scriptPubKey, false));
         if (!output.scriptPubKey.IsPayToPublicKeyHash() && !output.scriptPubKey.IsUnspendable()) {
             strError = strprintf("Invalid Script %s", txCollateral->ToString());
-            LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+            LogPrintf(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
             return false;
         }
         if (output.scriptPubKey == findScript && output.nValue >= nMinFee) {
@@ -556,22 +567,11 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
     if (!foundOpReturn) {
         strError = strprintf("Couldn't find opReturn %s in %s", nExpectedHash.ToString(), txCollateral->ToString());
-        LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        LogPrintf(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
 
     // GET CONFIRMATIONS FOR TRANSACTION
-
-    AssertLockHeld(cs_main);
-    int nConfirmationsIn = 0;
-    if (nBlockHash != uint256()) {
-        const CBlockIndex* pindex = LookupBlockIndex(nBlockHash);
-        if (pindex) {
-            if (::ChainActive().Contains(pindex)) {
-                nConfirmationsIn += ::ChainActive().Height() - pindex->nHeight + 1;
-            }
-        }
-    }
 
     if ((nConfirmationsIn < GOVERNANCE_FEE_CONFIRMATIONS)) {
         strError = strprintf("Collateral requires at least %d confirmations to be relayed throughout the network (it has only %d)", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
@@ -581,7 +581,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         } else {
             strError += ", rejected -- try again later";
         }
-        LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        LogPrintf(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
 
         return false;
     }
