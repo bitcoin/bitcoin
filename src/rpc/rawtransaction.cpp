@@ -184,7 +184,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     } else {
         uint32_t nBlockHeight;
         if(!pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block height not found in block index"); 	
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No such mempool or blockchain transaction"); 	
         } 
         {
             LOCK(cs_main);
