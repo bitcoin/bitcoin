@@ -180,6 +180,17 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
         in_active_chain = ::ChainActive().Contains(blockindex);
+    } else {
+        if(!pblockindexdb->ReadBlockHeight(nCollateralHash, nBlockHeight)){	    
+        
+            strError = strprintf("Can't find collateral blockhash %s in block index", nCollateralHash.ToString());	
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);	
+            return false;   	
+        } 
+        {
+            LOCK(cs_main);
+            blockindex = ::ChainActive()[nBlockHeight];
+        }
     }
 
     bool f_txindex_ready = false;
