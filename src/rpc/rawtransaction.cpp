@@ -181,9 +181,10 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         }
         in_active_chain = ::ChainActive().Contains(blockindex);
     } else {
-        if(!pblockindexdb->ReadBlockHeight(nCollateralHash, nBlockHeight)){	    
+        uint32_t nBlockHeight;
+        if(!pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
         
-            strError = strprintf("Can't find collateral blockhash %s in block index", nCollateralHash.ToString());	
+            strError = strprintf("Can't find collateral blockhash %s in block index", hash.ToString());	
             LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);	
             return false;   	
         } 
