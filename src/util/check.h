@@ -25,7 +25,7 @@ class NonFatalCheckError : public std::runtime_error
  * - where the condition is assumed to be true, not for error handling or validating user input
  * - where a failure to fulfill the condition is recoverable and does not abort the program
  *
- * For example in RPC code, where it is undersirable to crash the whole program, this can be generally used to replace
+ * For example in RPC code, where it is undesirable to crash the whole program, this can be generally used to replace
  * asserts or recoverable logic errors. A NonFatalCheckError in RPC code is caught and passed as a string to the RPC
  * caller, which can then report the issue to the developers.
  */
@@ -41,5 +41,19 @@ class NonFatalCheckError : public std::runtime_error
                     PACKAGE_BUGREPORT));                          \
         }                                                         \
     } while (false)
+
+#if defined(NDEBUG)
+#error "Cannot compile without assertions!"
+#endif
+
+/** Helper for Assert(). TODO remove in C++14 and replace `decltype(get_pure_r_value(val))` with `T` (templated lambda) */
+template <typename T>
+T get_pure_r_value(T&& val)
+{
+    return std::forward<T>(val);
+}
+
+/** Identity function. Abort if the value compares equal to zero */
+#define Assert(val) [&]() -> decltype(get_pure_r_value(val))& { auto& check = (val); assert(#val && check); return check; }()
 
 #endif // BITCOIN_UTIL_CHECK_H
