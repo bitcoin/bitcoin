@@ -523,7 +523,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     CBlockIndex* pindex = ::ChainActive()[nBlockHeight];
     if (!pindex) {
         strError = strprintf("pindex was null for collateral height", txCollateral->ToString());
-        LogPrint("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        LogPrint(BCLog::GOBJECT,"CGovernanceObject::IsCollateralValid -- %s\n", strError);
     }
     if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, pindex)) {
         strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
