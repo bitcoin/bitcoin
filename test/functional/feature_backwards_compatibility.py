@@ -6,7 +6,7 @@
 
 Test various backwards compatibility scenarios. Download the previous node binaries:
 
-contrib/devtools/previous_release.sh -b v0.19.1 v0.18.1 v0.17.1 v0.16.3 v0.15.2
+contrib/devtools/previous_release.py -b v0.19.1 v0.18.1 v0.17.1 v0.16.3 v0.15.2
 
 v0.15.2 is not required by this test, but it is used in wallet_upgradewallet.py.
 Due to a hardfork in regtest, it can't be used to sync nodes.
