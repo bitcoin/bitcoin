@@ -32,9 +32,10 @@ struct CBlockTemplate
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
     // SYSCOIN
-    std::vector<unsigned char> vchCoinbaseCommitmentExtra;
+    std::vector<unsigned char> vchCoinbaseCommitmentExtra; // coinbase opreturn commitment for quorums goes after any witness commitment
     std::vector<CTxOut> voutMasternodePayments; // masternode payment
     std::vector<CTxOut> voutSuperblockPayments; // superblock payment
+    int nCollateralHeight{0}; // used for seniority payments, height of which funded collateral
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)

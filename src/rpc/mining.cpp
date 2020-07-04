@@ -920,6 +920,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("masternode", masternodeObj);
     result.pushKV("masternode_payments_started", true);
     result.pushKV("masternode_payments_enforced", true);
+    result.pushKV("masternode_collateral_height", pblocktemplate->nCollateralHeight);
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblocktemplate->voutSuperblockPayments.size()) {

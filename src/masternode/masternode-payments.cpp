@@ -160,7 +160,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
     return false;
 }
 
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, int &nCollateralHeight)
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
@@ -171,12 +171,12 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
     }
 
     const CAmount &nHalfFee = fees / 2;
-    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee)) {
+    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee, nCollateralHeight)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
         return;
     }
 	// miner takes 25% of the reward and half fees
-	txNew.vout[0].nValue = (blockReward*0.25);
+	txNew.vout[0].nValue = voutMasternodePaymentsRet.empty()? blockReward: (blockReward*0.25);
 	txNew.vout[0].nValue += nHalfFee;
     // mn is paid 75% of block reward plus any seniority
     txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
@@ -248,12 +248,12 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 *   Get masternode payment tx outputs
 */
 
-bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee) const
+bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, int &nCollateralHeight) const
 {
     // make sure it's not filled yet
     voutMasternodePaymentsRet.clear();
     CAmount nMNSeniorityRet;
-    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee, nMNSeniorityRet)) {
+    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee, nMNSeniorityRet, nCollateralHeight)) {
         LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
         return false;
     }
@@ -288,7 +288,7 @@ CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, con
     }
     return nSubsidy;
 }
-bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, CAmount& nMNSeniorityRet) const
+bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, CAmount& nMNSeniorityRet, int& nCollateralHeightRet) const
 {
     voutMasternodePaymentsRet.clear();
 
@@ -314,6 +314,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
     }
 
     if (masternodeReward > 0) {
+        nCollateralHeightRet = dmnPayee->pdmnState->nCollateralHeight;
         voutMasternodePaymentsRet.emplace_back(masternodeReward, dmnPayee->pdmnState->scriptPayout);
     }
     if (operatorReward > 0) {
@@ -331,7 +332,8 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
     }
 
     std::vector<CTxOut> voutMasternodePayments;
-    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments, nHalfFee, nMNSeniorityRet)) {
+    int nCollateralHeight;
+    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments, nHalfFee, nMNSeniorityRet, nCollateralHeight)) {
         LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
         return true;
     }
