@@ -225,7 +225,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         }
         // Update coinbase transaction with additional info about masternode and governance payments,
         // get some info back to pass to getblocktemplate
-        FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
+        FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments, pblocktemplate->nCollateralHeight);
     }
 
     
