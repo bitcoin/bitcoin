@@ -20,8 +20,8 @@ class DIP3Test(SyscoinTestFramework):
         self.num_nodes = 1 + self.num_initial_mn + 2 # +1 for controller, +1 for mn-qt, +1 for mn created after dip3 activation
         self.setup_clean_chain = True
 
-        self.extra_args += ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
-        self.extra_args += ["-dip3params=135:150"]
+        self.extra_args = ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
+        self.extra_args += ["-dip3params=150:150"]
         self.extra_args += ["-mncollateral=100"]
 
 
