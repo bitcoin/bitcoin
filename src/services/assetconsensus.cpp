@@ -914,10 +914,6 @@ bool FlushSyscoinDBs() {
             LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
             ret = false;
         }
-        if (!pethereumtxrootsdb->Flush()) {
-            LogPrintf("Failed to write to ethereum tx root database!\n");
-            ret = false;
-        } 
      }
     if (pblockindexdb != nullptr)
      {
@@ -926,24 +922,6 @@ bool FlushSyscoinDBs() {
             LogPrintf("Failed to write to prune block index database!\n");
             ret = false;
         }
-        if (!pblockindexdb->Flush()) {
-            LogPrintf("Failed to write to block index database!\n");
-            ret = false;
-        } 
-     }
-    if (passetdb != nullptr)
-     {
-        if (!passetdb->Flush()) {
-            LogPrintf("Failed to write to asset database!\n");
-            ret = false;
-        } 
-     }
-    if (pethereumtxmintdb != nullptr)
-     {
-        if (!pethereumtxmintdb->Flush()) {
-            LogPrintf("Failed to write to asset mint database!\n");
-            ret = false;
-        } 
      }
 	return ret;
 }
