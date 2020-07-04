@@ -666,7 +666,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
     std::vector<CTxOut> voutMasternodePayments;
     CAmount mnRet;
-    mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments, 0, mnRet);
+    int nCollateralHeight;
+    mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
@@ -920,7 +921,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("masternode", masternodeObj);
     result.pushKV("masternode_payments_started", true);
     result.pushKV("masternode_payments_enforced", true);
-    result.pushKV("masternode_collateral_height", pblocktemplate->nCollateralHeight);
+    result.pushKV("masternode_collateral_height", nCollateralHeight);
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblocktemplate->voutSuperblockPayments.size()) {
