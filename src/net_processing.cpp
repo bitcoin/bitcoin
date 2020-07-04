@@ -3480,10 +3480,7 @@ void ProcessMessage(
         std::vector<CAddress> vAddr = connman.GetAddresses();
         FastRandomContext insecure_rand;
         for (const CAddress &addr : vAddr) {
-            bool banned_or_discouraged = banman && (banman->IsDiscouraged(addr) || banman->IsBanned(addr));
-            if (!banned_or_discouraged) {
-                pfrom.PushAddress(addr, insecure_rand);
-            }
+            pfrom.PushAddress(addr, insecure_rand);
         }
         return;
     }
