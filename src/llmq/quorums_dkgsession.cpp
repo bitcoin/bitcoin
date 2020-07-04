@@ -469,9 +469,9 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions()
         if (it == protoMap.end()) {
             m->badConnection = true;
             logger.Batch("%s is not connected to us", m->dmn->proTxHash.ToString());
-        } else if (it != protoMap.end() && it->second < MIN_PEER_PROTO_VERSION) {
+        } else if (it != protoMap.end() && it->second < MIN_MASTERNODE_PROTO_VERSION) {
             m->badConnection = true;
-            logger.Batch("%s does not have min proto version %d (has %d)", m->dmn->proTxHash.ToString(), MIN_PEER_PROTO_VERSION, it->second);
+            logger.Batch("%s does not have min proto version %d (has %d)", m->dmn->proTxHash.ToString(), MIN_MASTERNODE_PROTO_VERSION, it->second);
         }
 
         auto lastOutbound = mmetaman.GetMetaInfo(m->dmn->proTxHash)->GetLastOutboundSuccess();
