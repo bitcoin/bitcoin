@@ -253,7 +253,7 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
 def get_masternode_payment(nHeight, nBlockReward, nStartHeight):
     nSubsidy = nBlockReward*0.75
     if (nHeight > 0 and nStartHeight > 0):
-        unsigned int nDifferenceInBlocks = 0
+        nDifferenceInBlocks = 0
         if (nHeight > nStartHeight)
             nDifferenceInBlocks = (nHeight - nStartHeight)
             
