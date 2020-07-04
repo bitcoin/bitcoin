@@ -386,11 +386,10 @@ class DIP3Test(SyscoinTestFramework):
 
         # fix fees
         coinbasevalue -= bt_fees
-        coinbasevalue += new_fees
 
         if mn_amount is None:
-            mn_amount = get_masternode_payment(height, coinbasevalue)
-        miner_amount = coinbasevalue - mn_amount
+            mn_amount = get_masternode_payment(height, coinbasevalue) + new_fees/2
+        miner_amount = (coinbasevalue - mn_amount) + new_fees/2
 
         outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
         if mn_amount > 0:

@@ -514,6 +514,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             objMN.pushKV("address", dmn->pdmnState->addr.ToString());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
+            objMN.pushKV("collateralblock", dmn->pdmnState->nCollateralHeight);
             objMN.pushKV("lastpaidtime", dmnToLastPaidTime(dmn));
             objMN.pushKV("lastpaidblock", dmn->pdmnState->nLastPaidHeight);
             objMN.pushKV("owneraddress", EncodeDestination(dmn->pdmnState->keyIDOwner));

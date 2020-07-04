@@ -303,7 +303,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
     if (!dmnPayee) {
         return false;
     }
-    CAmount masternodeReward = GetBlockMNSubsidy(blockReward, nBlockHeight, Params().GetConsensus(), dmnPayee->pdmnState->nRegisteredHeight, nMNSeniorityRet) + nHalfFee;
+    CAmount masternodeReward = GetBlockMNSubsidy(blockReward, nBlockHeight, Params().GetConsensus(), dmnPayee->pdmnState->nCollateralHeight, nMNSeniorityRet) + nHalfFee;
 
     CAmount operatorReward = 0;
     if (dmnPayee->nOperatorReward != 0 && dmnPayee->pdmnState->scriptOperatorPayout != CScript()) {
