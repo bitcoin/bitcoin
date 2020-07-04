@@ -183,13 +183,11 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     // SYSCOIN
     } else {
         uint32_t nBlockHeight;
-        if(!pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No such mempool or blockchain transaction"); 	
-        } 
-        {
+        if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
             LOCK(cs_main);
             blockindex = ::ChainActive()[nBlockHeight];
-        }
+        } 
+ 
     }
 
     bool f_txindex_ready = false;
