@@ -160,7 +160,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
     return false;
 }
 
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, int &nCollateralHeight)
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
@@ -171,7 +171,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
     }
 
     const CAmount &nHalfFee = fees / 2;
-    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee, nCollateralHeight)) {
+    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
         return;
     }
@@ -248,11 +248,12 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 *   Get masternode payment tx outputs
 */
 
-bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, int &nCollateralHeight) const
+bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee) const
 {
     // make sure it's not filled yet
     voutMasternodePaymentsRet.clear();
     CAmount nMNSeniorityRet;
+    int nCollateralHeight;
     if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee, nMNSeniorityRet, nCollateralHeight)) {
         LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
         return false;
@@ -303,7 +304,8 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
     if (!dmnPayee) {
         return false;
     }
-    CAmount masternodeReward = GetBlockMNSubsidy(blockReward, nBlockHeight, Params().GetConsensus(), dmnPayee->pdmnState->nCollateralHeight, nMNSeniorityRet) + nHalfFee;
+    nCollateralHeightRet = dmnPayee->pdmnState->nCollateralHeight;
+    CAmount masternodeReward = GetBlockMNSubsidy(blockReward, nBlockHeight, Params().GetConsensus(), nCollateralHeightRet, nMNSeniorityRet) + nHalfFee;
 
     CAmount operatorReward = 0;
     if (dmnPayee->nOperatorReward != 0 && dmnPayee->pdmnState->scriptOperatorPayout != CScript()) {
@@ -314,7 +316,6 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
     }
 
     if (masternodeReward > 0) {
-        nCollateralHeightRet = dmnPayee->pdmnState->nCollateralHeight;
         voutMasternodePaymentsRet.emplace_back(masternodeReward, dmnPayee->pdmnState->scriptPayout);
     }
     if (operatorReward > 0) {
