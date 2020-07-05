@@ -11,10 +11,12 @@
 #define BITCOIN_PROTOCOL_H
 
 #include <netaddress.h>
+#include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <version.h>
 
+#include <list>
 #include <stdint.h>
 #include <string>
 
@@ -226,6 +228,13 @@ extern const char* GETBLOCKTXN;
  */
 extern const char* BLOCKTXN;
 /**
+ * The package message transmits a group of transactions with
+ * interdependencies for which the aggregated feerate should be
+ * equal or over to recipient's announced feerate.
+ * @since protocol 80002 as described by BIP XXX
+ */
+extern const char* PACKAGE;
+/**
  * getcfilters requests compact filters for a range of blocks.
  * Only available with service bit NODE_COMPACT_FILTERS as described by
  * BIP 157 & 158.
@@ -432,6 +441,18 @@ public:
 
     int type;
     uint256 hash;
+};
+
+class CPackageRelay
+{
+public:
+    std::vector<CTransactionRef> package_txn;
+
+    CPackageRelay() {}
+    explicit CPackageRelay(const std::vector<CTransactionRef> txn) :
+        package_txn(txn) {}
+
+    SERIALIZE_METHODS(CPackageRelay, obj) { READWRITE(Using<VectorFormatter<DefaultFormatter>>(obj.package_txn)); }
 };
 
 #endif // BITCOIN_PROTOCOL_H
