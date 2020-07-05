@@ -910,7 +910,9 @@ BlockMap& BlockIndex();
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
+// SYSCOIN
 /** Global variable that points to the height based on a transaction id  */
+static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 1 year of blocks
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
