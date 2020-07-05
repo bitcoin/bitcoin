@@ -398,8 +398,7 @@ class DIP3Test(SyscoinTestFramework):
         if mn_amount > 0:
             outputs[mn_payee] = str(Decimal(mn_amount) / COIN)
 
-        coinbase = CTransaction()
-        coinbase.vout = outputs
+        coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
         coinbase.vin = create_coinbase(height).vin
 
         # We can't really use this one as it would result in invalid merkle roots for masternode lists
