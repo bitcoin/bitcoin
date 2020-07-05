@@ -5636,6 +5636,8 @@ void ChainstateManager::Reset()
     m_snapshot_validated = false;
 }
 // SYSCOIN
+CBlockIndexDB::CBlockIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blockindex", nCacheSize, fMemory, fWipe) {
+}
 bool CBlockIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs) {	
     if(vecTXIDs.empty())	
         return true;	
