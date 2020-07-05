@@ -23,7 +23,6 @@ class DIP3Test(SyscoinTestFramework):
         self.extra_args = ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
         self.extra_args += ["-dip3params=150:150"]
         self.extra_args += ["-mncollateral=100"]
-        self.extra_args += ["-segwitheight=4320"]
 
 
     def setup_network(self):
@@ -267,7 +266,6 @@ class DIP3Test(SyscoinTestFramework):
         start_idx = len(self.nodes) - 1
         # SYSCOIN add offset and add nodes individually with offset and custom args
         for idx in range(start_idx, mn.idx):
-            self.log.info('add node idx %d', idx)
             self.add_nodes(1, offset=idx+1)
     
         extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
@@ -406,10 +404,10 @@ class DIP3Test(SyscoinTestFramework):
 
         # We can't really use this one as it would result in invalid merkle roots for masternode lists
         if len(bt['default_witness_commitment']) != 0:
-            coinbase.nVersion = bt['coinbase_version']
+            coinbase.nVersion = bt['version_coinbase']
             coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, bt['default_witness_commitment']]))) 
         elif len(bt['default_witness_commitment_extra']) != 0:
-            coinbase.nVersion = bt['coinbase_version']
+            coinbase.nVersion = bt['version_coinbase']
             coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, bt['default_witness_commitment_extra']])))
             
         coinbase.calc_sha256()
