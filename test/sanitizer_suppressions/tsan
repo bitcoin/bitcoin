@@ -21,6 +21,7 @@ race:ProcessNewBlock
 race:ThreadImport
 race:LoadWallet
 race:WalletBatch::WriteHDChain
+race:BerkeleyBatch
 race:BerkeleyDatabase
 race:zmq::*
 race:bitcoin-qt
