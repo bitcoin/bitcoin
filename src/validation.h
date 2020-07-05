@@ -37,6 +37,8 @@ class CChainState;
 class BlockValidationState;
 class CBlockIndex;
 class CBlockTreeDB;
+// SYSCOIN
+class CBlockIndexDB;
 class CBlockUndo;
 class CChainParams;
 class CInv;
