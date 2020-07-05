@@ -335,7 +335,7 @@ void Shutdown(NodeContext& node)
     {
         LOCK(cs_main);
         // SYSCOIN
-        FlushSyscoinDBs();
+        PruneSyscoinDBs();
         if (node.chainman) {
             
             for (CChainState* chainstate : node.chainman->GetAll()) {

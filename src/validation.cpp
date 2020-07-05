@@ -5686,3 +5686,23 @@ bool CBlockIndexDB::PruneTxRoots() {
     }
     return FlushErase(vecTXIDs);
 }
+bool PruneSyscoinDBs() {
+    bool ret = true;
+     if (pethereumtxrootsdb != nullptr)
+     {
+        if(!pethereumtxrootsdb->PruneTxRoots(fGethCurrentHeight))
+        {
+            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
+            ret = false;
+        }
+     }
+    if (pblockindexdb != nullptr)
+     {
+        if(!pblockindexdb->PruneTxRoots())
+        {
+            LogPrintf("Failed to write to prune block index database!\n");
+            ret = false;
+        }
+     }
+	return ret;
+}

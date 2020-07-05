@@ -923,6 +923,7 @@ public:
     bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
+bool PruneSyscoinDBs();
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
