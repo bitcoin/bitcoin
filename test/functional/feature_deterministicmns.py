@@ -47,7 +47,7 @@ class DIP3Test(SyscoinTestFramework):
     def run_test(self):
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 100:
-            self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress(address_type='legacy')) # generate enough for collaterals
+            self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress()) # generate enough for collaterals
         self.log.info("controller node has {} syscoin".format(self.nodes[0].getbalance()))
 
         # Make sure we're below block 135 (which activates dip3)
@@ -126,7 +126,7 @@ class DIP3Test(SyscoinTestFramework):
             self.assert_mnlist(self.nodes[0], mns_tmp)
 
         self.log.info("cause a reorg with a double spend and check that mnlists are still correct on all nodes")
-        self.mine_double_spend(self.nodes[0], dummy_txins, self.nodes[0].getnewaddress(address_type='legacy'), use_mnmerkleroot_from_tip=True)
+        self.mine_double_spend(self.nodes[0], dummy_txins, self.nodes[0].getnewaddress(), use_mnmerkleroot_from_tip=True)
         self.nodes[0].generate(spend_mns_count)
         self.sync_all()
         self.assert_mnlists(mns_tmp)
@@ -145,8 +145,8 @@ class DIP3Test(SyscoinTestFramework):
         self.log.info("testing P2SH/multisig for payee addresses")
 
         # Create 1 of 2 multisig
-        addr1 = self.nodes[0].getnewaddress(address_type='legacy')
-        addr2 = self.nodes[0].getnewaddress(address_type='legacy')
+        addr1 = self.nodes[0].getnewaddress()
+        addr2 = self.nodes[0].getnewaddress()
 
         addr1Obj = self.nodes[0].getaddressinfo(addr1)
         addr2Obj = self.nodes[0].getaddressinfo(addr2)
@@ -195,7 +195,7 @@ class DIP3Test(SyscoinTestFramework):
         node = self.nodes[0]
         old_dmnState = mn.node.masternode("status")["dmnState"]
         old_voting_address = old_dmnState["votingAddress"]
-        new_voting_address = node.getnewaddress(address_type='legacy')
+        new_voting_address = node.getnewaddress()
         assert(old_voting_address != new_voting_address)
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
@@ -216,8 +216,8 @@ class DIP3Test(SyscoinTestFramework):
         mn.p2p_port = p2p_port(mn.idx)
 
         blsKey = node.bls('generate')
-        mn.fundsAddr = node.getnewaddress(address_type='legacy')
-        mn.ownerAddr = node.getnewaddress(address_type='legacy')
+        mn.fundsAddr = node.getnewaddress()
+        mn.ownerAddr = node.getnewaddress()
         mn.operatorAddr = blsKey['public']
         mn.votingAddr = mn.ownerAddr
         mn.blsMnkey = blsKey['secret']
@@ -225,7 +225,7 @@ class DIP3Test(SyscoinTestFramework):
         return mn
 
     def create_mn_collateral(self, node, mn):
-        mn.collateral_address = node.getnewaddress(address_type='legacy')
+        mn.collateral_address = node.getnewaddress()
         mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 100)
         mn.collateral_vout = -1
         node.generate(1)
@@ -240,8 +240,8 @@ class DIP3Test(SyscoinTestFramework):
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn):
         node.sendtoaddress(mn.fundsAddr, 100.001)
-        mn.collateral_address = node.getnewaddress(address_type='legacy')
-        mn.rewards_address = node.getnewaddress(address_type='legacy')
+        mn.collateral_address = node.getnewaddress()
+        mn.rewards_address = node.getnewaddress()
 
         mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
         mn.collateral_txid = mn.protx_hash
@@ -257,7 +257,7 @@ class DIP3Test(SyscoinTestFramework):
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn):
         node.sendtoaddress(mn.fundsAddr, 0.001)
-        mn.rewards_address = node.getnewaddress(address_type='legacy')
+        mn.rewards_address = node.getnewaddress()
 
         mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
         node.generate(1)
@@ -328,7 +328,7 @@ class DIP3Test(SyscoinTestFramework):
 
     def spend_input(self, txid, vout, amount, with_dummy_input_output=False):
         # with_dummy_input_output is useful if you want to test reorgs with double spends of the TX without touching the actual txid/vout
-        address = self.nodes[0].getnewaddress(address_type='legacy')
+        address = self.nodes[0].getnewaddress()
 
         txins = [
             {'txid': txid, 'vout': vout}
@@ -337,7 +337,7 @@ class DIP3Test(SyscoinTestFramework):
 
         dummy_txin = None
         if with_dummy_input_output:
-            dummyaddress = self.nodes[0].getnewaddress(address_type='legacy')
+            dummyaddress = self.nodes[0].getnewaddress()
             unspent = self.nodes[0].listunspent(110)
             for u in unspent:
                 if u['amount'] > Decimal(1):
@@ -362,7 +362,7 @@ class DIP3Test(SyscoinTestFramework):
 
         coinbasevalue = bt['coinbasevalue']
         if miner_address is None:
-            miner_address = self.nodes[0].getnewaddress(address_type='legacy')
+            miner_address = self.nodes[0].getnewaddress()
         if mn_payee is None:
             if isinstance(bt['masternode'], list):
                 mn_payee = bt['masternode'][0]['payee']
@@ -436,7 +436,7 @@ class DIP3Test(SyscoinTestFramework):
         self.mine_block(node, [tx], use_mnmerkleroot_from_tip=use_mnmerkleroot_from_tip)
 
     def test_invalid_mn_payment(self, node):
-        mn_payee = self.nodes[0].getnewaddress(address_type='legacy')
+        mn_payee = self.nodes[0].getnewaddress()
         self.mine_block(node, mn_payee=mn_payee, expected_error='bad-cb-payee')
         self.mine_block(node, mn_amount=1, expected_error='bad-cb-payee')
 
