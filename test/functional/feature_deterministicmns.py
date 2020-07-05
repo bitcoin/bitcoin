@@ -155,7 +155,7 @@ class DIP3Test(SyscoinTestFramework):
         self.update_mn_payee(mns[0], multisig)
         found_multisig_payee = False
         for i in range(len(mns)):
-            bt = self.nodes[0].getblocktemplate()
+            bt = self.nodes[0].getblocktemplate({'rules': ['segwit']})
             expected_payee = bt['masternode'][0]['payee']
             expected_amount = bt['masternode'][0]['amount']
             self.nodes[0].generate(1)
@@ -355,7 +355,7 @@ class DIP3Test(SyscoinTestFramework):
         return dummy_txin
 
     def mine_block(self, node, vtx=[], miner_address=None, mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
-        bt = node.getblocktemplate()
+        bt = node.getblocktemplate({'rules': ['segwit']})
         height = bt['height']
         tip_hash = bt['previousblockhash']
 
