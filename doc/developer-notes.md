@@ -362,6 +362,8 @@ sanitizers to enable. The sanitizer list should correspond to supported
 `-fsanitize=` options in your compiler. These sanitizers have runtime overhead,
 so they are most useful when testing changes or producing debugging builds.
 
+Please note that compiling with libc++ is recommended for the ThreadSanitizer.
+
 Some examples:
 
 ```bash
@@ -369,7 +371,8 @@ Some examples:
 ./configure --with-sanitizers=address,undefined
 
 # Enable the thread sanitizer
-./configure --with-sanitizers=thread
+make -C depends CC=clang CXX='clang++ -stdlib=libc++' NO_QT=1
+CONFIG_SITE=$PWD/depends/x86_64-pc-linux-gnu/share/config.site ./configure --with-sanitizers=thread
 ```
 
 If you are compiling with GCC you will typically need to install corresponding
@@ -397,7 +400,7 @@ Additional resources:
  * [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
  * [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
  * [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
- * [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
+ * [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html) and [Issue #19038](https://github.com/bitcoin/bitcoin/issues/19038)
  * [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
  * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
  * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
