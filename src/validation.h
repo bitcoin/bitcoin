@@ -37,8 +37,6 @@ class CChainState;
 class BlockValidationState;
 class CBlockIndex;
 class CBlockTreeDB;
-// SYSCOIN
-class CBlockIndexDB;
 class CBlockUndo;
 class CChainParams;
 class CInv;
@@ -913,6 +911,17 @@ extern std::unique_ptr<CBlockTreeDB> pblocktree;
 // SYSCOIN
 /** Global variable that points to the height based on a transaction id  */
 static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 1 year of blocks
+// SYSCOIN
+class CBlockIndexDB : public CDBWrapper {
+public:
+    CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
+        return Read(txid, nHeight);
+    }  
+    bool PruneTxRoots();
+    bool FlushErase(const std::vector<uint256> &vecTXIDs);
+    bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
+};
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

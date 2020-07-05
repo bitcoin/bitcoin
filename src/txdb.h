@@ -99,15 +99,4 @@ public:
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
 };
-// SYSCOIN
-class CBlockIndexDB : public CDBWrapper {
-public:
-    CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
-        return Read(txid, nHeight);
-    }  
-    bool PruneTxRoots();
-    bool FlushErase(const std::vector<uint256> &vecTXIDs);
-    bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
-};
 #endif // SYSCOIN_TXDB_H
