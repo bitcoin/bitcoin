@@ -265,11 +265,10 @@ class DIP3Test(SyscoinTestFramework):
     def start_mn(self, mn):
         start_idx = len(self.nodes)
         # SYSCOIN add offset and add nodes individually with offset and custom args
-        for idx in range(0, mn.idx):
-            self.add_nodes(1, offset=idx + start_idx)
+        for idx in range(start_idx, mn.idx):
+            self.add_nodes(1, offset=idx)
     
         extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
-        mn.idx += start_idx
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         force_finish_mnsync(self.nodes[mn.idx])
         mn.node = self.nodes[mn.idx]
