@@ -520,17 +520,12 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);	
         return false;   	
     }
-    CBlockIndex* pindex = ::ChainActive()[nBlockHeight];
-    if (!pindex) {
-        strError = strprintf("pindex was null for collateral height", txCollateral->ToString());
-        LogPrint(BCLog::GOBJECT,"CGovernanceObject::IsCollateralValid -- %s\n", strError);
-    }
-    if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, pindex)) {
+    if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, ::ChainActive()[nBlockHeight])) {
         strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
         LogPrint(BCLog::GOBJECT,"CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
-    int nConfirmationsIn = ::ChainActive().Height() - pindex->nHeight + 1;
+    int nConfirmationsIn = ::ChainActive().Height() - nBlockHeight + 1;
 
     if (nBlockHash == uint256()) {
         strError = strprintf("Collateral tx %s is not mined yet", txCollateral->ToString());
