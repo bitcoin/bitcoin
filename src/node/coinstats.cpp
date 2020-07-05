@@ -24,31 +24,35 @@ static uint64_t GetBogoSize(const CScript& scriptPubKey)
            scriptPubKey.size() /* scriptPubKey */;
 }
 
-static void ApplyStats(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyHash(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs, std::map<uint32_t, Coin>::const_iterator it)
 {
-    assert(!outputs.empty());
-    ss << hash;
-    ss << VARINT(outputs.begin()->second.nHeight * 2 + outputs.begin()->second.fCoinBase ? 1u : 0u);
-    stats.nTransactions++;
-    for (const auto& output : outputs) {
-        ss << VARINT(output.first + 1);
-        ss << output.second.out.scriptPubKey;
-        ss << VARINT_MODE(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
-        stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
-        stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
+    if (it == outputs.begin()) {
+        ss << hash;
+        ss << VARINT(it->second.nHeight * 2 + it->second.fCoinBase ? 1u : 0u);
     }
-    ss << VARINT(0u);
+
+    ss << VARINT(it->first + 1);
+    ss << it->second.out.scriptPubKey;
+    ss << VARINT_MODE(it->second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+
+    if (it == std::prev(outputs.end())) {
+        ss << VARINT(0u);
+    }
 }
 
-static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyHash(CCoinsStats& stats, std::nullptr_t, const uint256& hash, const std::map<uint32_t, Coin>& outputs, std::map<uint32_t, Coin>::const_iterator it) {}
+
+template <typename T>
+static void ApplyStats(CCoinsStats &stats, T& hash_obj, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
     assert(!outputs.empty());
     stats.nTransactions++;
-    for (const auto& output : outputs) {
+    for (auto it = outputs.begin(); it != outputs.end(); ++it) {
+        ApplyHash(stats, hash_obj, hash, outputs, it);
+
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
-        stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
+        stats.nTotalAmount += it->second.out.nValue;
+        stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }
 }
 
