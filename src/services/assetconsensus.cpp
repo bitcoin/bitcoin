@@ -1,9 +1,8 @@
 ﻿// Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include <services/assetconsensus.h>
 #include <validation.h>
+#include <services/assetconsensus.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <ethereum/ethereum.h>
@@ -13,7 +12,6 @@
 #include <script/standard.h>
 #include <boost/thread/thread.hpp>
 #include <util/system.h>
-#include <validation.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
