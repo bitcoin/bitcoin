@@ -978,11 +978,11 @@ bool CBlockIndexDB::PruneTxRoots() {
     uint32_t nValue = 0;
     uint32_t cutoffHeight = ::ChainActive().Height() - MAX_BLOCK_INDEX;
     std::vector<uint256> vecTXIDs;
+    uint256 nKey;
     while (pcursor->Valid()) {
         try {
             if(pcursor->GetKey(nValue)) {
                 if (nValue < cutoffHeight) {
-                    uint32_t nKey = 0;
                     if(pcursor->GetKey(nKey))
                         vecTXIDs.emplace_back(nKey);
                 }
