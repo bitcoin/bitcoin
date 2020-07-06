@@ -193,6 +193,7 @@ BASE_SCRIPTS = [
     'p2p_eviction.py',
     'rpc_signmessage.py',
     'rpc_generateblock.py',
+    'rpc_generate.py',
     'wallet_balance.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
