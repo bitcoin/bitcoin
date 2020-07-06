@@ -24,9 +24,7 @@ class DIP3Test(SyscoinTestFramework):
         self.setup_clean_chain = True
 
         self.extra_args = ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
-        self.extra_args += ["-dip3params=150:150"]
         self.extra_args += ["-mncollateral=100"]
-        self.extra_args += ["-segwitheight=150"]
         
 
 
@@ -55,9 +53,9 @@ class DIP3Test(SyscoinTestFramework):
             self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress()) # generate enough for collaterals
         self.log.info("controller node has {} syscoin".format(self.nodes[0].getbalance()))
 
-        # Make sure we're below block 135 (which activates dip3)
+        # Make sure we're below block 432 (which activates dip3)
         self.log.info("testing rejection of ProTx before dip3 activation")
-        assert(self.nodes[0].getblockchaininfo()['blocks'] < 135)
+        assert(self.nodes[0].getblockchaininfo()['blocks'] < 432)
 
         mns = []
 
@@ -67,9 +65,9 @@ class DIP3Test(SyscoinTestFramework):
         self.create_mn_collateral(self.nodes[0], before_dip3_mn)
         mns.append(before_dip3_mn)
 
-        # block 150 starts enforcing DIP3 MN payments
-        self.nodes[0].generate(150 - self.nodes[0].getblockcount())
-        assert(self.nodes[0].getblockcount() == 150)
+        # block 432 starts enforcing DIP3 MN payments
+        self.nodes[0].generate(432 - self.nodes[0].getblockcount())
+        assert(self.nodes[0].getblockcount() == 432)
 
         self.log.info("mining final block for DIP3 activation")
         self.nodes[0].generate(1)
