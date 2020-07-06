@@ -398,8 +398,8 @@ class DIP3Test(SyscoinTestFramework):
         miner_amount = (coinbasevalue - mn_amount) + new_fees/2
 
         coinbase = CTransaction()
-        coinbase.vout.append(CTxOut(Decimal(miner_amount), hex_str_to_bytes(miner_script)))
-        coinbase.vout.append(CTxOut(Decimal(mn_amount), hex_str_to_bytes(mn_payee)))
+        coinbase.vout.append(CTxOut(int(miner_amount), hex_str_to_bytes(miner_script)))
+        coinbase.vout.append(CTxOut(int(mn_amount), hex_str_to_bytes(mn_payee)))
         coinbase.vin = create_coinbase(height).vin
         coinbase.nVersion = bt['version_coinbase']
         if len(bt['default_witness_commitment_extra']) != 0:
