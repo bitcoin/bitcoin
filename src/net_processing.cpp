@@ -2335,6 +2335,87 @@ static void ProcessGetCFCheckPt(CNode& pfrom, CDataStream& vRecv, const CChainPa
     connman.PushMessage(&pfrom, std::move(msg));
 }
 
+static void ProcessPackage(CNode& pfrom, CDataStream& vRecv, CConnman& connman)
+{
+    {
+        LOCK(cs_main);
+        if ((!g_relay_txes && !pfrom.HasPermission(PF_RELAY)) || (pfrom.m_tx_relay == nullptr)  || !State(pfrom.GetId())->m_packagerelay)
+        {
+            LogPrint(BCLog::NET, "package sent in violation of protocol peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+    }
+
+    CPackageRelay package;
+    vRecv >> package;
+
+    uint256 package_id;
+    CSHA256 hasher;
+    std::vector<uint256> package_txids;
+    for (const CTransactionRef& ptx: package.package_txn) {
+        hasher.Write(ptx->GetHash().begin(), ptx->GetHash().size());
+        package_txids.push_back(ptx->GetHash());
+    }
+    hasher.Finalize(package_id.begin());
+
+    CInv inv(MSG_PACKAGE, package_id);
+
+    LOCK2(cs_main, g_cs_orphans);
+
+    g_packagecache.AddPackageKnown(pfrom.GetId(), package_id);
+
+    TxValidationState package_state;
+
+    CNodeState *nodestate = State(pfrom.GetId());
+    nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
+    nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash);
+    EraseTxRequest(inv.hash);
+
+    std::list<CTransactionRef> lRemovedTxn;
+    std::list<CTransactionRef> tx_list;
+
+    std::copy(package.package_txn.begin(), package.package_txn.end(), std::back_inserter(tx_list));
+    if (!AlreadyHave(inv, mempool) &&
+        AcceptPackageToMemoryPool(mempool, package_state, tx_list,
+            &lRemovedTxn, 0 /* nAbsurdFee */, false /* test_accept */)) {
+        mempool.check(&::ChainstateActive().CoinsTip());
+        RelayPackage(pfrom.GetId(), tx_list);
+
+        pfrom.nLastTXTime = GetTime();
+
+    } else {
+        assert(recentRejects);
+        recentRejects->insert(package_id);
+        for (const CTransactionRef& ptx: package.package_txn) {
+            if (RecursiveDynamicUsage(*ptx) < 100000) {
+                AddToCompactExtraTransactions(ptx);
+            }
+        }
+
+        if (pfrom.HasPermission(PF_FORCERELAY)) {
+            bool package_in_mempool = true;
+            for (const CTransactionRef& ptx: package.package_txn) {
+                if (!mempool.exists(ptx->GetHash())) {
+                    package_in_mempool = false;
+                }
+            }
+            if (!package_in_mempool) {
+                RelayPackage(pfrom.GetId(), tx_list);
+            }
+        }
+    }
+
+    for (const CTransactionRef& removedTx: lRemovedTxn)
+        AddToCompactExtraTransactions(removedTx);
+
+    if (package_state.IsInvalid()) {
+        MaybePunishNodeForTx(pfrom.GetId(), package_state);
+    }
+
+    return;
+}
+
 void ProcessMessage(
     CNode& pfrom,
     const std::string& msg_type,
@@ -3567,6 +3648,10 @@ void ProcessMessage(
             pfrom.m_tx_relay->fSendMempool = true;
         }
         return;
+    }
+
+    if (msg_type == NetMsgType::PACKAGE) {
+        ProcessPackage(pfrom, vRecv, connman);
     }
 
     if (msg_type == NetMsgType::PING) {
