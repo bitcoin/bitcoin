@@ -355,7 +355,7 @@ class DIP3Test(SyscoinTestFramework):
 
         return dummy_txin
 
-    def mine_block(self, node, vtx=[], miner_address=None, mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
+    def mine_block(self, node, vtx=[], mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
         bt = node.getblocktemplate({'rules': ['segwit']})
         height = bt['height']
         tip_hash = bt['previousblockhash']
@@ -363,13 +363,13 @@ class DIP3Test(SyscoinTestFramework):
         tip_block = node.getblock(tip_hash)
 
         coinbasevalue = bt['coinbasevalue']
-        if miner_address is None:
-            miner_address = self.nodes[0].getnewaddress()
+    
+        miner_script = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['scriptPubKey']
         if mn_payee is None:
             if isinstance(bt['masternode'], list):
-                mn_payee = bt['masternode'][0]['payee']
+                mn_payee = bt['masternode'][0]['script']
             else:
-                mn_payee = bt['masternode']['payee']
+                mn_payee = bt['masternode']['script']
         # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
 
         # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
@@ -396,11 +396,9 @@ class DIP3Test(SyscoinTestFramework):
             mn_amount = get_masternode_payment(height, coinbasevalue, bt['masternode_collateral_height']) + new_fees/2
         miner_amount = (coinbasevalue - mn_amount) + new_fees/2
 
-        outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
-        if mn_amount > 0:
-            outputs[mn_payee] = str(Decimal(mn_amount) / COIN)
-
-        coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
+        coinbase = CTransaction()
+        coinbase.vout.append(CTxOut(miner_amount, hex_str_to_bytes(miner_script)))
+        coinbase.vout.append(CTxOut(mn_amount, hex_str_to_bytes(mn_payee)))
         coinbase.vin = create_coinbase(height).vin
 
         # We can't really use this one as it would result in invalid merkle roots for masternode lists
@@ -438,7 +436,7 @@ class DIP3Test(SyscoinTestFramework):
         self.mine_block(node, [tx], use_mnmerkleroot_from_tip=use_mnmerkleroot_from_tip)
 
     def test_invalid_mn_payment(self, node):
-        mn_payee = self.nodes[0].getnewaddress()
+        mn_payee = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['scriptPubKey']
         self.mine_block(node, mn_payee=mn_payee, expected_error='bad-cb-payee')
         self.mine_block(node, mn_amount=1, expected_error='bad-cb-payee')
 
