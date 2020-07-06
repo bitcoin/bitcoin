@@ -366,11 +366,6 @@ class DIP3Test(SyscoinTestFramework):
         coinbasevalue = bt['coinbasevalue']
     
         miner_script = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['scriptPubKey']
-        if mn_payee is None:
-            if isinstance(bt['masternode'], list):
-                mn_payee = bt['masternode'][0]['script']
-            else:
-                mn_payee = bt['masternode']['script']
         # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
 
         # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
@@ -397,9 +392,11 @@ class DIP3Test(SyscoinTestFramework):
             mn_amount = get_masternode_payment(height, coinbasevalue, bt['masternode_collateral_height']) + new_fees/2
         miner_amount = (coinbasevalue - mn_amount) + new_fees/2
 
-        coinbase = CTransaction()
-        coinbase.vout.append(CTxOut(int(miner_amount), hex_str_to_bytes(miner_script)))
-        coinbase.vout.append(CTxOut(int(mn_amount), hex_str_to_bytes(mn_payee)))
+        coinbasebt = FromHex(CTransaction(), bt['transactions'][0]['data'])
+        if mn_payee is None:
+            mn_payee = coinbasebt.vout[1].scriptPubKey
+        coinbase.vout.append(CTxOut(int(miner_amount), coinbasebt.vout[0].scriptPubKey))
+        coinbase.vout.append(CTxOut(int(mn_amount), mn_payee))
         coinbase.vin = create_coinbase(height).vin
         coinbase.nVersion = bt['version_coinbase']
         if len(bt['default_witness_commitment_extra']) != 0:
@@ -410,7 +407,6 @@ class DIP3Test(SyscoinTestFramework):
         block = create_block(int(tip_hash, 16), coinbase)
         block.set_base_version(4)
         block.vtx += vtx
-        block.hashMerkleRoot = block.calc_merkle_root()
         add_witness_commitment(block)
         block.solve()
         result = node.submitblock(ToHex(block))
@@ -434,7 +430,7 @@ class DIP3Test(SyscoinTestFramework):
 
     def test_invalid_mn_payment(self, node):
         mn_payee = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['scriptPubKey']
-        self.mine_block(node, mn_payee=mn_payee, expected_error='bad-cb-payee')
+        self.mine_block(node, mn_payee=hex_str_to_bytes(mn_payee), expected_error='bad-cb-payee')
         self.mine_block(node, mn_amount=1, expected_error='bad-cb-payee')
 
 if __name__ == '__main__':
