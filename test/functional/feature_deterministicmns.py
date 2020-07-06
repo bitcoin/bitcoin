@@ -6,7 +6,7 @@
 #
 # Test deterministic masternodes
 #
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
 from test_framework.messages import CTransaction, ToHex, FromHex, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
@@ -363,8 +363,16 @@ class DIP3Test(SyscoinTestFramework):
 
         tip_block = node.getblock(tip_hash)
 
+        coinbasevalue = bt['coinbasevalue']
+    
         miner_script = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['scriptPubKey']
         # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
+
+        # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
+        # include the template's transactions
+        bt_fees = 0
+        for tx in bt['transactions']:
+            bt_fees += tx['fee']
 
         new_fees = 0
         for tx in vtx:
@@ -377,14 +385,16 @@ class DIP3Test(SyscoinTestFramework):
                 out_value += txout.nValue
             new_fees += in_value - out_value
 
+        # fix fees
+        coinbasevalue -= bt_fees
+
+        if mn_amount is None:
+            mn_amount = get_masternode_payment(height, coinbasevalue, bt['masternode_collateral_height']) + new_fees/2
+        miner_amount = (coinbasevalue - mn_amount) + new_fees/2
 
         coinbasebt = FromHex(CTransaction(), bt['transactions'][0]['data'])
-        halffee = new_fees/2
-        miner_amount = coinbasebt.vout[0].nValue + halffee
-        mn_amount = coinbasebt.vout[1].nValue + halffee
         if mn_payee is None:
             mn_payee = coinbasebt.vout[1].scriptPubKey
-        coinbase = CTransaction()
         coinbase.vout.append(CTxOut(int(miner_amount), coinbasebt.vout[0].scriptPubKey))
         coinbase.vout.append(CTxOut(int(mn_amount), mn_payee))
         coinbase.vin = create_coinbase(height).vin
