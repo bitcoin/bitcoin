@@ -28,7 +28,7 @@ public:
 
 public Q_SLOTS:
     void initialize();
-    void shutdown();
+    void shutdown(bool node_shutdown);
 
 Q_SIGNALS:
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
