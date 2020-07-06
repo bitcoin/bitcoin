@@ -361,7 +361,7 @@ class DIP3Test(SyscoinTestFramework):
         height = bt['height']
         tip_hash = bt['previousblockhash']
 
-        tip_block = node.getblock(tip_hash)
+        tip_block = node.getblock(tip_hash, 2)["tx"][0]
 
         coinbasevalue = bt['coinbasevalue']
     
