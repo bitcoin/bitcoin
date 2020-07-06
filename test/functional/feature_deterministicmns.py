@@ -401,21 +401,17 @@ class DIP3Test(SyscoinTestFramework):
         coinbase.vout.append(CTxOut(Decimal(miner_amount), hex_str_to_bytes(miner_script)))
         coinbase.vout.append(CTxOut(Decimal(mn_amount), hex_str_to_bytes(mn_payee)))
         coinbase.vin = create_coinbase(height).vin
+        coinbase.nVersion = bt['version_coinbase']
+        if len(bt['default_witness_commitment_extra']) != 0:
+            coinbase.vout[0].extraData = hex_str_to_bytes(bt['default_witness_commitment_extra'])
 
-        # We can't really use this one as it would result in invalid merkle roots for masternode lists
-        if len(bt['default_witness_commitment']) != 0:
-            coinbase.nVersion = bt['version_coinbase']
-            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, hex_str_to_bytes(bt['default_witness_commitment'])])))
-        elif len(bt['default_witness_commitment_extra']) != 0:
-            coinbase.nVersion = bt['version_coinbase']
-            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, hex_str_to_bytes(bt['default_witness_commitment_extra'])])))
-            
-        coinbase.calc_sha256()
+        coinbase.calc_sha256(with_witness=True)
 
         block = create_block(int(tip_hash, 16), coinbase)
+        block.set_base_version(4)
         block.vtx += vtx
-
         block.hashMerkleRoot = block.calc_merkle_root()
+        add_witness_commitment(block)
         block.solve()
         result = node.submitblock(ToHex(block))
         if expected_error is not None and result != expected_error:
