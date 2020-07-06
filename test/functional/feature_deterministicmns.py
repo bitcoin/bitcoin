@@ -165,7 +165,7 @@ class DIP3Test(SyscoinTestFramework):
             self.sync_all()
             if expected_payee == multisig:
                 block = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
-                cbtx = self.nodes[0].getrawtransaction(block['tx'][0], 1)
+                cbtx = self.nodes[0].getrawtransaction(block['tx'][0], 1, self.nodes[0].getbestblockhash())
                 for out in cbtx['vout']:
                     if 'addresses' in out['scriptPubKey']:
                         if expected_payee in out['scriptPubKey']['addresses'] and out['valueSat'] == expected_amount:
