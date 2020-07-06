@@ -901,8 +901,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
+    result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
     if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
-        result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
     }
     // SYSCOIN
@@ -939,7 +939,6 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock);
     result.pushKV("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED));
     if (!pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
-        result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
         result.pushKV("default_witness_commitment_extra", HexStr(pblocktemplate->vchCoinbaseCommitmentExtra.begin(), pblocktemplate->vchCoinbaseCommitmentExtra.end()));
     }
     return result;
