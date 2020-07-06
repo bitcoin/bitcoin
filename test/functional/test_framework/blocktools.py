@@ -248,6 +248,26 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
 
     return node.sendrawtransaction(tx_to_witness)
 
+# SYSCOIN
+# Identical to GetBlockMNSubsidy in C++ code
+def get_masternode_payment(nHeight, nBlockReward, nStartHeight):
+    nSubsidy = nBlockReward*0.75
+    if (nHeight > 0 and nStartHeight > 0):
+        nDifferenceInBlocks = 0
+        if (nHeight > nStartHeight):
+            nDifferenceInBlocks = (nHeight - nStartHeight)
+            
+            fSubsidyAdjustmentPercentage = 0
+            if(nDifferenceInBlocks >= 150):
+                fSubsidyAdjustmentPercentage = 1.0
+            elif(nDifferenceInBlocks >= 60):
+                fSubsidyAdjustmentPercentage = 0.35
+            
+        if(fSubsidyAdjustmentPercentage > 0):
+            nMNSeniorityRet = nSubsidy*fSubsidyAdjustmentPercentage
+            nSubsidy += nMNSeniorityRet
+    return nSubsidy
+
 class TestFrameworkBlockTools(unittest.TestCase):
     def test_create_coinbase(self):
         height = 20
