@@ -411,7 +411,7 @@ class DIP3Test(SyscoinTestFramework):
                     cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
                 else:
                     cbtx.merkleRootMNList = 0
-            coinbase.extraData = hex_str_to_bytes(bt['default_witness_commitment_extra'])
+            coinbase.extraData = cbtx.serialize()
 
         coinbase.calc_sha256(with_witness=True)
 
