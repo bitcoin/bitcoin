@@ -27,6 +27,7 @@ public:
         ipc::capnp::SetupNodeClient(m_ipc->context());
     }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
+    bool canConnectIpc() override { return true; }
     // bitcoin-gui accepts -ipcbind option even though it does not use it
     // directly. It just returns true here to accept the option because
     // bitcoin-node accepts the option, and bitcoin-gui accepts all bitcoin-node
