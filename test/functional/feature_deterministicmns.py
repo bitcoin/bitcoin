@@ -363,9 +363,9 @@ class DIP3Test(SyscoinTestFramework):
 
         tip_block = node.getblock(tip_hash, 2)["tx"][0]
 
-        coinbaseoutput = 50 * COIN
+        coinbasevalue = 50 * COIN
         halvings = int(height / 150)  # regtest
-        coinbaseoutput >>= halvings
+        coinbasevalue >>= halvings
 
         miner_script = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['scriptPubKey']
         if mn_payee is None:
