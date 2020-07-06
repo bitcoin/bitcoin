@@ -10,7 +10,10 @@ from test_framework.blocktools import create_block, create_coinbase, get_mastern
 from test_framework.messages import CTransaction, ToHex, FromHex, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
-from test_framework.script import CScript
+from test_framework.script import (
+    CScript,
+    OP_RETURN,
+)
 class Masternode(object):
     pass
 
