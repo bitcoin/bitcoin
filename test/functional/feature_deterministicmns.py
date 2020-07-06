@@ -168,7 +168,7 @@ class DIP3Test(SyscoinTestFramework):
                 cbtx = self.nodes[0].getrawtransaction(block['tx'][0], 1, self.nodes[0].getbestblockhash())
                 for out in cbtx['vout']:
                     if 'addresses' in out['scriptPubKey']:
-                        if expected_payee in out['scriptPubKey']['addresses'] and out['value'] == expected_amount:
+                        if expected_payee in out['scriptPubKey']['addresses'] and int(out['value']*COIN) == expected_amount:
                             found_multisig_payee = True
         assert(found_multisig_payee)
 
