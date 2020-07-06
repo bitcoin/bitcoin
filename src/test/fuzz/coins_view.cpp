@@ -278,7 +278,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             CCoinsStats stats;
             bool expected_code_path = false;
             try {
-                (void)GetUTXOStats(&coins_view_cache, stats);
+                (void)GetUTXOStats(&coins_view_cache, stats, CoinStatsHashType::HASH_SERIALIZED);
             } catch (const std::logic_error&) {
                 expected_code_path = true;
             }
