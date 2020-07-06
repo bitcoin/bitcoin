@@ -19,26 +19,31 @@
 #define STORAGE_LEVELDB_INCLUDE_CACHE_H_
 
 #include <stdint.h>
+
+#include "leveldb/export.h"
 #include "leveldb/slice.h"
 
 namespace leveldb {
 
-class Cache;
+class LEVELDB_EXPORT Cache;
 
 // Create a new cache with a fixed size capacity.  This implementation
 // of Cache uses a least-recently-used eviction policy.
-extern Cache* NewLRUCache(size_t capacity);
+LEVELDB_EXPORT Cache* NewLRUCache(size_t capacity);
 
-class Cache {
+class LEVELDB_EXPORT Cache {
  public:
-  Cache() { }
+  Cache() = default;
+
+  Cache(const Cache&) = delete;
+  Cache& operator=(const Cache&) = delete;
 
   // Destroys all existing entries by calling the "deleter"
   // function that was passed to the constructor.
   virtual ~Cache();
 
   // Opaque handle to an entry stored in the cache.
-  struct Handle { };
+  struct Handle {};
 
   // Insert a mapping from key->value into the cache and assign it
   // the specified charge against the total cache capacity.
@@ -52,7 +57,7 @@ class Cache {
   virtual Handle* Insert(const Slice& key, void* value, size_t charge,
                          void (*deleter)(const Slice& key, void* value)) = 0;
 
-  // If the cache has no mapping for "key", returns NULL.
+  // If the cache has no mapping for "key", returns nullptr.
   //
   // Else return a handle that corresponds to the mapping.  The caller
   // must call this->Release(handle) when the returned mapping is no
@@ -99,10 +104,6 @@ class Cache {
 
   struct Rep;
   Rep* rep_;
-
-  // No copying allowed
-  Cache(const Cache&);
-  void operator=(const Cache&);
 };
 
 }  // namespace leveldb

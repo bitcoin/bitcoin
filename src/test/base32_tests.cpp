@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/strencodings.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -20,6 +20,17 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
         std::string strDec = DecodeBase32(vstrOut[i]);
         BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
     }
+
+    // Decoding strings with embedded NUL characters should fail
+    bool failure;
+    (void)DecodeBase32(std::string("invalid", 7), &failure);
+    BOOST_CHECK_EQUAL(failure, true);
+    (void)DecodeBase32(std::string("AWSX3VPP", 8), &failure);
+    BOOST_CHECK_EQUAL(failure, false);
+    (void)DecodeBase32(std::string("AWSX3VPP\0invalid", 16), &failure);
+    BOOST_CHECK_EQUAL(failure, true);
+    (void)DecodeBase32(std::string("AWSX3VPPinvalid", 15), &failure);
+    BOOST_CHECK_EQUAL(failure, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

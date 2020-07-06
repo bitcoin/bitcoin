@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2018 The Bitcoin Core developers
+# Copyright (c) 2010-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin P2P network half-a-node.
@@ -30,6 +30,9 @@ from test_framework.messages import (
     msg_blocktxn,
     msg_cmpctblock,
     msg_feefilter,
+    msg_filteradd,
+    msg_filterclear,
+    msg_filterload,
     msg_getaddr,
     msg_getblocks,
     msg_getblocktxn,
@@ -38,10 +41,10 @@ from test_framework.messages import (
     msg_headers,
     msg_inv,
     msg_mempool,
+    msg_merkleblock,
     msg_notfound,
     msg_ping,
     msg_pong,
-    msg_reject,
     msg_sendcmpct,
     msg_sendheaders,
     msg_tx,
@@ -63,6 +66,9 @@ MESSAGEMAP = {
     b"blocktxn": msg_blocktxn,
     b"cmpctblock": msg_cmpctblock,
     b"feefilter": msg_feefilter,
+    b"filteradd": msg_filteradd,
+    b"filterclear": msg_filterclear,
+    b"filterload": msg_filterload,
     b"getaddr": msg_getaddr,
     b"getblocks": msg_getblocks,
     b"getblocktxn": msg_getblocktxn,
@@ -71,10 +77,10 @@ MESSAGEMAP = {
     b"headers": msg_headers,
     b"inv": msg_inv,
     b"mempool": msg_mempool,
+    b"merkleblock": msg_merkleblock,
     b"notfound": msg_notfound,
     b"ping": msg_ping,
     b"pong": msg_pong,
-    b"reject": msg_reject,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
     b"tx": msg_tx,
@@ -111,7 +117,7 @@ class P2PConnection(asyncio.Protocol):
     def is_connected(self):
         return self._transport is not None
 
-    def peer_connect(self, dstaddr, dstport, net="regtest"):
+    def peer_connect(self, dstaddr, dstport, *, net):
         assert not self.is_connected
         self.dstaddr = dstaddr
         self.dstport = dstport
@@ -171,7 +177,7 @@ class P2PConnection(asyncio.Protocol):
                 if len(self.recvbuf) < 4:
                     return
                 if self.recvbuf[:4] != self.magic_bytes:
-                    raise ValueError("got garbage %s" % repr(self.recvbuf))
+                    raise ValueError("magic bytes mismatch: {} != {}".format(repr(self.magic_bytes), repr(self.recvbuf)))
                 if len(self.recvbuf) < 4 + 12 + 4 + 4:
                     return
                 command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
@@ -218,10 +224,7 @@ class P2PConnection(asyncio.Protocol):
         def maybe_write():
             if not self._transport:
                 return
-            # Python <3.4.4 does not have is_closing, so we have to check for
-            # its existence explicitly as long as Bitcoin Core supports all
-            # Python 3.4 versions.
-            if hasattr(self._transport, 'is_closing') and self._transport.is_closing():
+            if self._transport.is_closing():
                 return
             self._transport.write(raw_message_bytes)
         NetworkThread.network_event_loop.call_soon_threadsafe(maybe_write)
@@ -323,6 +326,9 @@ class P2PInterface(P2PConnection):
     def on_blocktxn(self, message): pass
     def on_cmpctblock(self, message): pass
     def on_feefilter(self, message): pass
+    def on_filteradd(self, message): pass
+    def on_filterclear(self, message): pass
+    def on_filterload(self, message): pass
     def on_getaddr(self, message): pass
     def on_getblocks(self, message): pass
     def on_getblocktxn(self, message): pass
@@ -330,6 +336,7 @@ class P2PInterface(P2PConnection):
     def on_getheaders(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
+    def on_merkleblock(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass
     def on_reject(self, message): pass
@@ -366,6 +373,7 @@ class P2PInterface(P2PConnection):
 
     def wait_for_tx(self, txid, timeout=60):
         def test_function():
+            assert self.is_connected
             if not self.last_message.get('tx'):
                 return False
             return self.last_message['tx'].tx.rehash() == txid
@@ -373,15 +381,30 @@ class P2PInterface(P2PConnection):
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_block(self, blockhash, timeout=60):
-        test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
+        def test_function():
+            assert self.is_connected
+            return self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
+
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_header(self, blockhash, timeout=60):
         def test_function():
+            assert self.is_connected
             last_headers = self.last_message.get('headers')
             if not last_headers:
                 return False
             return last_headers.headers[0].rehash() == blockhash
+
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_merkleblock(self, timeout=60):
+        def test_function():
+            assert self.is_connected
+            last_filtered_block = self.last_message.get('merkleblock')
+            if not last_filtered_block:
+                return False
+            # TODO change this method to take a hash value and only return true if the correct block has been received
+            return True
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
@@ -392,7 +415,11 @@ class P2PInterface(P2PConnection):
         value must be explicitly cleared before calling this method, or this will return
         immediately with success. TODO: change this method to take a hash value and only
         return true if the correct block/tx has been requested."""
-        test_function = lambda: self.last_message.get("getdata")
+
+        def test_function():
+            assert self.is_connected
+            return self.last_message.get("getdata")
+
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_getheaders(self, timeout=60):
@@ -402,20 +429,30 @@ class P2PInterface(P2PConnection):
         value must be explicitly cleared before calling this method, or this will return
         immediately with success. TODO: change this method to take a hash value and only
         return true if the correct block header has been requested."""
-        test_function = lambda: self.last_message.get("getheaders")
+
+        def test_function():
+            assert self.is_connected
+            return self.last_message.get("getheaders")
+
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_inv(self, expected_inv, timeout=60):
         """Waits for an INV message and checks that the first inv object in the message was as expected."""
         if len(expected_inv) > 1:
             raise NotImplementedError("wait_for_inv() will only verify the first inv object")
-        test_function = lambda: self.last_message.get("inv") and \
+
+        def test_function():
+            assert self.is_connected
+            return self.last_message.get("inv") and \
                                 self.last_message["inv"].inv[0].type == expected_inv[0].type and \
                                 self.last_message["inv"].inv[0].hash == expected_inv[0].hash
+
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_verack(self, timeout=60):
-        test_function = lambda: self.message_count["verack"]
+        def test_function():
+            return self.message_count["verack"]
+
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message sending helper functions
@@ -427,7 +464,11 @@ class P2PInterface(P2PConnection):
     # Sync up with the node
     def sync_with_ping(self, timeout=60):
         self.send_message(msg_ping(nonce=self.ping_counter))
-        test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
+
+        def test_function():
+            assert self.is_connected
+            return self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
+
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
         self.ping_counter += 1
 
@@ -460,7 +501,8 @@ class NetworkThread(threading.Thread):
         wait_until(lambda: not self.network_event_loop.is_running(), timeout=timeout)
         self.network_event_loop.close()
         self.join(timeout)
-
+        # Safe to remove event loop.
+        NetworkThread.network_event_loop = None
 
 class P2PDataStore(P2PInterface):
     """A P2P data store class.
@@ -542,7 +584,7 @@ class P2PDataStore(P2PInterface):
                 for b in blocks:
                     self.send_message(msg_block(block=b))
             else:
-                self.send_message(msg_headers([CBlockHeader(blocks[-1])]))
+                self.send_message(msg_headers([CBlockHeader(block) for block in blocks]))
                 wait_until(lambda: blocks[-1].sha256 in self.getdata_requests, timeout=timeout, lock=mininode_lock)
 
             if expect_disconnect:

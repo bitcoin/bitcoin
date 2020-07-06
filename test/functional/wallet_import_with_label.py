@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the behavior of RPC importprivkey on set and unset labels of
@@ -36,7 +36,7 @@ class ImportWithLabel(BitcoinTestFramework):
                      address,
                      iswatchonly=True,
                      ismine=False,
-                     label=label)
+                     labels=[label])
 
         self.log.info(
             "Import the watch-only address's private key without a "
@@ -44,10 +44,7 @@ class ImportWithLabel(BitcoinTestFramework):
         )
         priv_key = self.nodes[0].dumpprivkey(address)
         self.nodes[1].importprivkey(priv_key)
-
-        test_address(self.nodes[1],
-                     address,
-                     label=label)
+        test_address(self.nodes[1], address, labels=[label])
 
         self.log.info(
             "Test importaddress without label and importprivkey with label."
@@ -59,7 +56,7 @@ class ImportWithLabel(BitcoinTestFramework):
                      address2,
                      iswatchonly=True,
                      ismine=False,
-                     label="")
+                     labels=[""])
 
         self.log.info(
             "Import the watch-only address's private key with a "
@@ -69,9 +66,7 @@ class ImportWithLabel(BitcoinTestFramework):
         label2 = "Test Label 2"
         self.nodes[1].importprivkey(priv_key2, label2)
 
-        test_address(self.nodes[1],
-                     address2,
-                     label=label2)
+        test_address(self.nodes[1], address2, labels=[label2])
 
         self.log.info("Test importaddress with label and importprivkey with label.")
         self.log.info("Import a watch-only address with a label.")
@@ -82,7 +77,7 @@ class ImportWithLabel(BitcoinTestFramework):
                      address3,
                      iswatchonly=True,
                      ismine=False,
-                     label=label3_addr)
+                     labels=[label3_addr])
 
         self.log.info(
             "Import the watch-only address's private key with a "
@@ -92,23 +87,21 @@ class ImportWithLabel(BitcoinTestFramework):
         label3_priv = "Test Label 3 for importprivkey"
         self.nodes[1].importprivkey(priv_key3, label3_priv)
 
-        test_address(self.nodes[1],
-                     address3,
-                     label=label3_priv)
+        test_address(self.nodes[1], address3, labels=[label3_priv])
 
         self.log.info(
             "Test importprivkey won't label new dests with the same "
             "label as others labeled dests for the same key."
         )
-        self.log.info("Import a watch-only legacy address with a label.")
-        address4 = self.nodes[0].getnewaddress()
+        self.log.info("Import a watch-only p2sh-segwit address with a label.")
+        address4 = self.nodes[0].getnewaddress("", "p2sh-segwit")
         label4_addr = "Test Label 4 for importaddress"
         self.nodes[1].importaddress(address4, label4_addr)
         test_address(self.nodes[1],
                      address4,
                      iswatchonly=True,
                      ismine=False,
-                     label=label4_addr,
+                     labels=[label4_addr],
                      embedded=None)
 
         self.log.info(
@@ -121,12 +114,9 @@ class ImportWithLabel(BitcoinTestFramework):
         self.nodes[1].importprivkey(priv_key4)
         embedded_addr = self.nodes[1].getaddressinfo(address4)['embedded']['address']
 
-        test_address(self.nodes[1],
-                     embedded_addr,
-                     label="")
-        test_address(self.nodes[1],
-                     address4,
-                     label=label4_addr)
+        test_address(self.nodes[1], embedded_addr, labels=[""])
+
+        test_address(self.nodes[1], address4, labels=[label4_addr])
 
         self.stop_nodes()
 

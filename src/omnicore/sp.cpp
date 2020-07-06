@@ -7,6 +7,7 @@
 #include <omnicore/uint256_extensions.h>
 
 #include <arith_uint256.h>
+#include <hash.h>
 #include <validation.h>
 #include <tinyformat.h>
 #include <uint256.h>
@@ -53,7 +54,7 @@ void CMPCrowd::print(const std::string& address, FILE* fp) const
     fprintf(fp, "%s\n", toString(address).c_str());
 }
 
-void CMPCrowd::saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& addr) const
+void CMPCrowd::saveCrowdSale(std::ofstream& file, const std::string& addr, CHash256& hasher) const
 {
     // compose the outputline
     // addr,propertyId,nValue,property_desired,deadline,early_bird,percentage,created,mined
@@ -85,7 +86,7 @@ void CMPCrowd::saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std:
     }
 
     // add the line to the hash
-    SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+    hasher.Write((unsigned char*)lineOut.c_str(), lineOut.length());
 
     // write the line
     file << lineOut << std::endl;

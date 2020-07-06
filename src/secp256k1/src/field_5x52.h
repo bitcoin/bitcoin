@@ -10,7 +10,9 @@
 #include <stdint.h>
 
 typedef struct {
-    /* X = sum(i=0..4, elem[i]*2^52) mod n */
+    /* X = sum(i=0..4, n[i]*2^(i*52)) mod p
+     * where p = 2^256 - 0x1000003D1
+     */
     uint64_t n[5];
 #ifdef VERIFY
     int magnitude;

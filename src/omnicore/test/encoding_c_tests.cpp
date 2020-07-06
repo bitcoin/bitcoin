@@ -3,7 +3,7 @@
 #include <omnicore/script.h>
 
 #include <script/script.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>

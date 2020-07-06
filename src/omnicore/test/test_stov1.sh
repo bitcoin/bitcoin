@@ -32,7 +32,7 @@ printf "   * Generating addresses to use as STO recipients\\n"
 ADDRESS=()
 for ((i=0;i<11;i++))
 do
-   ADDRESS=("${ADDRESS[@]}" $($SRCDIR/omnicore-cli --regtest getnewaddress))
+   ADDRESS=("${ADDRESS[@]}" "$($SRCDIR/omnicore-cli --regtest getnewaddress)")
 done
 printf "   * Seeding a total of 100 SP#3\\n"
 printf "   * Seeding %s with 5%% = 5 SP#3\\n" ${ADDRESS[1]}
@@ -71,7 +71,7 @@ fi
 printf "\\nActivating cross property (v1) Send To Owners...\\n"
 printf "   * Sending the activation\\n"
 BLOCKS=$($SRCDIR/omnicore-cli --regtest getblockcount)
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 10 $(($BLOCKS + 8)) 999)
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 10 $((BLOCKS + 8)) 999)
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "     # Checking the activation transaction was valid... "
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep valid | cut -c15-)

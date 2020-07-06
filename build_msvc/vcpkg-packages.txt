@@ -1,0 +1,1 @@
+berkeleydb boost-filesystem boost-multi-index boost-signals2 boost-test boost-thread libevent[thread] zeromq double-conversion

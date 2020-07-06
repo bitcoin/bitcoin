@@ -1,4 +1,4 @@
-Name "@PACKAGE_NAME@ (@WINDOWS_BITS@-bit)"
+Name "@PACKAGE_NAME@ (64-bit)"
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
@@ -29,9 +29,7 @@ SetCompressor /SOLID lzma
 # Included files
 !include Sections.nsh
 !include MUI2.nsh
-!if "@WINDOWS_BITS@" == "64"
 !include x64.nsh
-!endif
 
 # Variables
 Var StartMenuGroup
@@ -49,12 +47,8 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/omnicore-${VERSION}-win@WINDOWS_BITS@-setup.exe
-!if "@WINDOWS_BITS@" == "64"
+OutFile @abs_top_srcdir@/omnicore-${VERSION}-win64-setup-unsigned.exe
 InstallDir "$PROGRAMFILES64\Omni Core"
-!else
-InstallDir "$PROGRAMFILES\Omni Core"
-!endif
 CRCCheck on
 XPStyle on
 BrandingText " "

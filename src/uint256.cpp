@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,6 @@
 
 #include <util/strencodings.h>
 
-#include <stdio.h>
 #include <string.h>
 
 template <unsigned int BITS>
@@ -37,16 +36,15 @@ void base_blob<BITS>::SetHex(const char* psz)
         psz += 2;
 
     // hex string to uint
-    const char* pbegin = psz;
-    while (::HexDigit(*psz) != -1)
-        psz++;
-    psz--;
+    size_t digits = 0;
+    while (::HexDigit(psz[digits]) != -1)
+        digits++;
     unsigned char* p1 = (unsigned char*)data;
     unsigned char* pend = p1 + WIDTH;
-    while (psz >= pbegin && p1 < pend) {
-        *p1 = ::HexDigit(*psz--);
-        if (psz >= pbegin) {
-            *p1 |= ((unsigned char)::HexDigit(*psz--) << 4);
+    while (digits > 0 && p1 < pend) {
+        *p1 = ::HexDigit(psz[--digits]);
+        if (digits > 0) {
+            *p1 |= ((unsigned char)::HexDigit(psz[--digits]) << 4);
             p1++;
         }
     }
@@ -77,3 +75,8 @@ template std::string base_blob<256>::GetHex() const;
 template std::string base_blob<256>::ToString() const;
 template void base_blob<256>::SetHex(const char*);
 template void base_blob<256>::SetHex(const std::string&);
+
+uint256& UINT256_ONE() {
+    static uint256* one = new uint256(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
+    return *one;
+}

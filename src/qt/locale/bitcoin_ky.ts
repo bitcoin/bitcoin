@@ -38,10 +38,6 @@
         <translation>Билдирүүнү &amp;текшерүү...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
@@ -82,6 +78,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>&amp;Address</source>
@@ -114,6 +116,9 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -165,9 +170,6 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -224,7 +226,7 @@
         <source>Wallet</source>
         <translation>Капчык</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -267,9 +269,6 @@
     </message>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -282,9 +281,6 @@
         <source>Clear &amp;All</source>
         <translation>&amp;Бардыгын тазалоо</translation>
     </message>
-    </context>
-<context>
-    <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -342,17 +338,5 @@
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Information</source>
-        <translation>Маалымат</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Эскертүү</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Ката</translation>
-    </message>
-</context>
+    </context>
 </TS>

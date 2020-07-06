@@ -198,7 +198,7 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
             QDateTime txTime;
             if (objTH.blockHeight > 0) {
                 LOCK(cs_main);
-                CBlockIndex* pBlkIdx = chainActive[objTH.blockHeight];
+                CBlockIndex* pBlkIdx = ::ChainActive()[objTH.blockHeight];
                 if (nullptr != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
                 dateCell->setData(Qt::DisplayRole, txTime);
             } else {

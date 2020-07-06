@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -115,7 +115,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
 }
 
 CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : m_name(fs::basename(path))
+    : m_name{path.stem().string()}
 {
     penv = nullptr;
     readoptions.verify_checksums = true;

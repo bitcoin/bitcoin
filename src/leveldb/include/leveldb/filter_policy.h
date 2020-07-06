@@ -18,11 +18,13 @@
 
 #include <string>
 
+#include "leveldb/export.h"
+
 namespace leveldb {
 
 class Slice;
 
-class FilterPolicy {
+class LEVELDB_EXPORT FilterPolicy {
  public:
   virtual ~FilterPolicy();
 
@@ -38,8 +40,8 @@ class FilterPolicy {
   //
   // Warning: do not change the initial contents of *dst.  Instead,
   // append the newly constructed filter to *dst.
-  virtual void CreateFilter(const Slice* keys, int n, std::string* dst)
-      const = 0;
+  virtual void CreateFilter(const Slice* keys, int n,
+                            std::string* dst) const = 0;
 
   // "filter" contains the data appended by a preceding call to
   // CreateFilter() on this class.  This method must return true if
@@ -63,8 +65,8 @@ class FilterPolicy {
 // ignores trailing spaces, it would be incorrect to use a
 // FilterPolicy (like NewBloomFilterPolicy) that does not ignore
 // trailing spaces in keys.
-extern const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);
+LEVELDB_EXPORT const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);
 
-}
+}  // namespace leveldb
 
 #endif  // STORAGE_LEVELDB_INCLUDE_FILTER_POLICY_H_

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,23 +9,17 @@
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
 
-#include <chain.h>
-#include <chainparams.h>
-#include <checkpoints.h>
 #include <clientversion.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
-#include <validation.h>
 #include <net.h>
 #include <netbase.h>
-#include <txmempool.h>
-#include <ui_interface.h>
 #include <util/system.h>
-#include <warnings.h>
 
 #include <stdint.h>
 
 #include <QDebug>
+#include <QThread>
 #include <QTimer>
 
 static int64_t nLastHeaderTipUpdateNotification = 0;
@@ -37,7 +31,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     optionsModel(_optionsModel),
     peerTableModel(nullptr),
     banTableModel(nullptr),
-    pollTimer(nullptr),
+    m_thread(new QThread(this)),
     lockedOmniStateChanged(false),
     lockedOmniBalanceChanged(false)
 {
@@ -45,9 +39,20 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     cachedBestHeaderTime = -1;
     peerTableModel = new PeerTableModel(m_node, this);
     banTableModel = new BanTableModel(m_node, this);
-    pollTimer = new QTimer(this);
-    connect(pollTimer, &QTimer::timeout, this, &ClientModel::updateTimer);
-    pollTimer->start(MODEL_UPDATE_DELAY);
+
+    QTimer* timer = new QTimer;
+    timer->setInterval(MODEL_UPDATE_DELAY);
+    connect(timer, &QTimer::timeout, [this] {
+        // no locking required at this point
+        // the following calls will acquire the required lock
+        Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage());
+        Q_EMIT bytesChanged(m_node.getTotalBytesRecv(), m_node.getTotalBytesSent());
+    });
+    connect(m_thread, &QThread::finished, timer, &QObject::deleteLater);
+    connect(m_thread, &QThread::started, [timer] { timer->start(); });
+    // move timer to thread so that polling doesn't disturb main event loop
+    timer->moveToThread(m_thread);
+    m_thread->start();
 
     subscribeToCoreSignals();
 }
@@ -55,6 +60,9 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
 ClientModel::~ClientModel()
 {
     unsubscribeFromCoreSignals();
+
+    m_thread->quit();
+    m_thread->wait();
 }
 
 int ClientModel::getNumConnections(unsigned int flags) const
@@ -97,14 +105,6 @@ int64_t ClientModel::getHeaderTipTime() const
         }
     }
     return cachedBestHeaderTime;
-}
-
-void ClientModel::updateTimer()
-{
-    // no locking required at this point
-    // the following calls will acquire the required lock
-    Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage());
-    Q_EMIT bytesChanged(m_node.getTotalBytesRecv(), m_node.getTotalBytesSent());
 }
 
 void ClientModel::updateNumConnections(int numConnections)
@@ -180,7 +180,7 @@ enum BlockSource ClientModel::getBlockSource() const
 
 QString ClientModel::getStatusBarWarnings() const
 {
-    return QString::fromStdString(m_node.getWarnings("gui"));
+    return QString::fromStdString(m_node.getWarnings());
 }
 
 OptionsModel *ClientModel::getOptionsModel()
@@ -288,8 +288,9 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
         clientmodel->cachedBestHeaderHeight = height;
         clientmodel->cachedBestHeaderTime = blockTime;
     }
-    // if we are in-sync or if we notify a header update, update the UI regardless of last update time
-    if (fHeader || !initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
+
+    // During initial sync, block notifications, and header notifications from reindexing are both throttled.
+    if (!initialSync || (fHeader && !clientmodel->node().getReindex()) || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass an async signal to the UI thread
         bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, height),

@@ -5,6 +5,10 @@ The package "mylib" will be used here as an example
 
 General tips:
 - mylib_foo is written as $(package)_foo in order to make recipes more similar.
+- Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
+  those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
+  need to be shared and should be built statically whenever possible. See
+  [below](#secondary-dependencies) for more details.
 
 ## Identifiers
 Each package is required to define at least these variables:
@@ -14,8 +18,9 @@ Each package is required to define at least these variables:
     placeholder such as 1.0 can be used.
 
     $(package)_download_path:
-    Location of the upstream source, without the file-name. Usually http or
-    ftp.
+    Location of the upstream source, without the file-name. Usually http, https
+    or ftp. Secure transmission options like https should be preferred if
+    available.
 
     $(package)_file_name:
     The upstream source filename available at the download path.
@@ -27,15 +32,15 @@ These variables are optional:
 
     $(package)_build_subdir:
     cd to this dir before running configure/build/stage commands.
-    
+
     $(package)_download_file:
     The file-name of the upstream source if it differs from how it should be
     stored locally. This can be used to avoid storing file-names with strange
     characters.
-    
+
     $(package)_dependencies:
     Names of any other packages that this one depends on.
-    
+
     $(package)_patches:
     Filenames of any patches needed to build the package
 
@@ -129,7 +134,7 @@ the user. Other variables may be defined as needed.
     Stage the build results. If undefined, does nothing.
 
   The following variables are available for each recipe:
-    
+
     $(1)_staging_dir: package's destination sysroot path
     $(1)_staging_prefix_dir: prefix path inside of the package's staging dir
     $(1)_extract_dir: path to the package's extracted sources
@@ -145,3 +150,49 @@ $($(package)_config_opts) will be appended.
 Most autotools projects can be properly staged using:
 
     $(MAKE) DESTDIR=$($(package)_staging_dir) install
+
+## Build outputs:
+
+In general, the output of a depends package should not contain any libtool
+archives. Instead, the package should output `.pc` (`pkg-config`) files where
+possible.
+
+From the [Gentoo Wiki entry](https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Handling_Libtool_Archives):
+
+>  Libtool pulls in all direct and indirect dependencies into the .la files it
+>  creates. This leads to massive overlinking, which is toxic to the Gentoo
+>  ecosystem, as it leads to a massive number of unnecessary rebuilds.
+
+## Secondary dependencies:
+
+Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
+those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
+need to be shared and should be built statically whenever possible. This
+improves general build reliability as illustrated by the following example:
+
+When linking an executable against a shared library `libprimary` that has its
+own shared dependency `libsecondary`, we may need to specify the path to
+`libsecondary` on the link command using the `-rpath/-rpath-link` options, it is
+not sufficient to just say `libprimary`.
+
+For us, it's much easier to just link a static `libsecondary` into a shared
+`libprimary`. Especially because in our case, we are linking against a dummy
+`libprimary` anyway that we'll throw away. We don't care if the end-user has a
+static or dynamic `libseconday`, that's not our concern. With a static
+`libseconday`, when we need to link `libprimary` into our executable, there's no
+dependency chain to worry about as `libprimary` has all the symbols.
+
+## Build targets:
+
+To build an individual package (useful for debugging), following build targets are available.
+
+    make ${package}
+    make ${package}_fetched
+    make ${package}_extracted
+    make ${package}_preprocessed
+    make ${package}_configured
+    make ${package}_built
+    make ${package}_staged
+    make ${package}_postprocessed
+    make ${package}_cached
+    make ${package}_cached_checksum

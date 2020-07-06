@@ -95,6 +95,7 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/fail41.json \
 	$(TEST_DATA_DIR)/fail42.json \
 	$(TEST_DATA_DIR)/fail44.json \
+	$(TEST_DATA_DIR)/fail45.json \
 	$(TEST_DATA_DIR)/fail3.json \
 	$(TEST_DATA_DIR)/fail4.json \
 	$(TEST_DATA_DIR)/fail5.json \
@@ -105,6 +106,7 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/pass1.json \
 	$(TEST_DATA_DIR)/pass2.json \
 	$(TEST_DATA_DIR)/pass3.json \
+	$(TEST_DATA_DIR)/pass4.json \
 	$(TEST_DATA_DIR)/round1.json \
 	$(TEST_DATA_DIR)/round2.json \
 	$(TEST_DATA_DIR)/round3.json \

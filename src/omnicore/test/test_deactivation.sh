@@ -30,7 +30,7 @@ $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "\\nActivating the fee system & all pair trading, and testing they went live:\\n\\n"
 printf "   * Sending the all pair activation & checking it was valid... "
 BLOCKS=$($SRCDIR/omnicore-cli --regtest getblockcount)
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 8 $(($BLOCKS + 8)) 999)
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 8 $((BLOCKS + 8)) 999)
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep valid | cut -c15-)
 if [ $RESULT == "true," ]
@@ -43,7 +43,7 @@ if [ $RESULT == "true," ]
 fi
 printf "   * Sending the fee system activation & checking it was valid... "
 BLOCKS=$($SRCDIR/omnicore-cli --regtest getblockcount)
-TXIDA=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 9 $(($BLOCKS + 8)) 999)
+TXIDA=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 9 $((BLOCKS + 8)) 999)
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXIDA | grep valid | cut -c15-)
 if [ $RESULT == "true," ]

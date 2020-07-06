@@ -14,7 +14,7 @@
 
 #include <base58.h>
 #include <key_io.h>
-#include <script/ismine.h>
+#include <wallet/ismine.h>
 
 #include <stdint.h>
 #include <sstream>

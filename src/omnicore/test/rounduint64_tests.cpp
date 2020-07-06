@@ -1,6 +1,6 @@
 #include <omnicore/convert.h>
 
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <stdint.h>
 

@@ -15,14 +15,19 @@
 #ifndef STORAGE_LEVELDB_INCLUDE_ITERATOR_H_
 #define STORAGE_LEVELDB_INCLUDE_ITERATOR_H_
 
+#include "leveldb/export.h"
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
 
 namespace leveldb {
 
-class Iterator {
+class LEVELDB_EXPORT Iterator {
  public:
   Iterator();
+
+  Iterator(const Iterator&) = delete;
+  Iterator& operator=(const Iterator&) = delete;
+
   virtual ~Iterator();
 
   // An iterator is either positioned at a key/value pair, or
@@ -72,28 +77,35 @@ class Iterator {
   //
   // Note that unlike all of the preceding methods, this method is
   // not abstract and therefore clients should not override it.
-  typedef void (*CleanupFunction)(void* arg1, void* arg2);
+  using CleanupFunction = void (*)(void* arg1, void* arg2);
   void RegisterCleanup(CleanupFunction function, void* arg1, void* arg2);
 
  private:
-  struct Cleanup {
+  // Cleanup functions are stored in a single-linked list.
+  // The list's head node is inlined in the iterator.
+  struct CleanupNode {
+    // True if the node is not used. Only head nodes might be unused.
+    bool IsEmpty() const { return function == nullptr; }
+    // Invokes the cleanup function.
+    void Run() {
+      assert(function != nullptr);
+      (*function)(arg1, arg2);
+    }
+
+    // The head node is used if the function pointer is not null.
     CleanupFunction function;
     void* arg1;
     void* arg2;
-    Cleanup* next;
+    CleanupNode* next;
   };
-  Cleanup cleanup_;
-
-  // No copying allowed
-  Iterator(const Iterator&);
-  void operator=(const Iterator&);
+  CleanupNode cleanup_head_;
 };
 
 // Return an empty iterator (yields nothing).
-extern Iterator* NewEmptyIterator();
+LEVELDB_EXPORT Iterator* NewEmptyIterator();
 
 // Return an empty iterator with the specified status.
-extern Iterator* NewErrorIterator(const Status& status);
+LEVELDB_EXPORT Iterator* NewErrorIterator(const Status& status);
 
 }  // namespace leveldb
 

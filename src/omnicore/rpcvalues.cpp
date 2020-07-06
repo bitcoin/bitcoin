@@ -11,7 +11,7 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
-#include <rpc/server.h>
+#include <rpc/util.h>
 #include <script/script.h>
 #include <uint256.h>
 
@@ -188,7 +188,7 @@ CMutableTransaction ParseMutableTransaction(const UniValue& value)
     return CMutableTransaction(tx);
 }
 
-CPubKey ParsePubKeyOrAddress(const interfaces::Wallet* iWallet, const UniValue& value)
+CPubKey ParsePubKeyOrAddress(interfaces::Wallet* iWallet, const UniValue& value)
 {
     CPubKey pubKey;
     if (!mastercore::AddressToPubKey(iWallet, value.get_str(), pubKey)) {

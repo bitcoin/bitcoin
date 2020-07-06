@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,7 @@
 #include <qt/receivecoinsdialog.h>
 #include <qt/forms/ui_receivecoinsdialog.h>
 
-#include <qt/addressbookpage.h>
 #include <qt/addresstablemodel.h>
-#include <qt/bitcoinunits.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/receiverequestdialog.h>
@@ -101,11 +99,11 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         }
 
         // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
-        ui->receiveButton->setEnabled(model->canGetAddresses());
+        ui->receiveButton->setEnabled(model->wallet().canGetAddresses());
 
         // Enable/disable the receive button if the wallet is now able/unable to give out new addresses.
         connect(model, &WalletModel::canGetAddressesChanged, [this] {
-            ui->receiveButton->setEnabled(model->canGetAddresses());
+            ui->receiveButton->setEnabled(model->wallet().canGetAddresses());
         });
     }
 }
@@ -256,7 +254,7 @@ void ReceiveCoinsDialog::copyColumnToClipboard(int column)
     if (!firstIndex.isValid()) {
         return;
     }
-    GUIUtil::setClipboard(model->getRecentRequestsTableModel()->data(firstIndex.child(firstIndex.row(), column), Qt::EditRole).toString());
+    GUIUtil::setClipboard(model->getRecentRequestsTableModel()->index(firstIndex.row(), column).data(Qt::EditRole).toString());
 }
 
 // context menu

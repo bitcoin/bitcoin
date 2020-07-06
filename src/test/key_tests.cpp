@@ -1,15 +1,15 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
 
 #include <key_io.h>
-#include <script/script.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <test/test_bitcoin.h>
+#include <util/string.h>
+#include <test/util/setup_common.h>
 
 #include <string>
 #include <vector>
@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(!key2C.VerifyPubKey(pubkey2));
     BOOST_CHECK(key2C.VerifyPubKey(pubkey2C));
 
-    BOOST_CHECK(DecodeDestination(addr1)  == CTxDestination(pubkey1.GetID()));
-    BOOST_CHECK(DecodeDestination(addr2)  == CTxDestination(pubkey2.GetID()));
-    BOOST_CHECK(DecodeDestination(addr1C) == CTxDestination(pubkey1C.GetID()));
-    BOOST_CHECK(DecodeDestination(addr2C) == CTxDestination(pubkey2C.GetID()));
+    BOOST_CHECK(DecodeDestination(addr1)  == CTxDestination(PKHash(pubkey1)));
+    BOOST_CHECK(DecodeDestination(addr2)  == CTxDestination(PKHash(pubkey2)));
+    BOOST_CHECK(DecodeDestination(addr1C) == CTxDestination(PKHash(pubkey1C)));
+    BOOST_CHECK(DecodeDestination(addr2C) == CTxDestination(PKHash(pubkey2C)));
 
     for (int n=0; n<16; n++)
     {
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     bool found_small = false;
     for (int i = 0; i < 256; ++i) {
         sig.clear();
-        std::string msg = "A message to be signed" + std::to_string(i);
+        std::string msg = "A message to be signed" + ToString(i);
         msg_hash = Hash(msg.begin(), msg.end());
         BOOST_CHECK(key.Sign(msg_hash, sig));
         found = sig[3] == 0x20;
@@ -186,6 +186,38 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     }
     BOOST_CHECK(found);
     BOOST_CHECK(found_small);
+}
+
+BOOST_AUTO_TEST_CASE(key_key_negation)
+{
+    // create a dummy hash for signature comparison
+    unsigned char rnd[8];
+    std::string str = "Bitcoin key verification\n";
+    GetRandBytes(rnd, sizeof(rnd));
+    uint256 hash;
+    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
+
+    // import the static test key
+    CKey key = DecodeSecret(strSecret1C);
+
+    // create a signature
+    std::vector<unsigned char> vch_sig;
+    std::vector<unsigned char> vch_sig_cmp;
+    key.Sign(hash, vch_sig);
+
+    // negate the key twice
+    BOOST_CHECK(key.GetPubKey().data()[0] == 0x03);
+    key.Negate();
+    // after the first negation, the signature must be different
+    key.Sign(hash, vch_sig_cmp);
+    BOOST_CHECK(vch_sig_cmp != vch_sig);
+    BOOST_CHECK(key.GetPubKey().data()[0] == 0x02);
+    key.Negate();
+    // after the second negation, we should have the original key and thus the
+    // same signature
+    key.Sign(hash, vch_sig_cmp);
+    BOOST_CHECK(vch_sig_cmp == vch_sig);
+    BOOST_CHECK(key.GetPubKey().data()[0] == 0x03);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

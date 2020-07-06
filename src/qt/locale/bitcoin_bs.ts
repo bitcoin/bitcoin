@@ -70,10 +70,6 @@
         <translation>Ovo su vaše Bitcoin adrese za slanje novca. Uvijek provjerite iznos i adresu primaoca prije slanja novca.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ovo su vaše Bitcoin adrese za primanje novca. Preporučljivo je da koristite novu adresu primaoca za svaku transakciju.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopirajte adresu</translation>
     </message>
@@ -113,13 +109,15 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
+    </context>
+<context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -144,6 +142,9 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     </context>
 <context>
@@ -157,9 +158,6 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -191,9 +189,6 @@
     </message>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -206,9 +201,6 @@
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
-    </context>
-<context>
-    <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -278,9 +270,5 @@
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Jezrga</translation>
-    </message>
     </context>
 </TS>

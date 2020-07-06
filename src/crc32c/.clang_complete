@@ -1,0 +1,8 @@
+-Ibuild/include/
+-Ibuild/third_party/glog/
+-Iinclude/
+-Ithird_party/benchmark/include/
+-Ithird_party/googletest/googletest/include/
+-Ithird_party/googletest/googlemock/include/
+-Ithird_party/glog/src/
+-std=c++11

@@ -56,7 +56,7 @@
 #include <util/strencodings.h>
 #include <util/time.h>
 #ifdef ENABLE_WALLET
-#include <script/ismine.h>
+#include <wallet/ismine.h>
 #include <wallet/wallet.h>
 #endif
 
@@ -75,7 +75,7 @@
 using namespace mastercore;
 
 //! Global lock for state objects
-CCriticalSection cs_tally;
+RecursiveMutex cs_tally;
 
 //! Exodus address (changes based on network)
 static std::string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
@@ -672,7 +672,7 @@ static bool TXExodusFundraiser(const CTransaction& tx, const std::string& sender
 static std::set<uint256> setMarkerCache;
 
 //! Guards marker cache
-static CCriticalSection cs_marker_cache;
+static RecursiveMutex cs_marker_cache;
 
 /**
  * Checks, if transaction has any Omni marker.
@@ -846,7 +846,7 @@ CCoinsView mastercore::viewDummy;
 CCoinsViewCache mastercore::view(&viewDummy);
 
 //! Guards coins view cache
-CCriticalSection mastercore::cs_tx_cache;
+RecursiveMutex mastercore::cs_tx_cache;
 
 static unsigned int nCacheHits = 0;
 static unsigned int nCacheMiss = 0;
@@ -889,8 +889,8 @@ static bool FillTxInputCache(const CTransaction& tx, const std::shared_ptr<std::
         } else if (GetTransaction(txIn.prevout.hash, txPrev, Params().GetConsensus(), hashBlock)) {
             newcoin.out.scriptPubKey = txPrev->vout[nOut].scriptPubKey;
             newcoin.out.nValue = txPrev->vout[nOut].nValue;
-            BlockMap::iterator bit = mapBlockIndex.find(hashBlock);
-            newcoin.nHeight = bit != mapBlockIndex.end() ? bit->second->nHeight : 1;
+            BlockMap::iterator bit = ::BlockIndex().find(hashBlock);
+            newcoin.nHeight = bit != ::BlockIndex().end() ? bit->second->nHeight : 1;
         } else {
             return false;
         }
@@ -1235,8 +1235,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
                 if (msc_debug_parser_data) {
                     CPubKey key(ParseHex(multisig_script_data[k]));
-                    CKeyID keyID = key.GetID();
-                    std::string strAddress = EncodeDestination(keyID);
+                    std::string strAddress = EncodeDestination(PKHash(key));
                     PrintToLog("multisig_data[%d]:%s: %s\n", k, multisig_script_data[k], strAddress);
                 }
                 if (msc_debug_parser) {
@@ -1251,7 +1250,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
             // ### FINALIZE CLASS B ###
             for (unsigned int m = 0; m < mdata_count; ++m) { // now decode mastercoin packets
-                if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false));
+                if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m]));
 
                 // check to ensure the sequence numbers are sequential and begin with 01 !
                 if (1 + m != packets[m][0]) {
@@ -1515,8 +1514,8 @@ static int msc_initial_scan(int nFirstBlock)
     {
         LOCK(cs_main);
         // used to print the progress to the console and notifies the UI
-        pFirstBlock = chainActive[nFirstBlock];
-        pLastBlock = chainActive[nLastBlock];
+        pFirstBlock = ::ChainActive()[nFirstBlock];
+        pLastBlock = ::ChainActive()[nLastBlock];
     }
 
     ProgressReporter progressReporter(pFirstBlock, pLastBlock);
@@ -1534,7 +1533,7 @@ static int msc_initial_scan(int nFirstBlock)
         CBlockIndex* pblockindex;
         {
             LOCK(cs_main);
-            pblockindex = chainActive[nBlock];
+            pblockindex = ::ChainActive()[nBlock];
         }
 
         if (nullptr == pblockindex) break;
@@ -1820,7 +1819,7 @@ int mastercore_init()
             std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
             PrintToLog(strShutdownReason);
             if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
-                DoAbortNode(strShutdownReason, strShutdownReason);
+                AbortNode(strShutdownReason, strShutdownReason);
             }
         }
 
@@ -2093,7 +2092,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
             if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
                 fs::path persistPath = GetDataDir() / "MP_persist";
                 if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-                DoAbortNode(msg, msg);
+                AbortNode(msg, msg);
             }
         }
     }

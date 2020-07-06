@@ -8,7 +8,7 @@
 
 #include <arith_uint256.h>
 #include <sync.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 
 #include <boost/test/unit_test.hpp>

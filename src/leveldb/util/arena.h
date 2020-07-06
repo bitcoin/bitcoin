@@ -5,29 +5,33 @@
 #ifndef STORAGE_LEVELDB_UTIL_ARENA_H_
 #define STORAGE_LEVELDB_UTIL_ARENA_H_
 
+#include <atomic>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
-#include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
-#include "port/port.h"
 
 namespace leveldb {
 
 class Arena {
  public:
   Arena();
+
+  Arena(const Arena&) = delete;
+  Arena& operator=(const Arena&) = delete;
+
   ~Arena();
 
   // Return a pointer to a newly allocated memory block of "bytes" bytes.
   char* Allocate(size_t bytes);
 
-  // Allocate memory with the normal alignment guarantees provided by malloc
+  // Allocate memory with the normal alignment guarantees provided by malloc.
   char* AllocateAligned(size_t bytes);
 
   // Returns an estimate of the total memory usage of data allocated
   // by the arena.
   size_t MemoryUsage() const {
-    return reinterpret_cast<uintptr_t>(memory_usage_.NoBarrier_Load());
+    return memory_usage_.load(std::memory_order_relaxed);
   }
 
  private:
@@ -42,11 +46,10 @@ class Arena {
   std::vector<char*> blocks_;
 
   // Total memory usage of the arena.
-  port::AtomicPointer memory_usage_;
-
-  // No copying allowed
-  Arena(const Arena&);
-  void operator=(const Arena&);
+  //
+  // TODO(costan): This member is accessed via atomics, but the others are
+  //               accessed without any locking. Is this OK?
+  std::atomic<size_t> memory_usage_;
 };
 
 inline char* Arena::Allocate(size_t bytes) {

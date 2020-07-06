@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Verify commits against a trusted keys list."""
 import argparse
 import hashlib
+import logging
 import os
 import subprocess
 import sys
@@ -15,7 +16,7 @@ GIT = os.getenv('GIT', 'git')
 def tree_sha512sum(commit='HEAD'):
     """Calculate the Tree-sha512 for the commit.
 
-    This is copied from github-merge.py."""
+    This is copied from github-merge.py. See https://github.com/bitcoin-core/bitcoin-maintainer-tools."""
 
     # request metadata for entire tree, recursively
     files = []
@@ -66,6 +67,11 @@ def tree_sha512sum(commit='HEAD'):
     return overall.hexdigest()
 
 def main():
+
+    # Enable debug logging if running in CI
+    if 'CI' in os.environ and os.environ['CI'].lower() == "true":
+        logging.getLogger().setLevel(logging.DEBUG)
+
     # Parse arguments
     parser = argparse.ArgumentParser(usage='%(prog)s [options] [commit id]')
     parser.add_argument('--disable-tree-check', action='store_false', dest='verify_tree', help='disable SHA-512 tree check')
@@ -95,6 +101,10 @@ def main():
 
     # Iterate through commits
     while True:
+
+        # Log a message to prevent Travis from timing out
+        logging.debug("verify-commits: [in-progress] processing commit {}".format(current_commit[:8]))
+
         if current_commit == verified_root:
             print('There is a valid path from "{}" to {} where all commits are signed!'.format(initial_commit, verified_root))
             sys.exit(0)

@@ -414,7 +414,7 @@ void TXHistoryDialog::UpdateHistory()
                 QTableWidgetItem *dateCell = new QTableWidgetItem;
                 if (htxo.blockHeight>0) {
                     LOCK(cs_main);
-                    CBlockIndex* pBlkIdx = chainActive[htxo.blockHeight];
+                    CBlockIndex* pBlkIdx = ::ChainActive()[htxo.blockHeight];
                     if (nullptr != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
                     dateCell->setData(Qt::DisplayRole, txTime);
                 } else {
