@@ -403,7 +403,7 @@ class DIP3Test(SyscoinTestFramework):
         coinbase.vin = create_coinbase(height).vin
         coinbase.nVersion = bt['version_coinbase']
         if len(bt['default_witness_commitment_extra']) != 0:
-            coinbase.vout[0].extraData = hex_str_to_bytes(bt['default_witness_commitment_extra'])
+            coinbase.extraData = hex_str_to_bytes(bt['default_witness_commitment_extra'])
 
         coinbase.calc_sha256(with_witness=True)
 
