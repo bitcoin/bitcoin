@@ -102,13 +102,14 @@ static const int defaultFontScale = 0;
 #endif
 
 /** Font related variables. */
-FontFamily fontFamily = defaultFontFamily;
-// Weight for normal text
-QFont::Weight fontWeightNormal = defaultFontWeightNormal;
-// Weight for bold text
-QFont::Weight fontWeightBold = defaultFontWeightBold;
-// Scale value for text sizes
-int fontScale = defaultFontScale;
+// Application font family. May be overwritten by -font-family.
+static FontFamily fontFamily = defaultFontFamily;
+// Application font scale value. May be overwritten by -font-scale.
+static int fontScale = defaultFontScale;
+// Application font weight for normal text. May be overwritten by -font-weight-normal.
+static QFont::Weight fontWeightNormal = defaultFontWeightNormal;
+// Application font weight for bold text. May be overwritten by -font-weight-bold.
+static QFont::Weight fontWeightBold = defaultFontWeightBold;
 
 // Contains all widgets and its font attributes (weight, italic) with font changes due to GUIUtil::setFont
 static std::map<QWidget*, std::pair<FontWeight, bool>> mapNormalFontUpdates;
@@ -1040,6 +1041,7 @@ QString fontFamilyToString(FontFamily family)
 void setFontFamily(FontFamily family)
 {
     fontFamily = family;
+    updateFonts();
 }
 
 FontFamily getFontFamilyDefault()
@@ -1108,6 +1110,7 @@ QFont::Weight getFontWeightNormal()
 void setFontWeightNormal(QFont::Weight weight)
 {
     fontWeightNormal = weight;
+    updateFonts();
 }
 
 QFont::Weight getFontWeightBoldDefault()
@@ -1123,6 +1126,7 @@ QFont::Weight getFontWeightBold()
 void setFontWeightBold(QFont::Weight weight)
 {
     fontWeightBold = weight;
+    updateFonts();
 }
 
 int getFontScaleDefault()
@@ -1138,6 +1142,7 @@ int getFontScale()
 void setFontScale(int nScale)
 {
     fontScale = nScale;
+    updateFonts();
 }
 
 double getScaledFontSize(int nSize)
