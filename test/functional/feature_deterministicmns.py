@@ -400,8 +400,8 @@ class DIP3Test(SyscoinTestFramework):
         miner_amount = (coinbasevalue - mn_amount) + new_fees/2
 
         coinbase = CTransaction()
-        coinbase.vout.append(CTxOut(miner_amount, hex_str_to_bytes(miner_script)))
-        coinbase.vout.append(CTxOut(mn_amount, hex_str_to_bytes(mn_payee)))
+        coinbase.vout.append(CTxOut(Decimal(miner_amount), hex_str_to_bytes(miner_script)))
+        coinbase.vout.append(CTxOut(Decimal(mn_amount), hex_str_to_bytes(mn_payee)))
         coinbase.vin = create_coinbase(height).vin
 
         # We can't really use this one as it would result in invalid merkle roots for masternode lists
