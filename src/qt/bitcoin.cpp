@@ -299,8 +299,14 @@ void BitcoinApplication::createNode(interfaces::Init& init)
         }
 
         // If node is not part of current process, spawn new bitcoin-node
-        // process.
-        auto node_init = init.ipc()->spawnProcess("bitcoin-node");
+        // process or connect to an existing one.
+        std::string address = gArgs.GetArg("-ipcconnect", "auto");
+        auto node_init = init.ipc()->connectAddress(address);
+        if (node_init) {
+            m_node_external = true;
+        } else {
+            node_init = init.ipc()->spawnProcess("bitcoin-node");
+        }
         m_node = node_init->makeNode();
         init.ipc()->addCleanup(*m_node, [node_init = node_init.release()] { delete node_init; });
     }
@@ -347,7 +353,13 @@ void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
-    Q_EMIT requestedInitialize();
+    if (m_node_external) {
+        interfaces::BlockAndHeaderTipInfo tip_info;
+        initializeResult(true, tip_info);
+    } else {
+        Q_EMIT requestedInitialize();
+    }
+
 }
 
 void BitcoinApplication::requestShutdown()
@@ -371,7 +383,7 @@ void BitcoinApplication::requestShutdown()
     window->unsubscribeFromCoreSignals();
     // Request node shutdown, which can interrupt long operations, like
     // rescanning a wallet.
-    node().startShutdown();
+    if (!m_node_external) node().startShutdown();
     // Prior to unsetting the client model, stop listening backend signals
     if (clientModel) {
         clientModel->stop();
@@ -397,7 +409,7 @@ void BitcoinApplication::requestShutdown()
     clientModel = nullptr;
 
     // Request shutdown from core thread
-    Q_EMIT requestedShutdown();
+    Q_EMIT requestedShutdown(!m_node_external);
 }
 
 void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
@@ -540,7 +552,7 @@ int GuiMain(int argc, char* argv[])
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
-    SetupServerArgs(gArgs, init->canListenIpc());
+    SetupServerArgs(gArgs, init->canConnectIpc(), init->canListenIpc());
     SetupUIArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
@@ -698,7 +710,7 @@ int GuiMain(int argc, char* argv[])
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
-        if (app.baseInitialize()) {
+        if (app.nodeExternal() || app.baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(CLIENT_NAME), (HWND)app.getMainWinId());
