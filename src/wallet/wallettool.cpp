@@ -126,7 +126,18 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Flush(true);
         } else if (command == "salvage") {
-            return RecoverDatabaseFile(path);
+            bilingual_str error;
+            std::vector<bilingual_str> warnings;
+            bool ret = RecoverDatabaseFile(path, error, warnings);
+            if (!ret) {
+                for (const auto warning : warnings) {
+                    tfm::format(std::cerr, "%s\n", warning.original);
+                }
+                if (!error.empty()) {
+                    tfm::format(std::cerr, "%s\n", error.original);
+                }
+            }
+            return ret;
         }
     } else {
         tfm::format(std::cerr, "Invalid command: %s\n", command);
