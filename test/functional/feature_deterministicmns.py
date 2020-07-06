@@ -374,13 +374,6 @@ class DIP3Test(SyscoinTestFramework):
             else:
                 mn_payee = bt['masternode']['script']
         # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
-
-        # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
-        # include the template's transactions
-        bt_fees = 0
-        for tx in bt['transactions']:
-            bt_fees += tx['fee']
-
         new_fees = 0
         for tx in vtx:
             in_value = 0
@@ -392,8 +385,6 @@ class DIP3Test(SyscoinTestFramework):
                 out_value += txout.nValue
             new_fees += in_value - out_value
 
-        # fix fees
-        coinbasevalue -= bt_fees
 
         if mn_amount is None:
             mn_amount = get_masternode_payment(height, coinbasevalue, bt['masternode_collateral_height']) + new_fees/2
