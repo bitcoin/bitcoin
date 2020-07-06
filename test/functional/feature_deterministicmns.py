@@ -395,7 +395,8 @@ class DIP3Test(SyscoinTestFramework):
 
         if mn_amount is None:
             mn_amount = get_masternode_payment(height, coinbasevalue, bt['masternode_collateral_height']) + new_fees/2
-        miner_amount = (coinbasevalue - mn_amount) + new_fees/2
+        miner_amount = coinbasevalue*0.25
+        miner_amount += new_fees/2
 
         coinbase = CTransaction()
         coinbase.vout.append(CTxOut(int(miner_amount), hex_str_to_bytes(miner_script)))
