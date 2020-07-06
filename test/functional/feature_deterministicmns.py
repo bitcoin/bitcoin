@@ -7,7 +7,7 @@
 # Test deterministic masternodes
 #
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
-from test_framework.messages import CTransaction, ToHex, FromHex, COIN, CTxOut
+from test_framework.messages import CTransaction, ToHex, FromHex, COIN, CTxOut, CScript
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 
