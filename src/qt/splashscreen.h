@@ -62,6 +62,7 @@ private:
     int curAlignment;
 
     interfaces::Node* m_node = nullptr;
+    bool m_shutdown = false;
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
