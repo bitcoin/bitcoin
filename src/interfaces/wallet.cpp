@@ -225,9 +225,10 @@ public:
         bilingual_str& fail_reason) override
     {
         LOCK(m_wallet->cs_wallet);
-        CTransactionRef tx;
+        CTransactionRef tx; 
+        std::string feeReason; 
         if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos,
-                fail_reason, coin_control, sign)) {
+                fail_reason, coin_control, feeReason, sign)) {
             return {};
         }
         return tx;
