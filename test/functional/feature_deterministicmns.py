@@ -7,7 +7,7 @@
 # Test deterministic masternodes
 #
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
-from test_framework.messages import CTransaction, ToHex, FromHex, COIN, CTxOut
+from test_framework.messages import CTransaction, ToHex, FromHex, CCbTx, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 from test_framework.script import (
@@ -401,8 +401,16 @@ class DIP3Test(SyscoinTestFramework):
         coinbase.vout.append(CTxOut(int(miner_amount), hex_str_to_bytes(miner_script)))
         coinbase.vout.append(CTxOut(int(mn_amount), hex_str_to_bytes(mn_payee)))
         coinbase.vin = create_coinbase(height).vin
+ 
+        # Recreate mn root as using one in BT would result in invalid merkle roots for masternode lists
         coinbase.nVersion = bt['version_coinbase']
         if len(bt['default_witness_commitment_extra']) != 0:
+            cbtx = FromHex(CCbTx(version=2), bt['default_witness_commitment_extra'])
+            if use_mnmerkleroot_from_tip:
+                if 'cbTx' in tip_block:
+                    cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
+                else:
+                    cbtx.merkleRootMNList = 0
             coinbase.extraData = hex_str_to_bytes(bt['default_witness_commitment_extra'])
 
         coinbase.calc_sha256(with_witness=True)
