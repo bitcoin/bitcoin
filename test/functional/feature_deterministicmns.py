@@ -406,10 +406,10 @@ class DIP3Test(SyscoinTestFramework):
         # We can't really use this one as it would result in invalid merkle roots for masternode lists
         if len(bt['default_witness_commitment']) != 0:
             coinbase.nVersion = bt['version_coinbase']
-            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, hex_str_to_bytes(bt['default_witness_commitment']]))))
+            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, hex_str_to_bytes(bt['default_witness_commitment'])])))
         elif len(bt['default_witness_commitment_extra']) != 0:
             coinbase.nVersion = bt['version_coinbase']
-            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, hex_str_to_bytes(bt['default_witness_commitment_extra']])))
+            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, hex_str_to_bytes(bt['default_witness_commitment_extra'])])))
             
         coinbase.calc_sha256()
 
