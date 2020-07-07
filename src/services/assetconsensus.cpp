@@ -7,7 +7,6 @@
 #include <consensus/validation.h>
 #include <ethereum/ethereum.h>
 #include <ethereum/address.h>
-#include <services/witnessaddress.h>
 #include <services/asset.h>
 #include <script/standard.h>
 #include <boost/thread/thread.hpp>
@@ -19,32 +18,6 @@ RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string &errorMessage, bool bConsensus) {
     return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
-}
-
-std::string CWitnessAddress::ToString() const {
-    if(nVersion == 0){
-        if (vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
-            return EncodeDestination(WitnessV0KeyHash(vchWitnessProgram));
-        }
-        else if (vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            return EncodeDestination(WitnessV0ScriptHash(vchWitnessProgram));
-        }
-    }
-    return "";
-}
-
-bool CWitnessAddress::IsValid() const {
-    const size_t& size = vchWitnessProgram.size();
-    // this is a hard limit 2->40
-    if(size < 2 || size > 40){
-        return false;
-    }
-    // BIP 142, version 0 must be of p2wpkh or p2wpsh size
-    if(nVersion == 0){
-        return (size == WITNESS_V0_KEYHASH_SIZE || size == WITNESS_V0_SCRIPTHASH_SIZE);
-    }
-    // otherwise mark as valid for future softfork expansion
-    return true;
 }
 
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys) {
@@ -252,16 +225,15 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     uint32_t nAssetEth = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
-    CWitnessAddress witnessAddress;
-    CTxDestination dest;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, nERC20Precision, nSPTPrecision, rlpBytes, outputAmount, nAssetEth, witnessAddress)) {
+    CTxDestination dest, witnessDest;
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, nERC20Precision, nSPTPrecision, rlpBytes, outputAmount, nAssetEth, witnessDest)) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
     if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
         return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
     }
     if(!fRegTest) {
-        if(EncodeDestination(dest) != witnessAddress.ToString()) {
+        if(dest != witnessDest) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
         }
     }

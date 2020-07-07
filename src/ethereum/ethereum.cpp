@@ -5,7 +5,6 @@
 #include <arith_uint256.h>
 #include <ethereum/ethereum.h>
 #include <ethereum/sha3.h>
-#include <services/witnessaddress.h>
 #include <logging.h>
 #include <util/strencodings.h>
 
@@ -105,7 +104,7 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, uint64_t& outputAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, uint64_t& outputAmount, uint32_t& nAsset, CTxDestination& witnessAddress) {
     // total 5 or 6 fields are expected @ 32 bytes each field, 6 fields if witness > 32 bytes + 4 byte method hash
     if(vchInputData.size() < 164 || vchInputData.size() > 196) {
       return false;  
@@ -153,6 +152,7 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     const unsigned char& nVersion = vchInputData[dataPos++];
     std::vector<unsigned char>::const_iterator firstWitness = vchInputData.begin()+dataPos;
     std::vector<unsigned char>::const_iterator lastWitness = firstWitness + dataLength; 
-    witnessAddress = CWitnessAddress(nVersion, std::vector<unsigned char>(firstWitness,lastWitness));
-    return witnessAddress.IsValid();
+    //witnessAddress = CWitnessAddress(nVersion, std::vector<unsigned char>(firstWitness,lastWitness));
+    //return witnessAddress.IsValid();
+    return true;
 }

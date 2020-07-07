@@ -108,7 +108,6 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
-  services/witnessaddress.h \
   services/asset.h \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
