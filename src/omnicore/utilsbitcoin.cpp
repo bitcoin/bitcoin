@@ -20,7 +20,7 @@ namespace mastercore
 int GetHeight()
 {
     LOCK(cs_main);
-    return chainActive.Height();
+    return ::ChainActive().Height();
 }
 
 /**
@@ -29,8 +29,8 @@ int GetHeight()
 uint32_t GetLatestBlockTime()
 {
     LOCK(cs_main);
-    if (chainActive.Tip())
-        return chainActive.Tip()->GetBlockTime();
+    if (::ChainActive().Tip())
+        return ::ChainActive().Tip()->GetBlockTime();
     else
         return Params().GenesisBlock().nTime;
 }
@@ -42,8 +42,8 @@ CBlockIndex* GetBlockIndex(const uint256& hash)
 {
     CBlockIndex* pBlockIndex = nullptr;
     LOCK(cs_main);
-    BlockMap::const_iterator it = mapBlockIndex.find(hash);
-    if (it != mapBlockIndex.end()) {
+    BlockMap::const_iterator it = ::BlockIndex().find(hash);
+    if (it != ::BlockIndex().end()) {
         pBlockIndex = it->second;
     }
 

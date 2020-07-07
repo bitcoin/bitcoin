@@ -211,6 +211,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="prune">
+     <property name="toolTip">
+      <string>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</string>
+     </property>
+     <property name="text">
+      <string></string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="lblExplanation2">
      <property name="text">
       <string>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</string>

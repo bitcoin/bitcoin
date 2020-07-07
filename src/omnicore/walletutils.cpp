@@ -21,7 +21,7 @@
 #include <util/strencodings.h>
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
-#include <script/ismine.h>
+#include <wallet/ismine.h>
 #include <wallet/wallet.h>
 #endif
 
@@ -35,7 +35,7 @@ namespace mastercore
 /**
  * Retrieves a public key from the wallet, or converts a hex-string to a public key.
  */
-bool AddressToPubKey(const interfaces::Wallet* iWallet, const std::string& key, CPubKey& pubKey)
+bool AddressToPubKey(interfaces::Wallet* iWallet, const std::string& key, CPubKey& pubKey)
 {
 #ifdef ENABLE_WALLET
     // Case 1: Bitcoin address and the key is in the wallet
@@ -46,7 +46,8 @@ bool AddressToPubKey(const interfaces::Wallet* iWallet, const std::string& key, 
             PrintToLog("%s: ERROR: redemption address %s does not refer to a public key\n", __func__, key);
             return false;
         }
-        if (!iWallet->getPubKey(keyID, pubKey)) {
+        CScript script = GetScriptForDestination(dest);
+        if (!iWallet->getPubKey(script, keyID, pubKey)) {
             PrintToLog("%s: ERROR: no public key in wallet for redemption address %s\n", __func__, key);
             return false;
         }
@@ -152,7 +153,7 @@ int IsMyAddressAllWallets(const std::string& address, const bool matchAny, const
 
     for(const std::shared_ptr<CWallet> wallet : GetWallets()) {
         CTxDestination destination = DecodeDestination(address);
-        isminetype ismine = IsMine(*wallet, destination);
+        isminetype ismine = wallet->IsMine(destination);
         if (matchAny && ismine != ISMINE_NO)
             return static_cast<int>(ismine);
         else if (ismine & filter)
@@ -205,7 +206,7 @@ int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress,
 {
     // total output funds collected
     int64_t nTotal = 0;
-    int nHeight = chainActive.Height();
+    int nHeight = ::ChainActive().Height();
 
     // select coins to cover up to 20 kB max. transaction size
     CAmount nMax = 20 * GetEstimatedFeePerKb(iWallet);
@@ -226,6 +227,12 @@ int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress,
             continue;
         }
 
+        if (status->second.depth_in_main_chain == 0) {
+            LOCK(mempool.cs);
+            if (!mempool.exists(txid))
+                continue;
+        }
+
         if (!it->available_credit) {
             continue;
         }
@@ -237,7 +244,7 @@ int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress,
             if (!CheckInput(txOut, nHeight, dest)) {
                 continue;
             }
-            if (!iWallet.isMine(dest)) {
+            if (!iWallet.txoutIsMine(txOut)) {
                 continue;
             }
             if (iWallet.isSpent(txid, n)) {
@@ -278,7 +285,7 @@ int64_t SelectAllCoins(interfaces::Wallet& iWallet, const std::string& fromAddre
 {
     // total output funds collected
     int64_t nTotal = 0;
-    int nHeight = chainActive.Height();
+    int nHeight = ::ChainActive().Height();
 
     std::map<uint256, interfaces::WalletTxStatus> tx_status;
     const std::vector<interfaces::WalletTx>& transactions = iWallet.getWalletTxsDetails(tx_status);

@@ -8,5 +8,7 @@ i686*
 mips*
 arm*
 aarch64*
+powerpc*
 riscv32*
 riscv64*
+s390x*

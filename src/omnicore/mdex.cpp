@@ -10,6 +10,7 @@
 
 #include <arith_uint256.h>
 #include <chain.h>
+#include <hash.h>
 #include <validation.h>
 #include <tinyformat.h>
 #include <uint256.h>
@@ -18,8 +19,6 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/rational.hpp>
-
-#include <openssl/sha.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -408,7 +407,7 @@ int64_t CMPMetaDEx::getAmountToFill() const
 
 int64_t CMPMetaDEx::getBlockTime() const
 {
-    CBlockIndex* pblockindex = chainActive[block];
+    CBlockIndex* pblockindex = ::ChainActive()[block];
     return pblockindex->GetBlockTime();
 }
 
@@ -425,7 +424,7 @@ std::string CMPMetaDEx::ToString() const
         property, FormatMP(property, amount_forsale), desired_property, FormatMP(desired_property, amount_desired));
 }
 
-void CMPMetaDEx::saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const
+void CMPMetaDEx::saveOffer(std::ofstream& file, CHash256 &hasher) const
 {
     std::string lineOut = strprintf("%s,%d,%d,%d,%d,%d,%d,%d,%s,%d",
         addr,
@@ -441,7 +440,7 @@ void CMPMetaDEx::saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const
     );
 
     // add the line to the hash
-    SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+    hasher.Write((unsigned char*)lineOut.c_str(), lineOut.length());
 
     // write the line
     file << lineOut << std::endl;

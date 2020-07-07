@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
@@ -16,10 +15,12 @@
 class CBaseChainParams
 {
 public:
-    /** BIP70 chain name strings (main, test or regtest) */
+    ///@{
+    /** Chain name strings */
     static const std::string MAIN;
     static const std::string TESTNET;
     static const std::string REGTEST;
+    ///@}
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }

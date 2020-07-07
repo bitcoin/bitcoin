@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,20 +6,21 @@
 
 #include <core_io.h>
 #include <key.h>
-#include <keystore.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <test/test_bitcoin.h>
-#include <rpc/server.h>
+#include <test/util/transaction_utils.h>
+#include <test/util/setup_common.h>
+#include <rpc/util.h>
+#include <streams.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>
 #endif
 
-#include <fstream>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -120,40 +121,6 @@ static ScriptError_t ParseScriptError(const std::string &name)
 }
 
 BOOST_FIXTURE_TEST_SUITE(script_tests, BasicTestingSetup)
-
-CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, int nValue = 0)
-{
-    CMutableTransaction txCredit;
-    txCredit.nVersion = 1;
-    txCredit.nLockTime = 0;
-    txCredit.vin.resize(1);
-    txCredit.vout.resize(1);
-    txCredit.vin[0].prevout.SetNull();
-    txCredit.vin[0].scriptSig = CScript() << CScriptNum(0) << CScriptNum(0);
-    txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txCredit.vout[0].scriptPubKey = scriptPubKey;
-    txCredit.vout[0].nValue = nValue;
-
-    return txCredit;
-}
-
-CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CScriptWitness& scriptWitness, const CTransaction& txCredit)
-{
-    CMutableTransaction txSpend;
-    txSpend.nVersion = 1;
-    txSpend.nLockTime = 0;
-    txSpend.vin.resize(1);
-    txSpend.vout.resize(1);
-    txSpend.vin[0].scriptWitness = scriptWitness;
-    txSpend.vin[0].prevout.hash = txCredit.GetHash();
-    txSpend.vin[0].prevout.n = 0;
-    txSpend.vin[0].scriptSig = scriptSig;
-    txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txSpend.vout[0].scriptPubKey = CScript();
-    txSpend.vout[0].nValue = txCredit.vout[0].nValue;
-
-    return txSpend;
-}
 
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, int flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
@@ -1199,7 +1166,7 @@ SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& 
 BOOST_AUTO_TEST_CASE(script_combineSigs)
 {
     // Test the ProduceSignature's ability to combine signatures function
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     std::vector<CKey> keys;
     std::vector<CPubKey> pubkeys;
     for (int i = 0; i < 3; i++)
@@ -1211,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         BOOST_CHECK(keystore.AddKey(key));
     }
 
-    CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(keys[0].GetPubKey().GetID()));
+    CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(PKHash(keys[0].GetPubKey())));
     CMutableTransaction txTo = BuildSpendingTransaction(CScript(), CScriptWitness(), CTransaction(txFrom));
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
     SignatureData scriptSig;
@@ -1237,7 +1204,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << ToByteVector(keys[0].GetPubKey()) << OP_CHECKSIG;
     BOOST_CHECK(keystore.AddCScript(pkSingle));
-    scriptPubKey = GetScriptForDestination(CScriptID(pkSingle));
+    scriptPubKey = GetScriptForDestination(ScriptHash(pkSingle));
     BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSig, empty);

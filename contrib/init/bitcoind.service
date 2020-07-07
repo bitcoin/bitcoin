@@ -5,8 +5,9 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/bitcoin/bitcoin.conf, except for those explicitly specified as arguments
-# in ExecStart=
+# /etc/bitcoin/bitcoin.conf, but keep in mind those explicitly
+# specified as arguments in ExecStart= will override those in the
+# config file.
 
 [Unit]
 Description=Bitcoin daemon
@@ -18,12 +19,17 @@ ExecStart=/usr/bin/bitcoind -daemon \
                             -conf=/etc/bitcoin/bitcoin.conf \
                             -datadir=/var/lib/bitcoind
 
+# Make sure the config directory is readable by the service user
+PermissionsStartOnly=true
+ExecStartPre=/bin/chgrp bitcoin /etc/bitcoin
+
 # Process management
 ####################
 
 Type=forking
 PIDFile=/run/bitcoind/bitcoind.pid
 Restart=on-failure
+TimeoutStopSec=600
 
 # Directory creation and permissions
 ####################################
@@ -52,6 +58,9 @@ PrivateTmp=true
 
 # Mount /usr, /boot/ and /etc read-only for the process.
 ProtectSystem=full
+
+# Deny access to /home, /root and /run/user
+ProtectHome=true
 
 # Disallow the process and all of its children to gain
 # new privileges through execve().

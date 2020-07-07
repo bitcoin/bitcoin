@@ -15,11 +15,7 @@
             "scriptPubKey": {
                 "asm": "02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397 OP_CHECKSIG",
                 "hex": "2102a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397ac",
-                "reqSigs": 1,
-                "type": "pubkey",
-                "addresses": [
-                    "1FoG2386FG2tAJS9acMuiDsKy67aGg9MKz"
-                ]
+                "type": "pubkey"
             }
         }
     ],

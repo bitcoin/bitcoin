@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 #include <serialize.h>
 #include <streams.h>
 
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -183,6 +183,26 @@ public:
         pre_vector = pre_vector_alt;
     }
 
+    void resize_uninitialized(realtype values) {
+        size_t r = values.size();
+        size_t s = real_vector.size() / 2;
+        if (real_vector.capacity() < s + r) {
+            real_vector.reserve(s + r);
+        }
+        real_vector.resize(s);
+        pre_vector.resize_uninitialized(s);
+        for (auto v : values) {
+            real_vector.push_back(v);
+        }
+        auto p = pre_vector.size();
+        pre_vector.resize_uninitialized(p + r);
+        for (auto v : values) {
+            pre_vector[p] = v;
+            ++p;
+        }
+        test();
+    }
+
     ~prevector_tester() {
         BOOST_CHECK_MESSAGE(passed, "insecure_rand: " + rand_seed.ToString());
     }
@@ -259,6 +279,14 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             }
             if (InsecureRandBits(5) == 18) {
                 test.move();
+            }
+            if (InsecureRandBits(5) == 19) {
+                unsigned int num = 1 + (InsecureRandBits(4));
+                std::vector<int> values(num);
+                for (auto &v : values) {
+                    v = InsecureRand32();
+                }
+                test.resize_uninitialized(values);
             }
         }
     }

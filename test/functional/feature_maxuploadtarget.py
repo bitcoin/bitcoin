@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test behavior of -maxuploadtarget.
@@ -35,7 +35,8 @@ class MaxUploadTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-maxuploadtarget=800"]]
+        self.extra_args = [["-maxuploadtarget=800", "-acceptnonstdtxn=1"]]
+        self.supports_cli = False
 
         # Cache for utxos, as the listunspent may take a long time later in the test
         self.utxo_cache = []
@@ -93,8 +94,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # 576MB will be reserved for relaying new blocks, so expect this to
         # succeed for ~235 tries.
         for i in range(success_count):
-            p2p_conns[0].send_message(getdata_request)
-            p2p_conns[0].sync_with_ping()
+            p2p_conns[0].send_and_ping(getdata_request)
             assert_equal(p2p_conns[0].block_receive_map[big_old_block], i+1)
 
         assert_equal(len(self.nodes[0].getpeerinfo()), 3)
@@ -111,8 +111,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # We'll try 800 times
         getdata_request.inv = [CInv(2, big_new_block)]
         for i in range(800):
-            p2p_conns[1].send_message(getdata_request)
-            p2p_conns[1].sync_with_ping()
+            p2p_conns[1].send_and_ping(getdata_request)
             assert_equal(p2p_conns[1].block_receive_map[big_new_block], i+1)
 
         self.log.info("Peer 1 able to repeatedly download new block")
@@ -131,18 +130,16 @@ class MaxUploadTest(BitcoinTestFramework):
         # and p2p_conns[2] should be able to retrieve the old block.
         self.nodes[0].setmocktime(int(time.time()))
         p2p_conns[2].sync_with_ping()
-        p2p_conns[2].send_message(getdata_request)
-        p2p_conns[2].sync_with_ping()
+        p2p_conns[2].send_and_ping(getdata_request)
         assert_equal(p2p_conns[2].block_receive_map[big_old_block], 1)
 
         self.log.info("Peer 2 able to download old block")
 
         self.nodes[0].disconnect_p2ps()
 
-        #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
-        self.log.info("Restarting nodes with -whitelist=127.0.0.1")
+        self.log.info("Restarting node 0 with noban permission and 1MB maxuploadtarget")
         self.stop_node(0)
-        self.start_node(0, ["-whitelist=127.0.0.1", "-maxuploadtarget=1"])
+        self.start_node(0, ["-whitelist=noban@127.0.0.1", "-maxuploadtarget=1"])
 
         # Reconnect to self.nodes[0]
         self.nodes[0].add_p2p_connection(TestP2PConn())
@@ -150,8 +147,7 @@ class MaxUploadTest(BitcoinTestFramework):
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(2, big_new_block)]
         for i in range(20):
-            self.nodes[0].p2p.send_message(getdata_request)
-            self.nodes[0].p2p.sync_with_ping()
+            self.nodes[0].p2p.send_and_ping(getdata_request)
             assert_equal(self.nodes[0].p2p.block_receive_map[big_new_block], i+1)
 
         getdata_request.inv = [CInv(2, big_old_block)]

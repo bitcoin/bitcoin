@@ -559,7 +559,7 @@ void CMPTxList::LoadAlerts(int blockHeight)
     int64_t blockTime = 0;
     {
         LOCK(cs_main);
-        CBlockIndex* pBlockIndex = chainActive[blockHeight - 1];
+        CBlockIndex* pBlockIndex = ::ChainActive()[blockHeight - 1];
         if (pBlockIndex != nullptr) {
             blockTime = pBlockIndex->GetBlockTime();
         }

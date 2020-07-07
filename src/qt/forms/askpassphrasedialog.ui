@@ -95,7 +95,7 @@
      <item row="3" column="1">
       <widget class="QCheckBox" name="toggleShowPasswordButton">
        <property name="text">
-        <string>Show password</string>
+        <string>Show passphrase</string>
        </property>
       </widget>
      </item>

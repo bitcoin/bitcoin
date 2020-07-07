@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 #include <QResizeEvent>
 #include <QPropertyAnimation>
 
-ModalOverlay::ModalOverlay(QWidget *parent) :
+ModalOverlay::ModalOverlay(bool enable_wallet, QWidget *parent) :
 QWidget(parent),
 ui(new Ui::ModalOverlay),
 bestHeaderHeight(0),
@@ -29,6 +29,10 @@ userClosed(false)
 
     blockProcessTime.clear();
     setVisible(false);
+    if (!enable_wallet) {
+        ui->infoText->setVisible(false);
+        ui->infoTextStrong->setText(tr("%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.").arg(PACKAGE_NAME));
+    }
 }
 
 ModalOverlay::~ModalOverlay()

@@ -223,7 +223,7 @@ if [ $RESULT == "false," ]
 fi
 printf "   * Sending a feature 14 activation to activate the notice period\\n"
 BLOCKS=$($SRCDIR/omnicore-cli --regtest getblockcount)
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 14 $(($BLOCKS + 8)) 999)
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 14 $((BLOCKS + 8)) 999)
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 printf "        - Checking the activation transaction was valid... "
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
@@ -347,12 +347,12 @@ fi
 printf "\\nRunning reorg test scenarios\\n"
 printf "   * Rolling back the chain to test reversing the last UNFREEZE tx\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 printf "        - Checking the block count is the same as before the rollback...                        "
 if [ $BLOCK == $NEWBLOCK ]
   then
@@ -413,12 +413,12 @@ if [ $RESULT == "true," ]
 fi
 printf "   * Rolling back the chain to test reversing the last FREEZE tx\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 printf "        - Checking the block count is the same as before the rollback...                        "
 if [ $BLOCK == $NEWBLOCK ]
   then
@@ -488,12 +488,12 @@ if [ $RESULT == "false," ]
 fi
 printf "   * Rolling back the chain to test reversing the last DISABLE FREEZEING tx\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 printf "        - Checking the block count is the same as before the rollback...                        "
 if [ $BLOCK == $NEWBLOCK ]
   then
@@ -571,12 +571,12 @@ if [ $RESULT == "false," ]
 fi
 printf "   * Rolling back the chain to test reversing the last ENABLE FREEZEING tx\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 printf "        - Checking the block count is the same as before the rollback...                        "
 if [ $BLOCK == $NEWBLOCK ]
   then

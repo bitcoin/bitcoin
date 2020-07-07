@@ -14,9 +14,6 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 
-// TODO: use crypto/sha256 instead of openssl
-#include <openssl/sha.h>
-
 #include <boost/algorithm/string.hpp>
 
 #include <assert.h>
@@ -87,10 +84,10 @@ std::string HashToAddress(unsigned char version, const uint160& hash)
 {
     if (version == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)[0]) {
         CKeyID keyId(hash);
-        return EncodeDestination(keyId);
+        return EncodeDestination(PKHash(keyId));
     } else if (version == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS)[0]) {
         CScriptID scriptId(hash);
-        return EncodeDestination(scriptId);
+        return EncodeDestination(ScriptHash(scriptId));
     }
 
     return "";
@@ -122,7 +119,7 @@ void PrepareObfuscatedHashes(const std::string& strSeed, int hashCount, std::str
     // Do only as many re-hashes as there are data packets, 255 per specification
     for (int j = 1; j <= hashCount; ++j)
     {
-        SHA256(sha_input, strlen((const char *)sha_input), sha_result);
+        CSHA256().Write(sha_input, strlen((const char *)sha_input)).Finalize(sha_result);
         vec_chars.resize(32);
         memcpy(&vec_chars[0], &sha_result[0], 32);
         vstrHashes[j] = HexStr(vec_chars);

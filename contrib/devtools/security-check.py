@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-Perform basic ELF security checks on a series of executables.
+Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
-Needs `readelf` (for ELF) and `objdump` (for PE).
+Needs `readelf` (for ELF), `objdump` (for PE) and `otool` (for MACHO).
 '''
 import subprocess
 import sys
@@ -14,6 +14,7 @@ import os
 
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
+OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 NONFATAL = {} # checks which are non-fatal for now but only generate a warning
 
 def check_ELF_PIE(executable):
@@ -162,6 +163,66 @@ def check_PE_NX(executable):
     (arch,bits) = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
+def get_MACHO_executable_flags(executable):
+    p = subprocess.Popen([OTOOL_CMD, '-vh', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+
+    flags = []
+    for line in stdout.splitlines():
+        tokens = line.split()
+        # filter first two header lines
+        if 'magic' in tokens or 'Mach' in tokens:
+            continue
+        # filter ncmds and sizeofcmds values
+        flags += [t for t in tokens if not t.isdigit()]
+    return flags
+
+def check_MACHO_PIE(executable) -> bool:
+    '''
+    Check for position independent executable (PIE), allowing for address space randomization.
+    '''
+    flags = get_MACHO_executable_flags(executable)
+    if 'PIE' in flags:
+        return True
+    return False
+
+def check_MACHO_NOUNDEFS(executable) -> bool:
+    '''
+    Check for no undefined references.
+    '''
+    flags = get_MACHO_executable_flags(executable)
+    if 'NOUNDEFS' in flags:
+        return True
+    return False
+
+def check_MACHO_NX(executable) -> bool:
+    '''
+    Check for no stack execution
+    '''
+    flags = get_MACHO_executable_flags(executable)
+    if 'ALLOW_STACK_EXECUTION' in flags:
+        return False
+    return True
+
+def check_MACHO_LAZY_BINDINGS(executable) -> bool:
+    '''
+    Check for no lazy bindings.
+    We don't use or check for MH_BINDATLOAD. See #18295.
+    '''
+    p = subprocess.Popen([OTOOL_CMD, '-l', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+
+    for line in stdout.splitlines():
+        tokens = line.split()
+        if 'lazy_bind_off' in tokens or 'lazy_bind_size' in tokens:
+            if tokens[1] != '0':
+                return False
+    return True
+
 CHECKS = {
 'ELF': [
     ('PIE', check_ELF_PIE),
@@ -173,6 +234,12 @@ CHECKS = {
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
     ('NX', check_PE_NX)
+],
+'MACHO': [
+    ('PIE', check_MACHO_PIE),
+    ('NOUNDEFS', check_MACHO_NOUNDEFS),
+    ('NX', check_MACHO_NX),
+    ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS)
 ]
 }
 
@@ -183,6 +250,8 @@ def identify_executable(executable):
         return 'PE'
     elif magic.startswith(b'\x7fELF'):
         return 'ELF'
+    elif magic.startswith(b'\xcf\xfa'):
+        return 'MACHO'
     return None
 
 if __name__ == '__main__':

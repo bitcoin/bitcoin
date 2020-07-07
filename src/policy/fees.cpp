@@ -1,13 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/fees.h>
-#include <policy/policy.h>
 
 #include <clientversion.h>
-#include <primitives/transaction.h>
 #include <streams.h>
 #include <txmempool.h>
 #include <util/system.h>
@@ -25,40 +23,6 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
     if (horizon_string == horizon_strings.end()) return "unknown";
 
     return horizon_string->second;
-}
-
-std::string StringForFeeReason(FeeReason reason) {
-    static const std::map<FeeReason, std::string> fee_reason_strings = {
-        {FeeReason::NONE, "None"},
-        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
-        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
-        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
-        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
-        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
-        {FeeReason::PAYTXFEE, "PayTxFee set"},
-        {FeeReason::FALLBACK, "Fallback fee"},
-        {FeeReason::REQUIRED, "Minimum Required Fee"},
-        {FeeReason::MAXTXFEE, "MaxTxFee limit"}
-    };
-    auto reason_string = fee_reason_strings.find(reason);
-
-    if (reason_string == fee_reason_strings.end()) return "Unknown";
-
-    return reason_string->second;
-}
-
-bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode) {
-    static const std::map<std::string, FeeEstimateMode> fee_modes = {
-        {"UNSET", FeeEstimateMode::UNSET},
-        {"ECONOMICAL", FeeEstimateMode::ECONOMICAL},
-        {"CONSERVATIVE", FeeEstimateMode::CONSERVATIVE},
-    };
-    auto mode = fee_modes.find(mode_string);
-
-    if (mode == fee_modes.end()) return false;
-
-    fee_estimate_mode = mode->second;
-    return true;
 }
 
 /**
@@ -82,7 +46,7 @@ private:
     std::vector<double> txCtAvg;
 
     // Count the total # of txs confirmed within Y blocks in each bucket
-    // Track the historical moving average of theses totals over blocks
+    // Track the historical moving average of these totals over blocks
     std::vector<std::vector<double>> confAvg; // confAvg[Y][X]
 
     // Track moving avg of txs which have been evicted from the mempool
@@ -553,14 +517,14 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
-                 hash.ToString().c_str());
+                 hash.ToString());
         return;
     }
 
     if (txHeight != nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random they don't
         // affect the estimate.  We'll potentially double count transactions in 1-block reorgs.
-        // Ignore txs if BlockPolicyEstimator is not in sync with chainActive.Tip().
+        // Ignore txs if BlockPolicyEstimator is not in sync with ::ChainActive().Tip().
         // It will be synced next time a block is processed.
         return;
     }

@@ -61,7 +61,7 @@ fi
 printf "\\nActivating trading on all pairs\\n"
 printf "   * Sending the activation\\n"
 BLOCKS=$($SRCDIR/omnicore-cli --regtest getblockcount)
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 8 $(($BLOCKS + 8)) 999)
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 8 $((BLOCKS + 8)) 999)
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "     # Checking the activation transaction was valid..."
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep valid | cut -c15-)

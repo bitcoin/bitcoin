@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 #include <uint256.h>
 #include <arith_uint256.h>
 #include <version.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <vector>
 
@@ -30,7 +30,6 @@ BOOST_FIXTURE_TEST_SUITE(pmt_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(pmt_test1)
 {
-    SeedInsecureRand(false);
     static const unsigned int nTxCounts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095};
 
     for (int i = 0; i < 12; i++) {

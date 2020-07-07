@@ -54,6 +54,12 @@
     <name>CoinControlDialog</name>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -72,6 +78,9 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     </context>
 <context>
@@ -85,9 +94,6 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -111,16 +117,10 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    </context>
-<context>
-    <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>

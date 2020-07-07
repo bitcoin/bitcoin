@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,13 +26,12 @@ enum class Result
 };
 
 //! Return whether transaction can be bumped.
-bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid);
+bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid);
 
-//! Create bumpfee transaction.
-Result CreateTransaction(const CWallet* wallet,
+//! Create bumpfee transaction based on feerate estimates.
+Result CreateRateBumpTransaction(CWallet& wallet,
                          const uint256& txid,
                          const CCoinControl& coin_control,
-                         CAmount total_fee,
                          std::vector<std::string>& errors,
                          CAmount& old_fee,
                          CAmount& new_fee,
@@ -41,13 +40,13 @@ Result CreateTransaction(const CWallet* wallet,
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was
 //! impossible to create the signature(s)
-bool SignTransaction(CWallet* wallet, CMutableTransaction& mtx);
+bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx);
 
 //! Commit the bumpfee transaction.
 //! @return success in case of CWallet::CommitTransaction was successful,
 //! but sets errors if the tx could not be added to the mempool (will try later)
 //! or if the old transaction could not be marked as replaced.
-Result CommitTransaction(CWallet* wallet,
+Result CommitTransaction(CWallet& wallet,
                          const uint256& txid,
                          CMutableTransaction&& mtx,
                          std::vector<std::string>& errors,

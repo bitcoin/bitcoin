@@ -1,6 +1,6 @@
 #include <random.h>
 #include <sync.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
@@ -13,7 +13,7 @@ namespace number
 
 namespace locker
 {
-    CCriticalSection cs_number;
+    RecursiveMutex cs_number;
 }
 
 static void plusOneThread(int nIterations)
@@ -22,7 +22,7 @@ static void plusOneThread(int nIterations)
         LOCK(locker::cs_number);
         int n = number::n;
         int nSleep = GetRandInt(10);
-        MilliSleep(nSleep);
+        UninterruptibleSleep(std::chrono::milliseconds{nSleep});
         number::n = n + 1;
     }
 }

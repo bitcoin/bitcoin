@@ -119,7 +119,7 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
         if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
             fs::path persistPath = GetDataDir() / "MP_persist";
             if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-            DoAbortNode(msg, msg);
+            AbortNode(msg, msg);
         }
     }
     int64_t newCachedAmount = currentCachedAmount + amount;

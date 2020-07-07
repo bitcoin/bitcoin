@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -256,7 +256,7 @@ CRIPEMD160& CRIPEMD160::Write(const unsigned char* data, size_t len)
         ripemd160::Transform(s, buf);
         bufsize = 0;
     }
-    while (end >= data + 64) {
+    while (end - data >= 64) {
         // Process full chunks directly from the source.
         ripemd160::Transform(s, data);
         bytes += 64;

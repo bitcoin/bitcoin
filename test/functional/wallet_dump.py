@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2016-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
@@ -46,10 +46,10 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                 keypath = None
                 if keytype == "inactivehdseed=1":
                     # ensure the old master is still available
-                    assert (hd_master_addr_old == addr)
+                    assert hd_master_addr_old == addr
                 elif keytype == "hdseed=1":
                     # ensure we have generated a new hd master key
-                    assert (hd_master_addr_old != addr)
+                    assert hd_master_addr_old != addr
                     hd_master_addr_ret = addr
                 elif keytype == "script=1":
                     # scripts don't have keypaths
@@ -137,7 +137,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
         # encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
-        self.nodes[0].walletpassphrase('test', 10)
+        self.nodes[0].walletpassphrase('test', 100)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(wallet_enc_dump)
