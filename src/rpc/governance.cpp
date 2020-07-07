@@ -668,7 +668,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
 
         
         if (!spk_man.GetKey(dmn->pdmnState->keyIDVoting, key)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(dmn->pdmnState->keyIDVoting)));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting))));
         }
     }
 

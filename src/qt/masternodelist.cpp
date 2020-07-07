@@ -247,10 +247,10 @@ void MasternodeList::updateDIP3List()
         }
         QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
 
-        QString ownerStr = QString::fromStdString(EncodeDestination(dmn->pdmnState->keyIDOwner));
+        QString ownerStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner)));
         QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
 
-        QString votingStr = QString::fromStdString(EncodeDestination(dmn->pdmnState->keyIDVoting));
+        QString votingStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting)));
         QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
 
         QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn->proTxHash.ToString()));
