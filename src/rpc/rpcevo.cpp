@@ -882,7 +882,7 @@ void protx_list_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static bool CheckWalletOwnsKey(CWallet* pwallet, const WitnessV0KeyHash& keyID) {
+static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
 #ifndef ENABLE_WALLET
     return false;
 #else
@@ -891,7 +891,7 @@ static bool CheckWalletOwnsKey(CWallet* pwallet, const WitnessV0KeyHash& keyID) 
     }
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-    return spk_man.IsMine(GetScriptForDestination(CTxDestination(keyID)));
+    return spk_man.IsMine(GetScriptForDestination(CTxDestination(WitnessV0KeyHash(keyID))));
 #endif
 }
 
