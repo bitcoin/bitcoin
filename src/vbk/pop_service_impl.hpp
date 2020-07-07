@@ -70,7 +70,7 @@ public:
     bool addAllBlockPayloads(const CBlockIndex* indexPrev, const CBlock& fullBlock, BlockValidationState& state) override;
     bool setState(const uint256& block, altintegration::ValidationState& state) override;
 
-    altintegration::PopData getPopData(const CBlockIndex& currentBlockIndex) override;
+    altintegration::PopData getPopData() override;
     void removePayloadsFromMempool(const altintegration::PopData& popData) override;
 
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;

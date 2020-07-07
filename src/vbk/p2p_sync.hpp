@@ -107,7 +107,7 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
 template <typename PopDataType>
 void sendPopData(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<PopDataType>& data)
 {
-    LogPrint(BCLog::NET, "send PopData: count %d\n", data.size());
+    LogPrint(BCLog::NET, "send PopData: %s, count %d\n", PopDataType::name(), data.size());
 
     connman->ForEachNode([&connman, &msgMaker, &data](CNode* pnode) {
         LOCK(cs_main);

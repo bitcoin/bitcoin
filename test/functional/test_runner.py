@@ -111,12 +111,19 @@ BASE_SCRIPTS = [
     'feature_reindex.py',
     'feature_abortnode.py',
     # vv Tests less than 30s vv
+    # VeriBlock tests
     'feature_pop_fork_resolution.py',
     'feature_pop_merkleroot.py',
     'feature_pop_payout.py',
     'feature_pop_sync.py',
     # 'feature_pop_init.py',
     'feature_pop_mempool_sync.py',
+    'feature_pop_p2p.py',
+    'feature_pop_p2p_ddos.py',
+    #'feature_pop_init.py',
+    'feature_pop_mempool_getpop.py',
+    'feature_pop_popdata_max_size.py',
+    ## end VeriBlock tests
     'wallet_keypool_topup.py',
     'feature_fee_estimation.py',
     'interface_zmq.py',

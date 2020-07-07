@@ -74,6 +74,8 @@ class PopInit(BitcoinTestFramework):
         assert_equal(popdata[0], popdata[2])
         assert_equal(popdata[1], popdata[2])
 
+        self.log.warning("success! _restart_init_test()")
+
     def run_test(self):
         """Main test logic"""
 
@@ -83,7 +85,6 @@ class PopInit(BitcoinTestFramework):
         self.apm = MockMiner()
 
         self._restart_init_test()
-
 
 if __name__ == '__main__':
     PopInit().main()

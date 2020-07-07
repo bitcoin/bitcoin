@@ -53,7 +53,7 @@ struct PopService {
     virtual bool addAllBlockPayloads(const CBlockIndex* prevIndex, const CBlock& fullBlock, BlockValidationState& state) = 0;
     virtual bool setState(const uint256& block, altintegration::ValidationState& state) = 0;
 
-    virtual altintegration::PopData getPopData(const CBlockIndex& currentBlockIndex) = 0;
+    virtual altintegration::PopData getPopData() = 0;
     virtual void removePayloadsFromMempool(const altintegration::PopData& popData) = 0;
 
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
