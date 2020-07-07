@@ -1976,7 +1976,7 @@ static void ProcessHeadersMessage(CNode& pfrom, CConnman* connman, ChainstateMan
               && nSize > MAX_HEADERS_SIZE) {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20);
-            return error("headers message size = %u", nSize);
+            return;
         }
     }
     bool received_new_header = false;
@@ -2524,7 +2524,7 @@ void ProcessMessage(
                     if (!fMasternodeMode) {
                         LogPrint(BCLog::NET, "but we're not a masternode, disconnecting\n");
                         pfrom.fDisconnect = true;
-                        return true;
+                        return;
                     }
                 }
             }
@@ -2717,7 +2717,7 @@ void ProcessMessage(
         if (pfrom.fMasternodeProbe && !pfrom.fFirstMessageIsMNAUTH) {
             LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d", pfrom.GetId());
             pfrom.fDisconnect = true;
-            return false;
+            return;
         }
     }
     if (msg_type == NetMsgType::ADDR) {
@@ -2808,7 +2808,7 @@ void ProcessMessage(
         bool b;
         vRecv >> b;
         pfrom.fSendRecSigs = b;
-        return true;
+        return;
     }
     if (msg_type == NetMsgType::INV) {
         std::vector<CInv> vInv;
