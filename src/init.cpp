@@ -2177,6 +2177,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             if(resultInt != 1)   
                 return InitError(Untranslated("Ensure you are running this masternode in a Unix OS and that only one syscoind is running...")); 
         }
+        if(!IsHex(strMasterNodeBLSPrivKey))
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         auto binKey = ParseHex(strMasterNodeBLSPrivKey);
         CBLSSecretKey keyOperator;
         keyOperator.SetBuf(binKey);
