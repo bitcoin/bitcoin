@@ -12,6 +12,7 @@
 #include <serialize.h>
 #include <version.h>
 #include <script/standard.h>
+#include <key_io.h>
 class UniValue;
 class CDeterministicMNList;
 class CDeterministicMN;
@@ -28,7 +29,7 @@ public:
     uint256 confirmedHash;
     CService service;
     CBLSLazyPublicKey pubKeyOperator;
-    std::string keyIDVoting;
+    CTxDestination keyIDVoting;
     bool isValid;
 
 public:

@@ -37,7 +37,7 @@ uint256 CSimplifiedMNListEntry::CalcHash() const
 std::string CSimplifiedMNListEntry::ToString() const
 {
     return strprintf("CSimplifiedMNListEntry(proRegTxHash=%s, confirmedHash=%s, service=%s, pubKeyOperator=%s, votingAddress=%s, isValid=%d)",
-        proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(), pubKeyOperator.Get().ToString(), keyIDVoting, isValid);
+        proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(), pubKeyOperator.Get().ToString(), EncodeDestination(keyIDVoting), isValid);
 }
 
 void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
@@ -48,7 +48,7 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
     obj.pushKV("confirmedHash", confirmedHash.ToString());
     obj.pushKV("service", service.ToString());
     obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
-    obj.pushKV("votingAddress", keyIDVoting);
+    obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
     obj.pushKV("isValid", isValid);
 }
 

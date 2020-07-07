@@ -502,8 +502,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                            dmnToStatus(dmn) << " " <<
                            dmnToLastPaidTime(dmn) << " " <<
                            dmn->pdmnState->nLastPaidHeight << " " <<
-                           dmn->pdmnState->keyIDOwner << " " <<
-                           dmn->pdmnState->keyIDVoting << " " <<
+                           EncodeDestination(dmn->pdmnState->keyIDOwner) << " " <<
+                           EncodeDestination(dmn->pdmnState->keyIDVoting) << " " <<
                            collateralAddressStr << " " <<
                            dmn->pdmnState->pubKeyOperator.Get().ToString();
             std::string strInfo = streamInfo.str();
@@ -517,8 +517,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
             objMN.pushKV("collateralblock", dmn->pdmnState->nCollateralHeight);
             objMN.pushKV("lastpaidtime", dmnToLastPaidTime(dmn));
             objMN.pushKV("lastpaidblock", dmn->pdmnState->nLastPaidHeight);
-            objMN.pushKV("owneraddress", dmn->pdmnState->keyIDOwner);
-            objMN.pushKV("votingaddress", dmn->pdmnState->keyIDVoting);
+            objMN.pushKV("owneraddress", EncodeDestination(dmn->pdmnState->keyIDOwner));
+            objMN.pushKV("votingaddress", EncodeDestination(dmn->pdmnState->keyIDVoting));
             objMN.pushKV("collateraladdress", collateralAddressStr);
             objMN.pushKV("pubkeyoperator", dmn->pdmnState->pubKeyOperator.Get().ToString());
             obj.pushKV(strOutpoint, objMN);
@@ -534,7 +534,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             obj.pushKV(strOutpoint, payeeStr);
         } else if (strMode == "owneraddress") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
-            obj.pushKV(strOutpoint, dmn->pdmnState->keyIDOwner);
+            obj.pushKV(strOutpoint, EncodeDestination(dmn->pdmnState->keyIDOwner));
         } else if (strMode == "pubkeyoperator") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, dmn->pdmnState->pubKeyOperator.Get().ToString());
@@ -545,7 +545,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             obj.pushKV(strOutpoint, strStatus);
         } else if (strMode == "votingaddress") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
-            obj.pushKV(strOutpoint, dmn->pdmnState->keyIDVoting);
+            obj.pushKV(strOutpoint, EncodeDestination(dmn->pdmnState->keyIDVoting));
         }
     });
 
