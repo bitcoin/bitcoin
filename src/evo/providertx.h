@@ -145,7 +145,7 @@ public:
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("proTxHash", proTxHash.ToString());
-        obj.pushKV("votingAddress", keyIDVoting);
+        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
             obj.pushKV("payoutAddress", EncodeDestination(dest));
