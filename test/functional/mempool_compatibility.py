@@ -15,10 +15,10 @@ Only v0.15.2 is required by this test. The rest is used in other backwards compa
 
 import os
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class MempoolCompatibilityTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
