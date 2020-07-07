@@ -135,7 +135,7 @@ void CGovernanceVote::UpdateHash() const
     // Note: doesn't match serialization
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing format
+    ss << masternodeOutpoint;
     ss << nParentHash;
     ss << nVoteSignal;
     ss << nVoteOutcome;

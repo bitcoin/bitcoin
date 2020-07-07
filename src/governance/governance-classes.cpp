@@ -877,7 +877,7 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
     */
 
     for (int i = 0; i < (int)vecParsed1.size(); i++) {
-        CTxDestination dest = DecodeDestination(vecParsed1[i]);
+        const CTxDestination &dest = DecodeDestination(vecParsed1[i]);
         if (!IsValidDestination(dest)) {
             std::ostringstream ostr;
             ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Syscoin Address : " << vecParsed1[i];
