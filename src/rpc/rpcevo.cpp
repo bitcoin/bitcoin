@@ -30,7 +30,7 @@
 #include <masternode/masternode-meta.h>
 #include <rpc/util.h>
 #include <util/translation.h>
-#include <keystore.h>
+#include <key_io.h>
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);

@@ -10,7 +10,6 @@
 #include <util/system.h>
 
 #include <evo/deterministicmns.h>
-#include <keystore.h>
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
     static const std::map<vote_outcome_enum_t, std::string> mapOutcomeString = {
