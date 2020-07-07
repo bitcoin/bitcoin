@@ -201,8 +201,8 @@ void MasternodeList::updateDIP3List()
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
             bool fMyMasternode = setOutpts.count(dmn->collateralOutpoint) ||
-                walletModel->wallet().isSpendable(CTxDestination(dmn->pdmnState->keyIDOwner)) ||
-                walletModel->wallet().isSpendable(CTxDestination(dmn->pdmnState->keyIDVoting)) ||
+                walletModel->wallet().isSpendable(CTxDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner))) ||
+                walletModel->wallet().isSpendable(CTxDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting))) ||
                 walletModel->wallet().isSpendable(dmn->pdmnState->scriptPayout) ||
                 walletModel->wallet().isSpendable(dmn->pdmnState->scriptOperatorPayout);
             if (!fMyMasternode) return;

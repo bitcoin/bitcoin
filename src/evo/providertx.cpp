@@ -316,7 +316,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         }
 
         // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
-        if (payoutDest == CTxDestination(dmn->pdmnState->keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
+        if (payoutDest == CTxDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner)) || payoutDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDVoting))) {
             return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
         }
 
@@ -331,7 +331,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-dest", fJustCheck);
         }
-        if (collateralTxDest == CTxDestination(dmn->pdmnState->keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
+        if (collateralTxDest == CTxDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner)) || collateralTxDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDVoting))) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
         }
 
