@@ -119,7 +119,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-dest", fJustCheck);
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
-    if (payoutDest == ptx.keyIDOwner || payoutDest == ptx.keyIDVoting) {
+    if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
     }
 
@@ -178,7 +178,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
     // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
-    if (collateralTxDest == ptx.keyIDOwner || collateralTxDest == ptx.keyIDVoting) {
+    if (collateralTxDest == CTxDestination(ptx.keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
         return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
     }
 
@@ -316,7 +316,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         }
 
         // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
-        if (payoutDest == dmn->pdmnState->keyIDOwner || payoutDest == ptx.keyIDVoting) {
+        if (payoutDest == CTxDestination(dmn->pdmnState->keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
             return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
         }
 
@@ -331,7 +331,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-dest", fJustCheck);
         }
-        if (collateralTxDest == dmn->pdmnState->keyIDOwner || collateralTxDest == ptx.keyIDVoting) {
+        if (collateralTxDest == CTxDestination(dmn->pdmnState->keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
         }
 

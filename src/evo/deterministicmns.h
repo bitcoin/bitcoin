@@ -19,7 +19,6 @@
 
 #include <unordered_map>
 #include <script/standard.h>
-#include <key_io.h>
 class CBlock;
 class CBlockIndex;
 class BlockValidationState;
@@ -47,9 +46,9 @@ public:
     // please note that this is NOT a double-sha256 hash
     uint256 confirmedHashWithProRegTxHash;
 
-    CTxDestination keyIDOwner;
+    WitnessV0KeyHash keyIDOwner;
     CBLSLazyPublicKey pubKeyOperator;
-    CTxDestination keyIDVoting;
+    WitnessV0KeyHash keyIDVoting;
     CService addr;
     CScript scriptPayout;
     CScript scriptOperatorPayout;
