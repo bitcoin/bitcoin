@@ -38,12 +38,6 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlQuantityText">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>Quantity:</string>
          </property>
@@ -67,12 +61,6 @@
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="labelCoinControlBytesText">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>Bytes:</string>
          </property>
@@ -112,12 +100,6 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlAmountText">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>Amount:</string>
          </property>
@@ -143,12 +125,6 @@
         <widget class="QLabel" name="labelCoinControlLowOutputText">
          <property name="enabled">
           <bool>false</bool>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
          </property>
          <property name="text">
           <string>Dust:</string>
@@ -192,12 +168,6 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlFeeText">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>Fee:</string>
          </property>
@@ -237,12 +207,6 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlAfterFeeText">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>After Fee:</string>
          </property>
@@ -268,12 +232,6 @@
         <widget class="QLabel" name="labelCoinControlChangeText">
          <property name="enabled">
           <bool>false</bool>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
          </property>
          <property name="text">
           <string>Change:</string>

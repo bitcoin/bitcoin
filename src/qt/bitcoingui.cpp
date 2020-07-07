@@ -410,6 +410,9 @@ void BitcoinGUI::createActions()
     connect(historyAction, SIGNAL(clicked()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(clicked()), this, SLOT(gotoHistoryPage()));
 
+    for (auto button : tabGroup->buttons()) {
+        GUIUtil::setFont({button}, GUIUtil::FontWeight::Normal, 16);
+    }
     // Give the selected tab button a bolder font.
     connect(tabGroup, SIGNAL(buttonToggled(QAbstractButton *, bool)), this, SLOT(highlightTabButton(QAbstractButton *, bool)));
 #endif // ENABLE_WALLET
@@ -937,9 +940,7 @@ void BitcoinGUI::openClicked()
 
 void BitcoinGUI::highlightTabButton(QAbstractButton *button, bool checked)
 {
-    QFont font = button->font();
-    font.setBold(checked);
-    button->setFont(font);
+    GUIUtil::setFont({button}, checked ? GUIUtil::FontWeight::Bold : GUIUtil::FontWeight::Normal, 16);
 }
 
 void BitcoinGUI::gotoOverviewPage()
@@ -1628,7 +1629,7 @@ UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *pl
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));
     QList<BitcoinUnits::Unit> units = BitcoinUnits::availableUnits();
     int max_width = 0;
-    const QFontMetrics fm(font());
+    const QFontMetrics fm(GUIUtil::getFontNormal());
     for (const BitcoinUnits::Unit unit : units)
     {
         max_width = qMax(max_width, fm.width(BitcoinUnits::name(unit)));

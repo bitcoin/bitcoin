@@ -101,12 +101,6 @@
      </item>
      <item row="4" column="1">
       <widget class="QLabel" name="capsLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
        <property name="text">
         <string/>
        </property>

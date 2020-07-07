@@ -296,6 +296,9 @@ bool BitcoinCore::baseInitialize()
     {
         return false;
     }
+    if (!GUIUtil::loadFonts()) {
+        return false;
+    }
     return true;
 }
 
@@ -727,6 +730,51 @@ int main(int argc, char *argv[])
     app.parameterSetup();
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
+
+    // Validate/set font family
+    if (gArgs.IsArgSet("-font-family")) {
+        GUIUtil::FontFamily family;
+        QString strFamily = gArgs.GetArg("-font-family", GUIUtil::fontFamilyToString(GUIUtil::getFontFamilyDefault()).toStdString()).c_str();
+        try {
+            family = GUIUtil::fontFamilyFromString(strFamily);
+        } catch (const std::exception& e) {
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                                  QObject::tr("Error: Specified font-family invalid. Valid values: %1.").arg("SystemDefault, Montserrat"));
+            return EXIT_FAILURE;
+        }
+        GUIUtil::setFontFamily(family);
+    }
+    // Validate/set normal font weight
+    if (gArgs.IsArgSet("-font-weight-normal")) {
+        QFont::Weight weight;
+        if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-normal", GUIUtil::weightToArg(GUIUtil::getFontWeightNormal())), weight)) {
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                                  QObject::tr("Error: Specified font-weight-normal invalid. Valid range %1 to %2.").arg(0).arg(8));
+            return EXIT_FAILURE;
+        }
+        GUIUtil::setFontWeightNormal(weight);
+    }
+    // Validate/set bold font weight
+    if (gArgs.IsArgSet("-font-weight-bold")) {
+        QFont::Weight weight;
+        if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-bold", GUIUtil::weightToArg(GUIUtil::getFontWeightBold())), weight)) {
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                                  QObject::tr("Error: Specified font-weight-bold invalid. Valid range %1 to %2.").arg(0).arg(8));
+            return EXIT_FAILURE;
+        }
+        GUIUtil::setFontWeightBold(weight);
+    }
+    // Validate/set font scale
+    if (gArgs.IsArgSet("-font-scale")) {
+        const int nScaleMin = -100, nScaleMax = 100;
+        int nScale = gArgs.GetArg("-font-scale", GUIUtil::getFontScale());
+        if (nScale < nScaleMin || nScale > nScaleMax) {
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                                  QObject::tr("Error: Specified font-scale invalid. Valid range %1 to %2.").arg(nScaleMin).arg(nScaleMax));
+            return EXIT_FAILURE;
+        }
+        GUIUtil::setFontScale(nScale);
+    }
 
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);

@@ -22,6 +22,15 @@ userClosed(false),
 foreverHidden(false)
 {
     ui->setupUi(this);
+
+    GUIUtil::setFont({ui->infoTextStrong,
+                      ui->labelNumberOfBlocksLeft,
+                      ui->labelLastBlockTime,
+                      ui->labelSyncDone,
+                      ui->labelProgressIncrease,
+                      ui->labelEstimatedTimeLeft,
+                     }, GUIUtil::FontWeight::Bold);
+
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
     if (parent) {
         parent->installEventFilter(this);

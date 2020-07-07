@@ -16,6 +16,7 @@ OpenURIDialog::OpenURIDialog(QWidget *parent) :
     ui(new Ui::OpenURIDialog)
 {
     ui->setupUi(this);
+    GUIUtil::updateFonts();
 #if QT_VERSION >= 0x040700
     ui->uriEdit->setPlaceholderText("dash:");
 #endif

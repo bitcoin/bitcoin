@@ -51,7 +51,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     QString copyrightText   = QString::fromUtf8(CopyrightHolders("\xc2\xA9", 2014, COPYRIGHT_YEAR).c_str());
     QString titleAddText    = networkStyle->getTitleAddText();
 
-    QString font = QApplication::font().toString();
+    QFont font = GUIUtil::getFontNormal();
 
     // load the bitmap for writing some text over it
     pixmap = networkStyle->getSplashImage();
@@ -60,24 +60,28 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     pixPaint.setPen(QColor(100,100,100));
 
     // check font size and drawing with
-    pixPaint.setFont(QFont(font, 28*fontFactor));
+    font.setPointSize(28 * fontFactor);
+    pixPaint.setFont(font);
     QFontMetrics fm = pixPaint.fontMetrics();
     int titleTextWidth = fm.width(titleText);
     if (titleTextWidth > 160) {
         fontFactor = 0.75;
     }
 
-    pixPaint.setFont(QFont(font, 28*fontFactor));
+    font.setPointSize(28 * fontFactor);
+    pixPaint.setFont(font);
     fm = pixPaint.fontMetrics();
     titleTextWidth  = fm.width(titleText);
     pixPaint.drawText(paddingLeft,paddingTop,titleText);
 
-    pixPaint.setFont(QFont(font, 15*fontFactor));
+    font.setPointSize(15 * fontFactor);
+    pixPaint.setFont(font);
     pixPaint.drawText(paddingLeft,paddingTop+titleVersionVSpace,versionText);
 
     // draw copyright stuff
     {
-        pixPaint.setFont(QFont(font, 10*fontFactor));
+        font.setPointSize(10 * fontFactor);
+        pixPaint.setFont(font);
         const int x = paddingLeft;
         const int y = paddingTop+titleCopyrightVSpace;
         QRect copyrightRect(x, y, pixmap.width() - x, pixmap.height() - y);
@@ -86,9 +90,8 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
 
     // draw additional text if special network
     if(!titleAddText.isEmpty()) {
-        QFont boldFont = QFont(font, 10*fontFactor);
-        boldFont.setWeight(QFont::Bold);
-        pixPaint.setFont(boldFont);
+        QFont boldFont = GUIUtil::getFontBold();
+        boldFont.setPointSize(10 * fontFactor);
         fm = pixPaint.fontMetrics();
         int titleAddTextWidth  = fm.width(titleAddText);
         pixPaint.drawText(pixmap.width()-titleAddTextWidth-10,pixmap.height()-25,titleAddText);
@@ -192,6 +195,7 @@ void SplashScreen::showMessage(const QString &message, int alignment, const QCol
 void SplashScreen::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
+    painter.setFont(GUIUtil::getFontNormal());
     painter.drawPixmap(0, 0, pixmap);
     QRect r = rect().adjusted(5, 5, -5, -5);
     painter.setPen(curColor);

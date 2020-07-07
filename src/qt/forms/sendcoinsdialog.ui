@@ -77,15 +77,6 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="font">
-             <font>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-weight:bold;</string>
-            </property>
             <property name="text">
              <string>Coin Control Features</string>
             </property>
@@ -126,15 +117,6 @@
           </item>
           <item>
            <widget class="QLabel" name="labelCoinControlInsuffFunds">
-            <property name="font">
-             <font>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-weight:bold;</string>
-            </property>
             <property name="text">
              <string>Insufficient funds!</string>
             </property>
@@ -218,12 +200,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlQuantityText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Quantity:</string>
                  </property>
@@ -253,12 +229,6 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlBytesText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Bytes:</string>
                  </property>
@@ -301,12 +271,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlAmountText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Amount:</string>
                  </property>
@@ -333,12 +297,6 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlLowOutputText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Dust:</string>
                  </property>
@@ -381,12 +339,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlFeeText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Fee:</string>
                  </property>
@@ -432,12 +384,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlAfterFeeText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>After Fee:</string>
                  </property>
@@ -464,12 +410,6 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlChangeText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Change:</string>
                  </property>
@@ -714,15 +654,6 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="font">
-                 <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font-weight:bold;</string>
-                </property>
                 <property name="text">
                  <string>Transaction Fee:</string>
                 </property>
@@ -761,12 +692,6 @@
              <widget class="QLabel" name="fallbackFeeWarningLabel">
               <property name="toolTip">
                <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</string>
-              </property>
-              <property name="font">
-              <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-              </font>
               </property>
               <property name="text">
                <string>Note: Not enough data for fee estimation, using the fallback fee instead.</string>

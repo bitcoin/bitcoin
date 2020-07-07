@@ -140,12 +140,6 @@
              </item>
              <item>
               <widget class="QLabel" name="infoTextStrong">
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
                <property name="text">
                 <string>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</string>
                </property>
@@ -203,12 +197,6 @@
            </property>
            <item row="0" column="0">
             <widget class="QLabel" name="labelNumberOfBlocksLeft">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>Number of blocks left</string>
              </property>
@@ -223,12 +211,6 @@
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="labelLastBlockTime">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>Last block time</string>
              </property>
@@ -249,12 +231,6 @@
            </item>
            <item row="2" column="0">
             <widget class="QLabel" name="labelSyncDone">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>Progress</string>
              </property>
@@ -283,12 +259,6 @@
            </item>
            <item row="4" column="0">
             <widget class="QLabel" name="labelProgressIncrease">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>Progress increase per hour</string>
              </property>
@@ -303,12 +273,6 @@
            </item>
            <item row="5" column="0">
             <widget class="QLabel" name="labelEstimatedTimeLeft">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>Estimated time left until synced</string>
              </property>
