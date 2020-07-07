@@ -258,12 +258,14 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
     for (const auto& prune_lock : prune_locks) {
+        if (prune_lock.second.m_temporary) continue;
         batch.Write(std::make_pair(DB_PRUNE_LOCK, prune_lock.first), prune_lock.second);
     }
     return WriteBatch(batch, true);
 }
 
 bool CBlockTreeDB::WritePruneLock(const std::string& name, const PruneLockInfo& lockinfo) {
+    if (lockinfo.m_temporary) return true;
     return Write(std::make_pair(DB_PRUNE_LOCK, name), lockinfo);
 }
 

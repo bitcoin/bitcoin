@@ -446,6 +446,7 @@ struct PruneLockInfo {
     std::string m_desc;
     uint64_t m_height_first{std::numeric_limits<uint64_t>::max()};
     uint64_t m_height_last{std::numeric_limits<uint64_t>::max()};
+    bool m_temporary{false};
 
     SERIALIZE_METHODS(PruneLockInfo, obj)
     {

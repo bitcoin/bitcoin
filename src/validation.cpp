@@ -3607,6 +3607,11 @@ bool SetPruneLock(const std::string& lockid, const PruneLockInfo& lockinfo, cons
         if (!pblocktree->WritePruneLock(lockid, lockinfo)) {
             return error("%s: failed to %s prune lock '%s'", __func__, "write", lockid);
         }
+    } else if (lockinfo.m_temporary && g_prune_locks.count(lockid) && !g_prune_locks.at(lockid).m_temporary) {
+        // Erase non-temporary lock from disk
+        if (!pblocktree->DeletePruneLock(lockid)) {
+            return error("%s: failed to %s prune lock '%s'", __func__, "erase", lockid);
+        }
     }
     g_prune_locks[lockid] = lockinfo;
     return true;
