@@ -16,6 +16,7 @@
 
 #include <chain.h>
 #include <fs.h>
+#include <hash.h>
 #include <validation.h>
 #include <tinyformat.h>
 #include <uint256.h>
@@ -24,8 +25,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-
-#include <openssl/sha.h>
 
 #include <stdint.h>
 
@@ -74,7 +73,7 @@ static bool is_state_prefix(std::string const &str)
     return false;
 }
 
-static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
+static int write_msc_balances(std::ofstream& file, CHash256& hasher)
 {
     std::unordered_map<std::string, CMPTally>::iterator iter;
     for (iter = mp_tally_map.begin(); iter != mp_tally_map.end(); ++iter) {
@@ -109,7 +108,7 @@ static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
 
         if (false == emptyWallet) {
             // add the line to the hash
-            SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+            hasher.Write((unsigned char*)lineOut.c_str(), lineOut.length());
 
             // write the line
             file << lineOut << std::endl;
@@ -119,7 +118,7 @@ static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
     return 0;
 }
 
-static int write_mp_offers(std::ofstream& file, SHA256_CTX* shaCtx)
+static int write_mp_offers(std::ofstream& file, CHash256& hasher)
 {
     OfferMap::const_iterator iter;
     for (iter = my_offers.begin(); iter != my_offers.end(); ++iter) {
@@ -127,13 +126,13 @@ static int write_mp_offers(std::ofstream& file, SHA256_CTX* shaCtx)
         std::vector<std::string> vstr;
         boost::split(vstr, iter->first, boost::is_any_of("-"), boost::token_compress_on);
         const CMPOffer& offer = iter->second;
-        offer.saveOffer(file, shaCtx, vstr[0]);
+        offer.saveOffer(file, vstr[0], hasher);
     }
 
     return 0;
 }
 
-static int write_mp_accepts(std::ofstream& file, SHA256_CTX* shaCtx)
+static int write_mp_accepts(std::ofstream& file, CHash256& hasher)
 {
     AcceptMap::const_iterator iter;
     for (iter = my_accepts.begin(); iter != my_accepts.end(); ++iter) {
@@ -141,13 +140,13 @@ static int write_mp_accepts(std::ofstream& file, SHA256_CTX* shaCtx)
         std::vector<std::string> vstr;
         boost::split(vstr, iter->first, boost::is_any_of("-+"), boost::token_compress_on);
         const CMPAccept& accept = iter->second;
-        accept.saveAccept(file, shaCtx, vstr[0], vstr[2]);
+        accept.saveAccept(file, vstr[0], vstr[2], hasher);
     }
 
     return 0;
 }
 
-static int write_globals_state(std::ofstream& file, SHA256_CTX* shaCtx)
+static int write_globals_state(std::ofstream& file, CHash256& hasher)
 {
     uint32_t nextSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_MSC);
     uint32_t nextTestSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_TMSC);
@@ -157,7 +156,7 @@ static int write_globals_state(std::ofstream& file, SHA256_CTX* shaCtx)
             nextTestSPID);
 
     // add the line to the hash
-    SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+    hasher.Write((unsigned char*)lineOut.c_str(), lineOut.length());
 
     // write the line
     file << lineOut << std::endl;
@@ -165,18 +164,18 @@ static int write_globals_state(std::ofstream& file, SHA256_CTX* shaCtx)
     return 0;
 }
 
-static int write_mp_crowdsales(std::ofstream& file, SHA256_CTX* shaCtx)
+static int write_mp_crowdsales(std::ofstream& file, CHash256& hasher)
 {
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         // decompose the key for address
         const CMPCrowd& crowd = it->second;
-        crowd.saveCrowdSale(file, shaCtx, it->first);
+        crowd.saveCrowdSale(file, it->first, hasher);
     }
 
     return 0;
 }
 
-static int write_mp_metadex(std::ofstream &file, SHA256_CTX* shaCtx)
+static int write_mp_metadex(std::ofstream &file, CHash256& hasher)
 {
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         md_PricesMap& prices = my_it->second;
@@ -184,7 +183,7 @@ static int write_mp_metadex(std::ofstream &file, SHA256_CTX* shaCtx)
             md_Set& indexes = (it->second);
             for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 const CMPMetaDEx& meta = *it;
-                meta.saveOffer(file, shaCtx);
+                meta.saveOffer(file, hasher);
             }
         }
     }
@@ -408,43 +407,40 @@ static int write_state_file(const CBlockIndex* pBlockIndex, int what)
     std::ofstream file;
     file.open(strFile.c_str());
 
-    SHA256_CTX shaCtx;
-    SHA256_Init(&shaCtx);
+    CHash256 hasher;
 
     int result = 0;
 
     switch (what) {
         case FILETYPE_BALANCES:
-            result = write_msc_balances(file, &shaCtx);
+            result = write_msc_balances(file, hasher);
             break;
 
         case FILETYPE_OFFERS:
-            result = write_mp_offers(file, &shaCtx);
+            result = write_mp_offers(file, hasher);
             break;
 
         case FILETYPE_ACCEPTS:
-            result = write_mp_accepts(file, &shaCtx);
+            result = write_mp_accepts(file, hasher);
             break;
 
         case FILETYPE_GLOBALS:
-            result = write_globals_state(file, &shaCtx);
+            result = write_globals_state(file, hasher);
             break;
 
         case FILETYPE_CROWDSALES:
-            result = write_mp_crowdsales(file, &shaCtx);
+            result = write_mp_crowdsales(file, hasher);
             break;
 
         case FILETYPE_MDEXORDERS:
-            result = write_mp_metadex(file, &shaCtx);
+            result = write_mp_metadex(file, hasher);
             break;
     }
 
     // generate and wite the double hash of all the contents written
-    uint256 hash1;
-    SHA256_Final((unsigned char*) &hash1, &shaCtx);
-    uint256 hash2;
-    SHA256((unsigned char*) &hash1, sizeof (hash1), (unsigned char*) &hash2);
-    file << "!" << hash2.ToString() << std::endl;
+    uint256 hash;
+    hasher.Finalize(hash.begin());
+    file << "!" << hash.ToString() << std::endl;
 
     file.flush();
     file.close();
@@ -569,8 +565,7 @@ int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
     int lines = 0;
     int (*inputLineFunc)(const std::string&) = nullptr;
 
-    SHA256_CTX shaCtx;
-    SHA256_Init(&shaCtx);
+    CHash256 hasher;
 
     switch (what) {
         case FILETYPE_BALANCES:
@@ -641,7 +636,7 @@ int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
 
         // update hash?
         if (verifyHash) {
-            SHA256_Update(&shaCtx, line.c_str(), line.length());
+            hasher.Write((unsigned char*)line.c_str(), line.length());
         }
 
         if (inputLineFunc) {
@@ -658,12 +653,10 @@ int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
 
     if (verifyHash && res == 0) {
         // generate and wite the double hash of all the contents written
-        uint256 hash1;
-        SHA256_Final((unsigned char*) &hash1, &shaCtx);
-        uint256 hash2;
-        SHA256((unsigned char*) &hash1, sizeof (hash1), (unsigned char*) &hash2);
+        uint256 hash;
+        hasher.Finalize(hash.begin());
 
-        if (false == boost::iequals(hash2.ToString(), fileHash)) {
+        if (false == boost::iequals(hash.ToString(), fileHash)) {
             PrintToLog("File %s loaded, but failed hash validation!\n", filename);
             res = -1;
         }

@@ -10,14 +10,14 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/rational.hpp>
 
-#include <openssl/sha.h>
-
 #include <stdint.h>
 
 #include <fstream>
 #include <map>
 #include <set>
 #include <string>
+
+class CHash256;
 
 typedef boost::rational<boost::multiprecision::checked_int128_t> rational_t;
 
@@ -99,7 +99,7 @@ public:
     /** Used for display of unit prices with 50 decimal places at RPC layer. */
     std::string displayFullUnitPrice() const;
 
-    void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const;
+    void saveOffer(std::ofstream& file, CHash256 &hasher) const;
 };
 
 namespace mastercore

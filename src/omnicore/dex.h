@@ -6,10 +6,9 @@
 #include <omnicore/tx.h>
 
 #include <amount.h>
+#include <hash.h>
 #include <tinyformat.h>
 #include <uint256.h>
-
-#include <openssl/sha.h>
 
 #include <stdint.h>
 #include <fstream>
@@ -87,7 +86,7 @@ public:
     {
     }
 
-    void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& address) const
+    void saveOffer(std::ofstream& file, const std::string& address, CHash256& hasher) const
     {
         std::string lineOut = strprintf("%s,%d,%d,%d,%d,%d,%d,%d,%s",
                 address,
@@ -102,7 +101,7 @@ public:
         );
 
         // add the line to the hash
-        SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+        hasher.Write((unsigned char*)lineOut.c_str(), lineOut.length());
 
         // write the line
         file << lineOut << std::endl;
@@ -195,7 +194,7 @@ public:
         return bRet;
     }
 
-    void saveAccept(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& address, const std::string& buyer) const
+    void saveAccept(std::ofstream& file, const std::string& address, const std::string& buyer, CHash256& hasher) const
     {
         std::string lineOut = strprintf("%s,%d,%s,%d,%d,%d,%d,%d,%d,%s",
                 address,
@@ -210,7 +209,7 @@ public:
                 offer_txid.ToString());
 
         // add the line to the hash
-        SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+        hasher.Write((unsigned char*)lineOut.c_str(), lineOut.length());
 
         // write the line
         file << lineOut << std::endl;
