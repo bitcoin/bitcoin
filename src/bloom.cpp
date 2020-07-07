@@ -100,11 +100,7 @@ bool CBloomFilter::contains(const uint256& hash) const
     std::vector<unsigned char> data(hash.begin(), hash.end());
     return contains(data);
 }
-bool CBloomFilter::contains(const std::string& strKey) const
-{
-    std::vector<unsigned char> data(strKey.begin(), strKey.end());
-    return contains(data);
-}
+
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;

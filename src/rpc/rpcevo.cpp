@@ -413,16 +413,12 @@ UniValue protx_register(const JSONRPCRequest& request)
         }
     }
 
-    std::string keyOwner = request.params[paramIdx + 1].get_str();
+    CTxDestination keyOwner = DecodeDestination(request.params[paramIdx + 1].get_str());
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-    std::string keyIDVoting = request.params[paramIdx + 1].get_str();
+    CTxDestination keyIDVoting = DecodeDestination(request.params[paramIdx + 1].get_str();
     if (request.params[paramIdx + 3].get_str() != "") {
-        keyIDVoting = request.params[paramIdx + 3].get_str();
+        keyIDVoting = DecodeDestination(request.params[paramIdx + 3].get_str());
     }
-    if(!IsValidDestinationString(keyOwner))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid owner address");
-    if(!IsValidDestinationString(keyIDVoting))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid voting address");
 
     int64_t operatorReward;
     if (!ParseFixedPoint(request.params[paramIdx + 4].getValStr(), 2, &operatorReward)) {
@@ -714,9 +710,8 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
         LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-        const CTxDestination& dest = DecodeDestination(dmn->pdmnState->keyIDOwner);
-        if (!spk_man.GetKey(GetKeyForDestination(dest), keyOwner)) {
-            throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", dmn->pdmnState->keyIDOwner));
+        if (!spk_man.GetKey(ToKeyID(dmn->pdmnState->keyIDOwner), keyOwner)) {
+            throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(dmn->pdmnState->keyIDOwner)));
         }
     }
 

@@ -28,9 +28,9 @@ public:
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
-    std::string keyIDOwner;
+    CTxDestination keyIDOwner;
     CBLSPublicKey pubKeyOperator;
-    std::string keyIDVoting;
+    CTxDestination keyIDVoting;
     uint16_t nOperatorReward{0};
     CScript scriptPayout;
     uint256 inputsHash; // replay protection
@@ -59,8 +59,8 @@ public:
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
         obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
         obj.pushKV("service", addr.ToString());
-        obj.pushKV("ownerAddress", keyIDOwner);
-        obj.pushKV("votingAddress", keyIDVoting);
+        obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
+        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
 
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
@@ -122,7 +122,7 @@ public:
     uint256 proTxHash;
     uint16_t nMode{0}; // only 0 supported for now
     CBLSPublicKey pubKeyOperator;
-    std::string keyIDVoting;
+    WitnessV0KeyHash keyIDVoting;
     CScript scriptPayout;
     uint256 inputsHash; // replay protection
     std::vector<unsigned char> vchSig;
