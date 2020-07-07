@@ -18,18 +18,11 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CBanEntry ban_entry = [&] {
-        switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 3)) {
+        switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 2)) {
         case 0:
             return CBanEntry{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
             break;
-        case 1:
-            return CBanEntry{fuzzed_data_provider.ConsumeIntegral<int64_t>(), fuzzed_data_provider.PickValueInArray<BanReason>({
-                                                                                  BanReason::BanReasonUnknown,
-                                                                                  BanReason::BanReasonNodeMisbehaving,
-                                                                                  BanReason::BanReasonManuallyAdded,
-                                                                              })};
-            break;
-        case 2: {
+        case 1: {
             const std::optional<CBanEntry> ban_entry = ConsumeDeserializable<CBanEntry>(fuzzed_data_provider);
             if (ban_entry) {
                 return *ban_entry;
@@ -39,5 +32,4 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
         return CBanEntry{};
     }();
-    assert(!ban_entry.banReasonToString().empty());
 }

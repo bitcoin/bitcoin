@@ -614,12 +614,12 @@ static UniValue setban(const JSONRPCRequest& request)
             absolute = true;
 
         if (isSubnet) {
-            node.banman->Ban(subNet, BanReasonManuallyAdded, banTime, absolute);
+            node.banman->Ban(subNet, banTime, absolute);
             if (node.connman) {
                 node.connman->DisconnectNode(subNet);
             }
         } else {
-            node.banman->Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
+            node.banman->Ban(netAddr, banTime, absolute);
             if (node.connman) {
                 node.connman->DisconnectNode(netAddr);
             }
@@ -628,7 +628,7 @@ static UniValue setban(const JSONRPCRequest& request)
     else if(strCommand == "remove")
     {
         if (!( isSubnet ? node.banman->Unban(subNet) : node.banman->Unban(netAddr) )) {
-            throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Unban failed. Requested address/subnet was not previously banned.");
+            throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Unban failed. Requested address/subnet was not previously manually banned.");
         }
     }
     return NullUniValue;
@@ -637,7 +637,7 @@ static UniValue setban(const JSONRPCRequest& request)
 static UniValue listbanned(const JSONRPCRequest& request)
 {
             RPCHelpMan{"listbanned",
-                "\nList all banned IPs/Subnets.\n",
+                "\nList all manually banned IPs/Subnets.\n",
                 {},
         RPCResult{RPCResult::Type::ARR, "", "",
             {
@@ -646,7 +646,6 @@ static UniValue listbanned(const JSONRPCRequest& request)
                         {RPCResult::Type::STR, "address", ""},
                         {RPCResult::Type::NUM_TIME, "banned_until", ""},
                         {RPCResult::Type::NUM_TIME, "ban_created", ""},
-                        {RPCResult::Type::STR, "ban_reason", ""},
                     }},
             }},
                 RPCExamples{
@@ -671,7 +670,6 @@ static UniValue listbanned(const JSONRPCRequest& request)
         rec.pushKV("address", entry.first.ToString());
         rec.pushKV("banned_until", banEntry.nBanUntil);
         rec.pushKV("ban_created", banEntry.nCreateTime);
-        rec.pushKV("ban_reason", banEntry.banReasonToString());
 
         bannedAddresses.push_back(rec);
     }
