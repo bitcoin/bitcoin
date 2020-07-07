@@ -968,8 +968,8 @@ UniValue protx_list(const JSONRPCRequest& request)
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             if (setOutpts.count(dmn->collateralOutpoint) ||
-                CheckWalletOwnsKey(pwallet, DecodeDestination(dmn->pdmnState->keyIDOwner)) ||
-                CheckWalletOwnsKey(pwallet, DecodeDestination(dmn->pdmnState->keyIDVoting)) ||
+                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
+                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting) ||
                 CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout) ||
                 CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)) {
                 ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
