@@ -696,7 +696,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
         ptx.pubKeyOperator = ParseBLSPubKey(request.params[2].get_str(), "operator BLS address");
     }
     if (request.params[3].get_str() != "") {
-        ptx.keyIDVoting = DecodeDestination(request.params[3].get_str());
+        ptx.keyIDVoting = request.params[3].get_str();
     }
 
     CTxDestination payoutDest;
