@@ -117,7 +117,7 @@ UniValue convertaddress(const JSONRPCRequest& request)	 {
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {	
         v4Dest = dest;	
         currentV4Address =  EncodeDestination(v4Dest);	
-        currentV3Address =  EncodeDestination(*witness_id);	
+        currentV3Address =  EncodeDestination(PKHash(*witness_id));	
     }	
     else if (auto key_id = boost::get<PKHash>(&dest)) {	
         v4Dest = WitnessV0KeyHash(*key_id);	
