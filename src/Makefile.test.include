@@ -81,8 +81,8 @@ BITCOIN_TESTS =\
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
   test/script_p2sh_tests.cpp \
-  test/script_P2PK_tests.cpp \
-  test/script_P2PKH_tests.cpp \
+  test/script_p2pk_tests.cpp \
+  test/script_p2pkh_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \

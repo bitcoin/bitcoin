@@ -7,7 +7,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(script_P2PK_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(script_p2pk_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(IsPayToPublicKey)
 {
