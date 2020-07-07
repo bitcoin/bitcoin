@@ -1456,22 +1456,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             if(!CheckSpecs(errorMessage)){
                 return InitError(Untranslated(errorMessage));
             }
-            std::array<char, 128> buffer;
-            std::string result;
-            std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("pidof syscoind | wc -w", "r"), pclose);
-            if (!pipe) {
-            return InitError(Untranslated("popen() failed!"));
-            }
-            while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-                result += buffer.data();
-            }
-            int resultInt = 0;
-            result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-            if(!result.empty() && !ParseInt32(result, &resultInt))
-                return InitError(Untranslated("Could not parse result from pidof"));
-
-            if(resultInt != 1)   
-                return InitError(Untranslated("Ensure you are running this masternode in a Unix OS and that only one syscoind is running...")); 
         }
         if(!IsHex(strMasterNodeBLSPrivKey))
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
