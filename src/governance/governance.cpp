@@ -285,7 +285,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
         return;
     }
 
-    // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANANGERS?
+    // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANAGERS?
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
                 govobj.GetDataAsPlainString(), govobj.GetObjectType());

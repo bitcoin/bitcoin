@@ -286,7 +286,7 @@ uint256 CGovernanceObject::GetHash() const
     ss << nRevision;
     ss << nTime;
     ss << GetDataAsHexString();
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
+    ss << masternodeOutpoint;
     ss << vchSig;
     // fee_tx is left out on purpose
 
