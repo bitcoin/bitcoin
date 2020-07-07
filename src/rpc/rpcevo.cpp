@@ -152,7 +152,7 @@ static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, b
     return key;
 }
 
-static WitnessV0KeyHash ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
+static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
     CTxDestination dest = DecodeDestination(strAddress);
     const WitnessV0KeyHash *keyID = boost::get<WitnessV0KeyHash>(&dest);
@@ -456,7 +456,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-    WitnessV0KeyHash keyIDVoting = WitnessV0KeyHash(keyOwner.GetPubKey().GetID());
+    CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
     if (request.params[paramIdx + 3].get_str() != "") {
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
@@ -475,7 +475,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
     }
 
-    ptx.keyIDOwner = WitnessV0KeyHash(keyOwner.GetPubKey().GetID());
+    ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
     ptx.pubKeyOperator = pubKeyOperator;
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
