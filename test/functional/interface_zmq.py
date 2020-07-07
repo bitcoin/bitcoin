@@ -48,6 +48,7 @@ class ZMQTest (BitcoinTestFramework):
         try:
             self.test_basic()
             self.test_reorg()
+            self.test_evict()
         finally:
             # Destroy the ZMQ context.
             self.log.debug("Destroying ZMQ context")
@@ -203,6 +204,82 @@ class ZMQTest (BitcoinTestFramework):
         assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[1])["tx"][0])
         # And the current tip
         assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[0])["tx"][0])
+
+    def test_evict(self):
+
+        if not self.is_wallet_compiled():
+
+            return
+
+        import zmq
+        address = 'tcp://127.0.0.1:28332'
+
+        # Short timeout to test that no messages are waiting
+
+
+        services = [b"hashtxevict", b"rawtxevict"]
+        sockets = []
+        subs = []
+        for service in services:
+            sockets.append(self.ctx.socket(zmq.SUB))
+            # 2 second timeout to check end of notifications
+            sockets[-1].set(zmq.RCVTIMEO, 2000)
+            subs.append(ZMQSubscriber(sockets[-1], service))
+
+        hashtx_evict = subs[0]
+        rawtx_evict = subs[1]
+
+        for socket in sockets:
+            socket.connect(address)
+        # Relax so that the subscriber is ready before publishing zmq messages
+        sleep(0.2)
+
+
+        # Subscribe to all available topics.
+        hashblock = subs[0]
+        hashtx = subs[1]
+
+
+        def check_no_messages():
+
+            try:
+                hashtx_evict.receive()
+                raise Exception("There should be no evicted transactions in the service!")
+            except zmq.error.Again:
+                pass
+
+            try:
+                rawtx_evict.receive()
+                raise Exception("There should be no evicted transactions in the service!")
+            except zmq.error.Again:
+                pass
+
+        self.restart_node(0, ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [hashtx_evict, rawtx_evict]])
+
+        assert_equal(self.nodes[0].getzmqnotifications(), [
+            {'type': 'pubhashtxevict', 'address': 'tcp://127.0.0.1:28332', 'hwm': 1000},
+            {'type': 'pubrawtxevict', 'address': 'tcp://127.0.0.1:28332', 'hwm': 1000}
+        ])
+
+        # Make a transaction, then evict it from mempool via RBF
+        txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1, replaceable=True)
+
+        # Nothing has been replaced yet
+        check_no_messages()
+
+        rbf_data = self.nodes[0].bumpfee(txid)
+        assert rbf_data["txid"] in self.nodes[0].getrawmempool()
+
+        assert_equal(hashtx_evict.receive(), bytearray.fromhex(txid))
+        assert_equal(rawtx_evict.receive(), bytearray.fromhex(self.nodes[0].gettransaction(txid)["hex"]))
+
+        # No additional messages should occur even if txns are added in mempool
+        check_no_messages()
+
+        self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
+
+        # Even if a transaction is mined, it won't be published in this channel
+        check_no_messages()
 
 if __name__ == '__main__':
     ZMQTest().main()

@@ -5,6 +5,7 @@
 #ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
+#include <txmempool.h>
 #include <zmq/zmqconfig.h>
 
 class CBlockIndex;
@@ -42,6 +43,7 @@ public:
 
     virtual bool NotifyBlock(const CBlockIndex *pindex);
     virtual bool NotifyTransaction(const CTransaction &transaction);
+    virtual bool NotifyTransactionEviction(const CTransaction &transaction, MemPoolRemovalReason reason);
 
 protected:
     void *psocket;

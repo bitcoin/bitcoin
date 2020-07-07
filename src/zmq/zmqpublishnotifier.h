@@ -40,6 +40,13 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
+class CZMQPublishHashTransactionEvictionNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyTransactionEviction(const CTransaction &transaction, MemPoolRemovalReason reason) override;
+};
+
+
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
@@ -50,6 +57,12 @@ class CZMQPublishRawTransactionNotifier : public CZMQAbstractPublishNotifier
 {
 public:
     bool NotifyTransaction(const CTransaction &transaction) override;
+};
+
+class CZMQPublishRawTransactionEvictionNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyTransactionEviction(const CTransaction &transaction, MemPoolRemovalReason reason) override;
 };
 
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

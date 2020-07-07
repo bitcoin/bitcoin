@@ -59,9 +59,11 @@ the command line or in the configuration file.
 Currently, the following notifications are supported:
 
     -zmqpubhashtx=address
+    -zmqpubhashtxevict=address
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubrawtxevict=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
@@ -70,9 +72,11 @@ The option to set the PUB socket's outbound message high water mark
 (SNDHWM) may be set individually for each notification:
 
     -zmqpubhashtxhwm=n
+    -zmqpubhashtxevicthwm=n
     -zmqpubhashblockhwm=n
     -zmqpubrawblockhwm=n
     -zmqpubrawtxhwm=n
+    -zmqpubrawtxevicthwm=n
 
 The high water mark value must be an integer greater than or equal to 0.
 
