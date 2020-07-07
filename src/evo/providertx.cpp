@@ -346,7 +346,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, ToKeyID(dmn->pdmnState->keyIDOwner), state, fJustCheck)) {
+        if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
