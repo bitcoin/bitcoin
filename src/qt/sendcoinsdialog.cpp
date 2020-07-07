@@ -414,12 +414,12 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         bool complete = false;
         // Always fill without signing first. This prevents an external signer
         // from being called prematurely and is not expensive.
-        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, psbtx, complete, nullptr);
+        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
         assert(!complete);
         assert(err == TransactionError::OK);
         if (model->wallet().hasExternalSigner()) {
             try {
-                err = model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, psbtx, complete, nullptr);
+                err = model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
             } catch (const std::runtime_error& e) {
                 QMessageBox::critical(nullptr, tr("Sign failed"), e.what());
                 send_failure = true;
