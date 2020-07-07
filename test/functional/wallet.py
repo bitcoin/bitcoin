@@ -66,7 +66,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(txout['value'], 500)
         txout = self.nodes[0].gettxout(txid=confirmed_txid, n=confirmed_index, include_mempool=True)
         assert_equal(txout['value'], 500)
-        
+
         # Send 210 DASH from 0 to 2 using sendtoaddress call.
         # Second transaction will be child of first, and will require a fee
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 110)
@@ -228,8 +228,8 @@ class WalletTest(BitcoinTestFramework):
         #2. hex-changed one output to 0.0
         #3. sign and send
         #4. check if recipient (node0) can list the zero value tx
-        usp = self.nodes[1].listunspent()
-        inputs = [{"txid":usp[0]['txid'], "vout":usp[0]['vout']}]
+        usp = self.nodes[1].listunspent(query_options={'minimumAmount': '499.998'})[0]
+        inputs = [{"txid":usp['txid'], "vout":usp['vout']}]
         outputs = {self.nodes[1].getnewaddress(): 499.998, self.nodes[0].getnewaddress(): 11.11}
 
         rawTx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000") #replace 11.11 with 0.0 (int32)
