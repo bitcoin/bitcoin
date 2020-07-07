@@ -103,8 +103,14 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     if (ptx.nMode != 0) {
         return FormatSyscoinErrorMessage(state, "bad-protx-mode", fJustCheck);
     }
-
-    if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
+    const CTxDestination& destOwner = DecodeDestination(dmn->pdmnState->keyIDOwner);
+    const CTxDestination& destVoting = DecodeDestination(dmn->pdmnState->keyIDVoting);
+    if (!IsValidDestination(destOwner) || !IsValidDestination(destVoting)) {
+        return FormatSyscoinErrorMessage(state, "bad-protx-destination-null", fJustCheck);
+    }
+    const CKeyID &keyIDOwner = GetKeyForDestination(destOwner);
+    const CKeyID &keyIDVoting = GetKeyForDestination(destVoting);
+    if (keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-key-null", fJustCheck);
     }
     int witnessversion;
@@ -119,7 +125,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-dest", fJustCheck);
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
-    if (payoutDest == ptx.keyIDOwner || payoutDest == ptx.keyIDVoting) {
+    if (payoutDest == destOwner || payoutDest == destVoting) {
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
     }
 
@@ -178,7 +184,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
     // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
-    if (collateralTxDest == ptx.keyIDOwner || collateralTxDest == ptx.keyIDVoting) {
+    if (collateralTxDest == destOwner || collateralTxDest == destVoting) {
         return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
     }
 
@@ -346,7 +352,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, ToKeyID(dmn->pdmnState->keyIDOwner), state, fJustCheck)) {
+        if (!CheckHashSig(ptx, GetKeyForDestination(dmn->pdmnState->keyIDOwner), state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
@@ -411,8 +417,8 @@ std::string CProRegTx::MakeSignString() const
 
     s += strPayout + "|";
     s += strprintf("%d", nOperatorReward) + "|";
-    s += EncodeDestination(keyIDOwner) + "|";
-    s += EncodeDestination(keyIDVoting) + "|";
+    s += keyIDOwner + "|";
+    s += keyIDVoting + "|";
 
     // ... and also the full hash of the payload as a protection agains malleability and replays
     s += ::SerializeHash(*this).ToString();
@@ -429,7 +435,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
-        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(keyIDOwner), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
+        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, keyIDOwner, pubKeyOperator.ToString(), keyIDVoting, payee);
 }
 
 std::string CProUpServTx::ToString() const
@@ -453,7 +459,7 @@ std::string CProUpRegTx::ToString() const
     }
 
     return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s)",
-        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
+        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), keyIDVoting, payee);
 }
 
 std::string CProUpRevTx::ToString() const

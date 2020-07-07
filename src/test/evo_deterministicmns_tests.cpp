@@ -88,7 +88,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
     BOOST_CHECK(SignTransaction(tx, &tempKeystore, coins, SIGHASH_ALL, input_errors));
 }
 
-static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CTxDestination& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
+static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, std::string& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
     operatorKeyRet.MakeNewKey();
 
@@ -223,10 +223,10 @@ BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
-    CTxDestination ownerKey;
+    std::string ownerKey;
     CBLSSecretKey operatorKey;
     CTxDestination payoutDest = DecodeDestination("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
-    ownerKey = payoutDest;
+    ownerKey = "mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs";
     auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutDest), coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = std::vector<CMutableTransaction>{tx};
 

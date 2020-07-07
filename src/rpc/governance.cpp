@@ -596,7 +596,8 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
 
         CKey key;
-        if (spk_man.GetKey(ToKeyID(dmn->pdmnState->keyIDVoting), key)) {
+        const CTxDestination& dest = DecodeDestination(dmn->pdmnState->keyIDVoting);
+        if (spk_man.GetKey(GetKeyForDestination(dest), key)) {
             votingKeys.emplace(dmn->proTxHash, key);
         }
     });
@@ -666,9 +667,9 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
         LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
-        
-        if (!spk_man.GetKey(ToKeyID(dmn->pdmnState->keyIDVoting), key)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(dmn->pdmnState->keyIDVoting)));
+        const CTxDestination& dest = DecodeDestination(dmn->pdmnState->keyIDVoting);
+        if (!spk_man.GetKey(GetKeyForDestination(dest), key)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", dmn->pdmnState->keyIDVoting));
         }
     }
 
