@@ -119,7 +119,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-dest", fJustCheck);
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
-    if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDVoting))) {
+    if (payoutDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDOwner)) || payoutDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDVoting))) {
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
     }
 
@@ -178,7 +178,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
     // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
-    if (collateralTxDest == CTxDestination(ptx.keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
+    if (collateralTxDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDOwner)) || collateralTxDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDVoting))) {
         return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
     }
 
