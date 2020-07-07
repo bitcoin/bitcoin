@@ -120,6 +120,47 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
     return strprintf(it->second, nParamNum);
 }
 
+// Allows to specify Syscoin address or priv key. In case of Syscoin address, the priv key is taken from the wallet
+static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, bool allowAddresses = true) {
+#ifdef ENABLE_WALLET
+    if (!pwallet) {
+        throw std::runtime_error("addresses not supported when wallet is disabled");
+    }
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    CTxDestination dest = DecodeDestination(strKeyOrAddress);
+    if (allowAddresses && IsValidDestination(dest)) {
+        auto keyId = GetKeyForDestination(spk_man, dest);
+        if (keyId.IsNull())
+            throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+        CKey key;
+        if (!spk_man.GetKey(keyId, key))
+            throw std::runtime_error(strprintf("non-wallet or invalid address %s", strKeyOrAddress));
+        return key;
+    }
+#else//ENABLE_WALLET
+        throw std::runtime_error("addresses not supported in no-wallet builds");
+#endif//ENABLE_WALLET
+    CKey key = DecodeSecret(strKeyOrAddress);
+    if (!key.IsValid()) {
+        throw std::runtime_error(strprintf("invalid priv-key/address %s", strKeyOrAddress));
+    }
+    return key;
+}
+
+static WitnessV0KeyHash ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
+{
+    CTxDestination dest = DecodeDestination(strAddress);
+    const WitnessV0KeyHash *keyID = boost::get<WitnessV0KeyHash>(&dest);
+    if (!keyID) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PWKH address, not %s", paramName, strAddress));
+    }
+    return *keyID;
+}
 
 static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName)
 {
@@ -413,11 +454,11 @@ UniValue protx_register(const JSONRPCRequest& request)
         }
     }
 
-    CTxDestination keyOwner = DecodeDestination(request.params[paramIdx + 1].get_str());
+    CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-    CTxDestination keyIDVoting = DecodeDestination(request.params[paramIdx + 1].get_str();
+    WitnessV0KeyHash keyIDVoting = WitnessV0KeyHash(keyOwner.GetPubKey().GetID());
     if (request.params[paramIdx + 3].get_str() != "") {
-        keyIDVoting = DecodeDestination(request.params[paramIdx + 3].get_str());
+        keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
 
     int64_t operatorReward;
@@ -434,7 +475,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
     }
 
-    ptx.keyIDOwner = keyOwner;
+    ptx.keyIDOwner = WitnessV0KeyHash(keyOwner.GetPubKey().GetID());
     ptx.pubKeyOperator = pubKeyOperator;
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
@@ -691,7 +732,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
         ptx.pubKeyOperator = ParseBLSPubKey(request.params[2].get_str(), "operator BLS address");
     }
     if (request.params[3].get_str() != "") {
-        ptx.keyIDVoting = DecodeDestination(request.params[3].get_str());
+        ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[3].get_str(), "voting address");
     }
 
     CTxDestination payoutDest;
@@ -841,7 +882,7 @@ void protx_list_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static bool CheckWalletOwnsKey(CWallet* pwallet, const CTxDestination& keyID) {
+static bool CheckWalletOwnsKey(CWallet* pwallet, const WitnessV0KeyHash& keyID) {
 #ifndef ENABLE_WALLET
     return false;
 #else
@@ -850,7 +891,7 @@ static bool CheckWalletOwnsKey(CWallet* pwallet, const CTxDestination& keyID) {
     }
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-    return spk_man.IsMine(GetScriptForDestination(keyID));
+    return spk_man.IsMine(GetScriptForDestination(CTxDestination(keyID)));
 #endif
 }
 

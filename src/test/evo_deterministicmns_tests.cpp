@@ -88,7 +88,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
     BOOST_CHECK(SignTransaction(tx, &tempKeystore, coins, SIGHASH_ALL, input_errors));
 }
 
-static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CTxDestination& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
+static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
@@ -96,9 +96,9 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const 
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
-    proTx.keyIDOwner = ownerKeyRet;
+    proTx.keyIDOwner = WitnessV0KeyHash(ownerKeyRet.GetPubKey().GetID());
     proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
-    proTx.keyIDVoting = ownerKeyRet;
+    proTx.keyIDVoting = WitnessV0KeyHash(ownerKeyRet.GetPubKey().GetID());
     proTx.scriptPayout = scriptPayout;
 
     CMutableTransaction tx;
@@ -224,10 +224,9 @@ BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
-    CTxDestination ownerKey;
+    CKey ownerKey;
     CBLSSecretKey operatorKey;
     CTxDestination payoutDest = DecodeDestination("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
-    ownerKey = payoutDest;
     auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutDest), coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = std::vector<CMutableTransaction>{tx};
 
@@ -263,11 +262,12 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     int port = 1;
 
     std::vector<uint256> dmnHashes;
-    std::map<uint256, CTxDestination> ownerKeys;
+    std::map<uint256, CKey> ownerKeys;
     std::map<uint256, CBLSSecretKey> operatorKeys;
-    CTxDestination ownerKey = DecodeDestination("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
+
     // register one MN per block
     for (size_t i = 0; i < 6; i++) {
+        CKey ownerKey;
         CBLSSecretKey operatorKey;
         auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
         dmnHashes.emplace_back(tx.GetHash());
@@ -321,6 +321,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     for (size_t i = 0; i < 3; i++) {
         std::vector<CMutableTransaction> txns;
         for (size_t j = 0; j < 3; j++) {
+            CKey ownerKey;
             CBLSSecretKey operatorKey;
             auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
             dmnHashes.emplace_back(tx.GetHash());
@@ -379,7 +380,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     CBLSSecretKey newOperatorKey;
     newOperatorKey.MakeNewKey();
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
-    tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]], dmn->pdmnState->scriptPayout, coinbaseKey);
+    tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), WitnessV0KeyHash(ownerKeys[dmnHashes[0]].GetPubKey().GetID()), dmn->pdmnState->scriptPayout, coinbaseKey);
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
     auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
     TxValidationState dummyState;
