@@ -25,7 +25,6 @@
 #include <net.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-#include <keystore.h>
 void gobject_count_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject count",
