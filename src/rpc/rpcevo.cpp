@@ -159,7 +159,7 @@ static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std:
     if (!keyID) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PWKH address, not %s", paramName, strAddress));
     }
-    return *keyID;
+    return ToKeyID(*keyID);
 }
 
 static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName)
