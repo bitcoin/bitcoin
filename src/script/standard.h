@@ -75,6 +75,16 @@ public:
         return m_hash < other.m_hash;
     }
 
+    unsigned char* data()
+    {
+        return m_hash.data();
+    }
+
+    const unsigned char* data() const
+    {
+        return m_hash.data();
+    }
+
     size_t size() const
     {
         return m_hash.size();
