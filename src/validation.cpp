@@ -2278,6 +2278,17 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
         assert(flushed);
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
+
+    {
+        // Prune locks that began around the tip should get rolled backward so they get a chance to reorg
+        LOCK(g_prune_locks_mutex);
+        for (auto& prune_lock : g_prune_locks) {
+            if (prune_lock.second.m_height_first < uint64_t(pindexDelete->nHeight) - 1) continue;
+            --prune_lock.second.m_height_first;
+            // NOTE: Don't need to write to db here, since it will get synced when the rest of the chainstate
+        }
+    }
+
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
         return false;
