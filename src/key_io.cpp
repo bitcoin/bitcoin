@@ -224,3 +224,16 @@ bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
 }
+// SYSCOIN
+CKeyID GetKeyForDestination(const CTxDestination& dest)
+{
+    // Only supports destinations which map to single public keys, i.e. P2PKH,
+    // P2WPKH, and P2SH-P2WPKH.
+    if (auto id = boost::get<PKHash>(&dest)) {
+        return ToKeyID(*id);
+    }
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
+        return ToKeyID(*witness_id);
+    }
+    return CKeyID();
+}
