@@ -2133,17 +2133,17 @@ class SegWitTest(BitcoinTestFramework):
 
         # Send tx2 through; it's an orphan so won't be accepted
         with mininode_lock:
-            self.tx_node.last_message.pop("getdata", None)
-        test_transaction_acceptance(self.nodes[0], self.tx_node, tx2, with_witness=True, accepted=False)
+            self.wtx_node.last_message.pop("getdata", None)
+        test_transaction_acceptance(self.nodes[0], self.wtx_node, tx2, with_witness=True, accepted=False)
 
-        # Expect a request for parent (tx) due to use of non-WTX peer
-        self.tx_node.wait_for_getdata([tx.sha256], 60)
+        # Expect a request for parent (tx) by txid despite use of WTX peer
+        self.wtx_node.wait_for_getdata([tx.sha256], 60)
         with mininode_lock:
-            lgd = self.tx_node.lastgetdata[:]
+            lgd = self.wtx_node.lastgetdata[:]
         assert_equal(lgd, [CInv(MSG_TX|MSG_WITNESS_FLAG, tx.sha256)])
 
         # Send tx through
-        test_transaction_acceptance(self.nodes[0], self.tx_node, tx, with_witness=False, accepted=True)
+        test_transaction_acceptance(self.nodes[0], self.wtx_node, tx, with_witness=False, accepted=True)
 
         # Check tx2 is there now
         assert_equal(tx2.hash in self.nodes[0].getrawmempool(), True)
