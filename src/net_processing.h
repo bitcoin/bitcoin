@@ -96,9 +96,14 @@ struct CNodeStateStats {
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 // SYSCOIN
-extern bool IsAnnouncementAllowed(const CNode* pfrom, const int requestedAnnouncements, const uint256& hash)  EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-extern void RequestInv(const CNode* pfrom, const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-extern void EraseInvRequest(const CNode* pfrom, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+// Upstream moved this into net_processing.cpp (13417), however since we use Misbehaving in a number of syscoin specific
+// files such as mnauth.cpp and governance.cpp it makes sense to keep it in the header
+/** Increase a node's misbehavior score. */
+bool IsBanned(NodeId nodeid, BanMan& banman);
+void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void EraseTxRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+size_t GetRequestedTxCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Relay transaction to every node */
 void RelayTransaction(const uint256&, const CConnman& connman);
+
 #endif // SYSCOIN_NET_PROCESSING_H

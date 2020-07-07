@@ -20,12 +20,14 @@ class PaymentServer;
 class PlatformStyle;
 class WalletController;
 class WalletModel;
-
 namespace interfaces {
 class Handler;
 class Node;
 } // namespace interfaces
-
+QT_BEGIN_NAMESPACE
+// SYSCOIN
+class QStringList;
+QT_END_NAMESPACE
 /** Class encapsulating Syscoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
@@ -38,6 +40,8 @@ public:
 public Q_SLOTS:
     void initialize();
     void shutdown();
+    // SYSCOIN
+    void restart(const QStringList &args);
 
 Q_SIGNALS:
     void initializeResult(bool success);

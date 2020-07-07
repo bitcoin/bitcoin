@@ -20,7 +20,10 @@ SOURCES = [
     "src/wallet/rpcwallet.cpp",
     "src/services/rpc/assetrpc.cpp",
     "src/services/rpc/wallet/assetwalletrpc.cpp",
-    "src/rpc/masternode.cpp"
+    "src/rpc/masternode.cpp",
+    "src/rpc/rpcevo.cpp",
+    "src/rpc/rpcquorums.cpp",
+    "src/rpc/governance.cpp"
 ]
 # Source file (relative to root) containing conversion mapping
 SOURCE_CLIENT = 'src/rpc/client.cpp'

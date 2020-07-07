@@ -16,6 +16,11 @@
 #include <util/strencodings.h>
 // SYSCOIN
 #include <services/asset.h>
+#include <evo/cbtx.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
+#include <llmq/quorums_commitment.h>
+
 bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, UniValue &entry) {
     const uint256& txHash = tx.GetHash();
     entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
@@ -389,6 +394,52 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     }
     entry.pushKV("vout", vout);
     // SYSCOIN
+    if (tx.nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
+        CProRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proRegTx", obj);
+        }
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpServTx", obj);
+        }
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpRegTx", obj);
+        }
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
+        CProUpRevTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpRevTx", obj);
+        }
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
+        CCbTx cbTx;
+        if (GetTxPayload(tx, cbTx)) {
+            UniValue obj;
+            cbTx.ToJson(obj);
+            entry.pushKV("cbTx", obj);
+        }
+    } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+        llmq::CFinalCommitmentTxPayload qcTx;
+        if (GetTxPayload(tx, qcTx)) {
+            UniValue obj;
+            UniValue cbObj;
+            qcTx.cbTx.ToJson(cbObj);
+            entry.pushKV("cbTx", cbObj);
+            qcTx.ToJson(obj);
+            entry.pushKV("qcTx", obj);
+        }
+    }
     UniValue output(UniValue::VOBJ);
     if(DecodeSyscoinRawtransaction(tx, hashBlock, output))
         entry.pushKV("systx", output);

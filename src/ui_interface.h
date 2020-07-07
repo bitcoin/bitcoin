@@ -11,6 +11,8 @@
 #include <string>
 
 class CBlockIndex;
+// SYSCOIN
+class CDeterministicMNList;
 enum class SynchronizationState;
 struct bilingual_str;
 
@@ -107,7 +109,8 @@ public:
     // SYSCOIN
     /** Additional data sync progress changed */
     ADD_SIGNALS_DECL_WRAPPER(NotifyAdditionalDataSyncProgressChanged, void, double nSyncProgress);
-
+    /** Masternode list has changed */
+    ADD_SIGNALS_DECL_WRAPPER(NotifyMasternodeListChanged, void, const CDeterministicMNList& mnList);
     /**
      * Show progress e.g. for verifychain.
      * resume_possible indicates shutting down now will result in the current progress action resuming upon restart.

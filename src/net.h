@@ -35,6 +35,8 @@
 #include <arpa/inet.h>
 #endif
 
+// SYSCOIN
+#include <consensus/params.h>
 
 class CScheduler;
 class CNode;
@@ -69,14 +71,14 @@ static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 static const int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
-/** Maximum number if outgoing masternodes */
-static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 20;
 /** Maximum number of block-relay-only outgoing connections */
 static const int MAX_BLOCKS_ONLY_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
+/** SYSCOIN Eviction protection time for incoming connections  */
+static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
 /** -upnp default */
 #ifdef USE_UPNP
 static const bool DEFAULT_UPNP = USE_UPNP;
@@ -212,8 +214,8 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     // SYSCOIN
-    void OpenMasternodeConnection(const CAddress& addrConnect);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool block_relay_only = false, bool fConnectToMasternode = false);
+    void OpenMasternodeConnection(const CAddress& addrConnect, bool isProbe = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool block_relay_only = false, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
 
     bool CheckIncomingNonce(uint64_t nonce);
 
@@ -237,8 +239,6 @@ public:
     {
         return ForNode(addr, FullyConnectedOnly, func);
     }
-
-    
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
     {
@@ -254,13 +254,13 @@ public:
     bool ForEachNodeContinueIf(Callable&& func)
     {
         return ForEachNodeContinueIf(FullyConnectedOnly, func);
-    };
+    }
 
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func) const
     {
         LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
+        for (const auto& node : vNodes)
             if (cond(node))
                 if(!func(node))
                     return false;
@@ -271,13 +271,30 @@ public:
     bool ForEachNodeContinueIf(Callable&& func) const
     {
         return ForEachNodeContinueIf(FullyConnectedOnly, func);
-    };
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
+    }
+
+    template<typename Condition, typename Callable>
+    void ForEachNode(const Condition& cond, Callable&& func)
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
+            if (cond(node))
+                func(node);
+        }
+    };
+
+    template<typename Callable>
+    void ForEachNode(Callable&& func)
+    {
+        ForEachNode(FullyConnectedOnly, func);
+    }
+
+    template<typename Condition, typename Callable>
+    void ForEachNode(const Condition& cond, Callable&& func) const
+    {
+        LOCK(cs_vNodes);
+        for (auto&& node : vNodes) {
+            if (cond(node))
                 func(node);
         }
     };
@@ -285,19 +302,32 @@ public:
     template<typename Callable>
     void ForEachNode(Callable&& func) const
     {
+        ForEachNode(FullyConnectedOnly, func);
+    }
+
+    template<typename Condition, typename Callable, typename CallableAfter>
+    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post)
+    {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
+            if (cond(node))
+                pre(node);
         }
+        post();
     };
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
     {
+        ForEachNodeThen(FullyConnectedOnly, pre, post);
+    }
+
+    template<typename Condition, typename Callable, typename CallableAfter>
+    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post) const
+    {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
+            if (cond(node))
                 pre(node);
         }
         post();
@@ -306,14 +336,9 @@ public:
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
-    // SYSCOIN
+        ForEachNodeThen(FullyConnectedOnly, pre, post);
+    }
+
     std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
     void AddNewAddress(const CAddress& addr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
@@ -339,10 +364,22 @@ public:
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
-    bool AddPendingMasternode(const CService& addr);
+    // SYSCOIN
+    bool AddPendingMasternode(const uint256& proTxHash);
+    void SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    bool HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
+    std::set<uint256> GetMasternodeQuorums(uint8_t llmqType);
+    // also returns QWATCH nodes
+    std::set<NodeId> GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash) const;
+    void RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
+    bool IsMasternodeQuorumNode(const CNode* pnode);
+    void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
+
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
     size_t GetNodeCount(NumConnections num);
+    // SYSCOIN
+    size_t GetMaxOutboundNodeCount();
     void GetNodeStats(std::vector<CNodeStats>& vstats);
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(const CSubNet& subnet);
@@ -493,8 +530,11 @@ private:
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     RecursiveMutex cs_vAddedNodes;
     // SYSCOIN
-    std::vector<CService> vPendingMasternodes GUARDED_BY(cs_vPendingMasternodes);
-    RecursiveMutex cs_vPendingMasternodes;
+    std::vector<uint256> vPendingMasternodes GUARDED_BY(cs_vPendingMasternodes);
+    std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
+    std::set<uint256> masternodePendingProbes;
+    mutable RecursiveMutex cs_vPendingMasternodes;
+    
     std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
     std::list<CNode*> vNodesDisconnected;
     mutable RecursiveMutex cs_vNodes;
@@ -689,6 +729,9 @@ public:
     // Bind address of our side of the connection
     CAddress addrBind;
     uint32_t m_mapped_as;
+    // SYSCOIN In case this is a verified MN, this value is the proTx of the MN
+    uint256 verifiedProRegTxHash;
+    bool fMasternode;
 };
 
 
@@ -834,6 +877,9 @@ public:
     std::atomic<int64_t> nLastRecv{0};
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
+    // SYSCOIN
+    std::atomic<int64_t> nTimeFirstMessageReceived;
+    std::atomic<bool> fFirstMessageIsMNAUTH;
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
@@ -870,7 +916,8 @@ public:
     std::atomic_bool fPauseSend{false};
     // SYSCOIN If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
     bool fMasternode;
-    CSemaphoreGrant grantMasternodeOutbound;
+    // If 'true' this node will be disconnected after MNAUTH
+    bool fMasternodeProbe;
 
 protected:
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -946,6 +993,18 @@ public:
     // Whether a ping is requested.
     std::atomic<bool> fPingQueued{false};
 
+    // SYSCOIN
+    // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
+    mutable RecursiveMutex cs_mnauth;
+    uint256 sentMNAuthChallenge;
+    uint256 receivedMNAuthChallenge;
+    uint256 verifiedProRegTxHash;
+    uint256 verifiedPubKeyHash;
+
+    // If true, we will announce/send him plain recovered sigs (usually true for full nodes)
+    std::atomic<bool> fSendRecSigs{false};
+    // If true, we will send him all quorum related messages, even if he is not a member of our quorums
+    std::atomic<bool> qwatch{false};
     std::set<uint256> orphan_work_set;
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool block_relay_only = false);
@@ -1100,7 +1159,12 @@ public:
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
 };
-
+// SYSCOIN
+class CExplicitNetCleanup
+{
+public:
+    static void callCleanup();
+};
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 int64_t PoissonNextSend(int64_t now, int average_interval_seconds);
 

@@ -63,9 +63,9 @@
 #include <QVBoxLayout>
 #include <QWindow>
 // SYSCOIN
-#include <masternodesync.h>
+#include <masternode/masternode-sync.h>
 #include <qt/masternodelist.h>
-
+#include <QStringList>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
         "macosx"
@@ -280,7 +280,7 @@ void SyscoinGUI::createActions()
 #ifdef ENABLE_WALLET
    // SYSCOIN
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
+    if (settings.value("fShowMasternodesTab").toBool()) {
         masternodeAction = new QAction(QIcon(":/icons/masternodes"), tr("&Masternodes"), this);
         masternodeAction->setStatusTip(tr("Browse masternodes"));
         masternodeAction->setToolTip(masternodeAction->statusTip());
@@ -377,6 +377,11 @@ void SyscoinGUI::createActions()
     m_mask_values_action->setStatusTip(tr("Mask the values in the Overview tab"));
     m_mask_values_action->setCheckable(true);
 
+    // SYSCOIN
+    openRepairAction = new QAction(platformStyle->SingleColorIcon(":/icons/options"), tr("Wallet &Repair"), this);
+    openRepairAction->setStatusTip(tr("Show wallet repair options"));
+    openRepairAction->setEnabled(false);
+
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
     connect(aboutAction, &QAction::triggered, this, &SyscoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
@@ -386,6 +391,11 @@ void SyscoinGUI::createActions()
     connect(openRPCConsoleAction, &QAction::triggered, this, &SyscoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
+    // SYSCOIN
+    connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
+
+    // Get restart command-line parameters and handle restart
+    connect(rpcConsole, &RPCConsole::handleRestart, this, &SyscoinGUI::handleRestart);
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -401,6 +411,9 @@ void SyscoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &SyscoinGUI::openClicked);
+        // SYSCOIN
+        connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
+
         connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
             m_open_wallet_menu->clear();
             for (const std::pair<const std::string, bool>& i : m_wallet_controller->listWalletDir()) {
@@ -446,6 +459,8 @@ void SyscoinGUI::createActions()
 
     connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindowActivateConsole);
     connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindow);
+    // SYSCOIN
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R), this), &QShortcut::activated, this, &SyscoinGUI::showRepair);
 }
 
 void SyscoinGUI::createMenuBar()
@@ -470,6 +485,7 @@ void SyscoinGUI::createMenuBar()
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
+        file->addAction(openRepairAction);
         file->addAction(m_load_psbt_action);
         file->addSeparator();
     }
@@ -558,7 +574,7 @@ void SyscoinGUI::createToolBars()
         toolbar->addAction(historyAction);
         // SYSCOIN
         QSettings settings;
-        if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction)
+        if (settings.value("fShowMasternodesTab").toBool() && masternodeAction)
         {
             toolbar->addAction(masternodeAction);
         }
@@ -745,7 +761,7 @@ void SyscoinGUI::setWalletActionsEnabled(bool enabled)
     historyAction->setEnabled(enabled);
     // SYSCOIN
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
+    if (settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
         masternodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
@@ -804,6 +820,7 @@ void SyscoinGUI::createTrayIconMenu()
     }
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openRPCConsoleAction);
+    trayIconMenu->addAction(openRepairAction);
 #ifndef Q_OS_MAC // This is built-in on macOS
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
@@ -846,7 +863,12 @@ void SyscoinGUI::showDebugWindow()
     GUIUtil::bringToFront(rpcConsole);
     Q_EMIT consoleShown(rpcConsole);
 }
-
+// SYSCOIN
+void SyscoinGUI::showRepair()
+{
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::TAB_REPAIR);
+    showDebugWindow();
+}
 void SyscoinGUI::showDebugWindowActivateConsole()
 {
     rpcConsole->setTabFocus(RPCConsole::TabTypes::CONSOLE);
@@ -872,7 +894,7 @@ void SyscoinGUI::openClicked()
 void SyscoinGUI::gotoMasternodePage()
 {
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
+    if (settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
         masternodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }
@@ -1083,7 +1105,7 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         tooltip += tr("Last received block was generated %1 ago.").arg(timeBehindText);
         tooltip += QString("<br>");
         tooltip += tr("Transactions after this will not yet be visible.");
-    } else if (fLiteMode) {
+    } else if (fDisableGovernance) {
         setAdditionalDataSyncProgress(1);
     }
     // Don't word-wrap this (fixed-width) tooltip
@@ -1130,7 +1152,7 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
     }
 
-    strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
+    strSyncStatus = QString::fromStdString(masternodeSync.GetSyncStatus().original);
     progressBarLabel->setText(strSyncStatus);
     tooltip = strSyncStatus + QString("<br>") + tooltip;
 
@@ -1257,6 +1279,7 @@ void SyscoinGUI::showEvent(QShowEvent *event)
     openRPCConsoleAction->setEnabled(true);
     aboutAction->setEnabled(true);
     optionsAction->setEnabled(true);
+    openRepairAction->setEnabled(true);
 }
 
 #ifdef ENABLE_WALLET
@@ -1494,6 +1517,13 @@ static bool ThreadSafeMessageBox(SyscoinGUI* gui, const bilingual_str& message, 
                                Q_ARG(QString, detailed_message));
     assert(invoked);
     return ret;
+}
+
+/** Get restart command-line parameters and request restart */
+void SyscoinGUI::handleRestart(const QStringList &args)
+{
+    if (!m_node.shutdownRequested())
+        Q_EMIT requestedRestart(args);
 }
 
 void SyscoinGUI::subscribeToCoreSignals()

@@ -40,7 +40,14 @@
 #include <QTime>
 #include <QTimer>
 
-
+// SYSCOIN
+// Repair parameters
+const QString SALVAGEWALLET("-salvagewallet");
+const QString RESCAN("-rescan");
+const QString ZAPTXES1("-zapwallettxes=1 -persistmempool=0");
+const QString ZAPTXES2("-zapwallettxes=2 -persistmempool=0");
+const QString UPGRADEWALLET("-upgradewallet");
+const QString REINDEX("-reindex");
 const int CONSOLE_HISTORY = 50;
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
 const QSize FONT_RANGE(4, 40);
@@ -475,6 +482,14 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->WalletSelector->setVisible(false);
     ui->WalletSelectorLabel->setVisible(false);
 
+    // SYSCOIN Wallet Repair Buttons
+    ui->btn_salvagewallet->setEnabled(false);
+    connect(ui->btn_rescan, &QPushButton::clicked, this, &RPCConsole::walletRescan);
+    connect(ui->btn_zapwallettxes1, &QPushButton::clicked, this, &RPCConsole::walletZaptxes1);
+    connect(ui->btn_zapwallettxes2, &QPushButton::clicked, this, &RPCConsole::walletZaptxes2);
+    connect(ui->btn_upgradewallet, &QPushButton::clicked, this, &RPCConsole::walletUpgrade);
+    connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
+
     // set library version labels
 #ifdef ENABLE_WALLET
     ui->berkeleyDBVersion->setText(QString::fromStdString(BerkeleyDatabaseVersion()));
@@ -579,8 +594,8 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         updateNetworkState();
         // SYSCOIN
-        setMasternodeCount(model->getMasternodeCountString());
-        connect(model, &ClientModel::strMasternodesChanged, this, &RPCConsole::setMasternodeCount);
+        connect(model, &ClientModel::masternodeListChanged, this, &RPCConsole::updateMasternodeCount);
+        clientModel->refreshMasternodeList();
         connect(model, &ClientModel::networkActiveChanged, this, &RPCConsole::setNetworkActive);
 
         updateTrafficStats(node.getTotalBytesRecv(), node.getTotalBytesSent());
@@ -765,9 +780,63 @@ void RPCConsole::setFontSize(int newSize)
     ui->messagesWidget->setHtml(str);
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
-void RPCConsole::setMasternodeCount(const QString &strMasternodes)
+// SYSCOIN
+/** Restart wallet with "-salvagewallet" */
+void RPCConsole::walletSalvage()
 {
-    ui->masternodeCount->setText(strMasternodes);
+    buildParameterlist(SALVAGEWALLET);
+}
+
+/** Restart wallet with "-rescan" */
+void RPCConsole::walletRescan()
+{
+    buildParameterlist(RESCAN);
+}
+
+/** Restart wallet with "-zapwallettxes=1" */
+void RPCConsole::walletZaptxes1()
+{
+    buildParameterlist(ZAPTXES1);
+}
+
+/** Restart wallet with "-zapwallettxes=2" */
+void RPCConsole::walletZaptxes2()
+{
+    buildParameterlist(ZAPTXES2);
+}
+
+/** Restart wallet with "-upgradewallet" */
+void RPCConsole::walletUpgrade()
+{
+    buildParameterlist(UPGRADEWALLET);
+}
+
+/** Restart wallet with "-reindex" */
+void RPCConsole::walletReindex()
+{
+    buildParameterlist(REINDEX);
+}
+
+/** Build command-line parameter list for restart */
+void RPCConsole::buildParameterlist(QString arg)
+{
+    // Get command-line arguments and remove the application name
+    QStringList args = QApplication::arguments();
+    args.removeFirst();
+
+    // Remove existing repair-options
+    args.removeAll(SALVAGEWALLET);
+    args.removeAll(RESCAN);
+    args.removeAll(ZAPTXES1);
+    args.removeAll(ZAPTXES2);
+    args.removeAll(UPGRADEWALLET);
+    args.removeAll(REINDEX);
+
+    // Append repair parameter to command line.
+    args.append(arg);
+
+    // Send command-line arguments to SyscoinGUI::handleRestart()
+    Q_EMIT handleRestart(args);
 }
 void RPCConsole::clear(bool clearHistory)
 {
@@ -877,7 +946,18 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         ui->lastBlockTime->setText(blockDate.toString());
     }
 }
-
+// SYSCOIN
+void RPCConsole::updateMasternodeCount()
+{
+    if (!clientModel) {
+        return;
+    }
+    auto mnList = clientModel->getMasternodeList();
+    QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
+        .arg(QString::number(mnList.GetAllMNsCount()))
+        .arg(QString::number(mnList.GetValidMNsCount()));
+    ui->masternodeCount->setText(strMasternodeCount);
+}
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
 {
     ui->mempoolNumberTxs->setText(QString::number(numberOfTxs));

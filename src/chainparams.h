@@ -90,7 +90,16 @@ public:
     // SYSCOIN
     void SetSYSXAssetForUnitTests(uint32_t asset);
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
-    const std::string& SporkAddress() const { return strSporkAddress; }
+    const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
+    int MinSporkKeys() const { return nMinSporkKeys; }
+    void UpdateLLMQTestParams(int size, int threshold);
+    /** Require addresses specified with "-externalip" parameter to be routable */
+    bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
+    /** How long to wait until we allow retrying of a LLMQ connection  */
+    int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
+    /** Allow nodes with the same address and multiple ports */
+    bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
+    void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
 protected:
     CChainParams() {}
 
@@ -113,8 +122,12 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     // SYSCOIN
+    int nLLMQConnectionRetryTimeout;
+    bool fRequireRoutableExternalIP;
+    bool fAllowMultiplePorts;
     int nFulfilledRequestExpireTime;
-    std::string strSporkAddress;   
+    std::vector<std::string> vSporkAddresses;
+    int nMinSporkKeys;
 };
 
 /**
@@ -140,5 +153,14 @@ void SelectParams(const std::string& chain);
  */
 void TurnOffSegwitForUnitTests();
 // SYSCOIN
+/**
+ * Allows modifying parameters of the test LLMQ
+ */
+void UpdateLLMQTestParams(int size, int threshold);
+
 void SetSYSXAssetForUnitTests(uint32_t asset);
+/**
+ * Allows modifying the DIP3 activation and enforcement height
+ */
+void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
 #endif // SYSCOIN_CHAINPARAMS_H

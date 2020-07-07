@@ -255,6 +255,18 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });
 }
 // SYSCOIN
+void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.SynchronousUpdatedBlockTip(pindexNew, pindexFork, fInitialDownload); });
+}
+void CMainSignals::NotifyGovernanceVote(const CGovernanceVote &vote) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(vote); });
+}
+void CMainSignals::NotifyGovernanceObject(const CGovernanceObject &object) {
+     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceObject(object); });
+}
+void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
+     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
+}
 void CMainSignals::NotifySyscoinUpdate(const char *value, const char *topic) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifySyscoinUpdate(value, topic); });
 }

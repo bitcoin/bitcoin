@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import copy
 
 from .authproxy import JSONRPCException
 from . import coverage
@@ -33,8 +34,13 @@ from .util import (
     initialize_datadir,
     sync_blocks,
     sync_mempools,
+    set_node_times,
+    p2p_port,
+    copy_datadir,
+    force_finish_mnsync,
+    wait_until,
+    bump_node_times,
 )
-
 
 class TestStatus(Enum):
     PASSED = 1
@@ -409,8 +415,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         raise NotImplementedError
 
     # Public helper methods. These can be accessed by the subclass test scripts.
-
-    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
+    # SYSCOIN add offset
+    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None, offset = None):
         """Instantiate TestNode objects.
 
         Should only be called once after the nodes have been specified in
@@ -451,10 +457,14 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         assert_equal(len(versions), num_nodes)
         assert_equal(len(binary), num_nodes)
         assert_equal(len(binary_cli), num_nodes)
+        offsetNum = 0
+        if offset is not None:
+            offsetNum = offset
         for i in range(num_nodes):
+            index = i + offsetNum
             self.nodes.append(TestNode(
-                i,
-                get_datadir_path(self.options.tmpdir, i),
+                index,
+                get_datadir_path(self.options.tmpdir, index),
                 chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
@@ -643,7 +653,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
             os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
             for entry in os.listdir(cache_path()):
-                if entry not in ['chainstate', 'blocks', 'ethereumminttx', 'ethereumtxroots', 'geth', 'blockindex', 'assets']:  # Only keep chainstate and blocks folder
+                if entry not in ['chainstate', 'blocks', 'ethereumminttx', 'ethereumtxroots', 'geth', 'blockindex', 'assets', 'llmq', 'evodb']:  # Only keep chainstate and blocks folder
                     os.remove(cache_path(entry))
 
         for i in range(self.num_nodes):
@@ -715,3 +725,491 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
         return self.config["components"].getboolean("ENABLE_ZMQ")
+
+
+MASTERNODE_COLLATERAL = 100
+
+
+class MasternodeInfo:
+    def __init__(self, proTxHash, ownerAddr, votingAddr, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout):
+        self.proTxHash = proTxHash
+        self.ownerAddr = ownerAddr
+        self.votingAddr = votingAddr
+        self.pubKeyOperator = pubKeyOperator
+        self.keyOperator = keyOperator
+        self.collateral_address = collateral_address
+        self.collateral_txid = collateral_txid
+        self.collateral_vout = collateral_vout
+
+
+class DashTestFramework(SyscoinTestFramework):
+    # Methods to override in subclass test scripts.
+    def run_test(self):
+        """Tests must override this method to define test logic"""
+        raise NotImplementedError
+    def set_test_params(self):
+        """Tests must this method to change default values for number of nodes, topology, etc"""
+        raise NotImplementedError
+    def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
+        self.mn_count = masterodes_count
+        self.num_nodes = num_nodes
+        self.mninfo = []
+        self.mocktime = None
+        self.setup_clean_chain = True
+        # additional args
+        if extra_args is None:
+            extra_args = [[]] * num_nodes
+        assert_equal(len(extra_args), num_nodes)
+        self.extra_args = [copy.deepcopy(a) for a in extra_args]
+        self.extra_args[0] += ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
+        self.fast_dip3_enforcement = fast_dip3_enforcement
+        if fast_dip3_enforcement:
+            for i in range(0, num_nodes):
+                self.extra_args[i].append("-dip3params=50:50")
+        for i in range(0, num_nodes):
+            self.extra_args[i].append("-mncollateral=100")
+        # LLMQ default test params (no need to pass -llmqtestparams)
+        self.llmq_size = 3
+        self.llmq_threshold = 2
+
+    def bump_mocktime(self, t, nodes=None):
+        if self.mocktime is None:
+            self.mocktime = int(time.time())
+        else:
+            self.mocktime += t
+        set_node_times(nodes or self.nodes, self.mocktime)
+
+    def bump_scheduler(self, t, nodes=None):
+        bump_node_times(nodes or self.nodes, t)
+        
+    def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
+        self.llmq_size = llmq_size
+        self.llmq_threshold = llmq_threshold
+        for i in range(0, self.num_nodes):
+            self.extra_args[i].append("-llmqtestparams=%d:%d" % (self.llmq_size, self.llmq_threshold))
+
+    def create_simple_node(self):
+        idx = len(self.nodes)
+        self.add_nodes(1, extra_args=[self.extra_args[idx]])
+        self.start_node(idx)
+        for i in range(0, idx):
+            connect_nodes(self.nodes[i], idx)
+
+    def prepare_masternodes(self):
+        self.log.info("Preparing %d masternodes" % self.mn_count)
+        for idx in range(0, self.mn_count):
+            self.prepare_masternode(idx)
+
+    def prepare_masternode(self, idx):
+        bls = self.nodes[0].bls('generate')
+        address = self.nodes[0].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
+
+        txraw = self.nodes[0].getrawtransaction(txid, True)
+        collateral_vout = 0
+        for vout_idx in range(0, len(txraw["vout"])):
+            vout = txraw["vout"][vout_idx]
+            if vout["value"] == MASTERNODE_COLLATERAL:
+                collateral_vout = vout_idx
+        self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
+
+        # send to same address to reserve some funds for fees
+        self.nodes[0].sendtoaddress(address, 0.001)
+
+        ownerAddr = self.nodes[0].getnewaddress()
+        votingAddr = self.nodes[0].getnewaddress()
+        rewardsAddr = self.nodes[0].getnewaddress()
+
+        port = p2p_port(len(self.nodes) + idx)
+        if (idx % 2) == 0:
+            self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
+            proTxHash = self.nodes[0].protx('register_fund', address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+        else:
+            self.nodes[0].generate(1)
+            proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+        self.nodes[0].generate(1)
+
+        self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
+        self.sync_all()
+
+        self.log.info("Prepared masternode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
+
+    def remove_mastermode(self, idx):
+        mn = self.mninfo[idx]
+        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 99.9999})
+        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
+        self.nodes[0].sendrawtransaction(rawtx["hex"])
+        self.nodes[0].generate(1)
+        self.sync_all()
+        self.mninfo.remove(mn)
+
+        self.log.info("Removed masternode %d", idx)
+
+    def prepare_datadirs(self):
+        # stop faucet node so that we can copy the datadir
+        self.stop_node(0)
+
+        start_idx = len(self.nodes)
+        for idx in range(0, self.mn_count):
+            copy_datadir(0, idx + start_idx, self.options.tmpdir)
+
+        # restart faucet node
+        self.start_node(0)
+
+    def start_masternodes(self):
+        self.log.info("Starting %d masternodes", self.mn_count)
+
+        start_idx = len(self.nodes)
+        # SYSCOIN add offset and add nodes individually with offset and custom args
+        for idx in range(0, self.mn_count):
+            self.add_nodes(1, offset=idx + start_idx, extra_args=[self.extra_args[idx + start_idx]])
+    
+        def do_connect(idx):
+            # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
+            connect_nodes(self.mninfo[idx].node, 0)
+
+
+        # start up nodes in parallel
+        for idx in range(0, self.mn_count):
+            self.mninfo[idx].nodeIdx = idx + start_idx
+            self.start_masternode(self.mninfo[idx])
+
+
+        for idx in range(0, self.mn_count):
+            do_connect(idx)
+
+
+    def start_masternode(self, mninfo, extra_args=None):
+        args = ['-masternodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
+        if extra_args is not None:
+            args += extra_args
+        self.start_node(mninfo.nodeIdx, extra_args=args)
+        mninfo.node = self.nodes[mninfo.nodeIdx]
+        force_finish_mnsync(mninfo.node)
+
+    def setup_network(self):
+        self.log.info("Creating and starting controller node")
+        self.add_nodes(1, extra_args=[self.extra_args[0]])
+        self.start_node(0)
+        self.import_deterministic_coinbase_privkeys()
+        required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
+        self.log.info("Generating %d coins" % required_balance)
+        while self.nodes[0].getbalance() < required_balance:
+            self.bump_mocktime(1)
+            self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress())
+        num_simple_nodes = self.num_nodes - self.mn_count - 1
+        self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
+        for i in range(0, num_simple_nodes):
+            self.create_simple_node()
+
+        self.log.info("Activating DIP3")
+        if not self.fast_dip3_enforcement:
+            while self.nodes[0].getblockcount() < 500:
+                self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress())
+        self.sync_all()
+
+        # create masternodes
+        self.prepare_masternodes()
+        self.prepare_datadirs()
+        self.start_masternodes()
+
+        # non-masternodes where disconnected from the control node during prepare_datadirs,
+        # let's reconnect them back to make sure they receive updates
+        for i in range(0, num_simple_nodes):
+            connect_nodes(self.nodes[i+1], 0)
+
+        self.bump_mocktime(1)
+        self.nodes[0].generate(1)
+        # sync nodes
+        self.sync_all()
+        self.bump_mocktime(1)
+
+        mn_info = self.nodes[0].masternodelist("status")
+        assert (len(mn_info) == self.mn_count)
+        for status in mn_info.values():
+            assert (status == 'ENABLED')
+
+    def create_raw_tx(self, node_from, node_to, amount, min_inputs, max_inputs):
+        assert (min_inputs <= max_inputs)
+        # fill inputs
+        inputs = []
+        balances = node_from.listunspent()
+        in_amount = 0.0
+        last_amount = 0.0
+        for tx in balances:
+            if len(inputs) < min_inputs:
+                input = {}
+                input["txid"] = tx['txid']
+                input['vout'] = tx['vout']
+                in_amount += float(tx['amount'])
+                inputs.append(input)
+            elif in_amount > amount:
+                break
+            elif len(inputs) < max_inputs:
+                input = {}
+                input["txid"] = tx['txid']
+                input['vout'] = tx['vout']
+                in_amount += float(tx['amount'])
+                inputs.append(input)
+            else:
+                input = {}
+                input["txid"] = tx['txid']
+                input['vout'] = tx['vout']
+                in_amount -= last_amount
+                in_amount += float(tx['amount'])
+                inputs[-1] = input
+            last_amount = float(tx['amount'])
+
+        assert (len(inputs) >= min_inputs)
+        assert (len(inputs) <= max_inputs)
+        assert (in_amount >= amount)
+        # fill outputs
+        receiver_address = node_to.getnewaddress()
+        change_address = node_from.getnewaddress()
+        fee = 0.001
+        outputs = {}
+        outputs[receiver_address] = satoshi_round(amount)
+        outputs[change_address] = satoshi_round(in_amount - amount - fee)
+        rawtx = node_from.createrawtransaction(inputs, outputs)
+        ret = node_from.signrawtransactionwithwallet(rawtx)
+        decoded = node_from.decoderawtransaction(ret['hex'])
+        ret = {**decoded, **ret}
+        return ret
+
+    def wait_for_tx(self, txid, node, expected=True, timeout=15):
+        def check_tx():
+            try:
+                return node.getrawtransaction(txid)
+            except:
+                return False
+        time.sleep(0.5)
+        if wait_until(check_tx, timeout=timeout, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_sporks_same(self, timeout=30):
+        def check_sporks_same():
+            sporks = self.nodes[0].spork('show')
+            return all(node.spork('show') == sporks for node in self.nodes[1:])
+        time.sleep(0.5)
+        wait_until(check_sporks_same, timeout=timeout)
+
+    def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None):
+        def check_quorum_connections():
+            all_ok = True
+            for node in nodes:
+                s = node.quorum("dkgstatus")
+                if s["session"] == {}:
+                    continue
+                if "quorumConnections" not in s:
+                    all_ok = False
+                    break
+                s = s["quorumConnections"]
+                if "llmq_test" not in s:
+                    all_ok = False
+                    break
+                cnt = 0
+                for c in s["llmq_test"]:
+                    if c["connected"]:
+                        cnt += 1
+                if cnt < expected_connections:
+                    all_ok = False
+                    break
+            if not all_ok and wait_proc is not None:
+                wait_proc()
+            return all_ok
+        time.sleep(1)
+        wait_until(check_quorum_connections, timeout=timeout)
+
+    def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
+        def check_probes():
+            def ret():
+                if wait_proc is not None:
+                    wait_proc()
+                return False
+
+            for mn in mninfos:
+                s = mn.node.quorum('dkgstatus')
+                if s["session"] == {}:
+                    continue
+                if "quorumConnections" not in s:
+                    return ret()
+                s = s["quorumConnections"]
+                if "llmq_test" not in s:
+                    return ret()
+
+                for c in s["llmq_test"]:
+                    if c["proTxHash"] == mn.proTxHash:
+                        continue
+                    if not c["outbound"]:
+                        mn2 = mn.node.protx('info', c["proTxHash"])
+                        if [m for m in mninfos if c["proTxHash"] == m.proTxHash]:
+                            # MN is expected to be online and functioning, so let's verify that the last successful
+                            # probe is not too old. Probes are retried after 50 minutes, while DKGs consider a probe
+                            # as failed after 60 minutes
+                            if mn2['metaInfo']['lastOutboundSuccessElapsed'] > 55 * 60:
+                                return ret()
+                        else:
+                            # MN is expected to be offline, so let's only check that the last probe is not too long ago
+                            if mn2['metaInfo']['lastOutboundAttemptElapsed'] > 55 * 60 and mn2['metaInfo']['lastOutboundSuccessElapsed'] > 55 * 60:
+                                return ret()
+
+            return True
+        time.sleep(1)
+        wait_until(check_probes, timeout=timeout)
+
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
+        def check_dkg_session():
+            all_ok = True
+            member_count = 0
+            for mn in mninfos:
+                s = mn.node.quorum("dkgstatus")["session"]
+                if "llmq_test" not in s:
+                    continue
+                member_count += 1
+                s = s["llmq_test"]
+                if s["quorumHash"] != quorum_hash:
+                    all_ok = False
+                    break
+                if "phase" not in s:
+                    all_ok = False
+                    break
+                if s["phase"] != phase:
+                    all_ok = False
+                    break
+                if check_received_messages is not None:
+                    if s[check_received_messages] < check_received_messages_count:
+                        all_ok = False
+                        break
+            if all_ok and member_count != expected_member_count:
+                return False
+            return all_ok
+        time.sleep(sleep)
+        wait_until(check_dkg_session, timeout=timeout)
+
+    def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15):
+        def check_dkg_comitments():
+            all_ok = True
+            for node in nodes:
+                s = node.quorum("dkgstatus")
+                if "minableCommitments" not in s:
+                    all_ok = False
+                    break
+                s = s["minableCommitments"]
+                if "llmq_test" not in s:
+                    all_ok = False
+                    break
+                s = s["llmq_test"]
+                if s["quorumHash"] != quorum_hash:
+                    all_ok = False
+                    break
+            return all_ok
+        wait_until(check_dkg_comitments, timeout=timeout)
+
+    def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None):
+        if expected_members is None:
+            expected_members = self.llmq_size
+        if expected_contributions is None:
+            expected_contributions = self.llmq_size
+        if expected_commitments is None:
+            expected_commitments = self.llmq_size
+        if mninfos is None:
+            mninfos = self.mninfo
+
+        self.log.info("Mining quorum: expected_members=%d, expected_connections=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
+                      "expected_commitments=%d" % (expected_members, expected_connections, expected_contributions, expected_complaints,
+                                                   expected_justifications, expected_commitments))
+
+        nodes = [self.nodes[0]] + [mn.node for mn in mninfos]
+
+        quorums = self.nodes[0].quorum("list")
+
+        # move forward to next DKG
+        skip_count = 24 - (self.nodes[0].getblockcount() % 24)
+        if skip_count != 0:
+            self.bump_mocktime(1, nodes=nodes)
+            self.nodes[0].generate(skip_count)
+        sync_blocks(nodes)
+
+        q = self.nodes[0].getbestblockhash()
+
+        self.log.info("Waiting for phase 1 (init)")
+        self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos)
+        self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        if self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] == 0:
+            self.wait_for_masternode_probes(mninfos, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].generate(2)
+        sync_blocks(nodes)
+
+        self.log.info("Waiting for phase 2 (contribute)")
+        self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos)
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].generate(2)
+        sync_blocks(nodes)
+
+        self.log.info("Waiting for phase 3 (complain)")
+        self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos)
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].generate(2)
+        sync_blocks(nodes)
+
+        self.log.info("Waiting for phase 4 (justify)")
+        self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos)
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].generate(2)
+        sync_blocks(nodes)
+
+        self.log.info("Waiting for phase 5 (commit)")
+        self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos)
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].generate(2)
+        sync_blocks(nodes)
+
+        self.log.info("Waiting for phase 6 (mining)")
+        self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos)
+
+        self.log.info("Waiting final commitment")
+        self.wait_for_quorum_commitment(q, nodes)
+
+        self.log.info("Mining final commitment")
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].generate(1)
+        while quorums == self.nodes[0].quorum("list"):
+            time.sleep(2)
+            self.bump_mocktime(1, nodes=nodes)
+            self.nodes[0].generate(1)
+            sync_blocks(nodes)
+        new_quorum = self.nodes[0].quorum("list", 1)["llmq_test"][0]
+        quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
+
+        # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
+        self.nodes[0].generate(8)
+
+        sync_blocks(nodes)
+
+        self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
+
+        return new_quorum
+
+    def get_quorum_masternodes(self, q):
+        qi = self.nodes[0].quorum('info', 100, q)
+        result = []
+        for m in qi['members']:
+            result.append(self.get_mninfo(m['proTxHash']))
+        return result
+
+    def get_mninfo(self, proTxHash):
+        for mn in self.mninfo:
+            if mn.proTxHash == proTxHash:
+                return mn
+        return None
+
+    def wait_for_mnauth(self, node, count, timeout=10):
+        def test():
+            pi = node.getpeerinfo()
+            c = 0
+            for p in pi:
+                if "verified_proregtx_hash" in p and p["verified_proregtx_hash"] != "":
+                    c += 1
+            return c >= count
+        wait_until(test, timeout=timeout)

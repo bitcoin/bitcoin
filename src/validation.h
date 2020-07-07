@@ -77,6 +77,8 @@ static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
+/** SYSCOIN Default for -syncmempool */
+static const bool DEFAULT_SYNC_MEMPOOL = true;
 /** Default for using fee filter */
 static const bool DEFAULT_FEEFILTER = true;
 /** Default for -stopatheight */
@@ -174,7 +176,7 @@ bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::P
  */
 bool ActivateBestChain(BlockValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
 // SYSCOIN
-CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount & nTotalRewardWithMasternodes, bool fSuperblockPartOnly = false, bool fMasternodePartOnly = false, unsigned int nStartHeight = 0);
+CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& chainparams, bool fSuperblockPartOnly = false);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
@@ -285,10 +287,6 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, c
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);
 // SYSCOIN
 bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
-/** Reprocess a number of blocks to try and get on the correct chain again **/
-bool DisconnectBlocks(int blocks);
-void ReprocessBlocks(int nBlocks);
-
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 
 /** Functions for validating blocks and updating the block tree */
@@ -310,7 +308,9 @@ int GetWitnessCommitmentIndex(const CBlock& block);
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 
 /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
-std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+// SYSCOIN
+static std::vector<unsigned char> emptyVec;
+std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, const std::vector<unsigned char> &vchExtraData = emptyVec);
 /**
  * Check proof-of-work of a block header, taking auxpow into account.
  * @param block The block header.
@@ -630,14 +630,13 @@ public:
     bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Block (dis)connection on a given view:
-    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view);
     // SYSCOIN
-    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys);
+    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<uint256>& vecTXIDs);
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                     CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                    CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                    CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(BlockValidationState& state, const CChainParams& chainparams, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
@@ -690,7 +689,7 @@ private:
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Mark a block as not having block data
     void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -909,6 +908,22 @@ BlockMap& BlockIndex();
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
+// SYSCOIN
+/** Global variable that points to the height based on a transaction id  */
+static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 1 year of blocks
+// SYSCOIN
+class CBlockIndexDB : public CDBWrapper {
+public:
+    CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
+        return Read(txid, nHeight);
+    }  
+    bool PruneTxRoots();
+    bool FlushErase(const std::vector<uint256> &vecTXIDs);
+    bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
+};
+extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
+bool PruneSyscoinDBs();
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)

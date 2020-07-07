@@ -33,7 +33,12 @@
 #include <validationinterface.h>
 
 #include <functional>
-
+// SYSCOIN
+#include <evo/specialtx.h>
+#include <evo/deterministicmns.h>
+#include <evo/cbtx.h>
+#include <llmq/quorums_init.h>
+#include <llmq/quorums_commitment.h>
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 
@@ -97,6 +102,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     LogInstance().StartLogging();
     SHA256AutoDetect();
     ECC_Start();
+    BLSInit();
     SetupEnvironment();
     SetupNetworking();
     InitSignatureCache();
@@ -107,10 +113,16 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         noui_connect();
         noui_connected = true;
     }
+    // SYSCOIN
+    evoDb.reset(new CEvoDB(1 << 20, true, true));
+    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
 }
 
 BasicTestingSetup::~BasicTestingSetup()
 {
+    // SYSCOIN
+    deterministicMNManager.reset();
+    evoDb.reset();
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
     gArgs.ClearArgs();
@@ -141,6 +153,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     assert(!::ChainstateActive().CanFlushToDisk());
     ::ChainstateActive().InitCoinsCache();
     assert(::ChainstateActive().CanFlushToDisk());
+    m_node.chainman = &::g_chainman;
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
@@ -167,10 +180,15 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         options.m_msgproc = m_node.peer_logic.get();
         m_node.connman->Init(options);
     }
+    // SYSCOIN
+    llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman);
 }
 
 TestingSetup::~TestingSetup()
 {
+    // SYSCOIN
+    llmq::InterruptLLMQSystem();
+    llmq::StopLLMQSystem();
     if (m_node.scheduler) m_node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
@@ -182,23 +200,28 @@ TestingSetup::~TestingSetup()
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
     UnloadBlockIndex();
+    // SYSCOIN
+    llmq::DestroyLLMQSystem();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
 }
-
-TestChain100Setup::TestChain100Setup()
+// SYSCOIN
+TestChain100Setup::TestChain100Setup(int count)
 {
     // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
     // TODO: fix the code to support SegWit blocks.
     gArgs.ForceSetArg("-segwitheight", "432");
+    // SYSCOIN
+    gArgs.ForceSetArg("-mncollateral", "100");
+    gArgs.ForceSetArg("-dip3params", "150:150");
     // Need to recreate chainparams
     SelectParams(CBaseChainParams::REGTEST);
 
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < COINBASE_MATURITY; i++)
+    for (int i = 0; i < count; i++)
     {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
@@ -218,6 +241,41 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     block.vtx.resize(1);
     for (const CMutableTransaction& tx : txns)
         block.vtx.push_back(MakeTransactionRef(tx));
+
+    // Manually update CbTx as we modified the block here
+    if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
+        LOCK(cs_main);
+        CCbTx cbTx;
+        if (!GetTxPayload(*block.vtx[0], cbTx)) {
+            BOOST_ASSERT(false);
+        }
+        BlockValidationState state;
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state)) {
+            BOOST_ASSERT(false);
+        }
+        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
+            BOOST_ASSERT(false);
+        }
+        CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
+        SetTxPayload(tmpTx, cbTx);
+        block.vtx[0] = MakeTransactionRef(tmpTx);
+    } else if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+        LOCK(cs_main);
+        llmq::CFinalCommitmentTxPayload qc;
+        if (!GetTxPayload(*block.vtx[0], qc)) {
+            BOOST_ASSERT(false);
+        }
+        BlockValidationState state;
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), qc.cbTx.merkleRootMNList, state)) {
+            BOOST_ASSERT(false);
+        }
+        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), qc.cbTx.merkleRootQuorums, state)) {
+            BOOST_ASSERT(false);
+        }
+        CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
+        SetTxPayload(tmpTx, qc);
+        block.vtx[0] = MakeTransactionRef(tmpTx);
+    }
     // IncrementExtraNonce creates a valid coinbase and merkleRoot
     {
         LOCK(cs_main);

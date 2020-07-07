@@ -29,7 +29,7 @@ import time
 
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
-
+from collections import namedtuple
 MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70014  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
@@ -58,6 +58,17 @@ MSG_FILTERED_BLOCK = 3
 MSG_CMPCT_BLOCK = 4
 MSG_WITNESS_FLAG = 1 << 30
 MSG_TYPE_MASK = 0xffffffff >> 2
+
+# SYSCOIN
+MSG_SPORK = 11
+MSG_GOVERNANCE_OBJECT = 12
+MSG_GOVERNANCE_OBJECT_VOTE = 13
+MSG_QUORUM_FINAL_COMMITMENT = 14
+MSG_QUORUM_CONTRIB = 15
+MSG_QUORUM_COMPLAINT = 16
+MSG_QUORUM_JUSTIFICATION = 17
+MSG_QUORUM_PREMATURE_COMMITMENT = 18
+MSG_QUORUM_RECOVERED_SIG = 19
 
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
@@ -186,7 +197,33 @@ def ser_string_vector(l):
         r += ser_string(sv)
     return r
 
+# SYSCOIN
+def deser_dyn_bitset(f, bytes_based):
+    if bytes_based:
+        nb = deser_compact_size(f)
+        n = nb * 8
+    else:
+        n = deser_compact_size(f)
+        nb = int((n + 7) / 8)
+    b = f.read(nb)
+    r = []
+    for i in range(n):
+        r.append((b[int(i / 8)] & (1 << (i % 8))) != 0)
+    return r
 
+
+def ser_dyn_bitset(l, bytes_based):
+    n = len(l)
+    nb = int((n + 7) / 8)
+    r = [0] * nb
+    for i in range(n):
+        r[int(i / 8)] |= (1 if l[i] else 0) << (i % 8)
+    if bytes_based:
+        r = ser_compact_size(nb) + bytes(r)
+    else:
+        r = ser_compact_size(n) + bytes(r)
+    return r
+    
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
     obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
@@ -197,7 +234,25 @@ def ToHex(obj):
     return obj.serialize().hex()
 
 # Objects that map to syscoind objects, which can be serialized/deserialized
+# SYSCOIN
+class CService:
+    __slots__ = ("ip", "port")
+    def __init__(self):
+        self.ip = ""
+        self.port = 0
 
+    def deserialize(self, f):
+        self.ip = socket.inet_ntop(socket.AF_INET6, f.read(16))
+        self.port = struct.unpack(">H", f.read(2))[0]
+
+    def serialize(self):
+        r = b""
+        r += socket.inet_pton(socket.AF_INET6, self.ip)
+        r += struct.pack(">H", self.port)
+        return r
+
+    def __repr__(self):
+        return "CService(ip=%s port=%i)" % (self.ip, self.port)
 
 class CAddress:
     __slots__ = ("ip", "nServices", "pchReserved", "port", "time")
@@ -242,7 +297,17 @@ class CInv:
         MSG_TX | MSG_WITNESS_FLAG: "WitnessTx",
         MSG_BLOCK | MSG_WITNESS_FLAG: "WitnessBlock",
         MSG_FILTERED_BLOCK: "filtered Block",
-        4: "CompactBlock"
+        4: "CompactBlock",
+        # SYSCOIN message types
+        MSG_SPORK: "spork",
+        MSG_GOVERNANCE_OBJECT: "govobj",
+        MSG_GOVERNANCE_OBJECT_VOTE: "govobjvote",
+        MSG_QUORUM_FINAL_COMMITMENT: "qfcommit",
+        MSG_QUORUM_CONTRIB: "qcontrib",
+        MSG_QUORUM_COMPLAINT: "qcomplaint",
+        MSG_QUORUM_JUSTIFICATION: "qjustify",
+        MSG_QUORUM_PREMATURE_COMMITMENT: "qpcommit",
+        MSG_QUORUM_RECOVERED_SIG: "qsigrec"
     }
 
     def __init__(self, t=0, h=0):
@@ -428,9 +493,11 @@ class CTxWitness:
 
 class CTransaction:
     __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
-                 "wit")
+                 "wit", "extraData")
 
     def __init__(self, tx=None):
+        # SYSCOIN
+        self.extraData = None
         if tx is None:
             self.nVersion = 1
             self.vin = []
@@ -1011,11 +1078,112 @@ class CMerkleBlock:
     def __repr__(self):
         return "CMerkleBlock(header=%s, txn=%s)" % (repr(self.header), repr(self.txn))
 
+# SYSCOIN
+class CCbTx:
+    def __init__(self, version=None, height=None, merkleRootMNList=None, merkleRootQuorums=None):
+        self.set_null()
+        if version is not None:
+            self.version = version
+        if height is not None:
+            self.height = height
+        if merkleRootMNList is not None:
+            self.merkleRootMNList = merkleRootMNList
+        if merkleRootQuorums is not None:
+            self.merkleRootQuorums = merkleRootQuorums
+
+    def set_null(self):
+        self.version = 0
+        self.height = 0
+        self.merkleRootMNList = None
+
+    def deserialize(self, f):
+        self.version = struct.unpack("<H", f.read(2))[0]
+        self.height = struct.unpack("<i", f.read(4))[0]
+        self.merkleRootMNList = deser_uint256(f)
+        self.merkleRootQuorums = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<H", self.version)
+        r += struct.pack("<i", self.height)
+        r += ser_uint256(self.merkleRootMNList)
+        r += ser_uint256(self.merkleRootQuorums)
+        return r
+
+class CSimplifiedMNListEntry:
+    def __init__(self):
+        self.set_null()
+
+    def set_null(self):
+        self.proRegTxHash = 0
+        self.confirmedHash = 0
+        self.service = CService()
+        self.pubKeyOperator = b'\\x0' * 48
+        self.keyIDVoting = 0
+        self.isValid = False
+
+    def deserialize(self, f):
+        self.proRegTxHash = deser_uint256(f)
+        self.confirmedHash = deser_uint256(f)
+        self.service.deserialize(f)
+        self.pubKeyOperator = f.read(48)
+        self.keyIDVoting = f.read(20)
+        self.isValid = struct.unpack("<?", f.read(1))[0]
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.proRegTxHash)
+        r += ser_uint256(self.confirmedHash)
+        r += self.service.serialize()
+        r += self.pubKeyOperator
+        r += self.keyIDVoting
+        r += struct.pack("<?", self.isValid)
+        return r
+
+
+class CFinalCommitment:
+    def __init__(self):
+        self.set_null()
+
+    def set_null(self):
+        self.nVersion = 0
+        self.llmqType = 0
+        self.quorumHash = 0
+        self.signers = []
+        self.validMembers = []
+        self.quorumPublicKey = b'\\x0' * 48
+        self.quorumVvecHash = 0
+        self.quorumSig = b'\\x0' * 96
+        self.membersSig = b'\\x0' * 96
+
+    def deserialize(self, f):
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
+        self.llmqType = struct.unpack("<B", f.read(1))[0]
+        self.quorumHash = deser_uint256(f)
+        self.signers = deser_dyn_bitset(f, False)
+        self.validMembers = deser_dyn_bitset(f, False)
+        self.quorumPublicKey = f.read(48)
+        self.quorumVvecHash = deser_uint256(f)
+        self.quorumSig = f.read(96)
+        self.membersSig = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<H", self.nVersion)
+        r += struct.pack("<B", self.llmqType)
+        r += ser_uint256(self.quorumHash)
+        r += ser_dyn_bitset(self.signers, False)
+        r += ser_dyn_bitset(self.validMembers, False)
+        r += self.quorumPublicKey
+        r += ser_uint256(self.quorumVvecHash)
+        r += self.quorumSig
+        r += self.membersSig
+        return r
 
 # Objects that correspond to messages on the wire
 class msg_version:
     __slots__ = ("addrFrom", "addrTo", "nNonce", "nRelay", "nServices",
-                 "nStartingHeight", "nTime", "nVersion", "strSubVer")
+                 "nStartingHeight", "nTime", "nVersion", "strSubVer", "receivedMNAuthChallenge", "fOtherMasternode")
     msgtype = b"version"
 
     def __init__(self):
@@ -1028,6 +1196,9 @@ class msg_version:
         self.strSubVer = MY_SUBVERSION
         self.nStartingHeight = -1
         self.nRelay = MY_RELAY
+        self.receivedMNAuthChallenge = 0
+        self.fOtherMasternode = 0
+
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -1051,6 +1222,8 @@ class msg_version:
                 self.nRelay = 0
         else:
             self.nRelay = 0
+        self.receivedMNAuthChallenge = deser_uint256(f)
+        self.fOtherMasternode = struct.unpack("<b", f.read(1))[0]
 
     def serialize(self):
         r = b""
@@ -1063,13 +1236,15 @@ class msg_version:
         r += ser_string(self.strSubVer)
         r += struct.pack("<i", self.nStartingHeight)
         r += struct.pack("<b", self.nRelay)
+        r += ser_uint256(self.receivedMNAuthChallenge)
+        r += struct.pack("<b", self.fOtherMasternode)
         return r
 
     def __repr__(self):
-        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X strSubVer=%s nStartingHeight=%i nRelay=%i)' \
+        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X strSubVer=%s nStartingHeight=%i nRelay=%i, receivedMNAuthChallenge=%064x, fOtherMasternode=%i)' \
             % (self.nVersion, self.nServices, time.ctime(self.nTime),
                repr(self.addrTo), repr(self.addrFrom), self.nNonce,
-               self.strSubVer, self.nStartingHeight, self.nRelay)
+               self.strSubVer, self.nStartingHeight, self.nRelay, self.receivedMNAuthChallenge, self.fOtherMasternode)
 
 
 class msg_verack:
@@ -1573,6 +1748,70 @@ class msg_blocktxn:
 
     def __repr__(self):
         return "msg_blocktxn(block_transactions=%s)" % (repr(self.block_transactions))
+
+
+class msg_getmnlistd():
+    msgtype = b"getmnlistd"
+
+    def __init__(self, baseBlockHash=0, blockHash=0):
+        self.baseBlockHash = baseBlockHash
+        self.blockHash = blockHash
+
+    def deserialize(self, f):
+        self.baseBlockHash = deser_uint256(f)
+        self.blockHash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.baseBlockHash)
+        r += ser_uint256(self.blockHash)
+        return r
+
+    def __repr__(self):
+        return "msg_getmnlistd(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
+
+QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
+
+class msg_mnlistdiff():
+    msgtype = b"mnlistdiff"
+
+    def __init__(self):
+        self.baseBlockHash = 0
+        self.blockHash = 0
+        self.merkleProof = CPartialMerkleTree()
+        self.deletedMNs = []
+        self.mnList = []
+        self.deletedQuorums = []
+        self.newQuorums = []
+        self.merkleRootMNList = 0
+        self.merkleRootQuorums = 0
+
+    def deserialize(self, f):
+        self.baseBlockHash = deser_uint256(f)
+        self.blockHash = deser_uint256(f)
+        self.merkleProof.deserialize(f)
+        self.deletedMNs = deser_uint256_vector(f)
+        self.mnList = []
+        for i in range(deser_compact_size(f)):
+            e = CSimplifiedMNListEntry()
+            e.deserialize(f)
+            self.mnList.append(e)
+
+        self.deletedQuorums = []
+        for i in range(deser_compact_size(f)):
+            llmqType = struct.unpack("<B", f.read(1))[0]
+            quorumHash = deser_uint256(f)
+            self.deletedQuorums.append(QuorumId(llmqType, quorumHash))
+        self.newQuorums = []
+        for i in range(deser_compact_size(f)):
+            qc = CFinalCommitment()
+            qc.deserialize(f)
+            self.newQuorums.append(qc)
+        self.merkleRootMNList = deser_uint256(f)
+        self.merkleRootQuorums = deser_uint256(f)
+
+    def __repr__(self):
+        return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
 
 class msg_no_witness_blocktxn(msg_blocktxn):

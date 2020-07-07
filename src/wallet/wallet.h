@@ -847,6 +847,8 @@ public:
     void UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    // SYSCOIN
+    void ListProTxCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /*
      * Rescan abort properties
@@ -1068,6 +1070,8 @@ public:
     void chainStateFlushed(const CBlockLocator& loc) override;
 
     DBErrors LoadWallet(bool& fFirstRunRet);
+    // SYSCOIN
+    void AutoLockMasternodeCollaterals();
     DBErrors ZapWalletTx(std::list<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
@@ -1155,8 +1159,7 @@ public:
      */
     void postInitProcess();
     // SYSCOIN
-    void LockMasternodeOutputs();
-    bool GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount);
+    bool GetBudgetSystemCollateralTX(CTransactionRef tx, uint256 hash, CAmount amount, const COutPoint& outpoint=COutPoint()/*defaults null*/);
     bool BackupWallet(const std::string& strDest) const;
 
     /* Returns true if HD is enabled */

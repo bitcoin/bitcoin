@@ -27,6 +27,7 @@ from .messages import (
     ser_uint256,
     sha256,
     uint256_from_str,
+    CCbTx,
 )
 from .script import (
     CScript,
@@ -48,7 +49,21 @@ MAX_BLOCK_SIGOPS = 20000
 # Genesis block time (regtest)
 # SYSCOIN
 TIME_GENESIS_BLOCK = 1553040331
+SYSCOIN_TX_VERSION_MN_REGISTER = 80
+SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE = 81
+SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR = 82
+SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE = 83
+SYSCOIN_TX_VERSION_MN_COINBASE = 84
+SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT = 85
 
+SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128
+SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 129
+SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 130
+SYSCOIN_TX_VERSION_ASSET_UPDATE = 131
+SYSCOIN_TX_VERSION_ASSET_SEND = 132
+SYSCOIN_TX_VERSION_ALLOCATION_MINT = 133
+SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM = 134
+SYSCOIN_TX_VERSION_ALLOCATION_SEND = 135
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
@@ -70,10 +85,13 @@ def create_block(hashprev, coinbase, ntime=None, *, version=1):
     block.calc_sha256()
     return block
 
-def get_witness_script(witness_root, witness_nonce):
+def get_witness_script(witness_root, witness_nonce, extraData=None):
     witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
-    return CScript([OP_RETURN, output_data])
+    if extraData is None:
+        return CScript([OP_RETURN, output_data])
+    else:
+        return CScript([OP_RETURN, output_data, extraData])
 
 def add_witness_commitment(block, nonce=0):
     """Add a witness commitment to the block's coinbase transaction.
@@ -88,8 +106,8 @@ def add_witness_commitment(block, nonce=0):
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
 
-    # witness commitment is the last OP_RETURN output in coinbase
-    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce)))
+    # SYSCOIN witness commitment is the last OP_RETURN output in coinbase
+    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce, extraData=block.vtx[0].extraData)))
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
@@ -102,8 +120,8 @@ def script_BIP34_coinbase_height(height):
         return CScript([res, OP_1])
     return CScript([CScriptNum(height)])
 
-
-def create_coinbase(height, pubkey=None):
+# SYSCOIN
+def create_coinbase(height, pubkey=None, witness=None, dip3height=432):
     """Create a coinbase transaction, assuming no miner fees.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -119,6 +137,14 @@ def create_coinbase(height, pubkey=None):
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [coinbaseoutput]
+    # SYSCOIN
+    if height >= dip3height:
+        coinbase.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE
+        cbtx_payload = CCbTx(2, height, 0, 0)
+        if witness is not None:
+            coinbase.extraData = cbtx_payload.serialize()
+        else:
+            coinbase.vout.append(CTxOut(0, CScript([OP_RETURN, cbtx_payload.serialize()])))
     coinbase.calc_sha256()
     return coinbase
 
@@ -221,6 +247,26 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
             tx_to_witness = ToHex(tx)
 
     return node.sendrawtransaction(tx_to_witness)
+
+# SYSCOIN
+# Identical to GetBlockMNSubsidy in C++ code
+def get_masternode_payment(nHeight, nBlockReward, nStartHeight):
+    nSubsidy = nBlockReward*0.75
+    if (nHeight > 0 and nStartHeight > 0):
+        nDifferenceInBlocks = 0
+        if (nHeight > nStartHeight):
+            nDifferenceInBlocks = (nHeight - nStartHeight)
+            
+            fSubsidyAdjustmentPercentage = 0
+            if(nDifferenceInBlocks >= 150):
+                fSubsidyAdjustmentPercentage = 1.0
+            elif(nDifferenceInBlocks >= 60):
+                fSubsidyAdjustmentPercentage = 0.35
+            
+        if(fSubsidyAdjustmentPercentage > 0):
+            nMNSeniorityRet = nSubsidy*fSubsidyAdjustmentPercentage
+            nSubsidy += nMNSeniorityRet
+    return nSubsidy
 
 class TestFrameworkBlockTools(unittest.TestCase):
     def test_create_coinbase(self):

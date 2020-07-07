@@ -21,6 +21,11 @@ class CConnman;
 class CValidationInterface;
 class uint256;
 class CScheduler;
+// SYSCOIN
+class CGovernanceVote;
+class CGovernanceObject;
+class CDeterministicMNList;
+class CDeterministicMNListDiff;
 enum class MemPoolRemovalReason;
 
 /** Register subscriber */
@@ -176,9 +181,13 @@ protected:
     friend class CMainSignals;
 
     // SYSCOIN
+    virtual void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     virtual void NotifySyscoinUpdate(const char *value, const char *topic) {}
     virtual void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
     virtual void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {}
+    virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
+    virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
+    virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
 };
 
 struct MainSignalsInstance;
@@ -204,6 +213,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     // SYSCOIN
+    void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef&, bool fBlock);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
@@ -212,6 +222,9 @@ public:
     void BlockChecked(const CBlock&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
     void NotifySyscoinUpdate(const char *value, const char *topic);
+    void NotifyGovernanceVote(const CGovernanceVote &vote);
+    void NotifyGovernanceObject(const CGovernanceObject &object);
+    void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
     /** Notifies listeners of accepted block header */
     void AcceptedBlockHeader(const CBlockIndex *);
     /** Notifies listeners of updated block header tip */

@@ -95,6 +95,10 @@ leave that many cores free, default: 0)
 .IP
 Whether to save the mempool on shutdown and load on restart (default: 1)
 .HP
+\fB\-syncmempool\fR
+.IP
+Sync mempool from other nodes on start (default: 1)
+.HP
 \fB\-pid=\fR<file>
 .IP
 Specify pid file. Relative paths will be prefixed by a net\-specific
@@ -417,6 +421,22 @@ Enable publish raw transaction in <address>
 \fB\-zmqpubrawmempooltx=\fR<address>
 .IP
 Enable publish raw transaction in <address> when entering mempool only
+.HP
+\fB\-zmqpubhashgovernancevote=\fR<address>
+.IP
+Enable publish hash of governance votes in <address>
+.HP
+\fB\-zmqpubhashgovernanceobject=\fR<address>
+.IP
+Enable publish hash of governance objects (like proposals) in <address>
+.HP
+\fB\-zmqpubrawgovernancevote=\fR<address>
+.IP
+Enable publish raw governance votes in <address>
+.HP
+\fB\-zmqpubrawgovernanceobject=\fR<address>
+.IP
+Enable publish raw governance objects (like proposals) in <address>
 .HP
 \fB\-zmqpubethstatus=\fR<address>
 .IP

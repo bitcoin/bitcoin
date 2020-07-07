@@ -35,8 +35,8 @@ class HelpRpcTest(SyscoinTestFramework):
 
         # command titles
         titles = [line[3:-3] for line in node.help().splitlines() if line.startswith('==')]
-        # SYSCOIN
-        components = ['Blockchain', 'Control', 'Generating', 'Governance', 'Mining', 'Network', 'Rawtransactions', 'Syscoin', 'Syscoinwallet', 'Util']
+        # SYSCOIN    
+        components = [ 'Blockchain', 'Control', 'Evo', 'Generating', 'Governance', 'Masternode', 'Mining', 'Network', 'Rawtransactions', 'Syscoin', 'Syscoinwallet', 'Util']
 
         if self.is_wallet_compiled():
             components.append('Wallet')

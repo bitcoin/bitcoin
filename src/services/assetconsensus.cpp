@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include <services/assetconsensus.h>
 #include <validation.h>
 #include <chainparams.h>
@@ -12,18 +11,14 @@
 #include <services/asset.h>
 #include <script/standard.h>
 #include <boost/thread/thread.hpp>
+#include <util/system.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
-bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus) {
-        if(bErrorNotInvalid) {
-            return state.Error(errorMessage);
-        }
-        else{
-            return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
-        }  
+bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string &errorMessage, bool bConsensus) {
+    return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
 }
 
 std::string CWitnessAddress::ToString() const {
@@ -65,11 +60,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
-    // do this check only when not in IBD (initial block download) or litemode
+    // do this check only when not in IBD (initial block download)
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
    
-    const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
+    const bool &ethTxRootShouldExist = !ibd && fLoaded && fGethSynced;
     {
         LOCK(cs_setethstatus);
         // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
@@ -265,7 +260,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
         return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
     }
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if(!fRegTest) {
         if(EncodeDestination(dest) != witnessAddress.ToString()) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
         }
@@ -294,7 +289,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
 }
 
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
+    if(!fRegTest && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
@@ -908,22 +903,6 @@ bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxMap &mapMintKeys) {
     return WriteBatch(batch);
 }
 
-bool FlushSyscoinDBs() {
-    bool ret = true;
-     if (pethereumtxrootsdb != nullptr)
-     {
-        if(!pethereumtxrootsdb->PruneTxRoots(fGethCurrentHeight))
-        {
-            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
-            ret = false;
-        }
-        if (!pethereumtxrootsdb->Flush()) {
-            LogPrintf("Failed to write to ethereum tx root database!\n");
-            ret = false;
-        } 
-     }
-	return ret;
-}
 
 bool CAssetDB::Flush(const AssetMap &mapAssets) {
     if(mapAssets.empty()) {

@@ -27,7 +27,7 @@
 
 #include <univalue.h>
 // SYSCOIN
-#include <masternodesync.h>
+#include <masternode/masternode-sync.h>
 #include <spork.h>
 UniValue mnsync(const JSONRPCRequest& request);
 UniValue spork(const JSONRPCRequest& request);
@@ -48,8 +48,9 @@ UniValue mnsync(const JSONRPCRequest& request)
                 }
             }.ToString());
 
-    std::string strMode = request.params[0].get_str();
     NodeContext& node = EnsureNodeContext(request.context);
+    std::string strMode = request.params[0].get_str();
+
     if(strMode == "status") {
         UniValue objStatus(UniValue::VOBJ);
         objStatus.pushKV("AssetID", masternodeSync.GetAssetID());
@@ -57,8 +58,6 @@ UniValue mnsync(const JSONRPCRequest& request)
         objStatus.pushKV("AssetStartTime", masternodeSync.GetAssetStartTime());
         objStatus.pushKV("Attempt", masternodeSync.GetAttempt());
         objStatus.pushKV("IsBlockchainSynced", masternodeSync.IsBlockchainSynced());
-        objStatus.pushKV("IsMasternodeListSynced", masternodeSync.IsMasternodeListSynced());
-        objStatus.pushKV("IsWinnersListSynced", masternodeSync.IsWinnersListSynced());
         objStatus.pushKV("IsSynced", masternodeSync.IsSynced());
         objStatus.pushKV("IsFailed", masternodeSync.IsFailed());
         return objStatus;
@@ -84,6 +83,7 @@ UniValue mnsync(const JSONRPCRequest& request)
     }
     return "failure";
 }
+
 /*
     Used for updating/reading spork settings on the network
 */
@@ -94,16 +94,14 @@ UniValue spork(const JSONRPCRequest& request)
         std:: string strCommand = request.params[0].get_str();
         if (strCommand == "show") {
             UniValue ret(UniValue::VOBJ);
-            for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
-                if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
-                    ret.pushKV(sporkManager.GetSporkNameByID(nSporkID), sporkManager.GetSporkValue(nSporkID));
+            for (const auto& sporkDef : sporkDefs) {
+                ret.pushKV(sporkDef.name, sporkManager.GetSporkValue(sporkDef.sporkId));
             }
             return ret;
         } else if(strCommand == "active"){
             UniValue ret(UniValue::VOBJ);
-            for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
-                if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
-                    ret.pushKV(sporkManager.GetSporkNameByID(nSporkID), sporkManager.IsSporkActive(nSporkID));
+            for (const auto& sporkDef : sporkDefs) {
+                ret.pushKV(sporkDef.name, sporkManager.IsSporkActive(sporkDef.sporkId));
             }
             return ret;
         }
@@ -131,7 +129,7 @@ UniValue spork(const JSONRPCRequest& request)
     } else {
         // advanced mode, update spork values
         int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
-        if(nSporkID == -1)
+        if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
         if (!node.connman)
@@ -142,7 +140,6 @@ UniValue spork(const JSONRPCRequest& request)
 
         //broadcast new spork
         if(sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)){
-            sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {
             throw std::runtime_error(
@@ -747,7 +744,9 @@ static const CRPCCommand commands[] =
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
-
+    /* Syscoin features */
+    { "syscoin",            "mnsync",                 &mnsync,                 {} },
+    { "syscoin",            "spork",                  &spork,                  {"arg0","value"} },
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
     { "hidden",             "mockscheduler",          &mockscheduler,          {"delta_time"}},
