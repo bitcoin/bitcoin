@@ -886,9 +886,9 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.pushKV("confirmations", confirmations);
 
-    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
+    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, DecodeDestination(dmn->pdmnState->keyIDOwner));
     bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
-    bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
+    bool hasVotingKey = CheckWalletOwnsKey(pwallet, DecodeDestination(dmn->pdmnState->keyIDVoting));
 
     bool ownsCollateral = false;
     CTransactionRef collateralTx;
