@@ -354,7 +354,6 @@ int CreateFundedTransaction(
         }
     }
 
-    uint256 txid;
     std::string err_string;
 
     const TransactionError err = BroadcastTransaction(node, ctx, err_string, iWallet->getDefaultMaxTxFee(), true, false);
@@ -362,7 +361,7 @@ int CreateFundedTransaction(
         LogPrintf("%s: BroadcastTransaction failed error: %s\n", __func__, err_string);
     }
 
-    retTxid = txid;
+    retTxid = ctx->GetHash();
 
     return 0;
 }
