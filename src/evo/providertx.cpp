@@ -16,7 +16,7 @@
 #include <streams.h>
 #include <univalue.h>
 #include <validation.h>
-#include <key_io.h>
+#include <keystore.h>
 template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, TxValidationState& state, bool fJustCheck)
 {
