@@ -262,9 +262,9 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     int port = 1;
 
     std::vector<uint256> dmnHashes;
-    std::map<uint256, std::string> ownerKeys;
+    std::map<uint256, CTxDestination> ownerKeys;
     std::map<uint256, CBLSSecretKey> operatorKeys;
-    std::string ownerKey = "mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs";
+    CTxDestination ownerKey = DecodeDestination("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
     // register one MN per block
     for (size_t i = 0; i < 6; i++) {
         CBLSSecretKey operatorKey;
