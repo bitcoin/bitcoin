@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Tall Moose (v1.9.12)
+The current version is Dextro Heat Sink (v1.9.15)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`d939c9d93e73aa726849a2167ef2d3ef`
+`c71a17a8c3601ed663f135c588b555ab`
 
 MacOS
-`014e68c0289201f924adda27f0ddc778`
+`df7cb4ab6637bed0d5e8e618989285b2`
 
 Windows (64-bit)
-`3f86fe797808c3314850385387a75869`
+`102d199b6c1bee15ba4c4837e2bd39ab`
 
 
 Relayer

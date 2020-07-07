@@ -15,7 +15,11 @@
 #include <stdlib.h>
 
 #include <algorithm>
-
+// SYSCOIN
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
+#include <evo/cbtx.h>
+#include <llmq/quorums_commitment.h>
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
 #define LN2 0.6931471805599453094172321214581765680755001343602552
 
@@ -96,16 +100,96 @@ bool CBloomFilter::contains(const uint256& hash) const
     std::vector<unsigned char> data(hash.begin(), hash.end());
     return contains(data);
 }
-// SYSCOIN
-void CBloomFilter::clear()
-{
-    vData.assign(vData.size(),0);
-}
+
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
+// SYSCOIN
+// Match if the filter contains any arbitrary script data element in script
+bool CBloomFilter::CheckScript(const CScript &script) const
+{
+    CScript::const_iterator pc = script.begin();
+    std::vector<unsigned char> data;
+    while (pc < script.end()) {
+        opcodetype opcode;
+        if (!script.GetOp(pc, opcode, data))
+            break;
+        if (data.size() != 0 && contains(data))
+            return true;
+    }
+    return false;
+}
+// If the transaction is a special transaction that has a registration
+// transaction hash, test the registration transaction hash.
+// If the transaction is a special transaction with any public keys or any
+// public key hashes test them.
+// If the transaction is a special transaction with payout addresses test
+// the hash160 of those addresses.
+// Filter is updated only if it has BLOOM_UPDATE_ALL flag to be able to have
+// simple SPV wallets that doesn't work with DIP2 transactions (multicoin
+// wallets, etc.)
+bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &tx)
+{
+    switch(tx.nVersion) {
+    case(SYSCOIN_TX_VERSION_MN_REGISTER): {
+        CProRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.collateralOutpoint) ||
+                    contains(proTx.keyIDOwner) ||
+                    contains(proTx.keyIDVoting) ||
+                    CheckScript(proTx.scriptPayout)) {
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(tx.GetHash());
+                return true;
+            }
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE): {
+        CProUpServTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.proTxHash)) {
+                return true;
+            }
+            if(CheckScript(proTx.scriptOperatorPayout)) {
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(proTx.proTxHash);
+                return true;
+            }
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR): {
+        CProUpRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.proTxHash))
+                return true;
+            if(contains(proTx.keyIDVoting) ||
+                    CheckScript(proTx.scriptPayout)) {
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(proTx.proTxHash);
+                return true;
+            }
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE): {
+        CProUpRevTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            if(contains(proTx.proTxHash))
+                return true;
+        }
+        return false;
+    }
+    case(SYSCOIN_TX_VERSION_MN_COINBASE):
+    case(SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT):
+        // No aditional checks for these transaction types
+        return false;
+    }
+    return false;
+}
 bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
 {
     bool fFound = false;
@@ -116,6 +200,10 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     const uint256& hash = tx.GetHash();
     if (contains(hash))
         fFound = true;
+
+
+    // SYSCOIN Check additional matches for special transactions
+    fFound = fFound || CheckSpecialTransactionMatchesAndUpdate(tx);
 
     for (unsigned int i = 0; i < tx.vout.size(); i++)
     {
@@ -270,11 +358,16 @@ bool CRollingBloomFilter::contains(const uint256& hash) const
     std::vector<unsigned char> vData(hash.begin(), hash.end());
     return contains(vData);
 }
-
 void CRollingBloomFilter::reset()
 {
     nTweak = GetRand(std::numeric_limits<unsigned int>::max());
     nEntriesThisGeneration = 0;
     nGeneration = 1;
     std::fill(data.begin(), data.end(), 0);
+}
+// SYSCOIN
+bool CBloomFilter::contains(const uint160& hash) const
+{
+    std::vector<unsigned char> data(hash.begin(), hash.end());
+    return contains(data);
 }

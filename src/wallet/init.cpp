@@ -30,6 +30,8 @@ public:
 
     //! Add wallets that should be opened to list of chain clients.
     void Construct(NodeContext& node) const override;
+    // SYSCOIN
+    void AutoLockMasternodeCollaterals() const override;
 };
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
@@ -74,6 +76,14 @@ void WalletInit::AddWalletOptions() const
 
 bool WalletInit::ParameterInteraction() const
 {
+    // SYSCOIN
+    if (gArgs.IsArgSet("-masternodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
+        LogPrintf("%s: parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1\n", __func__);
+        for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
+            LogPrintf("%s: parameter interaction: -disablewallet -> ignoring -wallet=%s\n", __func__, wallet);
+        }
+        return true;
+    }
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
             LogPrintf("%s: parameter interaction: -disablewallet -> ignoring -wallet=%s\n", __func__, wallet);
@@ -118,4 +128,11 @@ void WalletInit::Construct(NodeContext& node) const
     }
     gArgs.SoftSetArg("-wallet", "");
     node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet")));
+}
+// SYSCOIN
+void WalletInit::AutoLockMasternodeCollaterals() const
+{
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+        pwallet->AutoLockMasternodeCollaterals();
+    }
 }

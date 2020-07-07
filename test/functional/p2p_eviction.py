@@ -15,7 +15,7 @@ Therefore, this test is limited to the remaining protection criteria.
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.mininode import P2PInterface, P2PDataStore
 from test_framework.util import assert_equal, wait_until
 from test_framework.blocktools import create_block, create_coinbase
@@ -32,7 +32,7 @@ class SlowP2PInterface(P2PInterface):
         time.sleep(0.1)
         self.send_message(msg_pong(message.nonce))
 
-class P2PEvict(BitcoinTestFramework):
+class P2PEvict(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

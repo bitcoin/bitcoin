@@ -37,11 +37,14 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 // SYSCOIN
+#include <ctpl.h>
+#include <amount.h>
 class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool bGethTestnet;
 extern bool fZMQEthStatus;
-extern bool fLiteMode;
+extern bool fDisableGovernance;
+extern bool fRegTest;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
@@ -51,6 +54,8 @@ extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
 extern bool fAssetIndex;
+extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
+extern CAmount nMNCollateralRequired;
 extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.
@@ -71,7 +76,8 @@ meminfo_t parse_meminfo();
 int64_t GetStartupTime();
 
 extern const char * const SYSCOIN_CONF_FILENAME;
-
+// SYSCOIN
+void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
 void SetupEnvironment();
 bool SetupNetworking();
 
@@ -115,7 +121,6 @@ const fs::path &GetDataDir(bool fNetSpecific = true);
 fs::path GetGethPidFile();
 void KillProcess(const pid_t& pid);
 std::string GetGethFilename();
-fs::path GetMasternodeConfigFile();
 bool CheckSpecs(std::string &errMsg, bool bMiner = false);
 bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport=8646, int ethrpcport=8645, const std::string & mode="light");
 bool StopGethNode(pid_t &pid);

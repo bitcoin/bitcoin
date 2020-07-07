@@ -84,7 +84,8 @@ constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
 constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
 int GetRandInt(int nMax) noexcept;
 uint256 GetRandHash() noexcept;
-
+// SYSCOIN
+bool GetRandBool(double rate);
 /**
  * Gather entropy from various sources, feed it into the internal PRNG, and
  * generate random data using it.

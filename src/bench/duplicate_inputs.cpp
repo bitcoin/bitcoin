@@ -43,8 +43,7 @@ static void DuplicateInputs(benchmark::State& state)
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = SCRIPT_PUB;
     // SYSCOIN
-    CAmount nTotalRewardWithMasternodes;
-    coinbaseTx.vout[0].nValue = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
+    coinbaseTx.vout[0].nValue = GetBlockSubsidy(nHeight, chainparams);
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
 

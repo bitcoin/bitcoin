@@ -32,8 +32,9 @@ struct CBlockTemplate
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
     // SYSCOIN
-    CTxOut txoutMasternode; // masternode payment
-    std::vector<CTxOut> voutSuperblock; // superblock payment
+    std::vector<unsigned char> vchCoinbaseCommitmentExtra; // coinbase opreturn commitment for quorums goes after any witness commitment
+    std::vector<CTxOut> voutMasternodePayments; // masternode payment
+    std::vector<CTxOut> voutSuperblockPayments; // superblock payment
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
@@ -207,7 +208,8 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainParams);
 
+// SYSCOIN
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
-void RegenerateCommitments(CBlock& block);
+void RegenerateCommitments(CBlock& block, const std::vector<unsigned char> &vchExtraData);
 
 #endif // SYSCOIN_MINER_H

@@ -224,10 +224,11 @@ class RawTransactionsTest(SyscoinTestFramework):
         gottx = self.nodes[0].getrawtransaction(tx, True, block1)
         assert_equal(gottx['txid'], tx)
         assert_equal(gottx['in_active_chain'], True)
-        # We should not have the 'in_active_chain' flag when we don't provide a block
+        # We should have the 'in_active_chain' flag when we don't provide a block due to blockindexdb
         gottx = self.nodes[0].getrawtransaction(tx, True)
         assert_equal(gottx['txid'], tx)
-        assert 'in_active_chain' not in gottx
+        # SYSCOIN
+        assert 'in_active_chain' in gottx
         # We should not get the tx if we provide an unrelated block
         assert_raises_rpc_error(-5, "No such transaction found", self.nodes[0].getrawtransaction, tx, True, block2)
         # An invalid block hash should raise the correct errors

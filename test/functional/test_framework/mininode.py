@@ -23,7 +23,7 @@ import logging
 import struct
 import sys
 import threading
-
+import time
 from test_framework.messages import (
     CBlockHeader,
     MIN_VERSION_SUPPORTED,
@@ -61,6 +61,9 @@ from test_framework.messages import (
     NODE_NETWORK,
     NODE_WITNESS,
     sha256,
+    # Syscoin Specific
+    msg_getmnlistd,
+    msg_mnlistdiff,
 )
 from test_framework.util import wait_until
 
@@ -95,6 +98,14 @@ MESSAGEMAP = {
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
+    # Syscoin Specific
+    b"getmnlistd": msg_getmnlistd,
+    b"getsporks": None,
+    b"govsync": None,
+    b"mnlistdiff": msg_mnlistdiff,
+    b"qfcommit": None,
+    b"qsendrecsigs": None,
+    b"spork": None,
 }
 
 MAGIC_BYTES = {
@@ -203,6 +214,9 @@ class P2PConnection(asyncio.Protocol):
                 self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
                 if msgtype not in MESSAGEMAP:
                     raise ValueError("Received unknown msgtype from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, msgtype, repr(msg)))
+                if MESSAGEMAP[msgtype] is None:
+                    # Command is known but we don't want/need to handle it
+                    continue
                 f = BytesIO(msg)
                 t = MESSAGEMAP[msgtype]()
                 t.deserialize(f)
@@ -356,6 +370,8 @@ class P2PInterface(P2PConnection):
     def on_sendheaders(self, message): pass
     def on_tx(self, message): pass
 
+    # SYSCOIN
+    def on_mnlistdiff(self, message): pass
     def on_inv(self, message):
         want = msg_getdata()
         for i in message.inv:

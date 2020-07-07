@@ -24,8 +24,14 @@
 #include <algorithm>
 #include <utility>
 // SYSCOIN
-#include <masternodepayments.h>
-#include <masternodesync.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
+#include <evo/specialtx.h>
+#include <evo/cbtx.h>
+#include <evo/simplifiedmns.h>
+#include <evo/deterministicmns.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <util/system.h>
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
@@ -40,14 +46,14 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
     return nNewTime - nOldTime;
 }
-
-void RegenerateCommitments(CBlock& block)
+// SYSCOIN
+void RegenerateCommitments(CBlock& block, const std::vector<unsigned char> &vchExtraData)
 {
     CMutableTransaction tx{*block.vtx.at(0)};
     tx.vout.erase(tx.vout.begin() + GetWitnessCommitmentIndex(block));
     block.vtx.at(0) = MakeTransactionRef(tx);
 
-    GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus());
+    GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus(), vchExtraData);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
@@ -122,7 +128,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CBlockIndex* pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
-
+    bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
     const int32_t nChainId = chainparams.GetConsensus ().nAuxpowChainId;
     // FIXME: Active version bits after the always-auxpow fork!
     //const int32_t nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
@@ -150,7 +156,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // TODO: replace this with a call to main to assess validity of a mempool
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
-
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
     addPackageTxs(nPackagesSelected, nDescendantsUpdated);
@@ -166,31 +171,73 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    // SYSCOIN
-    CAmount nTotalRewardWithMasternodes;
-    CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus(), nTotalRewardWithMasternodes);
+    CAmount blockReward = GetBlockSubsidy(nHeight, Params());
 
     // Compute regular coinbase transaction.
     coinbaseTx.vout[0].nValue = blockReward + nFees;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !chainparams.MineBlocksOnDemand()) {
-        if (masternodeSync.IsFailed()) {
-            throw std::runtime_error("Masternode information has failed to sync, please restart your node!");
-        }
-        if (!masternodeSync.IsSynced()) {
-            throw std::runtime_error("Masternode information has not synced, please wait until it finishes before mining!");
+    // SYSCOIN
+    if (!fRegTest && !chainparams.MineBlocksOnDemand()) {
+        if (masternodeSync.IsFailed()) {	
+            throw std::runtime_error("Masternode information has failed to sync, please restart your node!");	
+        }	
+        if (!masternodeSync.IsSynced()) {	
+            throw std::runtime_error("Masternode information has not synced, please wait until it finishes before mining!");	
         }
         if(fGethSyncStatus != "synced"){
             throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
         }
     }
-    // Update coinbase transaction with additional info about masternode and governance payments,
-    // get some info back to pass to getblocktemplate
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST)
-        FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
+    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+    BlockValidationState state;
+    if(fDIP0003Active_context) {
+        // Update coinbase transaction with additional info about masternode and governance payments,
+        // get some info back to pass to getblocktemplate
+        coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE;
+        CCbTx cbTx;
+        cbTx.nVersion = 2;
+        cbTx.nHeight = nHeight;
+        llmq::CFinalCommitmentTxPayload qc;
+        for (auto& p : chainparams.GetConsensus().llmqs) {
+            // create commitment payload if quorum commitment is needed
+            llmq::CFinalCommitment commitment;
+            if (llmq::quorumBlockProcessor->GetMinableCommitment(p.first, nHeight, commitment)) {
+                coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
+                qc.commitments.push_back(commitment);
+            }
+        }
+        if (coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+            qc.cbTx = cbTx;
+        }
+        // pass qc pointer here because we want to build merkleRootMNList / merkleRootQuorums which depends on qc if qc is valid
+        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, &qc)) {
+            throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
+        }
+        if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state, &qc)) {
+            throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
+        }
 
-    pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+        if(coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
+            ds << cbTx;
+        } else {
+            qc.cbTx = cbTx;
+            ds << qc;
+        }
+        // Update coinbase transaction with additional info about masternode and governance payments,
+        // get some info back to pass to getblocktemplate
+        FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
+    }
+
+    
+    pblock->vtx[0] = MakeTransactionRef(coinbaseTx);
+    // SYSCOIN
+    pblocktemplate->vchCoinbaseCommitmentExtra = std::vector<unsigned char>(ds.begin(), ds.end());
+    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus(), pblocktemplate->vchCoinbaseCommitmentExtra);
+    // add coinbase payload if not witness commitment which would append it after witness data, in this case we can assume no witness commitment
+    if(pblocktemplate->vchCoinbaseCommitment.empty() && !pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
+        SetTxPayload(coinbaseTx, pblocktemplate->vchCoinbaseCommitmentExtra);
+        pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
+    }
     pblocktemplate->vTxFees[0] = -nFees;
     LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
@@ -201,13 +248,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    BlockValidationState state;
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
     int64_t nTime2 = GetTimeMicros();
 
-    LogPrint(BCLog::BENCH, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
+    LogPrint(BCLog::BENCHMARK, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
 
     return std::move(pblocktemplate);
 }

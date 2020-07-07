@@ -180,6 +180,14 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
         in_active_chain = ::ChainActive().Contains(blockindex);
+    // SYSCOIN
+    } else {
+        uint32_t nBlockHeight;
+        if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
+            LOCK(cs_main);
+            blockindex = ::ChainActive()[nBlockHeight];
+        } 
+ 
     }
 
     bool f_txindex_ready = false;
@@ -786,7 +794,8 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     SignTransaction(mtx, &keystore, coins, request.params[3], result);
     return result;
 }
-static UniValue sendrawtransaction(const JSONRPCRequest& request)
+// SYSCOIN
+UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
     RPCHelpMan{"sendrawtransaction",
                 "\nSubmit a raw transaction (serialized, hex-encoded) to local node and network.\n"

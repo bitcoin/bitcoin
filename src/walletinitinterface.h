@@ -18,6 +18,10 @@ public:
     /** Add wallets that should be opened to list of chain clients. */
     virtual void Construct(NodeContext& node) const = 0;
 
+
+    // Syscoin Specific WalletInitInterface
+    virtual void AutoLockMasternodeCollaterals() const = 0;
+
     virtual ~WalletInitInterface() {}
 };
 

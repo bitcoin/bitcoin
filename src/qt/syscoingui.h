@@ -24,7 +24,6 @@
 #endif
 
 #include <memory>
-
 class ClientModel;
 class NetworkStyle;
 class Notificator;
@@ -51,6 +50,8 @@ class QComboBox;
 class QMenu;
 class QProgressBar;
 class QProgressDialog;
+// SYSCOIN
+class QStringList;
 QT_END_NAMESPACE
 
 namespace GUIUtil {
@@ -169,6 +170,7 @@ private:
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
     ModalOverlay* modalOverlay = nullptr;
+    QAction *openRepairAction = nullptr;
 
 #ifdef Q_OS_MAC
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
@@ -212,12 +214,18 @@ Q_SIGNALS:
     /** Signal raised when RPC console shown */
     void consoleShown(RPCConsole* console);
     void setPrivacy(bool privacy);
+    // SYSCOIN
+    /** Restart handling */
+    void requestedRestart(const QStringList &args);
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set network state shown in the UI */
     void setNetworkActive(bool networkActive);
+    // SYSCOIN
+    /** Get restart command-line parameters and request restart */
+    void handleRestart(const QStringList &args);
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers, SynchronizationState sync_state);
     /** SYSCOIN Set additional data sync status shown in the UI */
@@ -293,6 +301,8 @@ public Q_SLOTS:
     void aboutClicked();
     /** Show debug window */
     void showDebugWindow();
+    // SYSCOIN
+    void showRepair();
     /** Show debug window and set focus to the console */
     void showDebugWindowActivateConsole();
     /** Show help message dialog */

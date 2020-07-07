@@ -18,7 +18,8 @@
 #include <type_traits>
 
 #include <boost/thread/thread.hpp>
-
+// SYSCOIN
+#include <consensus/consensus.h>
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
 
@@ -42,16 +43,16 @@ extern FastRandomContext g_insecure_rand_ctx;
  * Flag to make GetRand in random.h return the same number
  */
 extern bool g_mock_deterministic_tests;
-
+// SYSCOIN
 enum class SeedRand {
     ZEROS, //!< Seed with a compile time constant of zeros
-    SEED,  //!< Call the Seed() helper
+    SEEDRAND,  //!< Call the Seed() helper
 };
 
 /** Seed the given random ctx or use the seed passed in via an environment var */
 void Seed(FastRandomContext& ctx);
 
-static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
+static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEEDRAND)
 {
     if (seed == SeedRand::ZEROS) {
         g_insecure_rand_ctx = FastRandomContext(/* deterministic */ true);
@@ -98,6 +99,7 @@ struct RegTestingSetup : public TestingSetup {
         : TestingSetup{CBaseChainParams::REGTEST} {}
 };
 
+
 class CBlock;
 struct CMutableTransaction;
 class CScript;
@@ -107,7 +109,7 @@ class CScript;
 // 100-block REGTEST-mode block chain
 //
 struct TestChain100Setup : public RegTestingSetup {
-    TestChain100Setup();
+    TestChain100Setup(int count = COINBASE_MATURITY);
 
     // Create a new block with just given transactions, coinbase paying to
     // scriptPubKey, and try to add it to the current chain.
@@ -118,6 +120,20 @@ struct TestChain100Setup : public RegTestingSetup {
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
+};
+
+//
+// Testing fixture that pre-creates a
+// N-block REGTEST-mode block chain
+//
+struct TestChainDIP3Setup : public TestChain100Setup
+{
+    TestChainDIP3Setup() : TestChain100Setup(149) {}
+};
+
+struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
+{
+    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(148) {}
 };
 
 class CTxMemPoolEntry;

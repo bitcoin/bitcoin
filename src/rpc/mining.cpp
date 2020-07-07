@@ -39,10 +39,11 @@
 #include <memory>
 #include <stdint.h>
 // SYSCOIN
+#include <spork.h>
 #include <boost/thread.hpp>
-#include <governanceclasses.h>
-#include <masternodepayments.h>
-#include <masternodesync.h>
+#include <governance/governance-classes.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.
@@ -348,12 +349,13 @@ static UniValue generateblock(const JSONRPCRequest& request)
 
     CChainParams chainparams(Params());
     CBlock block;
-
+    // SYSCOIN
+    std::unique_ptr<CBlockTemplate> blocktemplate;
     {
         LOCK(cs_main);
 
         CTxMemPool empty_mempool;
-        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(empty_mempool, chainparams).CreateNewBlock(coinbase_script));
+        blocktemplate = BlockAssembler(empty_mempool, chainparams).CreateNewBlock(coinbase_script);
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
@@ -364,7 +366,8 @@ static UniValue generateblock(const JSONRPCRequest& request)
 
     // Add transactions
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
-    RegenerateCommitments(block);
+    // SYSCOIN
+    RegenerateCommitments(block, blocktemplate->vchCoinbaseCommitmentExtra);
 
     {
         LOCK(cs_main);
@@ -578,7 +581,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             }.Check(request);
     // SYSCOIN RPC_MISC_ERROR
     std::string errorMessage = "";
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST && !CheckSpecs(errorMessage, true)){
+    if(!fRegTest && !CheckSpecs(errorMessage, true)){
         throw JSONRPCError(RPC_MISC_ERROR, errorMessage);
     }
     LOCK(cs_main);
@@ -651,25 +654,27 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
+
+    if (::ChainstateActive().IsInitialBlockDownload())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
+
     // SYSCOIN
-    // when enforcement is on we need information about a masternode payee or otherwise our block is going to be orphaned by the network
-    CScript payee;
-    if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)
-        && !masternodeSync.IsWinnersListSynced()
-        && !mnpayments.GetBlockPayee(::ChainActive().Height() + 1, payee))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Syscoin Core is downloading masternode winners...");
-  
+    // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
+    // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
+    std::vector<CTxOut> voutMasternodePayments;
+    CAmount mnRet;
+    int nCollateralHeight;
+    mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
+
     // next bock is a superblock and we need governance info to correctly construct it
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
         && !masternodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Syscoin Core is syncing with network...");
     
-    if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
-
-    if (::ChainstateActive().IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
 
     static unsigned int nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(request.context);
@@ -873,8 +878,6 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
-    // SYSCOIN
-    result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->GetValueOut());
     result.pushKV("longpollid", ::ChainActive().Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
@@ -896,10 +899,46 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
+    result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
     if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
     }
+    // SYSCOIN
+    UniValue masternodeObj(UniValue::VARR);
+    for (const auto& txout : pblocktemplate->voutMasternodePayments) {
+        CTxDestination address1;
+        ExtractDestination(txout.scriptPubKey, address1);
 
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("payee", EncodeDestination(address1));
+        obj.pushKV("script", HexStr(txout.scriptPubKey));
+        obj.pushKV("amount", txout.nValue);
+        masternodeObj.push_back(obj);
+    }
+
+    result.pushKV("masternode", masternodeObj);
+    result.pushKV("masternode_payments_started", true);
+    result.pushKV("masternode_payments_enforced", true);
+    result.pushKV("masternode_collateral_height", nCollateralHeight);
+
+    UniValue superblockObjArray(UniValue::VARR);
+    if(pblocktemplate->voutSuperblockPayments.size()) {
+        for (const auto& txout : pblocktemplate->voutSuperblockPayments) {
+            UniValue entry(UniValue::VOBJ);
+            CTxDestination address1;
+            ExtractDestination(txout.scriptPubKey, address1);
+            entry.pushKV("payee", EncodeDestination(address1));
+            entry.pushKV("script", HexStr(txout.scriptPubKey));
+            entry.pushKV("amount", txout.nValue);
+            superblockObjArray.push_back(entry);
+        }
+    }
+    result.pushKV("superblock", superblockObjArray);
+    result.pushKV("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock);
+    result.pushKV("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED));
+    if (!pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
+        result.pushKV("default_witness_commitment_extra", HexStr(pblocktemplate->vchCoinbaseCommitmentExtra.begin(), pblocktemplate->vchCoinbaseCommitmentExtra.end()));
+    }
     return result;
 }
 

@@ -36,8 +36,8 @@ public:
         nKey.SetNull();
         insecure_rand = FastRandomContext(true);
     }
-
-    CAddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr)
+    // sYSCOIN
+    CAddrInfo* Find(const CService& addr, int* pnId = nullptr)
     {
         LOCK(cs);
         return CAddrMan::Find(addr, pnId);

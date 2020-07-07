@@ -228,16 +228,26 @@ extern const char* BLOCKTXN;
 // SYSCOIN message types
 extern const char *SPORK;
 extern const char *GETSPORKS;
-extern const char *MASTERNODEPAYMENTVOTE;
-extern const char *MASTERNODEPAYMENTSYNC;
-extern const char *MNANNOUNCE;
-extern const char *MNPING;
-extern const char *DSEG;
 extern const char *SYNCSTATUSCOUNT;
 extern const char *MNGOVERNANCESYNC;
 extern const char *MNGOVERNANCEOBJECT;
 extern const char *MNGOVERNANCEOBJECTVOTE;
-extern const char *MNVERIFY;
+extern const char *GETMNLISTDIFF;
+extern const char *MNLISTDIFF;
+extern const char *QSENDRECSIGS;
+extern const char *QFCOMMITMENT;
+extern const char *QCONTRIB;
+extern const char *QCOMPLAINT;
+extern const char *QJUSTIFICATION;
+extern const char *QPCOMMITMENT;
+extern const char *QWATCH;
+extern const char *QSIGSESANN;
+extern const char *QSIGSHARESINV;
+extern const char *QGETSIGSHARES;
+extern const char *QBSIGSHARES;
+extern const char *QSIGREC;
+extern const char *QSIGSHARE;
+extern const char *MNAUTH;
 /**
  * getcfilters requests compact filters for a range of blocks.
  * Only available with service bit NODE_COMPACT_FILTERS as described by
@@ -412,14 +422,15 @@ enum GetDataMsg {
     MSG_FILTERED_BLOCK = 3,                           //!< Defined in BIP37
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     // SYSCOIN message types
-    MSG_SPORK = 6,
-    MSG_MASTERNODE_PAYMENT_VOTE = 7,
-    MSG_MASTERNODE_PAYMENT_BLOCK = 8,
-    MSG_MASTERNODE_ANNOUNCE = 10,
-    MSG_MASTERNODE_PING = 11,
+    MSG_SPORK = 11,
     MSG_GOVERNANCE_OBJECT = 12,
     MSG_GOVERNANCE_OBJECT_VOTE = 13,
-    MSG_MASTERNODE_VERIFY = 14,
+    MSG_QUORUM_FINAL_COMMITMENT = 14,
+    MSG_QUORUM_CONTRIB = 15,
+    MSG_QUORUM_COMPLAINT = 16,
+    MSG_QUORUM_JUSTIFICATION = 17,
+    MSG_QUORUM_PREMATURE_COMMITMENT = 18,
+    MSG_QUORUM_RECOVERED_SIG = 19,
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
@@ -435,7 +446,8 @@ public:
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
     friend bool operator<(const CInv& a, const CInv& b);
-
+    // SYSCOIN
+    bool IsMnType() const;
     std::string GetCommand() const;
     std::string ToString() const;
 

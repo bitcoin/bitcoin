@@ -13,7 +13,11 @@
                 -zmqpubrawblock=tcp://127.0.0.1:28370 \
                 -zmqpubhashtx=tcp://127.0.0.1:28370 \
                 -zmqpubhashblock=tcp://127.0.0.1:28370 \
-                -zmqpubethstatus=tcp://127.0.0.1:28370
+                -zmqpubethstatus=tcp://127.0.0.1:28370 \
+                -zmqpubhashgovernancevote=tcp://127.0.0.1:28370 \
+                -zmqpubhashgovernanceobject=tcp://127.0.0.1:28370 \
+                -zmqpubrawgovernancevote=tcp://127.0.0.1:28370 \
+                -zmqpubrawgovernanceobject=tcp://127.0.0.1:28370
 
     We use the asyncio library here.  `self.handle()` installs itself as a
     future at the end of the function.  Since it never returns with the event
@@ -48,8 +52,10 @@ class ZMQHandler():
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashtx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawblock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawtx")
-        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "assetallocation")
-        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "assetrecord")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashgovernancevote")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashgovernanceobject")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawgovernancevote")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawgovernanceobject")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % port)
 
     async def handle(self) :
@@ -77,7 +83,19 @@ class ZMQHandler():
             print(body.decode("utf-8")) 
         elif topic == b"rawtx":
             print('- ASSET TX ('+sequence+') -')
-            print(body.decode("utf-8"))                   
+            print(body.decode("utf-8"))  
+        elif topic == b"hashgovernancevote":
+            print('- HASH GOVERNANCE VOTE ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == b"hashgovernanceobject":
+            print('- HASH GOVERNANCE OBJECT ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == b"rawgovernancevote":
+            print('- RAW GOVERNANCE VOTE ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == b"rawgovernanceobject":
+            print('- RAW GOVERNANCE OBJECT ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))                 
             
         # schedule ourselves to receive the next message
         asyncio.ensure_future(self.handle())

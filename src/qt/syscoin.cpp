@@ -48,8 +48,6 @@
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
-// SYSCOIN
-#include <masternodeconfig.h>
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_XCB)
@@ -60,7 +58,9 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
-
+// SYSCOIN
+#include <QProcess>
+#include <QStringList>
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
@@ -171,6 +171,28 @@ void SyscoinCore::initialize()
         handleRunawayException(&e);
     } catch (...) {
         handleRunawayException(nullptr);
+    }
+}
+// SYSCOIN
+void SyscoinCore::restart(const QStringList &args)
+{
+    static bool executing_restart{false};
+
+    if(!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
+        executing_restart = true;
+        try
+        {
+            qDebug() << __func__ << ": Running Restart in thread";
+            m_node.appShutdown();
+            qDebug() << __func__ << ": Shutdown finished";
+            Q_EMIT shutdownResult();
+            CExplicitNetCleanup::callCleanup();
+            QProcess::startDetached(QApplication::applicationFilePath(), args);
+            qDebug() << __func__ << ": Restart initiated...";
+            QApplication::quit();
+        } catch (...) {
+            handleRunawayException(nullptr);
+        }
     }
 }
 
@@ -285,6 +307,8 @@ void SyscoinApplication::startThread()
     connect(executor, &SyscoinCore::runawayException, this, &SyscoinApplication::handleRunawayException);
     connect(this, &SyscoinApplication::requestedInitialize, executor, &SyscoinCore::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, executor, &SyscoinCore::shutdown);
+    // SYSCOIN
+    connect(window, &SyscoinGUI::requestedRestart, executor, &SyscoinCore::restart);
     /*  make sure executor object is deleted in its own thread */
     connect(coreThread, &QThread::finished, executor, &QObject::deleteLater);
 
@@ -540,14 +564,6 @@ int GuiMain(int argc, char* argv[])
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
 #ifdef ENABLE_WALLET
-    // SYSCOIN
-    /// 7a. parse masternode.conf
-    std::string strErr;
-    if(!masternodeConfig.read(strErr)) {
-        QMessageBox::critical(0, QObject::tr("Syscoin Core"),
-                              QObject::tr("Error reading masternode configuration file: %1").arg(strErr.c_str()));
-        return EXIT_FAILURE;
-    }
     /// 8. URI IPC sending
     // - Do this early as we don't want to bother initializing if we are just calling IPC
     // - Do this *after* setting up the data directory, as the data directory hash is used in the name

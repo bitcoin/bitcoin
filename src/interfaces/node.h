@@ -28,6 +28,8 @@ class Coin;
 class RPCTimerInterface;
 class UniValue;
 class proxyType;
+// SYSCOIN
+class CDeterministicMNList;
 enum class SynchronizationState;
 enum class WalletCreationStatus;
 struct CNodeStateStats;
@@ -268,6 +270,8 @@ public:
     //! Register handler for additional sync messages.
     using NotifyAdditionalDataSyncProgressChangedFn = std::function<void(double nSyncProgress)>;
     virtual std::unique_ptr<Handler> handleNotifyAdditionalDataSyncProgressChanged(NotifyAdditionalDataSyncProgressChangedFn fn) = 0;  
+    using NotifyMasternodeListChangedFn = std::function<void(const CDeterministicMNList& mnList)>;
+    virtual std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) = 0;
     //! Return pointer to internal chain interface, useful for testing.
     virtual NodeContext* context() { return nullptr; }
 };

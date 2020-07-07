@@ -15,6 +15,7 @@ import os
 import random
 import re
 import time
+import shutil
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -238,8 +239,8 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
 # RPC/P2P connection constants and functions
 ############################################
 
-# The maximum number of nodes a single test can spawn
-MAX_NODES = 12
+# SYSCOIN The maximum number of nodes a single test can spawn
+MAX_NODES = 15
 # Don't assign rpc or p2p ports lower than this
 PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each
@@ -366,6 +367,20 @@ def get_auth_cookie(datadir, chain):
         raise ValueError("No RPC credentials")
     return user, password
 
+# SYSCOIN
+def copy_datadir(from_node, to_node, dirname):
+    from_datadir = os.path.join(dirname, "node"+str(from_node), "regtest")
+    to_datadir = os.path.join(dirname, "node"+str(to_node), "regtest")
+
+    dirs = ["blocks", "chainstate", "evodb", "llmq", "ethereumminttx", "ethereumtxroots", "assets", "blockindex"]
+    for d in dirs:
+        try:
+            src = os.path.join(from_datadir, d)
+            dst = os.path.join(to_datadir, d)
+            shutil.copytree(src, dst)
+        except:
+            pass
+
 # If a cookie file exists in the given datadir, delete it.
 def delete_cookie_file(datadir, chain):
     if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
@@ -379,6 +394,11 @@ def softfork_active(node, key):
 def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
+
+# SYSCOIN
+def bump_node_times(nodes, t):
+    for node in nodes:
+        node.mockscheduler(t)
 
 def disconnect_nodes(from_connection, node_num):
     def get_peer_ids():
@@ -463,7 +483,16 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
         "".join("\n  {!r}".format(m) for m in pool),
     ))
 
-
+# SYSCOIN
+def force_finish_mnsync(node):
+    """
+    Masternodes won't accept incoming connections while IsSynced is false.
+    Force them to switch to this state to speed things up.
+    """
+    while True:
+        if node.mnsync("status")['IsSynced']:
+            break
+        node.mnsync("next")
 # Transaction/Block functions
 #############################
 

@@ -90,6 +90,60 @@ void CChainParams::SetSYSXAssetForUnitTests (uint32_t asset)
 {
   consensus.nSYSXAsset = asset;
 }
+
+void CChainParams::UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
+{
+    consensus.DIP0003Height = nActivationHeight;
+    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
+}
+
+void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
+    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
+    params.size = size;
+    params.minSize = threshold;
+    params.threshold = threshold;
+    params.dkgBadVotesThreshold = threshold;
+}
+// this one is for testing only
+static Consensus::LLMQParams llmq_test = {
+        .type = Consensus::LLMQ_TEST,
+        .name = "llmq_test",
+        .size = 3,
+        .minSize = 2,
+        .threshold = 2,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 2,
+
+        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+
+        .keepOldConnections = 3,
+        .recoveryMembers = 3,
+};
+
+
+static Consensus::LLMQParams llmq50_60 = {
+        .type = Consensus::LLMQ_50_60,
+        .name = "llmq_50_60",
+        .size = 50,
+        .minSize = 40,
+        .threshold = 30,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 40,
+
+        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+
+        .keepOldConnections = 25,
+        .recoveryMembers = 25,
+};
+
 /**
  * Main network
  */
@@ -146,6 +200,8 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
         consensus.nBridgeStartBlock = 348000;
         consensus.nUTXOAssetsBlock = 600000;
+        consensus.DIP0003Height = 600000;
+        consensus.DIP0003EnforcementHeight = 600000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -186,7 +242,13 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
-        strSporkAddress = "SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN";    
+        fRequireRoutableExternalIP = true;
+        vSporkAddresses = {"SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN"};
+        nMinSporkKeys = 1;   
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        nLLMQConnectionRetryTimeout = 60;
+        fAllowMultiplePorts = false;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         m_is_test_chain = false;
         m_is_mockable_chain = false;
@@ -272,6 +334,8 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
         consensus.nBridgeStartBlock = 1000;
         consensus.nUTXOAssetsBlock = 400000;
+        consensus.DIP0003Height = 400000;
+        consensus.DIP0003EnforcementHeight = 400000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
@@ -312,10 +376,16 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
+        fRequireRoutableExternalIP = true;
         m_is_test_chain = true;
 
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
-        strSporkAddress = "TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX";
+        vSporkAddresses = {"TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX"};
+        nMinSporkKeys = 1;   
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        nLLMQConnectionRetryTimeout = 60;
+        fAllowMultiplePorts = false;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
 
@@ -389,7 +459,9 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
         consensus.nBridgeStartBlock = 100;
-        consensus.nUTXOAssetsBlock = 100;
+        consensus.nUTXOAssetsBlock = 432;
+        consensus.DIP0003Height = 432;
+        consensus.DIP0003EnforcementHeight = 432;
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
@@ -415,10 +487,16 @@ public:
 
         fDefaultConsistencyChecks = true;
         fRequireStandard = true;
+        fRequireRoutableExternalIP = false;
         m_is_test_chain = true;
         m_is_mockable_chain = true;
         // privKey: cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW
-        strSporkAddress = "mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z";
+        vSporkAddresses = {"mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z"};
+        nMinSporkKeys = 1; 
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
+        nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
+        fAllowMultiplePorts = true;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
        /* 
         
@@ -457,6 +535,26 @@ public:
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
+    if (gArgs.IsArgSet("-mncollateral")) {
+        uint32_t collateral = gArgs.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED);
+        nMNCollateralRequired = collateral*COIN;
+    }
+    if (gArgs.IsArgSet("-dip3params")) {
+        std::string strDIP3Params = gArgs.GetArg("-dip3params", "");
+        std::vector<std::string> vDIP3Params;
+        boost::split(vDIP3Params, strDIP3Params, boost::is_any_of(":"));
+        if (vDIP3Params.size() != 2) {
+            throw std::runtime_error("DIP3 parameters malformed, expecting DIP3ActivationHeight:DIP3EnforcementHeight");
+        }
+        int nDIP3ActivationHeight, nDIP3EnforcementHeight;
+        if (!ParseInt32(vDIP3Params[0], &nDIP3ActivationHeight)) {
+            throw std::runtime_error(strprintf("Invalid nDIP3ActivationHeight (%s)", vDIP3Params[0]));
+        }
+        if (!ParseInt32(vDIP3Params[1], &nDIP3EnforcementHeight)) {
+            throw std::runtime_error(strprintf("Invalid nDIP3EnforcementHeight (%s)", vDIP3Params[1]));
+        }
+        UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
+    }
     if (gArgs.IsArgSet("-segwitheight")) {
         int64_t height = gArgs.GetArg("-segwitheight", consensus.SegwitHeight);
         if (height < -1 || height >= std::numeric_limits<int>::max()) {
@@ -538,4 +636,14 @@ void SetSYSXAssetForUnitTests (uint32_t asset)
      we would have to have an explicit argument for BIP16.  */
   auto* params = const_cast<CChainParams*> (globalChainParams.get ());
   params->SetSYSXAssetForUnitTests (asset);
+}
+void UpdateLLMQTestParams(int size, int threshold)
+{
+    auto* params = const_cast<CChainParams*> (globalChainParams.get ());
+    params->UpdateLLMQTestParams(size, threshold);
+}
+void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
+{
+    auto* params = const_cast<CChainParams*> (globalChainParams.get ());
+    params->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
 }

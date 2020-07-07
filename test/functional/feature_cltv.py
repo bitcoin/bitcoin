@@ -92,6 +92,7 @@ class BIP65Test(SyscoinTestFramework):
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
+        # SYSCOIN
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
         block.set_base_version(3)
         block.vtx.append(spendtx)

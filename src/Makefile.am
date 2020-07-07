@@ -24,6 +24,8 @@ SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFL
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
+BLS_LIBS=-lchiabls -lgmp
+
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
@@ -111,24 +113,32 @@ SYSCOIN_CORE_H = \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
   services/rpc/wallet/assetwalletrpc.h \
-  activemasternode.h \
   spork.h \
   dsnotificationinterface.h \
-  governance.h \
-  governanceclasses.h \
-  governanceexceptions.h \
-  governanceobject.h \
-  governancevalidators.h \
-  governancevote.h \
-  governancevotedb.h \
-  masternode.h \
-  masternodepayments.h \
-  masternodesync.h \
-  masternodeman.h \
-  masternodeconfig.h \
+  governance/governance.h \
+  governance/governance-classes.h \
+  governance/governance-exceptions.h \
+  governance/governance-object.h \
+  governance/governance-validators.h \
+  governance/governance-vote.h \
+  governance/governance-votedb.h \
+  ctpl.h \
+  cxxtimer.hpp \
+  evo/cbtx.h \
+  evo/deterministicmns.h \
+  evo/evodb.h \
+  evo/mnauth.h \
+  evo/providertx.h \
+  evo/simplifiedmns.h \
+  evo/specialtx.h \
+  masternode/activemasternode.h \
+  masternode/masternode-meta.h \
+  masternode/masternode-payments.h \
+  masternode/masternode-sync.h \
+  masternode/masternode-utils.h \
+  flat-database.h \
   messagesigner.h \
   netfulfilledman.h \
-  flatdatabase.h \
   cachemap.h \
   cachemultimap.h \
   addrdb.h \
@@ -137,6 +147,7 @@ SYSCOIN_CORE_H = \
   auxpow.h \
   banman.h \
   base58.h \
+  batchedlogger.h \
   bech32.h \
   bloom.h \
   blockencodings.h \
@@ -177,6 +188,17 @@ SYSCOIN_CORE_H = \
   key_io.h \
   dbwrapper.h \
   limitedmap.h \
+  llmq/quorums.h \
+  llmq/quorums_blockprocessor.h \
+  llmq/quorums_commitment.h \
+  llmq/quorums_debug.h \
+  llmq/quorums_dkgsessionhandler.h \
+  llmq/quorums_dkgsessionmgr.h \
+  llmq/quorums_dkgsession.h \
+  llmq/quorums_init.h \
+  llmq/quorums_signing.h \
+  llmq/quorums_signing_shares.h \
+  llmq/quorums_utils.h \
   logging.h \
   logging/timer.h \
   memusage.h \
@@ -218,6 +240,7 @@ SYSCOIN_CORE_H = \
   rpc/request.h \
   rpc/server.h \
   rpc/util.h \
+  saltedhasher.h \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
@@ -229,6 +252,8 @@ SYSCOIN_CORE_H = \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
+  support/allocators/pooled_secure.h.h \
+  support/allocators/mt_pooled_secure.h \
   support/cleanse.h \
   support/events.h \
   support/lockedpool.h \
@@ -241,6 +266,7 @@ SYSCOIN_CORE_H = \
   txmempool.h \
   ui_interface.h \
   undo.h \
+  unordered_lru_cache.h \
   util/asmap.h \
   util/bip32.h \
   util/bytevectorhash.h \
@@ -336,26 +362,41 @@ libsyscoin_server_a_SOURCES = \
   services/assetconsensus.cpp \
   services/rpc/assetrpc.cpp \
   core_write.cpp \
-  activemasternode.cpp \
   dsnotificationinterface.cpp \
-  governance.cpp \
-  governanceclasses.cpp \
-  governanceobject.cpp \
-  governancevalidators.cpp \
-  governancevote.cpp \
-  governancevotedb.cpp \
-  masternode.cpp \
-  masternodepayments.cpp \
-  masternodesync.cpp \
-  masternodeconfig.cpp \
-  masternodeman.cpp \
+  governance/governance.cpp \
+  governance/governance-classes.cpp \
+  governance/governance-object.cpp \
+  governance/governance-validators.cpp \
+  governance/governance-vote.cpp \
+  governance/governance-votedb.cpp \
+  evo/cbtx.cpp \
+  evo/deterministicmns.cpp \
+  evo/evodb.cpp \
+  evo/mnauth.cpp \
+  evo/providertx.cpp \
+  evo/simplifiedmns.cpp \
+  evo/specialtx.cpp \
+  llmq/quorums.cpp \
+  llmq/quorums_blockprocessor.cpp \
+  llmq/quorums_commitment.cpp \
+  llmq/quorums_debug.cpp \
+  llmq/quorums_dkgsessionhandler.cpp \
+  llmq/quorums_dkgsessionmgr.cpp \
+  llmq/quorums_dkgsession.cpp \
+  llmq/quorums_init.cpp \
+  llmq/quorums_signing.cpp \
+  llmq/quorums_signing_shares.cpp \
+  llmq/quorums_utils.cpp \
+  masternode/activemasternode.cpp \
+  masternode/masternode-meta.cpp \
+  masternode/masternode-payments.cpp \
+  masternode/masternode-sync.cpp \
+  masternode/masternode-utils.cpp \
   messagesigner.cpp \
-  netfulfilledman.cpp \
-  rpc/masternode.cpp \
-  rpc/governance.cpp \
   spork.cpp \
   addrdb.cpp \
   addrman.cpp \
+  batchedlogger.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
@@ -373,6 +414,7 @@ libsyscoin_server_a_SOURCES = \
   dbwrapper.cpp \
   miner.cpp \
   net.cpp \
+  netfulfilledman.cpp \
   net_processing.cpp \
   node/coin.cpp \
   node/coinstats.cpp \
@@ -393,6 +435,10 @@ libsyscoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/masternode.cpp \
+  rpc/governance.cpp \
+  rpc/rpcevo.cpp \
+  rpc/rpcquorums.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   timedata.cpp \
@@ -445,6 +491,8 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
   rpc/governance.cpp \
+  rpc/rawtransaction.cpp \
+  rpc/rpcevo.cpp \
   rpc/masternode.cpp \
   rpc/auxpow_miner.cpp \
   services/rpc/wallet/assetwalletrpc.cpp \
@@ -515,6 +563,8 @@ libsyscoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  bls/bls.cpp \
+  bls/bls.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -570,6 +620,7 @@ libsyscoin_common_a_SOURCES = \
   policy/feerate.cpp \
   policy/policy.cpp \
   protocol.cpp \
+  saltedhasher.cpp \
   psbt.cpp \
   rpc/rawtransaction_util.cpp \
   rpc/util.cpp \
@@ -590,6 +641,11 @@ libsyscoin_common_a_SOURCES = \
 libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
+  bls/bls_batchverifier.h \
+  bls/bls_ies.cpp \
+  bls/bls_ies.h \
+  bls/bls_worker.cpp \
+  bls/bls_worker.h \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -677,7 +733,7 @@ syscoin_bin_ldadd = \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources)
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -707,7 +763,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
+syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
 # syscoin-tx binary #
@@ -732,7 +788,7 @@ syscoin_tx_LDADD = \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_tx_LDADD += $(BOOST_LIBS)
+syscoin_tx_LDADD += $(BOOST_LIBS) $(BLS_LIBS)
   
 #
 
