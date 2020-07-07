@@ -1173,7 +1173,7 @@ class DashTestFramework(SyscoinTestFramework):
         if skip_count != 0:
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         q = self.nodes[0].getbestblockhash()
 
@@ -1184,31 +1184,31 @@ class DashTestFramework(SyscoinTestFramework):
             self.wait_for_masternode_probes(mninfos, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 2 (contribute)")
         self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 3 (complain)")
         self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 4 (justify)")
         self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 5 (commit)")
         self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 6 (mining)")
         self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos)
@@ -1223,14 +1223,14 @@ class DashTestFramework(SyscoinTestFramework):
             time.sleep(2)
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(1)
-            sync_blocks(nodes)
+            self.sync_blocks(nodes)
         new_quorum = self.nodes[0].quorum("list", 1)["llmq_test"][0]
         quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
         self.nodes[0].generate(8)
 
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
 
         self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
 
