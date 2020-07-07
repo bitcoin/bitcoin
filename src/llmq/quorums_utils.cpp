@@ -44,7 +44,7 @@ uint256 CLLMQUtils::BuildSignHash(uint8_t llmqType, const uint256& quorumHash, c
     return h.GetHash();
 }
 
-bool CLLMQUtils::IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType)
+bool CLLMQUtils::IsAllMembersConnectedEnabled(uint8_t llmqType)
 {
     auto spork21 = sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED);
     if (spork21 == 0) {
