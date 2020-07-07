@@ -299,7 +299,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         return FormatSyscoinErrorMessage(state, "bad-protx-mode", fJustCheck);
     }
 
-    if (!ptx.pubKeyOperator.IsValid() || !IsValidDestinationString(ptx.keyIDVoting)) {
+    if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-key-null", fJustCheck);
     }
     int witnessversion;
