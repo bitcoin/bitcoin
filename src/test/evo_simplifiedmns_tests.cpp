@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         sk.SetBuf(skBuf, sizeof(skBuf));
 
         smle.pubKeyOperator.Set(sk.GetPublicKey());
-        smle.keyIDVoting = DecodeDestination(strprintf("%040x", i));
+        smle.keyIDVoting.SetHex(strprintf("%040x", i));
         smle.isValid = true;
 
 
