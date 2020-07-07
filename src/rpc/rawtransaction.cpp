@@ -848,6 +848,61 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     return tx->GetHash().GetHex();
 }
 
+static UniValue sendpackage(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"sendpackage",
+                "\nSubmit a package (serialized, hex-encoded) to local node and network.\n",
+                {
+                    {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings of raw transactions.\n"
+             "                                        Length must be two for now.",
+                        {
+                            {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                        },
+                    },
+                },
+                RPCResult{
+                    RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
+                },
+                RPCExamples{
+            "\nSend the package (signed hex)\n"
+            + HelpExampleRpc("sendpackage", "[\"signedhex\"]")
+                },
+    }.Check(request);
+
+    RPCTypeCheck(request.params, {
+            UniValue::VARR
+    });
+
+    if (request.params[0].get_array().size() != 2) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly two raw transactions for now");
+    }
+
+    // parse hex string from parameter
+    CMutableTransaction parent_mtx;
+    if (!DecodeHexTx(parent_mtx, request.params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "PARENT TX decode failed");
+    CTransactionRef parent_tx(MakeTransactionRef(std::move(parent_mtx)));
+
+    CMutableTransaction child_mtx;
+    if (!DecodeHexTx(child_mtx, request.params[1].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "CHILD TX decode failed");
+    CTransactionRef child_tx(MakeTransactionRef(std::move(child_mtx)));
+
+    std::list<CTransactionRef> package_txn;
+    package_txn.emplace_back(parent_tx);
+    package_txn.emplace_back(child_tx);
+
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastPackage(node, package_txn, err_string, /*relay*/ true, /*wait_callback*/ true);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
+
+    return parent_tx->GetHash().GetHex();
+}
+
 static UniValue testmempoolaccept(const JSONRPCRequest& request)
 {
     RPCHelpMan{"testmempoolaccept",
@@ -1798,6 +1853,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
     { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
     { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","maxfeerate"} },
+    { "rawtransactions",    "sendpackage",                  &sendpackage,               {"rawtxs"} },
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
     { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","maxfeerate"} },
