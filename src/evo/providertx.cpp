@@ -103,8 +103,8 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     if (ptx.nMode != 0) {
         return FormatSyscoinErrorMessage(state, "bad-protx-mode", fJustCheck);
     }
-    const CTxDestination& destOwner = DecodeDestination(ptx.keyIDOwner);
-    const CTxDestination& destVoting = DecodeDestination(ptx.keyIDVoting);
+    const CTxDestination& destOwner = DecodeDestination(dmn->pdmnState->keyIDOwner);
+    const CTxDestination& destVoting = DecodeDestination(dmn->pdmnState->keyIDVoting);
     if (!IsValidDestination(destOwner) || !IsValidDestination(destVoting)) {
         return FormatSyscoinErrorMessage(state, "bad-protx-destination-null", fJustCheck);
     }
@@ -322,9 +322,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         }
 
         // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
-        const CTxDestination& ownerDest = DecodeDestination(dmn->pdmnState->keyIDOwner);
-        const CTxDestination& voteDest = DecodeDestination(ptx.keyIDVoting);
-        if (payoutDest == ownerDest || payoutDest == voteDest) {
+        if (payoutDest == dmn->pdmnState->keyIDOwner || payoutDest == ptx.keyIDVoting) {
             return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
         }
 
@@ -339,7 +337,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-dest", fJustCheck);
         }
-        if (collateralTxDest == ownerDest || collateralTxDest == voteDest) {
+        if (collateralTxDest == dmn->pdmnState->keyIDOwner || collateralTxDest == ptx.keyIDVoting) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
         }
 
@@ -354,7 +352,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, GetKeyForDestination(ownerDest), state, fJustCheck)) {
+        if (!CheckHashSig(ptx, GetKeyForDestination(dmn->pdmnState->keyIDOwner), state, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
