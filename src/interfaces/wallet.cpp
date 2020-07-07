@@ -129,11 +129,10 @@ public:
     }
     CKeyID getKeyForDestination(const CTxDestination& dest) const override
     {
-        auto script = GetScriptForDestination(dest);
-        std::unique_ptr<SigningProvider> provider = m_wallet->GetSolvingProvider(script);
+        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
 
-        if (provider) {
-            return GetKeyForDestination(*provider, dest);
+        if (spk_man) {
+            return GetKeyForDestination(*spk_man, dest);
         }
 
         return CKeyID();
@@ -274,10 +273,9 @@ public:
     }
     bool produceSignature(const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata) override
     {
-        std::unique_ptr<SigningProvider> provider = m_wallet->GetSolvingProvider(scriptPubKey);
-
-        if (provider) {
-            return ProduceSignature(*provider, creator, scriptPubKey, sigdata);
+        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
+        if (spk_man) {
+            return ProduceSignature(*spk_man, creator, scriptPubKey, sigdata);
         }
 
         return false;
