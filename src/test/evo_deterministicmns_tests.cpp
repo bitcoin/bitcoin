@@ -96,9 +96,9 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const 
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
-    proTx.keyIDOwner = WitnessV0KeyHash(ownerKeyRet.GetPubKey().GetID());
+    proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
     proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
-    proTx.keyIDVoting = WitnessV0KeyHash(ownerKeyRet.GetPubKey().GetID());
+    proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
     proTx.scriptPayout = scriptPayout;
 
     CMutableTransaction tx;
@@ -129,7 +129,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOVec& utxos, const uint256
     return tx;
 }
 
-static CMutableTransaction CreateProUpRegTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const WitnessV0KeyHash& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRegTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
 
     CProUpRegTx proTx;
@@ -380,7 +380,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     CBLSSecretKey newOperatorKey;
     newOperatorKey.MakeNewKey();
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
-    tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), WitnessV0KeyHash(ownerKeys[dmnHashes[0]].GetPubKey().GetID()), dmn->pdmnState->scriptPayout, coinbaseKey);
+    tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
     auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
     TxValidationState dummyState;
