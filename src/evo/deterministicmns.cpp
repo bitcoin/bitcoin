@@ -784,7 +784,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             if (newState->nPoSeBanHeight != -1) {
                 // only revive when all keys are set
-                if (newState->pubKeyOperator.Get().IsValid() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
+                if (newState->pubKeyOperator.Get().IsValid() && IsValidDestinationString(newState->keyIDVoting) && IsValidDestinationString(newState->keyIDOwner)) {
                     newState->nPoSePenalty = 0;
                     newState->nPoSeBanHeight = -1;
                     newState->nPoSeRevivedHeight = nHeight;
