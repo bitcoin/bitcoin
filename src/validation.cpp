@@ -3054,13 +3054,13 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
              Ticks<MillisecondsDouble>(SteadyClock::now() - time_start));
 
     {
-        // Prune locks that began at or after the tip should be moved backward so they get a chance to reorg
+        // Prune locks that began around the tip should be moved backward so they get a chance to reorg
         const int max_height_first{pindexDelete->nHeight - 1};
         for (auto& prune_lock : m_blockman.m_prune_locks) {
-            if (prune_lock.second.height_first <= max_height_first) continue;
+            if (prune_lock.second.height_first < max_height_first) continue;
 
-            prune_lock.second.height_first = max_height_first;
-            LogPrint(BCLog::PRUNE, "%s prune lock moved back to %d\n", prune_lock.first, max_height_first);
+            --prune_lock.second.height_first;
+            LogPrint(BCLog::PRUNE, "%s prune lock moved back to %d\n", prune_lock.first, prune_lock.second.height_first);
         }
     }
 
