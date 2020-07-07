@@ -1449,6 +1449,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // SYSCOIN
     std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
 	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
+    CBLSSecretKey keyOperator;
     if(fMasternodeMode) {
         if(!fRegTest) {
             std::string errorMessage = "";
@@ -1471,6 +1472,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
             if(resultInt != 1)   
                 return InitError(Untranslated("Ensure you are running this masternode in a Unix OS and that only one syscoind is running...")); 
+        }
+        if(!IsHex(strMasterNodeBLSPrivKey))
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        auto binKey = ParseHex(strMasterNodeBLSPrivKey);
+        keyOperator.SetBuf(binKey);
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         }
     }
     // ********************************************************* Step 4a: application initialization
@@ -2179,14 +2187,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     activeMasternodeInfo.blsPubKeyOperator.reset();
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
-        if(!IsHex(strMasterNodeBLSPrivKey))
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        auto binKey = ParseHex(strMasterNodeBLSPrivKey);
-        CBLSSecretKey keyOperator;
-        keyOperator.SetBuf(binKey);
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
         activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey(keyOperator));
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey(activeMasternodeInfo.blsKeyOperator->GetPublicKey()));
        
