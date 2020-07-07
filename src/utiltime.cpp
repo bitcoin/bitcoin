@@ -15,8 +15,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 
-#include <chrono>
-
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
 
 int64_t GetTime()

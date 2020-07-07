@@ -27,7 +27,7 @@
 
 #include <bls/bls.h>
 
-#include "masternode/masternode-meta.h"
+#include <masternode/masternode-meta.h>
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);

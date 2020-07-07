@@ -63,11 +63,8 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
 
-#include <llmq/quorums_init.h>
-
 #include <stdint.h>
 #include <stdio.h>
-#include <memory>
 
 #include <bls/bls.h>
 

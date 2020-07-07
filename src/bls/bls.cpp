@@ -4,7 +4,6 @@
 
 #include <bls/bls.h>
 
-#include <hash.h>
 #include <random.h>
 #include <tinyformat.h>
 

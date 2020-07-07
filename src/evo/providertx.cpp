@@ -6,7 +6,6 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 
-#include <base58.h>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
@@ -14,7 +13,6 @@
 #include <messagesigner.h>
 #include <script/standard.h>
 #include <streams.h>
-#include <univalue.h>
 #include <validation.h>
 
 template <typename ProTx>

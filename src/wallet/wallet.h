@@ -18,7 +18,6 @@
 #include <utilstrencodings.h>
 #include <validationinterface.h>
 #include <script/ismine.h>
-#include <util.h>
 #include <wallet/coincontrol.h>
 #include <wallet/crypter.h>
 #include <wallet/walletdb.h>

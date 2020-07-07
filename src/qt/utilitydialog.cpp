@@ -17,7 +17,6 @@
 #include <qt/guiutil.h>
 #include <qt/intro.h>
 #include <qt/paymentrequestplus.h>
-#include <qt/guiutil.h>
 
 #include <clientversion.h>
 #include <init.h>
