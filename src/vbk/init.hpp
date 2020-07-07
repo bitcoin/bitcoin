@@ -15,29 +15,12 @@
 
 namespace VeriBlock {
 
-namespace detail {
-template <typename Face, typename Impl>
-Face& InitService()
-{
-    auto* ptr = new Impl();
-    setService<Face>(ptr);
-    return *ptr;
-}
-
-template <typename Face, typename Impl, typename Arg1>
-Face& InitService(Arg1 arg)
-{
-    auto* ptr = new Impl(arg);
-    setService<Face>(ptr);
-    return *ptr;
-}
-} // namespace detail
-
-
-inline PopService& InitPopService()
+inline PopService& InitPopService(const fs::path& dbpath)
 {
     auto& config = getService<VeriBlock::Config>();
-    return detail::InitService<PopService, PopServiceImpl>(config.popconfig);
+    auto* ptr = new PopServiceImpl(config.popconfig, dbpath);
+    setService<PopService>(ptr);
+    return *ptr;
 }
 
 inline Config& InitConfig()

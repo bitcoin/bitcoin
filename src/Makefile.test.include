@@ -626,7 +626,7 @@ if BUILD_BITCOIN_TX
 	@echo "SKIPPING test/util/bitcoin-util-test.py..."
 
 # disable tests for now, as they started to fail after merkle root algo have changed
-#	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+# 	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
 endif
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py

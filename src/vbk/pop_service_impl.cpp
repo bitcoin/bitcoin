@@ -24,9 +24,10 @@
 #include <veriblock/altintegration.hpp>
 #include <veriblock/finalizer.hpp>
 #include <veriblock/stateless_validation.hpp>
-#include <veriblock/storage/payloads_storage.hpp>
-#include <veriblock/storage/storage_manager.hpp>
 #include <veriblock/validation_state.hpp>
+
+//#include <veriblock/storage/rocks/storage_manager_rocks.hpp>
+#include <veriblock/storage/inmem/storage_manager_inmem.hpp>
 
 namespace VeriBlock {
 
@@ -188,15 +189,16 @@ int PopServiceImpl::compareForks(const CBlockIndex& leftForkTip, const CBlockInd
     return altTree->comparePopScore(left.hash, right.hash);
 }
 
-PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
+PopServiceImpl::PopServiceImpl(const altintegration::Config& config, const fs::path& popPath)
 {
-    altintegration::StorageManager store_man("");
-
-    payloads_store =
-        std::make_shared<altintegration::PayloadsStorage>(store_man.newPayloadsStorageInmem());
     config.validate();
 
-    altTree = altintegration::Altintegration::create(config, *payloads_store);
+    storeman = std::make_shared<altintegration::StorageManagerInmem>();
+    LogPrintf("Init POP storage in %s...\n", popPath.string());
+    payloadsStore = &storeman->getPayloadsStorage();
+    popStorage = &storeman->getPopStorage();
+
+    altTree = altintegration::Altintegration::create(config, *payloadsStore);
     mempool = std::make_shared<altintegration::MemPool>(altTree->getParams(), altTree->vbk().getParams(), altTree->btc().getParams());
 }
 

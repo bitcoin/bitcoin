@@ -1209,7 +1209,6 @@ bool AppInitLockDataDirectory()
 bool AppInitMain(NodeContext& node)
 {
     const CChainParams& chainparams = Params();
-    VeriBlock::InitPopService();
 
     // ********************************************************* Step 4a: application initialization
     if (!CreatePidFile()) {
@@ -1255,6 +1254,8 @@ bool AppInitMain(NodeContext& node)
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
             gArgs.GetArg("-datadir", ""), fs::current_path().string());
     }
+
+    VeriBlock::InitPopService(GetDataDir(true) / "pop");
 
     InitSignatureCache();
     InitScriptExecutionCache();

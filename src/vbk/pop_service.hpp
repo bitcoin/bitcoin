@@ -39,6 +39,7 @@ using PoPRewards = std::map<CScript, CAmount>;
 
 struct PopService {
     virtual ~PopService() = default;
+    virtual void clearPopDataStorage() = 0;
     virtual altintegration::AltTree& getAltTree() = 0;
     virtual altintegration::MemPool& getMemPool() = 0;
     virtual PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) = 0;

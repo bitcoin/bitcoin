@@ -77,7 +77,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SelectParams(chainName);
     VeriBlock::InitConfig();
     selectPopConfig("regtest", "regtest", true);
-    VeriBlock::InitPopService();
+    VeriBlock::InitPopService(m_path_root / "pop");
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
     InitLogging();
@@ -181,6 +181,9 @@ TestChain100Setup::TestChain100Setup(): RegTestingSetup()
     assert(ChainActive().Tip() != nullptr);
     assert(ChainActive().Tip()->nHeight == 100);
     assert(BlockIndex().size() == 101);
+
+    auto& tree = VeriBlock::getService<VeriBlock::PopService>().getAltTree();
+    assert(tree.getBestChain().tip()->height == ChainActive().Tip()->nHeight);
 }
 
 CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, uint256 prevBlock,
