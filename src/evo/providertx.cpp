@@ -119,7 +119,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-dest", fJustCheck);
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
-    if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
+    if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDVoting))) {
         return FormatSyscoinErrorMessage(state, "bad-protx-payee-reuse", fJustCheck);
     }
 
@@ -411,8 +411,8 @@ std::string CProRegTx::MakeSignString() const
 
     s += strPayout + "|";
     s += strprintf("%d", nOperatorReward) + "|";
-    s += EncodeDestination(keyIDOwner) + "|";
-    s += EncodeDestination(keyIDVoting) + "|";
+    s += EncodeDestination(WitnessV0KeyHash(keyIDOwner)) + "|";
+    s += EncodeDestination(WitnessV0KeyHash(keyIDVoting)) + "|";
 
     // ... and also the full hash of the payload as a protection agains malleability and replays
     s += ::SerializeHash(*this).ToString();
@@ -429,7 +429,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
-        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(keyIDOwner), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
+        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(WitnessV0KeyHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
 }
 
 std::string CProUpServTx::ToString() const
@@ -453,7 +453,7 @@ std::string CProUpRegTx::ToString() const
     }
 
     return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s)",
-        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
+        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
 }
 
 std::string CProUpRevTx::ToString() const

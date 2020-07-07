@@ -100,6 +100,11 @@ bool CBloomFilter::contains(const uint256& hash) const
     std::vector<unsigned char> data(hash.begin(), hash.end());
     return contains(data);
 }
+bool CBloomFilter::contains(const CKeyID& keyId) const
+{
+    std::vector<unsigned char> data(keyId.begin(), keyId.end());
+    return contains(data);
+}
 
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
