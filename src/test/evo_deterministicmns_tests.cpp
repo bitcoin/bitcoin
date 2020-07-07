@@ -90,6 +90,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
 
 static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CTxDestination& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
+    ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
 
     CProRegTx proTx;
@@ -128,7 +129,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOVec& utxos, const uint256
     return tx;
 }
 
-static CMutableTransaction CreateProUpRegTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CTxDestination& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRegTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const WitnessV0KeyHash& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
 
     CProUpRegTx proTx;
