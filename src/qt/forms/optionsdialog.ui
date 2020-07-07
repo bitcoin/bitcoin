@@ -908,12 +908,6 @@ https://www.transifex.com/projects/p/dash/</string>
          <height>0</height>
         </size>
        </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
        <property name="text">
         <string/>
        </property>

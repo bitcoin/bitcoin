@@ -355,6 +355,26 @@ RES_CSS = \
   qt/res/css/scrollbars.css \
   qt/res/css/trad.css
 
+RES_FONTS = \
+  qt/res/fonts/Montserrat/Montserrat-Black.otf \
+  qt/res/fonts/Montserrat/Montserrat-BlackItalic.otf \
+  qt/res/fonts/Montserrat/Montserrat-Bold.otf \
+  qt/res/fonts/Montserrat/Montserrat-BoldItalic.otf \
+  qt/res/fonts/Montserrat/Montserrat-ExtraBold.otf \
+  qt/res/fonts/Montserrat/Montserrat-ExtraBoldItalic.otf \
+  qt/res/fonts/Montserrat/Montserrat-ExtraLight.otf \
+  qt/res/fonts/Montserrat/Montserrat-ExtraLightItalic.otf \
+  qt/res/fonts/Montserrat/Montserrat-Italic.otf \
+  qt/res/fonts/Montserrat/Montserrat-Light.otf \
+  qt/res/fonts/Montserrat/Montserrat-LightItalic.otf \
+  qt/res/fonts/Montserrat/Montserrat-Medium.otf \
+  qt/res/fonts/Montserrat/Montserrat-MediumItalic.otf \
+  qt/res/fonts/Montserrat/Montserrat-Regular.otf \
+  qt/res/fonts/Montserrat/Montserrat-SemiBold.otf \
+  qt/res/fonts/Montserrat/Montserrat-SemiBoldItalic.otf \
+  qt/res/fonts/Montserrat/Montserrat-Thin.otf \
+  qt/res/fonts/Montserrat/Montserrat-ThinItalic.otf
+
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
 BITCOIN_RC = qt/res/dash-qt-res.rc
@@ -367,7 +387,7 @@ qt_libdashqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libdashqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libdashqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_FONTS) $(RES_MOVIES)
 
 nodist_qt_libdashqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
@@ -430,7 +450,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_FONTS) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) $(RCCFLAGS) -name dash $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@

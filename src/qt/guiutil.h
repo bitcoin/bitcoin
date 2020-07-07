@@ -233,6 +233,77 @@ namespace GUIUtil
     /** Load global CSS theme */
     QString loadStyleSheet();
 
+    enum class FontFamily {
+        SystemDefault,
+        Montserrat,
+    };
+
+    FontFamily fontFamilyFromString(const QString& strFamily);
+    QString fontFamilyToString(FontFamily family);
+
+    /** set/get font family: GUIUtil::fontFamily */
+    FontFamily getFontFamilyDefault();
+    FontFamily getFontFamily();
+    void setFontFamily(FontFamily family);
+
+    enum class FontWeight {
+        Normal, // Font weight for normal text
+        Bold,   // Font weight for bold text
+    };
+
+    /** Convert weight value from args (0-8) to QFont::Weight */
+    bool weightFromArg(int nArg, QFont::Weight& weight);
+    /** Convert QFont::Weight to an arg value (0-8) */
+    int weightToArg(const QFont::Weight weight);
+    /** Convert GUIUtil::FontWeight to QFont::Weight */
+    QFont::Weight toQFontWeight(FontWeight weight);
+
+    /** set/get normal font weight: GUIUtil::fontWeightNormal */
+    QFont::Weight getFontWeightNormalDefault();
+    QFont::Weight getFontWeightNormal();
+    void setFontWeightNormal(QFont::Weight weight);
+
+    /** set/get bold font weight: GUIUtil::fontWeightBold */
+    QFont::Weight getFontWeightBoldDefault();
+    QFont::Weight getFontWeightBold();
+    void setFontWeightBold(QFont::Weight weight);
+
+    /** set/get font scale: GUIUtil::fontScale */
+    int getFontScaleDefault();
+    int getFontScale();
+    void setFontScale(int nScale);
+
+    /** get font size with GUIUtil::fontScale applied */
+    double getScaledFontSize(int nSize);
+
+    /** Load dash specific appliciation fonts */
+    bool loadFonts();
+
+    /** Set an application wide default font, depends on the selected theme */
+    void setApplicationFont();
+
+    /** Workaround to set correct font styles in all themes since there is a bug in macOS which leads to
+        issues loading variations of montserrat in css it also keeps track of the set fonts to update on
+        theme changes. */
+    void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPointSize = -1, bool fItalic = false);
+
+    /** Workaround to set a fixed pitch font in traditional theme while keeping track of font updates */
+    void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets);
+
+    /** Update the font of all widgets where a custom font has been set with
+        GUIUtil::setFont */
+    void updateFonts();
+
+    /** Get a properly weighted QFont object with the font Montserrat
+        Use ExtraLight as default as this lines up with the default in css. */
+    QFont getFont(FontWeight weight, bool fItalic = false, int nPointSize = -1);
+
+    /** Get the default normal QFont */
+    QFont getFontNormal();
+
+    /** Get the default bold QFont */
+    QFont getFontBold();
+
     /** Check if a dash specific theme is activated (light/dark) */
     bool dashThemeActive();
 
@@ -272,11 +343,11 @@ namespace GUIUtil
     protected:
         void mouseReleaseEvent(QMouseEvent *event);
     };
-    
+
     class ClickableProgressBar : public QProgressBar
     {
         Q_OBJECT
-        
+
     Q_SIGNALS:
         /** Emitted when the progressbar is clicked. The relative mouse coordinates of the click are
          * passed to the signal.

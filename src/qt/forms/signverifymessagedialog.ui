@@ -110,11 +110,6 @@
          </property>
          <item>
           <widget class="QLineEdit" name="signatureOut_SM">
-           <property name="font">
-            <font>
-             <italic>true</italic>
-            </font>
-           </property>
            <property name="readOnly">
             <bool>true</bool>
            </property>
@@ -178,12 +173,6 @@
          </item>
          <item>
           <widget class="QLabel" name="statusLabel_SM">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -309,12 +298,6 @@
          </item>
          <item>
           <widget class="QLabel" name="statusLabel_VM">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>

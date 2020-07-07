@@ -29,12 +29,6 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="label_9">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>General</string>
          </property>
@@ -166,12 +160,6 @@
        </item>
        <item row="6" column="0">
            <widget class="QLabel" name="labelNetwork">
-               <property name="font">
-                   <font>
-                       <weight>75</weight>
-                       <bold>true</bold>
-                   </font>
-               </property>
                <property name="text">
                    <string>Network</string>
                </property>
@@ -248,12 +236,6 @@
        </item>
        <item row="10" column="0">
         <widget class="QLabel" name="label_10">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>Block chain</string>
          </property>
@@ -307,12 +289,6 @@
        </item>
        <item row="13" column="0">
         <widget class="QLabel" name="labelMempoolTitle">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="text">
           <string>Memory Pool</string>
          </property>
@@ -936,11 +912,6 @@
              <height>32</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -995,13 +966,6 @@
            <width>300</width>
            <height>32</height>
           </size>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
          </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -1572,12 +1536,6 @@
          <height>41</height>
         </rect>
        </property>
-       <property name="font">
-        <font>
-         <weight>50</weight>
-         <bold>false</bold>
-        </font>
-       </property>
        <property name="text">
         <string>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</string>
        </property>
@@ -1673,13 +1631,6 @@
          <width>711</width>
          <height>16</height>
         </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
        </property>
        <property name="text">
         <string>Wallet repair options.</string>
