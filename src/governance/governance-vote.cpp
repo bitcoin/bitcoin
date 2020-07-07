@@ -271,7 +271,8 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
     }
 
     if (useVotingKey) {
-        return CheckSignature(ToKeyID(dmn->pdmnState->keyIDVoting));
+        const CTxDestination& destVoting = DecodeDestination(dmn->pdmnState->keyIDOwner);
+        return CheckSignature(GetKeyForDestination(destVoting));
     } else {
         return CheckSignature(dmn->pdmnState->pubKeyOperator.Get());
     }
