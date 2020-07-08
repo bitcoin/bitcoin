@@ -30,7 +30,8 @@ print('Number of connections order: ' + str(connectionSequence))
 modifyConnectionSequence = input('Would you like to modify this? ').lower() in ['y', 'yes']
 if modifyConnectionSequence:
 	connectionSequenceStr = input('Enter a new connection sequence (separated by spaces): ').split()
-	connectionSequence = int(x) for x in connectionSequenceStr
+	connectionSequence = [int(x) for x in connectionSequenceStr]
+	print('Number of connections order: ' + str(connectionSequence))
 print()
 
 datadir = os.path.expanduser('~/.bitcoin') # Virtual machine shared folder
