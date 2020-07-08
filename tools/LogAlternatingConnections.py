@@ -57,9 +57,11 @@ def bitcoin(cmd):
 
 # Uses "top" to log the amount of resources that Bitcoin is using up, returns blank stings if the process is not running
 def getCPUData():
+	full_system = terminal('top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk \'{print 100 - $1}\'').strip()
 	raw = terminal('top -b -n 1 |grep bitcoind').strip().split()
 	while len(raw) < 12: raw.append('0')
 	output = {
+		'full_system': full_system,
 		'process_ID': raw[0],
 		'user': raw[1],
 		'priority': raw[2],
@@ -108,11 +110,11 @@ def fetchHeader():
 	line += "TotalBanScore,"
 	line += "Connections,"
 
-	line += 'CPU %,'
+	line += 'Bitcoin CPU %,'
 	line += 'Memory %,'
 	line += 'Mem (MB),'
 	line += 'VirtualMem (MB),'
-	line += 'SharedMem (MB),'
+	line += 'Full System CPU %,'
 
 	line += 'BlockHeight,'
 	line += 'BlockDelay (Seconds),'
@@ -320,7 +322,7 @@ def fetchHeader():
 
 	line += 'Time in which the sample was taken (in human readable format),' # Timestamp
 	line += 'Time in which the sample was taken (in number of seconds since 1/01/1970),' # Timestamp (Seconds)
-	
+
 	line += 'Number of peer connections,' # NumPeers
 	line += 'Sum of inbound connections (initiated by the peer),' # NumInbound
 	line += 'Sum of peers that do not have the full blockchain downloaded,' # NumPruned
@@ -335,7 +337,7 @@ def fetchHeader():
 	line += 'Percentage of memory usage of bitcoind,' # Memory %
 	line += 'Megabytes of memory being used,' # Mem
 	line += 'Megabytes of available disk extension space for if memory runs out,' # VirtualMem
-	line += 'Megabytes of memory that is shared by other processes,' # SharedMem
+	line += 'Total CPU usage for the system,' # Full System CPI %
 	#line += 'Contains the output from the "top" instruction for the bitcoind process,' # Resource usage
 	#line += 'A list of the current peer connections,' # GetPeerInfo
 	line += 'Block height of the node,' # BlockHeight
@@ -630,7 +632,7 @@ def fetch(now):
 	numPeers = 0
 	try:
 		numPeers = int(bitcoin('getconnectioncount').strip())
-		
+
 		# Disable all logging messages within bitcoin
 		if disableLog:
 			bitcoin('log')
@@ -735,7 +737,7 @@ def fetch(now):
 	line += resourceUsage['memory_percent'] + '%,'
 	line += resourceUsage['memory'] + ','
 	line += resourceUsage['virtual_memory'] + ','
-	line += resourceUsage['shared_memory'] + ','
+	line += resourceUsage['full_system'] + '%,'
 	#line += '"' + re.sub(r'\s', '', json.dumps(resourceUsage)).replace('"', '""') + '",'
 	#line += '"' + re.sub(r'\s', '', getpeerinfo_raw).replace('"', '""') + '",'
 
