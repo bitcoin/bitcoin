@@ -672,6 +672,7 @@ def fetch(now):
 		peerinfo = json.loads(bitcoin('getpeerinfo'))
 		resourceUsage = getCPUData()
 	except Exception as e:
+		print(e)
 		raise Exception('Unable to access Bitcoin console...')
 
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
