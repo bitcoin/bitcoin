@@ -1259,7 +1259,7 @@ void bls_help(const JSONRPCRequest& request)
 
 UniValue _bls(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty()) {
+    if (request.fHelp && request.params.empty()) {
         bls_help(request);
     }
 
