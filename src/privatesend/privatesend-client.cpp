@@ -1620,7 +1620,14 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
 
             // Number of denoms we can create given our denom and the amount of funds we have left
             int denomsToCreateValue = nValueLeft / (nDenomValue + nOutputFee);
-            int denomsToCreateBal = nBalanceToDenominate / nDenomValue;
+            // Prefer overshooting the targed balance by larger denoms (hence `+1`) instead of a more
+            // accurate approximation by many smaller denoms. This is ok because when we get here we
+            // should have nPrivateSendDenomsGoal of each smaller denom already. Also, without `+1`
+            // we can end up in a situation when there is already nPrivateSendDenomsHardCap of smaller
+            // denoms yet we can't mix the remaining nBalanceToDenominate because it's smaller than
+            // nDenomValue (and thus denomsToCreateBal == 0), so the target would never get reached
+            // even when there is enough funds for that.
+            int denomsToCreateBal = (nBalanceToDenominate / nDenomValue) + 1;
             // Use the smaller value
             int denomsToCreate = denomsToCreateValue > denomsToCreateBal ? denomsToCreateBal : denomsToCreateValue;
             auto it = mapDenomCount.find(nDenomValue);
