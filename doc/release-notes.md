@@ -98,7 +98,7 @@ will trigger BIP 125 (replace-by-fee) opt-in. (#11413)
 - The `bumpfee` command now uses `conf_target` rather than `confTarget` in the
   options. (#11413)
 
-- `getpeerinfo` no longer returns the `banscore` field unless the configuration
+- The `getpeerinfo` RPC no longer returns the `banscore` field unless the configuration
   option `-deprecatedrpc=banscore` is used. The `banscore` field will be fully
   removed in the next major release. (#19469)
 
@@ -123,8 +123,9 @@ Updated settings
 
 - The `-banscore` configuration option, which modified the default threshold for
   disconnecting and discouraging misbehaving peers, has been removed as part of
-  changes in this release to the handling of misbehaving peers. Refer to the
-  section, "Changes regarding misbehaving peers", for details. (#19464)
+  changes in 0.20.1 and in this release to the handling of misbehaving peers.
+  Refer to "Changes regarding misbehaving peers" in the 0.20.1 release notes for
+  details. (#19464)
 
 - The `-debug=db` logging category, which was deprecated in 0.20 and replaced by
   `-debug=walletdb` to distinguish it from `coindb`, has been removed. (#19202)
@@ -302,6 +303,11 @@ issue.
 
 GUI changes
 -----------
+
+- The GUI Peers window no longer displays a "Ban Score" field. This is part of
+  changes in 0.20.1 and in this release to the handling of misbehaving
+  peers. Refer to "Changes regarding misbehaving peers" in the 0.20.1 release
+  notes for details. (#19512)
 
 Low-level changes
 =================
