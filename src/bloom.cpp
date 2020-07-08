@@ -370,9 +370,3 @@ void CRollingBloomFilter::reset()
     nGeneration = 1;
     std::fill(data.begin(), data.end(), 0);
 }
-// SYSCOIN
-bool CBloomFilter::contains(const uint160& hash) const
-{
-    std::vector<unsigned char> data(hash.begin(), hash.end());
-    return contains(data);
-}
