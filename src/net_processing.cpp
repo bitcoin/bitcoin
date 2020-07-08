@@ -1744,9 +1744,10 @@ void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlock
             if (!pnode->CanRelay()) {
                 return;
             }
+            LOCK(pnode->cs_inventory);
             if (m_best_height > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 0)) {
                 for (const uint256& hash : reverse_iterate(vHashes)) {
-                    pnode->PushBlockHash(hash);
+                    pnode->vBlockHashesToAnnounce.push_back(hash);
                 }
             }
         });
@@ -2069,7 +2070,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, const CChainParams& chai
         // Trigger the peer node to send a getblocks request for the next batch of inventory
         if (inv.hash == pfrom.hashContinue)
         {
-            // Bypass PushInventory, this must send even if redundant,
+            // Send immediately. This must send even if redundant,
             // and we want it right after the last block so they don't
             // wait for other stuff first.
             std::vector<CInv> vInv;
@@ -3402,7 +3403,7 @@ void PeerManagerImpl::ProcessMessage(
                 break;
             }
             if (pfrom.CanRelay()) {
-                pfrom.PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+                WITH_LOCK(pfrom.cs_inventory, pfrom.vInventoryBlockToSend.push_back(pindex->GetBlockHash()));
             }
             if (--nLimit <= 0)
             {
@@ -4924,7 +4925,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                     // If the peer's chain has this block, don't inv it back.
                     if (!PeerHasHeader(&state, pindex)) {
-                        pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
+                        pto->vInventoryBlockToSend.push_back(hashToAnnounce);
                         LogPrint(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
                             pto->GetId(), hashToAnnounce.ToString());
                     }
