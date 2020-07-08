@@ -402,7 +402,9 @@ UniValue masternode(const JSONRPCRequest& request)
     } else if (strCommand == "winners") {
         return masternode_winners(request);
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid masternode command");
+        JSONRPCRequest jreq(request);
+        jreq.params = UniValue();
+        masternode_help(request);
     }
 }
 

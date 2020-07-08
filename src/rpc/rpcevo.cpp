@@ -1181,7 +1181,9 @@ UniValue protx(const JSONRPCRequest& request)
     } else if (command == "diff") {
         return protx_diff(request);
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid protx command");
+        JSONRPCRequest jreq(request);
+        jreq.params = UniValue();
+        protx_help(request);
     }
 }
 
@@ -1273,7 +1275,9 @@ UniValue _bls(const JSONRPCRequest& request)
     } else if (command == "fromsecret") {
         return bls_fromsecret(request);
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid bls command");
+        JSONRPCRequest jreq(request);
+        jreq.params = UniValue();
+        bls_help(request);
     }
 }
 
