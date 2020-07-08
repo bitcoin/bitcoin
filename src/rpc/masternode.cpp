@@ -354,8 +354,6 @@ void masternode_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"masternode",
         "Set of commands to execute masternode related actions\n"
-        "\nArguments:\n"
-        "1. \"command\"        (string or set of strings, required) The command to execute\n"
         "\nAvailable commands:\n"
         "  count        - Get information about number of masternodes (DEPRECATED options: 'total', 'ps', 'enabled', 'qualify', 'all')\n"
         "  current      - Print info on current masternode winner to be paid the next block (calculated locally)\n"
@@ -367,6 +365,7 @@ void masternode_help(const JSONRPCRequest& request)
         "  winner       - Print info on next masternode winner to vote for\n"
         "  winners      - Print list of masternode winners\n",
     {
+        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"}
     },
     RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
@@ -403,7 +402,7 @@ UniValue masternode(const JSONRPCRequest& request)
     } else if (strCommand == "winners") {
         return masternode_winners(request);
     } else {
-        masternode_help(request);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid masternode command");
     }
 }
 

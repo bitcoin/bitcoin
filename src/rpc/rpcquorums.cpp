@@ -504,8 +504,6 @@ void quorum_help(const JSONRPCRequest& request)
     RPCHelpMan{"quorum",
             "Set of commands for quorums/LLMQs.\n"
             "To get help on individual commands, use \"help quorum command\".\n"
-            "\nArguments:\n"
-            "1. \"command\"        (string, required) The command to execute\n"
             "\nAvailable commands:\n"
             "  list              - List of on-chain quorums\n"
             "  info              - Return information about a quorum\n"
@@ -518,6 +516,7 @@ void quorum_help(const JSONRPCRequest& request)
             "  isconflicting     - Test if a conflict exists\n"
             "  selectquorum      - Return the quorum that would/should sign a request\n",
     {
+        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"}
     },
     RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
@@ -550,7 +549,7 @@ UniValue quorum(const JSONRPCRequest& request)
     } else if (command == "dkgsimerror") {
         return quorum_dkgsimerror(request);
     } else {
-        quorum_help(request);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid quorum command");
     }
 }
 
