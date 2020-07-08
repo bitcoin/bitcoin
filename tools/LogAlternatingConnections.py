@@ -57,7 +57,8 @@ def bitcoin(cmd):
 
 # Uses "top" to log the amount of resources that Bitcoin is using up, returns blank stings if the process is not running
 def getCPUData():
-	full_system = terminal('top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk \'{print 100 - $1}\'').strip()
+	full_system = terminal('grep \'cpu \' /proc/stat | awk \'{usage=($2+$4)*100/($2+$4+$5)} END {print usage}\'').strip()
+	#full_system = terminal('top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk \'{print 100 - $1}\'').strip()
 	raw = terminal('top -b -n 1 |grep bitcoind').strip().split()
 	while len(raw) < 12: raw.append('0')
 	output = {
@@ -883,9 +884,9 @@ def log(file, targetDateTime, count):
 			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {numPeers}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
-			#if count >= 3600:
-			#	file.close()
-			#	return
+			##if count >= 3600:
+			##	file.close()
+			##	return
 			if(count % rowsPerFile == 0):
 				if not eclipsing: # If eclipse attack, max connections does not increase
 					maxConnections = (maxConnections + 1) % len(connectionSequence)
