@@ -112,7 +112,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                             {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                             {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection"},
                             {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
-                            {RPCResult::Type::NUM, "banscore", "The ban score"},
+                            {RPCResult::Type::NUM, "banscore", "The ban score (DEPRECATED, returned only if config option -deprecatedrpc=banscore is passed)"},
                             {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
                             {RPCResult::Type::NUM, "synced_blocks", "The last block we have in common with this peer"},
                             {RPCResult::Type::ARR, "inflight", "",
@@ -191,7 +191,10 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("addnode", stats.m_manual_connection);
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
-            obj.pushKV("banscore", statestats.nMisbehavior);
+            if (IsDeprecatedRPCEnabled("banscore")) {
+                // banscore is deprecated in v0.21 for removal in v0.22
+                obj.pushKV("banscore", statestats.nMisbehavior);
+            }
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);
