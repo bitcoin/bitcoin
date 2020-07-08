@@ -10,7 +10,7 @@
 #include <masternode/masternode-sync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
-#include <ui_interface.h>
+#include <node/ui_interface.h>
 #include <evo/deterministicmns.h>
 #include <shutdown.h>
 #include <util/translation.h>
