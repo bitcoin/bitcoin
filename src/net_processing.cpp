@@ -1016,7 +1016,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 }
 
 /**
- * Increment peer's misbehavior score. If the new value >= DEFAULT_BANSCORE_THRESHOLD, mark the node
+ * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
  * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
  */
 void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1030,7 +1030,7 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
 
     state->nMisbehavior += howmuch;
     std::string message_prefixed = message.empty() ? "" : (": " + message);
-    if (state->nMisbehavior >= DEFAULT_BANSCORE_THRESHOLD && state->nMisbehavior - howmuch < DEFAULT_BANSCORE_THRESHOLD)
+    if (state->nMisbehavior >= DISCOURAGEMENT_THRESHOLD && state->nMisbehavior - howmuch < DISCOURAGEMENT_THRESHOLD)
     {
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d) DISCOURAGE THRESHOLD EXCEEDED%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
         state->m_should_discourage = true;

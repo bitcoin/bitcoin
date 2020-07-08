@@ -26,7 +26,7 @@ from test_framework.util import (
     wait_until,
 )
 
-DEFAULT_BANSCORE_THRESHOLD = 100
+DISCOURAGEMENT_THRESHOLD = 100
 
 
 class CLazyNode(P2PInterface):
@@ -70,7 +70,7 @@ class CNodeNoVersionBan(CLazyNode):
     # NOTE: implementation-specific check here. Remove if bitcoind ban behavior changes
     def on_open(self):
         super().on_open()
-        for _ in range(DEFAULT_BANSCORE_THRESHOLD):
+        for _ in range(DISCOURAGEMENT_THRESHOLD):
             self.send_message(msg_verack())
 
 # Node that never sends a version. This one just sits idle and hopes to receive
