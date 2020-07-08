@@ -79,7 +79,7 @@ public:
         cachedAddressTable.clear();
         {
             LOCK(wallet->cs_wallet);
-            for (const std::pair<CTxDestination, CAddressBookData>& item : wallet->mapAddressBook)
+            for (const std::pair<const CTxDestination, CAddressBookData>& item : wallet->mapAddressBook)
             {
                 const CTxDestination& address = item.first;
                 bool fMine = IsMine(*wallet, address);

@@ -2956,6 +2956,9 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
             // Block until the validation queue drains. This should largely
             // never happen in normal operation, however may happen during
             // reindex, causing memory blowup if we run too far ahead.
+            // Note that if a validationinterface callback ends up calling
+            // ActivateBestChain this may lead to a deadlock! We should
+            // probably have a DEBUG_LOCKORDER test for this in the future.
             SyncWithValidationInterfaceQueue();
         }
 
@@ -4057,7 +4060,7 @@ bool CChainState::LoadBlockIndex(const Consensus::Params& consensus_params, CBlo
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(mapBlockIndex.size());
-    for (const std::pair<uint256, CBlockIndex*>& item : mapBlockIndex)
+    for (const std::pair<const uint256, CBlockIndex*>& item : mapBlockIndex)
     {
         CBlockIndex* pindex = item.second;
         vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
@@ -4129,7 +4132,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     // Check presence of blk files
     LogPrintf("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
-    for (const std::pair<uint256, CBlockIndex*>& item : mapBlockIndex)
+    for (const std::pair<const uint256, CBlockIndex*>& item : mapBlockIndex)
     {
         CBlockIndex* pindex = item.second;
         if (pindex->nStatus & BLOCK_HAVE_DATA) {
@@ -4243,7 +4246,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             reportDone = percentageDone/10;
         }
         uiInterface.ShowProgress(_("Verifying blocks..."), percentageDone, false);
-        if (pindex->nHeight < chainActive.Height()-nCheckDepth)
+        if (pindex->nHeight <= chainActive.Height()-nCheckDepth)
             break;
         if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, only go back as far as we have data.

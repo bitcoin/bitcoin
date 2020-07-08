@@ -13,8 +13,8 @@ pattern = args.pattern
 outfile = args.outfile
 
 in_remove = False
-with open(tracefile, 'r') as f:
-    with open(outfile, 'w') as wf:
+with open(tracefile, 'r', encoding="utf8") as f:
+    with open(outfile, 'w', encoding="utf8") as wf:
         for line in f:
             for p in pattern:
                 if line.startswith("SF:") and p in line:

@@ -139,7 +139,7 @@ def filterbyasn(ips, max_per_asn, max_total):
 def main():
     # This expects a json as outputted by "protx list valid 1"
     if len(sys.argv) > 1:
-        with open(sys.argv[1], 'r') as f:
+        with open(sys.argv[1], 'r', encoding="utf8") as f:
             mns = json.load(f)
     else:
         mns = json.load(sys.stdin)
