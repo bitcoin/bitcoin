@@ -195,10 +195,10 @@ class BerkeleyBatch
     };
 
 private:
-    bool ReadKey(CDataStream& key, CDataStream& value);
-    bool WriteKey(CDataStream& key, CDataStream& value, bool overwrite=true);
-    bool EraseKey(CDataStream& key);
-    bool HasKey(CDataStream& key);
+    bool ReadKey(CDataStream&& key, CDataStream& value);
+    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true);
+    bool EraseKey(CDataStream&& key);
+    bool HasKey(CDataStream&& key);
 
 protected:
     Db* pdb;
@@ -222,65 +222,52 @@ public:
     template <typename K, typename T>
     bool Read(const K& key, T& value)
     {
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
 
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        bool success = false;
-        bool ret = ReadKey(ssKey, ssValue);
-        if (ret) {
-            // Unserialize value
-            try {
-                ssValue >> value;
-                success = true;
-            } catch (const std::exception&) {
-                // In this case success remains 'false'
-            }
+        if (!ReadKey(std::move(ssKey), ssValue)) return false;
+        try {
+            ssValue >> value;
+            return true;
+        } catch (const std::exception&) {
+            return false;
         }
-        return ret && success;
     }
 
     template <typename K, typename T>
     bool Write(const K& key, const T& value, bool fOverwrite = true)
     {
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
 
-        // Value
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(10000);
         ssValue << value;
 
-        // Write
-        return WriteKey(ssKey, ssValue, fOverwrite);
+        return WriteKey(std::move(ssKey), std::move(ssValue), fOverwrite);
     }
 
     template <typename K>
     bool Erase(const K& key)
     {
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
 
-        // Erase
-        return EraseKey(ssKey);
+        return EraseKey(std::move(ssKey));
     }
 
     template <typename K>
     bool Exists(const K& key)
     {
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
 
-        // Exists
-        return HasKey(ssKey);
+        return HasKey(std::move(ssKey));
     }
 
     bool StartCursor();
