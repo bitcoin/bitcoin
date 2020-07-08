@@ -173,7 +173,7 @@ class BlockDataCopier:
             self.highTS = blkTS
 
         if (self.blkCountOut % 1000) == 0:
-            print('%i blocks scanned, %i blocks written (of %i, %.1f%% complete)' % 
+            print('%i blocks scanned, %i blocks written (of %i, %.1f%% complete)' %
                     (self.blkCountIn, self.blkCountOut, len(self.blkindex), 100.0 * self.blkCountOut / len(self.blkindex)))
 
     def inFileName(self, fn):
