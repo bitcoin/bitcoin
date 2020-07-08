@@ -89,7 +89,7 @@ jobs:
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PPA="ppa:openjdk-r/ppa"
-        PACKAGES="python3-zmq protobuf-compiler libprotobuf-dev openjdk-8-jdk"
+        PACKAGES="python3-zmq protobuf-compiler libprotobuf-dev openjdk-11-jdk"
         DEP_OPTS="NO_QT=1 NO_UPNP=1"
         RUN_UNIT_TESTS=false
         RUN_OMNIJ_TESTS=true
