@@ -94,7 +94,7 @@ std::vector<fs::path> ListWalletDir()
 
 WalletLocation::WalletLocation(const std::string& name)
     : m_name(name)
-    , m_path(fs::absolute(GetWalletDir() / name))
+    , m_path(fs::absolute(name.empty() ? GetWalletDir() : (GetWalletDir() / name)))
 {
 }
 
