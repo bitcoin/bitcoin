@@ -1152,7 +1152,7 @@ void protx_help(const JSONRPCRequest& request)
 
 UniValue protx(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty()) {
+    if (request.fHelp && request.params.empty()) {
         protx_help(request);
     }
 

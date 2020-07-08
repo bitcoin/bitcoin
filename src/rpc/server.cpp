@@ -143,7 +143,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                 "\nList all commands, or get help for a specified command.\n",
                 {
                     {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
-                    {"subCommand", RPCArg::Type::STR, RPCArg::Optional, "The subcommand to get help on. Please not that not all subcommands support this at the moment"}
+                    {"subCommand", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The subcommand to get help on. Please not that not all subcommands support this at the moment"}
                 },
                 RPCResult{
                     RPCResult::Type::STR, "", "The help text"
