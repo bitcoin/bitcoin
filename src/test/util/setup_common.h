@@ -96,8 +96,7 @@ struct TestingSetup : public BasicTestingSetup {
 /** Identical to TestingSetup, but chain set to regtest */
 struct RegTestingSetup : public TestingSetup {
     RegTestingSetup()
-        // SYSCOIN
-        : TestingSetup{CBaseChainParams::REGTEST} { fRegTest = true;}
+        : TestingSetup{CBaseChainParams::REGTEST} {}
 };
 
 
