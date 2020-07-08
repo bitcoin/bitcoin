@@ -2269,7 +2269,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (!pszDest) {
         // banned or exact match?
-        if ((m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))))
+        if (m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort())))
             return;
         // local and not a connection to itself?
         bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
@@ -2279,8 +2279,8 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         if ((!Params().AllowMultiplePorts() && FindNode(static_cast<CNetAddr>(addrConnect))) ||
             (Params().AllowMultiplePorts() && FindNode(static_cast<CService>(addrConnect))))
             return;
-        }
-    } else if (FindNode(std::string(pszDest)))
+    }
+    else if (FindNode(std::string(pszDest)))
         return;
 
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, manual_connection, block_relay_only);
