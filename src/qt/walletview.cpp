@@ -109,6 +109,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+
+    GUIUtil::disableMacFocusRect(this);
 }
 
 WalletView::~WalletView()

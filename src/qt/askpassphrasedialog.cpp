@@ -33,6 +33,8 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent) :
 
     GUIUtil::updateFonts();
 
+    GUIUtil::disableMacFocusRect(this);
+
     ui->passEdit1->setMinimumSize(ui->passEdit1->sizeHint());
     ui->passEdit2->setMinimumSize(ui->passEdit2->sizeHint());
     ui->passEdit3->setMinimumSize(ui->passEdit3->sizeHint());

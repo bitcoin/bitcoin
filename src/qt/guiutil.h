@@ -307,6 +307,10 @@ namespace GUIUtil
     /** Check if a dash specific theme is activated (light/dark) */
     bool dashThemeActive();
 
+    /** Disable the OS default focus rect for macOS because we have custom focus rects
+     * set in the css files */
+    void disableMacFocusRect(const QWidget* w);
+
     /* Convert QString to OS specific boost path through UTF-8 */
     fs::path qstringToBoostPath(const QString &path);
 
