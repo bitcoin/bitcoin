@@ -1310,7 +1310,7 @@ bool loadFonts()
 
     // Fail if an added id is -1 which means QFontDatabase::addApplicationFont failed.
     if (std::find(vecFontIds.begin(), vecFontIds.end(), -1) != vecFontIds.end()) {
-        return InitError("Font loading failed.");
+        return false;
     }
 
     // Print debug logs for added fonts fetched by the added ids
