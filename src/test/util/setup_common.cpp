@@ -186,6 +186,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
     // SYSCOIN
     llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman);
+    fRegTest = chainName == CBaseChainParams::REGTEST;
 }
 
 TestingSetup::~TestingSetup()
