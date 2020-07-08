@@ -17,6 +17,7 @@ OpenURIDialog::OpenURIDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     GUIUtil::updateFonts();
+    GUIUtil::disableMacFocusRect(this);
     ui->uriEdit->setPlaceholderText("dash:");
 }
 

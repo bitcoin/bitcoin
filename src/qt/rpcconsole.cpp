@@ -473,6 +473,8 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
                       ui->banHeading
                      }, GUIUtil::FontWeight::Bold, 16);
 
+    GUIUtil::disableMacFocusRect(this);
+
     QSettings settings;
     if (!restoreGeometry(settings.value("RPCConsoleWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window

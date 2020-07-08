@@ -1410,6 +1410,17 @@ bool dashThemeActive()
     return theme != traditionalTheme;
 }
 
+void disableMacFocusRect(const QWidget* w)
+{
+#ifdef Q_OS_MAC
+    for (const auto& c : w->findChildren<QWidget*>()) {
+        if (c->testAttribute(Qt::WA_MacShowFocusRect)) {
+            c->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
+        }
+    }
+#endif
+}
+
 void setClipboard(const QString& str)
 {
     QApplication::clipboard()->setText(str, QClipboard::Clipboard);

@@ -40,6 +40,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     GUIUtil::updateFonts();
 
+    GUIUtil::disableMacFocusRect(this);
+
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
