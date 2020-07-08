@@ -334,8 +334,8 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
         consensus.nBridgeStartBlock = 1000;
         consensus.nUTXOAssetsBlock = 400000;
-        consensus.DIP0003Height = 400000;
-        consensus.DIP0003EnforcementHeight = 400000;
+        consensus.DIP0003Height = 200;
+        consensus.DIP0003EnforcementHeight = 400;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
