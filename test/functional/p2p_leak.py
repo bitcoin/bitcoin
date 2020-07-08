@@ -26,7 +26,7 @@ from test_framework.util import (
     wait_until,
 )
 
-banscore = 10
+DEFAULT_BANSCORE_THRESHOLD = 100
 
 
 class CLazyNode(P2PInterface):
@@ -70,7 +70,7 @@ class CNodeNoVersionBan(CLazyNode):
     # NOTE: implementation-specific check here. Remove if bitcoind ban behavior changes
     def on_open(self):
         super().on_open()
-        for i in range(banscore):
+        for _ in range(DEFAULT_BANSCORE_THRESHOLD):
             self.send_message(msg_verack())
 
 # Node that never sends a version. This one just sits idle and hopes to receive
@@ -106,7 +106,6 @@ class P2PVersionStore(P2PInterface):
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-banscore=' + str(banscore)]]
 
     def run_test(self):
         no_version_bannode = self.nodes[0].add_p2p_connection(CNodeNoVersionBan(), send_version=False, wait_for_verack=False)

@@ -99,6 +99,11 @@ Build System
 Updated settings
 ----------------
 
+- The `-banscore` configuration option, which modified the default threshold for
+  disconnecting and discouraging misbehaving peers, has been removed as part of
+  changes in this release to the handling of misbehaving peers. Refer to the
+  section, "Changes regarding misbehaving peers", for details. (#19464)
+
 - The `-debug=db` logging category, which was deprecated in 0.20 and replaced by
   `-debug=walletdb` to distinguish it from `coindb`, has been removed. (#19202)
 
