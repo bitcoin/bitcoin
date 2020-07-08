@@ -127,7 +127,7 @@ static bool SalvageWallet(const fs::path& path)
 
 bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
 {
-    fs::path path = fs::absolute(name, GetWalletDir());
+    fs::path path = fs::absolute(GetWalletDir() / name);
 
     if (command == "create") {
         std::shared_ptr<CWallet> wallet_instance = CreateWallet(name, path);

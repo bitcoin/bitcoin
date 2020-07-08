@@ -94,7 +94,7 @@ std::vector<fs::path> ListWalletDir()
 
 WalletLocation::WalletLocation(const std::string& name)
     : m_name(name)
-    , m_path(fs::absolute(name, GetWalletDir()))
+    , m_path(fs::absolute(GetWalletDir() / name))
 {
 }
 
@@ -103,7 +103,7 @@ bool WalletLocation::Exists() const
     fs::path path = m_path;
     // For the default wallet, check specifically for the wallet.dat file
     if (m_name.empty()) {
-        path = fs::absolute("wallet.dat", m_path);
+        path = fs::absolute(m_path / "wallet.dat");
     }
     return fs::symlink_status(path).type() != fs::file_not_found;
 }

@@ -2288,10 +2288,10 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
         }
     }.Check(request);
 
-    fs::path path = fs::absolute(request.params[0].get_str(), GetDataDir());
+    fs::path path = fs::absolute(GetDataDir() / request.params[0].get_str());
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
-    fs::path temppath = fs::absolute(request.params[0].get_str() + ".incomplete", GetDataDir());
+    fs::path temppath = fs::absolute(GetDataDir() / (request.params[0].get_str() + ".incomplete"));
 
     if (fs::exists(path)) {
         throw JSONRPCError(

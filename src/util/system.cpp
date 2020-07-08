@@ -1156,7 +1156,7 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
     if (path.is_absolute()) {
         return path;
     }
-    return fs::absolute(path, GetDataDir(net_specific));
+    return fs::absolute(GetDataDir(net_specific) / path);
 }
 
 void ScheduleBatchPriority()
