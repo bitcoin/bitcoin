@@ -525,7 +525,7 @@ void quorum_help(const JSONRPCRequest& request)
 
 UniValue quorum(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty()) {
+    if (request.fHelp && request.params.empty()) {
         quorum_help(request);
     }
 
