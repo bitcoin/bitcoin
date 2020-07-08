@@ -119,6 +119,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     // SYSCOIN
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+    gArgs.ForceSetArg("-dip3params", "9000:9000");
 }
 
 BasicTestingSetup::~BasicTestingSetup()
