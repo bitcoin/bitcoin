@@ -492,7 +492,7 @@ std::string HelpMessage(HelpMessageMode mode)
 #ifndef WIN32
     strUsage += HelpMessageOpt("-pid=<file>", strprintf(_("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)"), BITCOIN_PID_FILENAME));
 #endif
-    strUsage += HelpMessageOpt("-prune=<n>", strprintf(_("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
+    strUsage += HelpMessageOpt("-prune=<n>", strprintf(_("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -rescan and -disablegovernance=false. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u = automatically prune block files to stay under the specified target size in MiB)"), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
     strUsage += HelpMessageOpt("-reindex-chainstate", _("Rebuild chain state from the currently indexed blocks"));
@@ -982,6 +982,23 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
 
+    if (gArgs.GetBoolArg("-litemode", false)) {
+        InitWarning(_("Warning: -litemode is deprecated, please use -disablegovernance.\n"));
+        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
+            LogPrintf("%s: parameter interaction: -litemode=true -> setting -disablegovernance=true\n", __func__);
+        }
+        gArgs.ForceRemoveArg("-litemode");
+    }
+
+    if (gArgs.GetArg("-prune", 0) > 0) {
+        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
+            LogPrintf("%s: parameter interaction: -prune=%d -> setting -disablegovernance=true\n", __func__);
+        }
+        if (gArgs.SoftSetBoolArg("-txindex", false)) {
+            LogPrintf("%s: parameter interaction: -prune=%d -> setting -txindex=false\n", __func__);
+        }
+    }
+
     // Make sure additional indexes are recalculated correctly in VerifyDB
     // (we must reconnect blocks whenever we disconnect them for these indexes to work)
     bool fAdditionalIndexes =
@@ -1097,10 +1114,13 @@ bool AppInitParameterInteraction()
 
     // also see: InitParameterInteraction()
 
-    // if using block pruning, then disallow txindex
+    // if using block pruning, then disallow txindex and require disabling governance validation
     if (gArgs.GetArg("-prune", 0)) {
         if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
+        if (!gArgs.GetBoolArg("-disablegovernance", false)) {
+            return InitError(_("Prune mode is incompatible with -disablegovernance=false."));
+        }
     }
 
     if (gArgs.IsArgSet("-devnet")) {
@@ -1189,14 +1209,6 @@ bool AppInitParameterInteraction()
 
     if (gArgs.IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
-
-    if (gArgs.GetBoolArg("-litemode", false)) {
-        InitWarning(_("Warning: -litemode is deprecated, please use -disablegovernance.\n"));
-        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
-            LogPrintf("%s: parameter interaction: -litemode=true -> setting -disablegovernance=true\n", __func__);
-        }
-        gArgs.ForceRemoveArg("-litemode");
-    }
 
     // Checkmempool and checkblockindex default to true in regtest mode
     int ratio = std::min<int>(std::max<int>(gArgs.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
@@ -1505,6 +1517,13 @@ bool AppInitParameterInteraction()
         }
     }
 
+    fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
+    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
+
+    if (fDisableGovernance) {
+        InitWarning(_("You are starting with governance validation disabled.") + (fPruneMode ? " " + _("This is expected because you are running a pruned node.") : ""));
+    }
+
     return true;
 }
 
@@ -1774,15 +1793,7 @@ bool AppInitMain()
         nMaxOutboundLimit = gArgs.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024;
     }
 
-    // ********************************************************* Step 7a: check lite mode and load sporks
-
-    // lite mode disables governance validation
-    fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
-    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
-
-    if(fDisableGovernance) {
-        InitWarning(_("You are starting with governance validation disabled."));
-    }
+    // ********************************************************* Step 7a: Load sporks
 
     uiInterface.InitMessage(_("Loading sporks cache..."));
     CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");

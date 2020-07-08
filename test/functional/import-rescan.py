@@ -126,7 +126,7 @@ class ImportRescanTest(BitcoinTestFramework):
                 # txindex is enabled by default in Dash and needs to be disabled for import-rescan.py
                 extra_args[i] += ["-prune=1", "-txindex=0", "-reindex"]
 
-        self.add_nodes(self.num_nodes, extra_args)
+        self.add_nodes(self.num_nodes, extra_args, stderr=sys.stdout)
         self.start_nodes()
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
