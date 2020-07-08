@@ -1127,8 +1127,6 @@ void protx_help(const JSONRPCRequest& request)
     RPCHelpMan{"protx",
             "Set of commands to execute ProTx related actions.\n"
             "To get help on individual commands, use \"help protx command\".\n"
-            "\nArguments:\n"
-            "1. \"command\"        (string, required) The command to execute\n"
             "\nAvailable commands:\n"
 #ifdef ENABLE_WALLET
             "  register          - Create and send ProTx to network\n"
@@ -1145,6 +1143,7 @@ void protx_help(const JSONRPCRequest& request)
 #endif
             "  diff              - Calculate a diff and a proof between two masternode lists\n",
     {
+        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"}
     },
     RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
@@ -1182,7 +1181,7 @@ UniValue protx(const JSONRPCRequest& request)
     } else if (command == "diff") {
         return protx_diff(request);
     } else {
-        protx_help(request);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid protx command");
     }
 }
 
@@ -1247,12 +1246,11 @@ void bls_help(const JSONRPCRequest& request)
     RPCHelpMan{"bls",
         "Set of commands to execute BLS related actions.\n"
         "To get help on individual commands, use \"help bls command\".\n"
-        "\nArguments:\n"
-        "1. \"command\"        (string, required) The command to execute\n"
         "\nAvailable commands:\n"
         "  generate          - Create a BLS secret/public key pair\n"
         "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n",
     {
+        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"}
     },
     RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
@@ -1275,7 +1273,7 @@ UniValue _bls(const JSONRPCRequest& request)
     } else if (command == "fromsecret") {
         return bls_fromsecret(request);
     } else {
-        bls_help(request);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid bls command");
     }
 }
 
