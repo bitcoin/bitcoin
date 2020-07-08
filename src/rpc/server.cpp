@@ -143,6 +143,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                 "\nList all commands, or get help for a specified command.\n",
                 {
                     {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
+                    // SYSCOIN
                     {"subCommand", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The subcommand to get help on. Please not that not all subcommands support this at the moment"}
                 },
                 RPCResult{
@@ -152,9 +153,13 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             }.ToString()
         );
 
-    std::string strCommand, strSubCommand;
+    std::string strCommand;
+    // SYSCOIN
+    std::string strSubCommand;
+
     if (jsonRequest.params.size() > 0)
         strCommand = jsonRequest.params[0].get_str();
+    // SYSCOIN
     if (jsonRequest.params.size() > 1)
         strSubCommand = jsonRequest.params[1].get_str();
 

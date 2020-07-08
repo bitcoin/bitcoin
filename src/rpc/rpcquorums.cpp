@@ -549,7 +549,9 @@ UniValue quorum(const JSONRPCRequest& request)
     } else if (command == "dkgsimerror") {
         return quorum_dkgsimerror(request);
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid quorum command");
+        JSONRPCRequest jreq(request);
+        jreq.params = UniValue();
+        quorum_help(request);
     }
 }
 
