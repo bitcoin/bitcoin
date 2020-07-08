@@ -651,8 +651,8 @@ def fetch(now):
 			if not success:
 				numSkippedSamples += 1
 				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
-				# If not connected for too long, reset the node
-				#if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
+				# If not connected for 3 hours, reset the node
+				if numSkippedSamples > 0 and numSkippedSamples % 10800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 				return ''
 		elif numPeers > connectionSequence[maxConnections]:
 			# If not eclipsing, and number of connections is too big, reduce connections
