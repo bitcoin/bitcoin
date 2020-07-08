@@ -1183,7 +1183,7 @@ UniValue protx(const JSONRPCRequest& request)
     } else {
         JSONRPCRequest jreq(request);
         jreq.params = UniValue();
-        protx_help(request);
+        protx_help(jreq);
     }
 }
 
@@ -1277,7 +1277,7 @@ UniValue _bls(const JSONRPCRequest& request)
     } else {
         JSONRPCRequest jreq(request);
         jreq.params = UniValue();
-        bls_help(request);
+        bls_help(jreq);
     }
 }
 

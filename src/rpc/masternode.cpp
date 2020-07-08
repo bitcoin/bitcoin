@@ -404,7 +404,7 @@ UniValue masternode(const JSONRPCRequest& request)
     } else {
         JSONRPCRequest jreq(request);
         jreq.params = UniValue();
-        masternode_help(request);
+        masternode_help(jreq);
     }
 }
 

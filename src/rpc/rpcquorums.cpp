@@ -551,7 +551,7 @@ UniValue quorum(const JSONRPCRequest& request)
     } else {
         JSONRPCRequest jreq(request);
         jreq.params = UniValue();
-        quorum_help(request);
+        quorum_help(jreq);
     }
 }
 
