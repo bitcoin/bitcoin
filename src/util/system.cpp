@@ -636,9 +636,11 @@ const fs::path &GetDataDir(bool fNetSpecific)
     } else {
         path = GetDefaultDataDir();
     }
-    if (fNetSpecific)
-        path /= BaseParams().DataDir();
-
+    if (fNetSpecific) {
+        if (!BaseParams().DataDir().empty()) {
+            path /= BaseParams().DataDir();
+        }
+    }
     if (fs::create_directories(path)) {
         // This is the first run, create wallets subdirectory too
         fs::create_directories(path / "wallets");
