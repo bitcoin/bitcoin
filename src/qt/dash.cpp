@@ -272,9 +272,6 @@ bool BitcoinCore::baseInitialize()
     {
         return false;
     }
-    if (!GUIUtil::loadFonts()) {
-        return false;
-    }
     return true;
 }
 
@@ -693,7 +690,12 @@ int main(int argc, char *argv[])
     app.parameterSetup();
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
-
+    // Load custom application fonts and setup font management
+    if (!GUIUtil::loadFonts()) {
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                              QObject::tr("Error: Failed to load application fonts."));
+        return EXIT_FAILURE;
+    }
     // Validate/set font family
     if (gArgs.IsArgSet("-font-family")) {
         GUIUtil::FontFamily family;
