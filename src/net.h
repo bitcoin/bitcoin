@@ -942,7 +942,7 @@ public:
        // SYSCOIN List of non-tx/non-block inventory items
     std::vector<CInv> vInventoryOtherToSend;
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
-    RecursiveMutex cs_inventory;
+    Mutex cs_inventory;
 
     struct TxRelay {
         mutable RecursiveMutex cs_filter;
@@ -1131,26 +1131,11 @@ public:
             m_tx_relay->setInventoryTxToSend.insert(hash);
         }
     }
-
     void PushOtherInventory(const CInv& inv)
     {
         // SYSCOIN
         vInventoryOtherToSend.push_back(inv);
     }
- 
-
-    void PushBlockInventory(const uint256& hash)
-    {
-        LOCK(cs_inventory);
-        vInventoryBlockToSend.push_back(hash);
-    }
-
-    void PushBlockHash(const uint256 &hash)
-    {
-        LOCK(cs_inventory);
-        vBlockHashesToAnnounce.push_back(hash);
-    }
-
     void CloseSocketDisconnect();
 
     void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
