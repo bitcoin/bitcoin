@@ -974,6 +974,7 @@ void gobject_help(const JSONRPCRequest& request)
             "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
 #endif // ENABLE_WALLET
     ,{
+        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"}
     },
     RPCResult{RPCResult::Type::NONE, "", ""},
     RPCExamples{""},
@@ -1031,7 +1032,9 @@ UniValue gobject(const JSONRPCRequest& request)
         // GET VOTES FOR SPECIFIC GOVERNANCE OBJECT
         return gobject_getcurrentvotes(request);
     } else {
-        gobject_help(request);
+        JSONRPCRequest jreq(request);
+        jreq.params = UniValue();
+        gobject_help(jreq);
     }
 }
 
