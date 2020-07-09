@@ -903,6 +903,7 @@ void BitcoinGUI::removeWallet(WalletModel* walletModel)
     m_wallet_selector->removeItem(index);
     if (m_wallet_selector->count() == 0) {
         setWalletActionsEnabled(false);
+        overviewButton->setChecked(true);
     } else if (m_wallet_selector->count() == 1) {
         m_wallet_selector_action->setVisible(false);
     }
