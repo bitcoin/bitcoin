@@ -12,7 +12,7 @@
 #include <compat.h>
 #include <serialize.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -143,10 +143,10 @@ class CService : public CNetAddr
 
     public:
         CService();
-        CService(const CNetAddr& ip, unsigned short port);
-        CService(const struct in_addr& ipv4Addr, unsigned short port);
+        CService(const CNetAddr& ip, uint16_t port);
+        CService(const struct in_addr& ipv4Addr, uint16_t port);
         explicit CService(const struct sockaddr_in& addr);
-        unsigned short GetPort() const;
+        uint16_t GetPort() const;
         bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
         bool SetSockAddr(const struct sockaddr* paddr);
         friend bool operator==(const CService& a, const CService& b);
@@ -157,7 +157,7 @@ class CService : public CNetAddr
         std::string ToStringPort() const;
         std::string ToStringIPPort() const;
 
-        CService(const struct in6_addr& ipv6Addr, unsigned short port);
+        CService(const struct in6_addr& ipv6Addr, uint16_t port);
         explicit CService(const struct sockaddr_in6& addr);
 
         SERIALIZE_METHODS(CService, obj) { READWRITE(obj.ip, Using<BigEndianFormatter<2>>(obj.port)); }
