@@ -76,6 +76,7 @@ void RPCServer::OnStopped(std::function<void ()> slot)
     g_rpcSignals.Stopped.connect(slot);
 }
 
+// SYSCOIN
 std::string CRPCTable::help(const std::string& strCommand, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
@@ -100,6 +101,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
         jreq.strMethod = strMethod;
         try
         {
+            // SYSCOIN
             if (!strSubCommand.empty()) {
                 jreq.params.setArray();
                 jreq.params.push_back(strSubCommand);
@@ -137,6 +139,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
 
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
+    // SYSCOIN
     if (jsonRequest.fHelp || jsonRequest.params.size() > 2)
         throw std::runtime_error(
             RPCHelpMan{"help",
