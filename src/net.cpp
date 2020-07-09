@@ -201,8 +201,7 @@ bool IsPeerAddrLocalGood(CNode *pnode)
            IsReachable(addrLocal.GetNetwork());
 }
 
-// pushes our own address to a peer
-void AdvertiseLocal(CNode *pnode)
+Optional<CAddress> GetLocalAddrForPeer(CNode *pnode)
 {
     if (fListen && pnode->fSuccessfullyConnected)
     {
@@ -222,10 +221,12 @@ void AdvertiseLocal(CNode *pnode)
         }
         if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false))
         {
-            LogPrint(BCLog::NET, "AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
-            pnode->PushAddress(addrLocal, rng);
+            LogPrint(BCLog::NET, "Advertising address %s to peer=%d\n", addrLocal.ToString(), pnode->GetId());
+            return addrLocal;
         }
     }
+    // Address is unroutable. Don't advertise.
+    return nullopt;
 }
 
 // learn a new local address
