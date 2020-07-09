@@ -125,7 +125,9 @@ private:
     std::map<std::string, std::vector<const CRPCCommand*>> mapCommands;
 public:
     CRPCTable();
-    std::string help(const std::string& name, const JSONRPCRequest& helpreq) const;
+
+    // SYSCOIN
+    std::string help(const std::string& name, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const;
 
     /**
      * Execute a method.
