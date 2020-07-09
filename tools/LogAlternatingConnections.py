@@ -655,7 +655,7 @@ def fetch(now):
 				numSkippedSamples += 1
 				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
 				# If it has at some point reached the limit, and is not connected for 2 hours, reset the node
-				if hasReachedConnections and numSkippedSamples > 0 and numSkippedSamples % 7200 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
+				if hasReachedConnections and numSkippedSamples > 0 and numSkippedSamples % 7200 == 0: resetNode()
 				return ''
 		elif numPeers > connectionSequence[maxConnections]:
 			# If not eclipsing, and number of connections is too big, reduce connections
@@ -665,7 +665,8 @@ def fetch(now):
 		if waitForConnectionNum and numPeers < connectionSequence[maxConnections]:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {connectionSequence[maxConnections]}, attempt #{numSkippedSamples}')
-			if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
+			# If it has at some point reached the limit, and is not connected for 2 hours, reset the node
+			if hasReachedConnections and numSkippedSamples > 0 and numSkippedSamples % 7200 == 0: resetNode()
 			return ''
 
 		messages = json.loads(bitcoin('getmsginfo'))
