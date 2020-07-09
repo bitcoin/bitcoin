@@ -1,10 +1,10 @@
 ### Global defaults
 
-timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+timeout_in: 60m  # https://cirrus-ci.org/faq/#instance-timed-out
 container:
   # https://cirrus-ci.org/faq/#are-there-any-limits
-  # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-  cpu: 2
+  # Each project has 16 CPU in total, assign 4 to each container, so that 4 tasks run in parallel
+  cpu: 4
   memory: 6G  # https://cirrus-ci.org/guide/linux/#linux-containers
 env:
   PACKAGE_MANAGER_INSTALL : "apt-get update && apt-get install -y"
