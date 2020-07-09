@@ -21,20 +21,10 @@ On a high level, these strings are to be translated:
 
 - GUI strings, anything that appears in a dialog or window
 
-- Command-line option documentation
-
 ### GUI strings
 
 Anything that appears to the user in the GUI is to be translated. This includes labels, menu items, button texts, tooltips and window titles.
 This includes messages passed to the GUI through the UI interface through `InitMessage`, `ThreadSafeMessageBox` or `ShowProgress`.
-
-### Command-line options
-
-Documentation for the command line options in the output of `--help` should be translated as well.
-
-Make sure that default values do not end up in the string, but use string formatting like `strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), 100)`. Putting default values in strings has led to accidental translations in the past, and forces the string to be retranslated every time the value changes.
-
-Do not translate messages that are only shown to developers, such as those that only appear when `--help-debug` is used.
 
 General recommendations
 ------------------------

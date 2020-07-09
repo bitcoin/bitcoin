@@ -717,7 +717,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
     for (TxSpends::iterator it = range.first; it != range.second; ++it) {
         const CWalletTx* wtx = &mapWallet[it->second];
         if (wtx->nOrderPos < nMinOrderPos) {
-            nMinOrderPos = wtx->nOrderPos;;
+            nMinOrderPos = wtx->nOrderPos;
             copyFrom = wtx;
         }
     }
@@ -773,6 +773,8 @@ void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
 {
     mapTxSpends.insert(std::make_pair(outpoint, wtxid));
     setWalletUTXO.erase(outpoint);
+
+    setLockedCoins.erase(outpoint);
 
     std::pair<TxSpends::iterator, TxSpends::iterator> range;
     range = mapTxSpends.equal_range(outpoint);
