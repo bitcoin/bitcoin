@@ -25,7 +25,7 @@ class HelpRpcTest(SyscoinTestFramework):
         node = self.nodes[0]
 
         # wrong argument count
-        // SYSCOIN
+        # SYSCOIN
         assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar', 'bar')
 
         # invalid argument
