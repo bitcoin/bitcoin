@@ -33,6 +33,7 @@
 #include <util/system.h>
 #include <validation.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <typeinfo>
@@ -4148,8 +4149,6 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds curre
 
     assert(node.m_addr_known);
 
-    const CNetMsgMaker msgMaker(node.GetCommonVersion());
-
     LOCK(node.m_addr_send_times_mutex);
     // Periodically advertise our local address to the peer.
     if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
@@ -4174,8 +4173,25 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds curre
     if (current_time <= node.m_next_addr_send) return;
 
     node.m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
-    std::vector<CAddress> vAddr;
-    vAddr.reserve(node.vAddrToSend.size());
+
+    if (!Assume(node.vAddrToSend.size() <= MAX_ADDR_TO_SEND)) {
+        // Should be impossible since we always check size before adding to
+        // vAddrToSend. Recover by trimming the vector.
+        node.vAddrToSend.resize(MAX_ADDR_TO_SEND);
+    }
+
+    // Remove addr records that the peer already knows about, and add new
+    // addrs to the m_addr_known filter on the same pass.
+    auto addr_already_known = [&node](const CAddress& addr) {
+        bool ret = node.m_addr_known->contains(addr.GetKey());
+        if (!ret) node.m_addr_known->insert(addr.GetKey());
+        return ret;
+    };
+    node.vAddrToSend.erase(std::remove_if(node.vAddrToSend.begin(), node.vAddrToSend.end(), addr_already_known),
+                           node.vAddrToSend.end());
+
+    // No addr messages to send
+    if (node.vAddrToSend.empty()) return;
 
     const char* msg_type;
     int make_flags;
@@ -4186,27 +4202,13 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds curre
         msg_type = NetMsgType::ADDR;
         make_flags = 0;
     }
-
-    for (const CAddress& addr : node.vAddrToSend)
-    {
-        if (!node.m_addr_known->contains(addr.GetKey()))
-        {
-            node.m_addr_known->insert(addr.GetKey());
-            vAddr.push_back(addr);
-            // receiver rejects addr messages larger than MAX_ADDR_TO_SEND
-            if (vAddr.size() >= MAX_ADDR_TO_SEND)
-            {
-                m_connman.PushMessage(&node, msgMaker.Make(make_flags, msg_type, vAddr));
-                vAddr.clear();
-            }
-        }
-    }
+    m_connman.PushMessage(&node, CNetMsgMaker(node.GetCommonVersion()).Make(make_flags, msg_type, node.vAddrToSend));
     node.vAddrToSend.clear();
-    if (!vAddr.empty())
-        m_connman.PushMessage(&node, msgMaker.Make(make_flags, msg_type, vAddr));
+
     // we only send the big addr message once
-    if (node.vAddrToSend.capacity() > 40)
+    if (node.vAddrToSend.capacity() > 40) {
         node.vAddrToSend.shrink_to_fit();
+    }
 }
 
 namespace {
