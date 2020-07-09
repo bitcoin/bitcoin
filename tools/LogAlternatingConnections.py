@@ -44,6 +44,7 @@ elif os.path.exists('/media/sf_BitcoinAttacker/blocks'):
 elif os.path.exists('/media/sim/BITCOIN/blocks'):
 	datadir = ' -datadir=/media/sim/BITCOIN'
 numSkippedSamples = 0
+hasReachedConnections = False
 
 # Fetch the external IP from myexternalip.com
 #def getmyIP():
@@ -631,7 +632,7 @@ def parseMessage(message, string, time):
 
 
 def fetch(now):
-	global numPeers, disableLog, numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
+	global numPeers, disableLog, numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount, hasReachedConnections
 	numPeers = 0
 	try:
 		numPeers = int(bitcoin('getconnectioncount').strip())
@@ -653,8 +654,8 @@ def fetch(now):
 			if not success:
 				numSkippedSamples += 1
 				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
-				# If not connected for 3 hours, reset the node
-				if numSkippedSamples > 0 and numSkippedSamples % 10800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
+				# If it has at some point reached the limit, and is not connected for 2 hours, reset the node
+				if hasReachedConnections and numSkippedSamples > 0 and numSkippedSamples % 7200 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 				return ''
 		elif numPeers > connectionSequence[maxConnections]:
 			# If not eclipsing, and number of connections is too big, reduce connections
@@ -880,7 +881,7 @@ def resetNode():
 		print('Startup delay complete.')
 
 def log(file, targetDateTime, count):
-	global maxConnections, fileSampleNumber, numPeers
+	global maxConnections, fileSampleNumber, numPeers, hasReachedConnections
 	try:
 		now = datetime.datetime.now()
 		line = fetch(now)
@@ -888,12 +889,15 @@ def log(file, targetDateTime, count):
 			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {numPeers}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
+
+			hasReachedConnections = True
 			##if count >= 3600:
 			##	file.close()
 			##	return
 			if(count % rowsPerFile == 0):
 				if not eclipsing: # If eclipse attack, max connections does not increase
 					maxConnections = (maxConnections + 1) % len(connectionSequence)
+					hasReachedConnections = False
 				try:
 					file = newFile(file)
 					resetNode()
@@ -933,7 +937,7 @@ def getFileName():
 		return f'Sample {fileSampleNumber}, maxConnections = {connectionSequence[maxConnections]}, minutes = {minutes}.csv'
 
 def init():
-	global fileSampleNumber, maxConnections, numconnectionsString, useBitcoinConf
+	global fileSampleNumber, maxConnections, numconnectionsString, useBitcoinConf, hasReachedConnections
 	global waitForConnectionNum, eclipsing, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate
 
 	fileSampleNumber = 0		# File number to start at
