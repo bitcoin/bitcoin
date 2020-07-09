@@ -42,8 +42,10 @@
 #include <univalue.h>
 
 #include <condition_variable>
+#include <future>
 #include <memory>
 #include <mutex>
+#include <queue>
 
 struct CUpdatedBlock
 {
@@ -541,6 +543,124 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
         fVerbose = request.params[0].get_bool();
 
     return MempoolToJSON(EnsureMemPool(request.context), fVerbose);
+}
+
+// TODO: streams must have a maximum queue size, when reached stream is dropped.
+class MempoolChanges : public CValidationInterface
+{
+    struct Stream {
+        std::queue<std::pair<bool, uint256>> queue;
+    };
+protected:
+    virtual void TransactionAddedToMempool(const CTransactionRef& tx)
+    {
+        LOCK(m_mutex);
+        for (auto& i : m_streams) {
+            Stream& stream = i.second;
+            stream.queue.emplace(true, tx->GetHash());
+        }
+    }
+    virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason)
+    {
+        LOCK(m_mutex);
+        for (auto& i : m_streams) {
+            Stream& stream = i.second;
+            stream.queue.emplace(false, tx->GetHash());
+        }
+    }
+    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex)
+    {
+        LOCK(m_mutex);
+        for (auto& i : m_streams) {
+            Stream& stream = i.second;
+            for (auto& tx : block->vtx) {
+                stream.queue.emplace(false, tx->GetHash());
+            }
+        }
+    }
+public:
+    UniValue Start(const CTxMemPool& pool)
+    {
+        uint64_t id;
+        std::promise<void> promise;
+        CallFunctionInValidationInterfaceQueue([&] {
+            Stream stream;
+            {
+                LOCK(pool.cs);
+                for (const CTxMemPoolEntry& e : pool.mapTx) {
+                    const uint256& hash = e.GetTx().GetHash();
+                    stream.queue.emplace(true, hash);
+                }
+            }
+            LOCK(m_mutex);
+            if (m_streams.empty()) RegisterValidationInterface(this);
+            id = ++m_last_stream_id;
+            m_streams.emplace(id, std::move(stream));
+            promise.set_value();
+        });
+        promise.get_future().wait();
+        return id;
+    }
+    UniValue Stop(uint64_t id)
+    {
+        LOCK(m_mutex);
+        const bool erased = m_streams.erase(id) == 1;
+        CHECK_NONFATAL(erased);
+        if (m_streams.empty()) UnregisterValidationInterface(this);
+        return {};
+    }
+    UniValue Pull(uint64_t id, size_t max)
+    {
+        LOCK(m_mutex);
+        auto it = m_streams.find(id);
+        CHECK_NONFATAL(it != m_streams.end());
+        UniValue result(UniValue::VARR);
+        Stream& stream = it->second;
+        while (stream.queue.size() > 0 && max-- > 0) {
+            auto e = stream.queue.front();
+            UniValue v(UniValue::VOBJ);
+            v.pushKV(e.first ? "add" : "del", e.second.ToString());
+            result.push_back(v);
+            stream.queue.pop();
+        }
+        return result;
+    }
+private:
+    Mutex m_mutex;
+    std::map<uint64_t, Stream> m_streams GUARDED_BY(m_mutex);
+    uint64_t m_last_stream_id GUARDED_BY(m_mutex) {0};
+};
+
+static MempoolChanges g_mempool_changes;
+
+static UniValue mempoolchanges(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"mempoolchanges",
+                "\n.\n",
+                {
+                    {"action", RPCArg::Type::STR, RPCArg::Optional::NO, "action\n"},
+                    {"stream", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "stream\n"},
+                    {"max", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "max\n"}
+                },
+                {
+                },
+                RPCExamples{
+                    HelpExampleCli("mempoolchanges", "\"start\"")
+            + HelpExampleRpc("mempoolchanges", "\"start\"")
+                },
+            }.Check(request);
+
+    const auto action = request.params[0].get_str();
+    if (action == "start") {
+        return g_mempool_changes.Start(EnsureMemPool(request.context));
+    }
+    if (action == "stop") {
+        return g_mempool_changes.Stop(request.params[1].get_int());
+    }
+    if (action == "pull") {
+        return g_mempool_changes.Pull(request.params[1].get_int(), request.params[2].get_int());
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid action");
 }
 
 static UniValue getmempoolancestors(const JSONRPCRequest& request)
@@ -2387,6 +2507,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
     { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose"} },
+    { "blockchain",         "mempoolchanges",         &mempoolchanges,         {"action", "stream", "max"} },
     { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {"hash_type"} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
