@@ -131,6 +131,9 @@ BASE_SCRIPTS= [
     'signmessages.py',
     'nulldummy.py',
     'import-rescan.py',
+    'rpcbind_test.py --ipv4',
+    'rpcbind_test.py --ipv6',
+    'rpcbind_test.py --nonloopback',
     'mining.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
@@ -172,7 +175,6 @@ EXTENDED_SCRIPTS = [
     'getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
     'p2p-timeouts.py',
     # vv Tests less than 60s vv
-    'rpcbind_test.py',
     # vv Tests less than 30s vv
     'assumevalid.py',
     'example_test.py',
