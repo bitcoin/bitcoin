@@ -887,12 +887,10 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     }
 
     if (fMasternodeMode) {
-        const CBlockIndex* pindexTip;
         {
             LOCK(cs_main);
-            pindexTip = ::ChainActive().Tip();
+            activeMasternodeManager->Init(::ChainActive().Tip());
         }
-        activeMasternodeManager->Init(pindexTip);
     }
     g_wallet_init_interface.AutoLockMasternodeCollaterals();
 
