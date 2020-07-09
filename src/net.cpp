@@ -2500,12 +2500,13 @@ void CConnman::SetNetworkActive(bool active)
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 // SYSCOIN
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : addrman(Params().AllowMultiplePorts()), nSeed0(nSeed0In), nSeed1(nSeed1In)
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, bool network_active) : addrman(Params().AllowMultiplePorts()), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 
     Options connOptions;
     Init(connOptions);
+    SetNetworkActive(network_active);
 }
 
 NodeId CConnman::GetNewNodeId()
