@@ -810,6 +810,7 @@ def fetch(now):
 	line += str(numSkippedSamples) + ','
 
 	numSkippedSamples = 0
+	hasReachedConnections = True
 	return line
 
 def newFile(file):
@@ -889,8 +890,6 @@ def log(file, targetDateTime, count):
 			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {numPeers}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
-
-			hasReachedConnections = True
 			##if count >= 3600:
 			##	file.close()
 			##	return
