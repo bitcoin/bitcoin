@@ -76,7 +76,8 @@ void RPCServer::OnStopped(std::function<void ()> slot)
     g_rpcSignals.Stopped.connect(slot);
 }
 
-std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
+// SYSCOIN
+std::string CRPCTable::help(const std::string& strCommand, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
     std::string category;
@@ -100,6 +101,12 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
         jreq.strMethod = strMethod;
         try
         {
+            // SYSCOIN
+            if (!strSubCommand.empty()) {
+                jreq.params.setArray();
+                jreq.params.push_back(strSubCommand);
+            }
+
             UniValue unused_result;
             if (setDone.insert(pcmd->unique_id).second)
                 pcmd->actor(jreq, unused_result, true /* last_handler */);
@@ -132,12 +139,15 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
+    // SYSCOIN
+    if (jsonRequest.fHelp || jsonRequest.params.size() > 2)
         throw std::runtime_error(
             RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
                     {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
+                    // SYSCOIN
+                    {"subCommand", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The subcommand to get help on. Please not that not all subcommands support this at the moment"}
                 },
                 RPCResult{
                     RPCResult::Type::STR, "", "The help text"
@@ -147,10 +157,16 @@ UniValue help(const JSONRPCRequest& jsonRequest)
         );
 
     std::string strCommand;
+    // SYSCOIN
+    std::string strSubCommand;
+
     if (jsonRequest.params.size() > 0)
         strCommand = jsonRequest.params[0].get_str();
+    // SYSCOIN
+    if (jsonRequest.params.size() > 1)
+        strSubCommand = jsonRequest.params[1].get_str();
 
-    return tableRPC.help(strCommand, jsonRequest);
+    return tableRPC.help(strCommand, strSubCommand, jsonRequest);
 }
 
 
