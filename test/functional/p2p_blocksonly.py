@@ -65,10 +65,10 @@ class P2PBlocksOnly(BitcoinTestFramework):
         second_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         peer_1_info = self.nodes[0].getpeerinfo()[0]
         assert_equal(peer_1_info['whitelisted'], True)
-        assert_equal(peer_1_info['permissions'], ['noban', 'forcerelay', 'relay', 'mempool'])
+        assert_equal(peer_1_info['permissions'], ['noban', 'forcerelay', 'relay', 'mempool', 'download'])
         peer_2_info = self.nodes[0].getpeerinfo()[1]
         assert_equal(peer_2_info['whitelisted'], True)
-        assert_equal(peer_2_info['permissions'], ['noban', 'forcerelay', 'relay', 'mempool'])
+        assert_equal(peer_2_info['permissions'], ['noban', 'forcerelay', 'relay', 'mempool', 'download'])
         assert_equal(self.nodes[0].testmempoolaccept([sigtx])[0]['allowed'], True)
         txid = self.nodes[0].testmempoolaccept([sigtx])[0]['txid']
 
