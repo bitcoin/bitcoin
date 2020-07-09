@@ -650,15 +650,6 @@ class WalletTest(BitcoinTestFramework):
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
         assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))
 
-        self.log.info("Testing Fee Reason")
-        #testing send_rpc_verbose sendtoaddress
-        address = self.nodes[0].getnewaddress("test") 
-        txid_feeReason_one = self.nodes[2].sendtoaddress(address = address, amount = 10, verbose = True)
-        assert_equal(str(txid_feeReason_one["Fee Reason"]), "Fallback fee")
-
-        #testing send_rpc_verbose sendtoaddress
-        txid_feeReason_two = self.nodes[2].sendmany(dummy = '', amounts = {address: 10}, verbose = True) 
-        assert_equal(str(txid_feeReason_two["Fee Reason"]), "Fallback fee")
 
 if __name__ == '__main__':
     WalletTest().main()
