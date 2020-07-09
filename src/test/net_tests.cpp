@@ -6,6 +6,7 @@
 #include <addrman.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <cstdint>
 #include <net.h>
 #include <netbase.h>
 #include <serialize.h>
@@ -83,10 +84,10 @@ BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {
     // test default
-    unsigned short port = GetListenPort();
+    uint16_t port = GetListenPort();
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
-    unsigned short altPort = 12345;
+    uint16_t altPort = 12345;
     BOOST_CHECK(gArgs.SoftSetArg("-port", ToString(altPort)));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);
