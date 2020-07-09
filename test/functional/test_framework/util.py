@@ -314,7 +314,7 @@ def get_datadir_path(dirname, n):
 
 def append_config(dirname, n, options):
     datadir = get_datadir_path(dirname, n)
-    with open(os.path.join(datadir, "bitcoin.conf"), 'a', encoding='utf8') as f:
+    with open(os.path.join(datadir, "dash.conf"), 'a', encoding='utf8') as f:
         for option in options:
             f.write(option + "\n")
 
