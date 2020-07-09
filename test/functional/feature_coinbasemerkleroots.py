@@ -14,7 +14,7 @@ Checks DIP4 merkle roots in coinbases
 
 '''
 
-class TestNode(P2PInterface):
+class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
         self.last_mnlistdiff = None
@@ -40,7 +40,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
 
     def run_test(self):
-        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         self.nodes[0].p2p.wait_for_verack()
 
         self.confirm_mns()
