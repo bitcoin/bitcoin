@@ -845,7 +845,7 @@ public:
      * validationinterface callback.
      *
      * @param[in]   pblock  The block we want to process.
-     * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
+     * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources.
      * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
      * @returns     If the block was processed, independently of block validity
      */

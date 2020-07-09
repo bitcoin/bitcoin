@@ -57,10 +57,10 @@ class P2PBlocksOnly(BitcoinTestFramework):
             self.nodes[0].p2p.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
 
-        self.log.info('Check that txs from whitelisted peers are not rejected and relayed to others')
-        self.log.info("Restarting node 0 with whitelist permission and blocksonly")
+        self.log.info('Check that txs from forcerelay peers are not rejected and relayed to others')
+        self.log.info("Restarting node 0 with forcerelay permission and blocksonly")
         self.restart_node(0, ["-persistmempool=0", "-whitelist=127.0.0.1", "-whitelistforcerelay", "-blocksonly"])
-        assert_equal(self.nodes[0].getrawmempool(),[])
+        assert_equal(self.nodes[0].getrawmempool(), [])
         first_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         second_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         peer_1_info = self.nodes[0].getpeerinfo()[0]
@@ -72,14 +72,15 @@ class P2PBlocksOnly(BitcoinTestFramework):
         assert_equal(self.nodes[0].testmempoolaccept([sigtx])[0]['allowed'], True)
         txid = self.nodes[0].testmempoolaccept([sigtx])[0]['txid']
 
-        self.log.info('Check that the tx from whitelisted first_peer is relayed to others (ie.second_peer)')
+        self.log.info('Check that the tx from forcerelay first_peer is relayed to others (ie.second_peer)')
         with self.nodes[0].assert_debug_log(["received getdata"]):
             first_peer.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
-            self.log.info('Check that the whitelisted peer is still connected after sending the transaction')
+            self.log.info('Check that the forcerelay peer is still connected after sending the transaction')
             assert_equal(first_peer.is_connected, True)
             second_peer.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
-        self.log.info("Whitelisted peer's transaction is accepted and relayed")
+        self.log.info("Forcerelay peer's transaction is accepted and relayed")
+
 
 if __name__ == '__main__':
     P2PBlocksOnly().main()

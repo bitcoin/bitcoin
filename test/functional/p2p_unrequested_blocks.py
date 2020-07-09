@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
 
-Setup: two nodes, node0+node1, not connected to each other. Node1 will have
+Setup: two nodes, node0 + node1, not connected to each other. Node1 will have
 nMinimumChainWork set to 0x10, so it won't process low-work unrequested blocks.
 
 We have one P2PInterface connection to node0 called test_node, and one to node1
@@ -71,18 +71,10 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.extra_args = [[], ["-minimumchainwork=0x10"]]
 
     def setup_network(self):
-        # Node0 will be used to test behavior of processing unrequested blocks
-        # from peers which are not whitelisted, while Node1 will be used for
-        # the whitelisted case.
-        # Node2 will be used for non-whitelisted peers to test the interaction
-        # with nMinimumChainWork.
         self.setup_nodes()
 
     def run_test(self):
-        # Setup the p2p connections
-        # test_node connects to node0 (not whitelisted)
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
-        # min_work_node connects to node1 (whitelisted)
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
         # 1. Have nodes mine a block (leave IBD)
@@ -226,7 +218,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.nodes[0].getblock(all_blocks[286].hash)
         assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[287].hash)
-        self.log.info("Successfully reorged to longer chain from non-whitelisted peer")
+        self.log.info("Successfully reorged to longer chain")
 
         # 8. Create a chain which is invalid at a height longer than the
         # current chain, but which has more blocks on top of that
