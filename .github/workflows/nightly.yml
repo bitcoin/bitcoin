@@ -145,7 +145,6 @@ jobs:
         run: |
           echo "::set-env name=ASAN_OPTIONS::detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
           echo "::set-env name=LSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan"
-          echo "::set-env name=TSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan"
           echo "::set-env name=UBSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
       - name: autogen
         run: ./autogen.sh
@@ -212,7 +211,8 @@ jobs:
           sudo make install
           )
       - name: set TSAN options
-        run: echo "::set-env name=TSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan"
+        run: |
+          echo "::set-env name=TSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan"
       - name: autogen
         run: ./autogen.sh
       - name: configure
@@ -239,13 +239,7 @@ jobs:
       - name: run functional tests
         if: always()
         timeout-minutes: 180
-        run: python3 test/functional/test_runner.py
-      - name: upload logs
-        uses: actions/upload-artifact@v1
-        if: failure()
-        with:
-          name: nightly-logs
-          path: ${{ github.workspace }}/sanitizer-output/tsan
+        run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
 #  windows:
 #    runs-on: windows-latest
@@ -349,18 +343,6 @@ jobs:
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
-      - name: Prepare ccache timestamp
-        id: cache_timestamp
-        run: |
-          current_date=`date +%Y%m%d_%H%M%SZ`
-          echo "::set-output name=timestamp::${current_date}"
-      - name: ccache cache files
-        uses: actions/cache@v1.1.0
-        with:
-          path: ~/.ccache
-          key: macos-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
-          restore-keys: |
-            macos-ccache-
       - name: get version for veriblock-pop-cpp
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
@@ -369,7 +351,7 @@ jobs:
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
       - name: install dependencies
         run: |
-          brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode zeromq
+          brew install automake berkeley-db4 boost miniupnpc pkg-config protobuf librsvg qrencode zeromq
           brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/d468bb8c4f5c34b18588e5d1b955021d58e1ff57/Formula/qt.rb
       - name: install veriblock-pop-cpp
         run: |
@@ -414,29 +396,8 @@ jobs:
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
-      - name: Prepare ccache timestamp
-        id: cache_timestamp
-        run: |
-          current_date=`date --utc +%Y%m%d_%H%M%SZ`
-          echo "::set-output name=timestamp::${current_date}"
-      - name: depends cache files
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        uses: actions/cache@v1.1.0
-        with:
-          path: ~/.depends_cache
-          key: darwin-depends-${{ steps.cache_timestamp.outputs.timestamp }}
-          restore-keys: |
-            darwin-depends-
-      - name: ccache cache files
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        uses: actions/cache@v1.1.0
-        with:
-          path: ~/.ccache
-          key: darwin-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
-          restore-keys: |
-            darwin-ccache-
       - name: install build requirements
-        run: sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools ccache
+        run: sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
       - name: download and extract macos sdk
         run: |
           wget -P depends/sdk-sources https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX10.14.sdk.tar.xz
@@ -445,7 +406,6 @@ jobs:
       - name: set variables and build dependencies for x86_64-apple-darwin16
         env:
           HOST: x86_64-apple-darwin16
-          BASE_CACHE: ~/.depends_cache
         run: cd depends && make -j2
       - name: autogen
         run: ./autogen.sh
@@ -493,31 +453,10 @@ jobs:
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
-      - name: Prepare ccache timestamp
-        id: cache_timestamp
-        run: |
-          current_date=`date --utc +%Y%m%d_%H%M%SZ`
-          echo "::set-output name=timestamp::${current_date}"
-      - name: depends cache files
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        uses: actions/cache@v1.1.0
-        with:
-          path: ~/.depends_cache
-          key: ${{ matrix.host }}-depends-${{ steps.cache_timestamp.outputs.timestamp }}
-          restore-keys: |
-            ${{ matrix.host }}-depends-
-      - name: ccache cache files
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        uses: actions/cache@v1.1.0
-        with:
-          path: ~/.ccache
-          key: ${{ matrix.host }}-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
-          restore-keys: |
-            ${{ matrix.host }}-ccache-
       - name: run apt-get update
         run: sudo apt-get update
       - name: install build requirements
-        run: sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch ccache
+        run: sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch
       - name: install additional dependencies
         if: matrix.host == 'x86_64-w64-mingw32'
         run: sudo apt-get install g++-mingw-w64-x86-64 nsis
@@ -548,7 +487,6 @@ jobs:
       - name: set variables and build dependencies for ${{ matrix.host }}
         env:
           HOST: ${{ matrix.host }}
-          BASE_CACHE: ~/.depends_cache
         run: cd depends && make -j2
       - name: autogen
         run: ./autogen.sh
