@@ -2251,7 +2251,7 @@ void Discover()
 
 void CConnman::SetNetworkActive(bool active)
 {
-    LogPrint(BCLog::NET, "SetNetworkActive: %s\n", active);
+    LogPrintf("%s: %s\n", __func__, active);
 
     if (fNetworkActive == active) {
         return;
