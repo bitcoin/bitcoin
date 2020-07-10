@@ -18,7 +18,7 @@
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
 
-    void SetPeerConnectTimeout(int64_t timeout)
+    void SetPeerConnectTimeout(std::chrono::seconds timeout)
     {
         m_peer_connect_timeout = timeout;
     }
