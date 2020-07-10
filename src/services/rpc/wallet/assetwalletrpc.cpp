@@ -1192,7 +1192,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
  
     std::string vchReceiptValue = params[8].get_str();
     std::string vchReceiptRoot = params[9].get_str();
-    std::string vchReceiptParentNodes = params[9].get_str();
+    std::string vchReceiptParentNodes = params[10].get_str();
     pos = vchReceiptParentNodes.find(vchReceiptValue);
     if(pos == std::string::npos || vchReceiptParentNodes.size() > (USHRT_MAX*2)){
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find receipt value in receipt parent nodes");  
