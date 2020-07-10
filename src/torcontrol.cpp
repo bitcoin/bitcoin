@@ -47,6 +47,11 @@ static const float RECONNECT_TIMEOUT_EXP = 1.5;
  */
 static const int MAX_LINE_LENGTH = 100000;
 
+enum Tor_proto_version {
+    TOR_NET_V2,
+    TOR_NET_V3
+};
+
 /****** Low-level TorControlConnection ********/
 
 /** Reply from Tor, can be single or multi-line */
@@ -422,6 +427,7 @@ private:
     struct event_base* base;
     std::string target;
     TorControlConnection conn;
+    Tor_proto_version tor_version = TOR_NET_V2;
     std::string private_key;
     std::string service_id;
     bool reconnect;
@@ -463,12 +469,6 @@ TorController::TorController(struct event_base* _base, const std::string& _targe
          std::bind(&TorController::disconnected_cb, this, std::placeholders::_1) )) {
         LogPrintf("tor: Initiating connection to Tor control port %s failed\n", _target);
     }
-    // Read service private key if cached
-    std::pair<bool,std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
-    if (pkf.first) {
-        LogPrint(BCLog::TOR, "tor: Reading cached private key from %s\n", GetPrivateKeyFile().string());
-        private_key = pkf.second;
-    }
 }
 
 TorController::~TorController()
@@ -485,7 +485,7 @@ TorController::~TorController()
 void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
-        LogPrint(BCLog::TOR, "tor: ADD_ONION successful\n");
+        LogPrint(BCLog::TOR, "tor: ADD_ONION %s successful\n", tor_version == TOR_NET_V2 ? "V2" : "V3");
         for (const std::string &s : reply.lines) {
             std::map<std::string,std::string> m = ParseTorReplyMapping(s);
             std::map<std::string,std::string>::iterator i;
@@ -495,25 +495,49 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
                 private_key = i->second;
         }
         if (service_id.empty()) {
-            LogPrintf("tor: Error parsing ADD_ONION parameters:\n");
+            LogPrintf("tor: Error parsing ADD_ONION %s parameters:\n", tor_version == TOR_NET_V2 ? "V2" : "V3");
             for (const std::string &s : reply.lines) {
                 LogPrintf("    %s\n", SanitizeString(s));
             }
-            return;
-        }
-        service = LookupNumeric(std::string(service_id+".onion"), Params().GetDefaultPort());
-        LogPrintf("tor: Got service ID %s, advertising service %s\n", service_id, service.ToString());
-        if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
-            LogPrint(BCLog::TOR, "tor: Cached service private key to %s\n", GetPrivateKeyFile().string());
+
         } else {
-            LogPrintf("tor: Error writing service private key to %s\n", GetPrivateKeyFile().string());
+            service = LookupNumeric(std::string(service_id + ".onion"), Params().GetDefaultPort());
+            if (service_id.length() > 16)
+                tor_version = TOR_NET_V3;
+            else
+                tor_version = TOR_NET_V2;
+            LogPrintf("tor: Got service ID %s, created %s.onion, advertising service %s\n", service_id, service_id, service.ToString());
+            if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
+                LogPrint(BCLog::TOR, "tor: Write cached service private key to %s\n", GetPrivateKeyFile().string());
+            } else {
+                LogPrintf("tor: Error writing service private key to %s\n", GetPrivateKeyFile().string());
+            }
+            AddLocal(service, LOCAL_MANUAL);
+            // ... onion requested - keep connection open
+
+            if (reply.code == 510) { // 510 Unrecognized command
+                LogPrintf("tor: Add onion failed with unrecognized command (You probably need to upgrade Tor)\n");
+            }
         }
-        AddLocal(service, LOCAL_MANUAL);
-        // ... onion requested - keep connection open
-    } else if (reply.code == 510) { // 510 Unrecognized command
-        LogPrintf("tor: Add onion failed with unrecognized command (You probably need to upgrade Tor)\n");
-    } else {
-        LogPrintf("tor: Add onion failed; error code %d\n", reply.code);
+        } else {
+            LogPrintf("tor: Add onion failed; error code %d\n", reply.code);
+        }
+        // Tor might deprecate v2-onions so we try to create from now on also v3 onions
+        // Now we try to create the v3-service
+        if (tor_version == TOR_NET_V2) {
+            tor_version = TOR_NET_V3;
+            private_key = "";
+            std::pair<bool, std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
+            if (pkf.first) {
+                LogPrint(BCLog::TOR, "tor: Reading cached private key from %s\n", GetPrivateKeyFile().string());
+                private_key = pkf.second;
+            }
+            if (private_key.empty())  // No private key, generate one
+                private_key = "NEW:ED25519-V3"; // Explicitly request ED25519-V3
+            // Request v3-hidden service, redirect port.
+            // Note that the 'virtual' port is always the default port to avoid decloaking nodes using other ports.
+            conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, Params().GetDefaultPort(), GetListenPort()),
+                         std::bind(&TorController::add_onion_cb, this, std::placeholders::_1, std::placeholders::_2));
     }
 }
 
@@ -522,7 +546,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
     if (reply.code == 250) {
         LogPrint(BCLog::TOR, "tor: Authentication successful\n");
 
-        // Now that we know Tor is running setup the proxy for onion addresses
+        // Now that we know Tor is running, set up the proxy for onion addresses
         // if -onion isn't set to something else.
         if (gArgs.GetArg("-onion", "") == "") {
             CService resolved(LookupNumeric("127.0.0.1", 9050));
@@ -531,13 +555,22 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
             SetReachable(NET_ONION, true);
         }
 
-        // Finally - now create the service
+        // Finaly we create the v2-service
+        tor_version = TOR_NET_V2;
+        private_key = "";
+        std::pair<bool, std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
+        if (pkf.first) {
+            LogPrint(BCLog::TOR, "tor: Reading cached private key from %s\n", GetPrivateKeyFile().string());
+            private_key = pkf.second;
+        }
+        tor_version = TOR_NET_V2;
         if (private_key.empty()) // No private key, generate one
             private_key = "NEW:RSA1024"; // Explicitly request RSA1024 - see issue #9214
         // Request onion service, redirect port.
         // Note that the 'virtual' port is always the default port to avoid decloaking nodes using other ports.
         _conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, Params().GetDefaultPort(), GetListenPort()),
             std::bind(&TorController::add_onion_cb, this, std::placeholders::_1, std::placeholders::_2));
+
     } else {
         LogPrintf("tor: Authentication failed\n");
     }
@@ -718,7 +751,8 @@ void TorController::Reconnect()
 
 fs::path TorController::GetPrivateKeyFile()
 {
-    return GetDataDir() / "onion_private_key";
+    if (tor_version == TOR_NET_V2) return GetDataDir() / "onion_private_key";
+    return GetDataDir() / "onion_private_key_v3";
 }
 
 void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
@@ -734,7 +768,6 @@ static std::thread torControlThread;
 static void TorControlThread()
 {
     TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
-
     event_base_dispatch(gBase);
 }
 
