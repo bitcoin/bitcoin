@@ -67,7 +67,7 @@ FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serializa
             break;
         }
         if (deserializer.Complete()) {
-            const int64_t m_time = std::numeric_limits<int64_t>::max();
+            const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             uint32_t out_err_raw_size{0};
             std::optional<CNetMessage> result{deserializer.GetMessage(m_time, out_err_raw_size)};
             if (result) {

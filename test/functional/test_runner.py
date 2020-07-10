@@ -272,6 +272,7 @@ BASE_SCRIPTS = [
     'mempool_compatibility.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
+    'p2p_ping.py',
     'rpc_scantxoutset.py',
     'feature_logging.py',
     'feature_coinstatsindex.py',

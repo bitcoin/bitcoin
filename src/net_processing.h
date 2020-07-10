@@ -72,7 +72,7 @@ public:
 
     /** Process a single message from a peer. Public for fuzz testing */
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                                int64_t nTimeReceived, const std::atomic<bool>& interruptMsgProc) = 0;
+                                const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
 
     virtual bool IsBanned(NodeId pnode) = 0;
 
