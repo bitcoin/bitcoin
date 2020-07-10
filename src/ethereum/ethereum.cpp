@@ -27,15 +27,15 @@ int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &
 std::string hexToASCII(std::string hex) 
 { 
     // initialize the ASCII code string as empty. 
-    string ascii = ""; 
+    std::string ascii = ""; 
     for (size_t i = 0; i < hex.length(); i += 2) 
     { 
         // extract two characters from hex string 
-        string part = hex.substr(i, 2); 
+        std::string part = hex.substr(i, 2); 
   
         // change it into base 16 and  
         // typecast as the character 
-        char ch = stoul(part, nullptr, 16); 
+        char ch = std::stoul(part, nullptr, 16); 
   
         // add this char to final ASCII string 
         ascii += ch; 
