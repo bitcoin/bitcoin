@@ -80,7 +80,7 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_WALLET_BIN) $(top_builddir)/release
-	@test -f $(MAKENSIS) && echo 'OutFile "$@"' | cat $(top_builddir)/share/setup.nsi - | $(MAKENSIS) -V2 - || \
+	$(AM_V_at)test -f $(MAKENSIS) && echo 'OutFile "$@"' | cat $(top_builddir)/share/setup.nsi - | $(MAKENSIS) -V2 - || \
 	  echo error: could not build $@
 	@echo built $@
 
@@ -90,7 +90,7 @@ $(OSX_APP)/Contents/PkgInfo:
 
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)
-	@touch $@
+	$(AM_V_at)touch $@
 
 $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
 	$(MKDIR_P) $(@D)
@@ -132,8 +132,8 @@ APP_DIST_DIR=$(top_builddir)/dist
 APP_DIST_EXTRAS=$(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE) $(APP_DIST_DIR)/.DS_Store $(APP_DIST_DIR)/Applications
 
 $(APP_DIST_DIR)/Applications:
-	@rm -f $@
-	@cd $(@D); $(LN_S) /Applications $(@F)
+	$(AM_V_at)rm -f $@
+	$(AM_V_at)cd $(@D); $(LN_S) /Applications $(@F)
 
 $(APP_DIST_EXTRAS): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt
 
@@ -200,7 +200,7 @@ baseline_filtered.info: baseline.info
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
 fuzz.info: baseline_filtered.info
-	@TIMEOUT=15 test/fuzz/test_runner.py qa-assets/fuzz_seed_corpus -l DEBUG
+	$(AM_V_at)TIMEOUT=15 test/fuzz/test_runner.py qa-assets/fuzz_seed_corpus -l DEBUG
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t fuzz-tests -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
@@ -218,7 +218,7 @@ test_bitcoin_filtered.info: test_bitcoin.info
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
 functional_test.info: test_bitcoin_filtered.info
-	@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
+	$(AM_V_at)TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
@@ -237,15 +237,15 @@ total_coverage.info: test_bitcoin_filtered.info functional_test_filtered.info
 
 fuzz.coverage/.dirstamp: fuzz_coverage.info
 	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
-	@touch $@
+	$(AM_V_at)touch $@
 
 test_bitcoin.coverage/.dirstamp:  test_bitcoin_coverage.info
 	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
-	@touch $@
+	$(AM_V_at)touch $@
 
 total.coverage/.dirstamp: total_coverage.info
 	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
-	@touch $@
+	$(AM_V_at)touch $@
 
 cov_fuzz: fuzz.coverage/.dirstamp
 

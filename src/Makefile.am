@@ -268,8 +268,8 @@ BITCOIN_CORE_H = \
 
 
 obj/build.h: FORCE
-	@$(MKDIR_P) $(builddir)/obj
-	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
+	$(AM_V_at)$(MKDIR_P) $(builddir)/obj
+	$(AM_V_at)$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
@@ -691,7 +691,7 @@ EXTRA_DIST = $(CTAES_DIST)
 
 
 config/bitcoin-config.h: config/stamp-h1
-	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
+	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
 config/stamp-h1: $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in $(top_builddir)/config.status
 	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
 $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in:  $(am__configure_deps)
@@ -705,7 +705,7 @@ clean-local:
 	-rm -rf test/__pycache__
 
 .rc.o:
-	@test -f $(WINDRES)
+	$(AM_V_at)test -f $(WINDRES)
 	## FIXME: How to get the appropriate modulename_CPPFLAGS in here?
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
