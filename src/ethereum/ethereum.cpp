@@ -141,8 +141,8 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     
     // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte
     const unsigned char &dataLength = vchInputData[131];
-    // bech32 addresses to 45 bytes, min length is 9 for min witness address https://en.bitcoin.it/wiki/BIP_0173
-    if(dataLength > 45 || dataLength < 9) {
+    // bech32 addresses to 46 bytes (sys1 vs bc1), min length is 9 for min witness address https://en.bitcoin.it/wiki/BIP_0173
+    if(dataLength > 46 || dataLength < 9) {
       return false;
     }
 
