@@ -139,18 +139,15 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     nAsset |= static_cast<uint32_t>(vchInputData[65]) << 16;
     nAsset |= static_cast<uint32_t>(vchInputData[64]) << 24;
     
-    size_t dataPos = 130;
     // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte
-    const unsigned char &dataLength = vchInputData[dataPos++] - 1; // // - 1 to account for the version byte
-    // witness programs can extend to 40 bytes, min length is 2 for min witness program
-    if(dataLength > 40 || dataLength < 2){
+    const unsigned char &dataLength = vchInputData[131];
+    // bech32 addresses to 45 bytes, min length is 9 for min witness address https://en.bitcoin.it/wiki/BIP_0173
+    if(dataLength > 45 || dataLength < 9) {
       return false;
     }
 
-    // witness address information starting at position dataPos till the end
-    // get version proceeded by witness program bytes
-    const unsigned char& nVersion = vchInputData[dataPos++];
-    std::vector<unsigned char>::const_iterator firstWitness = vchInputData.begin()+dataPos;
+    // witness address information starting at position 132 till the end
+    std::vector<unsigned char>::const_iterator firstWitness = vchInputData.begin()+132;
     std::vector<unsigned char>::const_iterator lastWitness = firstWitness + dataLength; 
     //witnessAddress = CWitnessAddress(nVersion, std::vector<unsigned char>(firstWitness,lastWitness));
     //return witnessAddress.IsValid();
