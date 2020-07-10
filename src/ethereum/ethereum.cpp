@@ -24,6 +24,24 @@ int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &
     return -1;
   }
 }
+std::string hexToASCII(std::string hex) 
+{ 
+    // initialize the ASCII code string as empty. 
+    string ascii = ""; 
+    for (size_t i = 0; i < hex.length(); i += 2) 
+    { 
+        // extract two characters from hex string 
+        string part = hex.substr(i, 2); 
+  
+        // change it into base 16 and  
+        // typecast as the character 
+        char ch = stoul(part, nullptr, 16); 
+  
+        // add this char to final ASCII string 
+        ascii += ch; 
+    } 
+    return ascii; 
+} 
 bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP& parentNodes, const dev::RLP& root) {
     try{
         dev::RLP currentNode;
@@ -147,6 +165,6 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     }
 
     // witness address information starting at position 132 till the end
-    witnessAddress = DecodeDestination(std::to_string(HexStr(vchInputData.begin()+132, vchInputData.begin()+132 + dataLength)));
+    witnessAddress = DecodeDestination(hexToASCII(HexStr(vchInputData.begin()+132, vchInputData.begin()+132 + dataLength))));
     return true;
 }
