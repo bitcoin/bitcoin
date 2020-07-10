@@ -1073,6 +1073,25 @@ bool MemPoolAccept::AcceptMultipleTransactions(const std::list<CTransactionRef>&
 
     std::list<Workspace> tx_workspaces;
 
+    // For now, ensure package is size-limited to 2 transactions.
+    if (tx_list.size() != 2) {
+        return args.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "non-standard-package-chain", "only 2-txn-sized package are allowed");
+    }
+
+    // Make sure all transactions are ancestors of the last one.
+    // For now, just check that the last transaction has all prior transactions
+    // as direct inputs. We can relax this in the future for bigger packages.
+    std::set<uint256> last_tx_parents;
+    for (auto input : tx_list.back()->vin) {
+        last_tx_parents.insert(input.prevout.hash);
+    }
+    for (auto ptx : tx_list) {
+        if (ptx == tx_list.back()) break;
+        if (last_tx_parents.count(ptx->GetHash()) == 0) {
+            return args.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "non-standard-package-chain", "only direct parents are allowed in package");
+        }
+    }
+
     for (const CTransactionRef& ptx : tx_list) {
         // The last transaction must be validated for making it past the fee
         // checks on its own, to prevent packages from including low-fee,
