@@ -47,8 +47,7 @@ public:
     };
     Q_ENUM(Unit)
 
-    enum class SeparatorStyle
-    {
+    enum class SeparatorStyle {
         NEVER,
         STANDARD,
         ALWAYS
@@ -60,8 +59,6 @@ public:
 
     //! Get list of units, for drop-down box
     static QList<Unit> availableUnits();
-    //! Is unit ID valid?
-    static bool valid(Unit unit);
     //! Long name
     static QString longName(Unit unit);
     //! Short name
