@@ -1236,8 +1236,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     bilingual_str error;
     int nChangePosRet = -1;
     CCoinControl coin_control;
-    coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
-    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
