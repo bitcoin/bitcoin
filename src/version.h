@@ -22,10 +22,6 @@ static const int MIN_PEER_PROTO_VERSION = 70215;
 //! minimum proto version of masternode to accept in DKGs
 static const int MIN_MASTERNODE_PROTO_VERSION = 70221;
 
-//! nTime field added to CAddress, starting with this version;
-//! if possible, avoid requesting addresses nodes older than this
-static const int CADDR_TIME_VERSION = 31402;
-
 //! protocol version is included in MNAUTH starting with this version
 static const int MNAUTH_NODE_VER_VERSION = 70218;
 
