@@ -58,6 +58,30 @@ def terminal(cmd):
 def bitcoin(cmd):
 	return terminal('./../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd)
 
+# Given a raw memory string from the linux "top" command, return the number of megabytes
+# 1 EiB = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 bytes
+# 1 PiB = 1024 * 1024 * 1024 * 1024 * 1024 bytes
+# 1 GiB = 1024 * 1024 * 1024 * 1024 bytes
+# 1 MiB = 1024 * 1024 * 1024 bytes
+# 1 KiB = 1024 * 1024 bytes
+# 1 byte = 1000000 megabytes
+def top_mem_to_mb(mem):
+	if mem.endswith('e'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 / 1000000 # exbibytes to megabytes
+	elif mem.endswith('p'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 * 1024 / 1000000 # gibibytes to megabytes
+	elif mem.endswith('t'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 / 1000000 # tebibytes to megabytes
+	elif mem.endswith('g'): return float(mem[:-1]) * 1024 * 1024 * 1024 / 1000000 # gibabytes to megabytes
+	elif mem.endswith('m'): return float(mem[:-1]) * 1024 * 1024 / 1000000 # mebibytes to megabytes
+	else: return float(mem) * 1024 / 1000000 # kibibytes to megabytes
+
+# Given a raw memory string from the linux "top" command, return the number of mebibytes
+def top_mem_to_MiB(mem):
+	if mem.endswith('e'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 # exbibytes to mebibytes
+	elif mem.endswith('p'): return float(mem[:-1]) * 1024 * 1024 * 1024 # gibibytes to mebibytes
+	elif mem.endswith('t'): return float(mem[:-1]) * 1024 * 1024 # tebibytes to mebibytes
+	elif mem.endswith('g'): return float(mem[:-1]) * 1024 # gibabytes to mebibytes
+	elif mem.endswith('m'): return float(mem[:-1]) # mebibytes to mebibytes
+	else: return float(mem) / 1024 # kibibytes to mebibytes
+
 # Uses "top" to log the amount of resources that Bitcoin is using up, returns blank stings if the process is not running
 def getCPUData():
 	full_system = terminal('grep \'cpu \' /proc/stat | awk \'{usage=($2+$4)*100/($2+$4+$5)} END {print usage}\'').strip()
@@ -70,9 +94,9 @@ def getCPUData():
 		'user': raw[1],
 		'priority': raw[2],
 		'nice_value': raw[3],
-		'virtual_memory': str(float(raw[4]) / 1024),
-		'memory': str(float(raw[5]) / 1024),
-		'shared_memory': str(float(raw[6]) / 1024),
+		'virtual_memory': str(top_mem_to_MiB(raw[4])),
+		'memory': str(top_mem_to_MiB(raw[5])),
+		'shared_memory': str(top_mem_to_MiB(raw[6])),
 		'state': raw[7],
 		'cpu_percent': raw[8],
 		'memory_percent': raw[9],
