@@ -1139,6 +1139,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
             {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
+            {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unique Bridge Transfer ID for this event from Ethereum. It is the low 32 bits of the transferIdAndPrecisions field in the TokenFreeze Event on freezeBurnERC20 call."},
             {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
             {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
             {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
@@ -1153,8 +1154,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
-            + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
+            HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blocknumber\" \"bridge_transfer_id\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
+            + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"bridge_transfer_id\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
         }
     }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1177,10 +1178,11 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationmint");  
 
     const uint32_t &nBlockNumber = params[3].get_uint(); 
+    const uint32_t &nBridgeTransferID = params[4].get_uint(); 
     
-    std::string vchTxValue = params[4].get_str();
-    std::string vchTxRoot = params[5].get_str();
-    std::string vchTxParentNodes = params[6].get_str();
+    std::string vchTxValue = params[5].get_str();
+    std::string vchTxRoot = params[6].get_str();
+    std::string vchTxParentNodes = params[7].get_str();
 
     // find byte offset of tx data in the parent nodes
     size_t pos = vchTxParentNodes.find(vchTxValue);
@@ -1188,11 +1190,11 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find tx value in tx parent nodes");  
     }
     uint16_t posTxValue = (uint16_t)pos/2;
-    std::string vchTxPath = params[7].get_str();
+    std::string vchTxPath = params[8].get_str();
  
-    std::string vchReceiptValue = params[8].get_str();
-    std::string vchReceiptRoot = params[9].get_str();
-    std::string vchReceiptParentNodes = params[10].get_str();
+    std::string vchReceiptValue = params[9].get_str();
+    std::string vchReceiptRoot = params[10].get_str();
+    std::string vchReceiptParentNodes = params[11].get_str();
     pos = vchReceiptParentNodes.find(vchReceiptValue);
     if(pos == std::string::npos || vchReceiptParentNodes.size() > (USHRT_MAX*2)){
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find receipt value in receipt parent nodes");  
@@ -1209,6 +1211,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::vector<CAssetOut> vecOut = {CAssetOut(0, nAmount)};
     mintSyscoin.voutAssets.emplace_back(nAsset, vecOut);
     mintSyscoin.nBlockNumber = nBlockNumber;
+    mintSyscoin.nBridgeTransferID = nBridgeTransferID;
     mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
     mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
     mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
