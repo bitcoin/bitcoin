@@ -17,7 +17,7 @@ Checks conflict handling between ChainLocks and InstantSend
 
 '''
 
-class TestNode(P2PInterface):
+class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
         self.clsigs = {}
@@ -57,7 +57,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
 
-        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 

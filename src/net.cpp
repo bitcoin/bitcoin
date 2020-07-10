@@ -2734,7 +2734,7 @@ void CConnman::ThreadMessageHandler()
             // Send messages
             if (!fSkipSendMessagesForMasternodes || !pnode->fMasternode) {
                 LOCK(pnode->cs_sendProcessing);
-                m_msgproc->SendMessages(pnode, flagInterruptMsgProc);
+                m_msgproc->SendMessages(pnode);
             }
 
             if (flagInterruptMsgProc)
