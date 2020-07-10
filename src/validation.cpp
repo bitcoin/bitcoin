@@ -5032,7 +5032,7 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
     return VersionBitsStateSinceHeight(::ChainActive().Tip(), params, pos, versionbitscache);
 }
 
-static const uint64_t MEMPOOL_DUMP_VERSION = 1;
+static const uint64_t MEMPOOL_DUMP_VERSION = 2;
 
 bool LoadMempool(CTxMemPool& pool)
 {
@@ -5058,68 +5058,100 @@ bool LoadMempool(CTxMemPool& pool)
         if (version != MEMPOOL_DUMP_VERSION) {
             return false;
         }
-        uint64_t num;
-        file >> num;
-        while (num--) {
-            CTransactionRef tx;
-            int64_t nTime;
-            int64_t nFeeDelta;
-            file >> tx;
-            file >> nTime;
-            file >> nFeeDelta;
+        std::map<std::string, std::vector<unsigned char>> mapData;
+        file >> mapData;
 
-            CAmount amountdelta = nFeeDelta;
-            if (amountdelta) {
-                pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
+        auto it = mapData.find("deltas");
+        if (it != mapData.end()) {
+            try {
+                CDataStream ss(it->second, SER_DISK, CLIENT_VERSION);
+                std::map<uint256, std::pair<double, CAmount>> mapDeltas;
+                ss >> mapDeltas;
+                LOCK(pool.cs);
+                for (const auto& it : mapDeltas) {
+                    const uint256& txid = it.first;
+                    const CAmount& amountdelta = it.second.second;
+                    pool.PrioritiseTransaction(txid, amountdelta);
+                }
+            } catch (const std::exception& e) {
+                LogPrintf("Failed to deserialize mempool %s from disk: %s. Continuing anyway.\n", "deltas", e.what());
             }
-            TxValidationState state;
-            if (nTime + nExpiryTimeout > nNow) {
-                LOCK(cs_main);
-                AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
-                                           nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
-                                           false /* test_accept */);
-                if (state.IsValid()) {
-                    ++count;
-                } else {
+        }
+
+        it = mapData.find("unbroadcast_txids");
+        if (it != mapData.end()) {
+            std::map<uint256, uint256> unbroadcast_txids;
+            try {
+                CDataStream ss(it->second, SER_DISK, CLIENT_VERSION);
+                ss >> unbroadcast_txids;
+                unbroadcast = unbroadcast_txids.size();
+            } catch (const std::exception& e) {
+                LogPrintf("Failed to deserialize mempool %s from disk: %s. Continuing anyway.\n", "unbroadcast txids", e.what());
+            }
+            for (const auto& elem : unbroadcast_txids) {
+                // Don't add unbroadcast transactions that didn't get back into the
+                // mempool.
+                const CTransactionRef& added_tx = pool.get(elem.first);
+                if (added_tx != nullptr) {
+                    pool.AddUnbroadcastTx(elem.first, added_tx->GetWitnessHash());
+                }
+            }
+        }
+
+        it = mapData.find("txs");
+        if (it != mapData.end()) {
+            std::vector<std::map<std::string, std::vector<unsigned char>>> txMapDatas;
+            try {
+                CDataStream(it->second, SER_DISK, CLIENT_VERSION) >> txMapDatas;
+            } catch (const std::exception& e) {
+                LogPrintf("Failed to deserialize mempool %s from disk: %s. Continuing anyway.\n", "transactions", e.what());
+            }
+            for (auto mapTxData : txMapDatas) {
+                try {
+                    it = mapTxData.find("t");
+                    if (it == mapTxData.end()) {
+                        throw std::runtime_error("mapTxData \"t\" key missing");
+                    }
+                    int64_t nTime;
+                    CDataStream(it->second, SER_DISK, CLIENT_VERSION) >> nTime;
+                    if (nTime + nExpiryTimeout <= nNow) {
+                        ++expired;
+                        continue;
+                    }
+
+                    it = mapTxData.find("");
+                    if (it == mapTxData.end()) {
+                        throw std::runtime_error("mapTxData null key missing");
+                    }
+                    CDataStream ssTx(it->second, SER_DISK, CLIENT_VERSION);
+                    CTransactionRef tx;
+                    ssTx >> tx;
+
                     // mempool may contain the transaction already, e.g. from
                     // wallet(s) having loaded it while we were processing
                     // mempool transactions; consider these as valid, instead of
-                    // failed, but mark them as 'already there'
+                    // failing, but mark them as 'already there'
                     if (pool.exists(tx->GetHash())) {
+                        ++count;
                         ++already_there;
-                    } else {
-                        ++failed;
+                        continue;
                     }
+
+                    TxValidationState state;
+                    LOCK(cs_main);
+                    AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
+                                               nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
+                                               false /* test_accept */);
+                    if (!state.IsValid()) {
+                        throw std::runtime_error(state.GetRejectReason());
+                    }
+                    ++count;
+                } catch (const std::exception& e) {
+                    ++failed;
                 }
-            } else {
-                ++expired;
             }
             if (ShutdownRequested())
                 return false;
-        }
-        std::map<uint256, CAmount> mapDeltas;
-        file >> mapDeltas;
-
-        for (const auto& i : mapDeltas) {
-            pool.PrioritiseTransaction(i.first, i.second);
-        }
-
-        // TODO: remove this try except in v0.22
-        std::map<uint256, uint256> unbroadcast_txids;
-        try {
-          file >> unbroadcast_txids;
-          unbroadcast = unbroadcast_txids.size();
-        } catch (const std::exception&) {
-          // mempool.dat files created prior to v0.21 will not have an
-          // unbroadcast set. No need to log a failure if parsing fails here.
-        }
-        for (const auto& elem : unbroadcast_txids) {
-            // Don't add unbroadcast transactions that didn't get back into the
-            // mempool.
-            const CTransactionRef& added_tx = pool.get(elem.first);
-            if (added_tx != nullptr) {
-                pool.AddUnbroadcastTx(elem.first, added_tx->GetWitnessHash());
-            }
         }
     } catch (const std::exception& e) {
         LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
@@ -5130,12 +5162,19 @@ bool LoadMempool(CTxMemPool& pool)
     return true;
 }
 
+template <class T>
+std::vector<unsigned char> SerializeToVector(T o) {
+    CDataStream ss(SER_DISK, CLIENT_VERSION);
+    ss << o;
+    return std::vector<unsigned char>(ss.begin(), ss.end());
+}
+
 bool DumpMempool(const CTxMemPool& pool)
 {
     int64_t start = GetTimeMicros();
 
-    std::map<uint256, CAmount> mapDeltas;
     std::vector<TxMempoolInfo> vinfo;
+    std::map<uint256, std::pair<double, CAmount>> mapDeltas;
     std::map<uint256, uint256> unbroadcast_txids;
 
     static Mutex dump_mutex;
@@ -5144,7 +5183,7 @@ bool DumpMempool(const CTxMemPool& pool)
     {
         LOCK(pool.cs);
         for (const auto &i : pool.mapDeltas) {
-            mapDeltas[i.first] = i.second;
+            mapDeltas[i.first] = std::make_pair(0.0, i.second);
         }
         vinfo = pool.infoAll();
         unbroadcast_txids = pool.GetUnbroadcastTxs();
@@ -5153,6 +5192,21 @@ bool DumpMempool(const CTxMemPool& pool)
     int64_t mid = GetTimeMicros();
 
     try {
+        std::map<std::string, std::vector<unsigned char>> mapData;
+        mapData["deltas"] = SerializeToVector(mapDeltas);
+        {
+            std::vector<std::map<std::string, std::vector<unsigned char>>> txMapDatas;
+            for (TxMempoolInfo info : vinfo) {
+                std::map<std::string, std::vector<unsigned char>> mapTxData;
+                mapTxData[""] = SerializeToVector(*(info.tx));
+                mapTxData["t"] = SerializeToVector(count_seconds(info.m_time));
+                txMapDatas.push_back(std::move(mapTxData));
+            }
+
+            mapData["txs"] = SerializeToVector(txMapDatas);
+        }
+        mapData["unbroadcast_txids"] = SerializeToVector(unbroadcast_txids);
+
         FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat.new", "wb");
         if (!filestr) {
             return false;
@@ -5163,18 +5217,7 @@ bool DumpMempool(const CTxMemPool& pool)
         uint64_t version = MEMPOOL_DUMP_VERSION;
         file << version;
 
-        file << (uint64_t)vinfo.size();
-        for (const auto& i : vinfo) {
-            file << *(i.tx);
-            file << int64_t{count_seconds(i.m_time)};
-            file << int64_t{i.nFeeDelta};
-            mapDeltas.erase(i.tx->GetHash());
-        }
-
-        file << mapDeltas;
-
-        LogPrintf("Writing %d unbroadcast transactions to disk.\n", unbroadcast_txids.size());
-        file << unbroadcast_txids;
+        file << mapData;
 
         if (!FileCommit(file.Get()))
             throw std::runtime_error("FileCommit failed");
