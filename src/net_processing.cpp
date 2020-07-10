@@ -1711,6 +1711,25 @@ CTransactionRef static FindTxForGetData(const CNode& peer, const uint256& txid_o
     return {};
 }
 
+//! Determine whether or not a peer can request a package and assemble it (or nullptr if failure or not allowed)
+static void FindPackageForGetData(CNode& peer, const uint256 package_id, std::vector<CTransactionRef>& package_txn) LOCKS_EXCLUDED(cs_main)
+{
+    std::vector<uint256> package_wtxids;
+    {
+        LOCK(cs_main);
+        if (!State(peer.GetId())->m_packagerelay) return;
+
+        g_packagecache.GetPackageWtxids(peer.GetId(), package_id, package_wtxids);
+    }
+
+    for (auto& hash : package_wtxids) {
+        auto txinfo = mempool.info(hash);
+        if (txinfo.tx) {
+            package_txn.emplace_back(txinfo.tx);
+        }
+    }
+}
+
 void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnman& connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
 {
     AssertLockNotHeld(cs_main);
@@ -1737,6 +1756,14 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
 
         if (pfrom.m_tx_relay == nullptr) {
             // Ignore GETDATA requests for transactions from blocks-only peers.
+            continue;
+        }
+
+        std::vector<CTransactionRef> package_txn;
+        FindPackageForGetData(pfrom, inv.hash, package_txn);
+        if (!package_txn.empty()) {
+            CPackageRelay package(std::move(package_txn));
+            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::PACKAGE, package));
             continue;
         }
 
