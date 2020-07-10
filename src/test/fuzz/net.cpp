@@ -58,27 +58,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 }
             },
             [&] {
-                if (node.m_addr_known == nullptr) {
-                    return;
-                }
-                const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-                if (!addr_opt) {
-                    return;
-                }
-                node.AddAddressKnown(*addr_opt);
-            },
-            [&] {
-                if (node.m_addr_known == nullptr) {
-                    return;
-                }
-                const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-                if (!addr_opt) {
-                    return;
-                }
-                FastRandomContext fast_random_context{ConsumeUInt256(fuzzed_data_provider)};
-                node.PushAddress(*addr_opt, fast_random_context);
-            },
-            [&] {
                 const std::optional<CInv> inv_opt = ConsumeDeserializable<CInv>(fuzzed_data_provider);
                 if (!inv_opt) {
                     return;
@@ -110,7 +89,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);
     (void)node.GetCommonVersion();
-    (void)node.RelayAddrsWithConn();
 
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     (void)node.HasPermission(net_permission_flags);
