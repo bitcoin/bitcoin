@@ -359,6 +359,11 @@ class CAddress : public CService
 {
     static constexpr uint32_t TIME_INIT{100000000};
 
+    /** The disk serialization for CAddress includes a version number.
+     *  Traditionally the number CLIENT_VERSION was used, but it has since
+     *  been disentangled from it. */
+    static constexpr uint32_t DISK_VERSION{210000};
+
 public:
     CAddress() : CService{} {};
     explicit CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
@@ -366,19 +371,20 @@ public:
     SERIALIZE_METHODS(CAddress, obj)
     {
         SER_READ(obj, obj.nTime = TIME_INIT);
-        int nVersion = s.GetVersion();
         if (s.GetType() & SER_DISK) {
-            READWRITE(nVersion);
-        }
-        if ((s.GetType() & SER_DISK) ||
-            (nVersion != INIT_PROTO_VERSION && !(s.GetType() & SER_GETHASH))) {
+            uint32_t disk_version = DISK_VERSION;
+            READWRITE(disk_version);
+            READWRITE(obj.nTime);
+        } else if (s.GetType() & SER_NETWORK) {
             // The only time we serialize a CAddress object without nTime is in
             // the initial VERSION messages which contain two CAddress records.
             // At that point, the serialization version is INIT_PROTO_VERSION.
             // After the version handshake, serialization version is >=
             // MIN_PEER_PROTO_VERSION and all ADDR messages are serialized with
             // nTime.
-            READWRITE(obj.nTime);
+            if (s.GetVersion() != INIT_PROTO_VERSION) {
+                READWRITE(obj.nTime);
+            }
         }
         READWRITE(Using<CustomUintFormatter<8>>(obj.nServices), AsBase<CService>(obj));
     }
