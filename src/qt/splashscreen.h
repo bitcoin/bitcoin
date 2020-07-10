@@ -56,8 +56,6 @@ private:
     void unsubscribeFromCoreSignals();
     /** Initiate shutdown */
     void shutdown();
-    /** Connect wallet signals to splash screen */
-    void ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet);
 
     QPixmap pixmap;
     QString curMessage;
