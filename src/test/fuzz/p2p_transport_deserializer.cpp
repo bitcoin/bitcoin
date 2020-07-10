@@ -30,7 +30,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         pch += handled;
         n_bytes -= handled;
         if (deserializer.Complete()) {
-            const int64_t m_time = std::numeric_limits<int64_t>::max();
+            const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             const CNetMessage msg = deserializer.GetMessage(Params().MessageStart(), m_time);
             assert(msg.m_command.size() <= CMessageHeader::COMMAND_SIZE);
             assert(msg.m_raw_message_size <= buffer.size());
