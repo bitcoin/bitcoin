@@ -16,6 +16,7 @@
 #include <merkleblock.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
+#include <packagecache.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -464,6 +465,8 @@ struct CNodeState {
 
 // Keeps track of the time (in microseconds) when transactions were requested last time
 limitedmap<uint256, std::chrono::microseconds> g_already_asked_for GUARDED_BY(cs_main)(MAX_INV_SZ);
+
+static PackageCache g_packagecache GUARDED_BY(cs_main);
 
 /** Map maintaining per-node state. */
 static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
@@ -4357,6 +4360,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         if (pto->m_tx_relay->filterInventoryKnown.contains(hash)) {
                             continue;
                         }
+
+                        // Walk away if this hash is going to be announced as part of a package.
+                        if (state.m_packagerelay && g_packagecache.HasPackage(hash)) {
+                            continue;
+                        }
+
                         // Not in the mempool anymore? don't bother sending it.
                         auto txinfo = m_mempool.info(hash, state.m_wtxid_relay);
                         if (!txinfo.tx) {
@@ -4403,6 +4412,19 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             // filter, when a child tx is requested. See
                             // ProcessGetData().
                             pto->m_tx_relay->filterInventoryKnown.insert(txid);
+                        }
+                    }
+
+                    // If peer signals tx-relay _and_ package relay, announce package it
+                    if (state.m_packagerelay) {
+                        std::vector<uint256> package_ids;
+                        g_packagecache.GetAnnouncable(pto->GetId(), package_ids);
+                        for (const uint256& hash : package_ids) {
+                            vInv.push_back(CInv(MSG_PACKAGE, hash));
+                            if (vInv.size() == MAX_INV_SZ) {
+                                connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+                                vInv.clear();
+                            }
                         }
                     }
                 }
