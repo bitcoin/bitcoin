@@ -2511,6 +2511,10 @@ void ProcessMessage(
             connman.PushMessage(&pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::WTXIDRELAY));
         }
 
+        if (nVersion >= PACKAGE_RELAY_VERSION) {
+            connman.PushMessage(&pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::SENDPACKAGE));
+        }
+
         connman.PushMessage(&pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERACK));
 
         pfrom.nServices = nServices;
@@ -2662,6 +2666,14 @@ void ProcessMessage(
                 State(pfrom.GetId())->m_wtxid_relay = true;
                 g_wtxid_relay_peers++;
             }
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::SENDPACKAGE) {
+        if (pfrom.nVersion >= PACKAGE_RELAY_VERSION) {
+            LOCK(cs_main);
+            State(pfrom.GetId())->m_packagerelay = true;
         }
         return;
     }

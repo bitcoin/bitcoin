@@ -276,6 +276,11 @@ extern const char* CFCHECKPT;
  * @since protocol version 70016 as described by BIP 339.
  */
 extern const char *WTXIDRELAY;
+/**
+ * Indicates that a node support package-relay
+ * @since protocol 80002 as described by BIP XXX
+ */
+extern const char* SENDPACKAGE;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
