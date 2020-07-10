@@ -976,15 +976,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
                 "\nReturns statistics about the unspent transaction output set.\n"
                 "Note this call may take some time.\n",
                 {
-<<<<<<< HEAD
-<<<<<<< HEAD
                     {"hash_type", RPCArg::Type::STR, /* default */ "hash_serialized_2", "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm), 'none'."},
-=======
-                    {"hash_type", RPCArg::Type::STR, /* default */ "hash_serialized_2", "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm)."},
->>>>>>> rpc: gettxoutsetinfo can specify hash_type (only legacy option for now)
-=======
-                    {"hash_type", RPCArg::Type::STR, /* default */ "hash_serialized_2", "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm), 'none'."},
->>>>>>> rpc: Add hash_type NONE to gettxoutsetinfo
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2331,15 +2323,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
 
         ::ChainstateActive().ForceFlushStateToDisk();
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, RpcInterruptionPoint)) {
-=======
-        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::HASH_SERIALIZED, RpcInterruptionPoint)) {
->>>>>>> rpc: gettxoutsetinfo can specify hash_type (only legacy option for now)
-=======
-        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, RpcInterruptionPoint)) {
->>>>>>> rpc: Add hash_type NONE to gettxoutsetinfo
+        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, RpcInterruptionPoint)) {  
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
 
