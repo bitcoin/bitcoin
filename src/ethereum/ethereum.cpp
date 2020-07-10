@@ -7,7 +7,7 @@
 #include <ethereum/sha3.h>
 #include <logging.h>
 #include <util/strencodings.h>
-
+#include <key_io.h>
 
 int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &path, int pathPtr) {
   std::string partialPath;
@@ -147,6 +147,6 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     }
 
     // witness address information starting at position 132 till the end
-    witnessAddress = DecodeDestination(std::to_string(vchInputData.begin()+132, firstWitness + dataLength));
+    witnessAddress = DecodeDestination(std::to_string(vchInputData.begin()+132, vchInputData.begin()+132 + dataLength));
     return true;
 }
