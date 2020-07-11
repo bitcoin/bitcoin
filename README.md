@@ -14,7 +14,7 @@ By default, Bitcoin will store its blockchain in ~/.bitcoin. If this is the case
 
 If run.sh is successful, a window will show up labeled "Custom Bitcoin Console", which is a python script (bitcoin_console.py) that communicates with Bitcoin. Within this window, type `help` to list all the available commands.
 
-By default, the newly added "researcher" logging category is activated, which prints out all the messages that are received by Bitcoin, along with the address of the sender, how long it took to process, and the number of bytes. This can be disabled in the console by entering `log researcher` to toggle the "researcher category, or simply `log` to toggle between all logging categories, and disable them.
+By default, the newly added "researcher" logging category is activated, which prints out all the messages that are received by Bitcoin, along with the address of the sender, how long it took to process, and the number of bytes. This can be disabled in the console by entering `log researcher` to toggle the "researcher" category, or simply `log` to toggle between all logging categories, and disable them.
 
 Modifications
 ----------------
@@ -40,5 +40,7 @@ A new category of commands exist under the label "Z Researcher". A few of them a
 * nextIPselect "address"
 * send "msg" ( "args" )
 * setcmpct
+
+A new optional parameter has also been added to the configuration, names `numconnections`. This can be used by adding `numconnections=X` to ~/.bitcoin/bitcoin.conf, where X is the number of peer connections you would like to add. This overrides the previous "maxconnections" parameter with a more powerful function that forces the peer to connect to many more connections than they default 10 peers (even when incoming connections are disabled). 
 
 For additional information about how to use each command, as well as a brief description of what each one does, enter `help` followed by the command to provide more information about.
