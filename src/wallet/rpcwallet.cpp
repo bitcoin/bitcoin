@@ -3008,6 +3008,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
     {
@@ -3015,12 +3018,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
         cctl.m_avoid_address_reuse = false;
         cctl.m_min_depth = nMinDepth;
         cctl.m_max_depth = nMaxDepth;
-        auto locked_chain = pwallet->chain().lock();
-        LOCK(pwallet->cs_wallet);
         pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
     }
-
-    LOCK(pwallet->cs_wallet);
 
     const bool avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
 
@@ -3090,7 +3089,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("frozen", out.fFrozen);
         entry.pushKV("lock", out.fFrozen);
         if (out.fFrozen) {
-            const Coin &coin = pwallet->chain().accessCoin(COutPoint(out.tx->GetHash(), out.i));
+            const Coin &coin = pwallet->chain().accessCoin(COutPoint(out.tx->GetHash(), out.i)); // lock cs_main
             if (coin.extraData) {
                 UniValue extra(UniValue::VOBJ);
                 DatacarrierPayloadToUniv(coin.extraData, out.tx->tx->vout[out.i], extra);
