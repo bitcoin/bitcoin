@@ -8,8 +8,11 @@
 #include <amount.h>
 #include <arith_uint256.h>
 #include <attributes.h>
+#include <chainparamsbase.h>
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <netaddress.h>
+#include <netbase.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -17,6 +20,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <version.h>
@@ -226,6 +230,38 @@ NODISCARD inline std::vector<uint8_t> ConsumeFixedLengthByteVector(FuzzedDataPro
         std::memcpy(result.data(), random_bytes.data(), random_bytes.size());
     }
     return result;
+}
+
+CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const Network network = fuzzed_data_provider.PickValueInArray({Network::NET_IPV4, Network::NET_IPV6, Network::NET_INTERNAL, Network::NET_ONION});
+    CNetAddr net_addr;
+    if (network == Network::NET_IPV4) {
+        const in_addr v4_addr = {
+            .s_addr = fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+        net_addr = CNetAddr{v4_addr};
+    } else if (network == Network::NET_IPV6) {
+        if (fuzzed_data_provider.remaining_bytes() >= 16) {
+            in6_addr v6_addr = {};
+            memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
+            net_addr = CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+        }
+    } else if (network == Network::NET_INTERNAL) {
+        net_addr.SetInternal(fuzzed_data_provider.ConsumeBytesAsString(32));
+    } else if (network == Network::NET_ONION) {
+        net_addr.SetSpecial(fuzzed_data_provider.ConsumeBytesAsString(32));
+    }
+    return net_addr;
+}
+
+CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int32_t>()};
+}
+
+void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
+{
+    static const BasicTestingSetup basic_testing_setup{chain_name, {"-nodebuglogfile"}};
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
