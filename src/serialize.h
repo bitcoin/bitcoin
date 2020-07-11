@@ -164,12 +164,29 @@ enum
     SER_GETHASH         = (1 << 2),
 };
 
-//! Convert the reference base type to X, without changing constness or reference type.
-template<typename X> X& ReadWriteAsHelper(X& x) { return x; }
-template<typename X> const X& ReadWriteAsHelper(const X& x) { return x; }
+/* Convert any argument to a reference to X, maintaining constness.
+ *
+ * This can be used in serialization code to invoke a base class's
+ * serialization routines.
+ *
+ * Example use:
+ *   class Base { ... };
+ *   class Child : public Base {
+ *     int m_data;
+ *   public:
+ *     SERIALIZE_METHODS(Child, obj) {
+ *       READWRITE(AsBase<Base>(obj), obj.m_data);
+ *     }
+ *   };
+ *
+ * static_cast cannot easily be used here, as the type of Obj will be const Child&
+ * during serialization and Child& during deserialization. AsBase will convert to
+ * const Base& and Base& appropriately.
+ */
+template<typename X> X& AsBase(X& x) { return x; }
+template<typename X> const X& AsBase(const X& x) { return x; }
 
 #define READWRITE(...) (::SerReadWriteMany(s, ser_action, __VA_ARGS__))
-#define READWRITEAS(type, obj) (::SerReadWriteMany(s, ser_action, ReadWriteAsHelper<type>(obj)))
 #define SER_READ(obj, code) ::SerRead(s, ser_action, obj, [&](Stream& s, typename std::remove_const<Type>::type& obj) { code; })
 #define SER_WRITE(obj, code) ::SerWrite(s, ser_action, obj, [&](Stream& s, const Type& obj) { code; })
 

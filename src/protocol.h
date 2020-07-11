@@ -380,8 +380,7 @@ public:
             // nTime.
             READWRITE(obj.nTime);
         }
-        READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
-        READWRITEAS(CService, obj);
+        READWRITE(Using<CustomUintFormatter<8>>(obj.nServices), AsBase<CService>(obj));
     }
 
     ServiceFlags nServices{NODE_NONE};

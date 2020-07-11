@@ -60,8 +60,7 @@ public:
 
     SERIALIZE_METHODS(CAddrInfo, obj)
     {
-        READWRITEAS(CAddress, obj);
-        READWRITE(obj.source, obj.nLastSuccess, obj.nAttempts);
+        READWRITE(AsBase<CAddress>(obj), obj.source, obj.nLastSuccess, obj.nAttempts);
     }
 
     CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
