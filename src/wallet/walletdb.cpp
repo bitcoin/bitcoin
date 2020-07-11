@@ -592,9 +592,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> ser_xpub;
             CExtPubKey xpub;
             xpub.Decode(ser_xpub.data());
-            if (wss.m_descriptor_caches.count(desc_id)) {
-                wss.m_descriptor_caches[desc_id] = DescriptorCache();
-            }
             if (parent) {
                 wss.m_descriptor_caches[desc_id].CacheParentExtPubKey(key_exp_index, xpub);
             } else {
