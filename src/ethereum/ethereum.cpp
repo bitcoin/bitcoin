@@ -123,8 +123,8 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * @return true if everything is valid
  */
 bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, uint64_t& outputAmount, uint32_t& nAsset, CTxDestination& witnessAddress) {
-    // total 5 or 6 fields are expected @ 32 bytes each field, 6 fields if witness > 32 bytes + 4 byte method hash
-    if(vchInputData.size() < 164 || vchInputData.size() > 196) {
+    // total 5 to 7 fields are expected @ 32 bytes each field, > 5 fields if address is bigger, bech32 can be up to 91 characters so it will span up to 3 fields and as little as 1 field
+    if(vchInputData.size() < 164 || vchInputData.size() > 228) {
       return false;  
     }
     // method hash is 4 bytes
@@ -159,8 +159,8 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     
     // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte
     const unsigned char &dataLength = vchInputData[131];
-    // bech32 addresses to 46 bytes (sys1 vs bc1), min length is 9 for min witness address https://en.bitcoin.it/wiki/BIP_0173
-    if(dataLength > 46 || dataLength < 9) {
+    // bech32 addresses to 91 chars (sys1 vs bc1), min length is 9 for min witness address https://en.bitcoin.it/wiki/BIP_0173
+    if(dataLength > 91 || dataLength < 9) {
       return false;
     }
 
