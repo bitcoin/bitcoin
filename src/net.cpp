@@ -14,12 +14,12 @@
 #include <clientversion.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
-#include <netbase.h>
 #include <net_permissions.h>
+#include <netbase.h>
+#include <node/ui_interface.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
-#include <ui_interface.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -49,6 +49,7 @@
 static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed");
 #endif
 
+#include <cstdint>
 #include <unordered_map>
 
 #include <math.h>
@@ -117,9 +118,9 @@ void CConnman::AddOneShot(const std::string& strDest)
     vOneShots.push_back(strDest);
 }
 
-unsigned short GetListenPort()
+uint16_t GetListenPort()
 {
-    return (unsigned short)(gArgs.GetArg("-port", Params().GetDefaultPort()));
+    return (uint16_t)(gArgs.GetArg("-port", Params().GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
@@ -576,15 +577,15 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     // since pingtime does not update until the ping is complete, which might take a while.
     // So, if a ping is taking an unusually long time in flight,
     // the caller can immediately detect that this is happening.
-    int64_t nPingUsecWait = 0;
-    if ((0 != nPingNonceSent) && (0 != nPingUsecStart)) {
-        nPingUsecWait = GetTimeMicros() - nPingUsecStart;
+    std::chrono::microseconds ping_wait{0};
+    if ((0 != nPingNonceSent) && (0 != m_ping_start.load().count())) {
+        ping_wait = GetTime<std::chrono::microseconds>() - m_ping_start.load();
     }
 
     // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
     stats.m_ping_usec = nPingUsecTime;
     stats.m_min_ping_usec  = nMinPingUsecTime;
-    stats.m_ping_wait_usec = nPingUsecWait;
+    stats.m_ping_wait_usec = count_microseconds(ping_wait);
 
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();
@@ -595,9 +596,9 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
     complete = false;
-    int64_t nTimeMicros = GetTimeMicros();
+    const auto time = GetTime<std::chrono::microseconds>();
     LOCK(cs_vRecv);
-    nLastRecv = nTimeMicros / 1000000;
+    nLastRecv = std::chrono::duration_cast<std::chrono::seconds>(time).count();
     nRecvBytes += nBytes;
     while (nBytes > 0) {
         // absorb network data
@@ -609,7 +610,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
 
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
-            CNetMessage msg = m_deserializer->GetMessage(Params().MessageStart(), nTimeMicros);
+            CNetMessage msg = m_deserializer->GetMessage(Params().MessageStart(), time);
 
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
@@ -712,7 +713,8 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) {
+CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageStartChars& message_start, const std::chrono::microseconds time)
+{
     // decompose a single CNetMessage from the TransportDeserializer
     CNetMessage msg(std::move(vRecv));
 
@@ -1024,13 +1026,20 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     // on all platforms.  Set it again here just to be sure.
     SetSocketNoDelay(hSocket);
 
-    int bannedlevel = m_banman ? m_banman->IsBannedLevel(addr) : 0;
-
-    // Don't accept connections from banned peers, but if our inbound slots aren't almost full, accept
-    // if the only banning reason was an automatic misbehavior ban.
-    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && bannedlevel > ((nInbound + 1 < nMaxInbound) ? 1 : 0))
+    // Don't accept connections from banned peers.
+    bool banned = m_banman->IsBanned(addr);
+    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && banned)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
+        CloseSocket(hSocket);
+        return;
+    }
+
+    // Only accept connections from discouraged peers if our inbound slots aren't (almost) full.
+    bool discouraged = m_banman->IsDiscouraged(addr);
+    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && nInbound + 1 >= nMaxInbound && discouraged)
+    {
+        LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());
         CloseSocket(hSocket);
         return;
     }
@@ -1058,7 +1067,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     pnode->m_permissionFlags = permissionFlags;
     // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
     pnode->m_legacyWhitelisted = legacyWhitelisted;
-    pnode->m_prefer_evict = bannedlevel > 0;
+    pnode->m_prefer_evict = discouraged;
     m_msgproc->InitializeNode(pnode);
 
     LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
@@ -1117,12 +1126,9 @@ void CConnman::DisconnectNodes()
             if (pnode->GetRefCount() <= 0) {
                 bool fDelete = false;
                 {
-                    TRY_LOCK(pnode->cs_inventory, lockInv);
-                    if (lockInv) {
-                        TRY_LOCK(pnode->cs_vSend, lockSend);
-                        if (lockSend) {
-                            fDelete = true;
-                        }
+                    TRY_LOCK(pnode->cs_vSend, lockSend);
+                    if (lockSend) {
+                        fDelete = true;
                     }
                 }
                 if (fDelete) {
@@ -1168,9 +1174,9 @@ void CConnman::InactivityCheck(CNode *pnode)
             LogPrintf("\nsocket receive timeout: %is\n", nTime - pnode->nLastRecv);
             pnode->fDisconnect = true;
         }
-        else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
+        else if (pnode->nPingNonceSent && pnode->m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL} < GetTime<std::chrono::microseconds>())
         {
-            LogPrintf("\nping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
+            LogPrintf("ping timeout: %fs\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - pnode->m_ping_start.load()));
             pnode->fDisconnect = true;
         }
         else if (!pnode->fSuccessfullyConnected)
@@ -2061,10 +2067,10 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return;
     }
     if (!pszDest) {
-        if (IsLocal(addrConnect) ||
-            FindNode(static_cast<CNetAddr>(addrConnect)) || (m_banman && m_banman->IsBanned(addrConnect)) ||
-            FindNode(addrConnect.ToStringIPPort()))
+        bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
+        if (IsLocal(addrConnect) || FindNode(static_cast<CNetAddr>(addrConnect)) || banned_or_discouraged || FindNode(addrConnect.ToStringIPPort())) {
             return;
+        }
     } else if (FindNode(std::string(pszDest)))
         return;
 
@@ -2521,11 +2527,6 @@ CConnman::~CConnman()
     Stop();
 }
 
-size_t CConnman::GetAddressCount() const
-{
-    return addrman.size();
-}
-
 void CConnman::SetServices(const CService &addr, ServiceFlags nServices)
 {
     addrman.SetServices(addr, nServices);
@@ -2655,7 +2656,7 @@ void CConnman::RecordBytesSent(uint64_t bytes)
         nMaxOutboundTotalBytesSentInCycle = 0;
     }
 
-    // TODO, exclude peers with noban permission
+    // TODO, exclude peers with download permission
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 

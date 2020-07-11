@@ -75,11 +75,13 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
             "dummy",
             "-printtoconsole=0",
             "-logtimemicros",
+            "-logthreadnames",
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
         },
         extra_args);
+    util::ThreadRename("test");
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
@@ -130,7 +132,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
-    threadGroup.create_thread([&]{ m_node.scheduler->serviceQueue(); });
+    threadGroup.create_thread([&] { TraceThread("scheduler", [&] { m_node.scheduler->serviceQueue(); }); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
@@ -229,7 +231,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    EnsureChainman(m_node).ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
     CBlock result = block;
     return result;

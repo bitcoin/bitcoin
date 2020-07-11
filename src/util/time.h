@@ -15,10 +15,15 @@ void UninterruptibleSleep(const std::chrono::microseconds& n);
 /**
  * Helper to count the seconds of a duration.
  *
- * All durations should be using std::chrono and calling this should generally be avoided in code. Though, it is still
- * preferred to an inline t.count() to protect against a reliance on the exact type of t.
+ * All durations should be using std::chrono and calling this should generally
+ * be avoided in code. Though, it is still preferred to an inline t.count() to
+ * protect against a reliance on the exact type of t.
+ *
+ * This helper is used to convert durations before passing them over an
+ * interface that doesn't support std::chrono (e.g. RPC, debug log, or the GUI)
  */
 inline int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
+inline int64_t count_microseconds(std::chrono::microseconds t) { return t.count(); }
 
 /**
  * DEPRECATED

@@ -539,11 +539,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::HDCHAIN) {
             CHDChain chain;
             ssValue >> chain;
-            pwallet->GetOrCreateLegacyScriptPubKeyMan()->SetHDChain(chain, true);
+            pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain);
         } else if (strType == DBKeys::FLAGS) {
             uint64_t flags;
             ssValue >> flags;
-            if (!pwallet->SetWalletFlags(flags, true)) {
+            if (!pwallet->LoadWalletFlags(flags)) {
                 strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
                 return false;
             }
@@ -592,9 +592,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> ser_xpub;
             CExtPubKey xpub;
             xpub.Decode(ser_xpub.data());
-            if (wss.m_descriptor_caches.count(desc_id)) {
-                wss.m_descriptor_caches[desc_id] = DescriptorCache();
-            }
             if (parent) {
                 wss.m_descriptor_caches[desc_id].CacheParentExtPubKey(key_exp_index, xpub);
             } else {
@@ -700,8 +697,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
 
         // Get cursor
-        Dbc* pcursor = m_batch.GetCursor();
-        if (!pcursor)
+        if (!m_batch.StartCursor())
         {
             pwallet->WalletLogPrintf("\nError getting wallet database cursor\n");
             return DBErrors::CORRUPT;
@@ -712,12 +708,15 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue);
-            if (ret == DB_NOTFOUND)
+            bool complete;
+            bool ret = m_batch.ReadAtCursor(ssKey, ssValue, complete);
+            if (complete) {
                 break;
-            else if (ret != 0)
+            }
+            else if (!ret)
             {
-                pwallet->WalletLogPrintf("\nError reading next record from wallet database\n");
+                m_batch.CloseCursor();
+                pwallet->WalletLogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
 
@@ -743,17 +742,17 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             if (!strErr.empty())
                 pwallet->WalletLogPrintf("\n%s\n", strErr);
         }
-        pcursor->close();
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
+    m_batch.CloseCursor();
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man_pair : wss.m_active_external_spks) {
-        pwallet->SetActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ false, /* memonly */ true);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ false);
     }
     for (auto spk_man_pair : wss.m_active_internal_spks) {
-        pwallet->SetActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ true, /* memonly */ true);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ true);
     }
 
     // Set the descriptor caches
@@ -850,8 +849,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
         }
 
         // Get cursor
-        Dbc* pcursor = m_batch.GetCursor();
-        if (!pcursor)
+        if (!m_batch.StartCursor())
         {
             LogPrintf("\nError getting wallet database cursor\n");
             return DBErrors::CORRUPT;
@@ -862,12 +860,13 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue);
-            if (ret == DB_NOTFOUND)
+            bool complete;
+            bool ret = m_batch.ReadAtCursor(ssKey, ssValue, complete);
+            if (complete) {
                 break;
-            else if (ret != 0)
-            {
-                LogPrintf("\nError reading next record from wallet database\n");
+            } else if (!ret) {
+                m_batch.CloseCursor();
+                LogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
 
@@ -881,10 +880,10 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
                 ssValue >> vWtx.back();
             }
         }
-        pcursor->close();
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
+    m_batch.CloseCursor();
 
     return result;
 }
@@ -950,9 +949,6 @@ void MaybeCompactWalletDB()
     if (fOneThread.exchange(true)) {
         return;
     }
-    if (!gArgs.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
-        return;
-    }
 
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         WalletDatabase& dbh = pwallet->GetDBHandle();
@@ -965,23 +961,13 @@ void MaybeCompactWalletDB()
         }
 
         if (dbh.nLastFlushed != nUpdateCounter && GetTime() - dbh.nLastWalletUpdate >= 2) {
-            if (BerkeleyBatch::PeriodicFlush(dbh)) {
+            if (dbh.PeriodicFlush()) {
                 dbh.nLastFlushed = nUpdateCounter;
             }
         }
     }
 
     fOneThread = false;
-}
-
-bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, bilingual_str& errorStr)
-{
-    return BerkeleyBatch::VerifyEnvironment(wallet_path, errorStr);
-}
-
-bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, bilingual_str& errorStr)
-{
-    return BerkeleyBatch::VerifyDatabaseFile(wallet_path, errorStr);
 }
 
 bool WalletBatch::WriteDestData(const std::string &address, const std::string &key, const std::string &value)

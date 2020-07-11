@@ -13,11 +13,11 @@
 #include <script/standard.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
-#include <ui_interface.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/ref.h>
 #include <util/system.h>
+#include <util/ui_change_type.h>
 #include <wallet/context.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
@@ -438,7 +438,6 @@ public:
     bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
-    OutputType getDefaultChangeType() override { return m_wallet->m_default_change_type; }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
@@ -484,10 +483,11 @@ public:
 class WalletClientImpl : public ChainClient
 {
 public:
-    WalletClientImpl(Chain& chain, std::vector<std::string> wallet_filenames)
+    WalletClientImpl(Chain& chain, ArgsManager& args, std::vector<std::string> wallet_filenames)
         : m_wallet_filenames(std::move(wallet_filenames))
     {
         m_context.chain = &chain;
+        m_context.args = &args;
     }
     void registerRpcs() override
     {
@@ -500,7 +500,7 @@ public:
     }
     bool verify() override { return VerifyWallets(*m_context.chain, m_wallet_filenames); }
     bool load() override { return LoadWallets(*m_context.chain, m_wallet_filenames); }
-    void start(CScheduler& scheduler) override { return StartWallets(scheduler); }
+    void start(CScheduler& scheduler) override { return StartWallets(scheduler, *Assert(m_context.args)); }
     void flush() override { return FlushWallets(); }
     void stop() override { return StopWallets(); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
@@ -515,7 +515,7 @@ public:
     ~WalletClientImpl() override { UnloadWallets(); }
 
     WalletContext m_context;
-    std::vector<std::string> m_wallet_filenames;
+    const std::vector<std::string> m_wallet_filenames;
     std::vector<std::unique_ptr<Handler>> m_rpc_handlers;
     std::list<CRPCCommand> m_rpc_commands;
 };
@@ -524,9 +524,9 @@ public:
 
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? MakeUnique<WalletImpl>(wallet) : nullptr; }
 
-std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames)
+std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, ArgsManager& args, std::vector<std::string> wallet_filenames)
 {
-    return MakeUnique<WalletClientImpl>(chain, std::move(wallet_filenames));
+    return MakeUnique<WalletClientImpl>(chain, args, std::move(wallet_filenames));
 }
 
 } // namespace interfaces

@@ -121,6 +121,8 @@ $ git clone https://github.com/google/afl
 $ make -C afl/
 $ make -C afl/llvm_mode/
 $ ./autogen.sh
+# It is possible to compile with afl-gcc and afl-g++ instead of afl-clang. However, running afl-fuzz
+# may require more memory via the -m flag.
 $ CC=$(pwd)/afl/afl-clang-fast CXX=$(pwd)/afl/afl-clang-fast++ ./configure --enable-fuzz
 $ make
 # For macOS you may need to ignore x86 compilation checks when running "make". If so,

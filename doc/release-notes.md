@@ -102,6 +102,11 @@ Updated settings
 - The `-debug=db` logging category, which was deprecated in 0.20 and replaced by
   `-debug=walletdb` to distinguish it from `coindb`, has been removed. (#19202)
 
+- A `download` permission has been extracted from the `noban` permission. For
+  compatibility, `noban` implies the `download` permission, but this may change
+  in future releases. Refer to the help of the affected settings `-whitebind`
+  and `-whitelist` for more details. (#19191)
+
 Changes to Wallet or GUI related settings can be found in the GUI or Wallet  section below.
 
 New settings
