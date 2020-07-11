@@ -25,15 +25,16 @@ public:
     explicit ModalOverlay(bool enable_wallet, QWidget *parent);
     ~ModalOverlay();
 
-public Q_SLOTS:
     void tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress);
     void setKnownBestHeight(int count, const QDateTime& blockDate);
 
-    void toggleVisibility();
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
-    void closeClicked();
     bool isLayerVisible() const { return layerIsVisible; }
+
+public Q_SLOTS:
+    void toggleVisibility();
+    void closeClicked();
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
