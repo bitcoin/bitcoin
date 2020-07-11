@@ -135,8 +135,8 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
                 else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
                 {
                     std::vector<std::vector<unsigned char> > vSolutions;
-                    txnouttype type = Solver(txout.scriptPubKey, vSolutions);
-                    if (type == TX_PUBKEY || type == TX_MULTISIG) {
+                    TxoutType type = Solver(txout.scriptPubKey, vSolutions);
+                    if (type == TxoutType::PUBKEY || type == TxoutType::MULTISIG) {
                         insert(COutPoint(hash, i));
                     }
                 }

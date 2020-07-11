@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+class ArgsManager;
 class CBlock;
 class CFeeRate;
 class CRPCCommand;
@@ -322,7 +323,7 @@ std::unique_ptr<Chain> MakeChain(NodeContext& node);
 //! analysis, or fee estimation. These clients need to expose their own
 //! MakeXXXClient functions returning their implementations of the ChainClient
 //! interface.
-std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames);
+std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, ArgsManager& args, std::vector<std::string> wallet_filenames);
 
 } // namespace interfaces
 

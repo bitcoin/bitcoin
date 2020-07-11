@@ -5,10 +5,10 @@
 
 #include <txdb.h>
 
+#include <node/ui_interface.h>
 #include <pow.h>
 #include <random.h>
 #include <shutdown.h>
-#include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <util/translation.h>

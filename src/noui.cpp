@@ -6,7 +6,7 @@
 #include <noui.h>
 
 #include <logging.h>
-#include <ui_interface.h>
+#include <node/ui_interface.h>
 #include <util/translation.h>
 
 #include <string>

@@ -58,7 +58,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     CTxDestination address;
     (void)ExtractDestination(script, address);
 
-    txnouttype type_ret;
+    TxoutType type_ret;
     std::vector<CTxDestination> addresses;
     int required_ret;
     (void)ExtractDestinations(script, type_ret, addresses, required_ret);
@@ -72,7 +72,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     (void)IsSolvable(signing_provider, script);
 
-    txnouttype which_type;
+    TxoutType which_type;
     (void)IsStandard(script, which_type);
 
     (void)RecursiveDynamicUsage(script);

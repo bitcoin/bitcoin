@@ -146,6 +146,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                      ismine=True,
                      solvable=True)
 
+        # Check persistence of data and that loading works correctly
+        w1.unloadwallet()
+        self.nodes[1].loadwallet('w1')
+        test_address(w1,
+                     key.p2sh_p2wpkh_addr,
+                     ismine=True,
+                     solvable=True)
+
         # # Test importing of a multisig descriptor
         key1 = get_generate_key()
         key2 = get_generate_key()
@@ -369,6 +377,10 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.nodes[0].generate(6)
         self.sync_all()
         assert_equal(wmulti_pub.getbalance(), wmulti_priv.getbalance())
+
+        # Make sure that descriptor wallets containing multiple xpubs in a single descriptor load correctly
+        wmulti_pub.unloadwallet()
+        self.nodes[1].loadwallet('wmulti_pub')
 
         self.log.info("Multisig with distributed keys")
         self.nodes[1].createwallet(wallet_name="wmulti_priv1", descriptors=True)
