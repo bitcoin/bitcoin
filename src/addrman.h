@@ -60,7 +60,7 @@ public:
 
     SERIALIZE_METHODS(CAddrInfo, obj)
     {
-        READWRITE(AsBase<CAddress>(obj), obj.source, obj.nLastSuccess, obj.nAttempts);
+        READWRITE(WithParams(CAddress::Format::DISK, AsBase<CAddress>(obj)), obj.source, obj.nLastSuccess, obj.nAttempts);
     }
 
     CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)

@@ -60,7 +60,7 @@ T Deserialize(CDataStream ds)
 }
 
 template <typename T>
-void DeserializeFromFuzzingInput(const std::vector<uint8_t>& buffer, T& obj)
+void DeserializeFromFuzzingInput(const std::vector<uint8_t>& buffer, T&& obj)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     try {
@@ -195,7 +195,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         (void)mh.IsValid(pchMessageStart);
 #elif ADDRESS_DESERIALIZE
         CAddress a;
-        DeserializeFromFuzzingInput(buffer, a);
+        DeserializeFromFuzzingInput(buffer, WithParams(CAddress::Format::NETWORK_NOTIME, a));
 #elif INV_DESERIALIZE
         CInv i;
         DeserializeFromFuzzingInput(buffer, i);

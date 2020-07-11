@@ -354,6 +354,7 @@ static inline bool MayHaveUsefulAddressDB(ServiceFlags services)
     return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
 }
 
+
 /** A CService with information about it as peer */
 class CAddress : public CService
 {
@@ -368,23 +369,21 @@ public:
     CAddress() : CService{} {};
     explicit CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
 
-    SERIALIZE_METHODS(CAddress, obj)
+    enum class Format {
+        DISK,
+        NETWORK_NOTIME,
+        NETWORK_WITHTIME,
+    };
+
+    SERIALIZE_METHODS_PARAMS(CAddress, obj, Format, fmt)
     {
         SER_READ(obj, obj.nTime = TIME_INIT);
-        if (s.GetType() & SER_DISK) {
+        if (fmt == Format::DISK) {
             uint32_t disk_version = DISK_VERSION;
             READWRITE(disk_version);
             READWRITE(obj.nTime);
-        } else if (s.GetType() & SER_NETWORK) {
-            // The only time we serialize a CAddress object without nTime is in
-            // the initial VERSION messages which contain two CAddress records.
-            // At that point, the serialization version is INIT_PROTO_VERSION.
-            // After the version handshake, serialization version is >=
-            // MIN_PEER_PROTO_VERSION and all ADDR messages are serialized with
-            // nTime.
-            if (s.GetVersion() != INIT_PROTO_VERSION) {
-                READWRITE(obj.nTime);
-            }
+        } else if (fmt == Format::NETWORK_WITHTIME) {
+            READWRITE(obj.nTime);
         }
         READWRITE(Using<CustomUintFormatter<8>>(obj.nServices), AsBase<CService>(obj));
     }
