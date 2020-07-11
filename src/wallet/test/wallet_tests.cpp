@@ -812,13 +812,13 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 
         LOCK(wallet->cs_wallet);
         BOOST_CHECK(wallet->HasWalletSpend(prev_hash));
-        BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 1);
+        BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 1u);
 
         std::vector<uint256> vHashIn{ block_hash }, vHashOut;
         BOOST_CHECK_EQUAL(wallet->ZapSelectTx(vHashIn, vHashOut), DBErrors::LOAD_OK);
 
         BOOST_CHECK(!wallet->HasWalletSpend(prev_hash));
-        BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 0);
+        BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 0u);
     }
 
     TestUnloadWallet(std::move(wallet));
