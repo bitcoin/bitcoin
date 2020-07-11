@@ -202,5 +202,10 @@ class WalletDumpTest(BitcoinTestFramework):
         result = self.nodes[0].getaddressinfo(multisig_addr)
         assert result['ismine']
 
+        self.log.info('Check that wallet is flushed')
+        with self.nodes[0].assert_debug_log(['Flushing wallet.dat'], timeout=20):
+            self.nodes[0].getnewaddress()
+
+
 if __name__ == '__main__':
     WalletDumpTest().main()
