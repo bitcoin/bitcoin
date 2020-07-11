@@ -622,7 +622,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if(tx.HasAssets()) {
         isAssetTx = IsAssetTx(tx.nVersion);
         TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool)) {
+        if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool, ws.m_test_accept)) {
             return state.Invalid(TxValidationResult::TX_CONFLICT, "bad-syscoin-tx", tx_state.ToString()); 
         } 
     }  

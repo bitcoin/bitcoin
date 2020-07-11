@@ -188,10 +188,19 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(pethereumtxmintdb->Exists(nBridgeTransferID)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
-    // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
-    auto itMap = mapMintKeys.emplace(nBridgeTransferID, txHash);
-    if(!itMap.second) {
-        return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
+    // sanity check is set in mempool during m_test_accept and when miner validates block
+    // we care to ensure unique bridge id's in the mempool, not to emplace on test_accept
+    if(bSanityCheck) {
+        if(mapMintKeys.find(nBridgeTransferID) != mapMintKeys.end()) {
+            return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
+        }
+    }
+    else {
+        // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
+        auto itMap = mapMintKeys.emplace(nBridgeTransferID, txHash);
+        if(!itMap.second) {
+            return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
+        }
     }
      
     // verify receipt proof
@@ -260,13 +269,13 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     return true;
 }
 
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck) {
     if(!fRegTest && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
-    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapMintKeys);
+    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys);
 }
 
 bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
