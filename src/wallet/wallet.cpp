@@ -1437,8 +1437,8 @@ bool CWallet::LoadWalletFlags(uint64_t flags)
 bool CWallet::AddWalletFlags(uint64_t flags)
 {
     LOCK(cs_wallet);
-    // We should never be writing unknown onon-tolerable wallet flags
-    assert(!(((flags & KNOWN_WALLET_FLAGS) >> 32) ^ (flags >> 32)));
+    // We should never be writing unknown non-tolerable wallet flags
+    assert(((flags & KNOWN_WALLET_FLAGS) >> 32) == (flags >> 32));
     if (!WalletBatch(*database).WriteWalletFlags(flags)) {
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
     }
