@@ -171,6 +171,8 @@ void ModalOverlay::showHide(bool hide, bool userRequested)
     if ( (layerIsVisible && !hide) || (!layerIsVisible && hide) || (!hide && userClosed && !userRequested))
         return;
 
+    Q_EMIT triggered(hide);
+
     if (!isVisible() && !hide)
         setVisible(true);
 

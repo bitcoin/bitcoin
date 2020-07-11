@@ -36,6 +36,9 @@ public Q_SLOTS:
     void toggleVisibility();
     void closeClicked();
 
+Q_SIGNALS:
+    void triggered(bool hidden);
+
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
     bool event(QEvent* ev) override;
