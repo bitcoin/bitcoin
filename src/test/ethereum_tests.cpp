@@ -12,7 +12,8 @@
 #include <policy/policy.h>
 #include <services/asset.h>
 #include <univalue.h>
-
+#include <key_io.h>
+#include <util/system.h>
 extern UniValue read_json(const std::string& jsondata);
 
 
