@@ -14,6 +14,10 @@ elif [ -d "/media/sim/BITCOIN/blocks/" ]; then
 else
 	dir="$HOME/.bitcoin/"
 	pruned="true"
+
+	if [ ! -d "$dir" ]; then
+		mkdir "$dir"
+	fi
 fi
 
 echo "datadir = $dir"
@@ -40,7 +44,7 @@ if [ "$1" == "gui" ]; then
 		src/qt/bitcoin-qt -datadir="$dir" -debug=researcher
 	fi
 else
-	
+
 	# Only open the console if not already open
 	if ! wmctrl -l | grep -q "Custom Bitcoin Console"; then
 		# Find the right terminal
