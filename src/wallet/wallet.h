@@ -1176,7 +1176,9 @@ public:
 
     /** overwrite all flags by the given uint64_t
        returns false if unknown, non-tolerable flags are present */
-    bool SetWalletFlags(uint64_t overwriteFlags, bool memOnly);
+    bool AddWalletFlags(uint64_t flags);
+    /** Loads the flags into the wallet. (used by LoadWallet) */
+    bool LoadWalletFlags(uint64_t flags);
 
     /** Determine if we are a legacy wallet */
     bool IsLegacy() const;
@@ -1254,12 +1256,17 @@ public:
     //! Instantiate a descriptor ScriptPubKeyMan from the WalletDescriptor and load it
     void LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc);
 
-    //! Sets the active ScriptPubKeyMan for the specified type and internal
+    //! Adds the active ScriptPubKeyMan for the specified type and internal. Writes it to the wallet file
     //! @param[in] id The unique id for the ScriptPubKeyMan
     //! @param[in] type The OutputType this ScriptPubKeyMan provides addresses for
     //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
-    //! @param[in] memonly Whether to record this update to the database. Set to true for wallet loading, normally false when actually updating the wallet.
-    void SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly = false);
+    void AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal);
+
+    //! Loads an active ScriptPubKeyMan for the specified type and internal. (used by LoadWallet)
+    //! @param[in] id The unique id for the ScriptPubKeyMan
+    //! @param[in] type The OutputType this ScriptPubKeyMan provides addresses for
+    //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
+    void LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
     void SetupDescriptorScriptPubKeyMans();

@@ -1547,7 +1547,7 @@ static UniValue ProcessDescriptorImport(CWallet * const pwallet, const UniValue&
             if (!w_desc.descriptor->GetOutputType()) {
                 warnings.push_back("Unknown output type, cannot set descriptor to active.");
             } else {
-                pwallet->SetActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
+                pwallet->AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
         }
 

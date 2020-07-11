@@ -905,20 +905,22 @@ bool LegacyScriptPubKeyMan::AddWatchOnly(const CScript& dest, int64_t nCreateTim
     return AddWatchOnly(dest);
 }
 
-void LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain, bool memonly)
+void LegacyScriptPubKeyMan::LoadHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
-    // memonly == true means we are loading the wallet file
-    // memonly == false means that the chain is actually being changed
-    if (!memonly) {
-        // Store the new chain
-        if (!WalletBatch(m_storage.GetDatabase()).WriteHDChain(chain)) {
-            throw std::runtime_error(std::string(__func__) + ": writing chain failed");
-        }
-        // When there's an old chain, add it as an inactive chain as we are now rotating hd chains
-        if (!m_hd_chain.seed_id.IsNull()) {
-            AddInactiveHDChain(m_hd_chain);
-        }
+    m_hd_chain = chain;
+}
+
+void LegacyScriptPubKeyMan::AddHDChain(const CHDChain& chain)
+{
+    LOCK(cs_KeyStore);
+    // Store the new chain
+    if (!WalletBatch(m_storage.GetDatabase()).WriteHDChain(chain)) {
+        throw std::runtime_error(std::string(__func__) + ": writing chain failed");
+    }
+    // When there's an old chain, add it as an inactive chain as we are now rotating hd chains
+    if (!m_hd_chain.seed_id.IsNull()) {
+        AddInactiveHDChain(m_hd_chain);
     }
 
     m_hd_chain = chain;
@@ -1172,7 +1174,7 @@ void LegacyScriptPubKeyMan::SetHDSeed(const CPubKey& seed)
     CHDChain newHdChain;
     newHdChain.nVersion = m_storage.CanSupportFeature(FEATURE_HD_SPLIT) ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE;
     newHdChain.seed_id = seed.GetID();
-    SetHDChain(newHdChain, false);
+    AddHDChain(newHdChain);
     NotifyCanGetAddressesChanged();
     WalletBatch batch(m_storage.GetDatabase());
     m_storage.UnsetBlankWalletFlag(batch);

@@ -1422,19 +1422,28 @@ bool CWallet::IsWalletFlagSet(uint64_t flag) const
     return (m_wallet_flags & flag);
 }
 
-bool CWallet::SetWalletFlags(uint64_t overwriteFlags, bool memonly)
+bool CWallet::LoadWalletFlags(uint64_t flags)
 {
     LOCK(cs_wallet);
-    m_wallet_flags = overwriteFlags;
-    if (((overwriteFlags & KNOWN_WALLET_FLAGS) >> 32) ^ (overwriteFlags >> 32)) {
+    if (((flags & KNOWN_WALLET_FLAGS) >> 32) ^ (flags >> 32)) {
         // contains unknown non-tolerable wallet flags
         return false;
     }
-    if (!memonly && !WalletBatch(*database).WriteWalletFlags(m_wallet_flags)) {
+    m_wallet_flags = flags;
+
+    return true;
+}
+
+bool CWallet::AddWalletFlags(uint64_t flags)
+{
+    LOCK(cs_wallet);
+    // We should never be writing unknown onon-tolerable wallet flags
+    assert(!(((flags & KNOWN_WALLET_FLAGS) >> 32) ^ (flags >> 32)));
+    if (!WalletBatch(*database).WriteWalletFlags(flags)) {
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
     }
 
-    return true;
+    return LoadWalletFlags(flags);
 }
 
 int64_t CWalletTx::GetTxTime() const
@@ -3798,7 +3807,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
-        walletInstance->SetWalletFlags(wallet_creation_flags, false);
+        walletInstance->AddWalletFlags(wallet_creation_flags);
 
         // Only create LegacyScriptPubKeyMan when not descriptor wallet
         if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
@@ -4419,12 +4428,21 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
             spk_manager->SetupDescriptorGeneration(master_key, t);
             uint256 id = spk_manager->GetID();
             m_spk_managers[id] = std::move(spk_manager);
-            SetActiveScriptPubKeyMan(id, t, internal);
+            AddActiveScriptPubKeyMan(id, t, internal);
         }
     }
 }
 
-void CWallet::SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly)
+void CWallet::AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
+{
+    WalletBatch batch(*database);
+    if (!batch.WriteActiveScriptPubKeyMan(static_cast<uint8_t>(type), id, internal)) {
+        throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
+    }
+    LoadActiveScriptPubKeyMan(id, type, internal);
+}
+
+void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
 {
     WalletLogPrintf("Setting spkMan to active: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(type), static_cast<int>(internal));
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
@@ -4432,12 +4450,6 @@ void CWallet::SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool interna
     spk_man->SetInternal(internal);
     spk_mans[type] = spk_man;
 
-    if (!memonly) {
-        WalletBatch batch(*database);
-        if (!batch.WriteActiveScriptPubKeyMan(static_cast<uint8_t>(type), id, internal)) {
-            throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
-        }
-    }
     NotifyCanGetAddressesChanged();
 }
 
