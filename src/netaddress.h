@@ -540,8 +540,7 @@ public:
 
     SERIALIZE_METHODS(CService, obj)
     {
-        READWRITEAS(CNetAddr, obj);
-        READWRITE(Using<BigEndianFormatter<2>>(obj.port));
+        READWRITE(AsBase<CNetAddr>(obj), Using<BigEndianFormatter<2>>(obj.port));
     }
 
     friend class CServiceHash;
