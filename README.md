@@ -1,80 +1,44 @@
-Bitcoin Core Research Toolkit
+Bitcoin Researcher
 =====================================
+This is a fork from the official Bitcoin Core main branch, which includes many additional features for testing the protocol and functionality of Bitcoin, as well as real-time logging of the node.
 
-https://bitcoincore.org
+Instructions
+----------------
+For first time users, inside a Debian version of linux, run `./first_compile.sh` from the terminal to install all the necessary prerequisites, compile, and run Bitcoin.
 
-What is Bitcoin?
+If modifications are made to the code, run `./compile.sh` to only compile the code and run it, without the additional prerequisites/configurations from first_compile.sh.
+
+If no modifications are made, run `./run.sh` to start up Bitcoin, with no additional overhead from compile.sh or first_compile.sh. To start in GUI mode instead of terminal mode, run `./run.sh gui`
+
+By default, Bitcoin will store its blockchain in ~/.bitcoin. If this is the case, then run.sh will by default start Bitcoin in pruned mode, where it will only keep the last 550 blocks (a few gigabytes), to avoid the cost of a full blockchain (several hundred gigabytes).
+
+If run.sh is successful, a window will show up labeled "Custom Bitcoin Console", which is a python script (bitcoin_console.py) that communicates with Bitcoin. Within this window, type `help` to list all the available commands.
+
+By default, the newly added "researcher" logging category is activated, which prints out all the messages that are received by Bitcoin, along with the address of the sender, how long it took to process, and the number of bytes. This can be disabled in the console by entering `log researcher` to toggle the "researcher category, or simply `log` to toggle between all logging categories, and disable them.
+
+Modifications
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+A new category of commands exist under the label "Z Researcher". A few of them are as follows:
+* DoS "duration" "times/seconds/clocks" "msg" ( "args" )
+* blocktimeoffset
+* bucketadd "address" "port"
+* bucketclear
+* bucketinfo
+* bucketlist "new/tried/all"
+* bucketremove "address" "port"
+* connect "address" "port"
+* count
+* disconnect "address" "port"
+* forcerealfake "real" "fake"
+* getmsginfo
+* list
+* listallstats
+* listcmpct
+* log "category"
+* mine ( "duration" "times/seconds/clocks" "delayBetweenNonces" "address" )
+* nextIPselect "address"
+* send "msg" ( "args" )
+* setcmpct
 
-For more information, as well as an immediately usable, binary version of
-the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
-
-License
--------
-
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
-
-Development Process
--------------------
-
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
-
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
-
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
-
-Testing
--------
-
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
-
-### Automated Testing
-
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
-
-There are also [regression and integration tests](/test), written
-in Python, that are run automatically on the build server.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
-
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and macOS, and that unit/sanity tests are run automatically.
-
-### Manual Quality Assurance (QA) Testing
-
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
-
-Translations
-------------
-
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
-
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+For additional information about how to use each command, as well as a brief description of what each one does, enter `help` followed by the command to provide more information about.
