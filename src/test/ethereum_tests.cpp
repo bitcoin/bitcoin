@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
     BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, 8, 8, rlpBytes, outputAmount, nAsset, address));
     BOOST_CHECK_EQUAL(outputAmount, 100*COIN);
     BOOST_CHECK_EQUAL(nAsset, 2615707979);
-    BOOST_CHECK(address == expectedAddress);
+    BOOST_CHECK(address == expectedDestination);
 
 }
 
