@@ -80,12 +80,24 @@ void ForceActivation();
 
 namespace GUIUtil {
 
+// The default stylesheet directory
+static const QString defaultStylesheetDirectory = ":css";
+// The actual stylesheet directory
+static QString stylesheetDirectory = defaultStylesheetDirectory;
 // The name of the traditional theme
 static const QString traditionalTheme = "Traditional";
 // The theme to set by default if settings are missing or incorrect
 static const QString defaultTheme = "Light";
 // The prefix a theme name should have if we want to apply dark colors and styles to it
 static const QString darkThemePrefix = "Dark";
+// Mapping css file => theme.
+static const std::map<QString, QString> mapStyleToTheme{
+    {"general.css", ""},
+    {"dark.css", "Dark"},
+    {"light.css", "Light"},
+    {"traditional.css", "Traditional"},
+    {"scrollbars.css", ""}
+};
 
 /** Font related default values. */
 static const FontFamily defaultFontFamily = FontFamily::SystemDefault;
@@ -971,48 +983,73 @@ void migrateQtSettings()
     }
 }
 
+void setStyleSheetDirectory(const QString& path)
+{
+    stylesheetDirectory = path;
+}
+
+bool isStyleSheetDirectoryCustom()
+{
+    return stylesheetDirectory != defaultStylesheetDirectory;
+}
+
+const std::vector<QString> listStyleSheets()
+{
+    std::vector<QString> vecStylesheets;
+    for (const auto& it : mapStyleToTheme) {
+        vecStylesheets.push_back(it.first);
+    }
+    return vecStylesheets;
+}
+
+const std::vector<QString> listThemes()
+{
+    std::vector<QString> vecThemes;
+    for (const auto& it : mapStyleToTheme) {
+        if (!it.second.isEmpty()) {
+            vecThemes.push_back(it.second);
+        }
+    }
+    return vecThemes;
+}
+
 // Open CSS when configured
 QString loadStyleSheet()
 {
     static std::unique_ptr<QString> stylesheet;
 
-    if (stylesheet.get() == nullptr) {
-
+    if (stylesheet == nullptr) {
         stylesheet = std::make_unique<QString>();
 
         QSettings settings;
-        QDir themes(":themes");
+        QDir themes(":css");
         QString theme = settings.value("theme", "").toString();
 
         // Make sure settings are pointing to an existent theme
-        if (theme.isEmpty() || !themes.exists(theme)) {
+        if (!isStyleSheetDirectoryCustom() && (theme.isEmpty() || !themes.exists(theme))) {
             theme = defaultTheme;
             settings.setValue("theme", theme);
         }
 
+        auto loadFile = [&](const QString& name) {
+            QFile qFile(stylesheetDirectory + "/" + name + (isStyleSheetDirectoryCustom() ? ".css" : ""));
+            if (qFile.open(QFile::ReadOnly)) {
+                stylesheet->append(QLatin1String(qFile.readAll()));
+            }
+        };
+
         // If light/dark theme is used load general styles first
         if (dashThemeActive()) {
-            QFile qFileGeneral(":css/general");
-            if (qFileGeneral.open(QFile::ReadOnly)) {
-                stylesheet.get()->append(QLatin1String(qFileGeneral.readAll()));
-            }
-
+            loadFile("general");
 #ifndef Q_OS_MAC
-            // Apply some styling to scrollbars
-            QFile qFileScrollbars(QString(":/css/scrollbars"));
-            if (qFileScrollbars.open(QFile::ReadOnly)) {
-                stylesheet.get()->append(QLatin1String(qFileScrollbars.readAll()));
-            }
+            loadFile("scrollbars");
 #endif
         }
 
-        QFile qFileTheme(":themes/" + theme);
-        if (qFileTheme.open(QFile::ReadOnly)) {
-            stylesheet.get()->append(QLatin1String(qFileTheme.readAll()));
-        }
+        loadFile(theme);
     }
 
-    return *stylesheet.get();
+    return *stylesheet;
 }
 
 FontFamily fontFamilyFromString(const QString& strFamily)

@@ -353,7 +353,7 @@ RES_CSS = \
   qt/res/css/general.css \
   qt/res/css/light.css \
   qt/res/css/scrollbars.css \
-  qt/res/css/trad.css
+  qt/res/css/traditional.css
 
 RES_FONTS = \
   qt/res/fonts/Montserrat/Montserrat-Black.otf \

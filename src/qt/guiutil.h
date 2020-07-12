@@ -230,6 +230,19 @@ namespace GUIUtil
     /** Modify Qt network specific settings on migration */
     void migrateQtSettings();
 
+    /** Change the stylesheet directory. This is used by
+        the parameter -custom-css-dir.*/
+    void setStyleSheetDirectory(const QString& path);
+
+    /** Check if a custom css directory has been set with -custom-css-dir */
+    bool isStyleSheetDirectoryCustom();
+
+    /** Return a list of all required css files */
+    const std::vector<QString> listStyleSheets();
+
+    /** Return a list of all theme css files */
+    const std::vector<QString> listThemes();
+
     /** Load global CSS theme */
     QString loadStyleSheet();
 
