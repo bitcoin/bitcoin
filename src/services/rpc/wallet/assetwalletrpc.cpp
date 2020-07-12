@@ -177,6 +177,25 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
         oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot)); 
         oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
+        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+        for(const auto &it: mintSyscoin.voutAssets) {
+            CAmount nTotal = 0;
+            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+            const uint32_t &nAsset = it.first;
+            oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+            UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+            for(const auto& voutAsset: it.second){
+                nTotal += voutAsset.nValue;
+                UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+                oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", voutAsset.nValue);
+                oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+            }
+            oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+            oAssetAllocationReceiversObj.__pushKV("total", nTotal);
+            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+        }
+        entry.__pushKV("allocations", oAssetAllocationReceiversArray);
     }
     return true;
 }
