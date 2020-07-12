@@ -13,6 +13,7 @@ class AssetTest(SyscoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.rpc_timeout = 240
+        self.extra_args = [['-assetindex=1'],['-assetindex=1']]
 
     def setup_network(self):
         self.setup_nodes()
