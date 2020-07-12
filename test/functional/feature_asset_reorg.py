@@ -11,10 +11,11 @@ class AssetReOrgTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.rpc_timeout = 240
         self.extra_args = [['-assetindex=1'],['-assetindex=1'],['-assetindex=1']]
 
     def run_test(self):
+        self.nodes[0].generate(1)
+        self.sync_blocks()
         self.nodes[2].generate(200)
         self.sync_blocks()
         disconnect_nodes(self.nodes[0], 1)
