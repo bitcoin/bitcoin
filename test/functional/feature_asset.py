@@ -22,7 +22,10 @@ class AssetTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, '1000', '10000', 31, {})['asset_guid']
+        self.sync_all()
         self.nodes[1].generate(3)
+        assetInfo = self.nodes[0].assetinfo(asset)
+        assert_equal(assetInfo['asset_guid'], asset)
         assetInfo = self.nodes[1].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
 
