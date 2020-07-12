@@ -57,6 +57,9 @@
     <qresource prefix="/css">
         <file alias="general">res/css/general.css</file>
         <file alias="scrollbars">res/css/scrollbars.css</file>
+        <file alias="Dark">res/css/dark.css</file>
+        <file alias="Light">res/css/light.css</file>
+        <file alias="Traditional">res/css/traditional.css</file>
     </qresource>
     <qresource prefix="/fonts">
         <file alias="Montserrat-Black">res/fonts/Montserrat/Montserrat-Black.otf</file>
@@ -77,11 +80,6 @@
         <file alias="Montserrat-SemiBoldItalic">res/fonts/Montserrat/Montserrat-SemiBoldItalic.otf</file>
         <file alias="Montserrat-Thin">res/fonts/Montserrat/Montserrat-Thin.otf</file>
         <file alias="Montserrat-ThinItalic">res/fonts/Montserrat/Montserrat-ThinItalic.otf</file>
-    </qresource>
-    <qresource prefix="/themes">
-        <file alias="Dark">res/css/dark.css</file>
-        <file alias="Light">res/css/light.css</file>
-        <file alias="Traditional">res/css/trad.css</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="arrow_down_normal">res/images/arrow_down_normal.png</file>

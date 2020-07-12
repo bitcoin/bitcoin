@@ -775,6 +775,41 @@ int main(int argc, char *argv[])
         }
         GUIUtil::setFontScale(nScale);
     }
+    // Validate/set custom css directory
+    if (gArgs.IsArgSet("-custom-css-dir")) {
+        fs::path customDir = fs::path(gArgs.GetArg("-custom-css-dir", ""));
+        QString strCustomDir = QString::fromStdString(customDir.string());
+        std::vector<QString> vecRequiredFiles = GUIUtil::listStyleSheets();
+        QString strFile;
+
+        if (!fs::is_directory(customDir)) {
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                                  QObject::tr("Error: Invalid -custom-css-dir path.") + "\n\n" + strCustomDir);
+            return EXIT_FAILURE;
+        }
+
+        for (auto itCustomDir = fs::directory_iterator(customDir); itCustomDir != fs::directory_iterator(); ++itCustomDir) {
+            if (fs::is_regular_file(*itCustomDir) && itCustomDir->path().extension() == ".css") {
+                strFile = QString::fromStdString(itCustomDir->path().filename().string());
+                auto itFile = std::find(vecRequiredFiles.begin(), vecRequiredFiles.end(), strFile);
+                if (itFile != vecRequiredFiles.end()) {
+                    vecRequiredFiles.erase(itFile);
+                }
+            }
+        }
+
+        if (vecRequiredFiles.size()) {
+            QString strMissingFiles;
+            for (const auto& strMissingFile : vecRequiredFiles) {
+                strMissingFiles += strMissingFile + "\n";
+            }
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                                  QObject::tr("Error: %1 CSS file(s) missing in -custom-css-dir path.").arg(vecRequiredFiles.size()) + "\n\n" + strMissingFiles);
+            return EXIT_FAILURE;
+        }
+
+        GUIUtil::setStyleSheetDirectory(strCustomDir);
+    }
 
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);
