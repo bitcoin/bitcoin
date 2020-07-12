@@ -261,6 +261,7 @@ BASE_SCRIPTS = [
     'feature_multikeysporks.py',
     'feature_asset.py',
     'feature_asset_reorg.py',
+    'feature_asset_mint.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 
