@@ -118,6 +118,12 @@ BASE_SCRIPTS = [
     'p2p_feefilter.py',
     'feature_reindex.py',
     'feature_abortnode.py',
+    'feature_llmqsigning.py',
+    'feature_llmqconnections.py',
+    'feature_llmqsimplepose.py',
+    'feature_llmqdkgerrors.py',
+    'feature_deterministicmns.py',
+    'feature_coinbasemerkleroots.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
     'wallet_keypool_topup.py --descriptors',
@@ -253,12 +259,7 @@ BASE_SCRIPTS = [
     'feature_shutdown.py',
     'feature_sporks.py',
     'feature_multikeysporks.py',
-    'feature_llmqsigning.py',
-    'feature_llmqconnections.py',
-    'feature_llmqsimplepose.py',
-    'feature_llmqdkgerrors.py',
-    'feature_deterministicmns.py',
-    'feature_coinbasemerkleroots.py',
+    'feature_asset.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 
