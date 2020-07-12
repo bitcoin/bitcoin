@@ -15,7 +15,7 @@ class AssetReOrgTest(SyscoinTestFramework):
         self.extra_args = [['-assetindex=1'],['-assetindex=1'],['-assetindex=1']]
 
     def run_test(self):
-        self.nodes[0].generate(200)
+        self.nodes[2].generate(200)
         self.sync_blocks()
         disconnect_nodes(self.nodes[0], 1)
         disconnect_nodes(self.nodes[0], 2)
