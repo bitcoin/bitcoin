@@ -374,8 +374,8 @@ void WalletInit::Flush()
 {
     if (privateSendClient.fEnablePrivateSend) {
         // Stop PrivateSend, release keys
-        privateSendClient.fPrivateSendRunning = false;
         privateSendClient.ResetPool();
+        privateSendClient.StopMixing();
     }
     for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(false);
@@ -408,10 +408,15 @@ void WalletInit::AutoLockMasternodeCollaterals()
 void WalletInit::InitPrivateSendSettings()
 {
     if (!HasWallets()) {
-        privateSendClient.fEnablePrivateSend = privateSendClient.fPrivateSendRunning = false;
+        privateSendClient.fEnablePrivateSend = false;
+        privateSendClient.StopMixing();
     } else {
         privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", true);
-        privateSendClient.fPrivateSendRunning = GetWallets()[0]->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
+        if (GetWallets()[0]->IsLocked()) {
+            privateSendClient.StopMixing();
+        } else if (gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART)) {
+            privateSendClient.StartMixing(GetWallets()[0]);
+        }
     }
     privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
     privateSendClient.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
@@ -423,7 +428,7 @@ void WalletInit::InitPrivateSendSettings()
     if (privateSendClient.fEnablePrivateSend) {
         LogPrintf("PrivateSend: autostart=%d, multisession=%d," /* Continued */
                   "sessions=%d, rounds=%d, amount=%d, denoms_goal=%d, denoms_hardcap=%d\n",
-                  privateSendClient.fPrivateSendRunning, privateSendClient.fPrivateSendMultiSession,
+                  privateSendClient.IsMixing(), privateSendClient.fPrivateSendMultiSession,
                   privateSendClient.nPrivateSendSessions, privateSendClient.nPrivateSendRounds,
                   privateSendClient.nPrivateSendAmount,
                   privateSendClient.nPrivateSendDenomsGoal, privateSendClient.nPrivateSendDenomsHardCap);

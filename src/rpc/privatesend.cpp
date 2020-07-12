@@ -50,13 +50,16 @@ UniValue privatesend(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
-        privateSendClient.fPrivateSendRunning = true;
+        if (!privateSendClient.StartMixing(pwallet)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
+        }
+
         bool result = privateSendClient.DoAutomaticDenominating(*g_connman);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatuses() + ", will retry"));
     }
 
     if (request.params[0].get_str() == "stop") {
-        privateSendClient.fPrivateSendRunning = false;
+        privateSendClient.StopMixing();
         return "Mixing was stopped";
     }
 

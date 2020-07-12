@@ -163,6 +163,7 @@ public:
     std::string GetStatus(bool fWaitForBlock);
 
     bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
+    CWallet* GetMixingWallet() const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
@@ -193,6 +194,8 @@ private:
     int nMinBlocksToWait; // how many blocks to wait after one successful mixing tx in non-multisession mode
     std::string strAutoDenomResult;
 
+    CWallet* mixingWallet;
+
     // Keep track of current block height
     int nCachedBlockHeight;
 
@@ -208,7 +211,6 @@ public:
     int nPrivateSendDenomsGoal;
     int nPrivateSendDenomsHardCap;
     bool fEnablePrivateSend;
-    bool fPrivateSendRunning;
     bool fPrivateSendMultiSession;
 
     int nCachedNumBlocks;    //used for the overview screen
@@ -226,21 +228,28 @@ public:
         nPrivateSendDenomsGoal(DEFAULT_PRIVATESEND_DENOMS_GOAL),
         nPrivateSendDenomsHardCap(DEFAULT_PRIVATESEND_DENOMS_HARDCAP),
         fEnablePrivateSend(false),
-        fPrivateSendRunning(false),
         fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION),
         nCachedNumBlocks(std::numeric_limits<int>::max()),
-        fCreateAutoBackups(true)
+        fCreateAutoBackups(true),
+        mixingWallet(nullptr)
     {
     }
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
+
+
+    bool StartMixing(CWallet* pwallet);
+    void StopMixing();
+    bool IsMixing() const;
     void ResetPool();
 
     std::string GetStatuses();
     std::string GetSessionDenoms();
 
     bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;
+
+    CWallet* GetMixingWallet() const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
