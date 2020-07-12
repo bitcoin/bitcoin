@@ -73,7 +73,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         } 
         oSPVProofObj.__pushKV("txvalue", HexStr(vchTxValue));
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
-        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));
         oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
         std::vector<unsigned char> vchReceiptValue;
         if(mintSyscoin.vchReceiptValue.size() == 2) {
@@ -84,8 +83,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
             vchReceiptValue = mintSyscoin.vchReceiptValue;
         }
         oSPVProofObj.__pushKV("receiptvalue", HexStr(vchReceiptValue));   
-        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
-        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot)); 
+        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes));  
         oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj);
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);

@@ -1176,11 +1176,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
             {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unique Bridge Transfer ID for this event from Ethereum. It is the low 32 bits of the transferIdAndPrecisions field in the TokenFreeze Event on freezeBurnERC20 call."},
             {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
-            {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
             {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
             {"merklerootpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle hash for both transaction and receipt root."},
             {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
-            {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
             {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
         },
         RPCResult{
@@ -1189,8 +1187,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blocknumber\" \"bridge_transfer_id\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
-            + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"bridge_transfer_id\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
+            HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blocknumber\" \"bridge_transfer_id\" \"tx_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptmerkleproof\"")
+            + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"bridge_transfer_id\", \"tx_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptmerkleproof\"")
         }
     }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1216,8 +1214,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     const uint32_t &nBridgeTransferID = params[4].get_uint(); 
     
     std::string vchTxValue = params[5].get_str();
-    std::string vchTxRoot = params[6].get_str();
-    std::string vchTxParentNodes = params[7].get_str();
+    std::string vchTxParentNodes = params[6].get_str();
 
     // find byte offset of tx data in the parent nodes
     size_t pos = vchTxParentNodes.find(vchTxValue);
@@ -1225,11 +1222,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find tx value in tx parent nodes");  
     }
     uint16_t posTxValue = (uint16_t)pos/2;
-    std::string vchTxPath = params[8].get_str();
+    std::string vchTxPath = params[7].get_str();
  
-    std::string vchReceiptValue = params[9].get_str();
-    std::string vchReceiptRoot = params[10].get_str();
-    std::string vchReceiptParentNodes = params[11].get_str();
+    std::string vchReceiptValue = params[8].get_str();
+    std::string vchReceiptParentNodes = params[9].get_str();
     pos = vchReceiptParentNodes.find(vchReceiptValue);
     if(pos == std::string::npos || vchReceiptParentNodes.size() > (USHRT_MAX*2)){
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find receipt value in receipt parent nodes");  
@@ -1248,11 +1244,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.nBridgeTransferID = nBridgeTransferID;
     mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
-    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
     mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
     mintSyscoin.vchTxPath = ParseHex(vchTxPath);
     mintSyscoin.vchReceiptValue = ushortToBytes(posReceiptValue);
-    mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
     
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
@@ -1670,7 +1664,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"asset_guid","amount"} }, 
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
-    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof"} },     
+    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","aux_fees"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
