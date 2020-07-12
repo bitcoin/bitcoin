@@ -661,6 +661,5 @@ class WalletTest(BitcoinTestFramework):
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
         assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))
 
-
 if __name__ == '__main__':
     WalletTest().main()
