@@ -48,7 +48,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], asset1)
 
         # data too big
-        assert_raises_rpc_error(None, "bad-syscoin-tx, asset-pubdata-too-big", self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, '1000', '10000', 31, {})
+        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, '1000', '10000', 31, {})
 
 if __name__ == '__main__':
     AssetTest().main()
