@@ -24,6 +24,15 @@ from .authproxy import AuthServiceProxy, JSONRPCException
 
 logger = logging.getLogger("TestFramework.utils")
 
+# Util options
+##############
+
+class Options:
+    timeout_scale = 1
+
+def set_timeout_scale(_timeout_scale):
+    Options.timeout_scale = _timeout_scale
+
 # Assert functions
 ##################
 
@@ -207,6 +216,7 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
     attempt = 0
+    timeout *= Options.timeout_scale
     time_end = time.time() + timeout
 
     while attempt < attempts and time.time() < time_end:
@@ -420,6 +430,7 @@ def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     # earlier.
     maxheight = max(x.getblockcount() for x in rpc_connections)
     start_time = cur_time = time.time()
+    timeout *= Options.timeout_scale
     while cur_time <= start_time + timeout:
         tips = [r.waitforblockheight(maxheight, int(wait * 1000)) for r in rpc_connections]
         if all(t["height"] == maxheight for t in tips):
@@ -435,6 +446,7 @@ def sync_chain(rpc_connections, *, wait=1, timeout=60):
     """
     Wait until everybody has the same best block
     """
+    timeout *= Options.timeout_scale
     while timeout > 0:
         best_hash = [x.getbestblockhash() for x in rpc_connections]
         if best_hash == [best_hash[0]] * len(best_hash):
@@ -448,6 +460,7 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True, 
     Wait until everybody has the same transactions in their memory
     pools
     """
+    timeout *= Options.timeout_scale
     while timeout > 0:
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
