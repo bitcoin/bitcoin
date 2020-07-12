@@ -24,19 +24,19 @@ class AssetReOrgTest(SyscoinTestFramework):
         # create fork
         self.nodes[0].generate(11)
         # won't exist on node 0 because it was created on node 3 and we are disconnected
-        assert_raises_rpc_error(-4, 'asset not found', self.nodes[0].assetinfo, self.asset)
+        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
         self.nodes[2].generate(10)
         assetInfo = self.nodes[2].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
         # still won't exist on node 0 yet
-        assert_raises_rpc_error(-4, 'asset not found', self.nodes[0].assetinfo, self.asset)
+        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
         # connect and sync to longest chain now which does not include the asset
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         self.sync_all()
-        assert_raises_rpc_error(-4, 'asset not found', self.nodes[0].assetinfo, self.asset)
-        assert_raises_rpc_error(-4, 'asset not found', self.nodes[1].assetinfo, self.asset)
-        assert_raises_rpc_error(-4, 'asset not found', self.nodes[2].assetinfo, self.asset)
+        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
+        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[1].assetinfo, self.asset)
+        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[2].assetinfo, self.asset)
         self.nodes[0].generate(1)
         self.sync_blocks()
         # asset is there now
