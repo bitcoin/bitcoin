@@ -33,7 +33,7 @@ class AssetReOrgTest(SyscoinTestFramework):
         # connect and sync to longest chain now which does not include the asset
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
-        self.sync_all()
+        self.sync_blocks()
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[1].assetinfo, self.asset)
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[2].assetinfo, self.asset)
