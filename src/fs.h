@@ -21,8 +21,6 @@ namespace fs = std::filesystem;
 namespace fsbridge {
     FILE *fopen(const fs::path& p, const char *mode);
 
-    fs::path unique_path();
-
     class FileLock
     {
     public:

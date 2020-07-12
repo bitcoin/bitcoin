@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
-#include <boost/filesystem.hpp>
 
 #ifndef WIN32
 #include <cstring>
@@ -30,14 +29,6 @@ FILE *fopen(const fs::path& p, const char *mode)
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t> utf8_cvt;
     return ::_wfopen(p.wstring().c_str(), utf8_cvt.from_bytes(mode).c_str());
 #endif
-}
-
-fs::path unique_path() {
-    // TODO: Do not use Boost in this implementation
-    boost::filesystem::path p = boost::filesystem::unique_path();
-    fs::path p2{p.string()};
-
-    return p2;
 }
 
 #ifndef WIN32

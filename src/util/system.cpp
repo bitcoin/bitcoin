@@ -5,6 +5,7 @@
 
 #include <sync.h>
 #include <util/system.h>
+#include <random.h>
 
 #ifdef HAVE_BOOST_PROCESS
 #include <boost/process.hpp>
@@ -123,7 +124,8 @@ void ReleaseDirectoryLocks()
 
 bool DirIsWritable(const fs::path& directory)
 {
-    fs::path tmpFile = directory / fsbridge::unique_path();
+    FastRandomContext rnd;
+    fs::path tmpFile = directory / HexStr(rnd.randbytes(8));
 
     FILE* file = fsbridge::fopen(tmpFile, "a");
     if (!file) return false;
