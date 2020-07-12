@@ -3515,7 +3515,7 @@ static RPCHelpMan fundrawtransaction()
     CAmount fee;
     int change_position;
     CCoinControl coin_control;
-    // Automatically select (additional) coins. Can be overriden by options.add_inputs.
+    // Automatically select (additional) coins. Can be overridden by options.add_inputs.
     coin_control.m_add_inputs = true;
     FundTransaction(pwallet, tx, fee, change_position, request.params[1], coin_control);
 
@@ -4509,7 +4509,7 @@ static RPCHelpMan walletcreatefundedpsbt()
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
     CCoinControl coin_control;
     // Automatically select coins, unless at least one is manually selected. Can
-    // be overriden by options.add_inputs.
+    // be overridden by options.add_inputs.
     coin_control.m_add_inputs = rawTx.vin.size() == 0;
     FundTransaction(pwallet, rawTx, fee, change_position, request.params[3], coin_control);
 
