@@ -90,7 +90,7 @@ public:
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
 
-/** Return wheter a BDB wallet database is currently loaded. */
+/** Return whether a BDB wallet database is currently loaded. */
 bool IsBDBWalletLoaded(const fs::path& wallet_path);
 
 /** An instance of this class represents one database.
