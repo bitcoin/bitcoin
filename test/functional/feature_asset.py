@@ -15,10 +15,6 @@ class AssetTest(SyscoinTestFramework):
         self.rpc_timeout = 240
         self.extra_args = [['-assetindex=1'],['-assetindex=1']]
 
-    def setup_network(self):
-        self.setup_nodes()
-        # We'll connect the nodes later
-
     def run_test(self):
         self.nodes[0].generate(200)
         self.sync_all()
