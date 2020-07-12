@@ -27,4 +27,4 @@ class AssetTest(SyscoinTestFramework):
 
 
 if __name__ == '__main__':
-    AbortNodeTest().main()
+    AssetTest().main()
