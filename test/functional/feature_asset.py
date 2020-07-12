@@ -21,9 +21,9 @@ class AssetTest(SyscoinTestFramework):
 
     def basic_asset(self):
         asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, '1000', '10000', 31, {})['asset_guid']
-        self.sync_all()
+        self.sync_mempools()
         self.nodes[1].generate(3)
-        self.sync_all()
+        self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
         assetInfo = self.nodes[1].assetinfo(asset)
@@ -36,7 +36,8 @@ class AssetTest(SyscoinTestFramework):
         baddata = gooddata + "a"
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, '1000', '10000', 31, {})['asset_guid']
         asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, '1000', '10000', 31, {})['asset_guid']
-
+        self.nodes[0].generate(1)
+        self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
         assetInfo = self.nodes[1].assetinfo(asset)
