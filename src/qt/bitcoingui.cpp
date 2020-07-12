@@ -1339,7 +1339,7 @@ void BitcoinGUI::showEvent(QShowEvent *event)
 void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
 {
     IncomingTransactionMessage itx = {
-            date, unit, amount, type, address, label
+            date, unit, amount, type, address, label, walletName
     };
     incomingTransactions.emplace_back(itx);
 
@@ -1406,8 +1406,8 @@ void BitcoinGUI::showIncomingTransactions()
             // On new transaction, make an info balloon
             QString msg = tr("Date: %1\n").arg(itx.date) +
                           tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(itx.unit, itx.amount, true));
-            if (WalletModel::isMultiwallet() && !walletName.isEmpty()) {
-                msg += tr("Wallet: %1\n").arg(walletName);
+            if (WalletModel::isMultiwallet() && !itx.walletName.isEmpty()) {
+                msg += tr("Wallet: %1\n").arg(itx.walletName);
             }
             msg += tr("Type: %1\n").arg(itx.type);
             if (!itx.label.isEmpty())
