@@ -1804,10 +1804,8 @@ static void ProcessHeadersMessage(CNode& pfrom, CConnman* connman, ChainstateMan
 
     BlockValidationState state;
     if (!chainman.ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast)) {
-        if (state.IsInvalid()) {
-            MaybePunishNodeForBlock(pfrom.GetId(), state, via_compact_block, "invalid header received");
-            return;
-        }
+        MaybePunishNodeForBlock(pfrom.GetId(), state, via_compact_block, "invalid header received");
+        return;
     }
 
     {
