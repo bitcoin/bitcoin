@@ -79,7 +79,6 @@ class AssetTxRootsTest(SyscoinTestFramework):
                 roots = []
                 nCount = 0
                 continue
-            }
             nCount += 1
         }
         if len(roots) > 0:
