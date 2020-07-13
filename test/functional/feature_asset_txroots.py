@@ -63,23 +63,20 @@ class AssetTxRootsTest(SyscoinTestFramework):
         assert_equal(missing_blocks[3]["to"] , 709779);
 
     def basic_audittxroot1(self):
-        roots = list(range(6))
+        roots = [None] * 6
         nStartHeight = 700000
         nMissingRange1 = 700059
         nMissingRange2 = 800022
         nMissingRange3 = 814011
-        nCount = 0
         for index in range(120000):
             i = nStartHeight + index
             if i == nMissingRange1 or i == nMissingRange2 or i == nMissingRange3:
                 continue
             roots.append([i,str(i),str(i-1),'a','a',0])
-            if nCount > 0 and (nCount % 400) == 0:
+            if (index % 400) == 0:
                 self.nodes[0].syscoinsetethheaders([roots])
-                roots = list(range(6))
-                nCount = 0
+                roots = [None] * 6
                 continue
-            nCount += 1
         if len(roots) > 0:
             self.nodes[0].syscoinsetethheaders([roots])
 
