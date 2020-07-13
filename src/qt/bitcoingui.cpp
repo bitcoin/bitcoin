@@ -87,6 +87,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     progressDialog(0),
     appMenuBar(0),
     appToolBar(0),
+    appToolBarLogoAction(0),
     overviewAction(0),
     historyAction(0),
     masternodeAction(0),
@@ -613,11 +614,7 @@ void BitcoinGUI::createToolBars()
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
-        QWidget *spacer = new QWidget();
-        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        toolbar->addWidget(spacer);
-
-        m_wallet_selector = new QComboBox();
+        m_wallet_selector = new QComboBox(this);
         connect(m_wallet_selector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setCurrentWallet(const QString&)));
 #endif
 
@@ -625,7 +622,7 @@ void BitcoinGUI::createToolBars()
         logoLabel->setObjectName("lblToolbarLogo");
         logoLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-        toolbar->addWidget(logoLabel);
+        appToolBarLogoAction = toolbar->addWidget(logoLabel);
 
         /** Create additional container for toolbar and walletFrame and make it the central widget.
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
@@ -746,11 +743,16 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
     setWalletActionsEnabled(true);
     m_wallet_selector->addItem(name);
     if (m_wallet_selector->count() == 2) {
-        m_wallet_selector_label = new QLabel();
-        m_wallet_selector_label->setText(tr("Wallet:") + " ");
-        m_wallet_selector_label->setBuddy(m_wallet_selector);
-        appToolBar->addWidget(m_wallet_selector_label);
-        appToolBar->addWidget(m_wallet_selector);
+        QVBoxLayout* layout = new QVBoxLayout(this);
+        layout->addWidget(m_wallet_selector);
+        layout->setSpacing(0);
+        layout->setMargin(0);
+        layout->setContentsMargins(5, 0, 5, 0);
+        QWidget* walletSelector = new QWidget(this);
+        walletSelector->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        walletSelector->setObjectName("walletSelector");
+        walletSelector->setLayout(layout);
+        appToolBar->insertWidget(appToolBarLogoAction, walletSelector);
     }
     rpcConsole->addWallet(walletModel);
     return walletFrame->addWallet(walletModel);
