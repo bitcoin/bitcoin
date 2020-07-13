@@ -200,6 +200,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 348000;
         consensus.nUTXOAssetsBlock = 600000;
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
         consensus.DIP0003Height = 600000;
         consensus.DIP0003EnforcementHeight = 600000;
         /**
@@ -334,6 +335,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 1000;
         consensus.nUTXOAssetsBlock = 400000;
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
         consensus.DIP0003Height = 200;
         consensus.DIP0003EnforcementHeight = 400;
         pchMessageStart[0] = 0xce;
@@ -460,6 +462,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 100;
         consensus.nUTXOAssetsBlock = 432;
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock;
         consensus.DIP0003Height = 432;
         consensus.DIP0003EnforcementHeight = 432;
         pchMessageStart[0] = 0xfa;
