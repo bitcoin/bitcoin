@@ -41,7 +41,7 @@ class AssetTxRootsTest(SyscoinTestFramework):
         self.nodes[0].syscoinsetethheaders([[707773,'707773','707772','a','a',0],[707775,'707775','707774','a','a',0],[707771,'707771','707770','a','a',0],[707777,'707777','707776','a','a',0],[707779,'707779','707778','a','a',0],[707781,'707781','707780','a','a',0]])
         r = self.nodes[0].syscoinsetethstatus("synced", 709780)
         missing_blocks = r["missing_blocks"]
-        assert_equal(missing_blocks[0]["from"] , 659780);
+        assert_equal(missing_blocks[0]["from"] , 559780);
         assert_equal(missing_blocks[0]["to"] , 707769);
         assert_equal(missing_blocks[1]["from"] , 707782);
         assert_equal(missing_blocks[1]["to"] , 709779);
@@ -51,7 +51,7 @@ class AssetTxRootsTest(SyscoinTestFramework):
         r = self.nodes[0].syscoinsetethstatus("synced", 709780)
         missing_blocks = r["missing_blocks"]
         # we should still have the missing ranges prior to the forks
-        assert_equal(missing_blocks[0]["from"] , 659780);
+        assert_equal(missing_blocks[0]["from"] , 559780);
         assert_equal(missing_blocks[0]["to"] , 707769);
         # 707773 is affected, -50 is 707723 and +50 is 707823
         assert_equal(missing_blocks[1]["from"] , 707723);
