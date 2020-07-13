@@ -11,7 +11,11 @@ export DOCKER_NAME_TAG=ubuntu:18.04  # Check that bionic can cross-compile to ma
 export PIP_PACKAGES="zmq"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
-export RUN_SECURITY_TESTS="true"
-# Run without depends
 export NO_DEPENDS=1
 export OSX_SDK=""
+
+export RUN_SECURITY_TESTS="true"
+if [ "$TRAVIS_REPO_SLUG" != "bitcoin/bitcoin" ]; then
+  export RUN_FUNCTIONAL_TESTS="false"
+  export EXPECTED_TESTS_DURATION_IN_SECONDS=200
+fi
