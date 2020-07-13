@@ -322,52 +322,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
-UniValue assetnewtest(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetnewtest",
-    "\nCreate a new asset with a specific GUID. Useful for testing purposes.\n",
-    {
-        {"asset_guid", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
-        {"funding_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Fund resulting UTXO owning the asset by this much SYS for gas."},
-        {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
-        {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
-        {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
-        {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
-        {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
-        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
-            {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
-                    {
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
-                    },
-                }
-            }
-        }
-    },
-    RPCResult{
-        RPCResult::Type::OBJ, "", "",
-        {
-            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
-        }},
-    RPCExamples{
-    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 {}")
-    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}")
-    }
-    }.Check(request);
-    UniValue paramsFund(UniValue::VARR);
-    nCustomAssetGuid = params[0].get_uint();
-    for(int i = 1;i<=9;i++)
-        paramsFund.push_back(params[i]);
-    JSONRPCRequest assetNewRequest(request.context);
-    assetNewRequest.params = paramsFund;
-    assetNewRequest.URI = request.URI;
-    return assetnew(assetNewRequest);        
-}
 UniValue assetnew(const JSONRPCRequest& request) {
     if(nCustomAssetGuid > 0)
         nCustomAssetGuid = 0;
@@ -547,7 +501,52 @@ UniValue assetnew(const JSONRPCRequest& request) {
     res.__pushKV("asset_guid", nAsset);
     return res;
 }
-
+UniValue assetnewtest(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    RPCHelpMan{"assetnewtest",
+    "\nCreate a new asset with a specific GUID. Useful for testing purposes.\n",
+    {
+        {"asset_guid", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
+        {"funding_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Fund resulting UTXO owning the asset by this much SYS for gas."},
+        {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
+        {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
+        {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
+        {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
+        {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
+        {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
+        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
+        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                    {
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                    },
+                }
+            }
+        }
+    },
+    RPCResult{
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+            {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
+        }},
+    RPCExamples{
+    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 {}")
+    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}")
+    }
+    }.Check(request);
+    UniValue paramsFund(UniValue::VARR);
+    nCustomAssetGuid = params[0].get_uint();
+    for(int i = 1;i<=9;i++)
+        paramsFund.push_back(params[i]);
+    JSONRPCRequest assetNewRequest(request.context);
+    assetNewRequest.params = paramsFund;
+    assetNewRequest.URI = request.URI;
+    return assetnew(assetNewRequest);        
+}
 UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
