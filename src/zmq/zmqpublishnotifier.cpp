@@ -170,24 +170,31 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     return SendMessage(MSG_HASHBLOCK, data, 32);
 }
 
-bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+bool CZMQAbstractPublishNotifier::NotifyTransactionX(const CTransaction &transaction, const char *pub_type)
 {
     uint256 hash = transaction.GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashtx %s\n", hash.GetHex());
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
-        data[31 - i] = hash.begin()[i];
-    return SendMessage(MSG_HASHTX, data, 32);
+    LogPrint(BCLog::ZMQ, "zmq: Publish %s %s\n", pub_type, hash.GetHex());
+    if (pub_type == MSG_HASHTX || pub_type == MSG_HASHTX_EVICT) {
+        char data[sizeof(uint256)];
+        for (unsigned int i = 0; i < sizeof(data); i++) {
+            data[31 - i] = hash.begin()[i];
+        }
+        return SendMessage(pub_type, data, sizeof(data));
+    } else {
+        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ss << transaction;
+        return SendMessage(pub_type, &(*ss.begin()), ss.size());
+    }
+}
+
+bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+{
+    return NotifyTransactionX(transaction, MSG_HASHTX);
 }
 
 bool CZMQPublishHashTransactionEvictionNotifier::NotifyTransactionEviction(const CTransaction &transaction, MemPoolRemovalReason reason)
 {
-    uint256 hash = transaction.GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish %s %s\n", MSG_HASHTX_EVICT, hash.GetHex());
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
-        data[31 - i] = hash.begin()[i];
-    return SendMessage(MSG_HASHTX_EVICT, data, 32);
+    return NotifyTransactionX(transaction, MSG_HASHTX_EVICT);
 }
 
 bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
@@ -213,18 +220,10 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
 bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
 {
-    uint256 hash = transaction.GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawtx %s\n", hash.GetHex());
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    ss << transaction;
-    return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
+    return NotifyTransactionX(transaction, MSG_RAWTX);
 }
 
 bool CZMQPublishRawTransactionEvictionNotifier::NotifyTransactionEviction(const CTransaction &transaction, MemPoolRemovalReason reason)
 {
-    uint256 hash = transaction.GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish %s %s\n", MSG_RAWTX_EVICT, hash.GetHex());
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    ss << transaction;
-    return SendMessage(MSG_RAWTX_EVICT, &(*ss.begin()), ss.size());
+    return NotifyTransactionX(transaction, MSG_RAWTX_EVICT);
 }

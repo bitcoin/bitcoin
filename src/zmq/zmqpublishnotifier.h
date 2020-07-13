@@ -26,6 +26,8 @@ public:
 
     bool Initialize(void *pcontext) override;
     void Shutdown() override;
+
+    bool NotifyTransactionX(const CTransaction&, const char*); // Common code between txn publishers
 };
 
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
