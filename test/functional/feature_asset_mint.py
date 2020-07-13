@@ -31,12 +31,15 @@ class AssetMintTest(SyscoinTestFramework):
         blockhash = '0xee524852fb7df5a6c27106f4bc47e740e6a6751e66bce1f98363ff2eecbf8c0d'
         prevblockhash = '0x5f41930a021d1c48a8add5d35aac63f18e085c2ee862990660603058fd6216c0'
         bridgetransferid = 2
-
+        timestamp = 1594359054
+        set_node_times(self.nodes, timestamp)
+        
         self.basic_asset()
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
         self.sync_blocks()
+        
 
         # Add eth root to DB so it an validate this SPV proof, do it on both nodes so they can verify the tx
         self.nodes[0].syscoinsetethheaders([[6816449, blockhash, prevblockhash, spv_tx_root, spv_receipt_root, 1594359054]])
@@ -53,8 +56,8 @@ class AssetMintTest(SyscoinTestFramework):
         self.sync_blocks()
         assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
         
-        # increase time by 1 week and assetallocationmint should throw timeout error
-        set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (604800 * 1000))
+        # increase time by 2.5 week and assetallocationmint should throw timeout error
+        set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (1512001 * 1000))
         self.nodes[0].generate(50)
         self.sync_blocks()
         assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
