@@ -132,6 +132,7 @@ struct Params {
     double nSeniorityLevel2;
     int nBridgeStartBlock;
     int nUTXOAssetsBlock;
+    int nUTXOAssetsBlockProvisioning;
         
     int nSuperblockStartBlock;
     int nSuperblockCycle; // in blocks

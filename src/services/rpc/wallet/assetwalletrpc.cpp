@@ -24,7 +24,7 @@
 #include <rpc/auxpow_miner.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
-
+uint32_t nCustomAssetGuid = 0;
 uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
     UniValue publicObj;
     if(!publicObj.read(public_data))
@@ -322,8 +322,50 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
-
+UniValue assetnewtest(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    RPCHelpMan{"assetnewtest",
+    "\nCreate a new asset with a specific GUID. Useful for testing purposes.\n",
+    {
+        {"asset_guid", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
+        {"funding_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Fund resulting UTXO owning the asset by this much SYS for gas."},
+        {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
+        {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
+        {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
+        {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
+        {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
+        {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
+        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
+        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                    {
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                    },
+                }
+            }
+        }
+    },
+    RPCResult{
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+            {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
+        }},
+    UniValue paramsFund(UniValue::VARR);
+    nCustomAssetGuid = params[0].get_uint();
+    for(int i = 1;i<=9;i++)
+        paramsFund.push_back(params[i]);
+    JSONRPCRequest assetNewRequest(request.context);
+    assetNewRequest.params = paramsFund;
+    assetNewRequest.URI = request.URI;
+    return assetnew(assetNewRequest);        
+}
 UniValue assetnew(const JSONRPCRequest& request) {
+    if(nCustomAssetGuid > 0)
+        nCustomAssetGuid = 0;
     const UniValue &params = request.params;
     RPCHelpMan{"assetnew",
     "\nCreate a new asset\n",
@@ -471,7 +513,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     data.clear();
     // generate deterministic guid based on input txid
-    const uint32_t &nAsset = GenerateSyscoinGuid(mtx.vin[0].prevout);
+    const uint32_t &nAsset = nCustomAssetGuid != 0? nCustomAssetGuid: GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.voutAssets.clear();
     newAsset.voutAssets.emplace_back(nAsset, outVec);
     newAsset.SerializeData(data);
@@ -1664,6 +1706,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees"}},
+    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","aux_fees"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},

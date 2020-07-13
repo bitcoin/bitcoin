@@ -262,7 +262,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
 
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck) {
     if(!fRegTest && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
-        return true;
+        return !IsSyscoinTx(tx.nVersion);
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
@@ -571,7 +571,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nUpdateFlags > ASSET_UPDATE_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
-            if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
+            if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning && nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
             }         
             // starting supply is the supplied balance upon init
