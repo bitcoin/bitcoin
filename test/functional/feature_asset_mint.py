@@ -61,7 +61,8 @@ class AssetMintTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
         
         # increase time by ~0.5 week and assetallocationmint should throw timeout error, must send to network by 0.5 week
-        numBlocks = int(302400 / (2*60*59))
+        numBlocks = int(303400 / (2*60*59))
+        # need to bump 2 hours at a time max
         for block in range(numBlocks):
             set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (2*60*59))
             self.nodes[0].generate(1)
