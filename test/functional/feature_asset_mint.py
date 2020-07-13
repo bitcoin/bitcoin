@@ -42,7 +42,8 @@ class AssetMintTest(SyscoinTestFramework):
         self.nodes[0].syscoinsetethheaders([[6816449, blockhash, prevblockhash, spv_tx_root, spv_receipt_root, 1594359054]])
         self.nodes[0].syscoinsetethstatus('synced', 6816449)
  
-        self.nodes[0].assetallocationmint(self.asset, self.nodes[0].getnewaddress(), '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        newaddress = self.nodes[0].getnewaddress()
+        self.nodes[0].assetallocationmint(self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
 
         # cannot mint twice
         assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
