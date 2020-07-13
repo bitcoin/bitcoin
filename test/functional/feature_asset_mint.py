@@ -38,10 +38,12 @@ class AssetMintTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], self.asset)
         self.sync_blocks()
 
-        # Add eth root to DB so it an validate this SPV proof
+        # Add eth root to DB so it an validate this SPV proof, do it on both nodes so they can verify the tx
         self.nodes[0].syscoinsetethheaders([[6816449, blockhash, prevblockhash, spv_tx_root, spv_receipt_root, 1594359054]])
         self.nodes[0].syscoinsetethstatus('synced', 6816449)
- 
+        self.nodes[1].syscoinsetethheaders([[6816449, blockhash, prevblockhash, spv_tx_root, spv_receipt_root, 1594359054]])
+        self.nodes[1].syscoinsetethstatus('synced', 6816449)
+
         newaddress = self.nodes[0].getnewaddress()
         self.nodes[0].assetallocationmint(self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
 
