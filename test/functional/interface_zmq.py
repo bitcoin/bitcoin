@@ -54,28 +54,31 @@ class ZMQTest (BitcoinTestFramework):
             self.ctx.destroy(linger=None)
 
     def test_basic(self):
-        # All messages are received in the same socket which means
-        # that this test fails if the publishing order changes.
-        # Note that the publishing order is not defined in the documentation and
-        # is subject to change.
         import zmq
 
         # Invalid zmq arguments don't take down the node, see #17185.
         self.restart_node(0, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
 
         address = 'tcp://127.0.0.1:28332'
-        socket = self.ctx.socket(zmq.SUB)
-        socket.set(zmq.RCVTIMEO, 60000)
+        sockets = []
+        subs = []
+        services = [b"hashblock", b"hashtx", b"rawblock", b"rawtx"]
+        for service in services:
+            sockets.append(self.ctx.socket(zmq.SUB))
+            sockets[-1].set(zmq.RCVTIMEO, 60000)
+            subs.append(ZMQSubscriber(sockets[-1], service))
 
         # Subscribe to all available topics.
-        hashblock = ZMQSubscriber(socket, b"hashblock")
-        hashtx = ZMQSubscriber(socket, b"hashtx")
-        rawblock = ZMQSubscriber(socket, b"rawblock")
-        rawtx = ZMQSubscriber(socket, b"rawtx")
+        hashblock = subs[0]
+        hashtx = subs[1]
+        rawblock = subs[2]
+        rawtx = subs[3]
 
         self.restart_node(0, ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [hashblock, hashtx, rawblock, rawtx]])
         connect_nodes(self.nodes[0], 1)
-        socket.connect(address)
+        for socket in sockets:
+            socket.connect(address)
+
         # Relax so that the subscriber is ready before publishing zmq messages
         sleep(0.2)
 
@@ -96,15 +99,16 @@ class ZMQTest (BitcoinTestFramework):
             tx.calc_sha256()
             assert_equal(tx.hash, txid.hex())
 
+            # Should receive the generated raw block.
+            block = rawblock.receive()
+            assert_equal(genhashes[x], hash256_reversed(block[:80]).hex())
+
             # Should receive the generated block hash.
             hash = hashblock.receive().hex()
             assert_equal(genhashes[x], hash)
             # The block should only have the coinbase txid.
             assert_equal([txid.hex()], self.nodes[1].getblock(hash)["tx"])
 
-            # Should receive the generated raw block.
-            block = rawblock.receive()
-            assert_equal(genhashes[x], hash256_reversed(block[:80]).hex())
 
         if self.is_wallet_compiled():
             self.log.info("Wait for tx from second node")
