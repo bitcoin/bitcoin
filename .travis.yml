@@ -23,8 +23,6 @@ cache:
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
     - $TRAVIS_BUILD_DIR/releases/$HOST
-before_cache:
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 stages:
   - lint
   - test
@@ -135,22 +133,12 @@ jobs:
       # Xcode 11.3.1, macOS 10.14, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
       osx_image: xcode11.3
-      cache:
-        directories:
-          - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
-          - $TRAVIS_BUILD_DIR/releases/$HOST
-          - $HOME/Library/Caches/Homebrew
-          - /usr/local/Homebrew
       addons:
         homebrew:
           packages:
-          - libtool
           - berkeley-db4
-          - boost
           - miniupnpc
-          - qt
           - qrencode
-          - python3
           - ccache
           - zeromq
       env: >-
