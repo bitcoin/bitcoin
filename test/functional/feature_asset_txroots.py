@@ -82,7 +82,8 @@ class AssetTxRootsTest(SyscoinTestFramework):
         if len(roots) > 0:
             self.nodes[0].syscoinsetethheaders(roots)
 
-        missing_blocks = self.nodes[0].syscoinsetethstatus("synced", 820000)
+        r = self.nodes[0].syscoinsetethstatus("synced", 820000)
+        missing_blocks = r["missing_blocks"]
         assert_equal(missing_blocks[0]["from"] , 700059);
         assert_equal(missing_blocks[0]["to"] , 700059);
         assert_equal(missing_blocks[1]["from"] , 800022);
