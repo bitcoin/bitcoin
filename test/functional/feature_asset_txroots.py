@@ -63,7 +63,7 @@ class AssetTxRootsTest(SyscoinTestFramework):
         assert_equal(missing_blocks[3]["to"] , 709779);
 
     def basic_audittxroot1(self):
-        roots = list()
+        roots = list(range(6))
         nStartHeight = 700000
         nMissingRange1 = 700059
         nMissingRange2 = 800022
