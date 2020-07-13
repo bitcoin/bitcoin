@@ -34,6 +34,8 @@ class AssetMintTest(SyscoinTestFramework):
 
         self.basic_asset()
         self.nodes[0].generate(1)
+        assetInfo = self.nodes[0].assetinfo(self.asset)
+        assert_equal(assetInfo['asset_guid'], self.asset)
         self.sync_blocks()
 
         # Add eth root to DB so it an validate this SPV proof
