@@ -23,7 +23,7 @@ class AssetTxRootsTest(SyscoinTestFramework):
         r = self.nodes[0].syscoinsetethstatus("synced", 709780)
         missing_blocks = r["missing_blocks"]
         # the - MAX_ETHEREUM_TX_ROOTS check to ensure you have at least that many roots stored from the tip
-        assert_equal(missing_blocks[0]["from"] , 659780);
+        assert_equal(missing_blocks[0]["from"] , 559780);
         assert_equal(missing_blocks[0]["to"] , 707769);
 
         assert_equal(missing_blocks[1]["from"] , 707771);
