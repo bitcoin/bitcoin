@@ -47,6 +47,10 @@ class AssetMintTest(SyscoinTestFramework):
         self.nodes[1].syscoinsetethstatus('synced', 6816449)
 
         newaddress = self.nodes[0].getnewaddress()
+        # must wait an hour first
+        assert_raises_rpc_error(-4, 'mint-insufficient-confirmations', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (3600 * 1000))
+        self.nodes[0].generate(50)
         self.nodes[0].assetallocationmint(self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
 
         # cannot mint twice
@@ -60,7 +64,7 @@ class AssetMintTest(SyscoinTestFramework):
         for block in range(numBlocks):
             set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + ((2*60*59) * 1000))
             self.nodes[0].generate(1)
-        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-blockheight-too-old', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
     
     def basic_asset(self):
         self.nodes[0].assetnewtest(self.asset, '1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, '1000', '10000', 31, {})
