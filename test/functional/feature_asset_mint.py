@@ -46,10 +46,10 @@ class AssetMintTest(SyscoinTestFramework):
         self.nodes[0].assetallocationmint(self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
 
         # cannot mint twice
-        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
         
         # increase time by 1 week and assetallocationmint should throw timeout error
         set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (604800 * 1000))
