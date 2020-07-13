@@ -13,6 +13,7 @@ export GOAL="install"
 export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
 export NO_DEPENDS=1
 export OSX_SDK=""
+export CCACHE_SIZE=300M
 
 export RUN_SECURITY_TESTS="true"
 if [ "$TRAVIS_REPO_SLUG" != "bitcoin/bitcoin" ]; then
