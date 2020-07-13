@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     // Read a single byte as an unsigned char.
     unsigned char a;
     reader >> a;
-    BOOST_CHECK_EQUAL(a, 1);
+    BOOST_CHECK_EQUAL(a, 1U);
     BOOST_CHECK_EQUAL(reader.size(), 5U);
     BOOST_CHECK(!reader.empty());
 
@@ -242,9 +242,9 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
 
     uint8_t i;
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 0);
+    BOOST_CHECK_EQUAL(i, 0U);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 1);
+    BOOST_CHECK_EQUAL(i, 1U);
 
     // After reading bytes 0 and 1, we're positioned at 2.
     BOOST_CHECK_EQUAL(bf.GetPos(), 2U);
@@ -252,12 +252,12 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // Rewind to offset 0, ok (within the 10 byte window).
     BOOST_CHECK(bf.SetPos(0));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 0);
+    BOOST_CHECK_EQUAL(i, 0U);
 
     // We can go forward to where we've been, but beyond may fail.
     BOOST_CHECK(bf.SetPos(2));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 2);
+    BOOST_CHECK_EQUAL(i, 2U);
 
     // If you know the maximum number of bytes that should be
     // read to deserialize the variable, you can limit the read
@@ -287,14 +287,14 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(bf.SetPos(0));
     BOOST_CHECK_EQUAL(bf.GetPos(), 0U);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 0);
+    BOOST_CHECK_EQUAL(i, 0U);
 
     // We can set the position forward again up to the farthest
     // into the stream we've been, but no farther. (Attempting
     // to go farther may succeed, but it's not guaranteed.)
     BOOST_CHECK(bf.SetPos(10));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 10);
+    BOOST_CHECK_EQUAL(i, 10U);
     BOOST_CHECK_EQUAL(bf.GetPos(), 11U);
 
     // Now it's only guaranteed that we can rewind to offset 1
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(bf.SetPos(1));
     BOOST_CHECK_EQUAL(bf.GetPos(), 1U);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 1);
+    BOOST_CHECK_EQUAL(i, 1U);
 
     // We can stream into large variables, even larger than
     // the buffer size.
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         uint8_t a[40 - 11];
         bf >> a;
         for (uint8_t j = 0; j < sizeof(a); ++j) {
-            BOOST_CHECK_EQUAL(a[j], 11 + j);
+            BOOST_CHECK_EQUAL(a[j], 11U + j);
         }
     }
     BOOST_CHECK_EQUAL(bf.GetPos(), 40U);
@@ -331,18 +331,69 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK_EQUAL(bf.GetPos(), 40U);
     BOOST_CHECK(bf.SetPos(30));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 30);
+    BOOST_CHECK_EQUAL(i, 30U);
     BOOST_CHECK_EQUAL(bf.GetPos(), 31U);
 
     // We're too far to rewind to position zero.
     BOOST_CHECK(!bf.SetPos(0));
     // But we should now be positioned at least as far back as allowed
     // by the rewind window (relative to our farthest read position, 40).
-    BOOST_CHECK(bf.GetPos() <= 30);
+    BOOST_CHECK(bf.GetPos() <= 30U);
 
     // We can explicitly close the file, or the destructor will do it.
     bf.fclose();
 
+    fs::remove("streams_test_tmp");
+}
+
+BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
+{
+    FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
+    // The value at each offset is the byte offset (e.g. byte 1 in the file has the value 0x01).
+    for (uint8_t j = 0; j < 40; ++j) {
+        fwrite(&j, 1, 1, file);
+    }
+    rewind(file);
+
+    // The buffer is 25 bytes, allow rewinding 10 bytes.
+    CBufferedFile bf(file, 25, 10, 222, 333);
+
+    uint8_t i;
+    // This is like bf >> (7-byte-variable), in that it will cause data
+    // to be read from the file into memory, but it's not copied to us.
+    bf.Skip(7);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 7U);
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 7U);
+
+    // The bytes in the buffer up to offset 7 are valid and can be read.
+    BOOST_CHECK(bf.SetPos(0));
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 0U);
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 1U);
+
+    // Skip()'s argument is the number of bytes to move forward in the
+    // file, not the absolute file position. Since bf is currently
+    // positioned to 2, this will advance it to 11.
+    bf.Skip(9);
+    bf >> i;
+    BOOST_CHECK_EQUAL(i, 11U);
+
+    // Skip() honors the transfer limit; this allows only one byte
+    // to be skipped (or read) since we're at position 12.
+    bf.SetLimit(13);
+    try {
+        bf.Skip(2);
+        BOOST_CHECK(false);
+    } catch (const std::exception& e) {
+        BOOST_CHECK(strstr(e.what(), "Read attempted past buffer limit") != nullptr);
+    }
+
+    bf.Skip(1);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
+
+    bf.fclose();
     fs::remove("streams_test_tmp");
 }
 
@@ -376,7 +427,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             // sizes; the boundaries of the objects can interact arbitrarily
             // with the CBufferFile's internal buffer. These first three
             // cases simulate objects of various sizes (1, 2, 5 bytes).
-            switch (InsecureRandRange(5)) {
+            switch (InsecureRandRange(6)) {
             case 0: {
                 uint8_t a[1];
                 if (currentPos + 1 > fileSize)
@@ -414,6 +465,17 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 break;
             }
             case 3: {
+                // Skip is similar to the "read" cases above, except
+                // we don't receive the data.
+                size_t nSize = InsecureRandRange(5);
+                if (currentPos + nSize > fileSize)
+                    continue;
+                bf.SetLimit(currentPos + nSize);
+                bf.Skip(nSize);
+                currentPos += nSize;
+                break;
+            }
+            case 4: {
                 // Find a byte value (that is at or ahead of the current position).
                 size_t find = currentPos + InsecureRandRange(8);
                 if (find >= fileSize)
@@ -430,7 +492,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 currentPos++;
                 break;
             }
-            case 4: {
+            case 5: {
                 size_t requestPos = InsecureRandRange(maxPos + 4);
                 bool okay = bf.SetPos(requestPos);
                 // The new position may differ from the requested position
