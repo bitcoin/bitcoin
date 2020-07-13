@@ -80,7 +80,6 @@ class AssetTxRootsTest(SyscoinTestFramework):
                 nCount = 0
                 continue
             nCount += 1
-        }
         if len(roots) > 0:
             self.nodes[0].syscoinsetethheaders([roots])
 
@@ -94,7 +93,6 @@ class AssetTxRootsTest(SyscoinTestFramework):
         self.nodes[0].syscoinsetethheaders([[814011,814011,814010,'a','a',0],[700059,700059,700058,'a','a',0],[800022,800022,800021,'a','a',0]])
         missing_blocks = self.nodes[0].syscoinsetethstatus("synced", 820000)
         assert_equal(missing_blocks, False)
-}
 
 
 if __name__ == '__main__':
