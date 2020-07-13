@@ -3721,7 +3721,9 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         *ppindex = pindex;
 
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    return pop.acceptBlock(*pindex, state);
+    bool res = pop.acceptBlock(*pindex, state);
+    assert(res);
+    return true;
 }
 
 // Exposed wrapper for AcceptBlockHeader
