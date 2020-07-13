@@ -64,11 +64,11 @@ class AssetTxRootsTest(SyscoinTestFramework):
 
     def basic_audittxroot1(self):
         roots = []
-        nStartHeight = 700000
+        nStartHeight = 670000
         nMissingRange1 = 700059
         nMissingRange2 = 800022
         nMissingRange3 = 814011
-        for index in range(120000):
+        for index in range(150000):
             i = nStartHeight + index
             if i == nMissingRange1 or i == nMissingRange2 or i == nMissingRange3:
                 continue
