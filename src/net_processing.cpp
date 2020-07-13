@@ -4042,6 +4042,10 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     }
     CNetMessage& msg(msgs.front());
 
+    if (gArgs.GetBoolArg("-capturemessages", false)) {
+        CaptureMessage(pfrom->addr, msg.m_command, MakeUCharSpan(msg.m_recv), /* incoming */ true);
+    }
+
     msg.SetVersion(pfrom->GetCommonVersion());
     const std::string& msg_type = msg.m_command;
 

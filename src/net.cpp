@@ -2864,6 +2864,9 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
     LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n",  SanitizeString(msg.m_type), nMessageSize, pnode->GetId());
+    if (gArgs.GetBoolArg("-capturemessages", false)) {
+        CaptureMessage(pnode->addr, msg.m_type, msg.data, /* incoming */ false);
+    }
 
     // make sure we use the appropriate network transport format
     std::vector<unsigned char> serializedHeader;
