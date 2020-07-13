@@ -114,6 +114,8 @@ SyscoinGUI::SyscoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         Q_EMIT consoleShown(rpcConsole);
     }
 
+    modalOverlay = new ModalOverlay(enableWallet, this->centralWidget());
+
     // Accept D&D of URIs
     setAcceptDrops(true);
 
@@ -203,7 +205,6 @@ SyscoinGUI::SyscoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         openOptionsDialogWithTab(OptionsDialog::TAB_NETWORK);
     });
 
-    modalOverlay = new ModalOverlay(enableWallet, this->centralWidget());
     connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &SyscoinGUI::showModalOverlay);
     connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &SyscoinGUI::showModalOverlay);
 #ifdef ENABLE_WALLET
@@ -240,6 +241,7 @@ SyscoinGUI::~SyscoinGUI()
 void SyscoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
+    connect(modalOverlay, &ModalOverlay::triggered, tabGroup, &QActionGroup::setEnabled);
 
     overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
