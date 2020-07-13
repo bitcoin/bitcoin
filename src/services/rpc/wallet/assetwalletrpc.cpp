@@ -323,6 +323,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     return res;
 }
 UniValue assetnew(const JSONRPCRequest& request) {
+    uint32_t nCustomGuid = nCustomAssetGuid;
     if(nCustomAssetGuid > 0)
         nCustomAssetGuid = 0;
     const UniValue &params = request.params;
@@ -472,7 +473,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     data.clear();
     // generate deterministic guid based on input txid
-    const uint32_t &nAsset = nCustomAssetGuid != 0? nCustomAssetGuid: GenerateSyscoinGuid(mtx.vin[0].prevout);
+    const uint32_t &nAsset = nCustomGuid != 0? nCustomGuid: GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.voutAssets.clear();
     newAsset.voutAssets.emplace_back(nAsset, outVec);
     newAsset.SerializeData(data);
