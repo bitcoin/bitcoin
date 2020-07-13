@@ -68,7 +68,7 @@ class AssetTxRootsTest(SyscoinTestFramework):
         nMissingRange1 = 700059
         nMissingRange2 = 800022
         nMissingRange3 = 814011
-        int nCount = 0
+        nCount = 0
         for index in range(120000):
             i = nStartHeight + index
             if i == nMissingRange1 or i == nMissingRange2 or i == nMissingRange3:
