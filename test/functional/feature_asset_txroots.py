@@ -75,7 +75,7 @@ class AssetTxRootsTest(SyscoinTestFramework):
                 continue
             roots += [i,str(i),str(i-1),'a','a',0]
             if nCount > 0 and (nCount % 400) == 0:
-                self.nodes[0].syscoinsetethheaders([roots])
+                self.nodes[0].syscoinsetethheaders(roots)
                 roots = []
                 nCount = 0
                 continue
