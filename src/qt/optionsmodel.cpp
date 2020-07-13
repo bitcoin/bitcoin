@@ -92,7 +92,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("bPrune"))
         settings.setValue("bPrune", false);
     if (!settings.contains("nPruneSize"))
-        settings.setValue("nPruneSize", 2);
+        settings.setValue("nPruneSize", 3);
     SetPrune(settings.value("bPrune").toBool());
 
     if (!settings.contains("nDatabaseCache"))
@@ -250,7 +250,7 @@ void OptionsModel::SetPrune(bool prune, bool force)
     QSettings settings;
     settings.setValue("bPrune", prune);
     // Convert prune size from GB to MiB:
-    const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
+    const uint64_t nPruneSizeMiB = (std::max(settings.value("nPruneSize").toInt(), 3) * GB_BYTES) >> 20;
     std::string prune_val = prune ? std::to_string(nPruneSizeMiB) : "0";
     if (force) {
         m_node.forceSetArg("-prune", prune_val);
