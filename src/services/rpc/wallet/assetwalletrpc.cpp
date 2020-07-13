@@ -354,6 +354,11 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
+    RPCExamples{
+    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 {}")
+    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}")
+    }
+    }.Check(request);
     UniValue paramsFund(UniValue::VARR);
     nCustomAssetGuid = params[0].get_uint();
     for(int i = 1;i<=9;i++)
