@@ -144,28 +144,55 @@ class ZMQTest (BitcoinTestFramework):
     def test_reorg(self):
         import zmq
         address = 'tcp://127.0.0.1:28333'
-        socket = self.ctx.socket(zmq.SUB)
-        socket.set(zmq.RCVTIMEO, 60000)
-        hashblock = ZMQSubscriber(socket, b'hashblock')
+
+        services = [b"hashblock", b"hashtx"]
+        sockets = []
+        subs = []
+        for service in services:
+            sockets.append(self.ctx.socket(zmq.SUB))
+            # 2 second timeout to check end of notifications
+            sockets[-1].set(zmq.RCVTIMEO, 2000)
+            subs.append(ZMQSubscriber(sockets[-1], service))
+
+        # Subscribe to all available topics.
+        hashblock = subs[0]
+        hashtx = subs[1]
 
         # Should only notify the tip if a reorg occurs
-        self.restart_node(0, ['-zmqpub%s=%s' % (hashblock.topic.decode(), address)])
-        socket.connect(address)
+        self.restart_node(0, ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [hashblock, hashtx]])
+        for socket in sockets:
+            socket.connect(address)
         # Relax so that the subscriber is ready before publishing zmq messages
         sleep(0.2)
 
         # Generate 1 block in nodes[0] and receive all notifications
-        self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
+        disconnect_block = self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+        disconnect_cb = self.nodes[0].getblock(disconnect_block)["tx"][0]
         assert_equal(self.nodes[0].getbestblockhash(), hashblock.receive().hex())
+        hashtx.receive() # consume, already tested
 
         # Generate 2 blocks in nodes[1]
-        self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_UNSPENDABLE)
+        connect_blocks = self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_UNSPENDABLE)
 
         # nodes[0] will reorg chain after connecting back nodes[1]
         connect_nodes(self.nodes[0], 1)
+        self.sync_all()
 
         # Should receive nodes[1] tip
         assert_equal(self.nodes[1].getbestblockhash(), hashblock.receive().hex())
+
+        # During reorg, should only receive the last coinbase tx from tip
+        assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[1])["tx"][0])
+
+        # But if we do a simple invalidate we announce the disconnected coinbase
+        self.nodes[0].invalidateblock(connect_blocks[1])
+        assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[1])["tx"][0])
+        # And not the current tip
+        try:
+            hashtx.receive()
+            raise Exception("Should have failed")
+        except zmq.error.Again:
+            pass
 
 if __name__ == '__main__':
     ZMQTest().main()
