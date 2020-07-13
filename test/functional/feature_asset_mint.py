@@ -11,7 +11,7 @@ class AssetMintTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [['-assetindex=1'],['-assetindex=1']]
+        self.extra_args = [['-assetindex=1','-mocktime=1594359054'],['-assetindex=1','-mocktime=1594359054']]
 
     def run_test(self):
         self.nodes[0].generate(200)
@@ -32,8 +32,7 @@ class AssetMintTest(SyscoinTestFramework):
         prevblockhash = '0x5f41930a021d1c48a8add5d35aac63f18e085c2ee862990660603058fd6216c0'
         bridgetransferid = 2
         timestamp = 1594359054
-        set_node_times(self.nodes, timestamp)
-        
+
         self.basic_asset()
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(self.asset)
@@ -56,10 +55,11 @@ class AssetMintTest(SyscoinTestFramework):
         self.sync_blocks()
         assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
         
-        # increase time by 2.5 week and assetallocationmint should throw timeout error
-        set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (1512001 * 1000))
-        self.nodes[0].generate(50)
-        self.sync_blocks()
+        # increase time by ~2.5 week and assetallocationmint should throw timeout error
+        numBlocks = 1513000 / (2*60*59)
+        for block in range(numBlocks):
+            set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + ((2*60*59) * 1000))
+            self.nodes[0].generate(1)
         assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetallocationmint, self.asset, newaddress, '100', height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
     
     def basic_asset(self):
