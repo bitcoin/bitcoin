@@ -142,6 +142,10 @@ class ZMQTest (BitcoinTestFramework):
         assert_equal(self.nodes[1].getzmqnotifications(), [])
 
     def test_reorg(self):
+        if not self.is_wallet_compiled():
+            self.log.info("Skipping reorg test because wallet is disabled")
+            return
+
         import zmq
         address = 'tcp://127.0.0.1:28333'
 
@@ -165,34 +169,40 @@ class ZMQTest (BitcoinTestFramework):
         # Relax so that the subscriber is ready before publishing zmq messages
         sleep(0.2)
 
-        # Generate 1 block in nodes[0] and receive all notifications
+        # Generate 1 block in nodes[0] with 1 mempool tx and receive all notifications
+        payment_txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
         disconnect_block = self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)[0]
         disconnect_cb = self.nodes[0].getblock(disconnect_block)["tx"][0]
         assert_equal(self.nodes[0].getbestblockhash(), hashblock.receive().hex())
-        hashtx.receive() # consume, already tested
+        assert_equal(hashtx.receive().hex(), payment_txid)
+        assert_equal(hashtx.receive().hex(), disconnect_cb)
 
         # Generate 2 blocks in nodes[1]
         connect_blocks = self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_UNSPENDABLE)
 
         # nodes[0] will reorg chain after connecting back nodes[1]
         connect_nodes(self.nodes[0], 1)
-        self.sync_all()
+        self.sync_blocks() # tx in mempool valid but not advertised
 
         # Should receive nodes[1] tip
         assert_equal(self.nodes[1].getbestblockhash(), hashblock.receive().hex())
 
-        # During reorg, should only receive the last coinbase tx from tip
-        assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[1])["tx"][0])
+        # During reorg:
+        # Get old payment transaction notification from disconnect and disconnected cb
+        assert_equal(hashtx.receive().hex(), payment_txid)
+        assert_equal(hashtx.receive().hex(), disconnect_cb)
+        # And the payment transaction again due to mempool entry
+        assert_equal(hashtx.receive().hex(), payment_txid)
+        assert_equal(hashtx.receive().hex(), payment_txid)
+        # And the new connected coinbases
+        for i in [0, 1]:
+            assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[i])["tx"][0])
 
-        # But if we do a simple invalidate we announce the disconnected coinbase
+        # If we do a simple invalidate we announce the disconnected coinbase
         self.nodes[0].invalidateblock(connect_blocks[1])
         assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[1])["tx"][0])
-        # And not the current tip
-        try:
-            hashtx.receive()
-            raise Exception("Should have failed")
-        except zmq.error.Again:
-            pass
+        # And the current tip
+        assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[0])["tx"][0])
 
 if __name__ == '__main__':
     ZMQTest().main()
