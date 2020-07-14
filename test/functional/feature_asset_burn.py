@@ -57,7 +57,8 @@ class AssetBurnTest(SyscoinTestFramework):
         assert(prebalance + 0.94 <= postbalance)
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
-        assert_equal(out[0]['assetGuid']['amount'], int(0.05*COIN))
+        assert_equal(out[0]['asset_guid'], 123456)
+        assert_equal(out[0]['asset_amount'], int(0.05*COIN))
         # in mempool, create more allocations and burn them all accumulating the coins
         self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.01*COIN))
         self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.02*COIN))
