@@ -1013,7 +1013,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     SetSocketNoDelay(hSocket);
 
     // Don't accept connections from banned peers.
-    bool banned = m_banman->IsBanned(addr);
+    bool banned = m_banman && m_banman->IsBanned(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && banned)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
@@ -1022,7 +1022,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     // Only accept connections from discouraged peers if our inbound slots aren't (almost) full.
-    bool discouraged = m_banman->IsDiscouraged(addr);
+    bool discouraged = m_banman && m_banman->IsDiscouraged(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && nInbound + 1 >= nMaxInbound && discouraged)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());

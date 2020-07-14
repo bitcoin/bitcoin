@@ -2491,8 +2491,10 @@ void ProcessMessage(
             if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
                 addr.nTime = nNow - 5 * 24 * 60 * 60;
             pfrom.AddAddressKnown(addr);
-            if (banman->IsDiscouraged(addr)) continue; // Do not process banned/discouraged addresses beyond remembering we received them
-            if (banman->IsBanned(addr)) continue;
+            if (banman && (banman->IsDiscouraged(addr) || banman->IsBanned(addr))) {
+                // Do not process banned/discouraged addresses beyond remembering we received them
+                continue;
+            }
             bool fReachable = IsReachable(addr);
             if (addr.nTime > nSince && !pfrom.fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
             {
@@ -3346,7 +3348,8 @@ void ProcessMessage(
         std::vector<CAddress> vAddr = connman->GetAddresses();
         FastRandomContext insecure_rand;
         for (const CAddress &addr : vAddr) {
-            if (!banman->IsDiscouraged(addr) && !banman->IsBanned(addr)) {
+            bool banned_or_discouraged = banman && (banman->IsDiscouraged(addr) || banman->IsBanned(addr));
+            if (!banned_or_discouraged) {
                 pfrom.PushAddress(addr, insecure_rand);
             }
         }
