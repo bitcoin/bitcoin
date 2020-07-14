@@ -977,6 +977,9 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
                 hashBlock = header.GetHash();
                 if (txOut->GetHash() != hash)
                     return error("%s: txid mismatch", __func__);
+                if (!mapBlockIndex.count(hashBlock)) {
+                    return error("%s: hashBlock %s not in mapBlockIndex", __func__, hashBlock.ToString());
+                }
                 return true;
             }
 
