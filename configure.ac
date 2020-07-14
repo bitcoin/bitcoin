@@ -1883,6 +1883,7 @@ echo
 echo "Options used to compile and link:"
 echo "  boost process = $ax_cv_boost_process"
 echo "  multiprocess  = $build_multiprocess"
+echo "  with libs     = $build_bitcoin_libs"
 echo "  with wallet   = $enable_wallet"
 if test "x$enable_wallet" != "xno"; then
     echo "    with sqlite = $use_sqlite"
