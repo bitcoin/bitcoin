@@ -41,7 +41,6 @@ TimeoutStopSec=600
 
 # Run as bitcoin:bitcoin
 User=bitcoin
-Group=bitcoin
 
 # /run/bitcoind
 RuntimeDirectory=bitcoind
