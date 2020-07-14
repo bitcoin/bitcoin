@@ -55,7 +55,7 @@ class AssetBurnTest(SyscoinTestFramework):
         postbalance = float(self.nodes[1].getbalance())
         # ensure SYS balance goes up on burn to syscoin, use 0.94 because of fees
         assert(prebalance + 0.94 <= postbalance)
-        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['assetGuid']['amount'], int(0.05*COIN))
         # in mempool, create more allocations and burn them all accumulating the coins
@@ -65,7 +65,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.005*COIN))
         self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.01*COIN))
         self.nodes[1].assetallocationburn(self.asset, int(0.05*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
-        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         self.nodes[0].generate(1)
         self.sync_blocks()
