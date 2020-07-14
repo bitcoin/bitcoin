@@ -23,6 +23,7 @@ class AssetBurnTest(SyscoinTestFramework):
     def basic_burn_syscoin(self):
         self.basic_asset()
         self.nodes[0].generate(1)
+        self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.5*COIN))
         self.nodes[0].generate(1)
         self.sync_blocks()
