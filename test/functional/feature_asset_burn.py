@@ -5,7 +5,7 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-
+from test_framework.messages import COIN
 
 class AssetBurnTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -24,19 +24,19 @@ class AssetBurnTest(SyscoinTestFramework):
         self.basic_asset()
         self.nodes[0].generate(1)
         newaddress = self.nodes[0].getnewaddress()
-        self.nodes[0].assetsend(self.asset, newaddress, '0.5')
+        self.nodes[0].assetsend(self.asset, newaddress, 0.5*COIN)
         self.nodes[0].generate(1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         # try to burn more than we own
-        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetallocationburn(self.asset, newaddress, '0.6', '0x931d387731bbbc988b312206c74f77d004d6b84b'))
-        self.nodes[0].assetallocationburn(self.asset, newaddress, '0.5', '0x931d387731bbbc988b312206c74f77d004d6b84b')
+        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetallocationburn(self.asset, newaddress, 0.6*COIN, '0x931d387731bbbc988b312206c74f77d004d6b84b'))
+        self.nodes[0].assetallocationburn(self.asset, newaddress, 0.5*COIN, '0x931d387731bbbc988b312206c74f77d004d6b84b')
         self.nodes[0].generate(1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
 
     def basic_asset(self):
-        self.asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, '1000', '10000', 31, {})['asset_guid']
+        self.asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
 
 
 

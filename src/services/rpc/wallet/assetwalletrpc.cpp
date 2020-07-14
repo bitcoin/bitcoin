@@ -25,7 +25,7 @@
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
-uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
+uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxDestination & address) {
     UniValue publicObj;
     if(!publicObj.read(public_data))
         return 0;
@@ -58,8 +58,8 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, cons
                 return 0;   
         UniValue boundValue = feeStruct[0]; 
         UniValue nextBoundValue = feeStructNext[0]; 
-        nBoundAmount = AssetAmountFromValue(boundValue, nPrecision);
-        nNextBoundAmount = AssetAmountFromValue(nextBoundValue, nPrecision);
+        nBoundAmount = boundValue.get_uint64();
+        nNextBoundAmount = nextBoundValue.get_uint64();
         if(!feeStruct[1].isStr())
             return 0;
         if(!ParseDouble(feeStruct[1].get_str(), &nRate))
@@ -240,7 +240,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
         "\nBurns Syscoin to the SYSX asset\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid of SYSX"},
-            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn."},
+            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of SYS to burn."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -287,7 +287,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
     CMutableTransaction mtx;
     UniValue amountObj = params[1];
-	uint64_t nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
+	uint64_t nAmount = amountObj.get_uint64();
     std::vector<CAssetOut> outVec = {CAssetOut(1, nAmount)};
     theAssetAllocation.voutAssets.emplace_back(nAsset, outVec);
 
@@ -335,15 +335,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
-        {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
+        {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
+        {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
         {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                 {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
                     },
                 }
@@ -395,14 +395,14 @@ UniValue assetnew(const JSONRPCRequest& request) {
     
     uint64_t nBalance;
     try{
-        nBalance = AssetAmountFromValue(param4, precision);
+        nBalance = param4.get_uint64();
     }
     catch(...){
         nBalance = 0;
     }
     uint64_t nMaxSupply;
     try{
-        nMaxSupply = AssetAmountFromValue(param5, precision);
+        nMaxSupply = param5.get_uint64();
     }
     catch(...){
         nMaxSupply = 0;
@@ -507,21 +507,21 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
     RPCHelpMan{"assetnewtest",
     "\nCreate a new asset with a specific GUID. Useful for testing purposes.\n",
     {
-        {"asset_guid", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
+        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
         {"funding_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Fund resulting UTXO owning the asset by this much SYS for gas."},
         {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
-        {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
+        {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
+        {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
         {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                 {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
                     },
                 }
@@ -641,14 +641,14 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
-            {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
+            {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
             {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                     {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                         {
-                            {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                            {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                             {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
                         },
                     }
@@ -698,8 +698,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     theAsset.ClearAsset();
     UniValue params3 = params[3];
     uint64_t nBalance = 0;
-    if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_real() != 0))
-        nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
+    nBalance = param3.get_uint64();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     UniValue feesStructArr = find_value(params[5].get_obj(), "fee_struct");
@@ -797,8 +796,8 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
             {
                 {"", RPCArg::Type::OBJ, RPCArg::Optional::NO, "An assetsend obj",
                     {
-                        {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to"},
-                        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Quantity of asset to send"}
+                        {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to transfer to"},
+                        {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Quantity of asset to send"}
                     }
                 }
             },
@@ -851,9 +850,9 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));             
         UniValue amountObj = find_value(receiverObj, "amount");
         uint64_t nAmount;
-        if (amountObj.isNum() || amountObj.isStr()) {
-            nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-            if (nAmount <= 0)
+        if (amountObj.isNum() {
+            nAmount = amountObj.get_uint64();
+            if (nAmount == 0)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
         }
         else
@@ -895,7 +894,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
     {
         {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the asset to (creates an asset allocation)."},
-        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send."}
+        {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quantity of asset to send."}
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -913,13 +912,13 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[2];
-    uint64_t nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
-    if (nAmount <= 0)
+    uint64_t nAmount = amountValue.get_uint64();
+    if (nAmount == 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetsend");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("address", params[1].get_str());
-    outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
+    outputObj.__pushKV("amount", amountValue);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(nAsset);
@@ -941,7 +940,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                         {
                             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                             {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to transfer to"},
-                            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Quantity of asset to send"}
+                            {"amount", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Quantity of asset to send"}
                         }
                     },
                     },
@@ -1019,8 +1018,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CTxOut change_prototype_txout(0, scriptPubKey);
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum() || amountObj.isStr()) {
-			const uint64_t &nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-			if (nAmount <= 0)
+			const uint64_t &nAmount = amountObj.get_uint64();
+			if (nAmount == 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
@@ -1105,7 +1104,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         "\nBurn an asset allocation in order to use the bridge or move back to Syscoin\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
+            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
             {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Set to '' to burn to Syscoin."}
         },
         RPCResult{
@@ -1134,8 +1133,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
     UniValue amountObj = params[1];
-	uint64_t nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-    if (nAmount <= 0) {
+	uint64_t nAmount = amountObj.get_uint64();
+    if (nAmount == 0) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
     }
 	std::string ethAddress = params[2].get_str();
@@ -1217,7 +1216,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
-            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
+            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
             {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
             {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unique Bridge Transfer ID for this event from Ethereum. It is the low 32 bits of the transferIdAndPrecisions field in the TokenFreeze Event on freezeBurnERC20 call."},
             {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
@@ -1251,8 +1250,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[2];
-    const uint64_t &nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
-    if (nAmount <= 0)
+    const uint64_t &nAmount = amountValue.get_uint64();
+    if (nAmount == 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationmint");  
 
     const uint32_t &nBlockNumber = params[3].get_uint(); 
@@ -1335,7 +1334,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
-            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send"},
+            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quantity of asset to send"},
             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
         },
         RPCResult{
@@ -1353,8 +1352,8 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[2];
-    uint64_t nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
-    if (nAmount <= 0)
+    uint64_t nAmount = amountValue.get_uint64();
+    if (nAmount == 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");  
     bool m_signal_bip125_rbf = false;
     if (!request.params[3].isNull()) {
@@ -1372,7 +1371,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("asset_guid", nAsset);
     outputObj.__pushKV("address", params[1].get_str());
-    outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
+    outputObj.__pushKV("amount", nAmount);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);

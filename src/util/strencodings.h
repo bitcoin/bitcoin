@@ -169,8 +169,6 @@ bool TimingResistantEqual(const T& a, const T& b)
  * @note The result must be in the range (-10^18,10^18), otherwise an overflow error will trigger.
  */
 NODISCARD bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out);
-// SYSCOIN
-NODISCARD bool ParseFixedPoint(const std::string &val, int decimals, uint64_t *amount_out);
 /** Convert from one power-of-2 number base to another. */
 template<int frombits, int tobits, bool pad, typename O, typename I>
 bool ConvertBits(const O& outfn, I it, I end) {

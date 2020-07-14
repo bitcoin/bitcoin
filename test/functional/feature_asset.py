@@ -5,7 +5,7 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-
+from test_framework.messages import COIN
 
 class AssetTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -20,7 +20,7 @@ class AssetTest(SyscoinTestFramework):
         self.asset_description_too_big()
 
     def basic_asset(self):
-        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, '1000', '10000', 31, {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
@@ -34,8 +34,8 @@ class AssetTest(SyscoinTestFramework):
         gooddata = "SfsddfdfsdsdffsdfdfsdsfDsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdssfsddSfdddssfsddSfdddSfddas"
         # 495 bytes long (makes 513 with the pubdata overhead)
         baddata = gooddata + "a"
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, '1000', '10000', 31, {})['asset_guid']
-        asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, '1000', '10000', 31, {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
+        asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
         self.nodes[0].generate(1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(asset)
@@ -48,7 +48,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], asset1)
 
         # data too big
-        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, '1000', '10000', 31, {})
+        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000*COIN, 10000*COIN, 31, {})
 
 if __name__ == '__main__':
     AssetTest().main()
