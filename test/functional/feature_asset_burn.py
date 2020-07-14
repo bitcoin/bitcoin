@@ -17,9 +17,10 @@ class AssetBurnTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         self.sync_blocks()
-        self.basic_burn_syscoin()
+        self.basic_burn_asset()
+        self.basic_burn_asset_multiple()
     
-    def basic_burn_syscoin(self):
+    def basic_burn_asset(self):
         self.basic_asset()
         self.nodes[0].generate(1)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
@@ -33,6 +34,37 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[1].assetallocationburn(self.asset, int(0.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.nodes[0].generate(1)
         self.sync_blocks()
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
+
+    def basic_burn_asset_multiple(self):
+        self.basic_asset()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), COIN)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 1)
+        # burn 0.4 + 0.5 + 0.05
+        self.nodes[1].assetallocationburn(self.asset, int(0.4*COIN), "")
+        self.nodes[1].assetallocationburn(self.asset, int(0.5*COIN), "")
+        self.nodes[1].assetallocationburn(self.asset, int(0.05*COIN), "")
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['assetGuid']['amount'], int(0.05*COIN))
+        # in mempool, create more allocations and burn them all accumulating the coins
+        self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.01*COIN))
+        self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.02*COIN))
+        self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.005*COIN))
+        self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.005*COIN))
+        self.nodes[1].assetsend(self.asset, self.nodes[1].getnewaddress(), int(0.01*COIN))
+        self.nodes[1].assetallocationburn(self.asset, int(0.05*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        # check over block too
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
 
