@@ -18,7 +18,6 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[0].generate(200)
         self.sync_blocks()
         self.basic_burn_syscoin()
-        self.basic_audittxroot1()
     
     def basic_burn_syscoin(self):
         self.basic_asset()
@@ -30,7 +29,7 @@ class AssetBurnTest(SyscoinTestFramework):
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         # try to burn more than we own
-        assert_raises_rpc_error(-4, 'Insufficient funds', self.nodes[1].assetallocationburn(self.asset, int(0.6*COIN), '0x931d387731bbbc988b312206c74f77d004d6b84b'))
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[1].assetallocationburn(self.asset, int(0.6*COIN), '0x931d387731bbbc988b312206c74f77d004d6b84b'))
         self.nodes[1].assetallocationburn(self.asset, int(0.5*COIN), '0x931d387731bbbc988b312206c74f77d004d6b84b')
         self.nodes[0].generate(1)
         self.sync_blocks()
