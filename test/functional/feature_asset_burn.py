@@ -38,8 +38,8 @@ class AssetBurnTest(SyscoinTestFramework):
         assert_equal(len(out), 0)
 
     def basic_burn_asset_multiple(self):
-        # SYSX guid on regtest is 1234
-        self.basic_asset(1234)
+        # SYSX guid on regtest is 123456
+        self.basic_asset(123456)
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), COIN)
