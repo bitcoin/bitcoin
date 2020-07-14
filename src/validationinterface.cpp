@@ -208,9 +208,9 @@ void CMainSignals::TransactionAddedToMempool(const CTransactionRef& tx) {
                           tx->GetWitnessHash().ToString());
 }
 
-void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {
+void CMainSignals::TransactionRemovedFromMempoolNotConfirmed(const CTransactionRef& tx, MemPoolRemovalReason reason) {
     auto event = [tx, reason, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempool(tx, reason); });
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempoolNotConfirmed(tx, reason); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
                           tx->GetHash().ToString(),

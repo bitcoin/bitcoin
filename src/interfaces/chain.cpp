@@ -63,7 +63,7 @@ public:
     {
         m_notifications->transactionAddedToMempool(tx);
     }
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override
+    void TransactionRemovedFromMempoolNotConfirmed(const CTransactionRef& tx, MemPoolRemovalReason reason) override
     {
         m_notifications->transactionRemovedFromMempool(tx, reason);
     }

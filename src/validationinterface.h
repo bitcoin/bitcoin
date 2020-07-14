@@ -117,20 +117,20 @@ protected:
      *
      * Transactions that are removed from the mempool because they conflict
      * with a transaction in the new block will have
-     * TransactionRemovedFromMempool events fired *before* the BlockConnected
+     * TransactionRemovedFromMempoolNotConfirmed events fired *before* the BlockConnected
      * event is fired. If multiple blocks are connected in one step, then the
      * ordering could be:
      *
-     * - TransactionRemovedFromMempool(tx1 from block A)
-     * - TransactionRemovedFromMempool(tx2 from block A)
-     * - TransactionRemovedFromMempool(tx1 from block B)
-     * - TransactionRemovedFromMempool(tx2 from block B)
+     * - TransactionRemovedFromMempoolNotConfirmed(tx1 from block A)
+     * - TransactionRemovedFromMempoolNotConfirmed(tx2 from block A)
+     * - TransactionRemovedFromMempoolNotConfirmed(tx1 from block B)
+     * - TransactionRemovedFromMempoolNotConfirmed(tx2 from block B)
      * - BlockConnected(A)
      * - BlockConnected(B)
      *
      * Called on a background thread.
      */
-    virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
+    virtual void TransactionRemovedFromMempoolNotConfirmed(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
@@ -198,7 +198,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef&);
-    void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason);
+    void TransactionRemovedFromMempoolNotConfirmed(const CTransactionRef&, MemPoolRemovalReason);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
     void ChainStateFlushed(const CBlockLocator &);
