@@ -39,8 +39,12 @@ namespace GUIUtil
         DEFAULT,
         /* Transaction list -- unconfirmed transaction */
         UNCONFIRMED,
-        /* Transaction list -- negative amount */
-        NEGATIVE,
+        /* Theme related blue color */
+        BLUE,
+        /* Eye-friendly red color, e.g. Transaction list -- negative amount */
+        RED,
+        /* Eye-friendly green color */
+        GREEN,
         /* Transaction list -- bare address (without label) */
         BAREADDRESS,
         /* Transaction list -- TX status decoration - open until date */
@@ -51,6 +55,12 @@ namespace GUIUtil
         TX_STATUS_DANGER,
         /* Transaction list -- TX status decoration - LockedByInstantSend color */
         TX_STATUS_LOCKED,
+        /* Background used for some widgets. Its slightly darker than the wallets frame background. */
+        BACKGROUND_WIDGET,
+        /* Border color used for some widgets. Its slightly brighter than BACKGROUND_WIDGET. */
+        BORDER_WIDGET,
+        /* Pixel color of generated QR codes. */
+        QR_PIXEL,
     };
 
     /* Enumeration of possible "styles" */

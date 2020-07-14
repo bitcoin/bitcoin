@@ -140,42 +140,52 @@ static std::set<QWidget*> setFixedPitchFontUpdates;
 static std::map<QWidget*, int> mapFontSizeUpdates;
 
 static const std::map<ThemedColor, QColor> themedColors = {
-    { ThemedColor::DEFAULT, QColor(0, 0, 0) },
+    { ThemedColor::DEFAULT, QColor(85, 85, 85) },
     { ThemedColor::UNCONFIRMED, QColor(128, 128, 128) },
-    { ThemedColor::NEGATIVE, QColor(255, 0, 0) },
+    { ThemedColor::BLUE, QColor(0, 141, 228) },
+    { ThemedColor::RED, QColor(168, 72, 50) },
+    { ThemedColor::GREEN, QColor(8, 110, 3) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
     { ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255) },
     { ThemedColor::TX_STATUS_OFFLINE, QColor(192, 192, 192) },
-    { ThemedColor::TX_STATUS_DANGER, QColor(200, 100, 100) },
-    { ThemedColor::TX_STATUS_LOCKED, QColor(0, 128, 255) },
+    { ThemedColor::TX_STATUS_DANGER, QColor(168, 72, 50) },
+    { ThemedColor::TX_STATUS_LOCKED, QColor(28, 117, 188) },
+    { ThemedColor::BACKGROUND_WIDGET, QColor(234, 234, 236) },
+    { ThemedColor::BORDER_WIDGET, QColor(220, 220, 220) },
+    { ThemedColor::QR_PIXEL, QColor(85, 85, 85) },
 };
 
 static const std::map<ThemedColor, QColor> themedDarkColors = {
-    { ThemedColor::DEFAULT, QColor(170, 170, 170) },
-    { ThemedColor::UNCONFIRMED, QColor(204, 204, 204) },
-    { ThemedColor::NEGATIVE, QColor(255, 69, 0) },
+    { ThemedColor::DEFAULT, QColor(199, 199, 199) },
+    { ThemedColor::UNCONFIRMED, QColor(170, 170, 170) },
+    { ThemedColor::BLUE, QColor(0, 89, 154) },
+    { ThemedColor::RED, QColor(168, 72, 50) },
+    { ThemedColor::GREEN, QColor(8, 110, 3) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
     { ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255) },
     { ThemedColor::TX_STATUS_OFFLINE, QColor(192, 192, 192) },
-    { ThemedColor::TX_STATUS_DANGER, QColor(200, 100, 100) },
-    { ThemedColor::TX_STATUS_LOCKED, QColor(0, 128, 255) },
+    { ThemedColor::TX_STATUS_DANGER, QColor(168, 72, 50) },
+    { ThemedColor::TX_STATUS_LOCKED, QColor(28, 117, 188) },
+    { ThemedColor::BACKGROUND_WIDGET, QColor(45, 45, 46) },
+    { ThemedColor::BORDER_WIDGET, QColor(74, 74, 75) },
+    { ThemedColor::QR_PIXEL, QColor(199, 199, 199) },
 };
 
 static const std::map<ThemedStyle, QString> themedStyles = {
-    { ThemedStyle::TS_INVALID, "background:#FF8080;" },
-    { ThemedStyle::TS_ERROR, "color:red;" },
-    { ThemedStyle::TS_SUCCESS, "color:green;" },
-    { ThemedStyle::TS_COMMAND, "color:#006060;" },
-    { ThemedStyle::TS_PRIMARY, "color:black;" },
-    { ThemedStyle::TS_SECONDARY, "color:#808080;" },
+    { ThemedStyle::TS_INVALID, "background:#e87b68;" },
+    { ThemedStyle::TS_ERROR, "color:#a84832;" },
+    { ThemedStyle::TS_SUCCESS, "color:#096e03;" },
+    { ThemedStyle::TS_COMMAND, "color:#1c75bc;" },
+    { ThemedStyle::TS_PRIMARY, "color:#333;" },
+    { ThemedStyle::TS_SECONDARY, "color:#444;" },
 };
 
 static const std::map<ThemedStyle, QString> themedDarkStyles = {
-    { ThemedStyle::TS_INVALID, "background:#ff4500;" },
-    { ThemedStyle::TS_ERROR, "color:#ff4500;" },
-    { ThemedStyle::TS_SUCCESS, "color:green;" },
-    { ThemedStyle::TS_COMMAND, "color:#0cc;" },
-    { ThemedStyle::TS_PRIMARY, "color:#ccc;" },
+    { ThemedStyle::TS_INVALID, "background:#a84832;" },
+    { ThemedStyle::TS_ERROR, "color:#a84832;" },
+    { ThemedStyle::TS_SUCCESS, "color:#096e03;" },
+    { ThemedStyle::TS_COMMAND, "color:#1c75bc;" },
+    { ThemedStyle::TS_PRIMARY, "color:#c7c7c7;" },
     { ThemedStyle::TS_SECONDARY, "color:#aaa;" },
 };
 
