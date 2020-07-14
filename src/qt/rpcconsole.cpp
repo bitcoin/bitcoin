@@ -450,7 +450,7 @@ void RPCExecutor::request(const QString &command)
 }
 
 RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
-    QWidget(parent),
+    QWidget(parent, Qt::Window),
     ui(new Ui::RPCConsole),
     clientModel(0),
     historyPtr(0),
@@ -460,9 +460,6 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     consoleFontSize(0)
 {
     ui->setupUi(this);
-
-    /* Open CSS when configured */
-    this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     GUIUtil::setFont({ui->label_9,
                       ui->labelNetwork,
