@@ -957,6 +957,11 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
     // SYSCOIN
+    if (gArgs.GetArg("-prune", 0) > 0) {
+        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
+            LogPrintf("%s: parameter interaction: -prune=%d -> setting -disablegovernance=true\n", __func__);
+        }
+    }
     if (gArgs.GetBoolArg("-masternodeblsprivkey", false)) {
         // masternodes MUST accept connections from outside
         gArgs.SoftSetBoolArg("-listen", true);
