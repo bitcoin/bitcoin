@@ -29,6 +29,10 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
 {
     ui->setupUi(this);
 
+    pageButtons.addButton(ui->btnSignMessage, pageButtons.buttons().size());
+    pageButtons.addButton(ui->btnVerifyMessage, pageButtons.buttons().size());
+    connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
@@ -95,16 +99,33 @@ void SignVerifyMessageDialog::setAddress_VM(const QString &address)
 
 void SignVerifyMessageDialog::showTab_SM(bool fShow)
 {
-    ui->tabWidget->setCurrentIndex(0);
+    showPage(0);
     if (fShow)
         this->show();
 }
 
 void SignVerifyMessageDialog::showTab_VM(bool fShow)
 {
-    ui->tabWidget->setCurrentIndex(1);
+    showPage(1);
     if (fShow)
         this->show();
+}
+
+void SignVerifyMessageDialog::showPage(int index)
+{
+    std::vector<QWidget*> vecNormal;
+    QAbstractButton* btnActive = pageButtons.button(index);
+    for (QAbstractButton* button : pageButtons.buttons()) {
+        if (button != btnActive) {
+            vecNormal.push_back(button);
+        }
+    }
+
+    GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont(vecNormal, GUIUtil::FontWeight::Normal, 16);
+
+    ui->stackedWidgetSig->setCurrentIndex(index);
+    btnActive->setChecked(true);
 }
 
 void SignVerifyMessageDialog::on_addressBookButton_SM_clicked()
@@ -272,8 +293,7 @@ bool SignVerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::FocusIn)
     {
-        if (ui->tabWidget->currentIndex() == 0)
-        {
+        if (ui->stackedWidgetSig->currentIndex() == 0) {
             /* Clear status message on focus change */
             ui->statusLabel_SM->clear();
 
@@ -283,9 +303,7 @@ bool SignVerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
                 ui->signatureOut_SM->selectAll();
                 return true;
             }
-        }
-        else if (ui->tabWidget->currentIndex() == 1)
-        {
+        } else if (ui->stackedWidgetSig->currentIndex() == 1) {
             /* Clear status message on focus change */
             ui->statusLabel_VM->clear();
         }

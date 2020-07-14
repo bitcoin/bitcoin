@@ -69,16 +69,27 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), ui->proxyPortTor, SLOT(setEnabled(bool)));
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), this, SLOT(updateProxyValidationState()));
 
-    /* Window elements init */
-#ifdef Q_OS_MAC
-    /* remove Window tab on Mac */
-    ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWindow));
-#endif
-
+    pageButtons.addButton(ui->btnMain, pageButtons.buttons().size());
     /* remove Wallet tab in case of -disablewallet */
     if (!enableWallet) {
-        ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
+        ui->stackedWidgetOptions->removeWidget(ui->pageWallet);
+        ui->btnWallet->hide();
+    } else {
+        pageButtons.addButton(ui->btnWallet, pageButtons.buttons().size());
     }
+    pageButtons.addButton(ui->btnNetwork, pageButtons.buttons().size());
+#ifdef Q_OS_MAC
+    /* remove Window tab on Mac */
+    ui->stackedWidgetOptions->removeWidget(ui->pageWindow);
+    ui->btnWindow->hide();
+#else
+    pageButtons.addButton(ui->btnWindow, pageButtons.buttons().size());
+#endif
+    pageButtons.addButton(ui->btnDisplay, pageButtons.buttons().size());
+
+    connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+
+    showPage(0);
 
     /* Display elements init */
 
@@ -226,6 +237,23 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
 
+}
+
+void OptionsDialog::showPage(int index)
+{
+    std::vector<QWidget*> vecNormal;
+    QAbstractButton* btnActive = pageButtons.button(index);
+    for (QAbstractButton* button : pageButtons.buttons()) {
+        if (button != btnActive) {
+            vecNormal.push_back(button);
+        }
+    }
+
+    GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont(vecNormal, GUIUtil::FontWeight::Normal, 16);
+
+    ui->stackedWidgetOptions->setCurrentIndex(index);
+    btnActive->setChecked(true);
 }
 
 void OptionsDialog::setOkButtonState(bool fState)

@@ -36,6 +36,107 @@ QToolBar QLabel#lblToolbarLogo {
 }
 
 /******************************************************
+QPushButton - Special case, tabbar replacement buttons
+******************************************************/
+
+/* Debug window buttons */
+#btnInfo,
+#btnConsole,
+#btnNetTraffic,
+#btnPeers,
+#btnRepair,
+/* Options dialog buttons */
+#btnMain,
+#btnWallet,
+#btnNetwork,
+#btnWindow,
+#btnDisplay,
+/* Sign/Verify dialog buttons */
+#btnSignMessage,
+#btnVerifyMessage {
+    background: none;
+    border-radius: 0px;
+    color: red;
+    border-bottom: 3px solid red;
+    padding-bottom: 5px;
+    background-color: transparent;
+    border-color: #008de4;
+    color: #333;
+}
+
+/* Debug window buttons */
+#btnInfo:hover:checked,
+#btnConsole:hover:checked,
+#btnNetTraffic:hover:checked,
+#btnPeers:hover:checked,
+#btnRepair:hover:checked,
+/* Options dialog buttons */
+#btnMain:hover:checked,
+#btnWallet:hover:checked,
+#btnNetwork:hover:checked,
+#btnWindow:hover:checked,
+#btnDisplay:hover:checked,
+/* Sign/Verify dialog buttons */
+#btnSignMessage:hover:checked,
+#btnVerifyMessage:hover:checked {
+    border: none;
+    color: red;
+    border-radius: 0px;
+    border-bottom: 3px solid red;
+    background-color:transparent;
+    border-color: #333;
+    color: #333;
+}
+
+/* Debug window buttons */
+#btnInfo:hover:!checked,
+#btnConsole:hover:!checked,
+#btnNetTraffic:hover:!checked,
+#btnPeers:hover:!checked,
+#btnRepair:hover:!checked,
+/* Options dialog buttons */
+#btnMain:hover:!checked,
+#btnWallet:hover:!checked,
+#btnNetwork:hover:!checked,
+#btnWindow:hover:!checked,
+#btnDisplay:hover:!checked,
+/* Sign/Verify dialog buttons */
+#btnSignMessage:hover:!checked,
+#btnVerifyMessage:hover:!checked {
+    border: none;
+    color: red;
+    border-radius: 0px;
+    border-bottom: 3px solid red;
+    background-color:transparent;
+    border-color: #047ac2;
+    color: #666;
+}
+
+/* Debug window buttons */
+#btnInfo:checked,
+#btnConsole:checked,
+#btnNetwork:checked,
+#btnPeers:checked,
+#btnRepair:checked,
+/* Options dialog buttons */
+#btnMain:checked,
+#btnWallet:checked,
+#btnNetwork:checked,
+#btnWindow:checked,
+#btnDisplay:checked,
+/* Sign/Verify dialog buttons */
+#btnSignMessage:checked,
+#btnVerifyMessage:checked {
+    border: none;
+    color: red;
+    border-radius: 0px;
+    border-bottom: 3px solid red;
+    background-color:transparent;
+    border-color: #333;
+    color: #333;
+}
+
+/******************************************************
 ModalOverlay
 ******************************************************/
 

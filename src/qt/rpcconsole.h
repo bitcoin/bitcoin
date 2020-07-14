@@ -11,6 +11,7 @@
 
 #include <net.h>
 
+#include <QButtonGroup>
 #include <QWidget>
 #include <QCompleter>
 #include <QThread>
@@ -65,8 +66,10 @@ protected:
     void keyPressEvent(QKeyEvent *);
 
 private Q_SLOTS:
+    /** custom tab buttons clicked */
+    void showPage(int index);
     void on_lineEdit_returnPressed();
-    void on_tabWidget_currentChanged(int index);
+    void on_stackedWidgetRPC_currentChanged(int index);
     /** open the debug.log from the current datadir */
     void on_openDebugLogfileButton_clicked();
     /** change the time range of the network traffic graph */
@@ -158,6 +161,7 @@ private:
     };
 
     Ui::RPCConsole *ui;
+    QButtonGroup pageButtons;
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
