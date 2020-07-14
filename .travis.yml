@@ -18,14 +18,11 @@ os: linux
 language: minimal
 arch: amd64
 cache:
-  ccache: true
   directories:
     - $TRAVIS_BUILD_DIR/depends/built
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
     - $TRAVIS_BUILD_DIR/releases/$HOST
-before_cache:
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 stages:
   - lint
   - test
@@ -47,7 +44,7 @@ script:
   - if [ $SECONDS -gt 1200 ]; then export CONTINUE=0; fi  # Likely the depends build took very long
   - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
   - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_a.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
-  - if [ $SECONDS -gt 2000 ]; then export CONTINUE=0; fi  # Likely the build took very long; The tests take about 1000s, so we should abort if we have less than 50*60-1000=2000s left
+  - if [[ $SECONDS -gt 50*60-$EXPECTED_TESTS_DURATION_IN_SECONDS ]]; then export CONTINUE=0; fi
   - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
   - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_b.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
 after_script:
@@ -136,22 +133,12 @@ jobs:
       # Xcode 11.3.1, macOS 10.14, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
       osx_image: xcode11.3
-      cache:
-        directories:
-          - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
-          - $TRAVIS_BUILD_DIR/releases/$HOST
-          - $HOME/Library/Caches/Homebrew
-          - /usr/local/Homebrew
       addons:
         homebrew:
           packages:
-          - libtool
           - berkeley-db4
-          - boost
           - miniupnpc
-          - qt
           - qrencode
-          - python3
           - ccache
           - zeromq
       env: >-

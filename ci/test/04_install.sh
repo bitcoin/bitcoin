@@ -14,7 +14,6 @@ if [[ $QEMU_USER_CMD == qemu-s390* ]]; then
 fi
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-  export PATH="/usr/local/opt/ccache/libexec:$PATH"
   ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
 fi
 
