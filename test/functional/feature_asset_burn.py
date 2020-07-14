@@ -48,11 +48,11 @@ class AssetBurnTest(SyscoinTestFramework):
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         # burn 0.4 + 0.5 + 0.05
-        prebalance = self.nodes[1].getbalance()
+        prebalance = float(self.nodes[1].getbalance())
         self.nodes[1].assetallocationburn(self.asset, int(0.4*COIN), "")
         self.nodes[1].assetallocationburn(self.asset, int(0.5*COIN), "")
         self.nodes[1].assetallocationburn(self.asset, int(0.05*COIN), "")
-        postbalance = self.nodes[1].getbalance()
+        postbalance = float(self.nodes[1].getbalance())
         # ensure SYS balance goes up on burn to syscoin, use 0.94 because of fees
         assert(prebalance + 0.94 <= postbalance)
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
