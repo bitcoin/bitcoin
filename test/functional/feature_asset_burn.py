@@ -26,12 +26,14 @@ class AssetBurnTest(SyscoinTestFramework):
         newaddress = self.nodes[1].getnewaddress()
         self.nodes[0].assetsend(self.asset, newaddress, int(0.5*COIN))
         self.nodes[0].generate(1)
+        self.sync_blocks()
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         # try to burn more than we own
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[1].assetallocationburn(self.asset, newaddress, int(0.6*COIN), '0x931d387731bbbc988b312206c74f77d004d6b84b'))
-        self.nodes[1].assetallocationburn(self.asset, newaddress, int(0.5*COIN), '0x931d387731bbbc988b312206c74f77d004d6b84b')
+        self.nodes[1].assetallocationburn(self.asset, int(0.5*COIN), '0x931d387731bbbc988b312206c74f77d004d6b84b')
         self.nodes[0].generate(1)
+        self.sync_blocks()
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
 
