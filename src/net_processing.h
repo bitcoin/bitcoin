@@ -31,6 +31,8 @@ static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this all
 static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
+/** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
+static const int DISCOURAGEMENT_THRESHOLD{100};
 
 struct CNodeStateStats {
     int m_misbehavior_score = 0;
@@ -64,7 +66,7 @@ public:
     virtual void SetBestHeight(int height) = 0;
 
     /**
-     * Increment peer's misbehavior score. If the new value surpasses banscore (specified on startup or by default), mark node to be discouraged, meaning the peer might be disconnected & added to the discouragement filter.
+     * Increment peer's misbehavior score. If the new value surpasses DISCOURAGEMENT_THRESHOLD (specified on startup or by default), mark node to be discouraged, meaning the peer might be disconnected & added to the discouragement filter.
      */
     virtual void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") = 0;
 

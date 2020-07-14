@@ -229,7 +229,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
             if (IsDeprecatedRPCEnabled("banscore")) {
-                // banscore is deprecated in v0.21 for removal in v0.22
+                // banscore is deprecated in v21 for removal in v22
                 obj.pushKV("banscore", statestats.m_misbehavior_score);
             }
             obj.pushKV("synced_headers", statestats.nSyncHeight);

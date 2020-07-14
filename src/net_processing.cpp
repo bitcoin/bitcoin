@@ -1476,9 +1476,8 @@ void PeerManagerImpl::Misbehaving(const NodeId pnode, const int howmuch, const s
 
     LOCK(peer->m_misbehavior_mutex);
     peer->m_misbehavior_score += howmuch;
-    const int banscore = gArgs.GetArg("-banscore", DEFAULT_BANSCORE_THRESHOLD);
     const std::string message_prefixed = message.empty() ? "" : (": " + message);
-    if (peer->m_misbehavior_score >= banscore && peer->m_misbehavior_score - howmuch < banscore)
+    if (peer->m_misbehavior_score >= DISCOURAGEMENT_THRESHOLD && peer->m_misbehavior_score - howmuch < DISCOURAGEMENT_THRESHOLD)
     {
         LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d) DISCOURAGE THRESHOLD EXCEEDED%s\n", pnode, peer->m_misbehavior_score - howmuch, peer->m_misbehavior_score, message_prefixed);
         peer->m_should_discourage = true;

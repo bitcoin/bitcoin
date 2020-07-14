@@ -25,7 +25,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
 )
 
-banscore = 10
+DISCOURAGEMENT_THRESHOLD = 100
 
 
 class LazyPeer(P2PInterface):
@@ -91,7 +91,6 @@ class P2PVersionStore(P2PInterface):
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-banscore=' + str(banscore)]]
 
     def setup_network(self):
         self.disable_mocktime()
@@ -111,7 +110,7 @@ class P2PLeakTest(BitcoinTestFramework):
 
         # Send enough ping messages (any non-version message will do) prior to sending
         # version to reach the peer discouragement threshold. This should get us disconnected.
-        for _ in range(banscore):
+        for _ in range(DISCOURAGEMENT_THRESHOLD):
             no_version_ban_peer.send_message(msg_ping())
 
         # Wait until we got the verack in response to the version. Though, don't wait for the node to receive the
