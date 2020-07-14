@@ -698,7 +698,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     theAsset.ClearAsset();
     UniValue params3 = params[3];
     uint64_t nBalance = 0;
-    nBalance = param3.get_uint64();
+    nBalance = params3.get_uint64();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     UniValue feesStructArr = find_value(params[5].get_obj(), "fee_struct");
@@ -850,7 +850,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));             
         UniValue amountObj = find_value(receiverObj, "amount");
         uint64_t nAmount;
-        if (amountObj.isNum() {
+        if (amountObj.isNum()) {
             nAmount = amountObj.get_uint64();
             if (nAmount == 0)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
@@ -1017,7 +1017,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));   
         CTxOut change_prototype_txout(0, scriptPubKey);
 		UniValue amountObj = find_value(receiverObj, "amount");
-		if (amountObj.isNum() || amountObj.isStr()) {
+		if (amountObj.isNum()) {
 			const uint64_t &nAmount = amountObj.get_uint64();
 			if (nAmount == 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
