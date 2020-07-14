@@ -899,7 +899,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg(platformStyle);
+    CoinControlDialog dlg(platformStyle, this);
     dlg.setModel(model);
     dlg.exec();
     coinControlUpdateLabels();

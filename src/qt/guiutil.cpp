@@ -53,6 +53,7 @@
 #include <QSettings>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
+#include <QTimer>
 #include <QMouseEvent>
 
 #if QT_VERSION < 0x050000
@@ -87,6 +88,7 @@ void ForceActivation();
 
 namespace GUIUtil {
 
+static CCriticalSection cs_css;
 // The default stylesheet directory
 static const QString defaultStylesheetDirectory = ":css";
 // The actual stylesheet directory
@@ -1052,43 +1054,92 @@ const std::vector<QString> listThemes()
     return vecThemes;
 }
 
-// Open CSS when configured
-QString loadStyleSheet()
+void loadStyleSheet(QWidget* widget, bool fDebugWidget)
 {
+    AssertLockNotHeld(cs_css);
+    LOCK(cs_css);
+
     static std::unique_ptr<QString> stylesheet;
+    static std::set<QWidget*> setWidgets;
 
-    if (stylesheet == nullptr) {
-        stylesheet = std::make_unique<QString>();
+    bool fDebugCustomStyleSheets = gArgs.GetBoolArg("-debug-ui", false) && isStyleSheetDirectoryCustom();
+    bool fStyleSheetChanged = false;
 
-        QSettings settings;
-        QDir themes(":css");
-        QString theme = settings.value("theme", "").toString();
+    if (stylesheet == nullptr || fDebugCustomStyleSheets) {
+        auto hasModified = [](const std::vector<QString>& vecFiles) -> bool {
+            static std::map<const QString, QDateTime> mapLastModified;
 
-        // Make sure settings are pointing to an existent theme
-        if (!isStyleSheetDirectoryCustom() && (theme.isEmpty() || !themes.exists(theme))) {
-            theme = defaultTheme;
-            settings.setValue("theme", theme);
-        }
-
-        auto loadFile = [&](const QString& name) {
-            QFile qFile(stylesheetDirectory + "/" + name + (isStyleSheetDirectoryCustom() ? ".css" : ""));
-            if (qFile.open(QFile::ReadOnly)) {
-                stylesheet->append(QLatin1String(qFile.readAll()));
+            bool fModified = false;
+            for (auto file = vecFiles.begin(); file != vecFiles.end() && !fModified; ++file) {
+                QFileInfo info(*file);
+                QDateTime lastModified = info.lastModified(), prevLastModified;
+                auto it = mapLastModified.emplace(std::make_pair(*file, lastModified));
+                prevLastModified = it.second ? QDateTime() : it.first->second;
+                it.first->second = lastModified;
+                fModified = prevLastModified != lastModified;
             }
+            return fModified;
         };
 
+        auto loadFiles = [&](const std::vector<QString>& vecFiles) -> bool {
+            if (fDebugCustomStyleSheets && !hasModified(vecFiles)) {
+                return false;
+            }
+
+            stylesheet = std::make_unique<QString>();
+
+            for (const auto& file : vecFiles) {
+                QFile qFile(file);
+                if (!qFile.open(QFile::ReadOnly)) {
+                    throw std::runtime_error(strprintf("%s: Failed to open file: %s", __func__, file.toStdString()));
+                }
+                stylesheet->append(QLatin1String(qFile.readAll()));
+            }
+            return true;
+        };
+
+        auto pathToFile = [&](const QString& file) -> QString {
+            return stylesheetDirectory + "/" + file + (isStyleSheetDirectoryCustom() ? ".css" : "");
+        };
+
+        std::vector<QString> vecFiles;
         // If light/dark theme is used load general styles first
         if (dashThemeActive()) {
-            loadFile("general");
 #ifndef Q_OS_MAC
-            loadFile("scrollbars");
+            vecFiles.push_back(pathToFile("scrollbars"));
 #endif
+            vecFiles.push_back(pathToFile("general"));
         }
+        vecFiles.push_back(pathToFile(getActiveTheme()));
 
-        loadFile(theme);
+        fStyleSheetChanged = loadFiles(vecFiles);
     }
 
-    return *stylesheet;
+    bool fUpdateStyleSheet = fDebugCustomStyleSheets && fStyleSheetChanged;
+
+    if (fDebugWidget) {
+        setWidgets.insert(widget);
+        QWidgetList allWidgets = QApplication::allWidgets();
+        auto it = setWidgets.begin();
+        while (it != setWidgets.end()) {
+            if (!allWidgets.contains(*it)) {
+                it = setWidgets.erase(it);
+                continue;
+            }
+            if (fUpdateStyleSheet && *it != widget) {
+                (*it)->setStyleSheet(*stylesheet);
+            }
+            ++it;
+        }
+    }
+
+    if (widget) {
+        widget->setStyleSheet(*stylesheet);
+    }
+
+    if (!ShutdownRequested() && fDebugCustomStyleSheets) {
+        QTimer::singleShot(200, [] { loadStyleSheet(); });
+    }
 }
 
 FontFamily fontFamilyFromString(const QString& strFamily)
@@ -1460,10 +1511,13 @@ QFont getFont(FontWeight weight, bool fItalic, int nPointSize)
         font.setWeight(qWeight);
         font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
     }
-    qDebug() << "GUIUtil::getFont() - " << font.toString() << " family: " << font.family() << ", style: " << font.styleName() << " match: " << font.exactMatch();
 
     if (nPointSize != -1) {
         font.setPointSizeF(getScaledFontSize(nPointSize));
+    }
+
+    if (gArgs.GetBoolArg("-debug-ui", false)) {
+        qDebug() << __func__ << ": font size: " << font.pointSizeF() << " family: " << font.family() << ", style: " << font.styleName() << " match: " << font.exactMatch();
     }
 
     return font;
@@ -1477,6 +1531,12 @@ QFont getFontNormal()
 QFont getFontBold()
 {
     return getFont(FontWeight::Bold);
+}
+
+QString getActiveTheme()
+{
+    QSettings settings;
+    return settings.value("theme", defaultTheme).toString();
 }
 
 bool dashThemeActive()
