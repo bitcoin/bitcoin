@@ -144,7 +144,8 @@ static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND = 7 * 10;
 /** Maximum number of inventory items to send per transmission. */
 static constexpr unsigned int INVENTORY_BROADCAST_MAX = INVENTORY_BROADCAST_PER_SECOND * INVENTORY_BROADCAST_INTERVAL;
 /** The number of most recently announced transactions a peer can request. */
-static constexpr unsigned int INVENTORY_MAX_RECENT_RELAY = 3500;
+// SYSCOIN
+static constexpr unsigned int INVENTORY_MAX_RECENT_RELAY = 35000;
 /** Verify that INVENTORY_MAX_RECENT_RELAY is enough to cache everything typically
  *  relayed before unconditional relay from the mempool kicks in. This is only a
  *  lower bound, and it should be larger to account for higher inv rate to outbound
@@ -1804,7 +1805,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 // Ignore GETDATA requests for transactions from blocks-only peers.
                 continue;	
             }
-            CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, mempool_req, longlived_mempool_time);
+            CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, mempool_req, now);
             if (tx) {
                 int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
                 connman->PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
