@@ -1184,6 +1184,10 @@ bool AppInitParameterInteraction()
         if (!g_enabled_filter_types.empty()) {
             return InitError(_("Prune mode is incompatible with -blockfilterindex."));
         }
+        // SYSCOIN
+        if (!gArgs.GetBoolArg("-disablegovernance", false)) {
+            return InitError(_("Prune mode is incompatible with -disablegovernance=false."));
+        }
     }
 
     // -bind and -whitebind can't be set when not listening
@@ -1295,7 +1299,13 @@ bool AppInitParameterInteraction()
         LogPrintf("Prune configured to target %u MiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
         fPruneMode = true;
     }
+    // SYSCOIN
+    fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
+    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
+    if (fDisableGovernance) {
+        InitWarning(_("You are starting with governance validation disabled.") + (fPruneMode ? " " + _("This is expected because you are running a pruned node.") : ""));
+    }
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -1766,7 +1776,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
     // ********************************************************* Step 7: load block chain
     fRegTest = gArgs.GetBoolArg("-regtest", false);
-    fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
     if(fRegTest) {
         nMNCollateralRequired = gArgs.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
     }
