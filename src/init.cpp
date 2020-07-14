@@ -1304,7 +1304,7 @@ bool AppInitParameterInteraction()
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
     if (fDisableGovernance) {
-        InitWarning(Untranslated("You are starting with governance validation disabled.") + (fPruneMode ? " " + Untranslated("This is expected because you are running a pruned node.") : ""));
+        InitWarning(Untranslated("You are starting with governance validation disabled.") + (fPruneMode ? Untranslated(" This is expected because you are running a pruned node.") : ""));
     }
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {
