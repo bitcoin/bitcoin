@@ -456,7 +456,7 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
-        consensus.nSYSXAsset = 0;
+        consensus.nSYSXAsset = 1234;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("0765EFB302D504751C652C5B1d65E8E9EDf2E70F");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
