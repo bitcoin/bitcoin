@@ -112,8 +112,11 @@ builder-image:
 .test-template:
   stage: test
   extends: .base-template
+  variables:
+    INTEGRATION_TESTS_ARGS: "--extended --exclude pruning,dbcrash"
   script:
-    - ./ci/test_integrationtests.sh --extended --exclude pruning,dbcrash
+    - echo "INTEGRATION_TESTS_ARGS=${INTEGRATION_TESTS_ARGS}"
+    - ./ci/test_integrationtests.sh $INTEGRATION_TESTS_ARGS
   after_script:
     - mkdir -p $CI_PROJECT_DIR/testlogs
   artifacts:
