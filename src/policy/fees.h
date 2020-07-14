@@ -273,7 +273,7 @@ public:
     /** Create new FeeFilterRounder */
     explicit FeeFilterRounder(const CFeeRate& minIncrementalFee);
 
-    /** Quantize a minimum fee for privacy purpose before broadcast **/
+    /** Quantize a minimum fee for privacy purpose before broadcast. Not thread-safe due to use of FastRandomContext */
     CAmount round(CAmount currentMinFee);
 
 private:
