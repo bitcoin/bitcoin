@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     connman->ClearNodes();
 }
 
-BOOST_AUTO_TEST_CASE(DoS_banning)
+BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     dummyNode2.fSuccessfullyConnected = true;
     {
         LOCK(cs_main);
-        Misbehaving(dummyNode2.GetId(), 50);
+        Misbehaving(dummyNode2.GetId(), DISCOURAGEMENT_THRESHOLD - 1);
     }
     {
         LOCK2(cs_main, dummyNode2.cs_sendProcessing);
@@ -259,62 +259,18 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     BOOST_CHECK(banman->IsDiscouraged(addr1));  // ... but 1 still should be
     {
         LOCK(cs_main);
-        Misbehaving(dummyNode2.GetId(), 50);
+        Misbehaving(dummyNode2.GetId(), 1); // 2 reaches discouragement threshold
     }
     {
         LOCK2(cs_main, dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
     }
-    BOOST_CHECK(banman->IsDiscouraged(addr2));
+    BOOST_CHECK(banman->IsDiscouraged(addr1));  // Expect both 1 and 2
+    BOOST_CHECK(banman->IsDiscouraged(addr2));  // to be discouraged now
 
     bool dummy;
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
     peerLogic->FinalizeNode(dummyNode2.GetId(), dummy);
-}
-
-BOOST_AUTO_TEST_CASE(DoS_banscore)
-{
-    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
-
-    banman->ClearBanned();
-    CAddress addr1(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode1(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr1, 3, 1, CAddress(), "", true);
-    dummyNode1.SetSendVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(&dummyNode1);
-    dummyNode1.nVersion = 1;
-    dummyNode1.fSuccessfullyConnected = true;
-    {
-        LOCK(cs_main);
-        Misbehaving(dummyNode1.GetId(), DISCOURAGEMENT_THRESHOLD - 11);
-    }
-    {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
-    }
-    BOOST_CHECK(!banman->IsDiscouraged(addr1));
-    {
-        LOCK(cs_main);
-        Misbehaving(dummyNode1.GetId(), 10);
-    }
-    {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
-    }
-    BOOST_CHECK(!banman->IsDiscouraged(addr1));
-    {
-        LOCK(cs_main);
-        Misbehaving(dummyNode1.GetId(), 1);
-    }
-    {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
-    }
-    BOOST_CHECK(banman->IsDiscouraged(addr1));
-
-    bool dummy;
-    peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
