@@ -1989,7 +1989,10 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
                 if (MaybePunishNodeForTx(fromPeer, orphan_state)) {
                     setMisbehaving.insert(fromPeer);
                 }
-                LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s\n", orphanHash.ToString());
+                LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
+                    orphanHash.ToString(),
+                    fromPeer,
+                    orphan_state.ToString());
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
@@ -2946,8 +2949,7 @@ void ProcessMessage(
         // peer simply for relaying a tx that our recentRejects has caught,
         // regardless of false positives.
 
-        if (state.IsInvalid())
-        {
+        if (state.IsInvalid()) {
             LogPrint(BCLog::MEMPOOLREJ, "%s from peer=%d was not accepted: %s\n", tx.GetHash().ToString(),
                 pfrom.GetId(),
                 state.ToString());
