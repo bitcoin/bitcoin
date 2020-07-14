@@ -555,14 +555,6 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
 }
 
 
-bool ParseFixedPoint(const std::string &val, int decimals, uint64_t *amount_out)
-{
-    const uint64_t &vali = std::stoull(val.c_str());
-    if(amount_out)
-        *amount_out = vali * ((uint64_t)powl(10, decimals));
-    return true;
-}
-
 std::string ToLower(const std::string& str)
 {
     std::string r;
