@@ -15,14 +15,77 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
+    <layout class="QHBoxLayout" name="horizontalLayout_Buttons_2">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="btnInfo">
+       <property name="text">
+        <string>&amp;Information</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnConsole">
+       <property name="text">
+        <string>&amp;Console</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnNetTraffic">
+       <property name="text">
+        <string>&amp;Network Traffic</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnPeers">
+       <property name="text">
+        <string>&amp;Peers</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnRepair">
+       <property name="text">
+        <string>&amp;Wallet Repair</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidgetRPC">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tab_info">
-      <attribute name="title">
-       <string>&amp;Information</string>
-      </attribute>
+     <widget class="QWidget" name="pageInfo">
       <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0">
        <property name="horizontalSpacing">
         <number>12</number>
@@ -159,11 +222,11 @@
         </widget>
        </item>
        <item row="6" column="0">
-           <widget class="QLabel" name="labelNetwork">
-               <property name="text">
-                   <string>Network</string>
-               </property>
-           </widget>
+        <widget class="QLabel" name="labelNetwork">
+         <property name="text">
+          <string>Network</string>
+         </property>
+        </widget>
        </item>
        <item row="7" column="0">
         <widget class="QLabel" name="label_8">
@@ -418,10 +481,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_console">
-      <attribute name="title">
-       <string>&amp;Console</string>
-      </attribute>
+     <widget class="QWidget" name="pageConsole">
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <property name="spacing">
         <number>3</number>
@@ -455,14 +515,14 @@
              <height>24</height>
             </size>
            </property>
-           <property name="text">
-            <string/>
-           </property>
            <property name="toolTip">
             <string>Decrease font size</string>
            </property>
+           <property name="text">
+            <string/>
+           </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset>
              <normaloff>:/icons/fontsmaller</normaloff>:/icons/fontsmaller</iconset>
            </property>
            <property name="iconSize">
@@ -494,7 +554,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset>
              <normaloff>:/icons/fontbigger</normaloff>:/icons/fontbigger</iconset>
            </property>
            <property name="iconSize">
@@ -529,7 +589,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset>
              <normaloff>:/icons/console_remove</normaloff>:/icons/console_remove</iconset>
            </property>
            <property name="shortcut">
@@ -584,7 +644,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset>
              <normaloff>:/icons/prompticon</normaloff>
              <disabledoff>:/icons/prompticon</disabledoff>:/icons/prompticon</iconset>
            </property>
@@ -613,10 +673,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_nettraffic">
-      <attribute name="title">
-       <string>&amp;Network Traffic</string>
-      </attribute>
+     <widget class="QWidget" name="pageNetTraffic">
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -866,10 +923,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_peers">
-      <attribute name="title">
-       <string>&amp;Peers</string>
-      </attribute>
+     <widget class="QWidget" name="pagePeers">
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0" rowspan="2">
         <layout class="QVBoxLayout" name="verticalLayout_101">
@@ -1428,10 +1482,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_repair">
-      <attribute name="title">
-       <string>&amp;Wallet Repair</string>
-      </attribute>
+     <widget class="QWidget" name="pageRepair">
       <widget class="QPushButton" name="btn_salvagewallet">
        <property name="geometry">
         <rect>
@@ -1697,8 +1748,6 @@
    </slots>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../dash.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

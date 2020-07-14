@@ -532,6 +532,14 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 
     consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(GUIUtil::getFontNormal()).pointSize()).toInt();
+
+    pageButtons.addButton(ui->btnInfo, pageButtons.buttons().size());
+    pageButtons.addButton(ui->btnConsole, pageButtons.buttons().size());
+    pageButtons.addButton(ui->btnNetTraffic, pageButtons.buttons().size());
+    pageButtons.addButton(ui->btnPeers, pageButtons.buttons().size());
+    pageButtons.addButton(ui->btnRepair, pageButtons.buttons().size());
+    connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+
     clear();
 }
 
@@ -969,6 +977,23 @@ void RPCConsole::setInstantSendLockCount(size_t count)
     ui->instantSendLockCount->setText(QString::number(count));
 }
 
+void RPCConsole::showPage(int index)
+{
+    std::vector<QWidget*> vecNormal;
+    QAbstractButton* btnActive = pageButtons.button(index);
+    for (QAbstractButton* button : pageButtons.buttons()) {
+        if (button != btnActive) {
+            vecNormal.push_back(button);
+        }
+    }
+
+    GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont(vecNormal, GUIUtil::FontWeight::Normal, 16);
+
+    ui->stackedWidgetRPC->setCurrentIndex(index);
+    btnActive->setChecked(true);
+}
+
 void RPCConsole::on_lineEdit_returnPressed()
 {
     QString cmd = ui->lineEdit->text();
@@ -1053,11 +1078,11 @@ void RPCConsole::startExecutor()
     thread.start();
 }
 
-void RPCConsole::on_tabWidget_currentChanged(int index)
+void RPCConsole::on_stackedWidgetRPC_currentChanged(int index)
 {
-    if (ui->tabWidget->widget(index) == ui->tab_console)
+    if (ui->stackedWidgetRPC->widget(index) == ui->pageConsole)
         ui->lineEdit->setFocus();
-    else if (ui->tabWidget->widget(index) != ui->tab_peers)
+    else if (ui->stackedWidgetRPC->widget(index) != ui->pagePeers)
         clearSelectedNode();
 }
 
@@ -1342,5 +1367,5 @@ void RPCConsole::showOrHideBanTableIfRequired()
 
 void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
-    ui->tabWidget->setCurrentIndex(tabType);
+    showPage(tabType);
 }
