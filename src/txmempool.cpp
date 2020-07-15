@@ -957,8 +957,12 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             }
             // Check whether its inputs are marked in mapNextTx.
             auto it3 = mapNextTx.find(txin.prevout);
+            auto itConflict = assetAllocationConflicts.find(txin.prevout);
             assert(it3 != mapNextTx.end());
-            assert(it3->first == &txin.prevout);
+            // SYSCOIN if conflicting, it won't point to the same prevout because it already existed
+            if(itConflict == assetAllocationConflicts.end()) {
+                assert(it3->first == &txin.prevout);
+            }
             assert(it3->second == &tx);
             i++;
         }
