@@ -2000,7 +2000,7 @@ bool CWalletTx::IsTrusted(std::set<uint256>& trusted_parents) const
         if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
         // SYSCOIN zdag inputs trusted because they are checked interactively
-        if (!parent->IsTrusted(trusted_parents) && !IsZdagTx(parent->nVersion)) return false;
+        if (!parent->IsTrusted(trusted_parents) && !IsZdagTx(parent->tx->nVersion)) return false;
         trusted_parents.insert(parent->GetHash());
     }
     return true;
