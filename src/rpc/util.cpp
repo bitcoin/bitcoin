@@ -385,9 +385,7 @@ struct Sections {
             PushSection({indent + "]" + (outer_type != OuterType::NONE ? "," : ""), ""});
             break;
         }
-
-            // no default case, so the compiler can warn about missing cases
-        }
+        } // no default case, so the compiler can warn about missing cases
     }
 
     /**
@@ -398,6 +396,9 @@ struct Sections {
         std::string ret;
         const size_t pad = m_max_pad + 4;
         for (const auto& s : m_sections) {
+            // The left part of a section is assumed to be a single line, usually it is the name of the JSON struct or a
+            // brace like {, }, [, or ]
+            CHECK_NONFATAL(s.m_left.find('\n') == std::string::npos);
             if (s.m_right.empty()) {
                 ret += s.m_left;
                 ret += "\n";
@@ -432,7 +433,11 @@ struct Sections {
 };
 
 RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples)
+    : RPCHelpMan{std::move(name), std::move(description), std::move(args), std::move(results), std::move(examples), nullptr} {}
+
+RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun)
     : m_name{std::move(name)},
+      m_fun{std::move(fun)},
       m_description{std::move(description)},
       m_args{std::move(args)},
       m_results{std::move(results)},
@@ -481,6 +486,16 @@ bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
     }
     return num_required_args <= num_args && num_args <= m_args.size();
 }
+
+std::vector<std::string> RPCHelpMan::GetArgNames() const
+{
+    std::vector<std::string> ret;
+    for (const auto& arg : m_args) {
+        ret.emplace_back(arg.m_names);
+    }
+    return ret;
+}
+
 std::string RPCHelpMan::ToString() const
 {
     std::string ret;
@@ -489,6 +504,7 @@ std::string RPCHelpMan::ToString() const
     ret += m_name;
     bool was_optional{false};
     for (const auto& arg : m_args) {
+        if (arg.m_hidden) continue;
         const bool optional = arg.IsOptional();
         ret += " ";
         if (optional) {
@@ -510,6 +526,7 @@ std::string RPCHelpMan::ToString() const
     Sections sections;
     for (size_t i{0}; i < m_args.size(); ++i) {
         const auto& arg = m_args.at(i);
+        if (arg.m_hidden) continue;
 
         if (i == 0) ret += "\nArguments:\n";
 
@@ -589,9 +606,7 @@ std::string RPCArg::ToDescriptionString() const
             ret += "json array";
             break;
         }
-
-            // no default case, so the compiler can warn about missing cases
-        }
+        } // no default case, so the compiler can warn about missing cases
     }
     if (m_fallback.which() == 1) {
         ret += ", optional, default=" + boost::get<std::string>(m_fallback);
@@ -609,9 +624,7 @@ std::string RPCArg::ToDescriptionString() const
             ret += ", required";
             break;
         }
-
-            // no default case, so the compiler can warn about missing cases
-        }
+        } // no default case, so the compiler can warn about missing cases
     }
     ret += ")";
     ret += m_description.empty() ? "" : " " + m_description;
@@ -706,10 +719,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         sections.PushSection({indent + "}" + maybe_separator, ""});
         return;
     }
-
-        // no default case, so the compiler can warn about missing cases
-    }
-
+    } // no default case, so the compiler can warn about missing cases
     CHECK_NONFATAL(false);
 }
 
@@ -746,9 +756,7 @@ std::string RPCArg::ToStringObj(const bool oneline) const
     case Type::OBJ_USER_KEYS:
         // Currently unused, so avoid writing dead code
         CHECK_NONFATAL(false);
-
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     CHECK_NONFATAL(false);
 }
 
@@ -783,9 +791,7 @@ std::string RPCArg::ToString(const bool oneline) const
         }
         return "[" + res + "...]";
     }
-
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     CHECK_NONFATAL(false);
 }
 
