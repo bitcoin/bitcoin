@@ -960,14 +960,13 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             auto itConflict1 = assetAllocationConflicts.find(*it3->first);
             assert(it3 != mapNextTx.end());
 
-            // SYSCOIN if conflicting, it won't point to the same prevout because it already existed
-            if(itConflict == assetAllocationConflicts.end()) {
-                if(it3->first != &txin.prevout) {
-                    LogPrintf("dblspend mempool check prevout mismatch txin.prevout %s it3->first %s assetAllocationConflict(txin.prevout)? %d assetAllocationConflict(it3->first)? %d it3->second hash %s tx hash %s\n", txin.prevout.ToString(), it3->first->ToString(), itConflict == assetAllocationConflicts.end()? 0: 1, itConflict1 == assetAllocationConflicts.end()? 0: 1,it3->second->GetHash().GetHex(), tx.GetHash().GetHex());
-                }
-                assert(it3->first == &txin.prevout);
-                assert(it3->second == &tx);
+            
+            if(it3->first != &txin.prevout) {
+                LogPrintf("dblspend mempool check prevout mismatch txin.prevout %s it3->first %s assetAllocationConflict(txin.prevout)? %d assetAllocationConflict(it3->first)? %d it3->second hash %s tx hash %s\n", txin.prevout.ToString(), it3->first->ToString(), itConflict == assetAllocationConflicts.end()? 0: 1, itConflict1 == assetAllocationConflicts.end()? 0: 1,it3->second->GetHash().GetHex(), tx.GetHash().GetHex());
             }
+            // SYSCOIN
+            assert(*it3->first == txin.prevout);
+            assert(*it3->second == tx);
             i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
