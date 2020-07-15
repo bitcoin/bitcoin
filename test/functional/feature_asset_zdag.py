@@ -6,7 +6,15 @@
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import COIN
-
+from enum import Enum
+class ZDAGStatus(Enum) {
+	ZDAG_NOT_FOUND = -1
+	ZDAG_STATUS_OK = 0
+	ZDAG_WARNING_RBF = 1
+    ZDAG_WARNING_NOT_ZDAG_TX = 2
+    ZDAG_WARNING_SIZE_OVER_POLICY = 3
+	ZDAG_MAJOR_CONFLICT = 4
+}
 class AssetZDAGTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -54,6 +62,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress3, int(1*COIN))['txid']
         self.sync_mempools()
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx1)['status'], ZDAGStatus.ZDAG_MAJOR_CONFLICT)
+        # ensure the tx2 made it to mempool of node1, should propogate dbl-spend first time
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx2)['status'], ZDAGStatus.ZDAG_MAJOR_CONFLICT)
         self.nodes[0].generate(1)
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
