@@ -63,9 +63,10 @@ endef
 endif
 
 define $(package)_set_vars
-  $(package)_config_opts=--target=$(host) --disable-lto-support --with-libtapi=$($(package)_extract_dir)
+  $(package)_config_opts=--target=$(host) --with-libtapi=$($(package)_extract_dir)
   $(package)_ldflags+=-Wl,-rpath=\\$$$$$$$$\$$$$$$$$ORIGIN/../lib
   ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+  $(package)_config_opts+=--enable-lto-support --with-llvm-config=$($(package)_extract_dir)/toolchain/bin/llvm-config
   $(package)_cc=$($(package)_extract_dir)/toolchain/bin/clang
   $(package)_cxx=$($(package)_extract_dir)/toolchain/bin/clang++
   else
