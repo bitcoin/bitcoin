@@ -692,8 +692,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     if(!args.m_test_accept && IsZTx){
                         // allow the first time this outpoint was found in conflict
                         auto it = assetAllocationConflicts.emplace(txin.prevout);
+                        LogPrintf("dblspend assetAllocationConflicts add prevout %s tx hash %s conflict tx hash %s\n", txin.prevout.ToString(), tx.GetHash().GetHex(), ptxConflicting->GetHash().GetHex());
                         // if was inserted (not found)
                         if(it.second) {
+                            LogPrintf("inserted dbl spend\n");
                             setConflictsAsset.insert(ptxConflicting->GetHash());
                             break;
                         }
