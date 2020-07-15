@@ -1999,8 +1999,7 @@ bool CWalletTx::IsTrusted(std::set<uint256>& trusted_parents) const
         // If we've already trusted this parent, continue
         if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
-        // SYSCOIN zdag inputs trusted because they are checked interactively
-        if (!parent->IsTrusted(trusted_parents) && !IsZdagTx(parent->tx->nVersion)) return false;
+        if (!parent->IsTrusted(trusted_parents)) return false;
         trusted_parents.insert(parent->GetHash());
     }
     return true;
@@ -2155,8 +2154,13 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
         if (nDepth == 0 && !wtx.InMempool())
             continue;
-
+        // SYSCOIN
         bool safeTx = wtx.IsTrusted(trusted_parents);
+        if(!safeTx) {
+            // if wasn't safe but it was a zdag tx and we are creating an asset tx then let it be safe as its interactively verified anyway with zdag
+            if(IsZdagTx(wtx.tx->nVersion) && coinControl && coinControl->assetInfo && coinControl->assetInfo->nAsset > 0)
+                safeTx = true;
+        }
 
         // We should not consider coins from transactions that are replacing
         // other transactions.
