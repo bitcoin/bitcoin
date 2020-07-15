@@ -962,8 +962,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             // SYSCOIN if conflicting, it won't point to the same prevout because it already existed
             if(itConflict == assetAllocationConflicts.end()) {
                 assert(it3->first == &txin.prevout);
+                assert(it3->second == &tx);
             }
-            assert(it3->second == &tx);
             i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
