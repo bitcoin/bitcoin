@@ -14,7 +14,7 @@ class ZDAGStatus(Enum):
     ZDAG_WARNING_NOT_ZDAG_TX = 2
     ZDAG_WARNING_SIZE_OVER_POLICY = 3
     ZDAG_MAJOR_CONFLICT = 4
-    
+
 class AssetZDAGTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -58,9 +58,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, newaddress2, int(0.5*COIN))['txid']
+        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
         # dbl spend
-        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress3, int(1*COIN))['txid']
+        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
         self.sync_mempools()
         assert_equal(self.nodes[0].assetallocationverifyzdag(tx1)['status'], ZDAGStatus.ZDAG_MAJOR_CONFLICT)
         # ensure the tx2 made it to mempool of node1, should propogate dbl-spend first time
@@ -68,11 +68,13 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
-        assert_equal(len(out), 2)
+        assert_equal(len(out), 3)
         assert_equal(out[0]['asset_guid'], self.asset)
         assert_equal(out[0]['asset_amount'], 0)
         assert_equal(out[1]['asset_guid'], self.asset)
         assert_equal(out[1]['asset_amount'], int(0.5*COIN))
+        assert_equal(out[2]['asset_guid'], self.asset)
+        assert_equal(out[2]['asset_amount'], int(1*COIN))
 
     def basic_asset(self):
         self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
