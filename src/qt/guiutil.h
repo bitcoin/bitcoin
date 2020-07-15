@@ -162,6 +162,21 @@ namespace GUIUtil
     };
 
     /**
+     * Qt event filter that intercepts QEvent::FocusOut events for QLabel objects, and
+     * resets their `textInteractionFlags' property to get rid of the visible cursor.
+     *
+     * This is a temporary fix of QTBUG-59514.
+     */
+    class LabelOutOfFocusEventFilter : public QObject
+    {
+        Q_OBJECT
+
+    public:
+        explicit LabelOutOfFocusEventFilter(QObject* parent);
+        bool eventFilter(QObject* watched, QEvent* event) override;
+    };
+
+    /**
      * Makes a QTableView last column feel as if it was being resized from its left border.
      * Also makes sure the column widths are never larger than the table's viewport.
      * In Qt, all columns are resizable from the right, but it's not intuitive resizing the last column from the right.
