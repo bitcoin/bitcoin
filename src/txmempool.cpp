@@ -384,8 +384,6 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // SYSCOIN
     const bool& IsZTx = IsZdagTx(tx.nVersion);
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        if(IsZTx && mapNextTx.find(tx.vin[i].prevout) != mapNextTx.end())
-            LogPrintf("prvout %s alrady exists tx %s\n", tx.vin[i].prevout.ToString(), tx.GetHash().GetHex());
         if(!IsZTx || mapNextTx.find(tx.vin[i].prevout) == mapNextTx.end()) {
             mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
             setParentTransactions.insert(tx.vin[i].prevout.hash);
@@ -916,6 +914,8 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
     bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
+    if(!fCheckResult)
+        LogPrintf("dummy_state %s\n", dummy_state.ToString());
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
@@ -943,6 +943,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         checkTotal += it->GetTxSize();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
+        // SYSCOIN
+        const bool& IsZTx = IsZdagTx(tx.nVersion);
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
         assert(linksiter != mapLinks.end());
         const TxLinks &links = linksiter->second;
@@ -970,8 +972,12 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             if(it3->first != &txin.prevout) {
                 LogPrintf("dblspend mempool check prevout mismatch txin.prevout %s it3->first %s assetAllocationConflict(txin.prevout)? %d assetAllocationConflict(it3->first)? %d it3->second hash %s tx hash %s\n", txin.prevout.ToString(), it3->first->ToString(), itConflict == assetAllocationConflicts.end()? 0: 1, itConflict1 == assetAllocationConflicts.end()? 0: 1,it3->second->GetHash().GetHex(), tx.GetHash().GetHex());
             }
-            assert(it3->first == &txin.prevout);
-            assert(*it3->second == tx);
+            if(IsZTx) {
+                assert(*it3->first == txin.prevout);
+            } else {
+                assert(it3->first == &txin.prevout);
+                assert(*it3->second == tx);          
+            }
             i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
