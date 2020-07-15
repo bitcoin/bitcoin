@@ -101,7 +101,9 @@ if ! PYTHONWARNINGS="ignore" flake8 --ignore=B,C,E,F,I,N,W --select=$(IFS=","; e
     EXIT_CODE=1
 fi
 
-if ! mypy --ignore-missing-imports $(git ls-files "test/functional/*.py"); then
+# set MYPYPATH variable to point to directory containing stub files in data and test_functional packages
+export MYPYPATH="${BASE_ROOT_DIR}/test/functional/test_framework/stubs:${BASE_ROOT_DIR}/test/functional/data/stubs"
+if ! mypy $(git ls-files "test/functional/*.py"); then
     EXIT_CODE=1
 fi
 
