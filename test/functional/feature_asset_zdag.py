@@ -33,6 +33,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset': 0.5})
         assert_equal(len(out), 1)
         self.nodes[0].assetallocationsend(self.asset, newaddress2, int(1.5*COIN))
+        self.nodes[0].generate(1)
+        self.sync_blocks()
         self.sync_mempools()
         self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.5*COIN))
         self.sync_mempools()
