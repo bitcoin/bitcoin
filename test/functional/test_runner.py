@@ -245,6 +245,7 @@ BASE_SCRIPTS = [
     'feature_config_args.py',
     'rpc_getdescriptorinfo.py',
     'rpc_getpeerinfo_banscore_deprecation.py',
+    'rpc_mempoolchanges.py',
     'rpc_help.py',
     'feature_help.py',
     'feature_shutdown.py',
