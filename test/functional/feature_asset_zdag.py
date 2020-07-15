@@ -58,10 +58,10 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 2)
-        assert_equal(out[0]['asset_guid', self.asset)
-        assert_equal(out[0]['asset_amount', int(0.5*COIN))
-        assert_equal(out[1]['asset_guid', self.asset)
-        assert_equal(out[1]['asset_amount', int(0.5*COIN))
+        assert_equal(out[0]['asset_guid'], self.asset)
+        assert_equal(out[0]['asset_amount'], int(0.5*COIN))
+        assert_equal(out[1]['asset_guid'], self.asset)
+        assert_equal(out[1]['asset_amount'], int(0.5*COIN))
 
     def basic_asset(self):
         self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
