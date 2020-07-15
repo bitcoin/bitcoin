@@ -639,7 +639,6 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
 // SYSCOIN
 bool CTxMemPool::existsConflicts(const CTransaction &tx)
 {
-    // check for and turn true on transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
@@ -958,12 +957,16 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             // Check whether its inputs are marked in mapNextTx.
             auto it3 = mapNextTx.find(txin.prevout);
             auto itConflict = assetAllocationConflicts.find(txin.prevout);
+            auto itConflict1 = assetAllocationConflicts.find(it3->first);
             assert(it3 != mapNextTx.end());
+            if(it3->first != &txin.prevout) {
+                LogPrintf("dblspend mempool check prevout mismatch txin.prevout %s it3->first %s assetAllocationConflict(txin.prevout)? %d assetAllocationConflict(it3->first)? %d it3->second hash %s tx hash %s\n", txin.prevout.ToString(), it3->first.ToString(), itConflict == assetAllocationConflicts.end()? 0: 1, itConflict1 == assetAllocationConflicts.end()? 0: 1,it3->second.GetHash().GetHex(), tx.GetHash().GetHex());
+            }
             // SYSCOIN if conflicting, it won't point to the same prevout because it already existed
-            if(itConflict == assetAllocationConflicts.end()) {
+            //if(itConflict == assetAllocationConflicts.end()) {
                 assert(it3->first == &txin.prevout);
                 assert(it3->second == &tx);
-            }
+            //}
             i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
