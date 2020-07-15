@@ -381,9 +381,15 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
     const CTransaction& tx = newit->GetTx();
     std::set<uint256> setParentTransactions;
+    // SYSCOIN
+    const bool& IsZTx = IsZdagTx(tx.nVersion);
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
-        setParentTransactions.insert(tx.vin[i].prevout.hash);
+        if(IsZTx && mapNextTx.find(tx.vin[i].prevout) != mapNextTx.end())
+            LogPrintf("prvout %s alrady exists tx %s\n", tx.vin[i].prevout.ToString(), tx.GetHash().GetHex());
+        if(IsZTx && mapNextTx.find(tx.vin[i].prevout) == mapNextTx.end()) {
+            mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
+            setParentTransactions.insert(tx.vin[i].prevout.hash);
+        }
     }
     // Don't bother worrying about child transactions of this one.
     // Normal case of a new transaction arriving is that there can't be any
@@ -937,8 +943,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         checkTotal += it->GetTxSize();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
-        // SYSCOIN
-        const bool& IsZTx = IsZdagTx(tx.nVersion);
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
         assert(linksiter != mapLinks.end());
         const TxLinks &links = linksiter->second;
@@ -959,11 +963,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             // Check whether its inputs are marked in mapNextTx.
             auto it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
-            // SYSCOIN
-            assert(*it3->first == txin.prevout);
-            // with zdag we can have different tx pointing to prevout
-            if(!IsZTx)
-                assert(*it3->second == tx);
+            assert(it3->first == &txin.prevout);
+            assert(*it3->second == tx);
             i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
