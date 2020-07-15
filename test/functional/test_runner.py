@@ -264,6 +264,7 @@ BASE_SCRIPTS = [
     'feature_asset_mint.py',
     'feature_asset_txroots.py',
     'feature_asset_burn.py',
+    'feature_asset_zdag.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 
