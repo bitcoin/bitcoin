@@ -26,6 +26,8 @@ jobs:
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: add bitcoin ppa
         run: sudo add-apt-repository ppa:bitcoin/bitcoin
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
       - name: install dependencies
@@ -119,6 +121,8 @@ jobs:
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
       - name: install dependencies
@@ -190,6 +194,8 @@ jobs:
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl ca-certificates ccache python3
       - name: install dependencies
@@ -396,6 +402,8 @@ jobs:
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
       - name: download and extract macos sdk

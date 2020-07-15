@@ -49,6 +49,8 @@ jobs:
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: add bitcoin ppa
         run: sudo add-apt-repository ppa:bitcoin/bitcoin
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache
       - name: install dependencies
@@ -141,6 +143,8 @@ jobs:
           key: mingw32-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
           restore-keys: |
             mingw32-ccache-
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64 ccache nsis
       - name: set the default mingw32 g++ compiler option to posix
@@ -216,6 +220,8 @@ jobs:
           key: darwin-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
           restore-keys: |
             darwin-ccache-
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools ccache
       - name: download and extract macos sdk
@@ -354,6 +360,8 @@ jobs:
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
+      - name: run apt update
+        run: sudo apt-get update
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache
       - name: install dependencies
