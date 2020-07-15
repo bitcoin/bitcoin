@@ -48,7 +48,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.5*COIN))
         self.sync_mempools()
         # node3 should have 2 less utxos because they were sent to change on node2
-        out =  self.nodes[2].listunspent(min_conf=0)
+        out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
         self.nodes[0].assetallocationsend(self.asset, newaddress2, int(0.5*COIN))
         # dbl spend
