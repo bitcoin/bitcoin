@@ -386,7 +386,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         if(IsZTx && mapNextTx.find(tx.vin[i].prevout) != mapNextTx.end())
             LogPrintf("prvout %s alrady exists tx %s\n", tx.vin[i].prevout.ToString(), tx.GetHash().GetHex());
-        if(IsZTx && mapNextTx.find(tx.vin[i].prevout) == mapNextTx.end()) {
+        if(!IsZTx || mapNextTx.find(tx.vin[i].prevout) == mapNextTx.end()) {
             mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
             setParentTransactions.insert(tx.vin[i].prevout.hash);
         }
