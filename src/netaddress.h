@@ -160,7 +160,11 @@ class CService : public CNetAddr
         CService(const struct in6_addr& ipv6Addr, uint16_t port);
         explicit CService(const struct sockaddr_in6& addr);
 
-        SERIALIZE_METHODS(CService, obj) { READWRITE(obj.ip, Using<BigEndianFormatter<2>>(obj.port)); }
+        SERIALIZE_METHODS(CService, obj)
+        {
+            READWRITEAS(CNetAddr, obj);
+            READWRITE(Using<BigEndianFormatter<2>>(obj.port));
+        }
 };
 
 bool SanityCheckASMap(const std::vector<bool>& asmap);
