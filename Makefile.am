@@ -45,7 +45,8 @@ OSX_QT_TRANSLATIONS = ar,bg,ca,cs,da,de,es,fa,fi,fr,gd,gl,he,hu,it,ja,ko,lt,lv,p
 
 DIST_CONTRIB = \
 	       $(top_srcdir)/contrib/linearize/linearize-data.py \
-	       $(top_srcdir)/contrib/linearize/linearize-hashes.py
+	       $(top_srcdir)/contrib/linearize/linearize-hashes.py \
+	       $(top_srcdir)/contrib/bitcoin-cli.bash-completion
 
 DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
