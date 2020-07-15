@@ -21,7 +21,7 @@ class ZMQSubscriber:
         self.socket = socket
         self.topic = topic
 
-        import zmq
+        import zmq # type: ignore
         self.socket.setsockopt(zmq.SUBSCRIBE, self.topic)
 
     def receive(self):

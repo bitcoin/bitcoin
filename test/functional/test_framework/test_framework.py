@@ -714,7 +714,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def skip_if_no_py3_zmq(self):
         """Attempt to import the zmq package and skip the test if the import fails."""
         try:
-            import zmq  # noqa
+            import zmq  # type:ignore
         except ImportError:
             raise SkipTest("python3-zmq module not available.")
 
