@@ -41,6 +41,16 @@ namespace BCLog {
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(util_check)
+{
+    // Check that Assert can forward
+    const std::unique_ptr<int> p_two = Assert(MakeUnique<int>(2));
+    // Check that Assert works on lvalues and rvalues
+    const int two = *Assert(p_two);
+    Assert(two == 2);
+    Assert(true);
+}
+
 BOOST_AUTO_TEST_CASE(util_criticalsection)
 {
     RecursiveMutex cs;
