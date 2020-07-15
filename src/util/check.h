@@ -56,4 +56,26 @@ T get_pure_r_value(T&& val)
 /** Identity function. Abort if the value compares equal to zero */
 #define Assert(val) [&]() -> decltype(get_pure_r_value(val))& { auto& check = (val); assert(#val && check); return check; }()
 
+/** Helper for static_check_equal, no type inference **/
+template <typename T1, typename T2, T1 value_1, T2 value_2, bool b>
+struct static_check_struct {
+    constexpr static_check_struct() {
+        static_assert(b, "Static Check Failed");
+    }
+};
+
+/** Check if the template arguments are (operator) at compile time. Compiler error prints values if
+ * failure. **/
+#define static_check_macro_msg(f, s1, s2, msg) static_check_struct<decltype(s1), decltype(s2), s1, s2, s1 f s2>()
+#define static_check_macro_nomsg(f, s1, s2)  static_check_macro_msg(f, s1, s2, "")
+#define static_check_macro_selector(f, s1, s2, msg, FUNC, ...) FUNC
+#define static_check_macro(...) static_check_macro_selector(__VA_ARGS__, static_check_macro_msg(__VA_ARGS__), static_check_macro_nomsg(__VA_ARGS__),)
+#define static_check_equal(...) static_check_macro(==, __VA_ARGS__)
+#define static_check_not_equal(...) static_check_macro(!=, __VA_ARGS__)
+#define static_check_greater(...) static_check_macro(>, __VA_ARGS__)
+#define static_check_less(...) static_check_macro(<, __VA_ARGS__)
+#define static_check_greater_equal(...) static_check_macro(>=, __VA_ARGS__)
+#define static_check_less_equal(...) static_check_macro(<=, __VA_ARGS__)
+
+
 #endif // BITCOIN_UTIL_CHECK_H

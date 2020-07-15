@@ -18,6 +18,7 @@
 #include <support/allocators/secure.h>
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
+#include <util/check.h> // for static_check_equal
 
 #include <stdlib.h>
 #include <thread>
@@ -408,7 +409,7 @@ public:
     {
         assert(num <= 32);
         unsigned char buf[64];
-        static_assert(sizeof(buf) == CSHA512::OUTPUT_SIZE, "Buffer needs to have hasher's output size");
+        static_check_equal(sizeof(buf), CSHA512::OUTPUT_SIZE, "Buffer needs to have hasher's output size");
         bool ret;
         {
             LOCK(m_mutex);
