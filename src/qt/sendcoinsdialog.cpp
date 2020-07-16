@@ -252,6 +252,7 @@ void SendCoinsDialog::onOperateMethodComboBoxChanged(int index)
             ui->clearButton->setVisible(false);
             ui->addButton->setVisible(false);
             ui->frameCoinControl->setVisible(false);
+            ui->optInRBF->setVisible(false);
             CoinControlDialog::coinControl()->m_coin_pick_policy = CoinPickPolicy::IncludeIfSet;
             CoinControlDialog::coinControl()->m_pick_dest = model->wallet().getPrimaryAddress();
             CoinControlDialog::coinControl()->destChange = model->wallet().getPrimaryAddress();
@@ -259,6 +260,7 @@ void SendCoinsDialog::onOperateMethodComboBoxChanged(int index)
         default: // Normal pay
             ui->clearButton->setVisible(true);
             ui->addButton->setVisible(true);
+            ui->optInRBF->setVisible(true);
             CoinControlDialog::coinControl()->destChange = CNoDestination();
             CoinControlDialog::coinControl()->m_pick_dest = CNoDestination();
             ui->frameCoinControl->setVisible(model->getOptionsModel()->getCoinControlFeatures());
@@ -528,7 +530,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         // append RBF message according to transaction's signalling
         if (ui->frameFee->isVisible()) {
             questionString.append("<span style='font-size:10pt; font-weight:normal;'>");
-            if (ui->optInRBF->isChecked()) {
+            if (ui->optInRBF->isChecked() && ui->optInRBF->isVisible()) {
                 questionString.append(tr("You can increase the fee later (signals Replace-By-Fee, BIP-125)."));
             } else {
                 questionString.append(tr("Not signalling Replace-By-Fee, BIP-125."));
