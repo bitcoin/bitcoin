@@ -902,8 +902,6 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
     bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
-    if(!fCheckResult)
-        LogPrintf("dummy_state %s\n", dummy_state.ToString());
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
@@ -924,15 +922,17 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
     const int64_t spendheight = GetSpendHeight(mempoolDuplicate);
-
+    bool IsZTx = false;
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         checkTotal += it->GetTxSize();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
-        // SYSCOIN
-        const bool& IsZTx = IsZdagTx(tx.nVersion);
+        // SYSCOIN, once zdag tx is checked we trigger isztx so it won't check and update coins in mempoolDuplicate because
+        // zdag tx can cause duplicate inputs if double spend happens and CheckInputsAndUpdateCoins won't pass
+        if(!IsZTx)
+            IsZTx = IsZdagTx(tx.nVersion);
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
         assert(linksiter != mapLinks.end());
         const TxLinks &links = linksiter->second;
@@ -953,13 +953,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             // Check whether its inputs are marked in mapNextTx.
             auto it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
-            auto itConflict = assetAllocationConflicts.find(txin.prevout);
-            auto itConflict1 = assetAllocationConflicts.find(*it3->first);
-
-            
-            if(it3->first != &txin.prevout) {
-                LogPrintf("dblspend mempool check prevout mismatch txin.prevout %s it3->first %s assetAllocationConflict(txin.prevout)? %d assetAllocationConflict(it3->first)? %d it3->second hash %s tx hash %s\n", txin.prevout.ToString(), it3->first->ToString(), itConflict == assetAllocationConflicts.end()? 0: 1, itConflict1 == assetAllocationConflicts.end()? 0: 1,it3->second->GetHash().GetHex(), tx.GetHash().GetHex());
-            }
+            // SYSCOIN
             if(IsZTx) {
                 assert(*it3->first == txin.prevout);
             } else {
@@ -1008,7 +1002,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
         if (fDependsWait)
             waitingOnDependants.push_back(&(*it));
-        else {
+        // SYSCOIN
+        else if(!IsZTx) {
             CheckInputsAndUpdateCoins(tx, mempoolDuplicate, spendheight);
         }
     }
@@ -1020,7 +1015,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             waitingOnDependants.push_back(entry);
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
-        } else {
+        // SYSCOIN
+        } else if(!IsZTx) {
             CheckInputsAndUpdateCoins(entry->GetTx(), mempoolDuplicate, spendheight);
             stepsSinceLastRemove = 0;
         }
