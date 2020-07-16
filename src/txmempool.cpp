@@ -652,16 +652,22 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
-        // SYSCOIN
-        assetAllocationConflicts.erase(txin.prevout);
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
+            // SYSCOIN
+            auto itZConflict = assetAllocationConflicts.find(txin.prevout);
+            bool bZdagConflict = false;
+            if(itZConflict != assetAllocationConflicts.end()) {
+                assetAllocationConflicts.erase(itZConflict);
+                bZdagConflict = true;
+            }
             const CTransaction &txConflict = *it->second;
-            if (txConflict != tx)
+            if (txConflict != tx || bZdagConflict)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
             }
+            
         }
     }
 }
