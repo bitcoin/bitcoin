@@ -365,8 +365,7 @@ void WalletInit::Start(CScheduler& scheduler)
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 
     if (!fMasternodeMode && privateSendClientOptions.fEnablePrivateSend) {
-        scheduler.scheduleEvery(std::bind(&CPrivateSendClientManager::DoMaintenance, std::ref(privateSendClientManager),
-                                            std::ref(*g_connman)), 1 * 1000);
+        scheduler.scheduleEvery(std::bind(&DoPrivateSendMaintenance, std::ref(*g_connman)), 1 * 1000);
     }
 }
 

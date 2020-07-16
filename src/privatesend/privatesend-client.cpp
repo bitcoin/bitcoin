@@ -23,18 +23,17 @@
 #include <univalue.h>
 
 CPrivateSendClientManager privateSendClientManager;
+CPrivateSendClientQueueManager privateSendClientQueueManager;
 CPrivateSendClientOptions privateSendClientOptions;
 
-void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CPrivateSendClientQueueManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!privateSendClientOptions.fEnablePrivateSend) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
 
     if (!CheckDiskSpace()) {
-        ResetPool();
-        StopMixing();
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::ProcessMessage -- Not enough disk space, disabling PrivateSend.\n");
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientQueueManager::ProcessMessage -- Not enough disk space, disabling PrivateSend.\n");
         return;
     }
 
@@ -85,14 +84,9 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
 
         // if the queue is ready, submit if we can
         if (dsq.fReady) {
-            LOCK(cs_deqsessions);
-            for (auto& session : deqSessions) {
-                CDeterministicMNCPtr mnMixing;
-                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->pdmnState->addr == dmn->pdmnState->addr && session.GetState() == POOL_STATE_QUEUE) {
-                    LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
-                    session.SubmitDenominate(connman);
-                    return;
-                }
+            if (privateSendClientManager.TrySubmitDenominate(dmn->pdmnState->addr, connman)) {
+                LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+                return;
             }
         } else {
             int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
@@ -108,13 +102,7 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
 
             LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
 
-            LOCK(cs_deqsessions);
-            for (auto& session : deqSessions) {
-                CDeterministicMNCPtr mnMixing;
-                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->collateralOutpoint == dsq.masternodeOutpoint) {
-                    dsq.fTried = true;
-                }
-            }
+            privateSendClientManager.MarkAlreadyJoinedQueueAsTried(dsq);
 
             TRY_LOCK(cs_vecqueue, lockRecv);
             if (!lockRecv) return;
@@ -122,7 +110,23 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
             dsq.Relay(connman);
         }
 
-    } else if (strCommand == NetMsgType::DSSTATUSUPDATE ||
+    }
+}
+
+void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+{
+    if (fMasternodeMode) return;
+    if (!privateSendClientOptions.fEnablePrivateSend) return;
+    if (!masternodeSync.IsBlockchainSynced()) return;
+
+    if (!CheckDiskSpace()) {
+        ResetPool();
+        StopMixing();
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::ProcessMessage -- Not enough disk space, disabling PrivateSend.\n");
+        return;
+    }
+
+    if (strCommand == NetMsgType::DSSTATUSUPDATE ||
                strCommand == NetMsgType::DSFINALTX ||
                strCommand == NetMsgType::DSCOMPLETE) {
         LOCK(cs_deqsessions);
@@ -427,8 +431,6 @@ bool CPrivateSendClientSession::CheckTimeout()
 void CPrivateSendClientManager::CheckTimeout()
 {
     if (fMasternodeMode) return;
-
-    CheckQueue();
 
     if (!privateSendClientOptions.fEnablePrivateSend || !IsMixing()) return;
 
@@ -1049,7 +1051,7 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
 
     // Look through the queues and see if anything matches
     CPrivateSendQueue dsq;
-    while (privateSendClientManager.GetQueueItemAndTry(dsq)) {
+    while (privateSendClientQueueManager.GetQueueItemAndTry(dsq)) {
         auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
 
         if (!dmn) {
@@ -1212,6 +1214,32 @@ void CPrivateSendClientManager::ProcessPendingDsaRequest(CConnman& connman)
             strAutoDenomResult = _("Mixing in progress...");
         }
     }
+}
+
+bool CPrivateSendClientManager::TrySubmitDenominate(const CService& mnAddr, CConnman& connman)
+{
+    LOCK(cs_deqsessions);
+    for (auto& session : deqSessions) {
+        CDeterministicMNCPtr mnMixing;
+        if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->pdmnState->addr == mnAddr && session.GetState() == POOL_STATE_QUEUE) {
+            session.SubmitDenominate(connman);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CPrivateSendClientManager::MarkAlreadyJoinedQueueAsTried(CPrivateSendQueue& dsq) const
+{
+    LOCK(cs_deqsessions);
+    for (const auto& session : deqSessions) {
+        CDeterministicMNCPtr mnMixing;
+        if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->collateralOutpoint == dsq.masternodeOutpoint) {
+            dsq.fTried = true;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
@@ -1760,6 +1788,16 @@ void CPrivateSendClientManager::UpdatedBlockTip(const CBlockIndex* pindex)
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
 }
 
+void CPrivateSendClientQueueManager::DoMaintenance()
+{
+    if (!privateSendClientOptions.fEnablePrivateSend) return;
+    if (fMasternodeMode) return; // no client-side mixing on masternodes
+
+    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+
+    CheckQueue();
+}
+
 void CPrivateSendClientManager::DoMaintenance(CConnman& connman)
 {
     if (!privateSendClientOptions.fEnablePrivateSend) return;
@@ -1800,7 +1838,6 @@ void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
     obj.clear();
     obj.setObject();
     obj.pushKV("running",       IsMixing());
-    obj.pushKV("queue_size",    GetQueueSize());
 
     UniValue arrSessions(UniValue::VARR);
     for (const auto& session : deqSessions) {
@@ -1811,4 +1848,10 @@ void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
         }
     }
     obj.pushKV("sessions",  arrSessions);
+}
+
+void DoPrivateSendMaintenance(CConnman& connman)
+{
+    privateSendClientQueueManager.DoMaintenance();
+    privateSendClientManager.DoMaintenance(connman);
 }

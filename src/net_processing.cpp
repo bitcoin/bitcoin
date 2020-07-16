@@ -3542,6 +3542,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
+        privateSendClientQueueManager.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
         privateSendClientManager.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
 #endif // ENABLE_WALLET
         privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);

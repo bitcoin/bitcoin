@@ -11,10 +11,13 @@
 
 #include <evo/deterministicmns.h>
 
-class CPrivateSendClientManager;
 class CPrivateSendClientOptions;
+class CPrivateSendClientManager;
+class CPrivateSendClientQueueManager;
+
 class CConnman;
 class CNode;
+
 class UniValue;
 
 static const int MIN_PRIVATESEND_SESSIONS = 1;
@@ -54,6 +57,9 @@ static const int PRIVATESEND_KEYS_THRESHOLD_STOP = 50;
 
 // The main object for accessing mixing
 extern CPrivateSendClientManager privateSendClientManager;
+
+// The object to track mixing queues
+extern CPrivateSendClientQueueManager privateSendClientQueueManager;
 
 // The object to store application wide mixing options
 extern CPrivateSendClientOptions privateSendClientOptions;
@@ -182,9 +188,19 @@ public:
     void GetJsonInfo(UniValue& obj) const;
 };
 
+/** Used to keep track of mixing queues
+ */
+class CPrivateSendClientQueueManager : public CPrivateSendBaseManager
+{
+public:
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+
+    void DoMaintenance();
+};
+
 /** Used to keep track of current status of mixing pool
  */
-class CPrivateSendClientManager : public CPrivateSendBaseManager
+class CPrivateSendClientManager
 {
 private:
     // Keep track of the used Masternodes
@@ -242,6 +258,9 @@ public:
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
 
+    bool TrySubmitDenominate(const CService& mnAddr, CConnman& connman);
+    bool MarkAlreadyJoinedQueueAsTried(CPrivateSendQueue& dsq) const;
+
     void CheckTimeout();
 
     void ProcessPendingDsaRequest(CConnman& connman);
@@ -280,5 +299,7 @@ public:
     {
     }
 };
+
+void DoPrivateSendMaintenance(CConnman& connman);
 
 #endif // BITCOIN_PRIVATESEND_PRIVATESEND_CLIENT_H
