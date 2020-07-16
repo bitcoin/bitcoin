@@ -976,6 +976,14 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         innerUsage += memusage::DynamicUsage(links.parents) + memusage::DynamicUsage(links.children);
         bool fDependsWait = false;
         setEntries setParentCheck;
+        // SYSCOIN
+        bool mapAssetAllocationConflicts = false;
+        for (const CTxIn &txin : tx.vin) {
+            if(mapAssetAllocationConflicts.find(txin.prevout) != mapAssetAllocationConflicts.end()) {
+                bFoundConflict = true;
+                break;
+            }
+        }
         for (const CTxIn &txin : tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
             indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
@@ -991,13 +999,18 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             auto it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
             // SYSCOIN
-            auto itzdagconflict = mapAssetAllocationConflicts.find(txin.prevout);
-             // does dbl-spend conflict exist
-            if(itzdagconflict != mapAssetAllocationConflicts.end()) {
-                assert(*it3->first == txin.prevout);
-                IsZTxConflict = true;
-                // the tx must be one of the dbl-spend conflicts
-                assert((itzdagconflict->second.first && *itzdagconflict->second.first == tx) || (itzdagconflict->second.second && *itzdagconflict->second.second == tx));
+            if(bFoundConflict) {
+                auto itzdagconflict = mapAssetAllocationConflicts.find(txin.prevout);
+                // does dbl-spend conflict exist
+                if(itzdagconflict != mapAssetAllocationConflicts.end()) {
+                    assert(*it3->first == txin.prevout);
+                    IsZTxConflict = true;
+                    // the tx must be one of the dbl-spend conflicts
+                    assert((itzdagconflict->second.first && *itzdagconflict->second.first == tx) || (itzdagconflict->second.second && *itzdagconflict->second.second == tx));
+                } else {
+                    assert(*it3->first == txin.prevout);
+                    assert(*it3->second == tx);     
+                }
             } else {
                 assert(it3->first == &txin.prevout);
                 assert(*it3->second == tx);          
