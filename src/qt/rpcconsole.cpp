@@ -1257,7 +1257,15 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
                 : tr("Outbound block-relay"));
     ui->peerHeight->setText(QString::number(stats->nodeStats.nStartingHeight));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
-    ui->peerWhitelisted->setText(stats->nodeStats.m_legacyWhitelisted ? tr("Yes") : tr("No"));
+    if (stats->nodeStats.m_permissionFlags == PF_NONE) {
+        ui->peerPermissions->setText(tr("N/A"));
+    } else {
+        QStringList permissions;
+        for (const auto& permission : NetPermissions::ToStrings(stats->nodeStats.m_permissionFlags)) {
+            permissions.append(QString::fromStdString(permission));
+        }
+        ui->peerPermissions->setText(permissions.join(" & "));
+    }
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : tr("N/A"));
     auto dmn = clientModel->getMasternodeList().first.GetMNByService(stats->nodeStats.addr);
     if (dmn == nullptr) {
