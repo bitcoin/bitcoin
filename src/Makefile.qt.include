@@ -281,7 +281,7 @@ if ENABLE_WALLET
 SYSCOIN_QT_CPP += $(SYSCOIN_QT_WALLET_CPP)
 endif # ENABLE_WALLET
 
-RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
+RES_ANIMATION = $(wildcard $(srcdir)/qt/res/animation/spinner-*.png)
 
 SYSCOIN_RC = qt/res/syscoin-qt-res.rc
 
@@ -293,7 +293,7 @@ qt_libsyscoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libsyscoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libsyscoinqt_a_SOURCES = $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(RES_ICONS) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(RES_ICONS) $(RES_ANIMATION)
 if TARGET_DARWIN
   qt_libsyscoinqt_a_SOURCES += $(SYSCOIN_MM)
 endif
@@ -364,7 +364,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_MOVIES)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_ANIMATION)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
