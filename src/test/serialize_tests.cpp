@@ -9,6 +9,7 @@
 #include <util/strencodings.h>
 
 #include <stdint.h>
+#include <string>
 
 #include <boost/test/unit_test.hpp>
 
@@ -252,6 +253,148 @@ BOOST_AUTO_TEST_CASE(class_methods)
         BOOST_CHECK_EQUAL(out.at(1), std::byte{'b'});
         BOOST_CHECK_EQUAL(out_3, std::byte{'c'});
     }
+}
+
+enum class BaseFormat {
+    RAW,
+    HEX,
+};
+
+/// (Un)serialize a number as raw byte or 2 hexadecimal chars.
+class Base
+{
+public:
+    uint8_t m_base_data;
+
+    Base() : m_base_data(17) {}
+    explicit Base(uint8_t data) : m_base_data(data) {}
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        if (s.GetParams() == BaseFormat::RAW) {
+            s << m_base_data;
+        } else {
+            s << Span{HexStr(Span{&m_base_data, 1})};
+        }
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        if (s.GetParams() == BaseFormat::RAW) {
+            s >> m_base_data;
+        } else {
+            std::string hex{"aa"};
+            s >> Span{hex}.first(hex.size());
+            m_base_data = TryParseHex<uint8_t>(hex).value().at(0);
+        }
+    }
+};
+
+class DerivedAndBaseFormat
+{
+public:
+    BaseFormat m_base_format;
+
+    enum class DerivedFormat {
+        LOWER,
+        UPPER,
+    } m_derived_format;
+};
+
+class Derived : public Base
+{
+public:
+    std::string m_derived_data;
+
+    SERIALIZE_METHODS_PARAMS(Derived, obj, DerivedAndBaseFormat, fmt)
+    {
+        READWRITE(WithParams(fmt.m_base_format, AsBase<Base>(obj)));
+
+        if (ser_action.ForRead()) {
+            std::string str;
+            s >> str;
+            SER_READ(obj, obj.m_derived_data = str);
+        } else {
+            s << (fmt.m_derived_format == DerivedAndBaseFormat::DerivedFormat::LOWER ?
+                      ToLower(obj.m_derived_data) :
+                      ToUpper(obj.m_derived_data));
+        }
+    }
+};
+
+BOOST_AUTO_TEST_CASE(with_params_base)
+{
+    Base b{0x0F};
+
+    DataStream stream;
+
+    stream << WithParams(BaseFormat::RAW, b);
+    BOOST_CHECK_EQUAL(stream.str(), "\x0F");
+
+    b.m_base_data = 0;
+    stream >> WithParams(BaseFormat::RAW, b);
+    BOOST_CHECK_EQUAL(b.m_base_data, 0x0F);
+
+    stream.clear();
+
+    stream << WithParams(BaseFormat::HEX, b);
+    BOOST_CHECK_EQUAL(stream.str(), "0f");
+
+    b.m_base_data = 0;
+    stream >> WithParams(BaseFormat::HEX, b);
+    BOOST_CHECK_EQUAL(b.m_base_data, 0x0F);
+}
+
+BOOST_AUTO_TEST_CASE(with_params_vector_of_base)
+{
+    std::vector<Base> v{Base{0x0F}, Base{0xFF}};
+
+    DataStream stream;
+
+    stream << WithParams(BaseFormat::RAW, v);
+    BOOST_CHECK_EQUAL(stream.str(), "\x02\x0F\xFF");
+
+    v[0].m_base_data = 0;
+    v[1].m_base_data = 0;
+    stream >> WithParams(BaseFormat::RAW, v);
+    BOOST_CHECK_EQUAL(v[0].m_base_data, 0x0F);
+    BOOST_CHECK_EQUAL(v[1].m_base_data, 0xFF);
+
+    stream.clear();
+
+    stream << WithParams(BaseFormat::HEX, v);
+    BOOST_CHECK_EQUAL(stream.str(), "\x02"
+                                    "0fff");
+
+    v[0].m_base_data = 0;
+    v[1].m_base_data = 0;
+    stream >> WithParams(BaseFormat::HEX, v);
+    BOOST_CHECK_EQUAL(v[0].m_base_data, 0x0F);
+    BOOST_CHECK_EQUAL(v[1].m_base_data, 0xFF);
+}
+
+BOOST_AUTO_TEST_CASE(with_params_derived)
+{
+    Derived d;
+    d.m_base_data = 0x0F;
+    d.m_derived_data = "xY";
+
+    DerivedAndBaseFormat fmt;
+
+    DataStream stream;
+
+    fmt.m_base_format = BaseFormat::RAW;
+    fmt.m_derived_format = DerivedAndBaseFormat::DerivedFormat::LOWER;
+    stream << WithParams(fmt, d);
+
+    fmt.m_base_format = BaseFormat::HEX;
+    fmt.m_derived_format = DerivedAndBaseFormat::DerivedFormat::UPPER;
+    stream << WithParams(fmt, d);
+
+    BOOST_CHECK_EQUAL(stream.str(), "\x0F\x02xy"
+                                    "0f\x02XY");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
