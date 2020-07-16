@@ -57,7 +57,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
-        set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + 360)
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
         # use tx2 to build tx3
