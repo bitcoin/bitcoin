@@ -50,6 +50,7 @@
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/threadnames.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <util/validation.h>
 #include <validation.h>
