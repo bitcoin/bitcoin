@@ -1843,6 +1843,18 @@ void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
     obj.pushKV("sessions",  arrSessions);
 }
 
+void CPrivateSendClientOptions::GetJsonInfo(UniValue& obj) const
+{
+    assert(obj.isObject());
+    obj.pushKV("enabled",           privateSendClientOptions.fEnablePrivateSend);
+    obj.pushKV("multisession",      privateSendClientOptions.fPrivateSendMultiSession);
+    obj.pushKV("max_sessions",      privateSendClientOptions.nPrivateSendSessions);
+    obj.pushKV("max_rounds",        privateSendClientOptions.nPrivateSendRounds);
+    obj.pushKV("max_amount",        privateSendClientOptions.nPrivateSendAmount);
+    obj.pushKV("denoms_goal",       privateSendClientOptions.nPrivateSendDenomsGoal);
+    obj.pushKV("denoms_hardcap",    privateSendClientOptions.nPrivateSendDenomsHardCap);
+}
+
 void DoPrivateSendMaintenance(CConnman& connman)
 {
     privateSendClientQueueManager.DoMaintenance();

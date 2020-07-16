@@ -136,14 +136,9 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
 
 #ifdef ENABLE_WALLET
 
-    obj.pushKV("enabled",           privateSendClientOptions.fEnablePrivateSend);
-    obj.pushKV("multisession",      privateSendClientOptions.fPrivateSendMultiSession);
-    obj.pushKV("max_sessions",      privateSendClientOptions.nPrivateSendSessions);
-    obj.pushKV("max_rounds",        privateSendClientOptions.nPrivateSendRounds);
-    obj.pushKV("max_amount",        privateSendClientOptions.nPrivateSendAmount);
-    obj.pushKV("denoms_goal",       privateSendClientOptions.nPrivateSendDenomsGoal);
-    obj.pushKV("denoms_hardcap",    privateSendClientOptions.nPrivateSendDenomsHardCap);
-    obj.pushKV("queue_size",        privateSendClientQueueManager.GetQueueSize());
+    privateSendClientOptions.GetJsonInfo(obj);
+
+    obj.pushKV("queue_size", privateSendClientQueueManager.GetQueueSize());
 
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) {

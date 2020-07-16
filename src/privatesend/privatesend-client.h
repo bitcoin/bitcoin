@@ -298,6 +298,8 @@ public:
         fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION)
     {
     }
+
+    void GetJsonInfo(UniValue& obj) const;
 };
 
 void DoPrivateSendMaintenance(CConnman& connman);
