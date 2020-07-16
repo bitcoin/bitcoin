@@ -56,7 +56,7 @@ static const int PRIVATESEND_KEYS_THRESHOLD_WARNING = 100;
 static const int PRIVATESEND_KEYS_THRESHOLD_STOP = 50;
 
 // The main object for accessing mixing
-extern CPrivateSendClientManager privateSendClientManager;
+extern std::map<const std::string, CPrivateSendClientManager*> privateSendClientManagers;
 
 // The object to track mixing queues
 extern CPrivateSendClientQueueManager privateSendClientQueueManager;

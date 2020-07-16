@@ -371,12 +371,13 @@ void WalletInit::Start(CScheduler& scheduler)
 
 void WalletInit::Flush()
 {
-    if (privateSendClientOptions.fEnablePrivateSend) {
-        // Stop PrivateSend, release keys
-        privateSendClientManager.ResetPool();
-        privateSendClientManager.StopMixing();
-    }
     for (CWallet* pwallet : GetWallets()) {
+        if (privateSendClientOptions.fEnablePrivateSend) {
+            // Stop PrivateSend, release keys
+            auto it = privateSendClientManagers.find(pwallet->GetName());
+            it->second->ResetPool();
+            it->second->StopMixing();
+        }
         pwallet->Flush(false);
     }
 }
@@ -408,13 +409,17 @@ void WalletInit::InitPrivateSendSettings()
 {
     if (!HasWallets()) {
         privateSendClientOptions.fEnablePrivateSend = false;
-        privateSendClientManager.StopMixing();
     } else {
         privateSendClientOptions.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", true);
-        if (GetWallets()[0]->IsLocked()) {
-            privateSendClientManager.StopMixing();
-        } else if (gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART)) {
-            privateSendClientManager.StartMixing(GetWallets()[0]);
+    }
+    bool fAutoStart = gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
+    if (privateSendClientOptions.fEnablePrivateSend) {
+        for (auto& pwallet : GetWallets()) {
+            if (pwallet->IsLocked()) {
+                privateSendClientManagers.at(pwallet->GetName())->StopMixing();
+            } else if (fAutoStart) {
+                privateSendClientManagers.at(pwallet->GetName())->StartMixing(pwallet);
+            }
         }
     }
     privateSendClientOptions.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
@@ -427,7 +432,7 @@ void WalletInit::InitPrivateSendSettings()
     if (privateSendClientOptions.fEnablePrivateSend) {
         LogPrintf("PrivateSend: autostart=%d, multisession=%d," /* Continued */
                   "sessions=%d, rounds=%d, amount=%d, denoms_goal=%d, denoms_hardcap=%d\n",
-                  privateSendClientManager.IsMixing(), privateSendClientOptions.fPrivateSendMultiSession,
+                  fAutoStart, privateSendClientOptions.fPrivateSendMultiSession,
                   privateSendClientOptions.nPrivateSendSessions, privateSendClientOptions.nPrivateSendRounds,
                   privateSendClientOptions.nPrivateSendAmount,
                   privateSendClientOptions.nPrivateSendDenomsGoal, privateSendClientOptions.nPrivateSendDenomsHardCap);

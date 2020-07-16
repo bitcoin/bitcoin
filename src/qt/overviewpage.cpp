@@ -181,14 +181,16 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
             ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
         }
     } else {
-        if(!privateSendClientManager.IsMixing()){
-            ui->togglePrivateSend->setText(tr("Start Mixing"));
-        } else {
-            ui->togglePrivateSend->setText(tr("Stop Mixing"));
-        }
         // Disable privateSendClient builtin support for automatic backups while we are in GUI,
         // we'll handle automatic backups and user warnings in privateSendStatus()
-        privateSendClientManager.fCreateAutoBackups = false;
+        for (auto& pair : privateSendClientManagers) {
+            if (!pair.second->IsMixing()) {
+                ui->togglePrivateSend->setText(tr("Start Mixing"));
+            } else {
+                ui->togglePrivateSend->setText(tr("Stop Mixing"));
+            }
+            pair.second->fCreateAutoBackups = false;
+        }
 
         timer = new QTimer(this);
         connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
@@ -490,8 +492,10 @@ void OverviewPage::privateSendStatus(bool fForce)
     static int64_t nLastDSProgressBlockTime = 0;
     int nBestHeight = clientModel->getNumBlocks();
 
+    CPrivateSendClientManager* privateSendClientManager = privateSendClientManagers.find(walletModel->getWallet()->GetName())->second;
+
     // We are processing more than 1 block per second, we'll just leave
-    if(nBestHeight > privateSendClientManager.nCachedNumBlocks && GetTime() - nLastDSProgressBlockTime <= 1) return;
+    if(nBestHeight > privateSendClientManager->nCachedNumBlocks && GetTime() - nLastDSProgressBlockTime <= 1) return;
     nLastDSProgressBlockTime = GetTime();
 
     QString strKeysLeftText(tr("keys left: %1").arg(walletModel->getKeysLeftSinceAutoBackup()));
@@ -500,9 +504,9 @@ void OverviewPage::privateSendStatus(bool fForce)
     }
     ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
 
-    if (!privateSendClientManager.IsMixing()) {
-        if (nBestHeight != privateSendClientManager.nCachedNumBlocks) {
-            privateSendClientManager.nCachedNumBlocks = nBestHeight;
+    if (!privateSendClientManager->IsMixing()) {
+        if (nBestHeight != privateSendClientManager->nCachedNumBlocks) {
+            privateSendClientManager->nCachedNumBlocks = nBestHeight;
             updatePrivateSendProgress();
         }
 
@@ -557,7 +561,7 @@ void OverviewPage::privateSendStatus(bool fForce)
         }
     }
 
-    QString strEnabled = privateSendClientManager.IsMixing() ? tr("Enabled") : tr("Disabled");
+    QString strEnabled = privateSendClientManager->IsMixing() ? tr("Enabled") : tr("Disabled");
     // Show how many keys left in advanced PS UI mode only
     if(fShowAdvancedPSUI) strEnabled += ", " + strKeysLeftText;
     ui->labelPrivateSendEnabled->setText(strEnabled);
@@ -579,15 +583,15 @@ void OverviewPage::privateSendStatus(bool fForce)
     }
 
     // check privatesend status and unlock if needed
-    if(nBestHeight != privateSendClientManager.nCachedNumBlocks) {
+    if(nBestHeight != privateSendClientManager->nCachedNumBlocks) {
         // Balance and number of transactions might have changed
-        privateSendClientManager.nCachedNumBlocks = nBestHeight;
+        privateSendClientManager->nCachedNumBlocks = nBestHeight;
         updatePrivateSendProgress();
     }
 
     setWidgetsVisible(true);
 
-    ui->labelSubmittedDenom->setText(QString(privateSendClientManager.GetSessionDenoms().c_str()));
+    ui->labelSubmittedDenom->setText(QString(privateSendClientManager->GetSessionDenoms().c_str()));
 }
 
 void OverviewPage::togglePrivateSend(){
@@ -600,7 +604,10 @@ void OverviewPage::togglePrivateSend(){
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
-    if(!privateSendClientManager.IsMixing()){
+
+    CPrivateSendClientManager* privateSendClientManager = privateSendClientManagers.find(walletModel->getWallet()->GetName())->second;
+
+    if (!privateSendClientManager->IsMixing()) {
         const CAmount nMinAmount = CPrivateSend::GetSmallestDenomination() + CPrivateSend::GetMaxCollateralAmount();
         if(currentBalance < nMinAmount){
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, nMinAmount));
@@ -617,7 +624,7 @@ void OverviewPage::togglePrivateSend(){
             if(!ctx.isValid())
             {
                 //unlock was cancelled
-                privateSendClientManager.nCachedNumBlocks = std::numeric_limits<int>::max();
+                privateSendClientManager->nCachedNumBlocks = std::numeric_limits<int>::max();
                 QMessageBox::warning(this, tr("PrivateSend"),
                     tr("Wallet is locked and user declined to unlock. Disabling PrivateSend."),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -628,15 +635,15 @@ void OverviewPage::togglePrivateSend(){
 
     }
 
-    privateSendClientManager.nCachedNumBlocks = std::numeric_limits<int>::max();
+    privateSendClientManager->nCachedNumBlocks = std::numeric_limits<int>::max();
 
-    if (privateSendClientManager.IsMixing()) {
+    if (privateSendClientManager->IsMixing()) {
         ui->togglePrivateSend->setText(tr("Start Mixing"));
-        privateSendClientManager.ResetPool();
-        privateSendClientManager.StopMixing();
+        privateSendClientManager->ResetPool();
+        privateSendClientManager->StopMixing();
     } else {
         ui->togglePrivateSend->setText(tr("Stop Mixing"));
-        privateSendClientManager.StartMixing(walletModel->getWallet());
+        privateSendClientManager->StartMixing(walletModel->getWallet());
     }
 }
 
@@ -664,5 +671,5 @@ void OverviewPage::DisablePrivateSendCompletely() {
     if (nWalletBackups <= 0) {
         ui->labelPrivateSendEnabled->setText("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>(" + tr("Disabled") + ")</span>");
     }
-    privateSendClientManager.StopMixing();
+    privateSendClientManagers.at(walletModel->getWallet()->GetName())->StopMixing();
 }

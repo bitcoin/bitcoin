@@ -43,6 +43,8 @@ UniValue privatesend(const JSONRPCRequest& request)
         }
     }
 
+    auto it = privateSendClientManagers.find(pwallet->GetName());
+
     if (request.params[0].get_str() == "start") {
         {
             LOCK(pwallet->cs_wallet);
@@ -50,21 +52,21 @@ UniValue privatesend(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
-        if (!privateSendClientManager.StartMixing(pwallet)) {
+        if (!it->second->StartMixing(pwallet)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        bool result = privateSendClientManager.DoAutomaticDenominating(*g_connman);
-        return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClientManager.GetStatuses() + ", will retry"));
+        bool result = it->second->DoAutomaticDenominating(*g_connman);
+        return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses() + ", will retry"));
     }
 
     if (request.params[0].get_str() == "stop") {
-        privateSendClientManager.StopMixing();
+        it->second->StopMixing();
         return "Mixing was stopped";
     }
 
     if (request.params[0].get_str() == "reset") {
-        privateSendClientManager.ResetPool();
+        it->second->ResetPool();
         return "Mixing was reset";
     }
 
@@ -148,7 +150,7 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
         return obj;
     }
 
-     privateSendClientManager.GetJsonInfo(obj);
+    privateSendClientManagers.at(pwallet->GetName())->GetJsonInfo(obj);
 
     obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
     obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
