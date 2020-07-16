@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times
 from test_framework.messages import COIN
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
