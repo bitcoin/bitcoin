@@ -977,7 +977,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         bool fDependsWait = false;
         setEntries setParentCheck;
         // SYSCOIN
-        bool mapAssetAllocationConflicts = false;
+        bool bFoundConflict = false;
         for (const CTxIn &txin : tx.vin) {
             if(mapAssetAllocationConflicts.find(txin.prevout) != mapAssetAllocationConflicts.end()) {
                 bFoundConflict = true;
