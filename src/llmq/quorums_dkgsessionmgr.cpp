@@ -26,27 +26,29 @@ CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWork
     blsWorker(_blsWorker),
     connman(_connman)
 {
+    for (const auto& qt : Params().GetConsensus().llmqs) {
+        dkgSessionHandlers.emplace(std::piecewise_construct,
+                std::forward_as_tuple(qt.first),
+                std::forward_as_tuple(qt.second, blsWorker, *this, connman));
+    }
 }
 
 CDKGSessionManager::~CDKGSessionManager()
 {
 }
 
-void CDKGSessionManager::StartMessageHandlerPool()
+void CDKGSessionManager::StartThreads()
 {
-    for (const auto& qt : Params().GetConsensus().llmqs) {
-        dkgSessionHandlers.emplace(std::piecewise_construct,
-                std::forward_as_tuple(qt.first),
-                std::forward_as_tuple(qt.second, messageHandlerPool, blsWorker, *this, connman));
+    for (auto& it : dkgSessionHandlers) {
+        it.second.StartThread();
     }
-
-    messageHandlerPool.resize(2);
-    RenameThreadPool(messageHandlerPool, "syscoin-q-msg");
 }
 
-void CDKGSessionManager::StopMessageHandlerPool()
+void CDKGSessionManager::StopThreads()
 {
-    messageHandlerPool.stop(true);
+    for (auto& it : dkgSessionHandlers) {
+        it.second.StopThread();
+    }
 }
 
 void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
