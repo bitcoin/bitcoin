@@ -1008,8 +1008,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                     // the tx must be one of the dbl-spend conflicts
                     assert((itzdagconflict->second.first && *itzdagconflict->second.first == tx) || (itzdagconflict->second.second && *itzdagconflict->second.second == tx));
                 } else {
-                    assert(*it3->first == txin.prevout);
-                    assert(*it3->second == tx);     
+                    assert(*it3->first == txin.prevout);   
                 }
             } else {
                 assert(it3->first == &txin.prevout);
