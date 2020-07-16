@@ -795,8 +795,7 @@ def fetch(now):
 		try:
 			if peer['relaytxes'] != 'false':
 				numTXRelayers += 1
-		except: passseconds
-seconds
+		except: pass
 		try:
 			if peer['addnode'] != 'false':
 				numAddnode += 1
