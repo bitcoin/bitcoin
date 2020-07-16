@@ -1000,15 +1000,13 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             assert(it3 != mapNextTx.end());
             // SYSCOIN
             if(bFoundConflict) {
+                assert(*it3->first == txin.prevout);
                 auto itzdagconflict = mapAssetAllocationConflicts.find(txin.prevout);
-                // does dbl-spend conflict exist
+                // does dbl-spend conflict exist, we don't have enough info to check tx otherwise if no conflict
                 if(itzdagconflict != mapAssetAllocationConflicts.end()) {
-                    assert(*it3->first == txin.prevout);
                     IsZTxConflict = true;
                     // the tx must be one of the dbl-spend conflicts
                     assert((itzdagconflict->second.first && *itzdagconflict->second.first == tx) || (itzdagconflict->second.second && *itzdagconflict->second.second == tx));
-                } else {
-                    assert(*it3->first == txin.prevout);   
                 }
             } else {
                 assert(it3->first == &txin.prevout);
