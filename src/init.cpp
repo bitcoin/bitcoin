@@ -1841,7 +1841,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         std::string tail = "......";
         for (int i = 0; !g_txindex->BlockUntilSyncedToCurrentChain(); i = (i + 1) % (int)tail.size()) {
             uiInterface.InitMessage(_("Omni Layer waiting txindex").translated + tail.substr(0, i+1));
-            Sleep(2000);
+            MilliSleep(2000);
         }
 
         uiInterface.InitMessage(_("Parsing Omni Layer transactions...").translated);
