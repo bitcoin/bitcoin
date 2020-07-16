@@ -675,12 +675,12 @@ void CTxMemPool::removeZDAGConflicts(const CTransaction &tx)
         // remove the two transactions linked to this prevout in event of a conflict
         if (it != mapAssetAllocationConflicts.end()) {
             if(it->second.first) {
-                ClearPrioritisation(it->second.first->tx.GetHash());
-                removeRecursive(it->second.first->tx, MemPoolRemovalReason::CONFLICT);
+                ClearPrioritisation(it->second.first->GetHash());
+                removeRecursive(*it->second.first, MemPoolRemovalReason::CONFLICT);
             }
             if(it->second.second) {
-                ClearPrioritisation(it->second.second->tx.GetHash());
-                removeRecursive(it->second.second->tx, MemPoolRemovalReason::CONFLICT);
+                ClearPrioritisation(it->second.second->GetHash());
+                removeRecursive(*it->second.second, MemPoolRemovalReason::CONFLICT);
             }
         } 
     }
@@ -698,12 +698,12 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
         // if it is one of those transactions that propagated double spent input related to syscoin asset tx
         if (it != mapAssetAllocationConflicts.end()) {
             txiter thisit, conflictit;
-            txiter firstit = mapTx.find(it->second.first->tx.GetHash());
+            txiter firstit = mapTx.find(it->second.first->GetHash());
             if(firstit != mapTx.end()){
                 if(firstit->GetTx() == tx)
                     thisit = firstit;
             }
-            txiter secondit = mapTx.find(it->second.second->tx.GetHash());
+            txiter secondit = mapTx.find(it->second.second->GetHash());
             CTransactionRef txConflict;
             if(secondit != mapTx.end()){
                 if(secondit->GetTx() == tx) {
@@ -997,7 +997,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                 assert(*it3->first == txin.prevout);
                 IsZTxConflict = true;
                 // the tx must be one of the dbl-spend conflicts
-                assert((itzdagconflict->second.first && itzdagconflict->second.first->tx == tx) || (itzdagconflict->second.second && itzdagconflict->second.second->tx == tx));
+                assert((itzdagconflict->second.first && *itzdagconflict->second.first == tx) || (itzdagconflict->second.second && *itzdagconflict->second.second == tx));
             } else {
                 assert(it3->first == &txin.prevout);
                 assert(*it3->second == tx);          
