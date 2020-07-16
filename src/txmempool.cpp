@@ -24,7 +24,7 @@
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 extern EthereumMintTxMap mapMintKeysMempool;
-extern std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef> > mapAssetAllocationConflicts;
+extern std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
