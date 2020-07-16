@@ -152,15 +152,10 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                 RPCResult{
                     RPCResult::Type::STR, "", "The help text"
                 },
-                RPCExamples{""},
-<<<<<<< HEAD
-        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
-{   
-=======
+                RPCExamples{""},   
             }.ToString()
         );
 
->>>>>>> parent of ea73ed0a45... Merge #19386: rpc: Assert that RPCArg names are equal to CRPCCommand ones (server)
     std::string strCommand;
     // SYSCOIN
     std::string strSubCommand;
@@ -172,8 +167,6 @@ UniValue help(const JSONRPCRequest& jsonRequest)
         strSubCommand = jsonRequest.params[1].get_str();
 
     return tableRPC.help(strCommand, strSubCommand, jsonRequest);
-},
-    };
 }
 
 
