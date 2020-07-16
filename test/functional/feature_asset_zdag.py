@@ -6,14 +6,12 @@
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import COIN
-from enum import Enum
-class ZDAGStatus(Enum):
-    ZDAG_NOT_FOUND = -1
-    ZDAG_STATUS_OK = 0
-    ZDAG_WARNING_RBF = 1
-    ZDAG_WARNING_NOT_ZDAG_TX = 2
-    ZDAG_WARNING_SIZE_OVER_POLICY = 3
-    ZDAG_MAJOR_CONFLICT = 4
+ZDAG_NOT_FOUND = -1
+ZDAG_STATUS_OK = 0
+ZDAG_WARNING_RBF = 1
+ZDAG_WARNING_NOT_ZDAG_TX = 2
+ZDAG_WARNING_SIZE_OVER_POLICY = 3
+ZDAG_MAJOR_CONFLICT = 4
 
 class AssetZDAGTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -46,14 +44,14 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_equal(len(out), 2)
         # send 2 asset UTXOs to newaddress2 same logic as explained above about dbl spend
         self.nodes[0].assetallocationsend(self.asset, newaddress2, int(1*COIN))
-        self.nodes[0].assetallocationsend(self.asset, newaddress2, int(0.5*COIN))
+        self.nodes[0].assetallocationsend(self.asset, newaddress2, int(0.4*COIN))
         self.nodes[0].generate(1)
         self.sync_blocks()
         # should have 2 sys utxos and 2 asset utxos
         out =  self.nodes[2].listunspent()
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
-        self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.5*COIN))
+        self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.3*COIN))
         self.sync_mempools()
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
@@ -61,20 +59,30 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
+        # dbl spend again
+        tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
+        # dbl spend again
+        tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         self.sync_mempools()
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx1)['status'], ZDAGStatus.ZDAG_MAJOR_CONFLICT)
-        # ensure the tx2 made it to mempool of node1, should propogate dbl-spend first time
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx2)['status'], ZDAGStatus.ZDAG_MAJOR_CONFLICT)
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
+        # ensure the tx2 made it to mempool, should propogate dbl-spend first time
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx2)['status'], ZDAG_MAJOR_CONFLICT)
+        # won't get tx3 because its using parent input of tx2 (cannot spend conflicting tx outputs)
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
+        # won't get tx4 because it won't have tx3 (it may orphan the tx)
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
         self.nodes[0].generate(1)
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
-        assert_equal(len(out), 3)
+        assert_equal(len(out), 4)
         assert_equal(out[0]['asset_guid'], self.asset)
         assert_equal(out[0]['asset_amount'], 0)
         assert_equal(out[1]['asset_guid'], self.asset)
-        assert_equal(out[1]['asset_amount'], int(0.5*COIN))
+        assert_equal(out[1]['asset_amount'], int(0.6*COIN))
         assert_equal(out[2]['asset_guid'], self.asset)
-        assert_equal(out[2]['asset_amount'], int(1*COIN))
+        assert_equal(out[2]['asset_amount'], int(0.3*COIN))
+        assert_equal(out[3]['asset_guid'], self.asset)
+        assert_equal(out[3]['asset_amount'], int(1*COIN))
 
     def basic_asset(self):
         self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
