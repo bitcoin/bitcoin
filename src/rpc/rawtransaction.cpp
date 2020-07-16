@@ -1632,7 +1632,7 @@ UniValue joinpsbts(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "At least two PSBTs are required to join PSBTs.");
     }
 
-    int32_t best_version = 1;
+    uint32_t best_version = 1;
     uint32_t best_locktime = 0xffffffff;
     for (unsigned int i = 0; i < txs.size(); ++i) {
         PartiallySignedTransaction psbtx;
@@ -1642,8 +1642,8 @@ UniValue joinpsbts(const JSONRPCRequest& request)
         }
         psbtxs.push_back(psbtx);
         // Choose the highest version number
-        if (psbtx.tx->nVersion > best_version) {
-            best_version = psbtx.tx->nVersion;
+        if (static_cast<uint32_t>(psbtx.tx->nVersion) > best_version) {
+            best_version = static_cast<uint32_t>(psbtx.tx->nVersion);
         }
         // Choose the lowest lock time
         if (psbtx.tx->nLockTime < best_locktime) {
@@ -1654,7 +1654,7 @@ UniValue joinpsbts(const JSONRPCRequest& request)
     // Create a blank psbt where everything will be added
     PartiallySignedTransaction merged_psbt;
     merged_psbt.tx = CMutableTransaction();
-    merged_psbt.tx->nVersion = best_version;
+    merged_psbt.tx->nVersion = static_cast<int32_t>(best_version);
     merged_psbt.tx->nLockTime = best_locktime;
 
     // Merge

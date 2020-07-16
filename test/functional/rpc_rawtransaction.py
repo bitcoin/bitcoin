@@ -424,11 +424,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         ####################################
 
         # Test the minimum transaction version number that fits in a signed 32-bit integer.
+        # As transaction version is unsigned, this should convert to its unsigned equivalent.
         tx = CTransaction()
         tx.nVersion = -0x80000000
         rawtx = ToHex(tx)
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
-        assert_equal(decrawtx['version'], -0x80000000)
+        assert_equal(decrawtx['version'], 0x80000000)
 
         # Test the maximum transaction version number that fits in a signed 32-bit integer.
         tx = CTransaction()
