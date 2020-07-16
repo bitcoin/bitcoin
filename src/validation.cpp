@@ -66,7 +66,7 @@
 #include <algorithm> // std::unique
 extern RecursiveMutex cs_setethstatus;
 EthereumMintTxMap mapMintKeysMempool;
-std::unsorted_map<COutPoint, std::pair<CTransactionRef, CTransactionRef> > mapAssetAllocationConflicts;
+std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef> > mapAssetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
