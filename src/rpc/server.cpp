@@ -151,7 +151,7 @@ static RPCHelpMan help()
                 },
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
-{
+{   
     std::string strCommand;
     // SYSCOIN
     std::string strSubCommand;
@@ -163,6 +163,8 @@ static RPCHelpMan help()
         strSubCommand = jsonRequest.params[1].get_str();
 
     return tableRPC.help(strCommand, strSubCommand, jsonRequest);
+},
+    };
 }
 
 static RPCHelpMan stop()
