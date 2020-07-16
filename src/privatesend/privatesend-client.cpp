@@ -1814,8 +1814,7 @@ void CPrivateSendClientManager::DoMaintenance(CConnman& connman)
 
 void CPrivateSendClientSession::GetJsonInfo(UniValue& obj) const
 {
-    obj.clear();
-    obj.setObject();
+    assert(obj.isObject());
     if (mixingMasternode != nullptr) {
         assert(mixingMasternode->pdmnState);
         obj.pushKV("protxhash", mixingMasternode->proTxHash.ToString());
@@ -1830,8 +1829,7 @@ void CPrivateSendClientSession::GetJsonInfo(UniValue& obj) const
 void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
 {
     LOCK(cs_deqsessions);
-    obj.clear();
-    obj.setObject();
+    assert(obj.isObject());
     obj.pushKV("running",       IsMixing());
 
     UniValue arrSessions(UniValue::VARR);
