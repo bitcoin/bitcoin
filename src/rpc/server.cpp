@@ -137,9 +137,12 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
     return strRet;
 }
 
-static RPCHelpMan help()
+UniValue help(const JSONRPCRequest& jsonRequest)
 {
-    return RPCHelpMan{"help",
+    // SYSCOIN
+    if (jsonRequest.fHelp || jsonRequest.params.size() > 2)
+        throw std::runtime_error(
+            RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
                     {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
@@ -150,8 +153,14 @@ static RPCHelpMan help()
                     RPCResult::Type::STR, "", "The help text"
                 },
                 RPCExamples{""},
+<<<<<<< HEAD
         [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
 {   
+=======
+            }.ToString()
+        );
+
+>>>>>>> parent of ea73ed0a45... Merge #19386: rpc: Assert that RPCArg names are equal to CRPCCommand ones (server)
     std::string strCommand;
     // SYSCOIN
     std::string strSubCommand;
@@ -167,21 +176,22 @@ static RPCHelpMan help()
     };
 }
 
-static RPCHelpMan stop()
+
+UniValue stop(const JSONRPCRequest& jsonRequest)
 {
     static const std::string RESULT{PACKAGE_NAME " stopping"};
-    return RPCHelpMan{"stop",
+    // Accept the deprecated and ignored 'detach' boolean argument
     // Also accept the hidden 'wait' integer argument (milliseconds)
     // For instance, 'stop 1000' makes the call wait 1 second before returning
     // to the client (intended for testing)
+    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
+        throw std::runtime_error(
+            RPCHelpMan{"stop",
                 "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
-                {
-                    {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "how long to wait in ms", "", {}, /* hidden */ true},
-                },
+                {},
                 RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
                 RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
-{
+            }.ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -189,13 +199,11 @@ static RPCHelpMan stop()
         UninterruptibleSleep(std::chrono::milliseconds{jsonRequest.params[0].get_int()});
     }
     return RESULT;
-},
-    };
 }
 
-static RPCHelpMan uptime()
+static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
-    return RPCHelpMan{"uptime",
+            RPCHelpMan{"uptime",
                 "\nReturns the total uptime of the server.\n",
                             {},
                             RPCResult{
@@ -205,16 +213,14 @@ static RPCHelpMan uptime()
                     HelpExampleCli("uptime", "")
                 + HelpExampleRpc("uptime", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
+            }.Check(jsonRequest);
+
     return GetTime() - GetStartupTime();
 }
-    };
-}
 
-static RPCHelpMan getrpcinfo()
+static UniValue getrpcinfo(const JSONRPCRequest& request)
 {
-    return RPCHelpMan{"getrpcinfo",
+            RPCHelpMan{"getrpcinfo",
                 "\nReturns details of the RPC server.\n",
                 {},
                 RPCResult{
@@ -234,8 +240,8 @@ static RPCHelpMan getrpcinfo()
                 RPCExamples{
                     HelpExampleCli("getrpcinfo", "")
                 + HelpExampleRpc("getrpcinfo", "")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
+            }.Check(request);
+
     LOCK(g_rpc_server_info.mutex);
     UniValue active_commands(UniValue::VARR);
     for (const RPCCommandExecutionInfo& info : g_rpc_server_info.active_commands) {
@@ -253,8 +259,6 @@ static RPCHelpMan getrpcinfo()
     result.pushKV("logpath", log_path);
 
     return result;
-}
-    };
 }
 
 // clang-format off
