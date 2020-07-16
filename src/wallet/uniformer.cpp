@@ -101,6 +101,7 @@ Result CreateBindPlotterTransaction(CWallet* wallet, const CTxDestination &dest,
 
     // Create special coin control for bind plotter
     CCoinControl realCoinControl = coin_control;
+    realCoinControl.m_signal_bip125_rbf = false;
     realCoinControl.m_coin_pick_policy = CoinPickPolicy::IncludeIfSet;
     realCoinControl.m_pick_dest = dest;
     realCoinControl.destChange = dest;
@@ -164,6 +165,7 @@ Result CreatePointTransaction(CWallet* wallet, const CTxDestination &senderDest,
 
     // Create special coin control for point
     CCoinControl realCoinControl = coin_control;
+    realCoinControl.m_signal_bip125_rbf = false;
     realCoinControl.m_coin_pick_policy = CoinPickPolicy::IncludeIfSet;
     realCoinControl.m_pick_dest = senderDest;
     realCoinControl.destChange = senderDest;
@@ -231,7 +233,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
     CMutableTransaction txNew;
     txNew.nLockTime = locked_chain->getHeight().get_value_or(0);
     txNew.nVersion = CTransaction::UNIFORM_VERSION;
-    txNew.vin = { CTxIn(outpoint, CScript(), coin_control.m_signal_bip125_rbf.get_value_or(wallet->m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1)) };
+    txNew.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1) };
     txNew.vout = { CTxOut(coin.out.nValue, coin.out.scriptPubKey) };
     int64_t nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), wallet, coin_control.fAllowWatchOnly);
     if (nBytes < 0) {
