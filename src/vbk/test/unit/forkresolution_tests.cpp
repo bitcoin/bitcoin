@@ -186,6 +186,7 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_invalid_1_test, E2eFixture)
     CBlockIndex* pblock = ChainActive().Tip();
 
     auto* endorsedBlockIndex = ChainActive()[config.popconfig.alt->getEndorsementSettlementInterval() - 2];
+
     endorseAltBlockAndMine(endorsedBlockIndex->GetBlockHash(), 10);
     CreateAndProcessBlock({}, cbKey);
 

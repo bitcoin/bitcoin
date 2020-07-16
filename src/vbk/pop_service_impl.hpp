@@ -31,8 +31,11 @@ private:
     altintegration::PayloadsStorage* payloadsStore;
     altintegration::PopStorage* popStorage;
 
+    std::vector<altintegration::PopData> disconnected_popdata;
+
 public:
-    void clearPopDataStorage() override {
+    void clearPopDataStorage() override
+    {
         VBK_ASSERT(payloadsStore);
         VBK_ASSERT(popStorage);
         // TODO: clear pop data
@@ -72,6 +75,9 @@ public:
 
     altintegration::PopData getPopData() override;
     void removePayloadsFromMempool(const altintegration::PopData& popData) override;
+    void addDisconnectedPopdata(const altintegration::PopData& popData) override;
+    void updatePopMempoolForReorg() override;
+
 
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;
 };

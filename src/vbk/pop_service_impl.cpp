@@ -221,6 +221,19 @@ void PopServiceImpl::removePayloadsFromMempool(const altintegration::PopData& po
     mempool->removePayloads(popData);
 }
 
+void PopServiceImpl::addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    this->disconnected_popdata.push_back(popData);
+}
+
+void PopServiceImpl::updatePopMempoolForReorg() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    for (const auto& popData : disconnected_popdata) {
+        mempool->submitAll(popData, *altTree);
+    }
+    disconnected_popdata.clear();
+}
+
 bool checkPopDataSize(const altintegration::PopData& popData, altintegration::ValidationState& state)
 {
     uint32_t nPopDataSize = ::GetSerializeSize(popData, CLIENT_VERSION);

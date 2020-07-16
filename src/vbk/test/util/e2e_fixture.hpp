@@ -116,11 +116,11 @@ struct E2eFixture : public TestChain100Setup {
         auto& alt_tree = pop->getAltTree();
         altintegration::ValidationState state;
         for (const auto& atv : atvs) {
-            BOOST_CHECK(pop_mempool.submit(atv, alt_tree, state));
+            pop_mempool.submit(atv, alt_tree, state);
         }
 
         for (const auto& vtb : vtbs) {
-            BOOST_CHECK(pop_mempool.submit(vtb, alt_tree, state));
+            pop_mempool.submit(vtb, alt_tree, state);
         }
 
         bool isValid = false;

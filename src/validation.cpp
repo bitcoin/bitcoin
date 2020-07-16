@@ -281,10 +281,10 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
                 return error("%s: Missing input", __func__);
             }
             if (coin.nHeight == MEMPOOL_HEIGHT) {
-            // Assume all mempool transaction confirm in the next block
+                // Assume all mempool transaction confirm in the next block
                 prevheights[txinIndex] = tip->nHeight + 1;
             } else {
-            prevheights[txinIndex] = coin.nHeight;
+                prevheights[txinIndex] = coin.nHeight;
             }
         }
         lockPair = CalculateSequenceLocks(tx, flags, &prevheights, index);
@@ -362,6 +362,10 @@ static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool, bool fAddToMempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs)
 {
     AssertLockHeld(cs_main);
+
+    // VeriBlock
+    VeriBlock::getService<VeriBlock::PopService>().updatePopMempoolForReorg();
+
     std::vector<uint256> vHashUpdate;
     // disconnectpool's insertion_order index sorts the entries from
     // oldest to newest, but the oldest entry will be the last tx from the
@@ -410,8 +414,8 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
     LOCK(pool.cs);
 
     assert(!tx.IsCoinBase());
-   
-   for (const CTxIn& txin : tx.vin) {
+
+    for (const CTxIn& txin : tx.vin) {
         const Coin& coin = view.AccessCoin(txin.prevout);
 
         // At this point we haven't actually checked if the coins are all
@@ -430,7 +434,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
             assert(!coinFromDisk.IsSpent());
             assert(coinFromDisk.out == coin.out);
         }
-   }
+    }
     // Call CheckInputs() to cache signature and script validity against current tip consensus rules.
     return CheckInputs(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
 }
@@ -1894,9 +1898,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     //VeriBlock : added ContextualCheckBlock() here becuse merkleRoot calculation  moved from the CheckBlock() to the ContextualCheckBlock()
 
-    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck)
-        && !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev, true)
-    ) {
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck) && !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev, true)) {
         if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
@@ -2421,8 +2423,7 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
         log(pindexNew->nChainWork.getdouble()) / log(2.0), (unsigned long)pindexNew->nChainTx,
         FormatISO8601DateTime(pindexNew->GetBlockTime()),
         GuessVerificationProgress(chainParams.TxData(), pindexNew), ::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1 << 20)), ::ChainstateActive().CoinsTip().GetCacheSize(),
-        !warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : ""
-        );
+        !warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : "");
 }
 
 /** Disconnect m_chain's tip.
@@ -2471,6 +2472,9 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
             disconnectpool->removeEntry(it);
         }
     }
+
+    // VeriBlock
+    VeriBlock::getService<VeriBlock::PopService>().addDisconnectedPopdata(block.popData);
 
     m_chain.SetTip(pindexDelete->pprev);
 
@@ -2638,7 +2642,7 @@ CBlockIndex* CChainState::FindBestChain()
     CBlockIndex* bestCandidate = m_chain.Tip();
 
     // return early
-    if(setBlockIndexCandidates.empty()) {
+    if (setBlockIndexCandidates.empty()) {
         return nullptr;
     }
 
@@ -3117,7 +3121,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
             if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->HaveTxsDownloaded()
                 // VeriBlock: setBlockIndexCandidates now stores all tips
                 /*&& !setBlockIndexCandidates.value_comp()(it->second, m_chain.Tip())*/
-                ) {
+            ) {
                 setBlockIndexCandidates.insert(it->second);
             }
             it++;
@@ -3158,7 +3162,7 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex* pindex)
             if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->HaveTxsDownloaded()
                 // VeriBlock: setBlockIndexCandidates now stores all tips
                 /*&& setBlockIndexCandidates.value_comp()(m_chain.Tip(), it->second)*/
-                ) {
+            ) {
                 setBlockIndexCandidates.insert(it->second);
             }
             if (it->second == pindexBestInvalid) {
@@ -3625,12 +3629,12 @@ bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, cons
 
     {
         LOCK(cs_main);
-        auto &pop = VeriBlock::getService<VeriBlock::PopService>();
+        auto& pop = VeriBlock::getService<VeriBlock::PopService>();
         if (!pop.addAllBlockPayloads(pindexPrev, block, state)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
-                                 strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
-                                           (pindexPrev->nHeight + 1), block.GetHash().ToString(),
-                                           FormatStateMessage(state)));
+                strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
+                    (pindexPrev->nHeight + 1), block.GetHash().ToString(),
+                    FormatStateMessage(state)));
         }
     }
 

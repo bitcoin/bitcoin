@@ -34,7 +34,7 @@ class PopPayouts(BitcoinTestFramework):
         self.sync_all(self.nodes)
 
     def _test_case_vbk(self, payloads_amount):
-        self.log.warning("running _test_case_vbk()")
+        self.log.info("running _test_case_vbk()")
 
         vbk_blocks = mine_vbk_blocks(self.nodes[0], self.apm, payloads_amount)
 
@@ -44,10 +44,10 @@ class PopPayouts(BitcoinTestFramework):
 
         assert len(containingblock['pop']['data']['vbkblocks']) == payloads_amount == len(vbk_blocks)
 
-        self.log.warning("success! _test_case_vbk()")
+        self.log.info("success! _test_case_vbk()")
 
     def _test_case_atv(self, payloads_amount):
-        self.log.warning("running _test_case_vbk()")
+        self.log.info("running _test_case_vbk()")
 
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
@@ -61,7 +61,7 @@ class PopPayouts(BitcoinTestFramework):
 
         assert len(containingblock['pop']['data']['atvs']) == payloads_amount
 
-        self.log.warning("success! _test_case_atv()")
+        self.log.info("success! _test_case_atv()")
 
     def run_test(self):
         """Main test logic"""

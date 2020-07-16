@@ -55,6 +55,8 @@ struct PopService {
 
     virtual altintegration::PopData getPopData() = 0;
     virtual void removePayloadsFromMempool(const altintegration::PopData& popData) = 0;
+    virtual void addDisconnectedPopdata(const altintegration::PopData& popData) = 0;
+    virtual void updatePopMempoolForReorg() = 0;
 
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
 

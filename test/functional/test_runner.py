@@ -120,7 +120,7 @@ BASE_SCRIPTS = [
     'feature_pop_mempool_sync.py',
     'feature_pop_p2p.py',
     'feature_pop_p2p_ddos.py',
-    #'feature_pop_init.py',
+    'feature_pop_mempool_reorg.py',
     'feature_pop_mempool_getpop.py',
     'feature_pop_popdata_max_size.py',
     ## end VeriBlock tests

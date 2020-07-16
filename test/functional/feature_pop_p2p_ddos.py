@@ -104,7 +104,7 @@ class PopP2P(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.nodes[0].generate(nblocks=100)
+        self.nodes[0].generate(nblocks=10)
         self.sync_all(self.nodes)
 
         from pypopminer import MockMiner
