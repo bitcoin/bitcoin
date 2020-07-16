@@ -515,7 +515,7 @@ static void PushNodeVersion(CNode& pnode, CConnman& connman, int64_t nTime)
         nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
 
-    connman->PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
+    connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
             nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode.m_tx_relay != nullptr, mnauthChallenge, pnode.fMasternode));
 
     if (fLogIPs) {
@@ -1831,7 +1831,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 case(MSG_SPORK): {
                     CSporkMessage spork;
                     if(sporkManager.GetSporkByHash(inv.hash, spork)) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
                         push = true;
                     }
                     break;
@@ -1850,7 +1850,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     }
                     LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
                     if(topush) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
                         push = true;
                     }
                     break;
@@ -1868,7 +1868,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     }
                     if(topush) {
                         LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                         push = true;
                     }
                     break;
@@ -1876,7 +1876,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 case(MSG_QUORUM_FINAL_COMMITMENT): {
                     llmq::CFinalCommitment o;
                     if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
                         push = true;
                     }
                     break;
@@ -1885,7 +1885,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 case(MSG_QUORUM_CONTRIB): {
                     llmq::CDKGContribution o;
                     if (llmq::quorumDKGSessionManager->GetContribution(inv.hash, o)) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
                         push = true;
                     }
                     break;
@@ -1893,7 +1893,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 case(MSG_QUORUM_COMPLAINT): {
                     llmq::CDKGComplaint o;
                     if (llmq::quorumDKGSessionManager->GetComplaint(inv.hash, o)) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
                         push = true;
                     }
                     break;
@@ -1901,7 +1901,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 case(MSG_QUORUM_JUSTIFICATION): {
                     llmq::CDKGJustification o;
                     if (llmq::quorumDKGSessionManager->GetJustification(inv.hash, o)) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
                         push = true;
                     }
                     break;
@@ -1909,7 +1909,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 case(MSG_QUORUM_PREMATURE_COMMITMENT): {
                     llmq::CDKGPrematureCommitment o;
                     if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
                         push = true;
                     }
                     break;
@@ -1917,7 +1917,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 case(MSG_QUORUM_RECOVERED_SIG): {
                     llmq::CRecoveredSig o;
                     if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
-                        connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
                         push = true;
                     }
                     break;
@@ -2687,7 +2687,7 @@ void ProcessMessage(
         }
         // SYSCOIN
         if (!pfrom.fMasternodeProbe) {
-            CMNAuth::PushMNAUTH(&pfrom, *connman);
+            CMNAuth::PushMNAUTH(&pfrom, connman);
         }
 
         if (pfrom.nVersion >= SENDHEADERS_VERSION) {
@@ -2716,11 +2716,11 @@ void ProcessMessage(
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // SPV nodes should not send this message
             // as they are usually only interested in the higher level messages
-            connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
+            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
         }
 
         if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.fMasternode) {
-            connman->PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
+            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
         pfrom.fSuccessfullyConnected = true;
         return;
@@ -3934,14 +3934,14 @@ void ProcessMessage(
    if (found)
     {
         //probably one the extensions
-        sporkManager.ProcessSpork(&pfrom, msg_type, vRecv, *connman);
+        sporkManager.ProcessSpork(&pfrom, msg_type, vRecv, connman);
         masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);
-        governance.ProcessMessage(&pfrom, msg_type, vRecv, *connman);
-        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, *connman);
-        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
-        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
-        llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
-        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, *connman);
+        governance.ProcessMessage(&pfrom, msg_type, vRecv, connman);
+        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, connman);
+        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, connman);
+        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, connman);
+        llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv, connman);
+        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, connman);
         return;
     }
         
