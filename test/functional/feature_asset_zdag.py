@@ -59,6 +59,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
+        self.sync_mempools()
         # use tx2 to build tx3
         tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
         # use tx2 to build tx4
