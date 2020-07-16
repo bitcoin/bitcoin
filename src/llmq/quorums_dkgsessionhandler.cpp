@@ -85,9 +85,8 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
     params(_params),
-    messageHandlerPool(_messageHandlerPool),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
     curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
@@ -96,18 +95,13 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctp
     pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
     pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
 {
-    phaseHandlerThread = std::thread([this] {
-        RenameThread(strprintf("dash-q-phase-%d", (uint8_t)params.type).c_str());
-        PhaseHandlerThread();
-    });
+    if (params.type == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
+    }
 }
 
 CDKGSessionHandler::~CDKGSessionHandler()
 {
-    stopRequested = true;
-    if (phaseHandlerThread.joinable()) {
-        phaseHandlerThread.join();
-    }
 }
 
 void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
@@ -143,6 +137,24 @@ void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
         pendingJustifications.PushPendingMessage(pfrom->GetId(), vRecv);
     } else if (strCommand == NetMsgType::QPCOMMITMENT) {
         pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), vRecv);
+    }
+}
+
+void CDKGSessionHandler::StartThread()
+{
+    if (phaseHandlerThread.joinable()) {
+        throw std::runtime_error("Tried to start an already started CDKGSessionHandler thread.");
+    }
+
+    std::string threadName = strprintf("q-phase-%d", params.type);
+    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, threadName, std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
+}
+
+void CDKGSessionHandler::StopThread()
+{
+    stopRequested = true;
+    if (phaseHandlerThread.joinable()) {
+        phaseHandlerThread.join();
     }
 }
 
