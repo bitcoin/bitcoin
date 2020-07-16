@@ -1657,7 +1657,7 @@ int CWallet::GetCappedOutpointPrivateSendRounds(const COutPoint& outpoint) const
 {
     LOCK(cs_wallet);
     int realPrivateSendRounds = GetRealOutpointPrivateSendRounds(outpoint);
-    return realPrivateSendRounds > privateSendClient.nPrivateSendRounds ? privateSendClient.nPrivateSendRounds : realPrivateSendRounds;
+    return realPrivateSendRounds > privateSendClientOptions.nPrivateSendRounds ? privateSendClientOptions.nPrivateSendRounds : realPrivateSendRounds;
 }
 
 bool CWallet::IsDenominated(const COutPoint& outpoint) const
@@ -2359,7 +2359,7 @@ CAmount CWalletTx::GetAnonymizedCredit(bool fUseCache) const
         if (pwallet->IsSpent(hashTx, i) || !CPrivateSend::IsDenominatedAmount(txout.nValue)) continue;
 
         const int nRounds = pwallet->GetCappedOutpointPrivateSendRounds(outpoint);
-        if (nRounds >= privateSendClient.nPrivateSendRounds){
+        if (nRounds >= privateSendClientOptions.nPrivateSendRounds){
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error(std::string(__func__) + ": value out of range");
@@ -2568,7 +2568,7 @@ CAmount CWallet::GetBalance() const
 
 CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) const
 {
-    if(!privateSendClient.fEnablePrivateSend) return 0;
+    if(!privateSendClientOptions.fEnablePrivateSend) return 0;
 
     std::vector<CompactTallyItem> vecTally;
     if(!SelectCoinsGroupedByAddresses(vecTally, fSkipDenominated, true, fSkipUnconfirmed)) return 0;
@@ -2590,7 +2590,7 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
 
 CAmount CWallet::GetAnonymizedBalance() const
 {
-    if(!privateSendClient.fEnablePrivateSend) return 0;
+    if(!privateSendClientOptions.fEnablePrivateSend) return 0;
 
     CAmount nTotal = 0;
 
@@ -2607,7 +2607,7 @@ CAmount CWallet::GetAnonymizedBalance() const
 // that's ok as long as we use it for informational purposes only
 float CWallet::GetAverageAnonymizedRounds() const
 {
-    if(!privateSendClient.fEnablePrivateSend) return 0;
+    if(!privateSendClientOptions.fEnablePrivateSend) return 0;
 
     int nTotal = 0;
     int nCount = 0;
@@ -2629,7 +2629,7 @@ float CWallet::GetAverageAnonymizedRounds() const
 // that's ok as long as we use it for informational purposes only
 CAmount CWallet::GetNormalizedAnonymizedBalance() const
 {
-    if(!privateSendClient.fEnablePrivateSend) return 0;
+    if(!privateSendClientOptions.fEnablePrivateSend) return 0;
 
     CAmount nTotal = 0;
 
@@ -2643,7 +2643,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
         if (it->second.GetDepthInMainChain() < 0) continue;
 
         int nRounds = GetCappedOutpointPrivateSendRounds(outpoint);
-        nTotal += nValue * nRounds / privateSendClient.nPrivateSendRounds;
+        nTotal += nValue * nRounds / privateSendClientOptions.nPrivateSendRounds;
     }
 
     return nTotal;
@@ -2651,7 +2651,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
 CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
 {
-    if(!privateSendClient.fEnablePrivateSend) return 0;
+    if(!privateSendClientOptions.fEnablePrivateSend) return 0;
 
     CAmount nTotal = 0;
 
@@ -2826,11 +2826,11 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
                 if (!CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
                 int nRounds = GetCappedOutpointPrivateSendRounds(COutPoint(wtxid, i));
-                found = nRounds >= privateSendClient.nPrivateSendRounds;
+                found = nRounds >= privateSendClientOptions.nPrivateSendRounds;
             } else if(nCoinType == CoinType::ONLY_READY_TO_MIX) {
                 if (!CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
                 int nRounds = GetCappedOutpointPrivateSendRounds(COutPoint(wtxid, i));
-                found = nRounds < privateSendClient.nPrivateSendRounds;
+                found = nRounds < privateSendClientOptions.nPrivateSendRounds;
             } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
                 if (CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
                 found = !CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
@@ -3212,7 +3212,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 // Make sure to include mixed preset inputs only,
                 // even if some non-mixed inputs were manually selected via CoinControl
                 int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
-                if (nRounds < privateSendClient.nPrivateSendRounds) continue;
+                if (nRounds < privateSendClientOptions.nPrivateSendRounds) continue;
             }
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
             setPresetCoins.insert(CInputCoin(pcoin, outpoint.n));
@@ -3415,7 +3415,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
                 // otherwise they will just lead to higher fee / lower priority
                 if(wtx.tx->vout[i].nValue <= nSmallestDenom/10) continue;
                 // ignore mixed
-                if(GetCappedOutpointPrivateSendRounds(COutPoint(outpoint.hash, i)) >= privateSendClient.nPrivateSendRounds) continue;
+                if(GetCappedOutpointPrivateSendRounds(COutPoint(outpoint.hash, i)) >= privateSendClientOptions.nPrivateSendRounds) continue;
             }
 
             if (itTallyItem == mapTally.end()) {
@@ -4342,7 +4342,7 @@ bool CWallet::NewKeyPool()
             batch.ErasePool(nIndex);
         }
         setExternalKeyPool.clear();
-        privateSendClient.StopMixing();
+        privateSendClientManager.StopMixing();
         nKeysLeftSinceAutoBackup = 0;
 
         m_pool_key_to_index.clear();

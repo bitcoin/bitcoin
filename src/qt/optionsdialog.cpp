@@ -288,7 +288,7 @@ void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
 #ifdef ENABLE_WALLET
-    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
+    privateSendClientManager.nCachedNumBlocks = std::numeric_limits<int>::max();
     if(HasWallets())
         GetWallets()[0]->MarkDirty();
 #endif // ENABLE_WALLET

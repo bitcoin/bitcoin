@@ -32,7 +32,7 @@ UniValue privatesend(const JSONRPCRequest& request)
     if (fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
 
-    if (!privateSendClient.fEnablePrivateSend) {
+    if (!privateSendClientOptions.fEnablePrivateSend) {
         if (!gArgs.GetBoolArg("-enableprivatesend", true)) {
             // otherwise it's on by default, unless cmd line option says otherwise
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing is disabled via -enableprivatesend=0 command line option, remove it to enable mixing again");
@@ -50,21 +50,21 @@ UniValue privatesend(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
-        if (!privateSendClient.StartMixing(pwallet)) {
+        if (!privateSendClientManager.StartMixing(pwallet)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        bool result = privateSendClient.DoAutomaticDenominating(*g_connman);
-        return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatuses() + ", will retry"));
+        bool result = privateSendClientManager.DoAutomaticDenominating(*g_connman);
+        return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClientManager.GetStatuses() + ", will retry"));
     }
 
     if (request.params[0].get_str() == "stop") {
-        privateSendClient.StopMixing();
+        privateSendClientManager.StopMixing();
         return "Mixing was stopped";
     }
 
     if (request.params[0].get_str() == "reset") {
-        privateSendClient.ResetPool();
+        privateSendClientManager.ResetPool();
         return "Mixing was reset";
     }
 
@@ -89,13 +89,13 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
                 "\nResult (for regular nodes):\n"
                 "{\n"
                 "  \"enabled\": true|false,             (bool) Whether mixing functionality is enabled\n"
-                "  \"running\": true|false,             (bool) Whether mixing is currently running\n"
                 "  \"multisession\": true|false,        (bool) Whether PrivateSend Multisession option is enabled\n"
                 "  \"max_sessions\": xxx,               (numeric) How many parallel mixing sessions can there be at once\n"
                 "  \"max_rounds\": xxx,                 (numeric) How many rounds to mix\n"
                 "  \"max_amount\": xxx,                 (numeric) Target PrivateSend balance in " + CURRENCY_UNIT + "\n"
                 "  \"max_denoms\": xxx,                 (numeric) How many inputs of each denominated amount to create\n"
                 "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
+                "  \"running\": true|false,             (bool) Whether mixing is currently running\n"
                 "  \"sessions\":                        (array of json objects)\n"
                 "    [\n"
                 "      {\n"
@@ -133,12 +133,21 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
 
 
 #ifdef ENABLE_WALLET
-    privateSendClient.GetJsonInfo(obj);
+
+    obj.pushKV("enabled",           privateSendClientOptions.fEnablePrivateSend);
+    obj.pushKV("multisession",      privateSendClientOptions.fPrivateSendMultiSession);
+    obj.pushKV("max_sessions",      privateSendClientOptions.nPrivateSendSessions);
+    obj.pushKV("max_rounds",        privateSendClientOptions.nPrivateSendRounds);
+    obj.pushKV("max_amount",        privateSendClientOptions.nPrivateSendAmount);
+    obj.pushKV("denoms_goal",       privateSendClientOptions.nPrivateSendDenomsGoal);
+    obj.pushKV("denoms_hardcap",    privateSendClientOptions.nPrivateSendDenomsHardCap);
 
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) {
         return obj;
     }
+
+     privateSendClientManager.GetJsonInfo(obj);
 
     obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
     obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING

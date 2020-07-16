@@ -12,6 +12,7 @@
 #include <evo/deterministicmns.h>
 
 class CPrivateSendClientManager;
+class CPrivateSendClientOptions;
 class CConnman;
 class CNode;
 class UniValue;
@@ -52,7 +53,10 @@ static const int PRIVATESEND_KEYS_THRESHOLD_WARNING = 100;
 static const int PRIVATESEND_KEYS_THRESHOLD_STOP = 50;
 
 // The main object for accessing mixing
-extern CPrivateSendClientManager privateSendClient;
+extern CPrivateSendClientManager privateSendClientManager;
+
+// The object to store application wide mixing options
+extern CPrivateSendClientOptions privateSendClientOptions;
 
 class CPendingDsaRequest
 {
@@ -205,14 +209,6 @@ private:
     bool CheckAutomaticBackup();
 
 public:
-    int nPrivateSendSessions;
-    int nPrivateSendRounds;
-    int nPrivateSendAmount;
-    int nPrivateSendDenomsGoal;
-    int nPrivateSendDenomsHardCap;
-    bool fEnablePrivateSend;
-    bool fPrivateSendMultiSession;
-
     int nCachedNumBlocks;    //used for the overview screen
     bool fCreateAutoBackups; //builtin support for automatic backups
 
@@ -223,12 +219,6 @@ public:
         nMinBlocksToWait(1),
         strAutoDenomResult(),
         nCachedBlockHeight(0),
-        nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
-        nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
-        nPrivateSendDenomsGoal(DEFAULT_PRIVATESEND_DENOMS_GOAL),
-        nPrivateSendDenomsHardCap(DEFAULT_PRIVATESEND_DENOMS_HARDCAP),
-        fEnablePrivateSend(false),
-        fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION),
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true),
         mixingWallet(nullptr)
@@ -236,8 +226,6 @@ public:
     }
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
-
-
 
     bool StartMixing(CWallet* pwallet);
     void StopMixing();
@@ -268,6 +256,29 @@ public:
     void DoMaintenance(CConnman& connman);
 
     void GetJsonInfo(UniValue& obj) const;
+};
+
+/* Application wide mixing options */
+class CPrivateSendClientOptions
+{
+public:
+    int nPrivateSendSessions;
+    int nPrivateSendRounds;
+    int nPrivateSendAmount;
+    int nPrivateSendDenomsGoal;
+    int nPrivateSendDenomsHardCap;
+    bool fEnablePrivateSend;
+    bool fPrivateSendMultiSession;
+
+    CPrivateSendClientOptions() :
+        nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
+        nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
+        nPrivateSendDenomsGoal(DEFAULT_PRIVATESEND_DENOMS_GOAL),
+        nPrivateSendDenomsHardCap(DEFAULT_PRIVATESEND_DENOMS_HARDCAP),
+        fEnablePrivateSend(false),
+        fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION)
+    {
+    }
 };
 
 #endif // BITCOIN_PRIVATESEND_PRIVATESEND_CLIENT_H

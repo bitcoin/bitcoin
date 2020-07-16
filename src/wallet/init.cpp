@@ -364,18 +364,18 @@ void WalletInit::Start(CScheduler& scheduler)
     // Run a thread to flush wallet periodically
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 
-    if (!fMasternodeMode && privateSendClient.fEnablePrivateSend) {
-        scheduler.scheduleEvery(std::bind(&CPrivateSendClientManager::DoMaintenance, std::ref(privateSendClient),
+    if (!fMasternodeMode && privateSendClientOptions.fEnablePrivateSend) {
+        scheduler.scheduleEvery(std::bind(&CPrivateSendClientManager::DoMaintenance, std::ref(privateSendClientManager),
                                             std::ref(*g_connman)), 1 * 1000);
     }
 }
 
 void WalletInit::Flush()
 {
-    if (privateSendClient.fEnablePrivateSend) {
+    if (privateSendClientOptions.fEnablePrivateSend) {
         // Stop PrivateSend, release keys
-        privateSendClient.ResetPool();
-        privateSendClient.StopMixing();
+        privateSendClientManager.ResetPool();
+        privateSendClientManager.StopMixing();
     }
     for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(false);
@@ -408,30 +408,30 @@ void WalletInit::AutoLockMasternodeCollaterals()
 void WalletInit::InitPrivateSendSettings()
 {
     if (!HasWallets()) {
-        privateSendClient.fEnablePrivateSend = false;
-        privateSendClient.StopMixing();
+        privateSendClientOptions.fEnablePrivateSend = false;
+        privateSendClientManager.StopMixing();
     } else {
-        privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", true);
+        privateSendClientOptions.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", true);
         if (GetWallets()[0]->IsLocked()) {
-            privateSendClient.StopMixing();
+            privateSendClientManager.StopMixing();
         } else if (gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART)) {
-            privateSendClient.StartMixing(GetWallets()[0]);
+            privateSendClientManager.StartMixing(GetWallets()[0]);
         }
     }
-    privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
-    privateSendClient.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
-    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), MAX_PRIVATESEND_ROUNDS);
-    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
-    privateSendClient.nPrivateSendDenomsGoal = std::min(std::max((int)gArgs.GetArg("-privatesenddenomsgoal", DEFAULT_PRIVATESEND_DENOMS_GOAL), MIN_PRIVATESEND_DENOMS_GOAL), MAX_PRIVATESEND_DENOMS_GOAL);
-    privateSendClient.nPrivateSendDenomsHardCap = std::min(std::max((int)gArgs.GetArg("-privatesenddenomshardcap", DEFAULT_PRIVATESEND_DENOMS_HARDCAP), MIN_PRIVATESEND_DENOMS_HARDCAP), MAX_PRIVATESEND_DENOMS_HARDCAP);
+    privateSendClientOptions.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
+    privateSendClientOptions.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
+    privateSendClientOptions.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), MAX_PRIVATESEND_ROUNDS);
+    privateSendClientOptions.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
+    privateSendClientOptions.nPrivateSendDenomsGoal = std::min(std::max((int)gArgs.GetArg("-privatesenddenomsgoal", DEFAULT_PRIVATESEND_DENOMS_GOAL), MIN_PRIVATESEND_DENOMS_GOAL), MAX_PRIVATESEND_DENOMS_GOAL);
+    privateSendClientOptions.nPrivateSendDenomsHardCap = std::min(std::max((int)gArgs.GetArg("-privatesenddenomshardcap", DEFAULT_PRIVATESEND_DENOMS_HARDCAP), MIN_PRIVATESEND_DENOMS_HARDCAP), MAX_PRIVATESEND_DENOMS_HARDCAP);
 
-    if (privateSendClient.fEnablePrivateSend) {
+    if (privateSendClientOptions.fEnablePrivateSend) {
         LogPrintf("PrivateSend: autostart=%d, multisession=%d," /* Continued */
                   "sessions=%d, rounds=%d, amount=%d, denoms_goal=%d, denoms_hardcap=%d\n",
-                  privateSendClient.IsMixing(), privateSendClient.fPrivateSendMultiSession,
-                  privateSendClient.nPrivateSendSessions, privateSendClient.nPrivateSendRounds,
-                  privateSendClient.nPrivateSendAmount,
-                  privateSendClient.nPrivateSendDenomsGoal, privateSendClient.nPrivateSendDenomsHardCap);
+                  privateSendClientManager.IsMixing(), privateSendClientOptions.fPrivateSendMultiSession,
+                  privateSendClientOptions.nPrivateSendSessions, privateSendClientOptions.nPrivateSendRounds,
+                  privateSendClientOptions.nPrivateSendAmount,
+                  privateSendClientOptions.nPrivateSendDenomsGoal, privateSendClientOptions.nPrivateSendDenomsHardCap);
     }
 
 }
