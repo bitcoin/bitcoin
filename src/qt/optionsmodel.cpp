@@ -159,10 +159,10 @@ void OptionsModel::Init(bool resetSettings)
 #ifdef ENABLE_OMNICORE
     if (!settings.contains("fEnableOmniCore"))
         settings.setValue("fEnableOmniCore", DEFAULT_OMNICORE);
-    if (!m_node.softSetBoolArg("-omni", settings.value("fEnableOmniCore").toBool())) {
+    if (!m_node.softSetBoolArg("-omni", settings.value("fEnableOmniCore").toBool()))
         addOverriddenOption("-omni");
-        addOverriddenOption("-txindex");
-    }
+    if (gArgs.GetBoolArg("-omni", DEFAULT_OMNICORE))
+        m_node.softSetBoolArg("-txindex", true);
 #endif
 }
 
