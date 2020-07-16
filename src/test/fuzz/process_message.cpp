@@ -38,7 +38,7 @@ void ProcessMessage(
     const CChainParams& chainparams,
     ChainstateManager& chainman,
     CTxMemPool& mempool,
-    CConnman* connman,
+    CConnman& connman,
     BanMan* banman,
     const std::atomic<bool>& interruptMsgProc);
 
@@ -89,7 +89,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     try {
         ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream, GetTime<std::chrono::microseconds>(),
             Params(), *g_setup->m_node.chainman, *g_setup->m_node.mempool,
-            g_setup->m_node.connman.get(), g_setup->m_node.banman.get(),
+            *g_setup->m_node.connman, g_setup->m_node.banman.get(),
             std::atomic<bool>{false});
     } catch (const std::ios_base::failure&) {
     }
