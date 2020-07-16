@@ -145,17 +145,17 @@ prev_bytes_sent = ''
 
 # Calls getNetworkData to compute the difference in bytes send and received
 def getBandwidth():
-	global bandwidth_download, bandwidth_upload, prev_bytes_received, prev_bytes_sent
+	global numSecondsPerSample, bandwidth_download, bandwidth_upload, prev_bytes_received, prev_bytes_sent
 	network_data = getNetworkData()
 
 	if network_data['interface'] != '':
 		if prev_bytes_received == '': prev_bytes_received = network_data['bytes_received']
-		r = network_data['bytes_received'] - prev_bytes_received
+		r = (network_data['bytes_received'] - prev_bytes_received) / numSecondsPerSample
 		bandwidth_download = r
 		prev_bytes_received = network_data['bytes_received']
 	
 		if prev_bytes_sent == '': prev_bytes_sent = network_data['bytes_sent']
-		d = network_data['bytes_sent'] - prev_bytes_sent
+		d = (network_data['bytes_sent'] - prev_bytes_sent) / numSecondsPerSample
 		bandwidth_upload = d
 		prev_bytes_sent = network_data['bytes_sent']
 	return {
@@ -795,7 +795,8 @@ def fetch(now):
 		try:
 			if peer['relaytxes'] != 'false':
 				numTXRelayers += 1
-		except: pass
+		except: passseconds
+seconds
 		try:
 			if peer['addnode'] != 'false':
 				numAddnode += 1
