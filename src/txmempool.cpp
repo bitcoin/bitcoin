@@ -645,13 +645,8 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
 {
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
-        auto it = mapNextTx.find(txin.prevout);
-        if (it != mapNextTx.end()) {
-            const CTransaction &txConflict = *it->second;
-            if (txConflict != tx) {
-                return true;
-            }
-        }
+        if(assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end())
+            return true;
     }
     return false;
 }
@@ -661,6 +656,8 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
+        // SYSCOIN
+        assetAllocationConflicts.erase(txin.prevout);
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second;
@@ -668,11 +665,6 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
-                // SYSCOIN
-                // we should only have to erase from assetAllocationConflicts if there has been a conflict
-                // in the case of RBF this will be called and do a no-op (erase on non-existent key) because it will only add to assetAllocationConflicts
-                // if RBF opt-out was used and yet it was still double spent input (also was a syscoin asset tx)
-                assetAllocationConflicts.erase(txin.prevout);
             }
         }
     }
