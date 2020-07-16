@@ -964,7 +964,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     const int64_t spendheight = GetSpendHeight(mempoolDuplicate);
     // SYSCOIN
     bool IsZTxConflict = false;
-    bool IsZTx = IsZdagTx(tx.nVersion);
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
@@ -992,17 +991,13 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             auto it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
             // SYSCOIN
-            if(IsZTx) {
+            auto itzdagconflict = mapAssetAllocationConflicts.find(txin.prevout);
+             // does dbl-spend conflict exist
+            if(itzdagconflict != mapAssetAllocationConflicts.end()) {
                 assert(*it3->first == txin.prevout);
-                auto itzdagconflict = mapAssetAllocationConflicts.find(txin.prevout);
-                // does dbl-spend conflict exist
-                if(itzdagconflict != mapAssetAllocationConflicts.end()) {
-                    IsZTxConflict = true;
-                    // the tx must be one of the dbl-spend conflicts
-                    assert((itzdagconflict->second.first && itzdagconflict->second.first->tx == tx) || (itzdagconflict->second.second && itzdagconflict->second.second->tx == tx));    
-                } else{
-                    assert(*it3->second == tx);
-                }
+                IsZTxConflict = true;
+                // the tx must be one of the dbl-spend conflicts
+                assert((itzdagconflict->second.first && itzdagconflict->second.first->tx == tx) || (itzdagconflict->second.second && itzdagconflict->second.second->tx == tx));
             } else {
                 assert(it3->first == &txin.prevout);
                 assert(*it3->second == tx);          
