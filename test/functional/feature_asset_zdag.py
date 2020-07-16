@@ -59,18 +59,18 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
-        # dbl spend again
+        # use tx2 to build tx3
         tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
-        # dbl spend again
+        # use tx2 to build tx4
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         self.sync_mempools()
         assert_equal(self.nodes[0].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
         # ensure the tx2 made it to mempool, should propogate dbl-spend first time
         assert_equal(self.nodes[0].assetallocationverifyzdag(tx2)['status'], ZDAG_MAJOR_CONFLICT)
-        # won't get tx3 because its using parent input of tx2 (cannot spend conflicting tx outputs)
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
-        # won't get tx4 because it won't have tx3 (it may orphan the tx)
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
+        # will conflict because its using tx2 which is in conflict state
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
+        # will conflict because its using tx3 which uses tx2 which is in conflict state
+        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
         self.nodes[0].generate(1)
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
