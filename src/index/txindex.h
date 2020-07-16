@@ -48,7 +48,6 @@ public:
     bool FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
 
     // For Omni::GetTransactionByteOffset()
-    // TODO master try let Omni independency txindex
     int ReadTxPos(const uint256& txid) const;
 };
 
