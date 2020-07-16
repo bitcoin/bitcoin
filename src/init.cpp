@@ -1028,6 +1028,13 @@ bool AppInitParameterInteraction()
         }
     }
 
+#ifdef ENABLE_OMNICORE
+    // omnicore dependency txindex
+    if (gArgs.GetBoolArg("-omni", DEFAULT_OMNICORE) && !gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+        return InitError(_("Omni require -txindex.").translated);
+    }
+#endif
+
     // -bind and -whitebind can't be set when not listening
     size_t nUserBind = gArgs.GetArgs("-bind").size() + gArgs.GetArgs("-whitebind").size();
     if (nUserBind != 0 && !gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
@@ -1829,6 +1836,10 @@ bool AppInitMain(InitInterfaces& interfaces)
 #ifdef ENABLE_OMNICORE
     // ********************************************************* Step 8.5: load omni core
     if (gArgs.GetBoolArg("-omni", DEFAULT_OMNICORE)) {
+        uiInterface.InitMessage(_("Omni Layer waiting txindex...").translated);
+        assert(g_txindex != nullptr);
+        g_txindex->BlockUntilSyncedToCurrentChain();
+
         uiInterface.InitMessage(_("Parsing Omni Layer transactions...").translated);
         omnicore_api::Init();
     }
