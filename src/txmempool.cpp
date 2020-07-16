@@ -24,7 +24,7 @@
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 extern EthereumMintTxMap mapMintKeysMempool;
-extern std::set<COutPoint> assetAllocationConflicts;
+extern std::unsorted_map<COutPoint, std::pair<CTransactionRef, CTransactionRef> > mapAssetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -641,7 +641,7 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
 {
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
-        if(assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end())
+        if(mapAssetAllocationConflicts.find(txin.prevout) != mapAssetAllocationConflicts.end())
             return true;
     }
     return false;
@@ -654,15 +654,8 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
-            // SYSCOIN
-            auto itZConflict = assetAllocationConflicts.find(txin.prevout);
-            bool bZdagConflict = false;
-            if(itZConflict != assetAllocationConflicts.end()) {
-                assetAllocationConflicts.erase(itZConflict);
-                bZdagConflict = true;
-            }
             const CTransaction &txConflict = *it->second;
-            if (txConflict != tx || bZdagConflict)
+            if (txConflict != tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
@@ -671,46 +664,86 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
         }
     }
 }
+
+// SYSCOIN
+void CTxMemPool::removeZDAGConflicts(const CTransaction &tx)
+{
+    // Remove conflicting zdag transactions which depend on inputs of tx, recursively
+    AssertLockHeld(cs);
+    for (const CTxIn &txin : tx.vin) {
+        auto it = mapAssetAllocationConflicts.find(txin.prevout);
+        // remove the two transactions linked to this prevout in event of a conflict
+        if (it != mapAssetAllocationConflicts.end()) {
+            if(it->second.first) {
+                ClearPrioritisation(it->second.first->tx.GetHash());
+                removeRecursive(it->second.first->tx, MemPoolRemovalReason::CONFLICT);
+            }
+            if(it->second.second) {
+                ClearPrioritisation(it->second.second->tx.GetHash());
+                removeRecursive(it->second.second->tx, MemPoolRemovalReason::CONFLICT);
+            }
+        } 
+    }
+}
+
 // true if other tx (conflicting) was first in mempool and it was involved in asset double spend
 bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
 {
     AssertLockHeld(cs);
-    txiter thisit = mapTx.find(tx.GetHash());
-    assert(thisit != mapTx.end());
     for (const CTxIn &txin : tx.vin) {
-        auto itConflict = mapNextTx.find(txin.prevout);
-        // ensure that we check for assetAllocationConflicts intersection of this input
+        auto it = mapAssetAllocationConflicts.find(txin.prevout);
+        // ensure that we check for mapAssetAllocationConflicts intersection of this input
         // the only time conflicts are allowed and would cause problems for zdag is when its double spent without RBF
         // we allow one double spend input to be propagated and here we ensure we are only dealing with skipping transactions based on time
         // if it is one of those transactions that propagated double spent input related to syscoin asset tx
-        if (itConflict != mapNextTx.end() && assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end()) {
-            const CTransaction &txConflict = *itConflict->second;
-            if (txConflict != tx) {
-                txiter conflictit = mapTx.find(txConflict.GetHash());
-                assert(conflictit != mapTx.end());
-                // if transaction in question was signalling RBF but conflicting transaction was not
-                // prefer the conflict version over this one as prescedence over time based ordering
-                // if both signal RBF, just choose the first one in mempool based on time below (they wouldn't have been used for point-of-sale anyway due to RBF)
-                const bool &thisRBF = SignalsOptInRBF(tx);
-                const bool &otherRBF = SignalsOptInRBF(txConflict);
-                if(thisRBF && !otherRBF) {
-                    return false;
-                // if this transaction is non-RBF but conflict signals it, prefer this one regardless of time order
-                } else if(!thisRBF && otherRBF) {
-                    return true;
-                }
-                // if conflicting transaction was received before the transaction in question
-                // idea is to mine the oldest transaction in event of conflict
-                // upon block, the conflict is removed
-                if(conflictit->GetTime() <= thisit->GetTime()){
-                    return false;
+        if (it != mapAssetAllocationConflicts.end()) {
+            txiter thisit, conflictit;
+            txiter firstit = mapTx.find(it->second.first->tx.GetHash());
+            if(firstit != mapTx.end()){
+                if(firstit->GetTx() == tx)
+                    thisit = firstit;
+            }
+            txiter secondit = mapTx.find(it->second.second->tx.GetHash());
+            CTransactionRef txConflict;
+            if(secondit != mapTx.end()){
+                if(secondit->GetTx() == tx) {
+                    thisit = secondit;
+                    conflictit = firstit;
+                } else {
+                    conflictit = secondit;
                 }
             }
-        }
+            // if first tx found not second, true if first one is tx, otherwise false
+            if (firstit != mapTx.end() && secondit == mapTx.end()) {
+                return firstit == thisit;
+            // if second tx found not first, true if second one is tx, otherwise false
+            } else if (secondit != mapTx.end() && firstit == mapTx.end()) {
+                return secondit == thisit;
+            // if first tx and second tx are not in mempool
+            } else if(firstit == mapTx.end() && secondit == mapTx.end())
+                return false;
+
+
+            // if transaction in question was signalling RBF but conflicting transaction was not
+            // prefer the conflict version over this one as prescedence over time based ordering
+            // if both signal RBF, just choose the first one in mempool based on time below (they wouldn't have been used for point-of-sale anyway due to RBF)
+            const bool &thisRBF = SignalsOptInRBF(thisit.GetTx());
+            const bool &otherRBF = SignalsOptInRBF(conflictit.GetTx());
+            if(thisRBF && !otherRBF) {
+                return false;
+            // if this transaction is non-RBF but conflict signals it, prefer this one regardless of time order
+            } else if(!thisRBF && otherRBF) {
+                return true;
+            }
+            // if conflicting transaction was received before the transaction in question
+            // idea is to mine the oldest transaction in event of conflict
+            // upon block, the conflict is removed
+            if(conflictit->GetTime() <= thisit->GetTime()){
+                return false;
+            }
     }
     return true;
 }
-// SYSCOIN
 
 void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId)
 {
@@ -877,6 +910,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         }
         removeConflicts(*tx);
         // SYSCOIN
+        removeZDAGConflicts(*tx);
         removeProTxConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
     }
@@ -928,17 +962,15 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
     const int64_t spendheight = GetSpendHeight(mempoolDuplicate);
-    bool IsZTx = false;
+    // SYSCOIN
+    bool IsZTxConflict = false;
+    bool IsZTx = IsZdagTx(tx.nVersion);
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         checkTotal += it->GetTxSize();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
-        // SYSCOIN, once zdag tx is checked we trigger isztx so it won't check and update coins in mempoolDuplicate because
-        // zdag tx can cause duplicate inputs if double spend happens and CheckInputsAndUpdateCoins won't pass
-        if(!IsZTx)
-            IsZTx = IsZdagTx(tx.nVersion);
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
         assert(linksiter != mapLinks.end());
         const TxLinks &links = linksiter->second;
@@ -962,6 +994,15 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             // SYSCOIN
             if(IsZTx) {
                 assert(*it3->first == txin.prevout);
+                auto itzdagconflict = mapAssetAllocationConflicts.find(txin.prevout);
+                // does dbl-spend conflict exist
+                if(itzdagconflict != mapAssetAllocationConflicts.end()) {
+                    IsZTxConflict = true;
+                    // the tx must be one of the dbl-spend conflicts
+                    assert((itzdagconflict->second.first && itzdagconflict->second.first->tx == tx) || (itzdagconflict->second.second && itzdagconflict->second.second->tx == tx));    
+                } else{
+                    assert(*it3->second == tx);
+                }
             } else {
                 assert(it3->first == &txin.prevout);
                 assert(*it3->second == tx);          
@@ -1009,7 +1050,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         if (fDependsWait)
             waitingOnDependants.push_back(&(*it));
         // SYSCOIN
-        else if(!IsZTx) {
+        else if(!IsZTxConflict) {
             CheckInputsAndUpdateCoins(tx, mempoolDuplicate, spendheight);
         }
     }
@@ -1022,7 +1063,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
         // SYSCOIN
-        } else if(!IsZTx) {
+        } else if(!IsZTxConflict) {
             CheckInputsAndUpdateCoins(entry->GetTx(), mempoolDuplicate, spendheight);
             stepsSinceLastRemove = 0;
         }
