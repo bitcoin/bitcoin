@@ -1836,9 +1836,12 @@ bool AppInitMain(InitInterfaces& interfaces)
 #ifdef ENABLE_OMNICORE
     // ********************************************************* Step 8.5: load omni core
     if (gArgs.GetBoolArg("-omni", DEFAULT_OMNICORE)) {
-        uiInterface.InitMessage(_("Omni Layer waiting txindex...").translated);
         assert(g_txindex != nullptr);
-        g_txindex->BlockUntilSyncedToCurrentChain();
+        std::string tail = "......";
+        for (int i = 0; !g_txindex->BlockUntilSyncedToCurrentChain(); i = (i + 1) % (int)tail.size()) {
+            uiInterface.InitMessage(_("Omni Layer waiting txindex").translated + tail.substr(0, i+1));
+            Sleep(2000);
+        }
 
         uiInterface.InitMessage(_("Parsing Omni Layer transactions...").translated);
         omnicore_api::Init();
