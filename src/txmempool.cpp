@@ -381,13 +381,9 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
     const CTransaction& tx = newit->GetTx();
     std::set<uint256> setParentTransactions;
-    // SYSCOIN
-    const bool& IsZTx = IsZdagTx(tx.nVersion);
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        if(!IsZTx || mapNextTx.find(tx.vin[i].prevout) == mapNextTx.end()) {
-            mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
-            setParentTransactions.insert(tx.vin[i].prevout.hash);
-        }
+        mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
+        setParentTransactions.insert(tx.vin[i].prevout.hash);
     }
     // Don't bother worrying about child transactions of this one.
     // Normal case of a new transaction arriving is that there can't be any
