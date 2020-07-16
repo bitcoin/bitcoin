@@ -66,7 +66,7 @@
 #include <algorithm> // std::unique
 extern RecursiveMutex cs_setethstatus;
 EthereumMintTxMap mapMintKeysMempool;
-std::set<COutPoint> assetAllocationConflicts;
+std::unsorted_map<COutPoint, std::pair<CTransactionRef, CTransactionRef> > mapAssetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
@@ -691,8 +691,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
                     if(!args.m_test_accept && IsZTx){
                         // allow the first time this outpoint was found in conflict
-                        auto it = assetAllocationConflicts.emplace(txin.prevout);
-                        LogPrintf("dblspend assetAllocationConflicts add prevout %s tx hash %s conflict tx hash %s\n", txin.prevout.ToString(), tx.GetHash().GetHex(), ptxConflicting->GetHash().GetHex());
+                        auto it = mapAssetAllocationConflicts.emplace(txin.prevout, std::make_pair(ptx, MakeTransactionRef(*ptxConflicting)));
+                        LogPrintf("dblspend mapAssetAllocationConflicts add prevout %s tx hash %s conflict tx hash %s\n", txin.prevout.ToString(), tx.GetHash().GetHex(), ptxConflicting->GetHash().GetHex());
                         // if was inserted (not found)
                         if(it.second) {
                             LogPrintf("inserted dbl spend\n");
@@ -1176,7 +1176,7 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
         for (const COutPoint& hashTx : coins_to_uncache){
             ::ChainstateActive().CoinsTip().Uncache(hashTx);
             // SYSCOIN
-            assetAllocationConflicts.erase(hashTx);
+            mapAssetAllocationConflicts.erase(hashTx);
         }
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits

@@ -615,6 +615,8 @@ public:
     bool existsConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool isSyscoinConflictIsFirstSeen(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    // SYSCOIN
+    void removeZDAGConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
