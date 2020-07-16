@@ -1051,12 +1051,13 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         // Also check to make sure size is greater than sum with immediate children.
         // just a sanity check, not definitive that this calc is correct...
         assert(it->GetSizeWithDescendants() >= child_sizes + it->GetTxSize());
-
-        if (fDependsWait)
-            waitingOnDependants.push_back(&(*it));
         // SYSCOIN
-        else if(!IsZTxConflict) {
-            CheckInputsAndUpdateCoins(tx, mempoolDuplicate, spendheight);
+        if(!IsZTxConflict) {
+            if (fDependsWait)
+                waitingOnDependants.push_back(&(*it));
+            else {
+                CheckInputsAndUpdateCoins(tx, mempoolDuplicate, spendheight);
+            }
         }
     }
     unsigned int stepsSinceLastRemove = 0;
@@ -1067,8 +1068,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             waitingOnDependants.push_back(entry);
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
-        // SYSCOIN
-        } else if(!IsZTxConflict) {
+        } else {
             CheckInputsAndUpdateCoins(entry->GetTx(), mempoolDuplicate, spendheight);
             stepsSinceLastRemove = 0;
         }
