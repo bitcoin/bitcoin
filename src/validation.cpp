@@ -3891,7 +3891,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Start enforcing BIP113 (Median Time Past).
     int nLockTimeFlags = 0;
-    if (nHeight >= consensusParams.CSVHeight) {
+    if (nHeight != 0 && nHeight >= consensusParams.CSVHeight) {
         assert(pindexPrev != nullptr);
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
