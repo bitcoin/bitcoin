@@ -103,7 +103,6 @@ private:
     std::atomic<bool> stopRequested{false};
 
     const Consensus::LLMQParams& params;
-    ctpl::thread_pool& messageHandlerPool;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
@@ -120,11 +119,14 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
+    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+
+    void StartThread();
+    void StopThread();
 
 private:
     bool InitNewQuorum(const CBlockIndex* pindexQuorum);
