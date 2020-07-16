@@ -67,8 +67,6 @@ public:
     bool IsDatabaseLoaded(const std::string& db_filename) const { return m_databases.find(db_filename) != m_databases.end(); }
     fs::path Directory() const { return strPath; }
 
-    bool Verify(const std::string& strFile);
-
     bool Open(bilingual_str& error);
     void Close();
     void Flush(bool fShutdown);
