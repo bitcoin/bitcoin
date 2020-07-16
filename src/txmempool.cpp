@@ -687,8 +687,7 @@ void CTxMemPool::removeZDAGConflicts(const CTransaction &tx)
 }
 
 // true if other tx (conflicting) was first in mempool and it was involved in asset double spend
-bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
-{
+bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx) {
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
         auto it = mapAssetAllocationConflicts.find(txin.prevout);
@@ -727,8 +726,8 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
             // if transaction in question was signalling RBF but conflicting transaction was not
             // prefer the conflict version over this one as prescedence over time based ordering
             // if both signal RBF, just choose the first one in mempool based on time below (they wouldn't have been used for point-of-sale anyway due to RBF)
-            const bool &thisRBF = SignalsOptInRBF(thisit.GetTx());
-            const bool &otherRBF = SignalsOptInRBF(conflictit.GetTx());
+            const bool &thisRBF = SignalsOptInRBF(thisit->GetTx());
+            const bool &otherRBF = SignalsOptInRBF(conflictit->GetTx());
             if(thisRBF && !otherRBF) {
                 return false;
             // if this transaction is non-RBF but conflict signals it, prefer this one regardless of time order
@@ -741,6 +740,7 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
             if(conflictit->GetTime() <= thisit->GetTime()){
                 return false;
             }
+        }
     }
     return true;
 }
