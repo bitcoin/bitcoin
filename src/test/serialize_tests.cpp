@@ -9,6 +9,7 @@
 #include <util/strencodings.h>
 
 #include <stdint.h>
+#include <string>
 
 #include <boost/test/unit_test.hpp>
 
@@ -374,6 +375,177 @@ BOOST_AUTO_TEST_CASE(class_methods)
     CDataStream ss2(SER_DISK, PROTOCOL_VERSION, intval, boolval, stringval, charstrval, txval);
     ss2 >> methodtest3;
     BOOST_CHECK(methodtest3 == methodtest4);
+}
+
+enum class BaseFormat {
+    DEC,
+    HEX,
+};
+
+/// (Un)serialize a number as a string either from/to decimal or hexadecimal.
+class Base
+{
+public:
+    uint8_t m_base_data;
+
+    Base() : m_base_data(17) {}
+    explicit Base(uint8_t data) : m_base_data(data) {}
+
+#if 0 // the following two are equivalent
+    SERIALIZE_METHODS_PARAMS(Base, obj, BaseFormat, fmt)
+    {
+        if (ser_action.ForRead()) {
+            std::string str;
+            s >> str;
+            assert(str.size() == 2 || (fmt == BaseFormat::DEC && str.size() == 3));
+            uint32_t data;
+            bool ok;
+            if (fmt == BaseFormat::DEC) {
+                ok = ParseUint32(str, &data);
+            } else {
+                ok = IsHex(str);
+                data = ParseHex(str)[0];
+            }
+            assert(ok);
+            SER_READ(obj, obj.m_base_data = data);
+        } else if (fmt == BaseFormat::DEC) {
+            s << strprintf("%02u", obj.m_base_data);
+        } else {
+            s << strprintf("%02X", obj.m_base_data);
+        }
+    }
+#else
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        if (s.GetParams() == BaseFormat::DEC) {
+            s << strprintf("%02u", m_base_data);
+        } else {
+            s << strprintf("%02X", m_base_data);
+        }
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        std::string str;
+        s >> str;
+        assert(str.size() == 2 || (s.GetParams() == BaseFormat::DEC && str.size() == 3));
+        uint32_t data;
+        bool ok;
+        if (s.GetParams() == BaseFormat::DEC) {
+            ok = ParseUInt32(str, &data);
+        } else {
+            ok = IsHex(str);
+            data = ParseHex(str)[0];
+        }
+        assert(ok);
+        m_base_data = data;
+    }
+#endif
+};
+
+class DerivedAndBaseFormat
+{
+public:
+    BaseFormat m_base_format;
+
+    enum class DerivedFormat {
+        LOWER,
+        UPPER,
+    } m_derived_format;
+};
+
+class Derived : public Base
+{
+public:
+    std::string m_derived_data;
+
+    SERIALIZE_METHODS_PARAMS(Derived, obj, DerivedAndBaseFormat, fmt)
+    {
+        READWRITE(WithParams(fmt.m_base_format, AsBase<Base>(obj)));
+
+        if (ser_action.ForRead()) {
+            std::string str;
+            s >> str;
+            SER_READ(obj, obj.m_derived_data = str);
+        } else {
+            s << (fmt.m_derived_format == DerivedAndBaseFormat::DerivedFormat::LOWER ?
+                      ToLower(obj.m_derived_data) :
+                      ToUpper(obj.m_derived_data));
+        }
+    }
+};
+
+BOOST_AUTO_TEST_CASE(with_params_base)
+{
+    Base b{15};
+
+    CDataStream stream(SER_DISK, PROTOCOL_VERSION);
+
+    stream << WithParams(BaseFormat::DEC, b);
+    BOOST_CHECK_EQUAL(stream.str(), "\2" "15");
+
+    b.m_base_data = 0;
+    stream >> WithParams(BaseFormat::DEC, b);
+    BOOST_CHECK_EQUAL(b.m_base_data, 15);
+
+    stream.clear();
+
+    stream << WithParams(BaseFormat::HEX, b);
+    BOOST_CHECK_EQUAL(stream.str(), "\2" "0F");
+
+    b.m_base_data = 0;
+    stream >> WithParams(BaseFormat::HEX, b);
+    BOOST_CHECK_EQUAL(b.m_base_data, 0x0F);
+}
+
+BOOST_AUTO_TEST_CASE(with_params_vector_of_base)
+{
+    std::vector<Base> v{Base{15}, Base{255}};
+
+    CDataStream stream(SER_DISK, PROTOCOL_VERSION);
+
+    stream << WithParams(BaseFormat::DEC, v);
+    BOOST_CHECK_EQUAL(stream.str(), "\2\2" "15" "\3" "255");
+
+    v[0].m_base_data = 0;
+    v[1].m_base_data = 0;
+    stream >> WithParams(BaseFormat::DEC, v);
+    BOOST_CHECK_EQUAL(v[0].m_base_data, 15);
+    BOOST_CHECK_EQUAL(v[1].m_base_data, 255);
+
+    stream.clear();
+
+    stream << WithParams(BaseFormat::HEX, v);
+    BOOST_CHECK_EQUAL(stream.str(), "\2\2" "0F" "\2" "FF");
+
+    v[0].m_base_data = 0;
+    v[1].m_base_data = 0;
+    stream >> WithParams(BaseFormat::HEX, v);
+    BOOST_CHECK_EQUAL(v[0].m_base_data, 0x0F);
+    BOOST_CHECK_EQUAL(v[1].m_base_data, 0xFF);
+}
+
+BOOST_AUTO_TEST_CASE(with_params_derived)
+{
+    Derived d;
+    d.m_base_data = 15;
+    d.m_derived_data = "xY";
+
+    DerivedAndBaseFormat fmt;
+
+    CDataStream stream(SER_DISK, PROTOCOL_VERSION);
+
+    fmt.m_base_format = BaseFormat::DEC;
+    fmt.m_derived_format = DerivedAndBaseFormat::DerivedFormat::LOWER;
+    stream << WithParams(fmt, d);
+
+    fmt.m_base_format = BaseFormat::HEX;
+    fmt.m_derived_format = DerivedAndBaseFormat::DerivedFormat::UPPER;
+    stream << WithParams(fmt, d);
+
+    BOOST_CHECK_EQUAL(stream.str(), "\2" "15" "\2" "xy" "\2" "0F" "\2" "XY");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
