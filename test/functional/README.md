@@ -27,6 +27,20 @@ don't have test cases for.
   `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
   the subclass, then locally-defined helper methods, then the `run_test()` method.
 
+#### Naming guidelines
+
+- Name the test `<area>_test.py`, where area can be one of the following:
+    - `feature` for tests for full features that aren't wallet/mining/mempool, eg `feature_rbf.py`
+    - `interface` for tests for other interfaces (REST, ZMQ, etc), eg `interface_rest.py`
+    - `mempool` for tests for mempool behaviour, eg `mempool_reorg.py`
+    - `mining` for tests for mining features, eg `mining_prioritisetransaction.py`
+    - `p2p` for tests that explicitly test the p2p interface, eg `p2p_disconnect_ban.py`
+    - `rpc` for tests for individual RPC methods or features, eg `rpc_listtransactions.py`
+    - `wallet` for tests for wallet features, eg `wallet_keypool.py`
+- use an underscore to separate words
+    - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
+- Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
+
 #### General test-writing advice
 
 - Set `self.num_nodes` to the minimum number of nodes necessary for the test.
@@ -73,7 +87,7 @@ start the networking thread.  (Continue with the test logic in your existing
 thread.)
 
 - Can be used to write tests where specific P2P protocol behavior is tested.
-Examples tests are `p2p-accept-block.py`, `p2p-compactblocks.py`.
+Examples tests are `p2p_unrequested_blocks.py`, `p2p_compactblocks.py`.
 
 ### test-framework modules
 

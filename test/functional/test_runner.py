@@ -58,103 +58,104 @@ TRAVIS_TIMEOUT_DURATION = 20 * 60
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'dip3-deterministicmns.py', # NOTE: needs dash_hash to pass
-    'wallet-hd.py',
-    'walletbackup.py',
+    'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
+    'wallet_hd.py',
+    'wallet_backup.py',
     # vv Tests less than 5m vv
-    'p2p-fullblocktest.py', # NOTE: needs dash_hash to pass
-    'fundrawtransaction.py',
-    'fundrawtransaction-hd.py',
+    'feature_block.py', # NOTE: needs dash_hash to pass
+    'rpc_fundrawtransaction.py',
+    'rpc_fundrawtransaction_hd.py',
     # vv Tests less than 2m vv
-    'p2p-instantsend.py',
-    'wallet.py',
-    'wallet-accounts.py',
-    'wallet-dump.py',
-    'listtransactions.py',
-    'multikeysporks.py',
-    'llmq-signing.py', # NOTE: needs dash_hash to pass
-    'llmq-signing.py --spork21', # NOTE: needs dash_hash to pass
-    'llmq-chainlocks.py', # NOTE: needs dash_hash to pass
-    'llmq-connections.py', # NOTE: needs dash_hash to pass
-    'llmq-simplepose.py', # NOTE: needs dash_hash to pass
-    'llmq-is-cl-conflicts.py', # NOTE: needs dash_hash to pass
-    'llmq-is-retroactive.py', # NOTE: needs dash_hash to pass
-    'llmq-dkgerrors.py', # NOTE: needs dash_hash to pass
-    'dip4-coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
+    'p2p_instantsend.py',
+    'wallet_basic.py',
+    'wallet_accounts.py',
+    'wallet_dump.py',
+    'rpc_listtransactions.py',
+    'feature_multikeysporks.py',
+    'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
+    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
+    'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
     # vv Tests less than 60s vv
-    'sendheaders.py', # NOTE: needs dash_hash to pass
-    'zapwallettxes.py',
-    'importmulti.py',
+    'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
+    'wallet_zapwallettxes.py',
+    'wallet_importmulti.py',
     'mempool_limit.py',
-    'merkle_blocks.py',
-    'receivedby.py',
-    'abandonconflict.py',
-    'bip68-112-113-p2p.py',
-    'rawtransactions.py',
-    'reindex.py',
+    'rpc_txoutproof.py',
+    'wallet_listreceivedby.py',
+    'wallet_abandonconflict.py',
+    'feature_csv_activation.py',
+    'rpc_rawtransaction.py',
+    'feature_reindex.py',
     # vv Tests less than 30s vv
-    'keypool-topup.py',
-    'zmq_test.py',
-    'bitcoin_cli.py',
-    'mempool_resurrect_test.py',
-    'txn_doublespend.py --mineblock',
-    'txn_clone.py',
-    'getchaintips.py',
-    'rest.py',
-    'mempool_spendcoinbase.py',
+    'wallet_keypool_topup.py',
+    'interface_zmq.py',
+    'interface_bitcoin_cli.py',
+    'mempool_resurrect.py',
+    'wallet_txn_doublespend.py --mineblock',
+    'wallet_txn_clone.py',
+    'rpc_getchaintips.py',
+    'interface_rest.py',
+    'mempool_spend_coinbase.py',
     'mempool_reorg.py',
     'mempool_persist.py',
-    'multiwallet.py',
-    'multiwallet.py --usecli',
-    'httpbasics.py',
-    'multi_rpc.py',
-    'proxy_test.py',
-    'signrawtransactions.py',
-    'disconnect_ban.py',
-    'addressindex.py',
-    'timestampindex.py',
-    'spentindex.py',
-    'decodescript.py',
-    'blockchain.py',
-    'deprecated_rpc.py',
-    'disablewallet.py',
-    'net.py',
-    'keypool.py',
-    'keypool-hd.py',
-    'p2p-mempool.py',
-    'prioritise_transaction.py',
-    'invalidblockrequest.py', # NOTE: needs dash_hash to pass
-    'invalidtxrequest.py', # NOTE: needs dash_hash to pass
-    'p2p-versionbits-warning.py',
-    'preciousblock.py',
-    'importprunedfunds.py',
-    'signmessages.py',
-    'nulldummy.py',
-    'import-rescan.py',
-    'rpcbind_test.py --ipv4',
-    'rpcbind_test.py --ipv6',
-    'rpcbind_test.py --nonloopback',
-    'mining.py',
-    'rpcnamedargs.py',
-    'listsinceblock.py',
-    'p2p-leaktests.py',
-    'p2p-compactblocks.py',
-    'sporks.py',
+    'wallet_multiwallet.py',
+    'wallet_multiwallet.py --usecli',
+    'interface_http.py',
+    'rpc_users.py',
+    'feature_proxy.py',
+    'rpc_signrawtransaction.py',
+    'p2p_disconnect_ban.py',
+    'feature_addressindex.py',
+    'feature_timestampindex.py',
+    'feature_spentindex.py',
+    'rpc_decodescript.py',
+    'rpc_blockchain.py',
+    'rpc_deprecated.py',
+    'wallet_disable.py',
+    'rpc_net.py',
+    'wallet_keypool.py',
+    'wallet_keypool_hd.py',
+    'p2p_mempool.py',
+    'mining_prioritisetransaction.py',
+    'p2p_invalid_block.py',
+    'p2p_invalid_tx.py',
+    'feature_versionbits_warning.py',
+    'rpc_preciousblock.py',
+    'wallet_importprunedfunds.py',
+    'rpc_signmessage.py',
+    'feature_nulldummy.py',
+    'wallet_import_rescan.py',
+    'rpc_bind.py --ipv4',
+    'rpc_bind.py --ipv6',
+    'rpc_bind.py --nonloopback',
+    'mining_basic.py',
+    'rpc_named_arguments.py',
+    'wallet_listsinceblock.py',
+    'p2p_leak.py',
+    'p2p_compactblocks.py',
+    'feature_sporks.py',
     'rpc_getblockstats.py',
-    'p2p-fingerprint.py',
-    'wallet-encryption.py',
-    'bipdersig-p2p.py',
-    'bip65-cltv-p2p.py',
-    'uptime.py',
-    'resendwallettransactions.py',
-    'minchainwork.py',
-    'p2p-acceptblock.py', # NOTE: needs dash_hash to pass
+    'wallet_encryption.py',
+    'feature_dersig.py',
+    'feature_cltv.py',
+    'rpc_uptime.py',
+    'wallet_resendwallettransactions.py',
+    'feature_minchainwork.py',
+    'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',
-    'privatesend.py',
-    'uacomment.py',
+    'rpc_privatesend.py',
+    'p2p_fingerprint.py',
+    'feature_uacomment.py',
+    'p2p_unrequested_blocks.py',
     'feature_logging.py',
-    'node_network_limited.py',
-    'conf_args.py',
+    'p2p_node_network_limited.py',
+    'feature_config_args.py',
     'feature_help.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
@@ -163,26 +164,26 @@ BASE_SCRIPTS= [
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work governance validation disabled though.
+    'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
-    'smartfees.py',
+    'feature_fee_estimation.py',
     # vv Tests less than 5m vv
-    'maxuploadtarget.py',
+    'feature_maxuploadtarget.py',
     'mempool_packages.py',
-    'dbcrash.py',
+    'feature_dbcrash.py',
     # vv Tests less than 2m vv
-    'bip68-sequence.py',
-    'getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
-    'p2p-timeouts.py',
+    'feature_bip68_sequence.py',
+    'mining_getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
+    'p2p_timeouts.py',
     # vv Tests less than 60s vv
     # vv Tests less than 30s vv
-    'assumevalid.py',
+    'feature_assumevalid.py',
     'example_test.py',
-    'txn_doublespend.py',
-    'txn_clone.py --mineblock',
-    'txindex.py',
-    'notifications.py',
-    'invalidateblock.py',
+    'wallet_txn_doublespend.py',
+    'wallet_txn_clone.py --mineblock',
+    'feature_txindex.py',
+    'feature_notifications.py',
+    'rpc_invalidateblock.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
@@ -292,6 +293,7 @@ def main():
         sys.exit(0)
 
     check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=args.ci)
+    check_script_prefixes()
 
     if not args.keepcache:
         shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
@@ -530,6 +532,24 @@ class TestResult():
     @property
     def was_successful(self):
         return self.status != "Failed"
+
+
+def check_script_prefixes():
+    """Check that at most a handful of the
+       test scripts don't start with one of the allowed name prefixes."""
+
+    # LEEWAY is provided as a transition measure, so that pull-requests
+    # that introduce new tests that don't conform with the naming
+    # convention don't immediately cause the tests to fail.
+    LEEWAY = 10
+
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet)_")
+    bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
+
+    if len(bad_script_names) > 0:
+        print("INFO: %d tests not meeting naming conventions:" % (len(bad_script_names)))
+        print("  %s" % ("\n  ".join(sorted(bad_script_names))))
+    assert len(bad_script_names) <= LEEWAY, "Too many tests not following naming convention! (%d found, maximum: %d)" % (len(bad_script_names), LEEWAY)
 
 
 def check_script_list(*, src_dir, fail_on_warn):

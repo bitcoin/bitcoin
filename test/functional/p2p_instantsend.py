@@ -9,7 +9,7 @@ from test_framework.util import isolate_node, reconnect_isolated_node, assert_eq
     assert_raises_rpc_error
 
 '''
-p2p-instantsend.py
+p2p_instantsend.py
 
 Tests InstantSend functionality (prevent doublespend for unconfirmed transactions)
 '''

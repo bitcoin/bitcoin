@@ -7,7 +7,7 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal
 
 '''
-dip4-coinbasemerkleroots.py
+feature_dip4_coinbasemerkleroots.py
 
 Checks DIP4 merkle roots in coinbases
 

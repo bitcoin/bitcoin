@@ -8,7 +8,7 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import set_node_times, isolate_node, reconnect_isolated_node
 
 '''
-llmq-is-retroactive.py
+feature_llmq_is_retroactive.py
 
 Tests retroactive signing
 

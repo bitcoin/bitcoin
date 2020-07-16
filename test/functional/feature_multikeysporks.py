@@ -8,7 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import connect_nodes, wait_until
 
 '''
-multikeysporks.py
+feature_multikeysporks.py
 
 Test logic for several signer keys usage for spork broadcast.
 

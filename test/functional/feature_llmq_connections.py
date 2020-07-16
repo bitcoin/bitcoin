@@ -7,7 +7,7 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import *
 
 '''
-llmq-connections.py
+feature_llmq_connections.py
 
 Checks intra quorum connections
 

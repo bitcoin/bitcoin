@@ -113,7 +113,7 @@ builder-image:
   stage: test
   extends: .base-template
   variables:
-    INTEGRATION_TESTS_ARGS: "--extended --exclude pruning,dbcrash"
+    INTEGRATION_TESTS_ARGS: "--extended --exclude feature_pruning,feature_dbcrash"
   script:
     - echo "INTEGRATION_TESTS_ARGS=${INTEGRATION_TESTS_ARGS}"
     - ./ci/test_integrationtests.sh $INTEGRATION_TESTS_ARGS

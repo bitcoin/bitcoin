@@ -11,7 +11,7 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_raises_rpc_error
 
 '''
-llmq-is-cl-conflicts.py
+feature_llmq_is_cl_conflicts.py
 
 Checks conflict handling between ChainLocks and InstantSend
 
