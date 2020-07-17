@@ -130,6 +130,11 @@ CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType d
     }
 }
 
+bool ParseBool(const UniValue& param, const bool default_value)
+{
+    return param.isNull() ? default_value : param.get_bool();
+}
+
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
     return "> bitcoin-cli " + methodname + " " + args + "\n";

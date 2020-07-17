@@ -80,6 +80,9 @@ extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKe
 
 CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType default_type);
 
+/** Parse bool from UniValue param with default fallback */
+bool ParseBool(const UniValue& param, const bool default_value);
+
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);

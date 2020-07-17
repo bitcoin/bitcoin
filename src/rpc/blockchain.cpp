@@ -536,10 +536,7 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    bool fVerbose = false;
-    if (!request.params[0].isNull())
-        fVerbose = request.params[0].get_bool();
-
+    const bool fVerbose = ParseBool(request.params[0], false);
     return MempoolToJSON(EnsureMemPool(request.context), fVerbose);
 }
 
@@ -564,10 +561,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
-
+    const bool fVerbose = ParseBool(request.params[1], false);
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
@@ -627,10 +621,7 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
-
+    const bool fVerbose = ParseBool(request.params[1], false);
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
@@ -761,10 +752,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
             }.Check(request);
 
     uint256 hash(ParseHashV(request.params[0], "hash"));
-
-    bool fVerbose = true;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose = ParseBool(request.params[1], true);
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -1063,9 +1051,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     uint256 hash(ParseHashV(request.params[0], "txid"));
     int n = request.params[1].get_int();
     COutPoint out(hash, n);
-    bool fMempool = true;
-    if (!request.params[2].isNull())
-        fMempool = request.params[2].get_bool();
+    const bool fMempool = ParseBool(request.params[2], true);
 
     Coin coin;
     CCoinsViewCache* coins_view = &::ChainstateActive().CoinsTip();

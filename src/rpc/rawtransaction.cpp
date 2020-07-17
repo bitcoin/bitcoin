@@ -1337,10 +1337,9 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
-
     CMutableTransaction mtx;
     bool complete = FinalizeAndExtractPSBT(psbtx, mtx);
+    const bool extract = ParseBool(request.params[1], true);
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
@@ -1470,9 +1469,9 @@ UniValue converttopsbt(const JSONRPCRequest& request)
 
     // parse hex string from parameter
     CMutableTransaction tx;
-    bool permitsigdata = request.params[1].isNull() ? false : request.params[1].get_bool();
-    bool witness_specified = !request.params[2].isNull();
-    bool iswitness = witness_specified ? request.params[2].get_bool() : false;
+    const bool permitsigdata = ParseBool(request.params[1], false);
+    const bool witness_specified = !request.params[2].isNull();
+    const bool iswitness = ParseBool(request.params[2], false);
     const bool try_witness = witness_specified ? iswitness : true;
     const bool try_no_witness = witness_specified ? !iswitness : true;
     if (!DecodeHexTx(tx, request.params[0].get_str(), try_no_witness, try_witness)) {
