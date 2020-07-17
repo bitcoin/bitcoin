@@ -183,7 +183,7 @@ TestChain100Setup::TestChain100Setup(): RegTestingSetup()
     assert(BlockIndex().size() == 101);
 
     auto& tree = VeriBlock::getService<VeriBlock::PopService>().getAltTree();
-    assert(tree.getBestChain().tip()->height == ChainActive().Tip()->nHeight);
+    assert(tree.getBestChain().tip()->getHeight() == ChainActive().Tip()->nHeight);
 }
 
 CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, uint256 prevBlock,

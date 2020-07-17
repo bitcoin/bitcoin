@@ -147,7 +147,7 @@ struct E2eFixture : public TestChain100Setup {
         auto best = popminer.vbk().getBestChain();
         auto tip = best.tip();
         BOOST_CHECK(tip != nullptr);
-        return endorseVbkBlock(tip->height);
+        return endorseVbkBlock(tip->getHeight());
     }
 
     VTB endorseVbkBlock(int height)
@@ -158,9 +158,9 @@ struct E2eFixture : public TestChain100Setup {
             throw std::logic_error("can not find VBK block at height " + std::to_string(height));
         }
 
-        auto btctx = popminer.createBtcTxEndorsingVbkBlock(*endorsed->header);
+        auto btctx = popminer.createBtcTxEndorsingVbkBlock(endorsed->getHeader());
         auto* btccontaining = popminer.mineBtcBlocks(1);
-        auto vbktx = popminer.createVbkPopTxEndorsingVbkBlock(*btccontaining->header, btctx, *endorsed->header, getLastKnownBTCblock());
+        auto vbktx = popminer.createVbkPopTxEndorsingVbkBlock(btccontaining->getHeader(), btctx, endorsed->getHeader(), getLastKnownBTCblock());
         auto* vbkcontaining = popminer.mineVbkBlocks(1);
 
         auto vtbs = popminer.vbkPayloads[vbkcontaining->getHash()];
@@ -171,7 +171,7 @@ struct E2eFixture : public TestChain100Setup {
         auto* current = vbkcontaining;
         auto lastKnownVbk = getLastKnownVBKblock();
         while (current != nullptr && current->getHash() != lastKnownVbk) {
-            vtb.context.push_back(*current->header);
+            vtb.context.push_back(current->getHeader());
             current = current->pprev;
         }
         std::reverse(vtb.context.begin(), vtb.context.end());

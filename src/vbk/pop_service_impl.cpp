@@ -197,7 +197,6 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config, const fs::p
     storeman = std::make_shared<altintegration::StorageManagerInmem>();
     LogPrintf("Init POP storage in %s...\n", popPath.string());
     payloadsStore = &storeman->getPayloadsStorage();
-    popStorage = &storeman->getPopStorage();
 
     altTree = altintegration::Altintegration::create(config, *payloadsStore);
     mempool = std::make_shared<altintegration::MemPool>(altTree->getParams(), altTree->vbk().getParams(), altTree->btc().getParams());

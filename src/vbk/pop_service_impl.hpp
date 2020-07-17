@@ -29,7 +29,6 @@ private:
     std::shared_ptr<altintegration::AltTree> altTree;
     std::shared_ptr<altintegration::StorageManager> storeman;
     altintegration::PayloadsStorage* payloadsStore;
-    altintegration::PopStorage* popStorage;
 
     std::vector<altintegration::PopData> disconnected_popdata;
 
@@ -37,7 +36,6 @@ public:
     void clearPopDataStorage() override
     {
         VBK_ASSERT(payloadsStore);
-        VBK_ASSERT(popStorage);
         // TODO: clear pop data
         storeman->clear();
     }

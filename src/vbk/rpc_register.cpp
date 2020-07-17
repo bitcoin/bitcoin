@@ -422,11 +422,11 @@ UniValue getblockhash(const JSONRPCRequest& request, Tree& tree, const std::stri
     }
 
     int height = request.params[0].get_int();
-    if (height < best.first()->height) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Chain %s starts at %d, provided %d", chain, best.first()->height, height));
+    if (height < best.first()->getHeight()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Chain %s starts at %d, provided %d", chain, best.first()->getHeight(), height));
     }
-    if (height > best.tip()->height) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Chain %s tip is at %d, provided %d", chain, best.tip()->height, height));
+    if (height > best.tip()->getHeight()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Chain %s tip is at %d, provided %d", chain, best.tip()->getHeight(), height));
     }
 
     auto* index = best[height];
