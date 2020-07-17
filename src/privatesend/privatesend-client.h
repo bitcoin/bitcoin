@@ -61,9 +61,6 @@ extern std::map<const std::string, CPrivateSendClientManager*> privateSendClient
 // The object to track mixing queues
 extern CPrivateSendClientQueueManager privateSendClientQueueManager;
 
-// The object to store application wide mixing options
-extern CPrivateSendClientOptions privateSendClientOptions;
-
 class CPendingDsaRequest
 {
 private:
@@ -281,6 +278,27 @@ public:
 class CPrivateSendClientOptions
 {
 public:
+    static int GetSessions() { return CPrivateSendClientOptions::Get().nPrivateSendSessions; }
+    static int GetRounds() { return CPrivateSendClientOptions::Get().nPrivateSendRounds; }
+    static int GetAmount() { return CPrivateSendClientOptions::Get().nPrivateSendAmount; }
+    static int GetDenomsGoal() { return CPrivateSendClientOptions::Get().nPrivateSendDenomsGoal; }
+    static int GetDenomsHardCap() { return CPrivateSendClientOptions::Get().nPrivateSendDenomsHardCap; }
+
+    static void SetEnabled(bool fEnabled);
+    static void SetMultiSessionEnabled(bool fEnabled);
+    static void SetRounds(int nRounds);
+    static void SetAmount(CAmount amount);
+
+    static int IsEnabled() { return CPrivateSendClientOptions::Get().fEnablePrivateSend; }
+    static int IsMultiSessionEnabled() { return CPrivateSendClientOptions::Get().fPrivateSendMultiSession; }
+
+    static void GetJsonInfo(UniValue& obj);
+
+private:
+    static CPrivateSendClientOptions* _instance;
+    static std::once_flag onceFlag;
+
+    CCriticalSection cs_ps_options;
     int nPrivateSendSessions;
     int nPrivateSendRounds;
     int nPrivateSendAmount;
@@ -299,7 +317,11 @@ public:
     {
     }
 
-    void GetJsonInfo(UniValue& obj) const;
+    CPrivateSendClientOptions(const CPrivateSendClientOptions& other) = delete;
+    CPrivateSendClientOptions& operator=(const CPrivateSendClientOptions&) = delete;
+
+    static CPrivateSendClientOptions& Get();
+    static void Init();
 };
 
 void DoPrivateSendMaintenance(CConnman& connman);

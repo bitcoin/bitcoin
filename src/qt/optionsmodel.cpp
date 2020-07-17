@@ -138,7 +138,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("nPrivateSendRounds", DEFAULT_PRIVATESEND_ROUNDS);
     if (!gArgs.SoftSetArg("-privatesendrounds", settings.value("nPrivateSendRounds").toString().toStdString()))
         addOverriddenOption("-privatesendrounds");
-    privateSendClientOptions.nPrivateSendRounds = settings.value("nPrivateSendRounds").toInt();
+    CPrivateSendClientOptions::SetRounds(settings.value("nPrivateSendRounds").toInt());
 
     if (!settings.contains("nPrivateSendAmount")) {
         // for migration from old settings
@@ -149,13 +149,13 @@ void OptionsModel::Init(bool resetSettings)
     }
     if (!gArgs.SoftSetArg("-privatesendamount", settings.value("nPrivateSendAmount").toString().toStdString()))
         addOverriddenOption("-privatesendamount");
-    privateSendClientOptions.nPrivateSendAmount = settings.value("nPrivateSendAmount").toInt();
+    CPrivateSendClientOptions::SetAmount(settings.value("nPrivateSendAmount").toInt());
 
     if (!settings.contains("fPrivateSendMultiSession"))
         settings.setValue("fPrivateSendMultiSession", DEFAULT_PRIVATESEND_MULTISESSION);
     if (!gArgs.SoftSetBoolArg("-privatesendmultisession", settings.value("fPrivateSendMultiSession").toBool()))
         addOverriddenOption("-privatesendmultisession");
-    privateSendClientOptions.fPrivateSendMultiSession = settings.value("fPrivateSendMultiSession").toBool();
+    CPrivateSendClientOptions::SetMultiSessionEnabled(settings.value("fPrivateSendMultiSession").toBool());
 #endif
 
     // Network
@@ -470,24 +470,24 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case PrivateSendRounds:
             if (settings.value("nPrivateSendRounds") != value)
             {
-                privateSendClientOptions.nPrivateSendRounds = value.toInt();
-                settings.setValue("nPrivateSendRounds", privateSendClientOptions.nPrivateSendRounds);
+                CPrivateSendClientOptions::SetRounds(value.toInt());
+                settings.setValue("nPrivateSendRounds", CPrivateSendClientOptions::GetRounds());
                 Q_EMIT privateSendRoundsChanged();
             }
             break;
         case PrivateSendAmount:
             if (settings.value("nPrivateSendAmount") != value)
             {
-                privateSendClientOptions.nPrivateSendAmount = value.toInt();
-                settings.setValue("nPrivateSendAmount", privateSendClientOptions.nPrivateSendAmount);
+                CPrivateSendClientOptions::SetAmount(value.toInt());
+                settings.setValue("nPrivateSendAmount", CPrivateSendClientOptions::GetAmount());
                 Q_EMIT privateSentAmountChanged();
             }
             break;
         case PrivateSendMultiSession:
             if (settings.value("fPrivateSendMultiSession") != value)
             {
-                privateSendClientOptions.fPrivateSendMultiSession = value.toBool();
-                settings.setValue("fPrivateSendMultiSession", privateSendClientOptions.fPrivateSendMultiSession);
+                CPrivateSendClientOptions::SetMultiSessionEnabled(value.toBool());
+                settings.setValue("fPrivateSendMultiSession", CPrivateSendClientOptions::IsMultiSessionEnabled());
             }
             break;
 #endif

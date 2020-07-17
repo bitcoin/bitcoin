@@ -364,7 +364,7 @@ void WalletInit::Start(CScheduler& scheduler)
     // Run a thread to flush wallet periodically
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 
-    if (!fMasternodeMode && privateSendClientOptions.fEnablePrivateSend) {
+    if (!fMasternodeMode && CPrivateSendClientOptions::IsEnabled()) {
         scheduler.scheduleEvery(std::bind(&DoPrivateSendMaintenance, std::ref(*g_connman)), 1 * 1000);
     }
 }
@@ -372,7 +372,7 @@ void WalletInit::Start(CScheduler& scheduler)
 void WalletInit::Flush()
 {
     for (CWallet* pwallet : GetWallets()) {
-        if (privateSendClientOptions.fEnablePrivateSend) {
+        if (CPrivateSendClientOptions::IsEnabled()) {
             // Stop PrivateSend, release keys
             auto it = privateSendClientManagers.find(pwallet->GetName());
             it->second->ResetPool();
@@ -407,37 +407,24 @@ void WalletInit::AutoLockMasternodeCollaterals()
 
 void WalletInit::InitPrivateSendSettings()
 {
-    if (!HasWallets()) {
-        privateSendClientOptions.fEnablePrivateSend = false;
-    } else {
-        privateSendClientOptions.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", true);
+    CPrivateSendClientOptions::SetEnabled(HasWallets() ? gArgs.GetBoolArg("-enableprivatesend", true) : false);
+    if (!CPrivateSendClientOptions::IsEnabled()) {
+        return;
     }
     bool fAutoStart = gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
-    if (privateSendClientOptions.fEnablePrivateSend) {
-        for (auto& pwallet : GetWallets()) {
-            if (pwallet->IsLocked()) {
-                privateSendClientManagers.at(pwallet->GetName())->StopMixing();
-            } else if (fAutoStart) {
-                privateSendClientManagers.at(pwallet->GetName())->StartMixing(pwallet);
-            }
+    for (auto& pwallet : GetWallets()) {
+        if (pwallet->IsLocked()) {
+            privateSendClientManagers.at(pwallet->GetName())->StopMixing();
+        } else if (fAutoStart) {
+            privateSendClientManagers.at(pwallet->GetName())->StartMixing(pwallet);
         }
     }
-    privateSendClientOptions.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
-    privateSendClientOptions.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
-    privateSendClientOptions.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), MAX_PRIVATESEND_ROUNDS);
-    privateSendClientOptions.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
-    privateSendClientOptions.nPrivateSendDenomsGoal = std::min(std::max((int)gArgs.GetArg("-privatesenddenomsgoal", DEFAULT_PRIVATESEND_DENOMS_GOAL), MIN_PRIVATESEND_DENOMS_GOAL), MAX_PRIVATESEND_DENOMS_GOAL);
-    privateSendClientOptions.nPrivateSendDenomsHardCap = std::min(std::max((int)gArgs.GetArg("-privatesenddenomshardcap", DEFAULT_PRIVATESEND_DENOMS_HARDCAP), MIN_PRIVATESEND_DENOMS_HARDCAP), MAX_PRIVATESEND_DENOMS_HARDCAP);
-
-    if (privateSendClientOptions.fEnablePrivateSend) {
-        LogPrintf("PrivateSend: autostart=%d, multisession=%d," /* Continued */
-                  "sessions=%d, rounds=%d, amount=%d, denoms_goal=%d, denoms_hardcap=%d\n",
-                  fAutoStart, privateSendClientOptions.fPrivateSendMultiSession,
-                  privateSendClientOptions.nPrivateSendSessions, privateSendClientOptions.nPrivateSendRounds,
-                  privateSendClientOptions.nPrivateSendAmount,
-                  privateSendClientOptions.nPrivateSendDenomsGoal, privateSendClientOptions.nPrivateSendDenomsHardCap);
-    }
-
+    LogPrintf("PrivateSend: autostart=%d, multisession=%d," /* Continued */
+              "sessions=%d, rounds=%d, amount=%d, denoms_goal=%d, denoms_hardcap=%d\n",
+              fAutoStart, CPrivateSendClientOptions::IsMultiSessionEnabled(),
+              CPrivateSendClientOptions::GetSessions(), CPrivateSendClientOptions::GetRounds(),
+              CPrivateSendClientOptions::GetAmount(), CPrivateSendClientOptions::GetDenomsGoal(),
+              CPrivateSendClientOptions::GetDenomsHardCap());
 }
 
 void WalletInit::InitKeePass()

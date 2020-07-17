@@ -32,7 +32,7 @@ UniValue privatesend(const JSONRPCRequest& request)
     if (fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
 
-    if (!privateSendClientOptions.fEnablePrivateSend) {
+    if (!CPrivateSendClientOptions::IsEnabled()) {
         if (!gArgs.GetBoolArg("-enableprivatesend", true)) {
             // otherwise it's on by default, unless cmd line option says otherwise
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing is disabled via -enableprivatesend=0 command line option, remove it to enable mixing again");
@@ -136,7 +136,7 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
 
 #ifdef ENABLE_WALLET
 
-    privateSendClientOptions.GetJsonInfo(obj);
+    CPrivateSendClientOptions::GetJsonInfo(obj);
 
     obj.pushKV("queue_size", privateSendClientQueueManager.GetQueueSize());
 

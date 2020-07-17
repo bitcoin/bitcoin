@@ -501,7 +501,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         // unselect non-fully-mixed, this can happen when users switch from Send to PrivateSend
         if (coinControl()->IsUsingPrivateSend()) {
             int nRounds = model->getRealOutpointPrivateSendRounds(outpt);
-            if (nRounds < privateSendClientOptions.nPrivateSendRounds) {
+            if (nRounds < CPrivateSendClientOptions::GetRounds()) {
                 coinControl()->UnSelect(outpt);
                 fUnselectedNonMixed = true;
                 continue;
@@ -707,7 +707,7 @@ void CoinControlDialog::updateView()
             COutPoint outpoint = COutPoint(out.tx->tx->GetHash(), out.i);
             int nRounds = model->getRealOutpointPrivateSendRounds(outpoint);
 
-            if ((coinControl()->IsUsingPrivateSend() && nRounds >= privateSendClientOptions.nPrivateSendRounds) || !(coinControl()->IsUsingPrivateSend())) {
+            if ((coinControl()->IsUsingPrivateSend() && nRounds >= CPrivateSendClientOptions::GetRounds()) || !(coinControl()->IsUsingPrivateSend())) {
                 nSum += out.tx->tx->vout[out.i].nValue;
                 nChildren++;
 
