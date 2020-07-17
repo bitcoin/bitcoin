@@ -363,7 +363,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>把錢包中的密鑰加密</translation>
+        <translation>將錢包中之密鑰加密</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -2237,6 +2237,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>確認付款金額</translation>
     </message>
     <message>
+        <source>Send</source>
+        <translation>發</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>收款位址無效。請再檢查看看。</translation>
     </message>
@@ -3458,7 +3462,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Unable to create the PID file '%s': %s</source>
-        <translation>无法创建PID文件'%s': %s</translation>
+        <translation>無法創建PID文件'%s': %s</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
@@ -3530,7 +3534,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation>交易必須至少要有一個收款人</translation>
+        <translation>交易必須至少有一個收款人</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

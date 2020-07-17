@@ -50,6 +50,18 @@
         <translation>Izvēlies adresi ar kuru saņemt bitcoins</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation>Izvēlēties</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Adrešu nosūtīšana</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Adrešu saņemšana</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopēt adresi</translation>
     </message>

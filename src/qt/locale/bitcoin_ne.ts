@@ -55,8 +55,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>ठेगाना कपी गर्नुहोस्
-</translation>
+        <translation>ठेगाना कपी गर्नुहोस्</translation>
     </message>
     </context>
 <context>
@@ -191,8 +190,7 @@
     </message>
     <message>
         <source>Copy address</source>
-        <translation>ठेगाना कपी गर्नुहोस्
-</translation>
+        <translation>ठेगाना कपी गर्नुहोस्</translation>
     </message>
     </context>
 <context>
@@ -396,8 +394,7 @@
     <name>TransactionView</name>
     <message>
         <source>Copy address</source>
-        <translation>ठेगाना कपी गर्नुहोस्
-</translation>
+        <translation>ठेगाना कपी गर्नुहोस्</translation>
     </message>
     </context>
 <context>
@@ -416,8 +413,7 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;amp;निर्यात गर्नुहोस्
-</translation>
+        <translation>&amp;amp;निर्यात गर्नुहोस्</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
