@@ -1785,6 +1785,14 @@
         <translation>Eşleşmiş Bloklar</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Eş seçimini çeşitlendirmek için kullanılan haritalı Otonom Sistem.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Eşlenmiş OLARAK</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Kullanıcı Yazılımı</translation>
     </message>

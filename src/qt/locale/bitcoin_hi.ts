@@ -180,23 +180,83 @@
         <translation>वॉलेट को एन्क्रिप्ट किया गया है</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>वॉलेट में नया सुरक्षा संवाद दर्ज करें | कृपया दस या उससे अधिक, या फिर आठ या उससे अधिक अव्यवस्थित अंको से ही अपना सुरक्षा संवाद बनाएं ।</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>वॉलेट में पुराना एवं नया सुरक्षा संवाद दर्ज करें ।</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>याद रखें कि अपने बटुए (वॉलेट) एन्क्रिप्ट करना आपके कंप्यूटर को संक्रमित करने वाले मैलवेयर द्वारा आपके बिटकॉइन को चोरी होने से पूरी तरह से सुरक्षित नहीं कर सकता है।</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>बटुए "वॉलेट" को एन्क्रिप्ट किया जाना है</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>आपका बटुआ "वॉलेट" एन्क्रिप्टेड होने वाला है।</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>आपका बटुआ "वॉलेट" एन्क्रिप्ट हो गया है।</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>महत्वपूर्ण: किसी भी पिछले बैकअप को आपने अपनी वॉलेट फ़ाइल से बनाया था, उसे नए जनरेट किए गए एन्क्रिप्टेड वॉलेट फ़ाइल से बदल दिया जाना चाहिए। सुरक्षा कारणों से, अनएन्क्रिप्टेड वॉलेट फ़ाइल के पिछले बैकअप बेकार हो जाएंगे जैसे ही आप नए, एन्क्रिप्टेड वॉलेट का उपयोग करना शुरू करते हैं।</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>वॉलेट एन्क्रिप्शन विफल रहा</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>आंतरिक त्रुटि के कारण वॉलेट एन्क्रिप्शन विफल रहा। आपका वॉलेट "बटुआ" एन्क्रिप्ट नहीं किया गया था।</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>आपूर्ति किए गए पासफ़्रेज़ मेल नहीं खाते हैं।</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
         <translation>वॉलेट अनलॉक विफल रहा</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>वॉलेट डिक्रिप्शन के लिए दर्ज किया गया पासफ़्रेज़ गलत था।</translation>
+    </message>
+    <message>
         <source>Wallet decryption failed</source>
         <translation>वॉलेट डिक्रिप्शन विफल</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>वॉलेट पासफ़्रेज़ को सफलतापूर्वक बदल दिया गया था।</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>चेतावनी: कैप्स लॉक कुंजी चालू है!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>आईपी /नेटमास्क "Netmask"</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation> तक बैन कर दिया</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>हस्ताक्षर और संदेश ...</translation>
+    </message>
     <message>
         <source>Synchronizing with network...</source>
         <translation>नेटवर्क से समकालिक (मिल) रहा है ...</translation>
@@ -227,12 +287,36 @@
         <translation>अप्लिकेशन से बाहर निकलना !</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>और %1 के बारे में</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>%1 के बारे में जानकारी दिखाएं</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>के बारे में और क्यूटी "Qt"</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>क्यूटी "Qt" के बारे में जानकारी दिखाएँ</translation>
+    </message>
+    <message>
         <source>&amp;Options...</source>
         <translation>&amp;विकल्प</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>और वॉलेट को गोपित "एन्क्रिप्ट" करें</translation>
+    </message>
+    <message>
         <source>&amp;Backup Wallet...</source>
         <translation>&amp;बैकप वॉलेट</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>और पासफ़्रेज़ बदलें</translation>
     </message>
     <message>
         <source>Wallet:</source>

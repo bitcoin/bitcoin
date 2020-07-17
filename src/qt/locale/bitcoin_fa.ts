@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>گشایش آدرس جدید</translation>
+        <translation>ساخت یک آدرس جدید</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>کپی کردن حساب انتخاب شده به حافظه سیستم - کلیپ بورد</translation>
+        <translation>کپی کردن آدرس  انتخاب شده به حافظه  کلیپ بورد سیستم</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -137,11 +137,11 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>برای انجام این عملیات، باید رمز کیف‌پول را وارد کنید.</translation>
+        <translation>این عملیات نیاز به رمز کیف ‌پول شما دارد تا کیف پول باز شود</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>بازکردن کیف‌پول</translation>
+        <translation>بازکردن کیف ‌پول</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
@@ -165,11 +165,15 @@
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>آیا از رمزگذاری کیف‌پول خود اطمینان دارید؟</translation>
+        <translation>آیا از رمزگذاری کیف ‌پول خود اطمینان دارید؟</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>کیف پول رمزگذاری شده است</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>رمز عبور قدیمی و رمز عبور جدید کیف پول خود را وارد کنید.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -297,6 +301,10 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>بازکردن آدرس...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>ساخت کیف پول جدید</translation>
     </message>
     <message>
         <source>Wallet:</source>

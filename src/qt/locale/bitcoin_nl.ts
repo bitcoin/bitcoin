@@ -1790,6 +1790,14 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <translation>Gesynchroniseerde blokken</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Het in kaart gebrachte autonome systeem dat wordt gebruikt voor het diversifiëren van peer-selectie.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>AS in kaart gebracht.</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
