@@ -2030,7 +2030,7 @@ static UniValue omni_listblockstransactions(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            RPCHelpMan{"omni_listblocktransactions",
+            RPCHelpMan{"omni_listblockstransactions",
                "\nLists all Omni transactions in a given range of blocks.\n",
                {
                    {"firstblock", RPCArg::Type::NUM, RPCArg::Optional::NO, "the index of the first block to consider\n"},
@@ -2043,8 +2043,8 @@ static UniValue omni_listblockstransactions(const JSONRPCRequest& request)
                    "]\n"
                },
                RPCExamples{
-                   HelpExampleCli("omni_listblocktransactions", "279007 300000")
-                   + HelpExampleRpc("omni_listblocktransactions", "279007, 300000")
+                   HelpExampleCli("omni_listblockstransactions", "279007 300000")
+                   + HelpExampleRpc("omni_listblockstransactions", "279007, 300000")
                }
             }.ToString());
 
