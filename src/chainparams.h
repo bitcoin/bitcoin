@@ -89,7 +89,9 @@ public:
     void UpdateLLMQTestParams(int size, int threshold);
     void UpdateLLMQDevnetParams(int size, int threshold);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
+    int PoolNewMinParticipants() const { return nPoolNewMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
+    int PoolNewMaxParticipants() const { return nPoolNewMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
@@ -118,7 +120,9 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     int nPoolMinParticipants;
+    int nPoolNewMinParticipants;
     int nPoolMaxParticipants;
+    int nPoolNewMaxParticipants;
     int nFulfilledRequestExpireTime;
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
