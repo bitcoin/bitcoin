@@ -1,6 +1,6 @@
 This directory contains the DashQT graphical user interface (GUI). It uses the cross platform framework [QT](https://www1.qt.io/developers/).
 
-The current precise version for QT 5 is specified in [qt.mk](/depends/packages/qt.mk). QT 4 is also supported (see [#8263](https://github.com/bitcoin/bitcoin/issues/8263)).
+The current precise version for QT 5 is specified in [qt.mk](/depends/packages/qt.mk). QT 4 is not supported.
 
 ## Compile and run
 
