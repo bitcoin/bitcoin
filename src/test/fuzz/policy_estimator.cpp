@@ -14,6 +14,11 @@
 #include <string>
 #include <vector>
 
+void initialize()
+{
+    InitializeFuzzingContext();
+}
+
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -65,5 +70,11 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         FeeCalculation fee_calculation;
         (void)block_policy_estimator.estimateSmartFee(fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeBool() ? &fee_calculation : nullptr, fuzzed_data_provider.ConsumeBool());
         (void)block_policy_estimator.HighestTargetTracked(fuzzed_data_provider.PickValueInArray({FeeEstimateHorizon::SHORT_HALFLIFE, FeeEstimateHorizon::MED_HALFLIFE, FeeEstimateHorizon::LONG_HALFLIFE}));
+    }
+    {
+        FuzzedAutoFileProvider fuzzed_auto_file_provider = ConsumeAutoFile(fuzzed_data_provider);
+        CAutoFile fuzzed_auto_file = fuzzed_auto_file_provider.open();
+        block_policy_estimator.Write(fuzzed_auto_file);
+        block_policy_estimator.Read(fuzzed_auto_file);
     }
 }
