@@ -56,8 +56,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
-        tx1 = self.nodes[1].
-        (self.asset, newaddress1, int(1*COIN))['txid']
+        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
         # use tx2 to build tx3
