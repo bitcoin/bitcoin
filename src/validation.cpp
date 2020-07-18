@@ -1263,7 +1263,7 @@ CoinsViews::CoinsViews(
 
 void CoinsViews::InitCache()
 {
-    m_cacheview = MakeUnique<CCoinsViewCache>(&m_catcherview);
+    m_cacheview = std::make_shared<CCoinsViewCache>(&m_catcherview);
 }
 
 CChainState::CChainState(BlockManager& blockman, uint256 from_snapshot_blockhash)
