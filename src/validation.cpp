@@ -2284,14 +2284,14 @@ bool CChainState::FlushStateToDisk(
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
 
-    const size_t coins_count = CoinsTip().GetCacheSize();
-    const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage();
-
     try {
     {
         bool fFlushForPrune = false;
         bool fDoFullFlush = false;
-        CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(::mempool);
+        CoinsCacheSizeState cache_state = CoinsCacheSizeState::OK;
+        if (mode == FlushStateMode::PERIODIC || mode == FlushStateMode::IF_NEEDED) {
+            cache_state = GetCoinsCacheSizeState(::mempool);
+        }
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             if (nManualPruneHeight > 0) {
@@ -2373,6 +2373,8 @@ bool CChainState::FlushStateToDisk(
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
         if (fDoFullFlush && !CoinsTip().GetBestBlock().IsNull()) {
+            const size_t coins_count = CoinsTip().GetCacheSize();
+            const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage();
             LOG_TIME_SECONDS(strprintf("write coins cache to disk (%d coins, %.2fkB)",
                 coins_count, coins_mem_usage / 1000));
 
