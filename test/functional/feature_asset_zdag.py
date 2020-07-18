@@ -58,8 +58,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
         # disconnect node 2 and 3 so they can double spend without seeing each others transaction
-        # set time 1 second into future and reconnect
-        
+        disconnect_nodes(self.nodes[0], 1)
         disconnect_nodes(self.nodes[1], 2)
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
         time.sleep(1)
@@ -69,6 +68,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
         # use tx2 to build tx4
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
+        connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
         self.sync_mempools()
         for i in range(3):
