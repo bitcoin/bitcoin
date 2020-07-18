@@ -3839,6 +3839,127 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     return true;
 }
 
+void BlockWarmer::SetCacheView(const std::shared_ptr<const CCoinsViewCache> cacheview)
+{
+    AssertLockHeld(cs_main);
+
+    StopThread();
+
+    m_cacheview = cacheview;
+
+    // If we are starting IBD from genesis, then wait for an initial flush to start warming.
+    // Warming is not useful when performing IBD from genesis and no flush has yet occurred,
+    // since all coins are already in the cache.
+    if (cacheview == nullptr || cacheview->GetBestBlock().IsNull()) {
+        return;
+    }
+
+    StartThread();
+}
+
+void BlockWarmer::StartThread()
+{
+    AssertLockHeld(cs_main);
+
+    if (m_thread_started) {
+        return;
+    }
+
+    m_thread_started = true;
+    m_thread_warm = std::thread(&TraceThread<std::function<void()>>, "warmcoins",
+                                std::bind(&BlockWarmer::WarmCoinsCacheThread, this));
+}
+
+void BlockWarmer::DidFlush()
+{
+    AssertLockHeld(cs_main);
+
+    if (m_thread_started) {
+        return;
+    }
+    StartThread();
+}
+
+void BlockWarmer::WarmCoinsCacheThread()
+{
+    while (!ShutdownRequested() && !m_stop_thread) {
+        {
+            WAIT_LOCK(m_cs_warm_block, lock);
+            while (m_stop_warming_block) {
+                m_warm_cv.wait(lock);
+            }
+        }
+
+        {
+            LOCK(m_cs_warm_block);
+
+            if (!m_warm_block) {
+                m_stop_warming_block = true;
+                continue;
+            }
+
+            for (const auto& tx : m_warm_block->vtx) {
+                if (tx->IsCoinBase()) continue;
+                for (const auto& input : tx->vin) {
+                    if (m_stop_warming_block) break;
+                    m_cacheview->AccessCoin(input.prevout);
+                }
+                if (m_stop_warming_block) break;
+            }
+
+            m_warm_block = nullptr;
+            m_stop_warming_block = true;
+        }
+    }
+}
+
+void BlockWarmer::WarmBlock(const std::shared_ptr<const CBlock> pblock, const CoinsCacheSizeState& cache_state)
+{
+    AssertLockHeld(cs_main);
+
+    if (!m_thread_started) {
+        return;
+    }
+
+    m_stop_warming_block = true;
+
+    if (cache_state >= CoinsCacheSizeState::LARGE) {
+        return;
+    }
+
+    {
+        LOCK(m_cs_warm_block);
+        m_warm_block = pblock;
+        m_stop_warming_block = false;
+        m_warm_cv.notify_all();
+    }
+}
+
+void BlockWarmer::CancelWarmingBlock()
+{
+    m_stop_warming_block = true;
+    LOCK(m_cs_warm_block);
+    m_warm_block = nullptr;
+}
+
+void BlockWarmer::StopThread()
+{
+    AssertLockHeld(cs_main);
+
+    if (!m_thread_started) return;
+
+    m_stop_thread = true;
+    {
+        CancelWarmingBlock();
+        AssertLockHeld(m_cs_warm_block);
+        // Notify the thread to continue if waiting on lock
+        m_stop_warming_block = false;
+        m_warm_cv.notify_all();
+    }
+    m_thread_warm.join();
+    m_thread_started = false;
+}
+
 bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock)
 {
     AssertLockNotHeld(cs_main);

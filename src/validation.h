@@ -33,6 +33,7 @@
 #include <utility>
 #include <vector>
 
+class BlockWarmer;
 class CChainState;
 class BlockValidationState;
 class CBlockIndex;
@@ -451,6 +452,48 @@ enum class CoinsCacheSizeState
     //! The cache is at >= 90% capacity.
     LARGE = 1,
     OK = 0
+};
+
+class BlockWarmer
+{
+  private:
+    /** Lock that is held when accessing the coins cache so coins aren't accessed during warming */
+    Mutex m_cs_warm_block;
+
+    /** The thread where coins are added to the cache */
+    std::thread m_thread_warm GUARDED_BY(::cs_main);
+
+    /** Flag to signal to the thread to abort warming the block */
+    std::atomic<bool> m_stop_warming_block{true};
+
+    /** Flag to signal to the thread to exit */
+    std::atomic<bool> m_stop_thread{false};
+
+    /** The cache view that is warmed */
+    std::shared_ptr<const CCoinsViewCache> m_cacheview GUARDED_BY(m_cs_warm_block);
+
+    /** The block to warm on the warm coins thread */
+    std::shared_ptr<const CBlock> m_warm_block GUARDED_BY(m_cs_warm_block);
+
+    /** Signals to the thread to begin warming the block */
+    std::condition_variable m_warm_cv GUARDED_BY(m_cs_warm_block);
+
+    /** Whether we have started the thread or not */
+    std::atomic<bool> m_thread_started{false};
+
+  public:
+    /** Sets the cache view. Pass nullptr to reset */
+    void SetCacheView(const std::shared_ptr<const CCoinsViewCache> cacheview) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /** Begin adding the inputs of the block to the coins cache on the warm coins thread */
+    void WarmBlock(const std::shared_ptr<const CBlock> pblock, const CoinsCacheSizeState& cache_state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void DidFlush() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void CancelWarmingBlock();
+
+  private:
+    /** The actual thread function */
+    void WarmCoinsCacheThread();
+    void StartThread() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void StopThread() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 /**
