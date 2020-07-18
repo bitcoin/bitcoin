@@ -64,15 +64,24 @@ class AssetZDAGTest(SyscoinTestFramework):
         # use tx2 to build tx4
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         self.sync_mempools()
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
-        # ensure the tx2 made it to mempool, should propogate dbl-spend first time
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx2)['status'], ZDAG_MAJOR_CONFLICT)
-        # will conflict because its using tx2 which is in conflict state
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
-        # will conflict because its using tx3 which uses tx2 which is in conflict state
-        assert_equal(self.nodes[0].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
+        for i in range(3):
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
+            # ensure the tx2 made it to mempool, should propogate dbl-spend first time
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_MAJOR_CONFLICT)
+            # will conflict because its using tx2 which is in conflict state
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
+            # will conflict because its using tx3 which uses tx2 which is in conflict state
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
         self.nodes[0].generate(1)
         self.sync_blocks()
+        for i in range(3):
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
+        
+        self.nodes[0].getrawtransaction(tx1)
+        assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].getrawtransaction, tx2
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0,'maximumAmountAsset':0})
         assert_equal(len(out), 1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.3,'maximumAmountAsset':0.3})
