@@ -6,6 +6,7 @@
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times, disconnect_nodes, connect_nodes
 from test_framework.messages import COIN
+from time import sleep
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
 ZDAG_WARNING_RBF = 1
