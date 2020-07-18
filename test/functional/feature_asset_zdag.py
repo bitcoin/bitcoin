@@ -75,12 +75,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         for i in range(3):
+            self.nodes[i].getrawtransaction(tx1)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
-        for i in range(3):
-            self.nodes[i].getrawtransaction(tx1)
             assert_raises_rpc_error(-5, 'Failed to read from asset DB', self.nodes[i].getrawtransaction, tx2)
             assert_raises_rpc_error(-5, 'Failed to read from asset DB', self.nodes[i].getrawtransaction, tx3)
             assert_raises_rpc_error(-5, 'Failed to read from asset DB', self.nodes[i].getrawtransaction, tx4)
