@@ -2546,6 +2546,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     return true;
 }
 
+static int64_t nTimeWarmingBlock = 0;
 static int64_t nTimeReadFromDisk = 0;
 static int64_t nTimeConnectTotal = 0;
 static int64_t nTimeFlush = 0;
@@ -3892,6 +3893,9 @@ void BlockWarmer::WarmCoinsCacheThread()
             }
         }
 
+        const int64_t start_time = GetTimeMicros();
+        bool did_finish = false;
+
         {
             LOCK(m_cs_warm_block);
 
@@ -3910,8 +3914,14 @@ void BlockWarmer::WarmCoinsCacheThread()
             }
 
             m_warm_block = nullptr;
+            if (!m_stop_warming_block) {
+                did_finish = true;
+            }
             m_stop_warming_block = true;
         }
+
+        const int64_t end_time = GetTimeMicros(); nTimeWarmingBlock += end_time - start_time;
+        LogPrint(BCLog::BENCH, "- Warmed coins cache for: %.2fms [%.2fs], finished %d\n", MILLI * (end_time - start_time), nTimeWarmingBlock * MICRO, did_finish);
     }
 }
 
