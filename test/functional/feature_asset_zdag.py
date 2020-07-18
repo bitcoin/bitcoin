@@ -72,7 +72,7 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
             # will conflict because its using tx3 which uses tx2 which is in conflict state
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
-        self.nodes[0].generate(10)
+        self.nodes[0].generate(1)
         self.sync_blocks()
         for i in range(3):
             self.nodes[i].getrawtransaction(tx1)
