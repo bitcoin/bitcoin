@@ -410,6 +410,7 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
 
 bool CCryptoKeyStore::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn)
 {
+    LOCK(cs_KeyStore);
     // should call EncryptKeys first
     if (!IsCrypted())
         return false;
@@ -463,6 +464,7 @@ bool CCryptoKeyStore::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn)
 
 bool CCryptoKeyStore::DecryptHDChain(CHDChain& hdChainRet) const
 {
+    LOCK(cs_KeyStore);
     if (!IsCrypted())
         return true;
 
@@ -514,6 +516,7 @@ bool CCryptoKeyStore::DecryptHDChain(CHDChain& hdChainRet) const
 
 bool CCryptoKeyStore::SetHDChain(const CHDChain& chain)
 {
+    LOCK(cs_KeyStore);
     if (IsCrypted())
         return false;
 
@@ -526,6 +529,7 @@ bool CCryptoKeyStore::SetHDChain(const CHDChain& chain)
 
 bool CCryptoKeyStore::SetCryptedHDChain(const CHDChain& chain)
 {
+    LOCK(cs_KeyStore);
     if (!SetCrypted())
         return false;
 
@@ -538,6 +542,7 @@ bool CCryptoKeyStore::SetCryptedHDChain(const CHDChain& chain)
 
 bool CCryptoKeyStore::GetHDChain(CHDChain& hdChainRet) const
 {
+    LOCK(cs_KeyStore);
     if(IsCrypted()) {
         hdChainRet = cryptedHDChain;
         return !cryptedHDChain.IsNull();

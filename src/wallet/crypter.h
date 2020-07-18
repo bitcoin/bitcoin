@@ -119,7 +119,7 @@ bool DecryptAES256(const SecureString& sKey, const std::string& sCiphertext, con
 class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
-    CHDChain cryptedHDChain;
+    CHDChain cryptedHDChain GUARDED_BY(cs_KeyStore);
 
     CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
