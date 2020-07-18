@@ -547,6 +547,9 @@ private:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    /** Warms a yet to be validated block */
+    BlockWarmer m_block_warmer;
+
 public:
     explicit CChainState(BlockManager& blockman, uint256 from_snapshot_blockhash = uint256());
 
@@ -590,10 +593,15 @@ public:
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
 
-    //! @returns A reference to the in-memory cache of the UTXO set.
+    /**
+     * @returns A reference to the in-memory cache of the UTXO set.
+     * Don't call this in the critical path from ProcessNewBlock to ConnectTip,
+     * since it will block warming the cache with the new block's inputs.
+     */
     CCoinsViewCache& CoinsTip() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
         assert(m_coins_views->m_cacheview);
+        m_block_warmer.CancelWarmingBlock();
         return *m_coins_views->m_cacheview.get();
     }
 
@@ -611,7 +619,10 @@ public:
     }
 
     //! Destructs all objects related to accessing the UTXO set.
-    void ResetCoinsViews() { m_coins_views.reset(); }
+    void ResetCoinsViews() {
+      m_block_warmer.SetCacheView(nullptr);
+      m_coins_views.reset();
+    }
 
     /**
      * Update the on-disk chain state.

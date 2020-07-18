@@ -1288,6 +1288,7 @@ void CChainState::InitCoinsCache()
 {
     assert(m_coins_views != nullptr);
     m_coins_views->InitCache();
+    m_block_warmer.SetCacheView(m_coins_views->m_cacheview);
 }
 
 // Note that though this is marked const, we may end up modifying `m_cached_finished_ibd`, which
@@ -2389,6 +2390,7 @@ bool CChainState::FlushStateToDisk(
             // Flush the chainstate (which may refer to block index entries).
             if (!CoinsTip().Flush())
                 return AbortNode(state, "Failed to write to coin database");
+            m_block_warmer.DidFlush();
             nLastFlush = nNow;
             full_flush_completed = true;
         }
@@ -3973,14 +3975,24 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
         // Therefore, the following critical section must include the CheckBlock() call as well.
         LOCK(cs_main);
 
-        // Ensure that CheckBlock() passes before calling AcceptBlock, as
-        // belt-and-suspenders.
-        bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
+        bool ret = pblock->fChecked || CheckProofOfWork(pblock->GetHash(), pblock->nBits, chainparams.GetConsensus());
         if (ret) {
+            // After checking PoW begin warming the cache to connect this block
+            ::ChainstateActive().m_block_warmer.WarmBlock(pblock, ::ChainstateActive().GetCoinsCacheSizeState(::mempool));
+
+            // Ensure that CheckBlock() passes before calling AcceptBlock, as
+            // belt-and-suspenders.
+            // No need to recheck POW since it was checked above
+            ret = CheckBlock(*pblock, state, chainparams.GetConsensus(), /* fCheckPOW */ false);
+        }
+        if (ret) {
+            // Set checked to true since it would not be if fCheckPOW is set to false
+            pblock->fChecked = true;
             // Store to disk
             ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
         }
         if (!ret) {
+            ::ChainstateActive().m_block_warmer.CancelWarmingBlock();
             GetMainSignals().BlockChecked(*pblock, state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, state.ToString());
         }
@@ -3989,8 +4001,10 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
     NotifyHeaderTip();
 
     BlockValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock))
+    if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock)) {
+        ::ChainstateActive().m_block_warmer.CancelWarmingBlock();
         return error("%s: ActivateBestChain failed (%s)", __func__, state.ToString());
+    }
 
     return true;
 }
