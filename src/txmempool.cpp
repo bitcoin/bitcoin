@@ -736,7 +736,7 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx) {
             // if conflicting transaction was received before the transaction in question
             // idea is to mine the oldest transaction in event of conflict
             // upon block, the conflict is removed
-            if(conflictit->GetTime() =< thisit->GetTime()){
+            if(conflictit->GetTime() <= thisit->GetTime()){
                 return false;
             }
         }
