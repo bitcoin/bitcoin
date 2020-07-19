@@ -825,9 +825,9 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<c
         return nullptr;
     }
     if (origin_split.size() == 1) return ParsePubkeyInner(key_exp_index, origin_split[0], permit_uncompressed, out, error);
-    if (origin_split[0].size() < 1 || origin_split[0][0] != '[') {
+    if (origin_split[0].empty() || origin_split[0][0] != '[') {
         error = strprintf("Key origin start '[ character expected but not found, got '%c' instead",
-                          origin_split[0].size() < 1 ? /** empty, implies split char */ ']' : origin_split[0][0]);
+                          origin_split[0].empty() ? /** empty, implies split char */ ']' : origin_split[0][0]);
         return nullptr;
     }
     auto slash_split = Split(origin_split[0].subspan(1), '/');
@@ -897,7 +897,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
             providers.emplace_back(std::move(pk));
             key_exp_index++;
         }
-        if (providers.size() < 1 || providers.size() > 16) {
+        if (providers.empty() || providers.size() > 16) {
             error = strprintf("Cannot have %u keys in multisig; must have between 1 and 16 keys, inclusive", providers.size());
             return nullptr;
         } else if (thres < 1) {
