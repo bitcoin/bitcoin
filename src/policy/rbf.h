@@ -18,5 +18,6 @@ enum class RBFTransactionState {
 // This involves checking sequence numbers of the transaction, as well
 // as the sequence numbers of all in-mempool ancestors.
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 
 #endif // BITCOIN_POLICY_RBF_H

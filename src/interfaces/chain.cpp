@@ -276,8 +276,9 @@ public:
     }
     RBFTransactionState isRBFOptIn(const CTransaction& tx) override
     {
-        LOCK(::mempool.cs);
-        return IsRBFOptIn(tx, ::mempool);
+        if (!m_node.mempool) return IsRBFOptInEmptyMempool(tx);
+        LOCK(m_node.mempool->cs);
+        return IsRBFOptIn(tx, *m_node.mempool);
     }
     bool hasDescendantsInMempool(const uint256& txid) override
     {
