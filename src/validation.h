@@ -160,7 +160,7 @@ void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
 /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
 bool LoadGenesisBlock(const CChainParams& chainparams);
 /** Unload database information */
-void UnloadBlockIndex();
+void UnloadBlockIndex(CTxMemPool* mempool);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck(int worker_num);
 /**

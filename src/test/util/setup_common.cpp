@@ -182,9 +182,9 @@ TestingSetup::~TestingSetup()
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.args = nullptr;
+    UnloadBlockIndex(m_node.mempool);
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
-    UnloadBlockIndex();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
