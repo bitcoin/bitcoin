@@ -24,7 +24,7 @@ public:
     bool HasWalletSupport() const override {return true;}
 
     //! Return the wallets help message.
-    void AddWalletOptions() const override;
+    void AddWalletOptions(ArgsManager& argsman) const override;
 
     //! Wallets parameter interaction
     bool ParameterInteraction() const override;
@@ -35,7 +35,7 @@ public:
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
-void WalletInit::AddWalletOptions() const
+void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
     gArgs.AddArg("-addresstype", strprintf("What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", default: \"%s\")", FormatOutputType(DEFAULT_ADDRESS_TYPE)), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     gArgs.AddArg("-avoidpartialspends", strprintf("Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u (always enabled for wallets with \"avoid_reuse\" enabled))", DEFAULT_AVOIDPARTIALSPENDS), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);

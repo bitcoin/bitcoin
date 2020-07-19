@@ -411,7 +411,7 @@ WId BitcoinApplication::getMainWinId() const
     return window->winId();
 }
 
-static void SetupUIArgs()
+static void SetupUIArgs(ArgsManager& argsman)
 {
     gArgs.AddArg("-choosedatadir", strprintf("Choose data directory on startup (default: %u)", DEFAULT_CHOOSE_DATADIR), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     gArgs.AddArg("-lang=<lang>", "Set language, for example \"de_DE\" (default: system locale)", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
@@ -454,7 +454,7 @@ int GuiMain(int argc, char* argv[])
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
     node->setupServerArgs();
-    SetupUIArgs();
+    SetupUIArgs(gArgs);
     std::string error;
     if (!node->parseParameters(argc, argv, error)) {
         node->initError(strprintf(Untranslated("Error parsing command line arguments: %s\n"), error));
