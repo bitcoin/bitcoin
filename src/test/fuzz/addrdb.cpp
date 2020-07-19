@@ -17,6 +17,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
+    // The point of this code is to exercise all CBanEntry constructors.
     const CBanEntry ban_entry = [&] {
         switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 2)) {
         case 0:
@@ -32,4 +33,5 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
         return CBanEntry{};
     }();
+    (void)ban_entry; // currently unused
 }
