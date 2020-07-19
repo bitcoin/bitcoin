@@ -29,7 +29,7 @@ public:
 
 void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
-    gArgs.AddHiddenArgs({
+    argsman.AddHiddenArgs({
         "-addresstype",
         "-avoidpartialspends",
         "-changetype",
