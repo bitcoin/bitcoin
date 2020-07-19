@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_GOVERNANCE_GOVERNANCE-VOTEDB_H
-#define BITCOIN_GOVERNANCE_GOVERNANCE-VOTEDB_H
+#ifndef BITCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
+#define BITCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
 
 #include <list>
 #include <map>
@@ -92,4 +92,4 @@ private:
     void RebuildIndex();
 };
 
-#endif // BITCOIN_GOVERNANCE_GOVERNANCE-VOTEDB_H
+#endif // BITCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H

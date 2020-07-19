@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_GOVERNANCE_GOVERNANCE-OBJECT_H
-#define BITCOIN_GOVERNANCE_GOVERNANCE-OBJECT_H
+#ifndef BITCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H
+#define BITCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H
 
 #include <cachemultimap.h>
 #include <governance/governance-exceptions.h>
@@ -356,4 +356,4 @@ public:
 };
 
 
-#endif // BITCOIN_GOVERNANCE_GOVERNANCE-OBJECT_H
+#endif // BITCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H
