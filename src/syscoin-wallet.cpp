@@ -19,10 +19,10 @@
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 
-static void SetupWalletToolArgs()
+static void SetupWalletToolArgs(ArgsManager& argsman)
 {
-    SetupHelpOptions(gArgs);
-    SetupChainParamsBaseOptions();
+    SetupHelpOptions(argsman);
+    SetupChainParamsBaseOptions(argsman);
 
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
@@ -36,7 +36,7 @@ static void SetupWalletToolArgs()
 
 static bool WalletAppInit(int argc, char* argv[])
 {
-    SetupWalletToolArgs();
+    SetupWalletToolArgs(gArgs);
     std::string error_message;
     if (!gArgs.ParseParameters(argc, argv, error_message)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
