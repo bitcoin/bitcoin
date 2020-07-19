@@ -282,8 +282,9 @@ public:
     }
     bool hasDescendantsInMempool(const uint256& txid) override
     {
-        LOCK(::mempool.cs);
-        auto it = ::mempool.GetIter(txid);
+        if (!m_node.mempool) return false;
+        LOCK(m_node.mempool->cs);
+        auto it = m_node.mempool->GetIter(txid);
         return it && (*it)->GetCountWithDescendants() > 1;
     }
     bool broadcastTransaction(const CTransactionRef& tx,
@@ -299,7 +300,9 @@ public:
     }
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {
-        ::mempool.GetTransactionAncestry(txid, ancestors, descendants);
+        ancestors = descendants = 0;
+        if (!m_node.mempool) return;
+        m_node.mempool->GetTransactionAncestry(txid, ancestors, descendants);
     }
     void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) override
     {
@@ -308,6 +311,7 @@ public:
     }
     bool checkChainLimits(const CTransactionRef& tx) override
     {
+        if (!m_node.mempool) return true;
         LockPoints lp;
         CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
         CTxMemPool::setEntries ancestors;
@@ -316,8 +320,9 @@ public:
         auto limit_descendant_count = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
         auto limit_descendant_size = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000;
         std::string unused_error_string;
-        LOCK(::mempool.cs);
-        return ::mempool.CalculateMemPoolAncestors(entry, ancestors, limit_ancestor_count, limit_ancestor_size,
+        LOCK(m_node.mempool->cs);
+        return m_node.mempool->CalculateMemPoolAncestors(
+            entry, ancestors, limit_ancestor_count, limit_ancestor_size,
             limit_descendant_count, limit_descendant_size, unused_error_string);
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
@@ -330,7 +335,8 @@ public:
     }
     CFeeRate mempoolMinFee() override
     {
-        return ::mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+        if (!m_node.mempool) return {};
+        return m_node.mempool->GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     }
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }
     CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
@@ -396,8 +402,9 @@ public:
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {
-        LOCK2(::cs_main, ::mempool.cs);
-        for (const CTxMemPoolEntry& entry : ::mempool.mapTx) {
+        if (!m_node.mempool) return;
+        LOCK2(::cs_main, m_node.mempool->cs);
+        for (const CTxMemPoolEntry& entry : m_node.mempool->mapTx) {
             notifications.transactionAddedToMempool(entry.GetSharedTx());
         }
     }
