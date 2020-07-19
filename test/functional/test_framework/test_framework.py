@@ -31,6 +31,7 @@ from .util import (
     disconnect_nodes,
     get_datadir_path,
     initialize_datadir,
+    wait_until,
 )
 
 
@@ -601,6 +602,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def sync_all(self, nodes=None):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
+
+    def wait_until(self, test_function, timeout=60, lock=None):
+        return wait_until(test_function, timeout=timeout, lock=lock, timeout_factor=self.options.timeout_factor)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
