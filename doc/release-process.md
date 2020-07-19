@@ -45,7 +45,7 @@ Write release notes. git shortlog helps a lot, for example:
 
 Generate list of authors:
 
-    git log --format='%aN' "$*" | sort -ui | sed -e 's/^/- /'
+    git log --format='- %aN' v(current version, e.g. 0.16.0)..v(new version, e.g. 0.16.1) | sort -fiu
 
 Tag version (or release candidate) in git
 

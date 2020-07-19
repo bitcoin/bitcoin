@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
     size_t nTasks = microTasks.getQueueInfo(first, last);
     BOOST_CHECK(nTasks == 0);
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; ++i) {
         boost::chrono::system_clock::time_point t = now + boost::chrono::microseconds(randomMsec(rng));
         boost::chrono::system_clock::time_point tReschedule = now + boost::chrono::microseconds(500 + randomMsec(rng));
         int whichCounter = zeroToNine(rng);
@@ -110,6 +110,48 @@ BOOST_AUTO_TEST_CASE(manythreads)
         counterSum += counter[i];
     }
     BOOST_CHECK_EQUAL(counterSum, 200);
+}
+
+BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
+{
+    CScheduler scheduler;
+
+    // each queue should be well ordered with respect to itself but not other queues
+    SingleThreadedSchedulerClient queue1(&scheduler);
+    SingleThreadedSchedulerClient queue2(&scheduler);
+
+    // create more threads than queues
+    // if the queues only permit execution of one task at once then
+    // the extra threads should effectively be doing nothing
+    // if they don't we'll get out of order behaviour
+    boost::thread_group threads;
+    for (int i = 0; i < 5; ++i) {
+        threads.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
+    }
+
+    // these are not atomic, if SinglethreadedSchedulerClient prevents
+    // parallel execution at the queue level no synchronization should be required here
+    int counter1 = 0;
+    int counter2 = 0;
+
+    // just simply count up on each queue - if execution is properly ordered then
+    // the callbacks should run in exactly the order in which they were enqueued
+    for (int i = 0; i < 100; ++i) {
+        queue1.AddToProcessQueue([i, &counter1]() {
+            BOOST_CHECK_EQUAL(i, counter1++);
+        });
+
+        queue2.AddToProcessQueue([i, &counter2]() {
+            BOOST_CHECK_EQUAL(i, counter2++);
+        });
+    }
+
+    // finish up
+    scheduler.stop(true);
+    threads.join_all();
+
+    BOOST_CHECK_EQUAL(counter1, 100);
+    BOOST_CHECK_EQUAL(counter2, 100);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
