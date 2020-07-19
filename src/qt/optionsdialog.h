@@ -60,15 +60,18 @@ private Q_SLOTS:
     void updateProxyValidationState();
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
+    void updateTheme(const QString& toTheme = QString());
 
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
+    void themeChanged();
 
 private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
     QButtonGroup pageButtons;
+    QString previousTheme;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

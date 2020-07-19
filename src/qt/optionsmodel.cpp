@@ -83,7 +83,7 @@ void OptionsModel::Init(bool resetSettings)
     strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "").toString();
 
     if (!settings.contains("theme"))
-        settings.setValue("theme", "");
+        settings.setValue("theme", GUIUtil::getDefaultTheme());
 
 #ifdef ENABLE_WALLET
     if (!settings.contains("fCoinControlFeatures"))
@@ -502,10 +502,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
 #endif // ENABLE_WALLET
         case Theme:
-            if (settings.value("theme") != value) {
-                settings.setValue("theme", value);
-                setRestartRequired(true);
-            }
+            // Set in OptionsDialog::updateTheme slot now
+            // to allow instant theme changes.
             break;
         case Language:
             if (settings.value("language") != value) {

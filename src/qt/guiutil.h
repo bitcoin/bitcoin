@@ -253,10 +253,13 @@ namespace GUIUtil
     /** Return a list of all theme css files */
     const std::vector<QString> listThemes();
 
-    /** Updates the widgets stylesheet and adds it to the list of ui debug elements
-        if fDebugWidget is true. Beeing on that list means the stylesheet of the
-        widget gets updated if the related css files has been changed if -debug-ui mode is active. */
-    void loadStyleSheet(QWidget* widget = nullptr, bool fDebugWidget = true);
+    /** Return the name of the default theme `*/
+    const QString getDefaultTheme();
+
+    /** Updates the widgets stylesheet and adds it to the list of ui debug elements.
+    Beeing on that list means the stylesheet of the widget gets updated if the
+    related css files has been changed if -debug-ui mode is active. */
+    void loadStyleSheet(QWidget* widget = nullptr, bool fForceUpdate = false);
 
     enum class FontFamily {
         SystemDefault,
@@ -335,9 +338,15 @@ namespace GUIUtil
     /** Check if a dash specific theme is activated (light/dark).*/
     bool dashThemeActive();
 
+    /** Load the theme and update all UI elements according to the appearance settings. */
+    void loadTheme(QWidget* widget = nullptr, bool fForce = true);
+
     /** Disable the OS default focus rect for macOS because we have custom focus rects
      * set in the css files */
     void disableMacFocusRect(const QWidget* w);
+
+    /** Enable/Disable the macOS focus rects depending on the current theme. */
+    void updateMacFocusRects();
 
     /* Convert QString to OS specific boost path through UTF-8 */
     fs::path qstringToBoostPath(const QString &path);

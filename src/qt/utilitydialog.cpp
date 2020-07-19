@@ -210,7 +210,7 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
 {
     setObjectName("ShutdownWindow");
 
-    GUIUtil::loadStyleSheet(this, false);
+    GUIUtil::loadStyleSheet(this);
 
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
