@@ -18,7 +18,7 @@ from test_framework.messages import (
 )
 from test_framework.mininode import (
     P2PInterface,
-    mininode_lock,
+    p2p_lock,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -73,7 +73,7 @@ class TxDownloadTest(BitcoinTestFramework):
 
         def getdata_found(peer_index):
             p = self.nodes[0].p2ps[peer_index]
-            with mininode_lock:
+            with p2p_lock:
                 return p.last_message.get("getdata") and p.last_message["getdata"].inv[-1].hash == txid
 
         node_0_mocktime = int(time.time())
@@ -134,18 +134,18 @@ class TxDownloadTest(BitcoinTestFramework):
 
         p = self.nodes[0].p2ps[0]
 
-        with mininode_lock:
+        with p2p_lock:
             p.tx_getdata_count = 0
 
         p.send_message(msg_inv([CInv(t=MSG_WTX, h=i) for i in txids]))
-        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT, lock=mininode_lock)
-        with mininode_lock:
+        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT, lock=p2p_lock)
+        with p2p_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT)
 
         self.log.info("Now check that if we send a NOTFOUND for a transaction, we'll get one more request")
         p.send_message(msg_notfound(vec=[CInv(t=MSG_WTX, h=txids[0])]))
-        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT + 1, timeout=10, lock=mininode_lock)
-        with mininode_lock:
+        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT + 1, timeout=10, lock=p2p_lock)
+        with p2p_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT + 1)
 
         WAIT_TIME = TX_EXPIRY_INTERVAL // 2 + TX_EXPIRY_INTERVAL

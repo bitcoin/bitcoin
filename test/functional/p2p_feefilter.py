@@ -7,7 +7,7 @@
 from decimal import Decimal
 
 from test_framework.messages import MSG_TX, MSG_WTX, msg_feefilter
-from test_framework.mininode import mininode_lock, P2PInterface
+from test_framework.mininode import p2p_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -23,7 +23,7 @@ class FeefilterConn(P2PInterface):
         self.feefilter_received = True
 
     def assert_feefilter_received(self, recv: bool):
-        with mininode_lock:
+        with p2p_lock:
             assert_equal(self.feefilter_received, recv)
 
 
@@ -42,7 +42,7 @@ class TestP2PConn(P2PInterface):
         self.wait_until(lambda: invs_expected == sorted(self.txinvs), timeout=60)
 
     def clear_invs(self):
-        with mininode_lock:
+        with p2p_lock:
             self.txinvs = []
 
 

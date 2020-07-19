@@ -320,7 +320,7 @@ class P2PInterface(P2PConnection):
 
         We keep a count of how many of each message type has been received
         and the most recent message of each type."""
-        with mininode_lock:
+        with p2p_lock:
             try:
                 msgtype = message.msgtype.decode('ascii')
                 self.message_count[msgtype] += 1
@@ -394,7 +394,7 @@ class P2PInterface(P2PConnection):
                 assert self.is_connected
             return test_function_in()
 
-        wait_until(test_function, timeout=timeout, lock=mininode_lock, timeout_factor=self.timeout_factor)
+        wait_until(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected
@@ -498,7 +498,7 @@ class P2PInterface(P2PConnection):
 # P2PConnection acquires this lock whenever delivering a message to a P2PInterface.
 # This lock should be acquired in the thread running the test logic to synchronize
 # access to any data shared with the P2PInterface or P2PConnection.
-mininode_lock = threading.Lock()
+p2p_lock = threading.Lock()
 
 
 class NetworkThread(threading.Thread):
@@ -592,7 +592,7 @@ class P2PDataStore(P2PInterface):
          - if success is False: assert that the node's tip doesn't advance
          - if reject_reason is set: assert that the correct reject message is logged"""
 
-        with mininode_lock:
+        with p2p_lock:
             for block in blocks:
                 self.block_store[block.sha256] = block
                 self.last_block_hash = block.sha256
@@ -629,7 +629,7 @@ class P2PDataStore(P2PInterface):
          - if expect_disconnect is True: Skip the sync with ping
          - if reject_reason is set: assert that the correct reject message is logged."""
 
-        with mininode_lock:
+        with p2p_lock:
             for tx in txs:
                 self.tx_store[tx.sha256] = tx
 
@@ -668,7 +668,7 @@ class P2PTxInvStore(P2PInterface):
                 self.tx_invs_received[i.hash] += 1
 
     def get_invs(self):
-        with mininode_lock:
+        with p2p_lock:
             return list(self.tx_invs_received.keys())
 
     def wait_for_broadcast(self, txns, timeout=60):

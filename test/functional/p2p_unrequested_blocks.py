@@ -55,7 +55,7 @@ import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
 from test_framework.messages import CBlockHeader, CInv, MSG_BLOCK, msg_block, msg_headers, msg_inv
-from test_framework.mininode import mininode_lock, P2PInterface
+from test_framework.mininode import p2p_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -199,13 +199,13 @@ class AcceptBlockTest(BitcoinTestFramework):
         # 6. Try to get node to request the missing block.
         # Poke the node with an inv for block at height 3 and see if that
         # triggers a getdata on block 2 (it should if block 2 is missing).
-        with mininode_lock:
+        with p2p_lock:
             # Clear state so we can check the getdata request
             test_node.last_message.pop("getdata", None)
             test_node.send_message(msg_inv([CInv(MSG_BLOCK, block_h3.sha256)]))
 
         test_node.sync_with_ping()
-        with mininode_lock:
+        with p2p_lock:
             getdata = test_node.last_message["getdata"]
 
         # Check that the getdata includes the right block

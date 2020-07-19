@@ -19,7 +19,7 @@ from test_framework.messages import (
     msg_mempool,
     msg_version,
 )
-from test_framework.mininode import P2PInterface, mininode_lock
+from test_framework.mininode import P2PInterface, p2p_lock
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -60,22 +60,22 @@ class P2PBloomFilter(P2PInterface):
 
     @property
     def tx_received(self):
-        with mininode_lock:
+        with p2p_lock:
             return self._tx_received
 
     @tx_received.setter
     def tx_received(self, value):
-        with mininode_lock:
+        with p2p_lock:
             self._tx_received = value
 
     @property
     def merkleblock_received(self):
-        with mininode_lock:
+        with p2p_lock:
             return self._merkleblock_received
 
     @merkleblock_received.setter
     def merkleblock_received(self, value):
-        with mininode_lock:
+        with p2p_lock:
             self._merkleblock_received = value
 
 

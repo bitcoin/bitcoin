@@ -44,7 +44,7 @@ from test_framework.messages import (
 )
 from test_framework.mininode import (
     P2PInterface,
-    mininode_lock,
+    p2p_lock,
 )
 from test_framework.script import (
     CScript,
@@ -177,7 +177,7 @@ class TestP2PConn(P2PInterface):
         if success:
             # sanity check
             assert (self.wtxidrelay and use_wtxid) or (not self.wtxidrelay and not use_wtxid)
-        with mininode_lock:
+        with p2p_lock:
             self.last_message.pop("getdata", None)
         if use_wtxid:
             wtxid = tx.calc_sha256(True)
@@ -195,7 +195,7 @@ class TestP2PConn(P2PInterface):
             assert not self.last_message.get("getdata")
 
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
-        with mininode_lock:
+        with p2p_lock:
             self.last_message.pop("getdata", None)
             self.last_message.pop("getheaders", None)
         msg = msg_headers()
@@ -209,7 +209,7 @@ class TestP2PConn(P2PInterface):
         self.wait_for_getdata([block.sha256])
 
     def request_block(self, blockhash, inv_type, timeout=60):
-        with mininode_lock:
+        with p2p_lock:
             self.last_message.pop("block", None)
         self.send_message(msg_getdata(inv=[CInv(inv_type, blockhash)]))
         self.wait_for_block(blockhash, timeout)
@@ -2114,7 +2114,7 @@ class SegWitTest(BitcoinTestFramework):
         # Check wtxidrelay feature negotiation message through connecting a new peer
         def received_wtxidrelay():
             return (len(self.wtx_node.last_wtxidrelay) > 0)
-        wait_until(received_wtxidrelay, timeout=60, lock=mininode_lock)
+        wait_until(received_wtxidrelay, timeout=60, lock=p2p_lock)
 
         # Create a Segwit output from the latest UTXO
         # and announce it to the network
@@ -2138,25 +2138,25 @@ class SegWitTest(BitcoinTestFramework):
         # Announce Segwit transaction with wtxid
         # and wait for getdata
         self.wtx_node.announce_tx_and_wait_for_getdata(tx2, use_wtxid=True)
-        with mininode_lock:
+        with p2p_lock:
             lgd = self.wtx_node.lastgetdata[:]
         assert_equal(lgd, [CInv(MSG_WTX, tx2.calc_sha256(True))])
 
         # Announce Segwit transaction from non wtxidrelay peer
         # and wait for getdata
         self.tx_node.announce_tx_and_wait_for_getdata(tx2, use_wtxid=False)
-        with mininode_lock:
+        with p2p_lock:
             lgd = self.tx_node.lastgetdata[:]
         assert_equal(lgd, [CInv(MSG_TX|MSG_WITNESS_FLAG, tx2.sha256)])
 
         # Send tx2 through; it's an orphan so won't be accepted
-        with mininode_lock:
+        with p2p_lock:
             self.wtx_node.last_message.pop("getdata", None)
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx2, with_witness=True, accepted=False)
 
         # Expect a request for parent (tx) by txid despite use of WTX peer
         self.wtx_node.wait_for_getdata([tx.sha256], 60)
-        with mininode_lock:
+        with p2p_lock:
             lgd = self.wtx_node.lastgetdata[:]
         assert_equal(lgd, [CInv(MSG_TX|MSG_WITNESS_FLAG, tx.sha256)])
 
