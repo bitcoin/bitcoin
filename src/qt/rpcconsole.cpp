@@ -1263,6 +1263,16 @@ void RPCConsole::hideEvent(QHideEvent *event)
     clientModel->getPeerTableModel()->stopAutoRefresh();
 }
 
+void RPCConsole::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::StyleChange) {
+        clear();
+        ui->promptIcon->setHidden(GUIUtil::dashThemeActive());
+    }
+
+    QWidget::changeEvent(e);
+}
+
 void RPCConsole::showPeersTableContextMenu(const QPoint& point)
 {
     QModelIndex index = ui->peerWidget->indexAt(point);

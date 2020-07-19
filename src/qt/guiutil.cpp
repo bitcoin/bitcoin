@@ -132,6 +132,11 @@ static std::set<QWidget*> setFixedPitchFontUpdates;
 // Contains all widgets where a non-default fontsize has been seet with GUIUtil::setFont
 static std::map<QWidget*, int> mapFontSizeUpdates;
 
+#ifdef Q_OS_MAC
+// Contains all widgets where the macOS focus rect has been disabled.
+static std::set<QWidget*> setRectsDisabled;
+#endif
+
 static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::DEFAULT, QColor(85, 85, 85) },
     { ThemedColor::UNCONFIRMED, QColor(128, 128, 128) },
@@ -1025,7 +1030,12 @@ const std::vector<QString> listThemes()
     return vecThemes;
 }
 
-void loadStyleSheet(QWidget* widget, bool fDebugWidget)
+const QString getDefaultTheme()
+{
+    return defaultTheme;
+}
+
+void loadStyleSheet(QWidget* widget, bool fForceUpdate)
 {
     AssertLockNotHeld(cs_css);
     LOCK(cs_css);
@@ -1036,7 +1046,7 @@ void loadStyleSheet(QWidget* widget, bool fDebugWidget)
     bool fDebugCustomStyleSheets = gArgs.GetBoolArg("-debug-ui", false) && isStyleSheetDirectoryCustom();
     bool fStyleSheetChanged = false;
 
-    if (stylesheet == nullptr || fDebugCustomStyleSheets) {
+    if (stylesheet == nullptr || fForceUpdate || fDebugCustomStyleSheets) {
         auto hasModified = [](const std::vector<QString>& vecFiles) -> bool {
             static std::map<const QString, QDateTime> mapLastModified;
 
@@ -1053,7 +1063,7 @@ void loadStyleSheet(QWidget* widget, bool fDebugWidget)
         };
 
         auto loadFiles = [&](const std::vector<QString>& vecFiles) -> bool {
-            if (fDebugCustomStyleSheets && !hasModified(vecFiles)) {
+            if (!fForceUpdate && fDebugCustomStyleSheets && !hasModified(vecFiles)) {
                 return false;
             }
 
@@ -1086,29 +1096,27 @@ void loadStyleSheet(QWidget* widget, bool fDebugWidget)
         fStyleSheetChanged = loadFiles(vecFiles);
     }
 
-    bool fUpdateStyleSheet = fDebugCustomStyleSheets && fStyleSheetChanged;
-
-    if (fDebugWidget) {
-        setWidgets.insert(widget);
-        QWidgetList allWidgets = QApplication::allWidgets();
-        auto it = setWidgets.begin();
-        while (it != setWidgets.end()) {
-            if (!allWidgets.contains(*it)) {
-                it = setWidgets.erase(it);
-                continue;
-            }
-            if (fUpdateStyleSheet && *it != widget) {
-                (*it)->setStyleSheet(*stylesheet);
-            }
-            ++it;
-        }
-    }
+    bool fUpdateStyleSheet = fForceUpdate || (fDebugCustomStyleSheets && fStyleSheetChanged);
 
     if (widget) {
+        setWidgets.insert(widget);
         widget->setStyleSheet(*stylesheet);
     }
 
-    if (!ShutdownRequested() && fDebugCustomStyleSheets) {
+    QWidgetList allWidgets = QApplication::allWidgets();
+    auto it = setWidgets.begin();
+    while (it != setWidgets.end()) {
+        if (!allWidgets.contains(*it)) {
+            it = setWidgets.erase(it);
+            continue;
+        }
+        if (fUpdateStyleSheet && *it != widget) {
+            (*it)->setStyleSheet(*stylesheet);
+        }
+        ++it;
+    }
+
+    if (!ShutdownRequested() && fDebugCustomStyleSheets && !fForceUpdate) {
         QTimer::singleShot(200, [] { loadStyleSheet(); });
     }
 }
@@ -1517,12 +1525,36 @@ bool dashThemeActive()
     return theme != traditionalTheme;
 }
 
+void loadTheme(QWidget* widget, bool fForce)
+{
+    loadStyleSheet(widget, fForce);
+    updateFonts();
+    updateMacFocusRects();
+}
+
 void disableMacFocusRect(const QWidget* w)
 {
 #ifdef Q_OS_MAC
     for (const auto& c : w->findChildren<QWidget*>()) {
         if (c->testAttribute(Qt::WA_MacShowFocusRect)) {
             c->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
+            setRectsDisabled.emplace(c);
+        }
+    }
+#endif
+}
+
+void updateMacFocusRects()
+{
+#ifdef Q_OS_MAC
+    QWidgetList allWidgets = QApplication::allWidgets();
+    auto it = setRectsDisabled.begin();
+    while (it != setRectsDisabled.end()) {
+        if (allWidgets.contains(*it)) {
+            (*it)->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
+            ++it;
+        } else {
+            it = setRectsDisabled.erase(it);
         }
     }
 #endif
