@@ -1710,7 +1710,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
 }
 
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
-CTransactionRef static FindTxForGetData(const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
+static CTransactionRef FindTxForGetData(const CTxMemPool& mempool, const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
 {
     auto txinfo = mempool.info(gtxid);
     if (txinfo.tx) {
@@ -1766,7 +1766,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             continue;
         }
 
-        CTransactionRef tx = FindTxForGetData(pfrom, ToGenTxid(inv), mempool_req, now);
+        CTransactionRef tx = FindTxForGetData(mempool, pfrom, ToGenTxid(inv), mempool_req, now);
         if (tx) {
             // WTX and WITNESS_TX imply we serialize with witness
             int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
@@ -2732,7 +2732,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
                 }
             } else if (inv.IsGenTxMsg()) {
                 const GenTxid gtxid = ToGenTxid(inv);
-                const bool fAlreadyHave = AlreadyHaveTx(gtxid, mempool);
+                const bool fAlreadyHave = AlreadyHaveTx(gtxid, m_mempool);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 pfrom.AddKnownTx(inv.hash);
@@ -3003,7 +3003,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
 
         std::list<CTransactionRef> lRemovedTxn;
 
-        // We do the AlreadyHave() check using wtxid, rather than txid - in the
+        // We do the AlreadyHaveTx() check using wtxid, rather than txid - in the
         // absence of witness malleation, this is strictly better, because the
         // recent rejects filter may contain the wtxid but rarely contains
         // the txid of a segwit transaction that has been rejected.
