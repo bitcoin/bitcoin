@@ -19,7 +19,7 @@ from test_framework.util import (
     p2p_port,
     wait_until,
 )
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 import test_framework.messages
 from test_framework.messages import (
     NODE_NETWORK,

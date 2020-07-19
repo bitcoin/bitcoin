@@ -7,7 +7,7 @@ import time
 
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import ToHex
-from test_framework.mininode import P2PTxInvStore, p2p_lock
+from test_framework.p2p import P2PTxInvStore, p2p_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
 

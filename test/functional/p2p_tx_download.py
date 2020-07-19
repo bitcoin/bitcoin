@@ -16,7 +16,7 @@ from test_framework.messages import (
     msg_inv,
     msg_notfound,
 )
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
 )

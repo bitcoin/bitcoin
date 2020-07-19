@@ -87,7 +87,7 @@ e. Announce one more that doesn't connect.
 """
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import CInv
-from test_framework.mininode import (
+from test_framework.p2p import (
     CBlockHeader,
     NODE_WITNESS,
     P2PInterface,

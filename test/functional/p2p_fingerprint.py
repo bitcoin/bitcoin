@@ -12,7 +12,7 @@ import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.messages import CInv, MSG_BLOCK
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PInterface,
     msg_headers,
     msg_block,

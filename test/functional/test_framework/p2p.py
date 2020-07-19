@@ -67,7 +67,7 @@ from test_framework.messages import (
 )
 from test_framework.util import wait_until
 
-logger = logging.getLogger("TestFramework.mininode")
+logger = logging.getLogger("TestFramework.p2p")
 
 MESSAGEMAP = {
     b"addr": msg_addr,

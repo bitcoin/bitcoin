@@ -42,7 +42,7 @@ from test_framework.messages import (
     uint256_from_str,
     FromHex,
 )
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
 )
