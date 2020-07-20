@@ -28,7 +28,7 @@ public:
     template<typename T>
     static uint256 BuildSignHash(const T& s)
     {
-        return BuildSignHash((uint8_t)s.llmqType, s.quorumHash, s.id, s.msgHash);
+        return BuildSignHash(s.llmqType, s.quorumHash, s.id, s.msgHash);
     }
 
     static bool IsAllMembersConnectedEnabled(uint8_t llmqType);

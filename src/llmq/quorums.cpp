@@ -211,7 +211,7 @@ bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, const
     assert(pindexQuorum);
     assert(qc.quorumHash == pindexQuorum->GetBlockHash());
 
-    auto members = CLLMQUtils::GetAllQuorumMembers((uint8_t)qc.llmqType, pindexQuorum);
+    auto members = CLLMQUtils::GetAllQuorumMembers(qc.llmqType, pindexQuorum);
 
     quorum->Init(qc, pindexQuorum, minedBlockHash, members);
 
@@ -242,7 +242,7 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitment& fqc, std::
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
     BLSSecretKeyVector skContributions;
-    if (!dkgManager.GetVerifiedContributions((uint8_t)fqc.llmqType, quorum->pindexQuorum, fqc.validMembers, memberIndexes, vvecs, skContributions)) {
+    if (!dkgManager.GetVerifiedContributions(fqc.llmqType, quorum->pindexQuorum, fqc.validMembers, memberIndexes, vvecs, skContributions)) {
         return false;
     }
 

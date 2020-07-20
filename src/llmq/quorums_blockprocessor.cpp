@@ -46,14 +46,14 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             return;
         }
 
-        if (!Params().GetConsensus().llmqs.count((uint8_t)qc.llmqType)) {
+        if (!Params().GetConsensus().llmqs.count(qc.llmqType)) {
             LOCK(cs_main);
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                     qc.llmqType, pfrom->GetId());
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
-        auto type = (uint8_t)qc.llmqType;
+        auto type = qc.llmqType;
         const auto& params = Params().GetConsensus().llmqs.at(type);
 
         // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
@@ -181,9 +181,9 @@ static std::tuple<std::string, uint8_t, uint32_t> BuildInversedHeightKey(uint8_t
 
 bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state)
 {
-    auto& params = Params().GetConsensus().llmqs.at((uint8_t)qc.llmqType);
+    auto& params = Params().GetConsensus().llmqs.at(qc.llmqType);
 
-    uint256 quorumHash = GetQuorumBlockHash((uint8_t)qc.llmqType, nHeight);
+    uint256 quorumHash = GetQuorumBlockHash(qc.llmqType, nHeight);
 
     // skip `bad-qc-block` checks below when replaying blocks after the crash
     if (!::ChainActive().Tip()) {
@@ -256,10 +256,10 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
         }
 
         evoDb.Erase(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(qc.llmqType, qc.quorumHash)));
-        evoDb.Erase(BuildInversedHeightKey((uint8_t)qc.llmqType, pindex->nHeight));
+        evoDb.Erase(BuildInversedHeightKey(qc.llmqType, pindex->nHeight));
         {
             LOCK(minableCommitmentsCs);
-            hasMinedCommitmentCache.erase(std::make_pair((uint8_t)qc.llmqType, qc.quorumHash));
+            hasMinedCommitmentCache.erase(std::make_pair(qc.llmqType, qc.quorumHash));
         }
 
         // if a reorg happened, we should allow to mine this commitment later
@@ -288,11 +288,11 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
         }
         for(const auto& commitment: qc.commitments) {
             // only allow one commitment per type and per block
-            if (ret.count((uint8_t)commitment.llmqType)) {
+            if (ret.count(commitment.llmqType)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
             }
 
-            ret.emplace((uint8_t)commitment.llmqType, std::move(commitment));
+            ret.emplace(commitment.llmqType, std::move(commitment));
         }
     }
     
@@ -449,7 +449,7 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
     {
         LOCK(minableCommitmentsCs);
 
-        auto k = std::make_pair((uint8_t) fqc.llmqType, fqc.quorumHash);
+        auto k = std::make_pair(fqc.llmqType, fqc.quorumHash);
         auto ins = minableCommitmentsByQuorum.emplace(k, commitmentHash);
         if (ins.second) {
             minableCommitments.emplace(commitmentHash, fqc);
