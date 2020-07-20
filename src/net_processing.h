@@ -40,6 +40,7 @@ struct PeerStats {
     bool m_addr_relay_enabled{false};
     ServiceFlags their_services;
     int64_t presync_height{-1};
+    std::string m_clean_subversion;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
