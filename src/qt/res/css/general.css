@@ -1482,12 +1482,6 @@ QWidget .QFrame#framePrivateSend .QWidget#layoutWidgetLastMessageAndButtons {
     max-width: 451px;
 }
 
-QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendLastMessage { /* PrivateSend Status Notifications */
-    qproperty-alignment: 'AlignVCenter | AlignLeft';
-    min-width: 288px;
-    min-height: 50px;
-}
-
 QWidget .QFrame#framePrivateSend .QPushButton#togglePrivateSend { /* Start PrivateSend Mixing */
     margin-top: 5px;
 }

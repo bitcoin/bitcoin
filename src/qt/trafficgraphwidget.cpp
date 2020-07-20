@@ -79,6 +79,9 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     QRect drawRect = rect();
+    // First draw the border
+    painter.fillRect(drawRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
+    drawRect.adjust(1, 1, -1, -1);
     painter.fillRect(drawRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
 
     if(fMax <= 0.0f) return;

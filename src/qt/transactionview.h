@@ -82,10 +82,12 @@ private:
     QAction *abandonAction;
 
     QWidget *createDateRangeWidget();
+    void updateCalendarWidgets();
 
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
 
     virtual void resizeEvent(QResizeEvent* event) override;
+    void changeEvent(QEvent* e) override;
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
