@@ -116,7 +116,7 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
 
     for (auto& p : baseQuorumHashes) {
         if (!quorumHashes.count(p)) {
-            deletedQuorums.emplace_back((uint8_t)p.first, p.second);
+            deletedQuorums.emplace_back(p.first, p.second);
         }
     }
     for (auto& p : quorumHashes) {

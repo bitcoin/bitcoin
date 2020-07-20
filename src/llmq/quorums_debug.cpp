@@ -18,7 +18,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
 {
     UniValue ret(UniValue::VOBJ);
 
-    if (!Params().GetConsensus().llmqs.count((uint8_t)llmqType) || quorumHash.IsNull()) {
+    if (!Params().GetConsensus().llmqs.count(llmqType) || quorumHash.IsNull()) {
         return ret;
     }
 
@@ -30,7 +30,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
             pindex = LookupBlockIndex(quorumHash);
         }
         if (pindex != nullptr) {
-            dmnMembers = CLLMQUtils::GetAllQuorumMembers((uint8_t) llmqType, pindex);
+            dmnMembers = CLLMQUtils::GetAllQuorumMembers(llmqType, pindex);
         }
     }
 
@@ -122,10 +122,10 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
 
     UniValue sessionsJson(UniValue::VOBJ);
     for (const auto& p : sessions) {
-        if (!Params().GetConsensus().llmqs.count((uint8_t)p.first)) {
+        if (!Params().GetConsensus().llmqs.count(p.first)) {
             continue;
         }
-        const auto& params = Params().GetConsensus().llmqs.at((uint8_t)p.first);
+        const auto& params = Params().GetConsensus().llmqs.at(p.first);
         sessionsJson.pushKV(params.name, p.second.ToJson(detailLevel));
     }
 
