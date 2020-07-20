@@ -778,8 +778,11 @@
                <property name="spacing">
                 <number>6</number>
                </property>
+               <property name="topMargin">
+                <number>3</number>
+               </property>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayoutFee13">
+                <layout class="QHBoxLayout" name="horizontalLayoutFee13" stretch="0,0,1">
                  <item>
                   <widget class="QLabel" name="labelCustomPerKilobyte">
                    <property name="toolTip">
@@ -855,6 +858,12 @@
              </item>
              <item row="0" column="0">
               <layout class="QVBoxLayout" name="verticalLayoutFee4" stretch="0,1">
+               <property name="topMargin">
+                <number>20</number>
+               </property>
+               <property name="bottomMargin">
+                <number>3</number>
+               </property>
                <item>
                 <widget class="QRadioButton" name="radioSmartFee">
                  <property name="text">
@@ -885,6 +894,9 @@
              </item>
              <item row="1" column="0">
               <layout class="QVBoxLayout" name="verticalLayoutFee9" stretch="0,1">
+               <property name="topMargin">
+                <number>30</number>
+               </property>
                <item>
                 <widget class="QRadioButton" name="radioCustomFee">
                  <property name="text">
@@ -916,7 +928,10 @@
                 <number>6</number>
                </property>
                <property name="topMargin">
-                <number>2</number>
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>3</number>
                </property>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutFee12">
@@ -975,19 +990,6 @@
                       <number>2</number>
                      </property>
                     </widget>
-                   </item>
-                   <item>
-                    <spacer name="verticalSpacer_3">
-                     <property name="orientation">
-                      <enum>Qt::Vertical</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>1</width>
-                       <height>1</height>
-                      </size>
-                     </property>
-                    </spacer>
                    </item>
                   </layout>
                  </item>
@@ -1136,7 +1138,7 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="labelBalanceText">
          <property name="text">
           <string>Balance:</string>
          </property>
@@ -1145,7 +1147,7 @@
        <item>
         <widget class="QLabel" name="labelBalance">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>

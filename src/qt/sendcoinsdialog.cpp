@@ -78,7 +78,7 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
                      }, GUIUtil::FontWeight::Bold);
 
     GUIUtil::setFont({ui->labelBalance,
-                      ui->label
+                      ui->labelBalanceText
                      }, GUIUtil::FontWeight::Bold, 14);
 
     GUIUtil::setFont({ui->labelCoinControlFeatures

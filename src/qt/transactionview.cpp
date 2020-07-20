@@ -19,6 +19,7 @@
 
 #include <ui_interface.h>
 
+#include <QCalendarWidget>
 #include <QComboBox>
 #include <QDateTimeEdit>
 #include <QDesktopServices>
@@ -33,6 +34,7 @@
 #include <QSettings>
 #include <QSignalMapper>
 #include <QTableView>
+#include <QTextCharFormat>
 #include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -69,6 +71,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     instantsendWidget->addItem(tr("All"), TransactionFilterProxy::InstantSendFilter_All);
     instantsendWidget->addItem(tr("Locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_Yes);
     instantsendWidget->addItem(tr("Not locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_No);
+    instantsendWidget->setObjectName("instantsendWidget");
     hlayout->addWidget(instantsendWidget);
 
     dateWidget = new QComboBox(this);
@@ -650,7 +653,23 @@ QWidget *TransactionView::createDateRangeWidget()
     connect(dateFrom, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
     connect(dateTo, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
 
+    updateCalendarWidgets();
+
     return dateRangeWidget;
+}
+
+void TransactionView::updateCalendarWidgets()
+{
+    auto adjustWeekEndColors = [](QCalendarWidget* w) {
+        QTextCharFormat format = w->weekdayTextFormat(Qt::Saturday);
+        format.setForeground(QBrush(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT), Qt::SolidPattern));
+
+        w->setWeekdayTextFormat(Qt::Saturday, format);
+        w->setWeekdayTextFormat(Qt::Sunday, format);
+    };
+
+    adjustWeekEndColors(dateFrom->calendarWidget());
+    adjustWeekEndColors(dateTo->calendarWidget());
 }
 
 void TransactionView::dateRangeChanged()
@@ -688,6 +707,13 @@ void TransactionView::resizeEvent(QResizeEvent* event)
     columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
 }
 
+void TransactionView::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::StyleChange) {
+        updateCalendarWidgets();
+    }
+}
+
 // Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
 bool TransactionView::eventFilter(QObject *obj, QEvent *event)
 {
@@ -698,6 +724,14 @@ bool TransactionView::eventFilter(QObject *obj, QEvent *event)
         {
              GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxPlainTextRole);
              return true;
+        }
+    }
+    if (event->type() == QEvent::Show) {
+        // Give the search field the first focus on startup
+        static bool fGotFirstFocus = false;
+        if (!fGotFirstFocus) {
+            search_widget->setFocus();
+            fGotFirstFocus = true;
         }
     }
     return QWidget::eventFilter(obj, event);
