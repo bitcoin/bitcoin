@@ -784,3 +784,38 @@ TransactionView
 ******************************************************/
 
 /***** No dark.css specific coloring here yet *****/
+
+
+/******************************************************
+*******************************************************
+STYLING OF OS SPECIFIC UI PARTS
+
+NOTE: GUIUtil::loadStyleSheet treats css code between <os="<os_list>"> and </os>
+different. It will only become added for operating systems provided in the list
+of the sections start tag.
+
+There may be multiple entries per section. Possible entries:
+
+- macosx
+- windows
+- other
+
+<os_list> must be a combination of the three options above separated by
+comma like in "windows,macosx".
+
+Its ok to have multiple <os="...">...</os> sections in a file with
+arbitrary OS combinations. They will all become added to the end of the
+file though. Means even putting an <os> section in the top of the file
+would become appended to the end of the file during loading which should
+be kept in mind when adding sections to avoid unexpected overwriting.
+*******************************************************
+******************************************************/
+
+<os="macosx, windows, other">
+
+/* Example section to add styles for all operating systems
+   Remove any to exclude it.
+*/
+
+</os>
+

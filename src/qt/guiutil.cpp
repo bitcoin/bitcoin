@@ -6,6 +6,7 @@
 #include <qt/guiutil.h>
 
 #include <qt/bitcoinaddressvalidator.h>
+#include <qt/bitcoingui.h>
 #include <qt/bitcoinunits.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
@@ -1106,6 +1107,7 @@ void loadStyleSheet(QWidget* widget, bool fForceUpdate)
                 return false;
             }
 
+            std::string platformName = gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
             stylesheet = std::make_unique<QString>();
 
             for (const auto& file : vecFiles) {
@@ -1113,7 +1115,41 @@ void loadStyleSheet(QWidget* widget, bool fForceUpdate)
                 if (!qFile.open(QFile::ReadOnly)) {
                     throw std::runtime_error(strprintf("%s: Failed to open file: %s", __func__, file.toStdString()));
                 }
-                stylesheet->append(QLatin1String(qFile.readAll()));
+
+                QString strStyle = QLatin1String(qFile.readAll());
+                // Process all <os=...></os> groups in the stylesheet first
+                QRegularExpressionMatch osStyleMatch;
+                QRegularExpression osStyleExp(
+                        "^"
+                        "(<os=(?:'|\").+(?:'|\")>)" // group 1
+                        "((?:.|\n)+?)"              // group 2
+                        "(</os>?)"                  // group 3
+                        "$");
+                osStyleExp.setPatternOptions(QRegularExpression::MultilineOption);
+                QRegularExpressionMatchIterator it = osStyleExp.globalMatch(strStyle);
+
+                // For all <os=...></os> sections
+                while (it.hasNext() && (osStyleMatch = it.next()).isValid()) {
+                    QStringList listMatches = osStyleMatch.capturedTexts();
+
+                    // Full match + 3 group matches
+                    if (listMatches.size() % 4) {
+                        throw std::runtime_error(strprintf("%s: Invalid <os=...></os> section in file %s", __func__, file.toStdString()));
+                    }
+
+                    for (int i = 0; i < listMatches.size(); i += 4) {
+                        if (!listMatches[i + 1].contains(QString::fromStdString(platformName))) {
+                            // If os is not supported for this styles
+                            // just remove the full match
+                            strStyle.replace(listMatches[i], "");
+                        } else {
+                            // If its supported remove the <os=...></os> tags
+                            strStyle.replace(listMatches[i + 1], "");
+                            strStyle.replace(listMatches[i + 3], "");
+                        }
+                    }
+                }
+                stylesheet->append(strStyle);
             }
             return true;
         };
