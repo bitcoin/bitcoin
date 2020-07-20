@@ -615,6 +615,7 @@ void BitcoinGUI::createToolBars()
 
 #ifdef ENABLE_WALLET
         m_wallet_selector = new QComboBox(this);
+        m_wallet_selector->setHidden(true);
         connect(m_wallet_selector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setCurrentWallet(const QString&)));
 #endif
 
@@ -743,6 +744,7 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
     setWalletActionsEnabled(true);
     m_wallet_selector->addItem(name);
     if (m_wallet_selector->count() == 2) {
+        m_wallet_selector->setHidden(false);
         QVBoxLayout* layout = new QVBoxLayout(this);
         layout->addWidget(m_wallet_selector);
         layout->setSpacing(0);
