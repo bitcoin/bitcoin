@@ -513,7 +513,10 @@ public:
      * criterium in CConnman::AttemptToEvictConnection. */
     std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> sock, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion);
+    CNode(NodeId id, std::shared_ptr<Sock> sock, const CAddress& addrIn,
+          uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn,
+          const CAddress& addrBindIn, const std::string& addrNameIn,
+          ConnectionType conn_type_in, bool inbound_onion);
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
 
@@ -571,11 +574,6 @@ public:
 
     void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
-    ServiceFlags GetLocalServices() const
-    {
-        return nLocalServices;
-    }
-
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
@@ -589,9 +587,6 @@ private:
     const uint64_t nLocalHostNonce;
     const ConnectionType m_conn_type;
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
-
-    //! Services offered to this peer.
-    const ServiceFlags nLocalServices;
 
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
@@ -1020,16 +1015,14 @@ private:
     std::map<uint64_t, CachedAddrResponse> m_addr_response_caches;
 
     /**
-     * Services this instance offers.
+     * Services this node offers.
      *
-     * This data is replicated in each CNode instance we create during peer
-     * connection (in ConnectNode()) under a member also called
-     * nLocalServices.
+     * This data is replicated in each Peer instance we create.
      *
      * This data is not marked const, but after being set it should not
-     * change. See the note in CNode::nLocalServices documentation.
+     * change.
      *
-     * \sa CNode::nLocalServices
+     * \sa Peer::our_services
      */
     ServiceFlags nLocalServices;
 

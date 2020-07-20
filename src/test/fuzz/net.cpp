@@ -68,7 +68,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
     (void)node.GetAddrLocal();
     (void)node.GetId();
     (void)node.GetLocalNonce();
-    (void)node.GetLocalServices();
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);
     (void)node.GetCommonVersion();

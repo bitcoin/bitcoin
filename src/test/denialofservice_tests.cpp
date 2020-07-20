@@ -54,7 +54,6 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
     CNode dummyNode1{id++,
-                     ServiceFlags(NODE_NETWORK | NODE_WITNESS),
                      /*sock=*/nullptr,
                      addr1,
                      /*nKeyedNetGroupIn=*/0,
@@ -68,6 +67,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         /*node=*/dummyNode1,
         /*successfully_connected=*/true,
         /*remote_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+        /*local_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
         /*permission_flags=*/NetPermissionFlags::None,
         /*version=*/PROTOCOL_VERSION,
         /*relay_txs=*/true);
@@ -117,7 +117,6 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
 {
     CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
     vNodes.emplace_back(new CNode{id++,
-                                  ServiceFlags(NODE_NETWORK | NODE_WITNESS),
                                   /*sock=*/nullptr,
                                   addr,
                                   /*nKeyedNetGroupIn=*/0,
@@ -129,7 +128,7 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
     CNode &node = *vNodes.back();
     node.SetCommonVersion(PROTOCOL_VERSION);
 
-    peerLogic.InitializeNode(node, node.GetLocalServices());
+    peerLogic.InitializeNode(node, ServiceFlags(NODE_NETWORK | NODE_WITNESS));
     node.fSuccessfullyConnected = true;
 
     connman.AddTestNode(node);
@@ -297,7 +296,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     banman->ClearBanned();
     NodeId id{0};
     nodes[0] = new CNode{id++,
-                         NODE_NETWORK,
                          /*sock=*/nullptr,
                          addr[0],
                          /*nKeyedNetGroupIn=*/0,
@@ -307,7 +305,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          ConnectionType::INBOUND,
                          /*inbound_onion=*/false};
     nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(*nodes[0], nodes[0]->GetLocalServices());
+    peerLogic->InitializeNode(*nodes[0], NODE_NETWORK);
     nodes[0]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[0]);
     peerLogic->UnitTestMisbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD); // Should be discouraged
@@ -320,7 +318,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
     nodes[1] = new CNode{id++,
-                         NODE_NETWORK,
                          /*sock=*/nullptr,
                          addr[1],
                          /*nKeyedNetGroupIn=*/1,
@@ -330,7 +327,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          ConnectionType::INBOUND,
                          /*inbound_onion=*/false};
     nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(*nodes[1], nodes[1]->GetLocalServices());
+    peerLogic->InitializeNode(*nodes[1], NODE_NETWORK);
     nodes[1]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[1]);
     peerLogic->UnitTestMisbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1);
@@ -358,7 +355,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // Make sure non-IP peers are discouraged and disconnected properly.
 
     nodes[2] = new CNode{id++,
-                         NODE_NETWORK,
                          /*sock=*/nullptr,
                          addr[2],
                          /*nKeyedNetGroupIn=*/1,
@@ -368,7 +364,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          ConnectionType::OUTBOUND_FULL_RELAY,
                          /*inbound_onion=*/false};
     nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(*nodes[2], nodes[2]->GetLocalServices());
+    peerLogic->InitializeNode(*nodes[2], NODE_NETWORK);
     nodes[2]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[2]);
     peerLogic->UnitTestMisbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD);
@@ -403,7 +399,6 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
     CNode dummyNode{id++,
-                    NODE_NETWORK,
                     /*sock=*/nullptr,
                     addr,
                     /*nKeyedNetGroupIn=*/4,
@@ -413,7 +408,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
                     ConnectionType::INBOUND,
                     /*inbound_onion=*/false};
     dummyNode.SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(dummyNode, dummyNode.GetLocalServices());
+    peerLogic->InitializeNode(dummyNode, NODE_NETWORK);
     dummyNode.fSuccessfullyConnected = true;
 
     peerLogic->UnitTestMisbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD);

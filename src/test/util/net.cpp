@@ -16,6 +16,7 @@
 void ConnmanTestMsg::Handshake(CNode& node,
                                bool successfully_connected,
                                ServiceFlags remote_services,
+                               ServiceFlags local_services,
                                NetPermissionFlags permission_flags,
                                int32_t version,
                                bool relay_txs)
@@ -24,7 +25,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
     const CNetMsgMaker mm{0};
 
-    peerman.InitializeNode(node, node.GetLocalServices());
+    peerman.InitializeNode(node, local_services);
 
     CSerializedNetMsg msg_version{
         mm.Make(NetMsgType::VERSION,
