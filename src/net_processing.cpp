@@ -829,7 +829,7 @@ void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 
 static bool IsOutboundDisconnectionCandidate(const CNode& node)
 {
-    return !(node.IsInboundConn() || node.IsManualConn() || node.IsFeelerConn() || node.IsAddrFetchConn());
+    return node.IsOutboundOrBlockRelayConn();
 }
 
 void PeerLogicValidation::InitializeNode(CNode *pnode) {
@@ -2324,7 +2324,7 @@ void ProcessMessage(
         {
             connman.SetServices(pfrom.addr, nServices);
         }
-        if (!pfrom.IsInboundConn() && !pfrom.IsFeelerConn() && !pfrom.IsManualConn() && !HasAllDesirableServiceFlags(nServices))
+        if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
         {
             LogPrint(BCLog::NET, "peer=%d does not offer the expected services (%08x offered, %08x expected); disconnecting\n", pfrom.GetId(), nServices, GetDesirableServiceFlags(nServices));
             pfrom.fDisconnect = true;

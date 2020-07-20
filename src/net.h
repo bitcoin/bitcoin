@@ -789,6 +789,21 @@ public:
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
 
+    bool IsOutboundOrBlockRelayConn() const {
+        switch(m_conn_type) {
+            case ConnectionType::OUTBOUND:
+            case ConnectionType::BLOCK_RELAY:
+                return true;
+            case ConnectionType::INBOUND:
+            case ConnectionType::MANUAL:
+            case ConnectionType::ADDR_FETCH:
+            case ConnectionType::FEELER:
+                return false;
+        }
+
+        assert(false);
+    }
+
     bool IsFullOutboundConn() const {
         return m_conn_type == ConnectionType::OUTBOUND;
     }
