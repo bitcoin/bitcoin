@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times, disconnect_nodes, connect_nodes
+from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times, disconnect_nodes, connect_nodes, bump_node_times
 from test_framework.messages import COIN
 import time
 ZDAG_NOT_FOUND = -1
@@ -69,8 +69,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         connect_nodes(self.nodes[1], 2)
         # broadcast transactions
-        self.nodes[0].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
-        self.nodes[1].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
+        bump_node_times(MAX_INITIAL_BROADCAST_DELAY)
         time.sleep(2)
         self.sync_mempools(timeout=30)
         for i in range(3):
