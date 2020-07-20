@@ -72,6 +72,6 @@ static void ECDSAVerify_LargeBlock(benchmark::State& state)
     }
 }
 
-BENCHMARK(ECDSASign)
-BENCHMARK(ECDSAVerify)
-BENCHMARK(ECDSAVerify_LargeBlock)
+BENCHMARK(ECDSASign, 22 * 1000)
+BENCHMARK(ECDSAVerify, 15 * 1000)
+BENCHMARK(ECDSAVerify_LargeBlock, 15)

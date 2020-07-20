@@ -105,14 +105,14 @@ static void strings_2_strptintf(benchmark::State& state)
     }
 }
 
-BENCHMARK(int_atoi);
-BENCHMARK(int_lexical_cast);
-BENCHMARK(strings_1_itostr);
-BENCHMARK(strings_1_lexical_cast);
-BENCHMARK(strings_1_numberToString);
-BENCHMARK(strings_1_to_string);
-BENCHMARK(strings_2_multi_itostr);
-BENCHMARK(strings_2_multi_lexical_cast);
-BENCHMARK(strings_2_multi_numberToString);
-BENCHMARK(strings_2_multi_to_string);
-BENCHMARK(strings_2_strptintf);
+BENCHMARK(int_atoi, 700 * 1000 * 1000);
+BENCHMARK(int_lexical_cast, 40 * 1000 * 1000);
+BENCHMARK(strings_1_itostr, 3 * 1000 * 1000);
+BENCHMARK(strings_1_lexical_cast, 20 * 1000 * 1000);
+BENCHMARK(strings_1_numberToString, 3 * 1000 * 1000);
+BENCHMARK(strings_1_to_string, 8 * 1000 * 1000);
+BENCHMARK(strings_2_multi_itostr, 500 * 1000);
+BENCHMARK(strings_2_multi_lexical_cast, 2500 * 1000);
+BENCHMARK(strings_2_multi_numberToString, 600 * 1000);
+BENCHMARK(strings_2_multi_to_string, 1500 * 1000);
+BENCHMARK(strings_2_strptintf, 700 * 1000);

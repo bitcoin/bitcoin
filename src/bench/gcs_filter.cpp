@@ -39,5 +39,5 @@ static void MatchGCSFilter(benchmark::State& state)
     }
 }
 
-BENCHMARK(ConstructGCSFilter/*, 1000*/);
-BENCHMARK(MatchGCSFilter/*, 50 * 1000*/);
+BENCHMARK(ConstructGCSFilter, 1000);
+BENCHMARK(MatchGCSFilter, 50 * 1000);

@@ -137,45 +137,45 @@ void CleanupBLSDkgTests()
 
 
 
-#define BENCH_BuildQuorumVerificationVectors(name, quorumSize, parallel) \
+#define BENCH_BuildQuorumVerificationVectors(name, quorumSize, parallel, num_iters_for_one_second) \
     static void BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize(benchmark::State& state) \
     { \
         InitIfNeeded(); \
         dkg##quorumSize->Bench_BuildQuorumVerificationVectors(state, parallel); \
     } \
-    BENCHMARK(BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize)
+    BENCHMARK(BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize, num_iters_for_one_second)
 
-BENCH_BuildQuorumVerificationVectors(simple, 10, false)
-BENCH_BuildQuorumVerificationVectors(simple, 100, false)
-BENCH_BuildQuorumVerificationVectors(simple, 400, false)
-BENCH_BuildQuorumVerificationVectors(parallel, 10, true)
-BENCH_BuildQuorumVerificationVectors(parallel, 100, true)
-BENCH_BuildQuorumVerificationVectors(parallel, 400, true)
+BENCH_BuildQuorumVerificationVectors(simple, 10, false, 2500)
+BENCH_BuildQuorumVerificationVectors(simple, 100, false, 25)
+BENCH_BuildQuorumVerificationVectors(simple, 400, false, 1)
+BENCH_BuildQuorumVerificationVectors(parallel, 10, true, 3000)
+BENCH_BuildQuorumVerificationVectors(parallel, 100, true, 50)
+BENCH_BuildQuorumVerificationVectors(parallel, 400, true, 3)
 
 ///////////////////////////////
 
 
 
-#define BENCH_VerifyContributionShares(name, quorumSize, invalidCount, parallel, aggregated) \
+#define BENCH_VerifyContributionShares(name, quorumSize, invalidCount, parallel, aggregated, num_iters_for_one_second) \
     static void BLSDKG_VerifyContributionShares_##name##_##quorumSize(benchmark::State& state) \
     { \
         InitIfNeeded(); \
         dkg##quorumSize->Bench_VerifyContributionShares(state, invalidCount, parallel, aggregated); \
     } \
-    BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize)
+    BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize, num_iters_for_one_second)
 
-BENCH_VerifyContributionShares(simple, 10, 5, false, false)
-BENCH_VerifyContributionShares(simple, 100, 5, false, false)
-BENCH_VerifyContributionShares(simple, 400, 5, false, false)
+BENCH_VerifyContributionShares(simple, 10, 5, false, false, 70)
+BENCH_VerifyContributionShares(simple, 100, 5, false, false, 1)
+BENCH_VerifyContributionShares(simple, 400, 5, false, false, 1)
 
-BENCH_VerifyContributionShares(aggregated, 10, 5, false, true)
-BENCH_VerifyContributionShares(aggregated, 100, 5, false, true)
-BENCH_VerifyContributionShares(aggregated, 400, 5, false, true)
+BENCH_VerifyContributionShares(aggregated, 10, 5, false, true, 70)
+BENCH_VerifyContributionShares(aggregated, 100, 5, false, true, 2)
+BENCH_VerifyContributionShares(aggregated, 400, 5, false, true, 1)
 
-BENCH_VerifyContributionShares(parallel, 10, 5, true, false)
-BENCH_VerifyContributionShares(parallel, 100, 5, true, false)
-BENCH_VerifyContributionShares(parallel, 400, 5, true, false)
+BENCH_VerifyContributionShares(parallel, 10, 5, true, false, 200)
+BENCH_VerifyContributionShares(parallel, 100, 5, true, false, 2)
+BENCH_VerifyContributionShares(parallel, 400, 5, true, false, 1)
 
-BENCH_VerifyContributionShares(parallel_aggregated, 10, 5, true, true)
-BENCH_VerifyContributionShares(parallel_aggregated, 100, 5, true, true)
-BENCH_VerifyContributionShares(parallel_aggregated, 400, 5, true, true)
+BENCH_VerifyContributionShares(parallel_aggregated, 10, 5, true, true, 150)
+BENCH_VerifyContributionShares(parallel_aggregated, 100, 5, true, true, 4)
+BENCH_VerifyContributionShares(parallel_aggregated, 400, 5, true, true, 1)

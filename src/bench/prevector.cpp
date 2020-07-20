@@ -22,43 +22,36 @@ template <typename T>
 static void PrevectorDestructor(benchmark::State& state)
 {
     while (state.KeepRunning()) {
-        for (auto x = 0; x < 1000; ++x) {
-            prevector<28, T> t0;
-            prevector<28, T> t1;
-            t0.resize(28);
-            t1.resize(29);
-        }
+        prevector<28, T> t0;
+        prevector<28, T> t1;
+        t0.resize(28);
+        t1.resize(29);
     }
 }
 
 template <typename T>
 static void PrevectorClear(benchmark::State& state)
 {
-
+    prevector<28, T> t0;
+    prevector<28, T> t1;
     while (state.KeepRunning()) {
-        for (auto x = 0; x < 1000; ++x) {
-            prevector<28, T> t0;
-            prevector<28, T> t1;
-            t0.resize(28);
-            t0.clear();
-            t1.resize(29);
-            t1.clear();
-        }
+        t0.resize(28);
+        t0.clear();
+        t1.resize(29);
+        t1.clear();
     }
 }
 
 template <typename T>
 void PrevectorResize(benchmark::State& state)
 {
+    prevector<28, T> t0;
+    prevector<28, T> t1;
     while (state.KeepRunning()) {
-        prevector<28, T> t0;
-        prevector<28, T> t1;
-        for (auto x = 0; x < 1000; ++x) {
-            t0.resize(28);
-            t0.resize(0);
-            t1.resize(29);
-            t1.resize(0);
-        }
+        t0.resize(28);
+        t0.resize(0);
+        t1.resize(29);
+        t1.resize(0);
     }
 }
 
@@ -66,15 +59,15 @@ void PrevectorResize(benchmark::State& state)
     static void Prevector ## name ## Nontrivial(benchmark::State& state) { \
         Prevector ## name<nontrivial_t>(state);                         \
     }                                                                   \
-    BENCHMARK(Prevector ## name ## Nontrivial/*, nontrivops*/);             \
+    BENCHMARK(Prevector ## name ## Nontrivial, nontrivops);             \
     static void Prevector ## name ## Trivial(benchmark::State& state) { \
         Prevector ## name<trivial_t>(state);                            \
     }                                                                   \
-    BENCHMARK(Prevector ## name ## Trivial/*, trivops*/);
+    BENCHMARK(Prevector ## name ## Trivial, trivops);
 
-PREVECTOR_TEST(Clear, 28300, 88600)
-PREVECTOR_TEST(Destructor, 28800, 88900)
-PREVECTOR_TEST(Resize, 28900, 90300)
+PREVECTOR_TEST(Clear, 80 * 1000 * 1000, 70 * 1000 * 1000)
+PREVECTOR_TEST(Destructor, 800 * 1000 * 1000, 800 * 1000 * 1000)
+PREVECTOR_TEST(Resize, 80 * 1000 * 1000, 70 * 1000 * 1000)
 
 #include <vector>
 
@@ -86,11 +79,9 @@ static void PrevectorAssign(benchmark::State& state)
     t.resize(28);
     std::vector<unsigned char> v;
     while (state.KeepRunning()) {
-        for (int i = 0; i < 1000; ++i) {
-            prevec::const_iterator b = t.begin() + 5;
-            prevec::const_iterator e = b + 20;
-            v.assign(b, e);
-        }
+        prevec::const_iterator b = t.begin() + 5;
+        prevec::const_iterator e = b + 20;
+        v.assign(b, e);
     }
 }
 
@@ -100,13 +91,11 @@ static void PrevectorAssignTo(benchmark::State& state)
     t.resize(28);
     std::vector<unsigned char> v;
     while (state.KeepRunning()) {
-        for (int i = 0; i < 1000; ++i) {
-            prevec::const_iterator b = t.begin() + 5;
-            prevec::const_iterator e = b + 20;
-            t.assign_to(b, e, v);
-        }
+        prevec::const_iterator b = t.begin() + 5;
+        prevec::const_iterator e = b + 20;
+        t.assign_to(b, e, v);
     }
 }
 
-BENCHMARK(PrevectorAssign)
-BENCHMARK(PrevectorAssignTo)
+BENCHMARK(PrevectorAssign, 90 * 1000 * 1000)
+BENCHMARK(PrevectorAssignTo, 700 * 1000 * 1000)
