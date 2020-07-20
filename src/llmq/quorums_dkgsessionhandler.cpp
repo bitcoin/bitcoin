@@ -148,7 +148,7 @@ void CDKGSessionHandler::StartThread()
     }
 
     std::string threadName = strprintf("q-phase-%d", params.type);
-    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, threadName, std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
+    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, threadName.c_str(), std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
 }
 
 void CDKGSessionHandler::StopThread()
