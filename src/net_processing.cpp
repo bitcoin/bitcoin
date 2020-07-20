@@ -977,6 +977,20 @@ static void AddKnownTx(Peer& peer, const uint256& hash)
     tx_relay->m_tx_inventory_known_filter.insert(hash);
 }
 
+/** Whether this peer can serve us blocks. */
+static bool CanServeBlocks(const Peer& peer)
+{
+    return peer.m_their_services & (NODE_NETWORK|NODE_NETWORK_LIMITED);
+}
+
+/** Whether this peer can only serve limited recent blocks (e.g. because
+ *  it prunes old blocks) */
+static bool IsLimitedPeer(const Peer& peer)
+{
+    return (!(peer.m_their_services & NODE_NETWORK) &&
+             (peer.m_their_services & NODE_NETWORK_LIMITED));
+}
+
 std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
                                                              std::chrono::seconds average_interval)
 {
@@ -2873,12 +2887,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         peer->m_starting_height = starting_height;
 
-        // set nodes not relaying blocks and tx and not serving (parts) of the historical blockchain as "clients"
-        pfrom.fClient = (!(nServices & NODE_NETWORK) && !(nServices & NODE_NETWORK_LIMITED));
-
-        // set nodes not capable of serving the complete blockchain history as "limited nodes"
-        pfrom.m_limited_node = (!(nServices & NODE_NETWORK) && (nServices & NODE_NETWORK_LIMITED));
-
         // We only initialize the m_tx_relay data structure if:
         // - this isn't an outbound block-relay-only connection; and
         // - fRelay=true or we're offering NODE_BLOOM to this peer
@@ -2903,7 +2911,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         {
             LOCK(cs_main);
             CNodeState* state = State(pfrom.GetId());
-            state->fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && !pfrom.fClient;
+            state->fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && CanServeBlocks(*peer);
             m_num_preferred_download_peers += state->fPreferredDownload;
         }
 
@@ -4863,7 +4871,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         bool sync_blocks_and_headers_from_peer = false;
         if (state.fPreferredDownload) {
             sync_blocks_and_headers_from_peer = true;
-        } else if (!pto->fClient && !pto->IsAddrFetchConn()) {
+        } else if (CanServeBlocks(*peer) && !pto->IsAddrFetchConn()) {
             // Typically this is an inbound peer. If we don't have any outbound
             // peers, or if we aren't downloading any blocks from such peers,
             // then allow block downloads from this peer, too.
@@ -4878,7 +4886,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             }
         }
 
-        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
+        if (!state.fSyncStarted && CanServeBlocks(*peer) && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 const CBlockIndex* pindexStart = m_chainman.m_best_header;
@@ -5255,7 +5263,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (!pto->fClient && ((sync_blocks_and_headers_from_peer && !pto->m_limited_node) || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (CanServeBlocks(*peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(*peer)) || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
