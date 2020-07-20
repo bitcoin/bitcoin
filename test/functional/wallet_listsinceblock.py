@@ -28,7 +28,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         # All nodes are in IBD from genesis, so they'll need the miner (node2) to be an outbound connection, or have
-        # only one connection. (See fPreferredDownload in net_processing)
+        # only one connection. (See m_preferred_download in net_processing)
         self.connect_nodes(1, 2)
         self.generate(self.nodes[2], COINBASE_MATURITY + 1)
 

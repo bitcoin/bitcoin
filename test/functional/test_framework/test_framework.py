@@ -397,7 +397,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         #
         # If all nodes are in IBD (clean chain from genesis), node0 is assumed to be the source of blocks (miner). To
         # ensure block propagation, all nodes will establish outgoing connections toward node0.
-        # See fPreferredDownload in net_processing.
+        # See m_preferred_download in net_processing.
         #
         # If further outbound connections are needed, they can be added at the beginning of the test with e.g.
         # self.connect_nodes(1, 2)
