@@ -147,8 +147,7 @@ void CDKGSessionHandler::StartThread()
         throw std::runtime_error("Tried to start an already started CDKGSessionHandler thread.");
     }
 
-    std::string threadName = strprintf("q-phase-%d", params.type);
-    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, threadName.c_str(), std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
+    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, sprintf("q-phase-%d", params.type), std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
 }
 
 void CDKGSessionHandler::StopThread()
