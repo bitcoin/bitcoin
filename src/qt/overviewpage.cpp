@@ -492,7 +492,12 @@ void OverviewPage::privateSendStatus(bool fForce)
     static int64_t nLastDSProgressBlockTime = 0;
     int nBestHeight = clientModel->getNumBlocks();
 
-    CPrivateSendClientManager* privateSendClientManager = privateSendClientManagers.find(walletModel->getWallet()->GetName())->second;
+    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
+    if (it == privateSendClientManagers.end()) {
+        // nothing to do
+        return;
+    }
+    CPrivateSendClientManager* privateSendClientManager = it->second;
 
     // We are processing more than 1 block per second, we'll just leave
     if(nBestHeight > privateSendClientManager->nCachedNumBlocks && GetTime() - nLastDSProgressBlockTime <= 1) return;
@@ -605,7 +610,12 @@ void OverviewPage::togglePrivateSend(){
         settings.setValue("hasMixed", "hasMixed");
     }
 
-    CPrivateSendClientManager* privateSendClientManager = privateSendClientManagers.find(walletModel->getWallet()->GetName())->second;
+    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
+    if (it == privateSendClientManagers.end()) {
+        // nothing to do
+        return;
+    }
+    CPrivateSendClientManager* privateSendClientManager = it->second;
 
     if (!privateSendClientManager->IsMixing()) {
         const CAmount nMinAmount = CPrivateSend::GetSmallestDenomination() + CPrivateSend::GetMaxCollateralAmount();
@@ -671,5 +681,10 @@ void OverviewPage::DisablePrivateSendCompletely() {
     if (nWalletBackups <= 0) {
         ui->labelPrivateSendEnabled->setText("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>(" + tr("Disabled") + ")</span>");
     }
-    privateSendClientManagers.at(walletModel->getWallet()->GetName())->StopMixing();
+    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
+    if (it == privateSendClientManagers.end()) {
+        // nothing to do
+        return;
+    }
+    it->second->StopMixing();
 }
