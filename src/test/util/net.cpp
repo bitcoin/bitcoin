@@ -24,7 +24,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
     const CNetMsgMaker mm{0};
 
-    peerman.InitializeNode(&node);
+    peerman.InitializeNode(node, node.GetLocalServices());
 
     CSerializedNetMsg msg_version{
         mm.Make(NetMsgType::VERSION,
