@@ -53,7 +53,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
         self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.3*COIN))
-        self.sync_mempools()
+        self.sync_mempools(timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
@@ -72,7 +72,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.node[0].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.node[1].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         time.sleep(2)
-        self.sync_mempools()
+        self.sync_mempools(timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
             # ensure the tx2 made it to mempool, should propogate dbl-spend first time
