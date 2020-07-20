@@ -69,7 +69,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         connect_nodes(self.nodes[1], 2)
         # broadcast transactions
-        bump_node_times(MAX_INITIAL_BROADCAST_DELAY)
+        bump_node_times(self.nodes, MAX_INITIAL_BROADCAST_DELAY)
         time.sleep(2)
         self.sync_mempools(timeout=30)
         for i in range(3):
