@@ -18,8 +18,11 @@ PeerTableSortProxy::PeerTableSortProxy(QObject* parent)
 
 bool PeerTableSortProxy::lessThan(const QModelIndex& left_index, const QModelIndex& right_index) const
 {
-    const CNodeStats left_stats = Assert(sourceModel()->data(left_index, PeerTableModel::StatsRole).value<CNodeCombinedStats*>())->nodeStats;
-    const CNodeStats right_stats = Assert(sourceModel()->data(right_index, PeerTableModel::StatsRole).value<CNodeCombinedStats*>())->nodeStats;
+    const CNodeCombinedStats* left_combined_stats = Assert(sourceModel()->data(left_index, PeerTableModel::StatsRole).value<CNodeCombinedStats*>());
+    const CNodeStats& left_stats = left_combined_stats->nodeStats;
+
+    const CNodeCombinedStats* right_combined_stats = Assert(sourceModel()->data(right_index, PeerTableModel::StatsRole).value<CNodeCombinedStats*>());
+    const CNodeStats& right_stats = right_combined_stats->nodeStats;
 
     switch (static_cast<PeerTableModel::ColumnIndex>(left_index.column())) {
     case PeerTableModel::NetNodeId:
@@ -41,7 +44,7 @@ bool PeerTableSortProxy::lessThan(const QModelIndex& left_index, const QModelInd
     case PeerTableModel::Received:
         return left_stats.nRecvBytes < right_stats.nRecvBytes;
     case PeerTableModel::Subversion:
-        return left_stats.cleanSubVer.compare(right_stats.cleanSubVer) < 0;
+        return left_combined_stats->m_peer_stats.m_clean_subversion.compare(right_combined_stats->m_peer_stats.m_clean_subversion) < 0;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

@@ -635,10 +635,6 @@ void CNode::CopyStats(CNodeStats& stats)
     X(nTimeOffset);
     X(m_addr_name);
     X(nVersion);
-    {
-        LOCK(m_subver_mutex);
-        X(cleanSubVer);
-    }
     stats.fInbound = IsInboundConn();
     X(m_bip152_highbandwidth_to);
     X(m_bip152_highbandwidth_from);

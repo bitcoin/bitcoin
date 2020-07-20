@@ -1180,7 +1180,6 @@ void RPCConsole::updateDetailWidget()
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_time));
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
     ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
-    ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
     ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type, /*prepend_direction=*/true));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
     if (stats->nodeStats.m_permissionFlags == NetPermissionFlags::None) {
@@ -1214,6 +1213,7 @@ void RPCConsole::updateDetailWidget()
         ui->peerAddrRelayEnabled->setText(stats->m_peer_stats.m_addr_relay_enabled ? ts.yes : ts.no);
         ui->peerAddrProcessed->setText(QString::number(stats->m_peer_stats.m_addr_processed));
         ui->peerAddrRateLimited->setText(QString::number(stats->m_peer_stats.m_addr_rate_limited));
+        ui->peerSubversion->setText(QString::fromStdString(stats->m_peer_stats.m_clean_subversion));
         ui->peerRelayTxes->setText(stats->m_peer_stats.m_relay_txs ? ts.yes : ts.no);
     }
 

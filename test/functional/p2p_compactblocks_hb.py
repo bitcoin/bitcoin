@@ -17,9 +17,9 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
 
     def peer_info(self, from_node, to_node):
         """Query from_node for its getpeerinfo about to_node."""
-        for peerinfo in self.nodes[from_node].getpeerinfo():
-            if "(testnode%i)" % to_node in peerinfo['subver']:
-                return peerinfo
+        for peer in self.nodes[from_node].getpeerinfo():
+            if 'subver' in peer and f"(testnode{to_node})" in peer['subver']:
+                return peer
         return None
 
     def setup_network(self):

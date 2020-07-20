@@ -204,6 +204,12 @@ struct Peer {
     /** Same id as the CNode object for this peer */
     const NodeId m_id{0};
 
+    /** Protects subversion data member */
+    Mutex m_subver_mutex;
+    /** A sanitized string of the user agent byte array we read from the wire.
+     *  This cleaned string can safely be logged or displayed.  */
+    std::string m_clean_subversion GUARDED_BY(m_subver_mutex){};
+
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
     /** Accumulated misbehavior score for this peer */
@@ -1422,6 +1428,7 @@ bool PeerManagerImpl::GetPeerStats(NodeId nodeid, PeerStats& stats) const
         stats.m_fee_filter_received = 0;
     }
 
+    stats.m_clean_subversion = WITH_LOCK(peer->m_subver_mutex, return peer->m_clean_subversion);
     stats.m_ping_wait = ping_wait;
     stats.m_addr_processed = peer->m_addr_processed.load();
     stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
@@ -2744,10 +2751,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         pfrom.nServices = nServices;
         pfrom.SetAddrLocal(addrMe);
-        {
-            LOCK(pfrom.m_subver_mutex);
-            pfrom.cleanSubVer = cleanSubVer;
-        }
+        WITH_LOCK(peer->m_subver_mutex, peer->m_clean_subversion = cleanSubVer);
         peer->m_starting_height = starting_height;
 
         // set nodes not relaying blocks and tx and not serving (parts) of the historical blockchain as "clients"

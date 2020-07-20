@@ -126,7 +126,7 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::NUM, "minping", /*optional=*/true, "minimum observed ping time (if any at all)"},
                     {RPCResult::Type::NUM, "pingwait", /*optional=*/true, "ping wait (if non-zero)"},
                     {RPCResult::Type::NUM, "version", "The peer version, such as 70001"},
-                    {RPCResult::Type::STR, "subver", "The string version"},
+                    {RPCResult::Type::STR, "subver", /*optional=*/true, "The string version"},
                     {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                     {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
@@ -215,10 +215,6 @@ static RPCHelpMan getpeerinfo()
             obj.pushKV("pingwait", CountSecondsDouble(peer_stats.m_ping_wait));
         }
         obj.pushKV("version", stats.nVersion);
-        // Use the sanitized form of subver here, to avoid tricksy remote peers from
-        // corrupting or modifying the JSON output by putting special characters in
-        // their ver message.
-        obj.pushKV("subver", stats.cleanSubVer);
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
@@ -236,6 +232,7 @@ static RPCHelpMan getpeerinfo()
             obj.pushKV("addr_relay_enabled", peer_stats.m_addr_relay_enabled);
             obj.pushKV("addr_processed", peer_stats.m_addr_processed);
             obj.pushKV("addr_rate_limited", peer_stats.m_addr_rate_limited);
+            obj.pushKV("subver", peer_stats.m_clean_subversion);
         }
         UniValue permissions(UniValue::VARR);
         for (const auto& permission : NetPermissions::ToStrings(stats.m_permissionFlags)) {

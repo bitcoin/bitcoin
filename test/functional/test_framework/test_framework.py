@@ -598,7 +598,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             def get_peer_ids():
                 result = []
                 for peer in from_connection.getpeerinfo():
-                    if "testnode{}".format(node_num) in peer['subver']:
+                    if 'subver' in peer and "testnode{}".format(node_num) in peer['subver']:
                         result.append(peer['id'])
                 return result
 
