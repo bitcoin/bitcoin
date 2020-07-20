@@ -69,8 +69,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         connect_nodes(self.nodes[1], 2)
         # broadcast transactions
-        self.node[0].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
-        self.node[1].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
+        self.nodes[0].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
+        self.nodes[1].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         time.sleep(2)
         self.sync_mempools(timeout=30)
         for i in range(3):
