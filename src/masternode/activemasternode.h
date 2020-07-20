@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ACTIVEMASTERNODE_H
-#define ACTIVEMASTERNODE_H
+#ifndef BITCOIN_MASTERNODE_ACTIVEMASTERNODE_H
+#define BITCOIN_MASTERNODE_ACTIVEMASTERNODE_H
 
 #include <chainparams.h>
 #include <key.h>
@@ -63,4 +63,4 @@ private:
     bool GetLocalAddress(CService& addrRet);
 };
 
-#endif
+#endif // BITCOIN_MASTERNODE_ACTIVEMASTERNODE_H

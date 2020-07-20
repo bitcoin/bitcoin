@@ -1,5 +1,5 @@
-#ifndef TRAFFICGRAPHDATA_H
-#define TRAFFICGRAPHDATA_H
+#ifndef BITCOIN_QT_TRAFFICGRAPHDATA_H
+#define BITCOIN_QT_TRAFFICGRAPHDATA_H
 
 #include <QHash>
 #include <QQueue>
@@ -88,4 +88,4 @@ private:
     TrafficGraphData& operator=(TrafficGraphData const&);
 };
 
-#endif // TRAFFICGRAPHDATA_H
+#endif // BITCOIN_QT_TRAFFICGRAPHDATA_H

@@ -21,8 +21,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DASH_BIP39_H
-#define DASH_BIP39_H
+#ifndef BITCOIN_BIP39_H
+#define BITCOIN_BIP39_H
 
 #include <support/allocators/secure.h>
 
@@ -36,4 +36,4 @@ public:
     static void ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet);
 };
 
-#endif
+#endif // BITCOIN_BIP39_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PRIVATESENDSERVER_H
-#define PRIVATESENDSERVER_H
+#ifndef BITCOIN_PRIVATESEND_PRIVATESEND_SERVER_H
+#define BITCOIN_PRIVATESEND_PRIVATESEND_SERVER_H
 
 #include <net.h>
 #include <privatesend/privatesend.h>
@@ -82,4 +82,4 @@ public:
     void GetJsonInfo(UniValue& obj) const;
 };
 
-#endif
+#endif // BITCOIN_PRIVATESEND_PRIVATESEND_SERVER_H

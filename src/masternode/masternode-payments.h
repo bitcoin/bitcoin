@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MASTERNODE_PAYMENTS_H
-#define MASTERNODE_PAYMENTS_H
+#ifndef BITCOIN_MASTERNODE_MASTERNODE_PAYMENTS_H
+#define BITCOIN_MASTERNODE_MASTERNODE_PAYMENTS_H
 
 #include <util.h>
 #include <core_io.h>
@@ -37,4 +37,4 @@ public:
     bool GetMasternodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
 };
 
-#endif
+#endif // BITCOIN_MASTERNODE_MASTERNODE_PAYMENTS_H
