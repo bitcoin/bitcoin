@@ -6,7 +6,7 @@
 """Test framework addition to include VeriBlock PoP functions"""
 import struct
 import time
-from typing import List
+from typing import List, Optional
 
 from .messages import ser_uint256, hash256, uint256_from_str
 from .script import hash160, CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
@@ -15,6 +15,7 @@ from .util import hex_str_to_bytes
 
 KEYSTONE_INTERVAL = 5
 POP_PAYOUT_DELAY = 50
+NETWORK_ID = 0x3ae6ca
 
 
 def isKeystone(height):
@@ -52,6 +53,7 @@ def create_endorsed_chain(node, apm, size: int, addr: str) -> None:
     hash = node.getbestblockhash()
     block = node.getblock(hash)
     height = block['height']
+    initial_height = height
 
     for i in range(size):
         atv_id = endorse_block(node, apm, height, addr)
@@ -66,8 +68,10 @@ def create_endorsed_chain(node, apm, size: int, addr: str) -> None:
         # we advanced 1 block further
         height += 1
 
+    node.waitforblockheight(initial_height + size)
 
-def endorse_block(node, apm, height: int, addr: str) -> str:
+
+def endorse_block(node, apm, height: int, addr: str, vtbs: Optional[int] = None) -> str:
     from pypopminer import PublicationData
 
     # get pubkey for that address
@@ -77,15 +81,19 @@ def endorse_block(node, apm, height: int, addr: str) -> str:
     payoutInfo = script.hex()
 
     popdata = node.getpopdata(height)
+    last_btc = popdata['last_known_bitcoin_blocks'][0]
     last_vbk = popdata['last_known_veriblock_blocks'][0]
     header = popdata['block_header']
     pub = PublicationData()
     pub.header = header
     pub.payoutInfo = payoutInfo
-    pub.identifier = 0x3ae6ca
+    pub.identifier = NETWORK_ID
+
+    if vtbs:
+        apm.endorseVbkBlock(last_vbk, last_btc, vtbs)
+
     payloads = apm.endorseAltBlock(pub, last_vbk)
-    vtbs = [x.toVbkEncodingHex() for x in payloads.vtbs]
-    node.submitpop([], vtbs, [payloads.atv.toVbkEncodingHex()])
+    node.submitpop(*payloads.prepare())
     return payloads.atv.getId()
 
 
@@ -159,6 +167,22 @@ class ContextInfoContainer:
                                                                          self.txRoot)
 
 
+def assert_pop_state_equal(nodes):
+    def is_same(func, msg):
+        s = [func(x) for x in nodes]
+        if s.count(s[0]) == len(nodes):
+            return True
+
+        raise AssertionError("{}: \n    {}\n".format(
+            msg,
+            "".join("\n  {!r}".format(m) for m in s)
+        ))
+
+    is_same(lambda x: x.getbtcblock(x.getbtcbestblockhash()), "BTC tips")
+    is_same(lambda x: x.getvbkblock(x.getvbkbestblockhash()), "VBK tips")
+    is_same(lambda x: x.getblock(x.getbestblockhash()), "ALT tips")
+
+
 def sync_pop_tips(rpc_connections, *, wait=1, timeout=10, flush_scheduler=True):
     """
     Wait until everybody has the same POP TIPS (BTC tip and VBK tip)
@@ -182,6 +206,21 @@ def sync_pop_tips(rpc_connections, *, wait=1, timeout=10, flush_scheduler=True):
         "".join("\n  {!r}".format(m) for m in btc),
         "".join("\n  {!r}".format(m) for m in vbk),
     ))
+
+def assert_pop_state_equal(nodes):
+    def is_same(func, msg):
+        s = [func(x) for x in nodes]
+        if s.count(s[0]) == len(nodes):
+            return True
+
+        raise AssertionError("{}: \n    {}\n".format(
+            msg,
+            "".join("\n  {!r}".format(m) for m in s)
+        ))
+
+    is_same(lambda x: x.getbtcblock(x.getbtcbestblockhash()), "BTC tips")
+    is_same(lambda x: x.getvbkblock(x.getvbkbestblockhash()), "VBK tips")
+    is_same(lambda x: x.getblock(x.getbestblockhash()), "ALT tips")
 
 
 def sync_pop_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):

@@ -87,8 +87,8 @@ bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, alt
     return true;
 }
 
-template <typename pop_t>
-bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& pop_mempool, altintegration::AltTree& altTree) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+template <typename PopDataType>
+bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& pop_mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     LogPrint(BCLog::NET, "received pop data: %s, bytes size: %d\n", pop_t::name(), vRecv.size());
@@ -126,22 +126,21 @@ int processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRe
 {
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
     auto& pop_mempool = pop_service.getMemPool();
-    auto& alt_tree = pop_service.getAltTree();
 
     // process Pop Data
     if (strCommand == altintegration::ATV::name()) {
         LOCK(cs_main);
-        return processPopData<altintegration::ATV>(pfrom, vRecv, pop_mempool, alt_tree);
+        return processPopData<altintegration::ATV>(pfrom, vRecv, pop_mempool);
     }
 
     if (strCommand == altintegration::VTB::name()) {
         LOCK(cs_main);
-        return processPopData<altintegration::VTB>(pfrom, vRecv, pop_mempool, alt_tree);
+        return processPopData<altintegration::VTB>(pfrom, vRecv, pop_mempool);
     }
 
     if (strCommand == altintegration::VbkBlock::name()) {
         LOCK(cs_main);
-        return processPopData<altintegration::VbkBlock>(pfrom, vRecv, pop_mempool, alt_tree);
+        return processPopData<altintegration::VbkBlock>(pfrom, vRecv, pop_mempool);
     }
     //----------------------
 

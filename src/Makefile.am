@@ -116,7 +116,12 @@ VBK_H = \
   vbk/altchainparam.hpp \
   vbk/p2p_sync.hpp \
   vbk/util.hpp \
-  vbk/adaptors/univalue_json.hpp
+  vbk/adaptors/univalue_json.hpp \
+  vbk/adaptors/batch_adapter.hpp \
+  vbk/adaptors/batch.hpp \
+  vbk/adaptors/repository.hpp \
+  vbk/adaptors/cursor.hpp
+
 ### VeriBlock section end
 
 
@@ -297,6 +302,8 @@ libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   vbk/pop_service_impl.cpp \
   vbk/pop_service_impl.hpp \
+  vbk/adaptors/repository.cpp \
+  vbk/adaptors/repository.hpp \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \

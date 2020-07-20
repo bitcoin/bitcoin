@@ -25,8 +25,9 @@ from test_framework.util import (
 class PopInit(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 3
-        self.extra_args = [[], ["-txindex"], ["-txindex"]]
+        self.num_nodes = 4
+        self.extra_args = [[], ["-txindex"], ["-reindex"], ["-txindex"]]
+        self.extra_args = [x + ["-checklevel=4"] for x in self.extra_args]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -34,8 +35,8 @@ class PopInit(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
-        # nodes[0,1] will be restarted
-        # node[2] is a control node
+        # nodes[0,1,2] will be restarted
+        # node[3] is a control node
 
         # all nodes connected and synced
         for i in range(self.num_nodes - 1):
@@ -51,28 +52,36 @@ class PopInit(BitcoinTestFramework):
         self.addr0 = self.nodes[0].getnewaddress()
         # 100 blocks without endorsements
         self.nodes[0].generate(nblocks=100)
-        self.log.info("node0 started mining of {} endorsed blocks".format(self.SIZE))
-        create_endorsed_chain(self.nodes[0], self.apm, self.SIZE, self.addr0)
-        self.log.info("node0 finished creation of {} endorsed blocks".format(self.SIZE))
-
-        self.sync_blocks(self.nodes)
+        self.sync_blocks(self.nodes, timeout=20)
         self.log.info("nodes are in sync")
 
-        # stop node0
-        self.restart_node(0)
-        self.restart_node(1)
-        self.log.info("nodes[0,1] restarted")
-        self.sync_all(self.nodes, timeout=30)
-        self.log.info("nodes are in sync")
+        def try_restart_then_check():
+            # stop nodes
+            self.restart_node(0)
+            self.restart_node(1)
+            self.restart_node(2)
+            self.log.info("nodes[0,1,2] restarted")
+            self.sync_all(self.nodes, timeout=30)
+            self.log.info("nodes are in sync")
+            bestblocks = [self.get_best_block(x) for x in self.nodes]
+            popdata = [x.getpopdata(bestblocks[0]['height']) for x in self.nodes]
+       
+            # when node0 stops, its VBK/BTC trees get cleared. When we start it again, it MUST load payloads into trees.
+            # if this assert fails, it means that node restarted, but NOT loaded its VBK/BTC state into memory.
+            # node[3] is a control node that has never been shut down.
+            assert_equal(popdata[0], popdata[3])
+            assert_equal(popdata[1], popdata[3])
+            assert_equal(popdata[2], popdata[3])
 
-        bestblocks = [self.get_best_block(x) for x in self.nodes]
-        popdata = [x.getpopdata(bestblocks[0]['height']) for x in self.nodes]
+        for i, node in enumerate(self.nodes):
+            addr = node.getnewaddress()
+            self.log.info("node{}/{} creates endorsed chain of size {}".format(i, len(self.nodes), self.SIZE))
+            create_endorsed_chain(node, self.apm, self.SIZE, addr)
+            self.log.info("node{}/{} finished".format(i, len(self.nodes),))
+            self.sync_all(self.nodes, timeout=20)
+            self.log.info("all nodes syncd")
 
-        # when node0 stops, its VBK/BTC trees get cleared. When we start it again, it MUST load payloads into trees.
-        # if this assert fails, it means that node restarted, but NOT loaded its VBK/BTC state into memory.
-        # node[2] is a control node that has never been shut down.
-        assert_equal(popdata[0], popdata[2])
-        assert_equal(popdata[1], popdata[2])
+            try_restart_then_check()
 
         self.log.warning("success! _restart_init_test()")
 
@@ -85,6 +94,7 @@ class PopInit(BitcoinTestFramework):
         self.apm = MockMiner()
 
         self._restart_init_test()
+
 
 if __name__ == '__main__':
     PopInit().main()

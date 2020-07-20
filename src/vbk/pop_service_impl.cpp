@@ -17,7 +17,12 @@
 #include <util/strencodings.h>
 #include <validation.h>
 
+#ifdef WIN32
+#include <boost/thread/interruption.hpp>
+#endif //WIN32
+
 #include <vbk/p2p_sync.hpp>
+#include <vbk/adaptors/batch_adapter.hpp>
 #include <vbk/service_locator.hpp>
 #include <vbk/util.hpp>
 
@@ -25,9 +30,10 @@
 #include <veriblock/altintegration.hpp>
 #include <veriblock/finalizer.hpp>
 #include <veriblock/stateless_validation.hpp>
+#include <veriblock/storage/util.hpp>
 #include <veriblock/validation_state.hpp>
 
-//#include <veriblock/storage/rocks/storage_manager_rocks.hpp>
+#include <shutdown.h>
 #include <veriblock/storage/inmem/storage_manager_inmem.hpp>
 
 namespace VeriBlock {
@@ -201,16 +207,13 @@ int PopServiceImpl::compareForks(const CBlockIndex& leftForkTip, const CBlockInd
     return altTree->comparePopScore(left.hash, right.hash);
 }
 
-PopServiceImpl::PopServiceImpl(const altintegration::Config& config, const fs::path& popPath)
+PopServiceImpl::PopServiceImpl(const altintegration::Config& config, CDBWrapper& db)
 {
     config.validate();
 
-    storeman = std::make_shared<altintegration::StorageManagerInmem>();
-    LogPrintf("Init POP storage in %s...\n", popPath.string());
-    payloadsStore = &storeman->getPayloadsStorage();
-
-    altTree = altintegration::Altintegration::create(config, *payloadsStore);
-
+    repo = std::make_shared<Repository>(db);
+    store = std::make_shared<altintegration::PayloadsStorage>(repo);
+    altTree = altintegration::Altintegration::create(config, *store);
     mempool = std::make_shared<altintegration::MemPool>(*altTree);
     //
     mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
@@ -234,6 +237,97 @@ void PopServiceImpl::removePayloadsFromMempool(const altintegration::PopData& po
 {
     AssertLockHeld(cs_main);
     mempool->removePayloads(popData);
+}
+
+bool PopServiceImpl::hasPopData(CBlockTreeDB& db)
+{
+    return db.Exists(BatchAdapter::btctip()) && db.Exists(BatchAdapter::vbktip()) && db.Exists(BatchAdapter::alttip());
+}
+
+
+void PopServiceImpl::saveTrees(altintegration::BatchAdaptor& batch)
+{
+    AssertLockHeld(cs_main);
+    altintegration::SaveAllTrees(*this->altTree, batch);
+}
+
+template <typename BlockTree>
+bool LoadTree(CDBIterator& iter, char blocktype, std::pair<char, std::string> tiptype, BlockTree& out, altintegration::ValidationState& state)
+{
+    using index_t = typename BlockTree::index_t;
+    using block_t = typename index_t::block_t;
+    using hash_t = typename BlockTree::hash_t;
+
+    // Load tip
+    hash_t tiphash;
+    std::pair<char, std::string> ckey;
+
+    iter.Seek(tiptype);
+    if (!iter.Valid()) {
+        // no valid tip is stored = no need to load anything
+        return error("%s: failed to load %s tip", block_t::name());
+    }
+    if (!iter.GetKey(ckey)) {
+        return error("%s: failed to find key %c:%s in %s", __func__, tiptype.first, tiptype.second, block_t::name());
+    }
+    if (ckey != tiptype) {
+        return error("%s: bad key for tip %c:%s in %s", __func__, tiptype.first, tiptype.second, block_t::name());
+    }
+    if (!iter.GetValue(tiphash)) {
+        return error("%s: failed to read tip value in %s", __func__, block_t::name());
+    }
+
+    std::vector<index_t> blocks;
+
+    // Load blocks
+    iter.Seek(std::make_pair(blocktype, hash_t()));
+    while (iter.Valid()) {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        boost::this_thread::interruption_point();
+#endif
+        if (ShutdownRequested()) return false;
+        std::pair<char, hash_t> key;
+        if (iter.GetKey(key) && key.first == blocktype) {
+            index_t diskindex;
+            if (iter.GetValue(diskindex)) {
+                blocks.push_back(diskindex);
+                iter.Next();
+            } else {
+                return error("%s: failed to read %s block", __func__, block_t::name());
+            }
+        } else {
+            break;
+        }
+    }
+
+    // sort blocks by height
+    std::sort(blocks.begin(), blocks.end(), [](const index_t& a, const index_t& b) {
+        return a.getHeight() < b.getHeight();
+    });
+    if (!altintegration::LoadTree(out, blocks, tiphash, state)) {
+        return error("%s: failed to load tree %s", __func__, block_t::name());
+    }
+
+    auto* tip = out.getBestChain().tip();
+    assert(tip);
+    LogPrintf("Loaded %d blocks in %s tree with tip %s\n", out.getBlocks().size(), block_t::name(), tip->toShortPrettyString());
+
+    return true;
+}
+
+bool PopServiceImpl::loadTrees(CDBIterator& iter)
+{
+    altintegration::ValidationState state;
+    if (!LoadTree(iter, DB_BTC_BLOCK, BatchAdapter::btctip(), altTree->btc(), state)) {
+        return error("%s: failed to load BTC tree %s", __func__, state.toString());
+    }
+    if (!LoadTree(iter, DB_VBK_BLOCK, BatchAdapter::vbktip(), altTree->vbk(), state)) {
+        return error("%s: failed to load VBK tree %s", __func__, state.toString());
+    }
+    if (!LoadTree(iter, DB_ALT_BLOCK, BatchAdapter::alttip(), *altTree, state)) {
+        return error("%s: failed to load ALT tree %s", __func__, state.toString());
+    }
+    return true;
 }
 
 void PopServiceImpl::addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)

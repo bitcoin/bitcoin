@@ -227,6 +227,11 @@ UniValue submitpop(const JSONRPCRequest& request)
 
         altintegration::MempoolResult result = pop_mempool.submitAll(popData);
 
+        const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+        VeriBlock::p2p::sendPopData<altintegration::ATV>(g_rpc_node->connman.get(), msgMaker, popData.atvs);
+        VeriBlock::p2p::sendPopData<altintegration::VTB>(g_rpc_node->connman.get(), msgMaker, popData.vtbs);
+        VeriBlock::p2p::sendPopData<altintegration::VbkBlock>(g_rpc_node->connman.get(), msgMaker, popData.context);
+
         return altintegration::ToJSON<UniValue>(result);
     }
 }

@@ -13,7 +13,7 @@
 #include <mutex>
 #include <vector>
 
-#include <util/system.h>
+#include <vbk/adaptors/repository.hpp>
 #include <veriblock/altintegration.hpp>
 #include <veriblock/blockchain/alt_block_tree.hpp>
 #include <veriblock/config.hpp>
@@ -27,17 +27,18 @@ class PopServiceImpl : public PopService
 private:
     std::shared_ptr<altintegration::MemPool> mempool;
     std::shared_ptr<altintegration::AltTree> altTree;
-    std::shared_ptr<altintegration::StorageManager> storeman;
-    altintegration::PayloadsStorage* payloadsStore;
-
+    std::shared_ptr<altintegration::Repository> repo;
+    std::shared_ptr<altintegration::PayloadsStorage> store;
     std::vector<altintegration::PopData> disconnected_popdata;
 
 public:
+    bool hasPopData(CBlockTreeDB& db) override;
+    void saveTrees(altintegration::BatchAdaptor& batch) override;
+    bool loadTrees(CDBIterator& iter) override;
+
     void clearPopDataStorage() override
     {
-        VBK_ASSERT(payloadsStore);
-        // TODO: clear pop data
-        storeman->clear();
+        assert(false && "not implemented");
     }
 
     std::string toPrettyString() const override
@@ -56,7 +57,7 @@ public:
         return *mempool;
     }
 
-    PopServiceImpl(const altintegration::Config& config, const fs::path& dbPath);
+    PopServiceImpl(const altintegration::Config& config, CDBWrapper& db);
 
     ~PopServiceImpl() override = default;
 
