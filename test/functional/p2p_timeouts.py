@@ -74,7 +74,7 @@ class TimeoutsTest(BitcoinTestFramework):
         ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
-            sleep(3)
+            sleep(3 + 1) # Sleep one second more than peertimeout
             assert not no_verack_node.connected
             assert not no_version_node.connected
             assert not no_send_node.connected
