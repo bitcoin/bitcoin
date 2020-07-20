@@ -187,7 +187,6 @@ class CNodeStats
 {
 public:
     NodeId nodeid;
-    ServiceFlags nServices;
     std::chrono::seconds m_last_send;
     std::chrono::seconds m_last_recv;
     std::chrono::seconds m_last_tx_time;
@@ -346,7 +345,6 @@ public:
     std::unique_ptr<TransportSerializer> m_serializer;
 
     NetPermissionFlags m_permissionFlags{NetPermissionFlags::None};
-    std::atomic<ServiceFlags> nServices{NODE_NONE};
 
     /**
      * Socket used for communication with the node.
@@ -481,6 +479,9 @@ public:
     std::atomic<bool> m_bip152_highbandwidth_to{false};
     // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
     std::atomic<bool> m_bip152_highbandwidth_from{false};
+
+    /** Whether this peer provides all services that we want. Used for eviction decisions */
+    std::atomic_bool m_has_all_wanted_services{false};
 
     /** Whether we should relay transactions to this peer (their version
      *  message did not include fRelay=false and this is not a block-relay-only
