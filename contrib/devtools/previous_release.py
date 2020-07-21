@@ -4,7 +4,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-# Build previous releases.
+# Download or build previous releases.
+# Needs curl and tar to download a release, or the build dependencies when
+# building a release.
 
 import argparse
 import contextlib
@@ -52,14 +54,14 @@ def download_binary(tag, args) -> int:
     print('Fetching: {sha256SumsUrl}'.format(sha256SumsUrl=sha256SumsUrl))
 
     header, status = subprocess.Popen(
-        ['curl', '-I', tarballUrl], stdout=subprocess.PIPE).communicate()
+        ['curl', '--head', tarballUrl], stdout=subprocess.PIPE).communicate()
     if re.search("404 Not Found", header.decode("utf-8")):
         print("Binary tag was not found")
         return 1
 
     curlCmds = [
-        ['curl', '-O', tarballUrl],
-        ['curl', "-o", sha256Sums, sha256SumsUrl],
+        ['curl', '--remote-name', tarballUrl],
+        ['curl', '--output', sha256Sums, sha256SumsUrl],
     ]
 
     for cmd in curlCmds:
@@ -69,23 +71,17 @@ def download_binary(tag, args) -> int:
 
     hasher = hashlib.sha256()
     with open(tarball, "rb") as afile:
-        buf = afile.read()
-        hasher.update(buf)
-    afile.close()
+        hasher.update(afile.read())
     tarballHash = hasher.hexdigest()
-    file = open(sha256Sums, 'r', encoding="utf-8")
-    lst = list(file.readlines())
-    file.close()
-    lastline = lst[len(lst)-1]
+    tarballHash = '{}  {}\n'.format(tarballHash, tarball)
+    with open(sha256Sums, 'r', encoding="utf-8") as afile:
+        shasums = afile.readlines()
 
-    for line in lst:
-        if re.search(tarballHash, line):
-            print("Checksum matched")
-            break
-        elif lastline == line:
-            print("Checksum did not match")
-            Path(tarball).unlink()
-            return 1
+    if tarballHash not in shasums:
+        print("Checksum did not match")
+        Path(tarball).unlink()
+        return 1
+    print("Checksum matched")
 
     # Bitcoin Core Release Signing Keys v0.11.0+
     signingKey = "01EA5486DE18A882D4C2684590C8019E36C2E964"
@@ -182,8 +178,7 @@ def check_host(args) -> int:
 
 
 def main(args) -> int:
-    if not Path(args.target_dir).is_dir():
-        Path(args.target_dir).mkdir(exist_ok=True, parents=True)
+    Path(args.target_dir).mkdir(exist_ok=True, parents=True)
     print("Releases directory: {}".format(args.target_dir))
     ret = check_host(args)
     if ret:
