@@ -75,26 +75,28 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        if tx2 not in self.nodes[0].getrawmempool():
-            for i in range(3):
+        for i in range(3):
+            try:
                 self.nodes[i].getrawtransaction(tx1)
-                assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
-                assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
-                assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
-                assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
-                assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[i].getrawtransaction, tx2)
-                assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[i].getrawtransaction, tx3)
-                assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[i].getrawtransaction, tx4)
-            out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0,'maximumAmountAsset':0})
-            assert_equal(len(out), 1)
-            out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.4,'maximumAmountAsset':0.4})
-            assert_equal(len(out), 1)
-            out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.6,'maximumAmountAsset':0.6})
-            assert_equal(len(out), 1)
-            out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':1.0,'maximumAmountAsset':1.0})
-            assert_equal(len(out), 1)
-            out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
-            assert_equal(len(out), 4)
+            except JSONRPCException as e:
+                continue
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
+            assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[i].getrawtransaction, tx2)
+            assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[i].getrawtransaction, tx3)
+            assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[i].getrawtransaction, tx4)
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0,'maximumAmountAsset':0})
+        assert_equal(len(out), 1)
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.4,'maximumAmountAsset':0.4})
+        assert_equal(len(out), 1)
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.6,'maximumAmountAsset':0.6})
+        assert_equal(len(out), 1)
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':1.0,'maximumAmountAsset':1.0})
+        assert_equal(len(out), 1)
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 4)
 
     def basic_asset(self):
         self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
