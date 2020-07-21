@@ -63,9 +63,9 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     if (key.IsCompressed()) {
         CTxDestination segwit = WitnessV0KeyHash(keyid);
         CTxDestination p2sh = ScriptHash(GetScriptForDestination(segwit));
-        return std::vector<CTxDestination>{std::move(keyid), std::move(p2sh), std::move(segwit)};
+        return std::vector<CTxDestination>{std::move(p2sh)};
     } else {
-        return std::vector<CTxDestination>{std::move(keyid)};
+        return std::vector<CTxDestination>{std::move(keyid)}; // reserved p2pkh
     }
 }
 
