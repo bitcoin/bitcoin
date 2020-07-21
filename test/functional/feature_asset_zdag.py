@@ -99,7 +99,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         if tx2inchain is True:
             assert_equal(len(out), 0)
             out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
-            assert_equal(len(out), 3)
+            assert_equal(len(out), 6)
         else:
             assert_equal(len(out), 1)
             out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
