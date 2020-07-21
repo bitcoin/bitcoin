@@ -437,7 +437,6 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     {
         LogPrintf("%s thread start\n", name);
         func();
-        LogPrintf("%s thread exit\n", name);
     }
     catch (const boost::thread_interrupted&)
     {
