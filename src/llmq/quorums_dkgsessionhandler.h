@@ -118,6 +118,7 @@ private:
     CDKGPendingMessages pendingComplaints;
     CDKGPendingMessages pendingJustifications;
     CDKGPendingMessages pendingPrematureCommitments;
+    std::string m_threadName;
 
 public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, CConnman& connman);
@@ -128,6 +129,7 @@ public:
 
     void StartThread();
     void StopThread();
+    const char* GetName() {return m_threadName.c_str();}
 
 private:
     bool InitNewQuorum(const CBlockIndex* pindexQuorum);
