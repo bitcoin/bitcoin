@@ -29,9 +29,7 @@ print()
 print('Number of connections order: ' + str(connectionSequence))
 modifyConnectionSequence = input('Would you like to modify this? ').lower() in ['y', 'yes']
 if modifyConnectionSequence:
-	connectionSequenceStr = input('Enter a new connection sequence (separated by spaces): ').split()
-	connectionSequence = [int(x) for x in connectionSequenceStr]
-	print('Number of connections order: ' + str(connectionSequence))
+	connectionSequence = input('Enter a new connection sequence (separated by spaces): ').split()
 print()
 
 datadir = os.path.expanduser('~/.bitcoin') # Virtual machine shared folder
@@ -44,7 +42,6 @@ elif os.path.exists('/media/sf_BitcoinAttacker/blocks'):
 elif os.path.exists('/media/sim/BITCOIN/blocks'):
 	datadir = ' -datadir=/media/sim/BITCOIN'
 numSkippedSamples = 0
-hasReachedConnections = False
 
 # Fetch the external IP from myexternalip.com
 #def getmyIP():
@@ -58,45 +55,18 @@ def terminal(cmd):
 def bitcoin(cmd):
 	return terminal('./../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd)
 
-# Given a raw memory string from the linux "top" command, return the number of megabytes
-# 1 EiB = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 bytes
-# 1 PiB = 1024 * 1024 * 1024 * 1024 * 1024 bytes
-# 1 GiB = 1024 * 1024 * 1024 * 1024 bytes
-# 1 MiB = 1024 * 1024 * 1024 bytes
-# 1 KiB = 1024 * 1024 bytes
-# 1 byte = 1000000 megabytes
-def top_mem_to_mb(mem):
-	if mem.endswith('e'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 / 1000000 # exbibytes to megabytes
-	elif mem.endswith('p'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 * 1024 / 1000000 # gibibytes to megabytes
-	elif mem.endswith('t'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 / 1000000 # tebibytes to megabytes
-	elif mem.endswith('g'): return float(mem[:-1]) * 1024 * 1024 * 1024 / 1000000 # gibabytes to megabytes
-	elif mem.endswith('m'): return float(mem[:-1]) * 1024 * 1024 / 1000000 # mebibytes to megabytes
-	else: return float(mem) * 1024 / 1000000 # kibibytes to megabytes
-
-# Given a raw memory string from the linux "top" command, return the number of mebibytes
-def top_mem_to_MiB(mem):
-	if mem.endswith('e'): return float(mem[:-1]) * 1024 * 1024 * 1024 * 1024 # exbibytes to mebibytes
-	elif mem.endswith('p'): return float(mem[:-1]) * 1024 * 1024 * 1024 # gibibytes to mebibytes
-	elif mem.endswith('t'): return float(mem[:-1]) * 1024 * 1024 # tebibytes to mebibytes
-	elif mem.endswith('g'): return float(mem[:-1]) * 1024 # gibabytes to mebibytes
-	elif mem.endswith('m'): return float(mem[:-1]) # mebibytes to mebibytes
-	else: return float(mem) / 1024 # kibibytes to mebibytes
-
 # Uses "top" to log the amount of resources that Bitcoin is using up, returns blank stings if the process is not running
 def getCPUData():
-	full_system = terminal('grep \'cpu \' /proc/stat | awk \'{usage=($2+$4)*100/($2+$4+$5)} END {print usage}\'').strip()
-	#full_system = terminal('top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk \'{print 100 - $1}\'').strip()
 	raw = terminal('top -b -n 1 |grep bitcoind').strip().split()
 	while len(raw) < 12: raw.append('0')
 	output = {
-		'full_system': full_system,
 		'process_ID': raw[0],
 		'user': raw[1],
 		'priority': raw[2],
 		'nice_value': raw[3],
-		'virtual_memory': str(top_mem_to_MiB(raw[4])),
-		'memory': str(top_mem_to_MiB(raw[5])),
-		'shared_memory': str(top_mem_to_MiB(raw[6])),
+		'virtual_memory': str(float(raw[4]) / 1024),
+		'memory': str(float(raw[5]) / 1024),
+		'shared_memory': str(float(raw[6]) / 1024),
 		'state': raw[7],
 		'cpu_percent': raw[8],
 		'memory_percent': raw[9],
@@ -105,63 +75,6 @@ def getCPUData():
 
 	}
 	return output
-
-
-# Reads /proc/net/dev to get networking bytes/packets sent/received
-def getNetworkData():
-	raw = terminal('awk \'/:/ { print($1, $2, $3, $10, $11) }\' < /proc/net/dev -').strip().split('\n')
-	selected_interface = ''
-	for interface in raw:
-		if not interface.startswith('lo:'):
-			selected_interface = interface
-			break
-	data = selected_interface.strip().split()
-	if selected_interface != '' and len(data) == 5:
-		if data[0].endswith(':'): data[0] = data[0][:-1]
-		# Differentiate between error and no error
-		if data[0] == '': data[0] == ' '
-		try:
-			return {
-				'interface': data[0],
-				'bytes_sent': int(data[3]),
-				'bytes_received': int(data[1]),
-				'packets_sent': int(data[4]),
-				'packets_received': int(data[2]),
-			}
-		except:
-			pass
-	return {
-		'interface': '',
-		'bytes_sent': '',
-		'bytes_received': '',
-		'packets_sent': '',
-		'packets_received': '',
-	}
-
-bandwidth_download = 0
-bandwidth_upload = 0
-prev_bytes_received = ''
-prev_bytes_sent = ''
-
-# Calls getNetworkData to compute the difference in bytes send and received
-def getBandwidth():
-	global numSecondsPerSample, bandwidth_download, bandwidth_upload, prev_bytes_received, prev_bytes_sent
-	network_data = getNetworkData()
-
-	if network_data['interface'] != '':
-		if prev_bytes_received == '': prev_bytes_received = network_data['bytes_received']
-		r = (network_data['bytes_received'] - prev_bytes_received) / numSecondsPerSample
-		bandwidth_download = r
-		prev_bytes_received = network_data['bytes_received']
-	
-		if prev_bytes_sent == '': prev_bytes_sent = network_data['bytes_sent']
-		d = (network_data['bytes_sent'] - prev_bytes_sent) / numSecondsPerSample
-		bandwidth_upload = d
-		prev_bytes_sent = network_data['bytes_sent']
-	return {
-		'download_bps': bandwidth_download,
-		'upload_bps': bandwidth_upload,
-	}
 
 # Send commands to the Victim's Bitcoin Core Console
 def bitcoinVictim(cmd):
@@ -195,11 +108,11 @@ def fetchHeader():
 	line += "TotalBanScore,"
 	line += "Connections,"
 
-	line += 'Bitcoin CPU %,'
+	line += 'CPU %,'
 	line += 'Memory %,'
-	line += 'Memory (MB),'
-	line += 'Full System Bandwidth (download/upload),'
-	line += 'Full System CPU %,'
+	line += 'Mem (MB),'
+	line += 'VirtualMem (MB),'
+	line += 'SharedMem (MB),'
 
 	line += 'BlockHeight,'
 	line += 'BlockDelay (Seconds),'
@@ -407,7 +320,7 @@ def fetchHeader():
 
 	line += 'Time in which the sample was taken (in human readable format),' # Timestamp
 	line += 'Time in which the sample was taken (in number of seconds since 1/01/1970),' # Timestamp (Seconds)
-
+	
 	line += 'Number of peer connections,' # NumPeers
 	line += 'Sum of inbound connections (initiated by the peer),' # NumInbound
 	line += 'Sum of peers that do not have the full blockchain downloaded,' # NumPruned
@@ -421,8 +334,8 @@ def fetchHeader():
 	line += 'Percentage of CPU usage of bitcoind for each core summed together (i.e. it may exceed 100%),' # CPU %
 	line += 'Percentage of memory usage of bitcoind,' # Memory %
 	line += 'Megabytes of memory being used,' # Mem
-	line += 'System bytes per second of the download and upload rates,' # Full System Bandwidth (download/upload)
-	line += 'System CPU usage pergentage,' # Full System CPU %
+	line += 'Megabytes of available disk extension space for if memory runs out,' # VirtualMem
+	line += 'Megabytes of memory that is shared by other processes,' # SharedMem
 	#line += 'Contains the output from the "top" instruction for the bitcoind process,' # Resource usage
 	#line += 'A list of the current peer connections,' # GetPeerInfo
 	line += 'Block height of the node,' # BlockHeight
@@ -713,13 +626,11 @@ def parseMessage(message, string, time):
 
 
 def fetch(now):
-	global numPeers, disableLog, numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount, hasReachedConnections
+	global numPeers, disableLog, numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	numPeers = 0
 	try:
-		# Fetch the bandwidth rate every second regardless of errors, because otherwise after the logging resumes, there will be a sharp jump calculating the difference in bytes per second
-		networkBandwidth = getBandwidth()
 		numPeers = int(bitcoin('getconnectioncount').strip())
-
+		
 		# Disable all logging messages within bitcoin
 		if disableLog:
 			bitcoin('log')
@@ -737,8 +648,7 @@ def fetch(now):
 			if not success:
 				numSkippedSamples += 1
 				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
-				# If it has at some point reached the limit, and is not connected for 2 hours, reset the node
-				if hasReachedConnections and numSkippedSamples > 0 and numSkippedSamples % 7200 == 0: resetNode()
+				if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 				return ''
 		elif numPeers > connectionSequence[maxConnections]:
 			# If not eclipsing, and number of connections is too big, reduce connections
@@ -748,8 +658,7 @@ def fetch(now):
 		if waitForConnectionNum and numPeers < connectionSequence[maxConnections]:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {connectionSequence[maxConnections]}, attempt #{numSkippedSamples}')
-			# If it has at some point reached the limit, and is not connected for 2 hours, reset the node
-			if hasReachedConnections and numSkippedSamples > 0 and numSkippedSamples % 7200 == 0: resetNode()
+			if numSkippedSamples > 0 and numSkippedSamples % 1800 == 0: resetNode() # After 1800 seconds / 30 minutes, just reset
 			return ''
 
 		messages = json.loads(bitcoin('getmsginfo'))
@@ -759,7 +668,6 @@ def fetch(now):
 		peerinfo = json.loads(bitcoin('getpeerinfo'))
 		resourceUsage = getCPUData()
 	except Exception as e:
-		print(e)
 		raise Exception('Unable to access Bitcoin console...')
 
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
@@ -826,8 +734,8 @@ def fetch(now):
 	line += resourceUsage['cpu_percent'] + '%,'
 	line += resourceUsage['memory_percent'] + '%,'
 	line += resourceUsage['memory'] + ','
-	line += str(networkBandwidth['download_bps']) + '/' + str(networkBandwidth['upload_bps']) + ','
-	line += resourceUsage['full_system'] + '%,'
+	line += resourceUsage['virtual_memory'] + ','
+	line += resourceUsage['shared_memory'] + ','
 	#line += '"' + re.sub(r'\s', '', json.dumps(resourceUsage)).replace('"', '""') + '",'
 	#line += '"' + re.sub(r'\s', '', getpeerinfo_raw).replace('"', '""') + '",'
 
@@ -894,7 +802,6 @@ def fetch(now):
 	line += str(numSkippedSamples) + ','
 
 	numSkippedSamples = 0
-	hasReachedConnections = True
 	return line
 
 def newFile(file):
@@ -966,7 +873,7 @@ def resetNode():
 		print('Startup delay complete.')
 
 def log(file, targetDateTime, count):
-	global maxConnections, fileSampleNumber, numPeers, hasReachedConnections
+	global maxConnections, fileSampleNumber, numPeers
 	try:
 		now = datetime.datetime.now()
 		line = fetch(now)
@@ -974,13 +881,12 @@ def log(file, targetDateTime, count):
 			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {numPeers}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
-			##if count >= 3600:
-			##	file.close()
-			##	return
+			#if count >= 3600:
+			#	file.close()
+			#	return
 			if(count % rowsPerFile == 0):
 				if not eclipsing: # If eclipse attack, max connections does not increase
 					maxConnections = (maxConnections + 1) % len(connectionSequence)
-					hasReachedConnections = False
 				try:
 					file = newFile(file)
 					resetNode()
@@ -1020,23 +926,15 @@ def getFileName():
 		return f'Sample {fileSampleNumber}, maxConnections = {connectionSequence[maxConnections]}, minutes = {minutes}.csv'
 
 def init():
-	global fileSampleNumber, maxConnections, numconnectionsString, useBitcoinConf, hasReachedConnections
+	global fileSampleNumber, maxConnections, numconnectionsString, useBitcoinConf
 	global waitForConnectionNum, eclipsing, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate
 
 	fileSampleNumber = 0		# File number to start at
-	#while len(glob.glob(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/Sample {fileSampleNumber + 1}*'))) > 0:
-	#	fileSampleNumber += 1
+	while len(glob.glob(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/Sample {fileSampleNumber + 1}*'))) > 0:
+		fileSampleNumber += 1
 
 	filesList = '\n'.join(glob.glob(os.path.expanduser('~/Desktop/Logs_AlternatingConnections/Sample *')))
 	filesList = filesList.replace(os.path.expanduser('~/Desktop/Logs_AlternatingConnections/'), '')
-
-	# Find the maximum sample number to continue logging off of
-	for file in filesList.split('\n'):
-		match = re.match(r'Sample ([0-9]+),', file)
-		if match == None: continue
-		if int(match.group(1)) > fileSampleNumber:
-			fileSampleNumber = int(match.group(1))
-
 	print(filesList)
 	print()
 	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')

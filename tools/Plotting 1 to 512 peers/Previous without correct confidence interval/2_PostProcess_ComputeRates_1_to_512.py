@@ -1,13 +1,11 @@
 # This script scans for Sample X numConnections Y.csv files wihin the current directory, and parses them, adding # Diff and BytesSum Diff columns to the end
 
-from decimal import Decimal
 import csv
-import numpy as np
 import os
 import re
-import scipy.stats
 import sys
 import time
+from decimal import Decimal
 
 numSecondsPerSample = 1
 
@@ -17,24 +15,11 @@ def listFiles(regex, directory):
 	path = os.path.join(os.curdir, directory)
 	return [os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file)) and bool(re.match(regex, file))]
 
-# Compute the confidence interval of a list of data
-def compute_confidence(data, confidence=0.95):
-	a = 1.0 * np.array(data)
-	n = len(a)
-	m, se = np.mean(a), scipy.stats.sem(a)
-	h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
-	return m, m-h, m+h
-
-def compute_mean_open_high_low_close(data):
-	m, o, c = compute_confidence(data)
-	h = max(data)
-	l = min(data)
-	return f'{m} {o} {h} {l} {c}'
 
 if __name__ == '__main__':
 	outputFile = open(f'Raw Rate Info.csv', 'w', newline='')
 	line = 'File Name,'
-	line += 'Hash ID,'
+	line += 'SampleNum,'
 	line += 'Connections,'
 	line += 'Logging Time,'
 
@@ -55,17 +40,14 @@ if __name__ == '__main__':
 	line += 'UniqueTX/Sec,'
 	line += 'AllTX/Sec,'
 
-	line += 'AvgBitcoinCPU,'
-	line += 'AvgSystemCPU,'
+	line += 'AvgCPU,'
 	line += 'AvgMemory,'
 	line += 'AvgMemoryMB,'
-	line += 'AvgDownloadRate,'
-	line += 'AvgUploadRate,'
 
 
 	outputFile.write(line + '\n')
 	directory = 'PostProcessed'
-	files = listFiles(r'Connections_[0-9]+_mins_[0-9\.]+_hash_', directory)
+	files = listFiles(r'Sample [0-9]+, numConnections = [0-9]+, minutes = [0-9\.]+', directory)
 
 	for file in files:
 		print(f'Processing {file}')
@@ -76,11 +58,11 @@ if __name__ == '__main__':
 		header = next(reader)
 		headerDesc = next(reader)
 
-		match = re.match(r'(?:\.[/\\])?' + directory + r'[/\\]Connections_([0-9]+)_mins_([0-9\.]+)_hash_(.*)\.csv', file)
+		match = re.match(r'(?:\.[/\\])?' + directory + r'[/\\]Sample ([0-9]+), numConnections = ([0-9]+), minutes = [0-9\.]+', file)
 
 		fileName = os.path.basename(file)
-		connections = match.group(1)
-		hashID = match.group(3)
+		sampleNum = match.group(1)
+		connections = match.group(2)
 		loggingTime = 0
 		avgBlockDelay = 0
 		numAllMsgs = 0
@@ -93,20 +75,12 @@ if __name__ == '__main__':
 		allMsgsPerSec = 0
 		uniqueTxPerSec = 0
 		allTxPerSec = 0
-		avgBitcoinCpu = 0
-		avgSystemCpu = 0
+		avgCpu = 0
 		avgMemory = 0
 		avgMemoryMB = 0
-		avgDownloadRate = 0
-		avgUploadRate = 0
 
 
 		numRows = 0
-		cpuPercentRows = 0
-		blockDelayRows = 0
-		cpuSystemPercentRows = 0
-		memoryPercentRows = 0
-		avgDownloadUploadRateRows = 0
 		firstRow = ''
 		lastRow = ''
 		row = ''
@@ -115,9 +89,7 @@ if __name__ == '__main__':
 			if numRows == 0: firstRow = row
 
 			blockDelay = row[17]
-			if blockDelay != '' and row[16] != row[17]:
-				avgBlockDelay += float(blockDelay)
-				blockDelayRows += 1
+			if blockDelay != '': avgBlockDelay += float(blockDelay)
 
 			# Skip the first row because the difference contains everything before the script execution
 			if prevRow != '':
@@ -136,31 +108,12 @@ if __name__ == '__main__':
 				allTxPerSec += allTXDiff
 
 			cpuPercent = row[11]
-			if cpuPercent.endswith('%'):
-				cpuPercent = cpuPercent[:-1]
-				avgBitcoinCpu += float(cpuPercent)
-				cpuPercentRows += 1
-
-			if header[15].strip() == 'Full System CPU %':
-				cpuSystemPercent = row[15]
-				if cpuSystemPercent.endswith('%'):
-					cpuSystemPercent = cpuSystemPercent[:-1]
-					avgSystemCpu += float(cpuSystemPercent)
-					cpuSystemPercentRows += 1
-
+			if cpuPercent.endswith('%'): cpuPercent = cpuPercent[:-1]
+			avgCpu += float(cpuPercent)
 			memoryPercent = row[12]
-			if memoryPercent.endswith('%'):
-				memoryPercent = memoryPercent[:-1]
-				avgMemory += float(memoryPercent)
-				memoryPercentRows += 1
+			if memoryPercent.endswith('%'): memoryPercent = memoryPercent[:-1]
+			avgMemory += float(memoryPercent)
 			avgMemoryMB += float(row[13])
-
-			bandwidth = row[14]
-			if len(bandwidth.split('/')) == 2:
-				down, up = bandwidth.split('/')
-				avgDownloadRate += float(down)
-				avgUploadRate += float(up)
-				avgDownloadUploadRateRows += 1
 
 			numRows += 1
 			prevRow = row
@@ -168,62 +121,38 @@ if __name__ == '__main__':
 
 		loggingTime = (float(lastRow[1]) - float(firstRow[1])) / 60
 
-		avgBlockDelay /= blockDelayRows
+		avgBlockDelay /= numRows
 		#numUniqueTx
 		#numAllTx
-		if numUniqueTx > numAllTx: numUniqueTx = numAllTx
 		txRatioUniqueAll = (numUniqueTx / numAllTx) if numAllTx != 0 else 0
 		#numUniqueBlocks
 		#numAllBlocks
-		if numUniqueBlocks > numAllBlocks: numUniqueBlocks = numAllBlocks
 		blockRatioUniqueAll = (numUniqueBlocks / numAllBlocks) if numAllBlocks != 0 else 0
 		allMsgsPerSec /= numRows
 		uniqueTxPerSec /= numRows
 		allTxPerSec /= numRows
-		avgBitcoinCpu /= cpuPercentRows
-		avgSystemCpu = (avgSystemCpu / cpuSystemPercentRows) if cpuSystemPercentRows != 0 else ''
-
-		avgMemory /= memoryPercentRows
+		avgCpu /= numRows
+		avgMemory /= numRows
 		avgMemoryMB /= numRows
 
-		avgDownloadRate = (avgDownloadRate / avgDownloadUploadRateRows) if avgDownloadUploadRateRows != 0 else ''
-		avgUploadRate = (avgUploadRate / avgDownloadUploadRateRows) if avgDownloadUploadRateRows != 0 else ''
-
-
-
-
-
-
-
 		line = '"' + fileName + '",'
-		line += str(hashID) + ','
+		line += str(sampleNum) + ','
 		line += str(connections) + ','
 		line += str(loggingTime) + ','
-
 		line += str(avgBlockDelay) + ','
-
 		line += str(numAllMsgs) + ','
-
 		line += str(numUniqueTx) + ','
 		line += str(numAllTx) + ','
 		line += str(txRatioUniqueAll) + ','
-
 		line += str(numUniqueBlocks) + ','
 		line += str(numAllBlocks) + ','
 		line += str(blockRatioUniqueAll) + ','
-
 		line += str(allMsgsPerSec) + ','
-
 		line += str(uniqueTxPerSec) + ','
 		line += str(allTxPerSec) + ','
-
-		line += str(avgBitcoinCpu) + ','
-		line += str(avgSystemCpu) + ','
+		line += str(avgCpu) + ','
 		line += str(avgMemory) + ','
 		line += str(avgMemoryMB) + ','
-
-		line += str(avgDownloadRate) + ','
-		line += str(avgUploadRate) + ','
 
 		outputFile.write(line + '\n')
 

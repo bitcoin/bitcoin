@@ -1,53 +1,27 @@
 # This newer script scans files wihin the current directory, and parses them, adding # Diff and BytesSum Diff columns to the end
 
-from decimal import Decimal
 import csv
-import hashlib
-import codecs
 import os
 import re
 import sys
 import time
+from decimal import Decimal
 
 # List the files with a regular expression
 def listFiles(regex):
 	return [file for file in os.listdir(os.curdir) if os.path.isfile(file) and bool(re.match(regex, file))]
 
-# Given a file name, compute the hash of its contents
-def computeFileHash(fileName):
-	BLOCK_SIZE = 65536
-	fileHash = hashlib.sha256()
-	with open(file, 'rb') as f:
-		fb = f.read(BLOCK_SIZE)
-		while len(fb) > 0:
-			fileHash.update(fb)
-			fb = f.read(BLOCK_SIZE)
-	base64 = codecs.encode(fileHash.digest(), 'base64').decode().strip()
-	base64 = re.sub(r'[<>:"/\\|?*]', '', base64)[:16]
-	return base64
 
 if __name__ == '__main__':
 	try:
 		os.mkdir('PostProcessed')
 	except: pass
-	files = listFiles(r'Sample [0-9]+, numConnections = [0-9]+, minutes = [0-9\.]+(?: copy(?: [0-9]+)?)?\.csv')
+	files = listFiles(r'.*csv')
 	for file in files:
 		print(f'Processing {file}')
-		match = re.match(r'Sample ([0-9]+), numConnections = ([0-9]+), minutes = ([0-9\.]+)', file)
-		if match == None:
-			print('\n' + '!' * 60 + f'\nERROR! File "{file}" does not match the pattern!\n')
-			continue
-		fileHash = computeFileHash(file)
-		newFileName = f'Connections_{match.group(2)}_mins_{match.group(3)}_hash_{fileHash}.csv'
-		if os.path.exists(os.path.join('PostProcessed', newFileName)):
-			# Skip the files that have already been processed
-			print(f'Skipping file "{newFileName}"')
-			continue
-
-		print(f'Writing to {newFileName}')
-
 		readerFile = open(file, 'r')
-		writerFile = open(os.path.join('PostProcessed', newFileName), 'w', newline='')
+
+		writerFile = open(f'PostProcessed/{file}', 'w', newline='')
 
 		# Remove NUL bytes to prevent errors
 		reader = csv.reader(x.replace('\0', '') for x in readerFile)
