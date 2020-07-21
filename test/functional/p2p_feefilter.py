@@ -88,24 +88,22 @@ class FeeFilterTest(BitcoinTestFramework):
 
         conn = self.nodes[0].add_p2p_connection(TestP2PConn())
 
-        # Test that invs are received by test connection for all txs at
-        # feerate of .2 sat/byte
+        self.log.info("Test txs paying 0.2 sat/byte are received by test connection")
         node1.settxfee(Decimal("0.00000200"))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         assert allInvsMatch(txids, conn)
         conn.clear_invs()
 
-        # Set a filter of .15 sat/byte on test connection
+        # Set a fee filter of 0.15 sat/byte on test connection
         conn.send_and_ping(msg_feefilter(150))
 
-        # Test that txs are still being received by test connection (paying .15 sat/byte)
+        self.log.info("Test txs paying 0.15 sat/byte are received by test connection")
         node1.settxfee(Decimal("0.00000150"))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         assert allInvsMatch(txids, conn)
         conn.clear_invs()
 
-        # Change tx fee rate to .1 sat/byte and test they are no longer received
-        # by the test connection
+        self.log.info("Test txs paying 0.1 sat/byte are no longer received by test connection")
         node1.settxfee(Decimal("0.00000100"))
         [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         self.sync_mempools()  # must be sure node 0 has received all txs
@@ -122,7 +120,7 @@ class FeeFilterTest(BitcoinTestFramework):
         assert allInvsMatch(txids, conn)
         conn.clear_invs()
 
-        # Remove fee filter and check that txs are received again
+        self.log.info("Remove fee filter and check txs are received again")
         conn.send_and_ping(msg_feefilter(0))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         assert allInvsMatch(txids, conn)
