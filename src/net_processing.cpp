@@ -3542,7 +3542,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
+        privateSendClientQueueManager.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
+        for (auto& pair : privateSendClientManagers) {
+            pair.second->ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
+        }
 #endif // ENABLE_WALLET
         privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
         sporkManager.ProcessSpork(pfrom, strCommand, vRecv, *connman);

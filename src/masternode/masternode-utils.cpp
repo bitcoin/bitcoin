@@ -24,7 +24,9 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
 {
     std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
 #ifdef ENABLE_WALLET
-    privateSendClient.GetMixingMasternodesInfo(vecDmns);
+    for (const auto& pair : privateSendClientManagers) {
+        pair.second->GetMixingMasternodesInfo(vecDmns);
+    }
 #endif // ENABLE_WALLET
 
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes

@@ -62,7 +62,9 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     CPrivateSend::UpdatedBlockTip(pindexNew);
 #ifdef ENABLE_WALLET
-    privateSendClient.UpdatedBlockTip(pindexNew);
+    for (auto& pair : privateSendClientManagers) {
+        pair.second->UpdatedBlockTip(pindexNew);
+    }
 #endif // ENABLE_WALLET
 
     llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);

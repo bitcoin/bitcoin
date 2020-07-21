@@ -495,6 +495,22 @@
           <number>4</number>
          </property>
          <item>
+          <widget class="QLabel" name="WalletSelectorLabel">
+           <property name="text">
+            <string>Wallet: </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="WalletSelector">
+           <item>
+            <property name="text">
+             <string>(none)</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>

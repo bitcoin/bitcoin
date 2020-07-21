@@ -23,6 +23,7 @@
 #include <privatesend/privatesend-client.h>
 #include <qt/walletframe.h>
 #include <qt/walletmodel.h>
+#include <qt/walletview.h>
 #endif // ENABLE_WALLET
 
 #ifdef Q_OS_MAC
@@ -41,6 +42,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QButtonGroup>
+#include <QComboBox>
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
@@ -70,10 +72,6 @@ const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 #endif
         ;
 
-/** Display name for default wallet name. Uses tilde to avoid name
- * collisions in the future with additional wallets */
-const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
-
 BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
     enableWallet(false),
@@ -88,6 +86,8 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     progressBar(0),
     progressDialog(0),
     appMenuBar(0),
+    appToolBar(0),
+    appToolBarLogoAction(0),
     overviewAction(0),
     historyAction(0),
     masternodeAction(0),
@@ -588,6 +588,7 @@ void BitcoinGUI::createToolBars()
     if(walletFrame)
     {
         QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
+        appToolBar = toolbar;
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
         toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -612,11 +613,17 @@ void BitcoinGUI::createToolBars()
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
+#ifdef ENABLE_WALLET
+        m_wallet_selector = new QComboBox(this);
+        m_wallet_selector->setHidden(true);
+        connect(m_wallet_selector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setCurrentWallet(const QString&)));
+#endif
+
         QLabel *logoLabel = new QLabel();
         logoLabel->setObjectName("lblToolbarLogo");
         logoLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-        toolbar->addWidget(logoLabel);
+        appToolBarLogoAction = toolbar->addWidget(logoLabel);
 
         /** Create additional container for toolbar and walletFrame and make it the central widget.
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
@@ -729,12 +736,28 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
 }
 
 #ifdef ENABLE_WALLET
-bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
+bool BitcoinGUI::addWallet(WalletModel *walletModel)
 {
     if(!walletFrame)
         return false;
+    const QString name = walletModel->getWalletName();
     setWalletActionsEnabled(true);
-    return walletFrame->addWallet(name, walletModel);
+    m_wallet_selector->addItem(name);
+    if (m_wallet_selector->count() == 2) {
+        m_wallet_selector->setHidden(false);
+        QVBoxLayout* layout = new QVBoxLayout(this);
+        layout->addWidget(m_wallet_selector);
+        layout->setSpacing(0);
+        layout->setMargin(0);
+        layout->setContentsMargins(5, 0, 5, 0);
+        QWidget* walletSelector = new QWidget(this);
+        walletSelector->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        walletSelector->setObjectName("walletSelector");
+        walletSelector->setLayout(layout);
+        appToolBar->insertWidget(appToolBarLogoAction, walletSelector);
+    }
+    rpcConsole->addWallet(walletModel);
+    return walletFrame->addWallet(walletModel);
 }
 
 bool BitcoinGUI::setCurrentWallet(const QString& name)
@@ -759,8 +782,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     sendCoinsMenuAction->setEnabled(enabled);
 #ifdef ENABLE_WALLET
-    privateSendCoinsAction->setEnabled(enabled && privateSendClient.fEnablePrivateSend);
-    privateSendCoinsMenuAction->setEnabled(enabled && privateSendClient.fEnablePrivateSend);
+    privateSendCoinsAction->setEnabled(enabled && CPrivateSendClientOptions::IsEnabled());
+    privateSendCoinsMenuAction->setEnabled(enabled && CPrivateSendClientOptions::IsEnabled());
 #else
     privateSendCoinsAction->setEnabled(enabled);
     privateSendCoinsMenuAction->setEnabled(enabled);
@@ -1028,7 +1051,9 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     // Disabling macOS App Nap on initial sync, disk, reindex operations and mixing.
     bool disableAppNap = !masternodeSync.IsSynced();
 #ifdef ENABLE_WALLET
-    disableAppNap |= privateSendClient.fPrivateSendRunning;
+    for (const auto& pair : privateSendClientManagers) {
+        disableAppNap |= pair.second->IsMixing();
+    }
 #endif // ENABLE_WALLET
     if (disableAppNap) {
         m_app_nap_inhibitor->disableAppNap();
@@ -1317,10 +1342,10 @@ void BitcoinGUI::showEvent(QShowEvent *event)
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label)
+void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
 {
     IncomingTransactionMessage itx = {
-            date, unit, amount, type, address, label
+            date, unit, amount, type, address, label, walletName
     };
     incomingTransactions.emplace_back(itx);
 
@@ -1386,8 +1411,11 @@ void BitcoinGUI::showIncomingTransactions()
         for (auto& itx : txs) {
             // On new transaction, make an info balloon
             QString msg = tr("Date: %1\n").arg(itx.date) +
-                          tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(itx.unit, itx.amount, true)) +
-                          tr("Type: %1\n").arg(itx.type);
+                          tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(itx.unit, itx.amount, true));
+            if (WalletModel::isMultiwallet() && !itx.walletName.isEmpty()) {
+                msg += tr("Wallet: %1\n").arg(itx.walletName);
+            }
+            msg += tr("Type: %1\n").arg(itx.type);
             if (!itx.label.isEmpty())
                 msg += tr("Label: %1\n").arg(itx.label);
             else if (!itx.address.isEmpty())
@@ -1495,6 +1523,20 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
     }
+}
+
+void BitcoinGUI::updateWalletStatus()
+{
+    if (!walletFrame) {
+        return;
+    }
+    WalletView * const walletView = walletFrame->currentWalletView();
+    if (!walletView) {
+        return;
+    }
+    WalletModel * const walletModel = walletView->getWalletModel();
+    setEncryptionStatus(walletModel->getEncryptionStatus());
+    setHDStatus(walletModel->hdEnabled());
 }
 #endif // ENABLE_WALLET
 

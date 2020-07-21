@@ -288,9 +288,10 @@ void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
 #ifdef ENABLE_WALLET
-    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
-    if(HasWallets())
-        GetWallets()[0]->MarkDirty();
+    for (auto& pwallet : GetWallets()) {
+        privateSendClientManagers.at(pwallet->GetName())->nCachedNumBlocks = std::numeric_limits<int>::max();
+        pwallet->MarkDirty();
+    }
 #endif // ENABLE_WALLET
     accept();
     updateDefaultProxyNets();

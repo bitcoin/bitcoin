@@ -138,8 +138,9 @@ void WalletModel::updateStatus()
 {
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
 
-    if(cachedEncryptionStatus != newEncryptionStatus)
-        Q_EMIT encryptionStatusChanged(newEncryptionStatus);
+    if(cachedEncryptionStatus != newEncryptionStatus) {
+        Q_EMIT encryptionStatusChanged();
+    }
 }
 
 void WalletModel::pollBalanceChanged()
@@ -154,13 +155,12 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || privateSendClient.nPrivateSendRounds != cachedPrivateSendRounds)
-    {
+    if (fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || CPrivateSendClientOptions::GetRounds() != cachedPrivateSendRounds) {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
-        cachedPrivateSendRounds = privateSendClient.nPrivateSendRounds;
+        cachedPrivateSendRounds = CPrivateSendClientOptions::GetRounds();
 
         checkBalanceChanged();
         if(transactionTableModel)
@@ -807,4 +807,19 @@ bool WalletModel::hdEnabled() const
 int WalletModel::getDefaultConfirmTarget() const
 {
     return nTxConfirmTarget;
+}
+
+QString WalletModel::getWalletName() const
+{
+    LOCK(wallet->cs_wallet);
+    QString walletName = QString::fromStdString(wallet->GetName());
+    if (walletName.endsWith(".dat")) {
+        walletName.truncate(walletName.size() - 4);
+    }
+    return walletName;
+}
+
+bool WalletModel::isMultiwallet()
+{
+    return gArgs.GetArgs("-wallet").size() > 1;
 }
