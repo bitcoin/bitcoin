@@ -245,6 +245,7 @@ UniValue prioritisetransaction(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"txid\"       (string, required) The transaction id.\n"
             "2. fee_delta      (numeric, required) The fee value (in duffs) to add (or subtract, if negative).\n"
+            "                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee.\n"
             "\nResult:\n"
