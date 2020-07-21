@@ -965,11 +965,19 @@ def init():
 	global waitForConnectionNum, eclipsing, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate
 
 	fileSampleNumber = 0		# File number to start at
-	while len(glob.glob(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/Sample {fileSampleNumber + 1}*'))) > 0:
-		fileSampleNumber += 1
+	#while len(glob.glob(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/Sample {fileSampleNumber + 1}*'))) > 0:
+	#	fileSampleNumber += 1
 
 	filesList = '\n'.join(glob.glob(os.path.expanduser('~/Desktop/Logs_AlternatingConnections/Sample *')))
 	filesList = filesList.replace(os.path.expanduser('~/Desktop/Logs_AlternatingConnections/'), '')
+
+	# Find the maximum sample number to continue logging off of
+	for file in filesList.split('\n'):
+		match = re.match(r'Sample ([0-9]+),', file)
+		if match == None: continue
+		if int(match.group(1)) > fileSampleNumber:
+			fileSampleNumber = int(match.group(1))
+
 	print(filesList)
 	print()
 	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')
