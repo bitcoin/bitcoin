@@ -61,6 +61,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         disconnect_nodes(self.nodes[0], 1)
         disconnect_nodes(self.nodes[1], 2)
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
+        
         time.sleep(2)
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
@@ -69,9 +70,15 @@ class AssetZDAGTest(SyscoinTestFramework):
         # use tx2 to build tx4
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         connect_nodes(self.nodes[0], 1)
+        # sync up tx1
+        self.nodes[0].setmocktime(self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']+10)
+        bump_node_times(self.nodes[0:1], MAX_INITIAL_BROADCAST_DELAY)
+        # give time for propogation
+        time.sleep(2)
         connect_nodes(self.nodes[1], 2)
-        # broadcast transactions
-        bump_node_times(self.nodes, MAX_INITIAL_BROADCAST_DELAY+1)
+        # sync up tx2, tx3, tx4
+        bump_node_times(self.nodes[1:2], MAX_INITIAL_BROADCAST_DELAY)
+        # give time for propogation
         time.sleep(2)
         self.sync_all()
         for i in range(3):
