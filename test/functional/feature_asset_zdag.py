@@ -57,31 +57,13 @@ class AssetZDAGTest(SyscoinTestFramework):
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
-        # disconnect nodes they can double spend without seeing each others transaction
-        disconnect_nodes(self.nodes[0], 1)
-        disconnect_nodes(self.nodes[1], 2)
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
-        
-        time.sleep(2)
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
         # use tx2 to build tx3
         tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
         # use tx2 to build tx4
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
-        connect_nodes(self.nodes[0], 1)
-        # sync up tx1
-        bump_node_times(self.nodes[0:2], MAX_INITIAL_BROADCAST_DELAY)
-        # give time for propogation
-        time.sleep(2)
-        # add delay between tx1 and tx2 so tx2 will be discarded by mempool based on FIFO
-        newtime = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']+10
-        self.nodes[0].setmocktime(newtime)
-        connect_nodes(self.nodes[1], 2)
-        # sync up tx2, tx3, tx4
-        bump_node_times(self.nodes[1:3], MAX_INITIAL_BROADCAST_DELAY)
-        # give time for propogation
-        time.sleep(2)
         self.sync_all()
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
