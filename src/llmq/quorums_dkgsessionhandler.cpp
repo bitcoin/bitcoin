@@ -96,6 +96,7 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBL
     pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT),
     connman(_connman)
 {
+    m_threadName = strprintf("q-phase-%d", params.type);
     if (params.type == Consensus::LLMQ_NONE) {
         throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
     }
@@ -146,8 +147,8 @@ void CDKGSessionHandler::StartThread()
     if (phaseHandlerThread.joinable()) {
         throw std::runtime_error("Tried to start an already started CDKGSessionHandler thread.");
     }
-    std::string threadName = strprintf("q-phase-%d", params.type);
-    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, threadName.c_str(), std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
+    
+    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, GetName(), std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
 }
 
 void CDKGSessionHandler::StopThread()
