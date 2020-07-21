@@ -61,7 +61,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         disconnect_nodes(self.nodes[0], 1)
         disconnect_nodes(self.nodes[1], 2)
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
-        time.sleep(1)
+        time.sleep(2)
         # dbl spend
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
         # use tx2 to build tx3
