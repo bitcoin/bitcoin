@@ -71,10 +71,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
         connect_nodes(self.nodes[0], 1)
         # sync up tx1
-        self.nodes[0].setmocktime(self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']+10)
         bump_node_times(self.nodes[0:1], MAX_INITIAL_BROADCAST_DELAY)
         # give time for propogation
         time.sleep(2)
+        # add delay between tx1 and tx2 so tx2 will be discarded by mempool based on FIFO
+        self.nodes[0].setmocktime(self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']+10)
         connect_nodes(self.nodes[1], 2)
         # sync up tx2, tx3, tx4
         bump_node_times(self.nodes[1:2], MAX_INITIAL_BROADCAST_DELAY)
