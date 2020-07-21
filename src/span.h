@@ -21,6 +21,62 @@
 /** A Span is an object that can refer to a contiguous sequence of objects.
  *
  * It implements a subset of C++20's std::span.
+ *
+ * Things to be aware of when writing code that deals with Spans:
+ *
+ * - Similar to references themselves, Spans are subject to reference lifetime
+ *   issues. The user is responsible for making sure the objects pointed to by
+ *   a Span live as long as the Span is used. For example:
+ *
+ *       std::vector<int> vec{1,2,3,4};
+ *       Span<int> sp(vec);
+ *       vec.push_back(5);
+ *       printf("%i\n", sp.front()); // UB!
+ *
+ *   may exhibit undefined behavior, as increasing the size of a vector may
+ *   invalidate references.
+ *
+ * - One particular pitfall is that Spans can be constructed from temporaries,
+ *   but this is unsafe when the Span is stored in a variable, outliving the
+ *   temporary. For example, this will compile, but exhibits undefined behavior:
+ *
+ *       Span<const int> sp(std::vector<int>{1, 2, 3});
+ *       printf("%i\n", sp.front()); // UB!
+ *
+ *   The lifetime of the vector ends when the statement it is created in ends.
+ *   Thus the Span is left with a dangling reference, and using it is undefined.
+ *
+ * - Due to Span's automatic creation from range-like objects (arrays, and data
+ *   types that expose a data() and size() member function), functions that
+ *   accept a Span as input parameter can be called with any compatible
+ *   range-like object. For example, this works:
+*
+ *       void Foo(Span<const int> arg);
+ *
+ *       Foo(std::vector<int>{1, 2, 3}); // Works
+ *
+ *   This is very useful in cases where a function truly does not care about the
+ *   container, and only about having exactly a range of elements. However it
+ *   may also be surprising to see automatic conversions in this case.
+ *
+ *   When a function accepts a Span with a mutable element type, it will not
+ *   accept temporaries; only variables or other references. For example:
+ *
+ *       void FooMut(Span<int> arg);
+ *
+ *       FooMut(std::vector<int>{1, 2, 3}); // Does not compile
+ *       std::vector<int> baz{1, 2, 3};
+ *       FooMut(baz); // Works
+ *
+ *   This is similar to how functions that take (non-const) lvalue references
+ *   as input cannot accept temporaries. This does not work either:
+ *
+ *       void FooVec(std::vector<int>& arg);
+ *       FooVec(std::vector<int>{1, 2, 3}); // Does not compile
+ *
+ *   The idea is that if a function accepts a mutable reference, a meaningful
+ *   result will be present in that variable after the call. Passing a temporary
+ *   is useless in that context.
  */
 template<typename C>
 class Span

@@ -39,7 +39,8 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             # default permissions (no specific permissions)
             ["-whitelist=127.0.0.1"],
-            ["relay", "noban", "mempool"],
+            # Make sure the default values in the command line documentation match the ones here
+            ["relay", "noban", "mempool", "download"],
             True)
 
         self.checkpermission(
@@ -51,7 +52,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             # relay permission removed (no specific permissions)
             ["-whitelist=127.0.0.1", "-whitelistrelay=0"],
-            ["noban", "mempool"],
+            ["noban", "mempool", "download"],
             True)
 
         self.checkpermission(
@@ -59,7 +60,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
             # Legacy parameter interaction which set whitelistrelay to true
             # if whitelistforcerelay is true
             ["-whitelist=127.0.0.1", "-whitelistforcerelay"],
-            ["forcerelay", "relay", "noban", "mempool"],
+            ["forcerelay", "relay", "noban", "mempool", "download"],
             True)
 
         # Let's make sure permissions are merged correctly
@@ -70,32 +71,32 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
-            ["noban", "bloomfilter", "forcerelay", "relay"],
+            ["noban", "bloomfilter", "forcerelay", "relay", "download"],
             False)
         self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")
 
         self.checkpermission(
             # legacy whitelistrelay should be ignored
             ["-whitelist=noban,mempool@127.0.0.1", "-whitelistrelay"],
-            ["noban", "mempool"],
+            ["noban", "mempool", "download"],
             False)
 
         self.checkpermission(
             # legacy whitelistforcerelay should be ignored
             ["-whitelist=noban,mempool@127.0.0.1", "-whitelistforcerelay"],
-            ["noban", "mempool"],
+            ["noban", "mempool", "download"],
             False)
 
         self.checkpermission(
             # missing mempool permission to be considered legacy whitelisted
             ["-whitelist=noban@127.0.0.1"],
-            ["noban"],
+            ["noban", "download"],
             False)
 
         self.checkpermission(
             # all permission added
             ["-whitelist=all@127.0.0.1"],
-            ["forcerelay", "noban", "mempool", "bloomfilter", "relay"],
+            ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download"],
             False)
 
         self.stop_node(1)
@@ -107,9 +108,9 @@ class P2PPermissionsTests(BitcoinTestFramework):
         block_op_true = self.nodes[0].getblock(self.nodes[0].generatetoaddress(100, ADDRESS_BCRT1_P2WSH_OP_TRUE)[0])
         self.sync_all()
 
-        self.log.debug("Create a connection from a whitelisted wallet that rebroadcasts raw txs")
+        self.log.debug("Create a connection from a forcerelay peer that rebroadcasts raw txs")
         # A python mininode is needed to send the raw transaction directly. If a full node was used, it could only
-        # rebroadcast via the inv-getdata mechanism. However, even for whitelisted connections, a full node would
+        # rebroadcast via the inv-getdata mechanism. However, even for forcerelay connections, a full node would
         # currently not request a txid that is already in the mempool.
         self.restart_node(1, extra_args=["-whitelist=forcerelay@127.0.0.1"])
         p2p_rebroadcast_wallet = self.nodes[1].add_p2p_connection(P2PDataStore())
@@ -134,7 +135,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         self.log.debug("Check that node[1] will send the tx to node[0] even though it is already in the mempool")
         connect_nodes(self.nodes[1], 0)
-        with self.nodes[1].assert_debug_log(["Force relaying tx {} from whitelisted peer=0".format(txid)]):
+        with self.nodes[1].assert_debug_log(["Force relaying tx {} from peer=0".format(txid)]):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
             wait_until(lambda: txid in self.nodes[0].getrawmempool())
 
@@ -145,7 +146,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='Not relaying non-mempool transaction {} from whitelisted peer=0'.format(txid),
+            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid),
         )
 
     def checkpermission(self, args, expectedPermissions, whitelisted):

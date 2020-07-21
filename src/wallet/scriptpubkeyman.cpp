@@ -88,16 +88,16 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
     IsMineResult ret = IsMineResult::NO;
 
     std::vector<valtype> vSolutions;
-    txnouttype whichType = Solver(scriptPubKey, vSolutions);
+    TxoutType whichType = Solver(scriptPubKey, vSolutions);
 
     CKeyID keyID;
     switch (whichType)
     {
-    case TX_NONSTANDARD:
-    case TX_NULL_DATA:
-    case TX_WITNESS_UNKNOWN:
+    case TxoutType::NONSTANDARD:
+    case TxoutType::NULL_DATA:
+    case TxoutType::WITNESS_UNKNOWN:
         break;
-    case TX_PUBKEY:
+    case TxoutType::PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
         if (!PermitsUncompressed(sigversion) && vSolutions[0].size() != 33) {
             return IsMineResult::INVALID;
@@ -106,7 +106,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
             ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
-    case TX_WITNESS_V0_KEYHASH:
+    case TxoutType::WITNESS_V0_KEYHASH:
     {
         if (sigversion == IsMineSigVersion::WITNESS_V0) {
             // P2WPKH inside P2WSH is invalid.
@@ -121,7 +121,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         ret = std::max(ret, IsMineInner(keystore, GetScriptForDestination(PKHash(uint160(vSolutions[0]))), IsMineSigVersion::WITNESS_V0));
         break;
     }
-    case TX_PUBKEYHASH:
+    case TxoutType::PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
         if (!PermitsUncompressed(sigversion)) {
             CPubKey pubkey;
@@ -133,7 +133,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
             ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
-    case TX_SCRIPTHASH:
+    case TxoutType::SCRIPTHASH:
     {
         if (sigversion != IsMineSigVersion::TOP) {
             // P2SH inside P2WSH or P2SH is invalid.
@@ -146,7 +146,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         }
         break;
     }
-    case TX_WITNESS_V0_SCRIPTHASH:
+    case TxoutType::WITNESS_V0_SCRIPTHASH:
     {
         if (sigversion == IsMineSigVersion::WITNESS_V0) {
             // P2WSH inside P2WSH is invalid.
@@ -165,7 +165,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         break;
     }
 
-    case TX_MULTISIG:
+    case TxoutType::MULTISIG:
     {
         // Never treat bare multisig outputs as ours (they can still be made watchonly-though)
         if (sigversion == IsMineSigVersion::TOP) {
@@ -597,11 +597,6 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
             continue;
         }
 
-        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
-        if (!input.IsSane()) {
-            return TransactionError::INVALID_PSBT;
-        }
-
         // Get the Sighash type
         if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
             return TransactionError::SIGHASH_MISMATCH;
@@ -836,7 +831,7 @@ bool LegacyScriptPubKeyMan::HaveWatchOnly() const
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
     std::vector<std::vector<unsigned char>> solutions;
-    return Solver(dest, solutions) == TX_PUBKEY &&
+    return Solver(dest, solutions) == TxoutType::PUBKEY &&
         (pubKeyOut = CPubKey(solutions[0])).IsFullyValid();
 }
 
@@ -910,20 +905,22 @@ bool LegacyScriptPubKeyMan::AddWatchOnly(const CScript& dest, int64_t nCreateTim
     return AddWatchOnly(dest);
 }
 
-void LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain, bool memonly)
+void LegacyScriptPubKeyMan::LoadHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
-    // memonly == true means we are loading the wallet file
-    // memonly == false means that the chain is actually being changed
-    if (!memonly) {
-        // Store the new chain
-        if (!WalletBatch(m_storage.GetDatabase()).WriteHDChain(chain)) {
-            throw std::runtime_error(std::string(__func__) + ": writing chain failed");
-        }
-        // When there's an old chain, add it as an inactive chain as we are now rotating hd chains
-        if (!m_hd_chain.seed_id.IsNull()) {
-            AddInactiveHDChain(m_hd_chain);
-        }
+    m_hd_chain = chain;
+}
+
+void LegacyScriptPubKeyMan::AddHDChain(const CHDChain& chain)
+{
+    LOCK(cs_KeyStore);
+    // Store the new chain
+    if (!WalletBatch(m_storage.GetDatabase()).WriteHDChain(chain)) {
+        throw std::runtime_error(std::string(__func__) + ": writing chain failed");
+    }
+    // When there's an old chain, add it as an inactive chain as we are now rotating hd chains
+    if (!m_hd_chain.seed_id.IsNull()) {
+        AddInactiveHDChain(m_hd_chain);
     }
 
     m_hd_chain = chain;
@@ -1177,7 +1174,7 @@ void LegacyScriptPubKeyMan::SetHDSeed(const CPubKey& seed)
     CHDChain newHdChain;
     newHdChain.nVersion = m_storage.CanSupportFeature(FEATURE_HD_SPLIT) ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE;
     newHdChain.seed_id = seed.GetID();
-    SetHDChain(newHdChain, false);
+    AddHDChain(newHdChain);
     NotifyCanGetAddressesChanged();
     WalletBatch batch(m_storage.GetDatabase());
     m_storage.UnsetBlankWalletFlag(batch);
@@ -1900,8 +1897,8 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         desc_prefix = "wpkh(" + xpub + "/84'";
         break;
     }
-    default: assert(false);
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(!desc_prefix.empty());
 
     // Mainnet derives at 0', testnet and regtest derive at 1'
     if (Params().IsTestChain()) {
@@ -2084,11 +2081,6 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
 
         if (PSBTInputSigned(input)) {
             continue;
-        }
-
-        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
-        if (!input.IsSane()) {
-            return TransactionError::INVALID_PSBT;
         }
 
         // Get the Sighash type

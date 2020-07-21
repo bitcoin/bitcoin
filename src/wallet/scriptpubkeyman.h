@@ -422,8 +422,10 @@ public:
     //! Generate a new key
     CPubKey GenerateNewKey(WalletBatch& batch, CHDChain& hd_chain, bool internal = false) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
-    /* Set the HD chain model (chain child index counters) */
-    void SetHDChain(const CHDChain& chain, bool memonly);
+    /* Set the HD chain model (chain child index counters) and writes it to the database */
+    void AddHDChain(const CHDChain& chain);
+    //! Load a HD chain model (used by LoadWallet)
+    void LoadHDChain(const CHDChain& chain);
     const CHDChain& GetHDChain() const { return m_hd_chain; }
     void AddInactiveHDChain(const CHDChain& chain);
 

@@ -42,8 +42,8 @@ const std::string& FormatOutputType(OutputType type)
     case OutputType::LEGACY: return OUTPUT_TYPE_STRING_LEGACY;
     case OutputType::P2SH_SEGWIT: return OUTPUT_TYPE_STRING_P2SH_SEGWIT;
     case OutputType::BECH32: return OUTPUT_TYPE_STRING_BECH32;
-    default: assert(false);
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
@@ -61,8 +61,8 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
             return witdest;
         }
     }
-    default: assert(false);
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
@@ -100,6 +100,6 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
             return ScriptHash(witprog);
         }
     }
-    default: assert(false);
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }

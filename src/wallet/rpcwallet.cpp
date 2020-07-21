@@ -223,7 +223,7 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
         cc.m_feerate = CFeeRate(fee_rate);
 
         // default RBF to true for explicit fee rate modes
-        if (cc.m_signal_bip125_rbf == boost::none) cc.m_signal_bip125_rbf = true;
+        if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
     } else if (!estimate_param.isNull()) {
         cc.m_confirm_target = ParseConfirmTarget(estimate_param, pwallet->chain().estimateMaxBlocks());
     }
@@ -306,7 +306,7 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
 
-    OutputType output_type = pwallet->m_default_change_type != OutputType::CHANGE_AUTO ? pwallet->m_default_change_type : pwallet->m_default_address_type;
+    OutputType output_type = pwallet->m_default_change_type.get_value_or(pwallet->m_default_address_type);
     if (!request.params[0].isNull()) {
         if (!ParseOutputType(request.params[0].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[0].get_str()));
@@ -2993,10 +2993,11 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             if (options.exists("changeAddress")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both changeAddress and address_type options");
             }
-            coinControl.m_change_type = pwallet->m_default_change_type;
-            if (!ParseOutputType(options["change_type"].get_str(), *coinControl.m_change_type)) {
+            OutputType out_type;
+            if (!ParseOutputType(options["change_type"].get_str(), out_type)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown change type '%s'", options["change_type"].get_str()));
             }
+            coinControl.m_change_type.emplace(out_type);
         }
 
         coinControl.fAllowWatchOnly = ParseIncludeWatchonly(options["includeWatching"], *pwallet);
@@ -3503,7 +3504,7 @@ public:
     {
         // Always present: script type and redeemscript
         std::vector<std::vector<unsigned char>> solutions_data;
-        txnouttype which_type = Solver(subscript, solutions_data);
+        TxoutType which_type = Solver(subscript, solutions_data);
         obj.pushKV("script", GetTxnOutputType(which_type));
         obj.pushKV("hex", HexStr(subscript));
 
@@ -3520,7 +3521,7 @@ public:
             // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
             if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
             obj.pushKV("embedded", std::move(subobj));
-        } else if (which_type == TX_MULTISIG) {
+        } else if (which_type == TxoutType::MULTISIG) {
             // Also report some information on multisig scripts (which do not have a corresponding address).
             // TODO: abstract out the common functionality between this logic and ExtractDestinations.
             obj.pushKV("sigsrequired", solutions_data[0][0]);

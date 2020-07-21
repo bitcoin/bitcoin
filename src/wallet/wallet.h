@@ -13,11 +13,11 @@
 #include <policy/feerate.h>
 #include <psbt.h>
 #include <tinyformat.h>
-#include <ui_interface.h>
 #include <util/message.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
+#include <util/ui_change_type.h>
 #include <validationinterface.h>
 #include <wallet/coinselection.h>
 #include <wallet/crypter.h>
@@ -104,9 +104,6 @@ class ReserveDestination;
 
 //! Default for -addresstype
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
-
-//! Default for -changetype
-constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};
 
 static constexpr uint64_t KNOWN_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE
@@ -934,7 +931,7 @@ public:
     Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
-    OutputType TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend);
+    OutputType TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend);
 
     /**
      * Insert additional inputs into the transaction by
@@ -1012,7 +1009,13 @@ public:
     CFeeRate m_fallback_fee{DEFAULT_FALLBACK_FEE};
     CFeeRate m_discard_rate{DEFAULT_DISCARD_FEE};
     OutputType m_default_address_type{DEFAULT_ADDRESS_TYPE};
-    OutputType m_default_change_type{DEFAULT_CHANGE_TYPE};
+    /**
+     * Default output type for change outputs. When unset, automatically choose type
+     * based on address type setting and the types other of non-change outputs
+     * (see -changetype option documentation and implementation in
+     * CWallet::TransactionChangeType for details).
+     */
+    Optional<OutputType> m_default_change_type{};
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
@@ -1173,7 +1176,9 @@ public:
 
     /** overwrite all flags by the given uint64_t
        returns false if unknown, non-tolerable flags are present */
-    bool SetWalletFlags(uint64_t overwriteFlags, bool memOnly);
+    bool AddWalletFlags(uint64_t flags);
+    /** Loads the flags into the wallet. (used by LoadWallet) */
+    bool LoadWalletFlags(uint64_t flags);
 
     /** Determine if we are a legacy wallet */
     bool IsLegacy() const;
@@ -1251,12 +1256,17 @@ public:
     //! Instantiate a descriptor ScriptPubKeyMan from the WalletDescriptor and load it
     void LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc);
 
-    //! Sets the active ScriptPubKeyMan for the specified type and internal
+    //! Adds the active ScriptPubKeyMan for the specified type and internal. Writes it to the wallet file
     //! @param[in] id The unique id for the ScriptPubKeyMan
     //! @param[in] type The OutputType this ScriptPubKeyMan provides addresses for
     //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
-    //! @param[in] memonly Whether to record this update to the database. Set to true for wallet loading, normally false when actually updating the wallet.
-    void SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly = false);
+    void AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal);
+
+    //! Loads an active ScriptPubKeyMan for the specified type and internal. (used by LoadWallet)
+    //! @param[in] id The unique id for the ScriptPubKeyMan
+    //! @param[in] type The OutputType this ScriptPubKeyMan provides addresses for
+    //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
+    void LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
     void SetupDescriptorScriptPubKeyMans();

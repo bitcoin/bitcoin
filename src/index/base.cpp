@@ -4,9 +4,9 @@
 
 #include <chainparams.h>
 #include <index/base.h>
+#include <node/ui_interface.h>
 #include <shutdown.h>
 #include <tinyformat.h>
-#include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>

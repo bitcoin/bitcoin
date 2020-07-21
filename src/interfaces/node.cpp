@@ -17,6 +17,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/settings.h>
@@ -26,7 +27,6 @@
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -146,10 +146,10 @@ public:
         }
         return false;
     }
-    bool ban(const CNetAddr& net_addr, BanReason reason, int64_t ban_time_offset) override
+    bool ban(const CNetAddr& net_addr, int64_t ban_time_offset) override
     {
         if (m_context.banman) {
-            m_context.banman->Ban(net_addr, reason, ban_time_offset);
+            m_context.banman->Ban(net_addr, ban_time_offset);
             return true;
         }
         return false;

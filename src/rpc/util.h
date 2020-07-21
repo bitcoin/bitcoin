@@ -5,6 +5,7 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/coinstats.h>
 #include <node/transaction.h>
 #include <outputtype.h>
 #include <protocol.h>
@@ -76,6 +77,8 @@ extern uint256 ParseHashV(const UniValue& v, std::string strName);
 extern uint256 ParseHashO(const UniValue& o, std::string strKey);
 extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
 extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+
+CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType default_type);
 
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);

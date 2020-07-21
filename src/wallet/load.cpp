@@ -11,6 +11,7 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
@@ -82,14 +83,16 @@ bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& walle
     }
 }
 
-void StartWallets(CScheduler& scheduler)
+void StartWallets(CScheduler& scheduler, const ArgsManager& args)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();
     }
 
     // Schedule periodic wallet flushes and tx rebroadcasts
-    scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{500});
+    if (args.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
+        scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{500});
+    }
     scheduler.scheduleEvery(MaybeResendWalletTxs, std::chrono::milliseconds{1000});
 }
 

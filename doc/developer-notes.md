@@ -620,6 +620,19 @@ class A
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers.
 
+- Use `Span` as function argument when it can operate on any range-like container.
+
+  - *Rationale*: Compared to `Foo(const vector<int>&)` this avoids the need for a (potentially expensive)
+    conversion to vector if the caller happens to have the input stored in another type of container.
+    However, be aware of the pitfalls documented in [span.h](../src/span.h).
+
+```cpp
+void Foo(Span<const int> data);
+
+std::vector<int> vec{1,2,3};
+Foo(vec);
+```
+
 - Prefer `enum class` (scoped enumerations) over `enum` (traditional enumerations) where possible.
 
   - *Rationale*: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to `int`, and name clashes due to enumerators being exported to the surrounding scope.
@@ -874,7 +887,7 @@ Others are external projects without a tight relationship with our project. Chan
 be sent upstream, but bugfixes may also be prudent to PR against Bitcoin Core so that they can be integrated
 quickly. Cosmetic changes should be purely taken upstream.
 
-There is a tool in `test/lint/git-subtree-check.sh` to check a subtree directory for consistency with
+There is a tool in `test/lint/git-subtree-check.sh` ([instructions](../test/lint#git-subtree-checksh)) to check a subtree directory for consistency with
 its upstream repository.
 
 Current subtrees include:

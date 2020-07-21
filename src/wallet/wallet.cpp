@@ -99,9 +99,11 @@ std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
     return interfaces::MakeHandler([it] { LOCK(cs_wallets); g_load_wallet_fns.erase(it); });
 }
 
+static Mutex g_loading_wallet_mutex;
 static Mutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
-static std::set<std::string> g_unloading_wallet_set;
+static std::set<std::string> g_loading_wallet_set GUARDED_BY(g_loading_wallet_mutex);
+static std::set<std::string> g_unloading_wallet_set GUARDED_BY(g_wallet_release_mutex);
 
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
@@ -145,7 +147,8 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
     }
 }
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings)
+namespace {
+std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     try {
         if (!CWallet::Verify(chain, location, error, warnings)) {
@@ -165,6 +168,19 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocati
         error = Untranslated(e.what());
         return nullptr;
     }
+}
+} // namespace
+
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings)
+{
+    auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(location.GetName()));
+    if (!result.second) {
+        error = Untranslated("Wallet already being loading.");
+        return nullptr;
+    }
+    auto wallet = LoadWalletInternal(chain, location, error, warnings);
+    WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
+    return wallet;
 }
 
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings)
@@ -1406,19 +1422,28 @@ bool CWallet::IsWalletFlagSet(uint64_t flag) const
     return (m_wallet_flags & flag);
 }
 
-bool CWallet::SetWalletFlags(uint64_t overwriteFlags, bool memonly)
+bool CWallet::LoadWalletFlags(uint64_t flags)
 {
     LOCK(cs_wallet);
-    m_wallet_flags = overwriteFlags;
-    if (((overwriteFlags & KNOWN_WALLET_FLAGS) >> 32) ^ (overwriteFlags >> 32)) {
+    if (((flags & KNOWN_WALLET_FLAGS) >> 32) ^ (flags >> 32)) {
         // contains unknown non-tolerable wallet flags
         return false;
     }
-    if (!memonly && !WalletBatch(*database).WriteWalletFlags(m_wallet_flags)) {
+    m_wallet_flags = flags;
+
+    return true;
+}
+
+bool CWallet::AddWalletFlags(uint64_t flags)
+{
+    LOCK(cs_wallet);
+    // We should never be writing unknown onon-tolerable wallet flags
+    assert(!(((flags & KNOWN_WALLET_FLAGS) >> 32) ^ (flags >> 32)));
+    if (!WalletBatch(*database).WriteWalletFlags(flags)) {
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
     }
 
-    return true;
+    return LoadWalletFlags(flags);
 }
 
 int64_t CWalletTx::GetTxTime() const
@@ -2491,13 +2516,8 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
             continue;
         }
 
-        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
-        if (!input.IsSane()) {
-            return TransactionError::INVALID_PSBT;
-        }
-
         // If we have no utxo, grab it from the wallet.
-        if (!input.non_witness_utxo && input.witness_utxo.IsNull()) {
+        if (!input.non_witness_utxo) {
             const uint256& txhash = txin.prevout.hash;
             const auto it = mapWallet.find(txhash);
             if (it != mapWallet.end()) {
@@ -2653,11 +2673,11 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uin
     return locktime;
 }
 
-OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend)
+OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend)
 {
     // If -changetype is specified, always use that change type.
-    if (change_type != OutputType::CHANGE_AUTO) {
-        return change_type;
+    if (change_type) {
+        return *change_type;
     }
 
     // if m_default_address_type is legacy, use legacy address as change (even
@@ -3109,9 +3129,11 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
 {
     AssertLockHeld(cs_wallet);
     DBErrors nZapSelectTxRet = WalletBatch(*database, "cr+").ZapSelectTx(vHashIn, vHashOut);
-    for (uint256 hash : vHashOut) {
+    for (const uint256& hash : vHashOut) {
         const auto& it = mapWallet.find(hash);
         wtxOrdered.erase(it->second.m_it_wtxOrdered);
+        for (const auto& txin : it->second.tx->vin)
+            mapTxSpends.erase(txin.prevout);
         mapWallet.erase(it);
         NotifyTransactionChanged(this, hash, CT_DELETED);
     }
@@ -3721,15 +3743,11 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(wallet_path);
 
     try {
-        if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
-            return false;
-        }
+        return database->Verify(error_string);
     } catch (const fs::filesystem_error& e) {
         error_string = Untranslated(strprintf("Error loading wallet %s. %s", location.GetName(), fsbridge::get_filesystem_error_message(e)));
         return false;
     }
-
-    return WalletBatch::VerifyDatabaseFile(wallet_path, error_string);
 }
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings, uint64_t wallet_creation_flags)
@@ -3789,7 +3807,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
-        walletInstance->SetWalletFlags(wallet_creation_flags, false);
+        walletInstance->AddWalletFlags(wallet_creation_flags);
 
         // Only create LegacyScriptPubKeyMan when not descriptor wallet
         if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
@@ -3826,14 +3844,20 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
     }
 
-    if (!gArgs.GetArg("-addresstype", "").empty() && !ParseOutputType(gArgs.GetArg("-addresstype", ""), walletInstance->m_default_address_type)) {
-        error = strprintf(_("Unknown address type '%s'"), gArgs.GetArg("-addresstype", ""));
-        return nullptr;
+    if (!gArgs.GetArg("-addresstype", "").empty()) {
+        if (!ParseOutputType(gArgs.GetArg("-addresstype", ""), walletInstance->m_default_address_type)) {
+            error = strprintf(_("Unknown address type '%s'"), gArgs.GetArg("-addresstype", ""));
+            return nullptr;
+        }
     }
 
-    if (!gArgs.GetArg("-changetype", "").empty() && !ParseOutputType(gArgs.GetArg("-changetype", ""), walletInstance->m_default_change_type)) {
-        error = strprintf(_("Unknown change type '%s'"), gArgs.GetArg("-changetype", ""));
-        return nullptr;
+    if (!gArgs.GetArg("-changetype", "").empty()) {
+        OutputType out_type;
+        if (!ParseOutputType(gArgs.GetArg("-changetype", ""), out_type)) {
+            error = strprintf(_("Unknown change type '%s'"), gArgs.GetArg("-changetype", ""));
+            return nullptr;
+        }
+        walletInstance->m_default_change_type = out_type;
     }
 
     if (gArgs.IsArgSet("-mintxfee")) {
@@ -4404,12 +4428,21 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
             spk_manager->SetupDescriptorGeneration(master_key, t);
             uint256 id = spk_manager->GetID();
             m_spk_managers[id] = std::move(spk_manager);
-            SetActiveScriptPubKeyMan(id, t, internal);
+            AddActiveScriptPubKeyMan(id, t, internal);
         }
     }
 }
 
-void CWallet::SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly)
+void CWallet::AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
+{
+    WalletBatch batch(*database);
+    if (!batch.WriteActiveScriptPubKeyMan(static_cast<uint8_t>(type), id, internal)) {
+        throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
+    }
+    LoadActiveScriptPubKeyMan(id, type, internal);
+}
+
+void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
 {
     WalletLogPrintf("Setting spkMan to active: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(type), static_cast<int>(internal));
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
@@ -4417,12 +4450,6 @@ void CWallet::SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool interna
     spk_man->SetInternal(internal);
     spk_mans[type] = spk_man;
 
-    if (!memonly) {
-        WalletBatch batch(*database);
-        if (!batch.WriteActiveScriptPubKeyMan(static_cast<uint8_t>(type), id, internal)) {
-            throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
-        }
-    }
     NotifyCanGetAddressesChanged();
 }
 

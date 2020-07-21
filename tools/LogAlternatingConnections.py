@@ -106,6 +106,63 @@ def getCPUData():
 	}
 	return output
 
+
+# Reads /proc/net/dev to get networking bytes/packets sent/received
+def getNetworkData():
+	raw = terminal('awk \'/:/ { print($1, $2, $3, $10, $11) }\' < /proc/net/dev -').strip().split('\n')
+	selected_interface = ''
+	for interface in raw:
+		if not interface.startswith('lo:'):
+			selected_interface = interface
+			break
+	data = selected_interface.strip().split()
+	if selected_interface != '' and len(data) == 5:
+		if data[0].endswith(':'): data[0] = data[0][:-1]
+		# Differentiate between error and no error
+		if data[0] == '': data[0] == ' '
+		try:
+			return {
+				'interface': data[0],
+				'bytes_sent': int(data[3]),
+				'bytes_received': int(data[1]),
+				'packets_sent': int(data[4]),
+				'packets_received': int(data[2]),
+			}
+		except:
+			pass
+	return {
+		'interface': '',
+		'bytes_sent': '',
+		'bytes_received': '',
+		'packets_sent': '',
+		'packets_received': '',
+	}
+
+bandwidth_download = 0
+bandwidth_upload = 0
+prev_bytes_received = ''
+prev_bytes_sent = ''
+
+# Calls getNetworkData to compute the difference in bytes send and received
+def getBandwidth():
+	global numSecondsPerSample, bandwidth_download, bandwidth_upload, prev_bytes_received, prev_bytes_sent
+	network_data = getNetworkData()
+
+	if network_data['interface'] != '':
+		if prev_bytes_received == '': prev_bytes_received = network_data['bytes_received']
+		r = (network_data['bytes_received'] - prev_bytes_received) / numSecondsPerSample
+		bandwidth_download = r
+		prev_bytes_received = network_data['bytes_received']
+	
+		if prev_bytes_sent == '': prev_bytes_sent = network_data['bytes_sent']
+		d = (network_data['bytes_sent'] - prev_bytes_sent) / numSecondsPerSample
+		bandwidth_upload = d
+		prev_bytes_sent = network_data['bytes_sent']
+	return {
+		'download_bps': bandwidth_download,
+		'upload_bps': bandwidth_upload,
+	}
+
 # Send commands to the Victim's Bitcoin Core Console
 def bitcoinVictim(cmd):
 	victim_ip = '10.0.2.5'
@@ -140,8 +197,8 @@ def fetchHeader():
 
 	line += 'Bitcoin CPU %,'
 	line += 'Memory %,'
-	line += 'Mem (MB),'
-	line += 'VirtualMem (MB),'
+	line += 'Memory (MB),'
+	line += 'Full System Bandwidth (download/upload),'
 	line += 'Full System CPU %,'
 
 	line += 'BlockHeight,'
@@ -364,8 +421,8 @@ def fetchHeader():
 	line += 'Percentage of CPU usage of bitcoind for each core summed together (i.e. it may exceed 100%),' # CPU %
 	line += 'Percentage of memory usage of bitcoind,' # Memory %
 	line += 'Megabytes of memory being used,' # Mem
-	line += 'Megabytes of available disk extension space for if memory runs out,' # VirtualMem
-	line += 'Total CPU usage for the system,' # Full System CPI %
+	line += 'System bytes per second of the download and upload rates,' # Full System Bandwidth (download/upload)
+	line += 'System CPU usage pergentage,' # Full System CPU %
 	#line += 'Contains the output from the "top" instruction for the bitcoind process,' # Resource usage
 	#line += 'A list of the current peer connections,' # GetPeerInfo
 	line += 'Block height of the node,' # BlockHeight
@@ -659,6 +716,8 @@ def fetch(now):
 	global numPeers, disableLog, numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount, hasReachedConnections
 	numPeers = 0
 	try:
+		# Fetch the bandwidth rate every second regardless of errors, because otherwise after the logging resumes, there will be a sharp jump calculating the difference in bytes per second
+		networkBandwidth = getBandwidth()
 		numPeers = int(bitcoin('getconnectioncount').strip())
 
 		# Disable all logging messages within bitcoin
@@ -767,7 +826,7 @@ def fetch(now):
 	line += resourceUsage['cpu_percent'] + '%,'
 	line += resourceUsage['memory_percent'] + '%,'
 	line += resourceUsage['memory'] + ','
-	line += resourceUsage['virtual_memory'] + ','
+	line += str(networkBandwidth['download_bps']) + '/' + str(networkBandwidth['upload_bps']) + ','
 	line += resourceUsage['full_system'] + '%,'
 	#line += '"' + re.sub(r'\s', '', json.dumps(resourceUsage)).replace('"', '""') + '",'
 	#line += '"' + re.sub(r'\s', '', getpeerinfo_raw).replace('"', '""') + '",'
