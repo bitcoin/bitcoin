@@ -78,7 +78,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         for i in range(3):
             try:
                 self.nodes[i].getrawtransaction(tx1)
-            except JSONRPCException as e:
+            except:
                 continue
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
