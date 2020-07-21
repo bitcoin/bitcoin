@@ -981,7 +981,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         setEntries setParentCheck;
         // SYSCOIN
         bool bFoundConflict = false;
-        bool bZDAGTx = IsZdagTx(tx.nVersion);
+        bool bAssetAllocationTX = IsAssetAllocationTx(tx.nVersion);
         for (const CTxIn &txin : tx.vin) {
             if(mapAssetAllocationConflicts.find(txin.prevout) != mapAssetAllocationConflicts.end()) {
                 bFoundConflict = true;
@@ -1056,7 +1056,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         // just a sanity check, not definitive that this calc is correct...
         assert(it->GetSizeWithDescendants() >= child_sizes + it->GetTxSize());
         // SYSCOIN
-        if(!bZDAGTx) {
+        if(!bAssetAllocationTX) {
             if (fDependsWait)
                 waitingOnDependants.push_back(&(*it));
             else {
