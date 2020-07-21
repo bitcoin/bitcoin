@@ -44,15 +44,15 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[2].listunspent()
         assert_equal(len(out), 2)
         # send 2 asset UTXOs to newaddress2 same logic as explained above about dbl spend
-        self.nodes[0].assetallocationsend(self.asset, newaddress2, int(1*COIN))
         self.nodes[0].assetallocationsend(self.asset, newaddress2, int(0.4*COIN))
+        self.nodes[0].assetallocationsend(self.asset, newaddress2, int(1*COIN))
         self.nodes[0].generate(1)
         self.sync_blocks()
         # should have 2 sys utxos and 2 asset utxos
         out =  self.nodes[2].listunspent()
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
-        self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.3*COIN))
+        self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.4*COIN))
         self.sync_mempools(timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
@@ -95,7 +95,7 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[i].getrawtransaction, tx4)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0,'maximumAmountAsset':0})
         assert_equal(len(out), 1)
-        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.3,'maximumAmountAsset':0.3})
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.4,'maximumAmountAsset':0.4})
         assert_equal(len(out), 1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.6,'maximumAmountAsset':0.6})
         assert_equal(len(out), 1)
