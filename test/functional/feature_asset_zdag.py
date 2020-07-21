@@ -75,10 +75,12 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
         self.nodes[0].generate(1)
         self.sync_blocks()
+        tx2inchain = False
         for i in range(3):
             try:
                 self.nodes[i].getrawtransaction(tx1)
             except:
+                tx2inchain = True
                 continue
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
@@ -94,9 +96,14 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':0.6,'maximumAmountAsset':0.6})
         assert_equal(len(out), 1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':1.0,'maximumAmountAsset':1.0})
-        assert_equal(len(out), 1)
-        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
-        assert_equal(len(out), 4)
+        if tx2inchain is True:
+            assert_equal(len(out), 0)
+            out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
+            assert_equal(len(out), 3)
+        else:
+            assert_equal(len(out), 1)
+            out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
+            assert_equal(len(out), 4)
 
     def basic_asset(self):
         self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
