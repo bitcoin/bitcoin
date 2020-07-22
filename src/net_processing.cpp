@@ -2469,8 +2469,7 @@ void ProcessMessage(
         if (!pfrom.IsAddrRelayPeer()) {
             return;
         }
-        if (vAddr.size() > 1000)
-        {
+        if (vAddr.size() > MAX_ADDR_TO_SEND) {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20, strprintf("addr message size = %u", vAddr.size()));
             return;
@@ -2509,7 +2508,7 @@ void ProcessMessage(
                 vAddrOk.push_back(addr);
         }
         connman.AddNewAddresses(vAddrOk, pfrom.addr, 2 * 60 * 60);
-        if (vAddr.size() < 1000)
+        if (vAddr.size() < MAX_ADDR_TO_SEND)
             pfrom.fGetAddr = false;
         if (pfrom.fOneShot)
             pfrom.fDisconnect = true;
@@ -3935,9 +3934,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 {
                     pto->m_addr_known->insert(addr.GetKey());
                     vAddr.push_back(addr);
-                    // receiver rejects addr messages larger than 1000
-                    if (vAddr.size() >= 1000)
-                    {
+                    // receiver rejects addr messages larger than MAX_ADDR_TO_SEND
+                    if (vAddr.size() >= MAX_ADDR_TO_SEND) {
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::ADDR, vAddr));
                         vAddr.clear();
                     }
