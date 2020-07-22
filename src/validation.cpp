@@ -3641,8 +3641,10 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
-            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
+        if (!CheckBlockHeader(block, state, chainparams.GetConsensus())) {
+            LogPrint(BCLog::VALIDATION, "%s: Consensus::CheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
+            return false;
+        }
 
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
