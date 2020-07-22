@@ -116,6 +116,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         useraddress1 = self.nodes[0].getnewaddress()
         # needed by node4 when dbl-spending
         self.nodes[0].sendtoaddress(useraddress1, 1)
+        self.nodes[0].sendtoaddress(useraddress1, 1)
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[0].sendtoaddress(useraddress4, 1)
@@ -134,16 +135,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
         self.nodes[2].assetallocationsend(self.asset, useraddress1, int(0.2*COIN))
         # put all in useraddress1 so node4 can access in dbl spend, its probably in change address prior to this on node0
-        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.5*COIN))
-        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.0*COIN))
-        # ensure gas exists on new output so it wont use both asset utxos to fund 0.5 COIN burn
-        self.nodes[0].sendtoaddress(useraddress1, 1)
-
-        self.nodes[0].assetallocationburn(self.asset, int(0.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.5*COIN))
         self.sync_mempools(timeout=30)
-        self.nodes[0].assetallocationburn(self.asset, int(1.0*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        self.nodes[0].assetallocationburn(self.asset, int(1.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
         # dbl spend
-        txdblspend = self.nodes[3].assetallocationburn(self.asset, int(1.0*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
+        txdblspend = self.nodes[3].assetallocationburn(self.asset, int(1.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
 
         self.nodes[1].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
         self.nodes[2].assetallocationburn(self.asset, int(0.3*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
