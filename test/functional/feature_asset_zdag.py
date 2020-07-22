@@ -119,7 +119,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress1))
-        self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.5*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
+        self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.0*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
+        # create seperate output for dbl spend
+        self.nodes[0].assetsend(self.asset, useraddress1, int(0.5*COIN))
         # try to do multiple asset sends in one block
         assert_raises_rpc_error(-4, 'bad-txns-asset-inputs-missingorspent', self.nodes[0].assetsend, self.asset, useraddress1, int(2*COIN))
         self.nodes[0].generate(1)
@@ -136,7 +138,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         txdblspend = self.nodes[3].assetallocationburn(self.asset, int(0.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
 
         self.nodes[1].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
-        self.nodes[2].assetallocationburn(self.asset, int(0.3*COIN), "")
+        self.nodes[2].assetallocationburn(self.asset, int(0.3*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.sync_mempools(timeout=30)
         # node1/node2/node3 shouldn't have dbl spend tx because no RBF and not zdag tx
         assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[0].getrawtransaction, txdblspend)
