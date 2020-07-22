@@ -46,7 +46,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     std::vector<unsigned char> compressed;
     if (CompressScript(script, compressed)) {
         const unsigned int size = compressed[0];
-        assert(size >= 0 && size <= 5);
+        assert(size <= 5);
         CScript decompressed_script;
         const bool ok = DecompressScript(decompressed_script, size, compressed);
         assert(ok);
