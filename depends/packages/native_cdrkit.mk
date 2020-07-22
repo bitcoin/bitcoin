@@ -9,8 +9,10 @@ define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/cdrkit-deterministic.patch
 endef
 
+# Starting with 10.1, GCC defaults to -fno-common, resulting in linking errors.
+# Pass -fcommon to retain the legacy behaviour.
 define $(package)_config_cmds
-  cmake -DCMAKE_INSTALL_PREFIX=$(build_prefix)
+  cmake -DCMAKE_INSTALL_PREFIX=$(build_prefix) -DCMAKE_C_FLAGS="-fcommon"
 endef
 
 define $(package)_build_cmds
