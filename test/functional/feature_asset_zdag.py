@@ -115,10 +115,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         useraddress4 = self.nodes[3].getnewaddress()
         useraddress1 = self.nodes[0].getnewaddress()
         self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress1))
-        self.nodes[0].assetsend(self.asset, useraddress1, int(2*COIN))
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.5*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
+        # try to do multiple asset sends in one block
+        assert_raises_rpc_error(-4, 'bad-txns-asset-inputs-missingorspent', self.nodes[0].assetsend, self.asset, useraddress1, int(2*COIN))
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.2*COIN))
