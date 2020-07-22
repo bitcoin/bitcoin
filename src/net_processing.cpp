@@ -30,6 +30,7 @@
 #include <util/system.h>
 #include <validation.h>
 
+#include <algorithm>
 #include <memory>
 #include <typeinfo>
 
@@ -3926,7 +3927,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         if (pto->IsAddrRelayPeer() && pto->m_next_addr_send < current_time) {
             pto->m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
             std::vector<CAddress> vAddr;
-            vAddr.reserve(pto->vAddrToSend.size());
+            vAddr.reserve(std::min(pto->vAddrToSend.size(), (size_t)MAX_ADDR_TO_SEND));
             assert(pto->m_addr_known);
             for (const CAddress& addr : pto->vAddrToSend)
             {
