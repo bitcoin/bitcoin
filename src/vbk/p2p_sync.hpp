@@ -114,8 +114,12 @@ void sendPopData(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vec
 
         auto& known_map = getPopDataNodeState(pnode->GetId()).getMap<PopDataType>();
         for (const auto& el : data) {
-            known_map[el.getId()];
-            connman->PushMessage(pnode, msgMaker.Make(PopDataType::name(), el));
+            auto id = el.getId();
+            auto it = known_map.find(id);
+            if(it == known_map.end()) {
+                known_map.insert({id, 0});
+                connman->PushMessage(pnode, msgMaker.Make(PopDataType::name(), el));
+            }
         }
     });
 }
