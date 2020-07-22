@@ -22,7 +22,7 @@ file1 : https://drive.google.com/file/d/1-lsbqV8R03m7cjPb-Om4ietIIo2uOiO-/view?u
 The BTC-ECC package works made the following environment.
 
 - OS: Ubuntu 18.04.2 LTS or later (http://old-releases.ubuntu.com/releases/18.04.2/)
-- Git location of the package:  (https://github.com/cryptoecc/bitcoin_ECC, ver0.1.3)
+- Git location of the package:  (https://github.com/cryptoecc/bitcoin_ECC)
 
 
 
@@ -82,7 +82,7 @@ sudo apt-get install git
 ```
 git clone https://github.com/cryptoecc/bitcoin_ECC.git
 cd bitcoin_ECC
-git checkout ecc-0.1.3
+git checkout ecc-0.1.2
 ```
 
 
