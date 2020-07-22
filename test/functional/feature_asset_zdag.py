@@ -19,7 +19,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 4
         self.rpc_timeout = 240
-        self.extra_args = [['-assetindex=1'],['-assetindex=1'],['-assetindex=1']]
+        self.extra_args = [['-assetindex=1'],['-assetindex=1'],['-assetindex=1'],['-assetindex=1']]
 
     def run_test(self):
         self.nodes[0].generate(200)
