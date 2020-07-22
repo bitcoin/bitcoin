@@ -12,16 +12,11 @@ BTC-ECC is a new bitcoin core program. BTC-ECC replaced bitcoin consensus with E
 
 Today we will build our own private network and test it is working well. However, we will use only 1 node for today. We will try a multi-node example later on.
 
-## VMWare ECCPoW Ubuntu 
-Plz. Use the vmware file temporarily. (2G ram ver)
-
-file1 : https://drive.google.com/file/d/1-lsbqV8R03m7cjPb-Om4ietIIo2uOiO-/view?usp=sharing (password: wjdguswns)
-
 ## 1. Environment
 
 The BTC-ECC package works made the following environment.
 
-- OS: Ubuntu 18.04.2 LTS or later (http://old-releases.ubuntu.com/releases/18.04.2/)
+- OS: Ubuntu 18.04 LTS or later (https://releases.ubuntu.com/18.04/)
 - Git location of the package:  (https://github.com/cryptoecc/bitcoin_ECC)
 
 
