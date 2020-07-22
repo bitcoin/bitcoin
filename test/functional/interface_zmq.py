@@ -5,7 +5,7 @@
 """Test the ZMQ notification interface."""
 import struct
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import CTransaction, hash256
 from test_framework.util import assert_equal, connect_nodes
@@ -177,8 +177,8 @@ class ZMQTest (BitcoinTestFramework):
         assert_equal(hashtx.receive().hex(), payment_txid)
         assert_equal(hashtx.receive().hex(), disconnect_cb)
 
-        # Generate 2 blocks in nodes[1]
-        connect_blocks = self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_UNSPENDABLE)
+        # Generate 2 blocks in nodes[1] to a different address to ensure split
+        connect_blocks = self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_P2WSH_OP_TRUE)
 
         # nodes[0] will reorg chain after connecting back nodes[1]
         connect_nodes(self.nodes[0], 1)
