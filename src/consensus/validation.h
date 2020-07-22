@@ -30,11 +30,15 @@ enum class TxValidationResult {
     TX_MISSING_INPUTS,        //!< transaction was missing some of its inputs
     TX_PREMATURE_SPEND,       //!< transaction spends a coinbase too early, or violates locktime/sequence locks
     /**
-     * Transaction might be missing a witness, have a witness prior to SegWit
+     * Transaction might have a witness prior to SegWit
      * activation, or witness may have been malleated (which includes
      * non-standard witnesses).
      */
     TX_WITNESS_MUTATED,
+    /**
+     * Transaction is missing a witness.
+     */
+    TX_WITNESS_STRIPPED,
     /**
      * Tx already in mempool or conflicts with a tx in the chain
      * (if it conflicts with another tx in mempool, we use MEMPOOL_POLICY as it failed to reach the RBF threshold)

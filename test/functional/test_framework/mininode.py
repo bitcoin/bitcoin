@@ -59,6 +59,8 @@ from test_framework.messages import (
     MSG_TYPE_MASK,
     msg_verack,
     msg_version,
+    MSG_WTX,
+    msg_wtxidrelay,
     NODE_NETWORK,
     NODE_WITNESS,
     sha256,
@@ -96,6 +98,7 @@ MESSAGEMAP = {
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
+    b"wtxidrelay": msg_wtxidrelay,
 }
 
 MAGIC_BYTES = {
@@ -356,6 +359,7 @@ class P2PInterface(P2PConnection):
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
     def on_tx(self, message): pass
+    def on_wtxidrelay(self, message): pass
 
     def on_inv(self, message):
         want = msg_getdata()
@@ -373,6 +377,8 @@ class P2PInterface(P2PConnection):
 
     def on_version(self, message):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        if message.nVersion >= 70016:
+            self.send_message(msg_wtxidrelay())
         self.send_message(msg_verack())
         self.nServices = message.nServices
 
@@ -654,7 +660,7 @@ class P2PTxInvStore(P2PInterface):
         super().on_inv(message) # Send getdata in response.
         # Store how many times invs have been received for each tx.
         for i in message.inv:
-            if i.type == MSG_TX:
+            if (i.type == MSG_TX) or (i.type == MSG_WTX):
                 # save txid
                 self.tx_invs_received[i.hash] += 1
 

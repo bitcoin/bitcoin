@@ -261,6 +261,12 @@ extern const char* GETCFCHECKPT;
  * evenly spaced filter headers for blocks on the requested chain.
  */
 extern const char* CFCHECKPT;
+/**
+ * Indicates that a node prefers to relay transactions via wtxid, rather than
+ * txid.
+ * @since protocol version 70016 as described by BIP 339.
+ */
+extern const char *WTXIDRELAY;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -397,11 +403,12 @@ const uint32_t MSG_TYPE_MASK = 0xffffffff >> 2;
  * These numbers are defined by the protocol. When adding a new value, be sure
  * to mention it in the respective BIP.
  */
-enum GetDataMsg {
+enum GetDataMsg : uint32_t {
     UNDEFINED = 0,
     MSG_TX = 1,
     MSG_BLOCK = 2,
-    // The following can only occur in getdata. Invs always use TX or BLOCK.
+    MSG_WTX = 5,                                      //!< Defined in BIP 339
+    // The following can only occur in getdata. Invs always use TX/WTX or BLOCK.
     MSG_FILTERED_BLOCK = 3,                           //!< Defined in BIP37
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
