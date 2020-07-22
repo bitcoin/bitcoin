@@ -115,6 +115,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         useraddress4 = self.nodes[3].getnewaddress()
         useraddress1 = self.nodes[0].getnewaddress()
         self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress1))
+        # needed by node4 when dbl-spending
+        self.nodes[0].sendtoaddress(useraddress1, 1)
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.5*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
