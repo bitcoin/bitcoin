@@ -9,6 +9,8 @@
 
 #include <memory>
 
+#include <memusage.h>
+
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(allocator_tests, BasicTestingSetup)
@@ -231,6 +233,43 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_live)
     BOOST_CHECK(pool.stats().total <= (initial.total + LockedPool::ARENA_SIZE));
     // Usage must be back to where it started
     BOOST_CHECK(pool.stats().used == initial.used);
+}
+
+BOOST_AUTO_TEST_CASE(accounting_allocation_test)
+{
+    size_t total = 0;
+    size_t dummy = 0;
+
+    {
+        typedef std::unordered_set<int, std::hash<int>, std::equal_to<int>, memusage::AccountingAllocator<int>> container_type;
+        container_type container1({}, 2, std::hash<int>(), std::equal_to<int>(), memusage::AccountingAllocator<int>(dummy)); // container1 is accounted for in 'dummy'
+        container1.insert(6);
+        {
+            container_type container2(1, std::hash<int>(), std::equal_to<int>(), memusage::AccountingAllocator<int>(total)); // container2 is accounted for in 'total'
+            container2.insert(5);
+            container2.insert(2);
+            container2.insert(3);
+            container2.erase(2);
+            BOOST_CHECK(total > 0);
+            size_t old = total;
+            container1 = std::move(container2); // container1 is now accounted for in 'total'
+            BOOST_CHECK(total >= old);
+        }
+        container1.erase(5);
+        size_t cached = total;
+        BOOST_CHECK(cached > 0);
+        {
+            container_type container3 = container1; // container3 is a copy of container1, which is unaccounted.
+            BOOST_CHECK(total == cached);
+            container3.insert(4);
+            container3.erase(3);
+            BOOST_CHECK(total == cached);
+        }
+        BOOST_CHECK(total == cached);
+    }
+
+    BOOST_CHECK(total == 0); // After all objects using 'total' are gone, its value must go back to 0.
+    BOOST_CHECK(dummy == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

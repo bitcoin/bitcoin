@@ -449,6 +449,7 @@ private:
 
     uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    size_t m_allocation_counter GUARDED_BY(cs); //!< Accounting variable for AccountingAllocator-managed containers
 
     mutable int64_t lastRollingFeeUpdate;
     mutable bool blockSinceLastRollingFeeBump;
@@ -487,7 +488,8 @@ public:
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByAncestorFee
             >
-        >
+        >,
+        memusage::AccountingAllocator<CTxMemPoolEntry>
     > indexed_transaction_set;
 
     /**
@@ -521,14 +523,14 @@ public:
     indexed_transaction_set mapTx GUARDED_BY(cs);
 
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
-    std::vector<std::pair<uint256, txiter>> vTxHashes GUARDED_BY(cs); //!< All tx witness hashes/entries in mapTx, in random order
+    std::vector<std::pair<uint256, txiter>, memusage::AccountingAllocator<std::pair<uint256, txiter>>> vTxHashes GUARDED_BY(cs); //!< All tx witness hashes/entries in mapTx, in random order
 
     struct CompareIteratorByHash {
         bool operator()(const txiter &a, const txiter &b) const {
             return a->GetTx().GetHash() < b->GetTx().GetHash();
         }
     };
-    typedef std::set<txiter, CompareIteratorByHash> setEntries;
+    typedef std::set<txiter, CompareIteratorByHash, memusage::AccountingAllocator<txiter>> setEntries;
 
     const setEntries & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     const setEntries & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -539,13 +541,17 @@ private:
     struct TxLinks {
         setEntries parents;
         setEntries children;
+
+        TxLinks(size_t& allocation_counter) :
+            parents({}, CompareIteratorByHash(), memusage::AccountingAllocator<txiter>(allocation_counter)),
+            children({}, CompareIteratorByHash(), memusage::AccountingAllocator<txiter>(allocation_counter)) {}
     };
 
-    typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
-    txlinksMap mapLinks;
+    typedef std::map<txiter, TxLinks, CompareIteratorByHash, memusage::AccountingAllocator<std::pair<const txiter, TxLinks>>> txlinksMap;
+    txlinksMap mapLinks GUARDED_BY(cs);
 
-    void UpdateParent(txiter entry, txiter parent, bool add);
-    void UpdateChild(txiter entry, txiter child, bool add);
+    void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateChild(txiter entry, txiter child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -553,8 +559,8 @@ private:
     std::set<uint256> m_unbroadcast_txids GUARDED_BY(cs);
 
 public:
-    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
-    std::map<uint256, CAmount> mapDeltas;
+    indirectmap<COutPoint, const CTransaction*, memusage::AccountingAllocator<std::pair<const COutPoint* const, const CTransaction*>>> mapNextTx GUARDED_BY(cs);
+    std::map<uint256, CAmount, std::less<uint256>, memusage::AccountingAllocator<std::pair<const uint256, CAmount>>> mapDeltas GUARDED_BY(cs);
 
     /** Create a new CTxMemPool.
      */
@@ -868,7 +874,8 @@ struct DisconnectedBlockTransactions {
             boost::multi_index::sequenced<
                 boost::multi_index::tag<insertion_order>
             >
-        >
+        >,
+        memusage::AccountingAllocator<CTransactionRef>
     > indexed_disconnected_transactions;
 
     // It's almost certainly a logic bug if we don't clear out queuedTx before
@@ -881,13 +888,14 @@ struct DisconnectedBlockTransactions {
     // reorg, besides draining this object).
     ~DisconnectedBlockTransactions() { assert(queuedTx.empty()); }
 
+    size_t m_allocation_counter;
     indexed_disconnected_transactions queuedTx;
     uint64_t cachedInnerUsage = 0;
 
-    // Estimate the overhead of queuedTx to be 6 pointers + an allocation, as
-    // no exact formula for boost::multi_index_contained is implemented.
+    DisconnectedBlockTransactions() : m_allocation_counter(0), queuedTx(memusage::AccountingAllocator<CTransactionRef>(m_allocation_counter)) {}
+
     size_t DynamicMemoryUsage() const {
-        return memusage::MallocUsage(sizeof(CTransactionRef) + 6 * sizeof(void*)) * queuedTx.size() + cachedInnerUsage;
+        return m_allocation_counter + cachedInnerUsage;
     }
 
     void addTransaction(const CTransactionRef& tx)

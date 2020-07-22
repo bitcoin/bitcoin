@@ -6,6 +6,7 @@
 #define BITCOIN_INDIRECTMAP_H
 
 #include <map>
+#include <memory>
 
 template <class T>
 struct DereferencingComparator { bool operator()(const T a, const T b) const { return *a < *b; } };
@@ -20,16 +21,19 @@ struct DereferencingComparator { bool operator()(const T a, const T b) const { r
  * Objects pointed to by keys must not be modified in any way that changes the
  * result of DereferencingComparator.
  */
-template <class K, class T>
+template <class K, class T, class A = std::allocator<std::pair<const K* const, T>>>
 class indirectmap {
 private:
-    typedef std::map<const K*, T, DereferencingComparator<const K*> > base;
+    typedef std::map<const K*, T, DereferencingComparator<const K*>, A> base;
     base m;
 public:
     typedef typename base::iterator iterator;
     typedef typename base::const_iterator const_iterator;
     typedef typename base::size_type size_type;
     typedef typename base::value_type value_type;
+
+    indirectmap() = default;
+    explicit indirectmap(const A& alloc) : m({}, DereferencingComparator<const K*>(), alloc) {}
 
     // passthrough (pointer interface)
     std::pair<iterator, bool> insert(const value_type& value) { return m.insert(value); }

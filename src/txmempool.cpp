@@ -327,7 +327,12 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
 }
 
 CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator)
-    : nTransactionsUpdated(0), minerPolicyEstimator(estimator), m_epoch(0), m_has_epoch_guard(false)
+    : nTransactionsUpdated(0), minerPolicyEstimator(estimator), m_allocation_counter(0), m_epoch(0),
+      m_has_epoch_guard(false), mapTx(memusage::AccountingAllocator<CTxMemPoolEntry>(m_allocation_counter)),
+      vTxHashes(memusage::AccountingAllocator<std::pair<uint256, txiter>>(m_allocation_counter)),
+      mapLinks({}, CompareIteratorByHash(), memusage::AccountingAllocator<std::pair<const txiter, TxLinks>>(m_allocation_counter)),
+      mapNextTx(memusage::AccountingAllocator<std::pair<const COutPoint* const, const CTransaction*>>(m_allocation_counter)),
+      mapDeltas({}, std::less<uint256>(), memusage::AccountingAllocator<std::pair<const uint256, CAmount>>(m_allocation_counter))
 {
     _clear(); //lock free clear
 
@@ -359,7 +364,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Used by AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
     indexed_transaction_set::iterator newit = mapTx.insert(entry).first;
-    mapLinks.insert(make_pair(newit, TxLinks()));
+    mapLinks.emplace(newit, m_allocation_counter);
 
     // Update transaction for any feeDelta created by PrioritiseTransaction
     // TODO: refactor so that the fee delta is calculated before inserting
@@ -430,7 +435,6 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
-    cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
@@ -635,8 +639,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         const CTransaction& tx = it->GetTx();
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
         assert(linksiter != mapLinks.end());
-        const TxLinks &links = linksiter->second;
-        innerUsage += memusage::DynamicUsage(links.parents) + memusage::DynamicUsage(links.children);
         bool fDependsWait = false;
         setEntries setParentCheck;
         for (const CTxIn &txin : tx.vin) {
@@ -853,7 +855,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
 void CTxMemPool::ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const
 {
     LOCK(cs);
-    std::map<uint256, CAmount>::const_iterator pos = mapDeltas.find(hash);
+    auto pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
         return;
     const CAmount &delta = pos->second;
@@ -917,8 +919,7 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
 
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
-    // Estimate the overhead of mapTx to be 12 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
-    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 12 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
+    return cachedInnerUsage + m_allocation_counter;
 }
 
 void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {
@@ -966,21 +967,19 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, bool validFeeEstimat
 
 void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)
 {
-    setEntries s;
-    if (add && mapLinks[entry].children.insert(child).second) {
-        cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
-    } else if (!add && mapLinks[entry].children.erase(child)) {
-        cachedInnerUsage -= memusage::IncrementalDynamicUsage(s);
+    if (add) {
+        mapLinks.at(entry).children.emplace(child);
+    } else {
+        mapLinks.at(entry).children.erase(child);
     }
 }
 
 void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add)
 {
-    setEntries s;
-    if (add && mapLinks[entry].parents.insert(parent).second) {
-        cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
-    } else if (!add && mapLinks[entry].parents.erase(parent)) {
-        cachedInnerUsage -= memusage::IncrementalDynamicUsage(s);
+    if (add) {
+        mapLinks.at(entry).parents.emplace(parent);
+    } else {
+        mapLinks.at(entry).parents.erase(parent);
     }
 }
 
