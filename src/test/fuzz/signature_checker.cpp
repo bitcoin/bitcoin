@@ -28,17 +28,17 @@ public:
     {
     }
 
-    virtual bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
 
-    virtual bool CheckLockTime(const CScriptNum& nLockTime) const
+    bool CheckLockTime(const CScriptNum& nLockTime) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
 
-    virtual bool CheckSequence(const CScriptNum& nSequence) const
+    bool CheckSequence(const CScriptNum& nSequence) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
