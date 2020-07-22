@@ -136,6 +136,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         # put all in useraddress1 so node4 can access in dbl spend, its probably in change address prior to this on node0
         self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.5*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.0*COIN))
+        # ensure gas exists on new output so it wont use both asset utxos to fund 0.5 COIN burn
+        self.nodes[0].sendtoaddress(useraddress1, 1)
 
         self.nodes[0].assetallocationburn(self.asset, int(0.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.sync_mempools(timeout=30)
