@@ -39,6 +39,11 @@ extern UniValue addmultisigaddress(const JSONRPCRequest& request);
 
 extern RecursiveMutex cs_wallets;
 
+// Ensure that fee levels defined in the wallet are at least as high
+// as the default levels for node policy.
+static_assert(DEFAULT_TRANSACTION_MINFEE >= DEFAULT_MIN_RELAY_TX_FEE, "wallet minimum fee is smaller than default relay fee");
+static_assert(WALLET_INCREMENTAL_RELAY_FEE >= DEFAULT_INCREMENTAL_RELAY_FEE, "wallet incremental fee is smaller than default incremental relay fee");
+
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
 namespace {
