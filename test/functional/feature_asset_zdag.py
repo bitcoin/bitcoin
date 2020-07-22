@@ -17,13 +17,14 @@ MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 class AssetZDAGTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 3
+        self.num_nodes = 4
         self.rpc_timeout = 240
         self.extra_args = [['-assetindex=1'],['-assetindex=1'],['-assetindex=1']]
 
     def run_test(self):
         self.nodes[0].generate(200)
         self.sync_blocks()
+        self.burn_zdag_doublespend()
         self.basic_zdag_doublespend()
 
     def basic_zdag_doublespend(self):
@@ -104,6 +105,48 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(len(out), 1)
             out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
             assert_equal(len(out), 4)
+
+    # a = 1, b = 0.2, c = 0.1, a->b (0.2), b->a(0.2),  a->c(0.2), c->a(0.2), burn a(0.5), burn a(0.5), b->c(0.2), burn c(0.3) (a=0, b=0, c=0 and burn=1.3)
+    def burn_zdag_doublespend(self):
+        self.basic_asset()
+        self.nodes[0].generate(1)
+        useraddress2 = self.nodes[1].getnewaddress()
+        useraddress3 = self.nodes[2].getnewaddress()
+        useraddress4 = self.nodes[3].getnewaddress()
+        useraddress1 = self.nodes[0].getnewaddress()
+        self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress1))
+        self.nodes[0].assetsend(self.asset, newaddress1, int(2*COIN))
+
+        self.nodes[0].sendtoaddress(useraddress2, 1)
+        self.nodes[0].sendtoaddress(useraddress3, 1)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].assetsendmany(self.asset,[{address: useraddress1,amount:int(1.5*COIN)},{address: useraddress2,amount:int(0.4*COIN)},{address: useraddress3,amount:int(0.5*COIN)}}])
+        
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.2*COIN))
+        self.nodes[1].assetallocationsend(self.asset, useraddress1, int(0.2*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
+        self.nodes[2].assetallocationsend(self.asset, useraddress1, int(0.2*COIN))
+
+        self.nodes[0].assetallocationburn(self.asset, int(0.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        self.sync_mempools(timeout=30)
+        self.nodes[0].assetallocationburn(self.asset, int(0.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        # dbl spend
+        txdblspend = self.nodes[3].assetallocationburn(self.asset, int(0.5*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
+
+        self.nodes[1].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
+        self.nodes[2].assetallocationburn(self.asset, int(0.3*COIN), "")
+        self.sync_mempools(timeout=30)
+        # node1/node2/node3 shouldn't have dbl spend tx because no RBF and not zdag tx
+        assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[0].getrawtransaction, txdblspend)
+        assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[1].getrawtransaction, txdblspend)
+        assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[2].getrawtransaction, txdblspend)
+        self.nodes[3].getrawtransaction(txdblspend)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        # after block, even node4 should have removed conflicting tx
+        assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[3].getrawtransaction, txdblspend)
+
 
     def basic_asset(self):
         self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
