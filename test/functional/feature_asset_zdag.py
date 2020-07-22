@@ -120,6 +120,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress1))
         self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.0*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
+        self.nodes[0].generate(1)
+        self.sync_blocks()
         # create seperate output for dbl spend
         self.nodes[0].assetsend(self.asset, useraddress1, int(0.5*COIN))
         # try to do multiple asset sends in one block
