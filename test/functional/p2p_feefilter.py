@@ -54,7 +54,12 @@ class FeeFilterTest(BitcoinTestFramework):
         # mempool and wallet feerate calculation based on GetFee
         # rounding down 3 places, leading to stranded transactions.
         # See issue #16499
-        self.extra_args = [["-minrelaytxfee=0.00000100", "-mintxfee=0.00000100"]] * self.num_nodes
+        # grant noban permission to all peers to speed up tx relay / mempool sync
+        self.extra_args = [[
+            "-minrelaytxfee=0.00000100",
+            "-mintxfee=0.00000100",
+            "-whitelist=noban@127.0.0.1",
+        ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
