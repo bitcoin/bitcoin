@@ -118,6 +118,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress1, 1)
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
+        self.nodes[0].sendtoaddress(useraddress4, 1)
         self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress1))
         self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.0*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
         self.nodes[0].generate(1)
