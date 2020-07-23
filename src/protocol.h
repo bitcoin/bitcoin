@@ -11,6 +11,7 @@
 #define BITCOIN_PROTOCOL_H
 
 #include <netaddress.h>
+#include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <version.h>
@@ -441,5 +442,8 @@ public:
     int type;
     uint256 hash;
 };
+
+/** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */
+GenTxid ToGenTxid(const CInv& inv);
 
 #endif // BITCOIN_PROTOCOL_H

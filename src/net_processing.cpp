@@ -398,7 +398,7 @@ struct CNodeState {
         /* Track when to attempt download of announced transactions (process
          * time in micros -> txid)
          */
-        std::multimap<std::chrono::microseconds, uint256> m_tx_process_time;
+        std::multimap<std::chrono::microseconds, GenTxid> m_tx_process_time;
 
         //! Store all the transactions a peer has recently announced
         std::set<uint256> m_tx_announced;
@@ -797,23 +797,23 @@ std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chron
     return process_time;
 }
 
-void RequestTx(CNodeState* state, const uint256& txid, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void RequestTx(CNodeState* state, const GenTxid& gtxid, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CNodeState::TxDownloadState& peer_download_state = state->m_tx_download;
     if (peer_download_state.m_tx_announced.size() >= MAX_PEER_TX_ANNOUNCEMENTS ||
             peer_download_state.m_tx_process_time.size() >= MAX_PEER_TX_ANNOUNCEMENTS ||
-            peer_download_state.m_tx_announced.count(txid)) {
+            peer_download_state.m_tx_announced.count(gtxid.GetHash())) {
         // Too many queued announcements from this peer, or we already have
         // this announcement
         return;
     }
-    peer_download_state.m_tx_announced.insert(txid);
+    peer_download_state.m_tx_announced.insert(gtxid.GetHash());
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
-    const auto process_time = CalculateTxGetDataTime(txid, current_time, !state->fPreferredDownload, !state->m_wtxid_relay && g_wtxid_relay_peers > 0);
+    const auto process_time = CalculateTxGetDataTime(gtxid.GetHash(), current_time, !state->fPreferredDownload, !state->m_wtxid_relay && g_wtxid_relay_peers > 0);
 
-    peer_download_state.m_tx_process_time.emplace(process_time, txid);
+    peer_download_state.m_tx_process_time.emplace(process_time, gtxid);
 }
 
 } // namespace
@@ -2678,7 +2678,7 @@ void ProcessMessage(
                     pfrom.fDisconnect = true;
                     return;
                 } else if (!fAlreadyHave && !chainman.ActiveChainstate().IsInitialBlockDownload()) {
-                    RequestTx(State(pfrom.GetId()), inv.hash, current_time);
+                    RequestTx(State(pfrom.GetId()), ToGenTxid(inv), current_time);
                 }
             }
         }
@@ -2994,7 +2994,7 @@ void ProcessMessage(
                         // protocol for getting all unconfirmed parents.
                         CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
                         pfrom.AddKnownTx(txin.prevout.hash);
-                        if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom.GetId()), _inv.hash, current_time);
+                        if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom.GetId()), ToGenTxid(_inv), current_time);
                     }
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
@@ -4529,15 +4529,15 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
         auto& tx_process_time = state.m_tx_download.m_tx_process_time;
         while (!tx_process_time.empty() && tx_process_time.begin()->first <= current_time && state.m_tx_download.m_tx_in_flight.size() < MAX_PEER_TX_IN_FLIGHT) {
-            const uint256 txid = tx_process_time.begin()->second;
+            const GenTxid gtxid = tx_process_time.begin()->second;
             // Erase this entry from tx_process_time (it may be added back for
             // processing at a later time, see below)
             tx_process_time.erase(tx_process_time.begin());
-            CInv inv(state.m_wtxid_relay ? MSG_WTX : (MSG_TX | GetFetchFlags(*pto)), txid);
+            CInv inv(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*pto)), gtxid.GetHash());
             if (!AlreadyHave(inv, m_mempool)) {
                 // If this transaction was last requested more than 1 minute ago,
                 // then request.
-                const auto last_request_time = GetTxRequestTime(inv.hash);
+                const auto last_request_time = GetTxRequestTime(gtxid.GetHash());
                 if (last_request_time <= current_time - GETDATA_TX_INTERVAL) {
                     LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
                     vGetData.push_back(inv);
@@ -4545,8 +4545,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
                         vGetData.clear();
                     }
-                    UpdateTxRequestTime(inv.hash, current_time);
-                    state.m_tx_download.m_tx_in_flight.emplace(inv.hash, current_time);
+                    UpdateTxRequestTime(gtxid.GetHash(), current_time);
+                    state.m_tx_download.m_tx_in_flight.emplace(gtxid.GetHash(), current_time);
                 } else {
                     // This transaction is in flight from someone else; queue
                     // up processing to happen after the download times out
@@ -4560,13 +4560,13 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // would open us up to an attacker using inbound
                     // wtxid-relay to prevent us from requesting transactions
                     // from outbound txid-relay peers).
-                    const auto next_process_time = CalculateTxGetDataTime(txid, current_time, !state.fPreferredDownload, false);
-                    tx_process_time.emplace(next_process_time, txid);
+                    const auto next_process_time = CalculateTxGetDataTime(gtxid.GetHash(), current_time, !state.fPreferredDownload, false);
+                    tx_process_time.emplace(next_process_time, gtxid);
                 }
             } else {
                 // We have already seen this transaction, no need to download.
-                state.m_tx_download.m_tx_announced.erase(inv.hash);
-                state.m_tx_download.m_tx_in_flight.erase(inv.hash);
+                state.m_tx_download.m_tx_announced.erase(gtxid.GetHash());
+                state.m_tx_download.m_tx_in_flight.erase(gtxid.GetHash());
             }
         }
 
