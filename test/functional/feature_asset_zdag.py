@@ -137,9 +137,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_mempools(timeout=30)
         # put all in useraddress1 so node4 can access in dbl spend, its probably in change address prior to this on node0
         txid = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.5*COIN))['txid']
-        rawtx = self.nodes[0].getrawtransaction(txid)
         # dbl spend
         txdblspend = self.nodes[3].assetallocationburn(self.asset, int(1.1*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
+        rawtx = self.nodes[0].getrawtransaction(txid)
         self.nodes[1].sendrawtransaction(rawtx)
         self.nodes[2].sendrawtransaction(rawtx)
 
