@@ -120,7 +120,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress1, 1)
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
-        self.nodes[0].sendtoaddress(useraddress4, 1)
         self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.0*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
         self.nodes[0].generate(1)
         self.sync_blocks()
@@ -134,8 +133,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[1].assetallocationsend(self.asset, useraddress1, int(0.2*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
         self.nodes[2].assetallocationsend(self.asset, useraddress1, int(0.2*COIN))
+        self.sync_mempools(timeout=30)
         # put all in useraddress1 so node4 can access in dbl spend, its probably in change address prior to this on node0
-        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.1*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.5*COIN))
         self.sync_mempools(timeout=30)
         self.nodes[0].assetallocationburn(self.asset, int(1.1*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
         # dbl spend
