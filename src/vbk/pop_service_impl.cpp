@@ -217,7 +217,7 @@ altintegration::PopData PopServiceImpl::getPopData() EXCLUSIVE_LOCKS_REQUIRED(cs
 void PopServiceImpl::removePayloadsFromMempool(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    mempool->removePayloads(popData);
+    mempool->removePayloads(popData, *this->altTree);
 }
 
 void PopServiceImpl::addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
