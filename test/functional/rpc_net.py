@@ -168,15 +168,23 @@ class NetTest(BitcoinTestFramework):
             msg.addrs.append(addr)
         self.nodes[0].p2p.send_and_ping(msg)
 
-        # obtain addresses via rpc call and check they were ones sent in before
-        REQUEST_COUNT = 10
-        node_addresses = self.nodes[0].getnodeaddresses(REQUEST_COUNT)
-        assert_equal(len(node_addresses), REQUEST_COUNT)
+        # Obtain addresses via rpc call and check they were ones sent in before.
+        #
+        # All addresses added above are in the same netgroup and so are assigned
+        # to the same bucket. Maximum possible addresses in addrman is therefore
+        # 64, although actual number will usually be slightly less due to
+        # BucketPosition collisions.
+        node_addresses = self.nodes[0].getnodeaddresses(0)
+        assert_greater_than(len(node_addresses), 50)
+        assert_greater_than(65, len(node_addresses))
         for a in node_addresses:
-            assert_greater_than(a["time"], 1527811200) # 1st June 2018
+            assert_greater_than(a["time"], 1527811200)  # 1st June 2018
             assert_equal(a["services"], NODE_NETWORK | NODE_WITNESS)
             assert a["address"] in imported_addrs
             assert_equal(a["port"], 8333)
+
+        node_addresses = self.nodes[0].getnodeaddresses(1)
+        assert_equal(len(node_addresses), 1)
 
         assert_raises_rpc_error(-8, "Address count out of range", self.nodes[0].getnodeaddresses, -1)
 
