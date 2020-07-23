@@ -98,56 +98,59 @@ class BerkeleyBatch;
 /** An instance of this class represents one database.
  * For BerkeleyDB this is just a (env, strFile) tuple.
  **/
-class BerkeleyDatabase
+class BerkeleyDatabase : public WalletDatabase
 {
     friend class BerkeleyBatch;
 public:
     /** Create dummy DB handle */
-    BerkeleyDatabase() : nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(nullptr)
+    BerkeleyDatabase() : WalletDatabase(), env(nullptr)
     {
     }
 
     /** Create DB handle to real database */
     BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, std::string filename) :
-        nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(std::move(env)), strFile(std::move(filename))
+        WalletDatabase(), env(std::move(env)), strFile(std::move(filename))
     {
         auto inserted = this->env->m_databases.emplace(strFile, std::ref(*this));
         assert(inserted.second);
     }
 
-    ~BerkeleyDatabase() {
-        if (env) {
-            size_t erased = env->m_databases.erase(strFile);
-            assert(erased == 1);
-        }
-    }
+    ~BerkeleyDatabase() override;
+
+    /** Open the database if it is not already opened.
+     *  Dummy function, doesn't do anything right now, but is needed for class abstraction */
+    void Open(const char* mode) override;
 
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
      */
-    bool Rewrite(const char* pszSkip=nullptr);
+    bool Rewrite(const char* pszSkip=nullptr) override;
+
+    /** Indicate the a new database user has began using the database. */
+    void AddRef() override;
+    /** Indicate that database user has stopped using the database and that it could be flushed or closed. */
+    void RemoveRef() override;
 
     /** Back up the entire database to a file.
      */
-    bool Backup(const std::string& strDest) const;
+    bool Backup(const std::string& strDest) const override;
 
-    /** Make sure all changes are flushed to disk.
+    /** Make sure all changes are flushed to database file.
      */
-    void Flush(bool shutdown);
+    void Flush() override;
+    /** Flush to the database file and close the database.
+     *  Also close the environment if no other databases are open in it.
+     */
+    void Close() override;
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
-    bool PeriodicFlush();
+    bool PeriodicFlush() override;
 
-    void IncrementUpdateCounter();
+    void IncrementUpdateCounter() override;
 
-    void ReloadDbEnv();
-
-    std::atomic<unsigned int> nUpdateCounter;
-    unsigned int nLastSeen;
-    unsigned int nLastFlushed;
-    int64_t nLastWalletUpdate;
+    void ReloadDbEnv() override;
 
     /** Verifies the environment and database file */
-    bool Verify(bilingual_str& error);
+    bool Verify(bilingual_str& error) override;
 
     /**
      * Pointer to shared database environment.
@@ -164,7 +167,7 @@ public:
     std::unique_ptr<Db> m_db;
 
     /** Make a BerkeleyBatch connected to this database */
-    std::unique_ptr<BerkeleyBatch> MakeBatch(const char* mode, bool flush_on_close);
+    std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) override;
 
 private:
     std::string strFile;
@@ -213,6 +216,7 @@ protected:
     bool fReadOnly;
     bool fFlushOnClose;
     BerkeleyEnvironment *env;
+    BerkeleyDatabase& m_database;
 
 public:
     explicit BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
