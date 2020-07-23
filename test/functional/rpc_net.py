@@ -22,8 +22,6 @@ from test_framework.util import (
 from test_framework.mininode import P2PInterface
 import test_framework.messages
 from test_framework.messages import (
-    CAddress,
-    msg_addr,
     NODE_NETWORK,
     NODE_WITNESS,
 )
@@ -154,29 +152,25 @@ class NetTest(BitcoinTestFramework):
     def _test_getnodeaddresses(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
 
-        # send some addresses to the node via the p2p message addr
-        msg = msg_addr()
+        # Add some addresses to the Address Manager over RPC. Due to the way
+        # bucket and bucket position are calculated, some of these addresses
+        # will collide.
         imported_addrs = []
-        for i in range(256):
-            a = "123.123.123.{}".format(i)
+        for i in range(10000):
+            first_octet = i >> 8
+            second_octet = i % 256
+            a = "{}.{}.1.1".format(first_octet, second_octet)
             imported_addrs.append(a)
-            addr = CAddress()
-            addr.time = 100000000
-            addr.nServices = NODE_NETWORK | NODE_WITNESS
-            addr.ip = a
-            addr.port = 8333
-            msg.addrs.append(addr)
-        self.nodes[0].p2p.send_and_ping(msg)
+            self.nodes[0].addpeeraddress(a, 8333)
 
         # Obtain addresses via rpc call and check they were ones sent in before.
         #
-        # All addresses added above are in the same netgroup and so are assigned
-        # to the same bucket. Maximum possible addresses in addrman is therefore
-        # 64, although actual number will usually be slightly less due to
-        # BucketPosition collisions.
+        # Maximum possible addresses in addrman is 10000, although actual
+        # number will usually be less due to bucket and bucket position
+        # collisions.
         node_addresses = self.nodes[0].getnodeaddresses(0)
-        assert_greater_than(len(node_addresses), 50)
-        assert_greater_than(65, len(node_addresses))
+        assert_greater_than(len(node_addresses), 5000)
+        assert_greater_than(10000, len(node_addresses))
         for a in node_addresses:
             assert_greater_than(a["time"], 1527811200)  # 1st June 2018
             assert_equal(a["services"], NODE_NETWORK | NODE_WITNESS)

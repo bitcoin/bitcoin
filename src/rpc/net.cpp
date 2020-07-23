@@ -773,6 +773,54 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
     return ret;
 }
 
+static UniValue addpeeraddress(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"addpeeraddress",
+        "\nAdd the address of a potential peer to the address manager. This RPC is for testing only.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address of the peer"},
+            {"port", RPCArg::Type::NUM, RPCArg::Optional::NO, "The port of the peer"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::BOOL, "success", "whether the peer address was successfully added to the address manager"},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333")
+    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333")
+        },
+    }.Check(request);
+
+    NodeContext& node = EnsureNodeContext(request.context);
+    if (!node.connman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    }
+
+    UniValue obj(UniValue::VOBJ);
+
+    std::string addr_string = request.params[0].get_str();
+    uint16_t port = request.params[1].get_int();
+
+    CNetAddr net_addr;
+    if (!LookupHost(addr_string, net_addr, false)) {
+        obj.pushKV("success", false);
+        return obj;
+    }
+    CAddress address = CAddress({net_addr, port}, ServiceFlags(NODE_NETWORK|NODE_WITNESS));
+    address.nTime = GetAdjustedTime();
+    // The source address is set equal to the address. This is equivalent to the peer
+    // announcing itself.
+    if (!node.connman->AddNewAddresses({address}, address)) {
+        obj.pushKV("success", false);
+        return obj;
+    }
+
+    obj.pushKV("success", true);
+    return obj;
+}
+
 void RegisterNetRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -792,6 +840,7 @@ static const CRPCCommand commands[] =
     { "network",            "clearbanned",            &clearbanned,            {} },
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
     { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
+    { "hidden",             "addpeeraddress",         &addpeeraddress,         {"address", "port"} },
 };
 // clang-format on
 
