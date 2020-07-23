@@ -2358,7 +2358,9 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             if (interruptMsgProc)
                 return true;
 
-            // ignore INVs that don't match wtxidrelay setting
+            // Ignore INVs that don't match wtxidrelay setting.
+            // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
+            // This is fine as no INV messages are involved in that process.
             if (State(pfrom->GetId())->m_wtxid_relay) {
                 if (inv.type == MSG_TX) continue;
             } else {
@@ -2642,9 +2644,11 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 
         TxValidationState state;
 
-        nodestate->m_tx_download.m_tx_announced.erase(hash);
-        nodestate->m_tx_download.m_tx_in_flight.erase(hash);
-        EraseTxRequest(hash);
+        for (uint256 hash : {txid, wtxid}) {
+            nodestate->m_tx_download.m_tx_announced.erase(hash);
+            nodestate->m_tx_download.m_tx_in_flight.erase(hash);
+            EraseTxRequest(hash);
+        }
 
         std::list<CTransactionRef> lRemovedTxn;
 
@@ -2696,17 +2700,15 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
                 uint32_t nFetchFlags = GetFetchFlags(pfrom);
                 const auto current_time = GetTime<std::chrono::microseconds>();
 
-                if (!State(pfrom->GetId())->m_wtxid_relay) {
-                    for (const CTxIn& txin : tx.vin) {
-                        // Here, we only have the txid (and not wtxid) of the
-                        // inputs, so we only request parents from
-                        // non-wtxid-relay peers.
-                        // Eventually we should replace this with an improved
-                        // protocol for getting all unconfirmed parents.
-                        CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
-                        pfrom->AddKnownTx(txin.prevout.hash);
-                        if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom->GetId()), ToGenTxid(_inv), current_time);
-                    }
+                for (const CTxIn& txin : tx.vin) {
+                    // Here, we only have the txid (and not wtxid) of the
+                    // inputs, so we only request in txid mode, even for
+                    // wtxidrelay peers.
+                    // Eventually we should replace this with an improved
+                    // protocol for getting all unconfirmed parents.
+                    CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
+                    pfrom->AddKnownTx(txin.prevout.hash);
+                    if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom->GetId()), ToGenTxid(_inv), current_time);
                 }
                 AddOrphanTx(ptx, pfrom->GetId());
 
