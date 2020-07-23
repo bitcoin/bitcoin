@@ -93,13 +93,15 @@ class NetTest(DashTestFramework):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 3)
 
-        self.nodes[0].setnetworkactive(state=False)
+        with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
+            self.nodes[0].setnetworkactive(state=False)
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], False)
         # Wait a bit for all sockets to close
         self.wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
         self.wait_until(lambda: self.nodes[1].getnetworkinfo()['connections'] == 0, timeout=3)
 
-        self.nodes[0].setnetworkactive(state=True)
+        with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
+            self.nodes[0].setnetworkactive(state=True)
         # Connect nodes both ways.
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)

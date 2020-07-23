@@ -3129,7 +3129,7 @@ void Discover()
 
 void CConnman::SetNetworkActive(bool active)
 {
-    LogPrint(BCLog::NET, "SetNetworkActive: %s\n", active);
+    LogPrintf("%s: %s\n", __func__, active);
 
     if (fNetworkActive == active) {
         return;
@@ -3137,20 +3137,24 @@ void CConnman::SetNetworkActive(bool active)
 
     fNetworkActive = active;
 
-    // Always call the Reset() if the network gets enabled/disabled to make sure the sync process
-    // gets a reset if its outdated..
-    ::masternodeSync->Reset();
+    // masternodeSync is nullptr during app initialization with `-networkactive=`
+    if (::masternodeSync) {
+        // Always call the Reset() if the network gets enabled/disabled to make sure the sync process
+        // gets a reset if its outdated..
+        ::masternodeSync->Reset();
+    }
 
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in) :
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, bool network_active) :
         addrman(addrman_in), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 
     Options connOptions;
     Init(connOptions);
+    SetNetworkActive(network_active);
 }
 
 NodeId CConnman::GetNewNodeId()
