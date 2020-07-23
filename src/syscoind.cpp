@@ -101,6 +101,12 @@ static bool AppInit(int argc, char* argv[])
                 return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see syscoind -h for a list of options.\n", argv[i])));
             }
         }
+
+        if (!gArgs.InitSettings(error)) {
+            InitError(Untranslated(error));
+            return false;
+        }
+
         // -server defaults to true for syscoind but not for the GUI so do this here
         gArgs.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
