@@ -346,11 +346,10 @@ public:
 
     std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
-    void AddNewAddress(const CAddress& addr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
     // Addrman functions
     void SetServices(const CService &addr, ServiceFlags nServices);
     void MarkAddressGood(const CAddress& addr);
-    void AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
+    bool AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
     std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct);
     /**
      * Cache is used to minimize topology leaks, so it should
