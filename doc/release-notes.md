@@ -95,10 +95,54 @@ broken since that release (bug
 0.20.1 change log
 =================
 
+### Mining
+- #19019 Fix GBT: Restore "!segwit" and "csv" to "rules" key (luke-jr)
+
+### P2P protocol and network code
+- #19219 Replace automatic bans with discouragement filter (sipa)
+
+### Wallet
+- #19300 Handle concurrent wallet loading (promag)
+- #18982 Minimal fix to restore conflicted transaction notifications (ryanofsky)
+
+### RPC and other APIs
+- #19524 Increment input value sum only once per UTXO in decodepsbt (fanquake)
+- #19517 psbt: Increment input value sum only once per UTXO in decodepsbt (achow101)
+
+### GUI
+- #19097 Add missing QPainterPath include (achow101)
+- #19059 update Qt base translations for macOS release (fanquake)
+
+### Build system
+- #19152 improve build OS configure output (skmcontrib)
+- #19536 qt, build: Fix QFileDialog for static builds (hebasto)
+
+### Tests and QA
+- #19444 Remove cached directories and associated script blocks from appveyor config (sipsorcery)
+- #18640 appveyor: Remove clcache (MarcoFalke)
+
+### Miscellaneous
+- #19194 util: Don't reference errno when pthread fails (miztake)
+- #18700 Fix locking on WSL using flock instead of fcntl (meshcollider)
+
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
+
+- Aaron Clauson
+- Andrew Chow
+- fanquake
+- Hennadii Stepanov
+- João Barbosa
+- Luke Dashjr
+- MarcoFalke
+- MIZUTA Takeshi
+- Pieter Wuille
+- Russell Yanofsky
+- sachinkm77
+- Samuel Dobson
+- Wladimir J. van der Laan
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
