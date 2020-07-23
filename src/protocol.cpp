@@ -208,3 +208,9 @@ const std::vector<std::string> &getAllNetMessageTypes()
 {
     return allNetMessageTypesVec;
 }
+
+GenTxid ToGenTxid(const CInv& inv)
+{
+    assert(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX || inv.type == MSG_WTX);
+    return {inv.type == MSG_WTX, inv.hash};
+}
