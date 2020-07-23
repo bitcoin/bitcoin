@@ -716,14 +716,15 @@ public:
         return totalTxSize;
     }
 
-    bool exists(const uint256& hash, bool wtxid=false) const
+    bool exists(const GenTxid& gtxid) const
     {
         LOCK(cs);
-        if (wtxid) {
-            return (mapTx.get<index_by_wtxid>().count(hash) != 0);
+        if (gtxid.IsWtxid()) {
+            return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
         }
-        return (mapTx.count(hash) != 0);
+        return (mapTx.count(gtxid.GetHash()) != 0);
     }
+    bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
 
     CTransactionRef get(const uint256& hash) const;
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
@@ -731,7 +732,8 @@ public:
         AssertLockHeld(cs);
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
-    TxMempoolInfo info(const uint256& hash, bool wtxid=false) const;
+    TxMempoolInfo info(const uint256& hash) const;
+    TxMempoolInfo info(const GenTxid& gtxid) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
     size_t DynamicMemoryUsage() const;

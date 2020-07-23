@@ -1453,7 +1453,7 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LO
                 if (g_recent_confirmed_transactions->contains(inv.hash)) return true;
             }
 
-            return recentRejects->contains(inv.hash) || mempool.exists(inv.hash, inv.IsMsgWtx());
+            return recentRejects->contains(inv.hash) || mempool.exists(ToGenTxid(inv));
         }
     case MSG_BLOCK:
     case MSG_WITNESS_BLOCK:
@@ -1673,7 +1673,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
 CTransactionRef static FindTxForGetData(const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
 {
-    auto txinfo = mempool.info(gtxid.GetHash(), gtxid.IsWtxid());
+    auto txinfo = mempool.info(gtxid);
     if (txinfo.tx) {
         // If a TX could have been INVed in reply to a MEMPOOL request,
         // or is older than UNCONDITIONAL_RELAY_DELAY, permit the request
@@ -4358,6 +4358,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         std::set<uint256>::iterator it = vInvTx.back();
                         vInvTx.pop_back();
                         uint256 hash = *it;
+                        CInv inv(state.m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
                         // Remove it from the to-be-sent set
                         pto->m_tx_relay->setInventoryTxToSend.erase(it);
                         // Check if not in the filter already
@@ -4365,7 +4366,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             continue;
                         }
                         // Not in the mempool anymore? don't bother sending it.
-                        auto txinfo = m_mempool.info(hash, state.m_wtxid_relay);
+                        auto txinfo = m_mempool.info(ToGenTxid(inv));
                         if (!txinfo.tx) {
                             continue;
                         }
@@ -4378,7 +4379,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                         // Send
                         State(pto->GetId())->m_recently_announced_invs.insert(hash);
-                        vInv.push_back(CInv(state.m_wtxid_relay ? MSG_WTX : MSG_TX, hash));
+                        vInv.push_back(inv);
                         nRelayedTransactions++;
                         {
                             // Expire old relay messages
