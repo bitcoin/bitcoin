@@ -22,7 +22,7 @@ from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 3
         self.extra_args = [
             [
                 "-maxorphantx=1000",
@@ -35,6 +35,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             [
             ],
         ]
+        self.extra_args.append(
+            [
+                *self.extra_args[0],
+                "-mempoolreplacement=fee,-optin",
+            ],
+        )
         self.supports_cli = False
 
     def run_test(self):
@@ -69,7 +75,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.test_too_many_replacements_with_default_mempool_params()
 
         self.log.info("Running test opt-in...")
-        self.test_opt_in(self.nodes[0])
+        self.test_opt_in(self.nodes[0], fullrbf=False)
+        self.test_opt_in(self.nodes[-1], fullrbf=True)
 
         self.log.info("Running test RPC...")
         self.test_rpc()
@@ -470,7 +477,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.generate(normal_node, 1)
         self.wallet.rescan_utxos()
 
-    def test_opt_in(self, node):
+    def test_opt_in(self, node, fullrbf):
         """Replacing should only work if orig tx opted in"""
         tx0_outpoint = self.make_utxo(node, int(1.1 * COIN))
 
@@ -486,14 +493,18 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(node.getmempoolentry(tx1a_utxo["txid"])['bip125-replaceable'], False)
 
         # Shouldn't be able to double-spend
-        tx1b_hex = self.wallet.create_self_transfer(
+        tx1b = self.wallet.create_self_transfer(
             utxo_to_spend=tx0_outpoint,
             sequence=0,
             fee=Decimal("0.2"),
-        )["hex"]
+        )
 
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", node.sendrawtransaction, tx1b_hex, 0)
+        if fullrbf:
+            node.sendrawtransaction(tx1b['hex'], 0)
+            tx1a_utxo = tx1b['new_utxo']
+        else:
+            # This will raise an exception
+            assert_raises_rpc_error(-26, "txn-mempool-conflict", node.sendrawtransaction, tx1b['hex'], 0)
 
         tx1_outpoint = self.make_utxo(node, int(1.1 * COIN))
 
@@ -506,14 +517,18 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         )["new_utxo"]
 
         # Still shouldn't be able to double-spend
-        tx2b_hex = self.wallet.create_self_transfer(
+        tx2b = self.wallet.create_self_transfer(
             utxo_to_spend=tx1_outpoint,
             sequence=0,
             fee=Decimal("0.2"),
-        )["hex"]
+        )
 
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", node.sendrawtransaction, tx2b_hex, 0)
+        if fullrbf:
+            node.sendrawtransaction(tx2b['hex'], 0)
+            tx2a_utxo = tx2b['new_utxo']
+        else:
+            # This will raise an exception
+            assert_raises_rpc_error(-26, "txn-mempool-conflict", node.sendrawtransaction, tx2b['hex'], 0)
 
         # Now create a new transaction that spends from tx1a and tx2a
         # opt-in on one of the inputs
@@ -544,6 +559,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             sequence=0,
             fee=Decimal("0.4"),
         )
+
+        self.generate(node, 1)  # clean mempool
 
     def test_prioritised_transactions(self):
         # Ensure that fee deltas used via prioritisetransaction are
