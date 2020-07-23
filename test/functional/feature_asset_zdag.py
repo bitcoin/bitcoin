@@ -24,8 +24,8 @@ class AssetZDAGTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         self.sync_blocks()
-        self.burn_zdag_doublespend()
         self.basic_zdag_doublespend()
+        self.burn_zdag_doublespend()
 
     def basic_zdag_doublespend(self):
         self.basic_asset()
