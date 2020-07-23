@@ -236,7 +236,7 @@ namespace {
     /** When our tip was last updated. */
     std::atomic<int64_t> g_last_tip_update(0);
 
-    /** Relay map */
+    /** Relay map (txid or wtxid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
@@ -1671,9 +1671,9 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
 }
 
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
-CTransactionRef static FindTxForGetData(const CNode& peer, const uint256& txid_or_wtxid, bool use_wtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
+CTransactionRef static FindTxForGetData(const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
 {
-    auto txinfo = mempool.info(txid_or_wtxid, use_wtxid);
+    auto txinfo = mempool.info(gtxid.GetHash(), gtxid.IsWtxid());
     if (txinfo.tx) {
         // If a TX could have been INVed in reply to a MEMPOOL request,
         // or is older than UNCONDITIONAL_RELAY_DELAY, permit the request
@@ -1686,11 +1686,11 @@ CTransactionRef static FindTxForGetData(const CNode& peer, const uint256& txid_o
     {
         LOCK(cs_main);
         // Otherwise, the transaction must have been announced recently.
-        if (State(peer.GetId())->m_recently_announced_invs.contains(txid_or_wtxid)) {
+        if (State(peer.GetId())->m_recently_announced_invs.contains(gtxid.GetHash())) {
             // If it was, it can be relayed from either the mempool...
             if (txinfo.tx) return std::move(txinfo.tx);
             // ... or the relay pool.
-            auto mi = mapRelay.find(txid_or_wtxid);
+            auto mi = mapRelay.find(gtxid.GetHash());
             if (mi != mapRelay.end()) return mi->second;
         }
     }
@@ -1727,7 +1727,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             continue;
         }
 
-        CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, inv.IsMsgWtx(), mempool_req, now);
+        CTransactionRef tx = FindTxForGetData(pfrom, ToGenTxid(inv), mempool_req, now);
         if (tx) {
             // WTX and WITNESS_TX imply we serialize with witness
             int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
