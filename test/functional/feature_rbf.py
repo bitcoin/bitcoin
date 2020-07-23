@@ -67,7 +67,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
 
 class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 3
         self.extra_args = [
             [
                 "-acceptnonstdtxn=1",
@@ -82,6 +82,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 "-mempoolreplacement=0",
             ],
         ]
+        self.extra_args.append(
+            [
+                *self.extra_args[0],
+                "-mempoolreplacement=fee,-optin",
+            ],
+        )
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
@@ -115,7 +121,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.test_too_many_replacements()
 
         self.log.info("Running test opt-in...")
-        self.test_opt_in()
+        self.test_opt_in(fullrbf=False)
+        self.nodes[0], self.nodes[-1] = self.nodes[-1], self.nodes[0]
+        self.test_opt_in(fullrbf=True)
+        self.nodes[0], self.nodes[-1] = self.nodes[-1], self.nodes[0]
 
         self.log.info("Running test RPC...")
         self.test_rpc()
@@ -435,7 +444,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         double_tx_hex = double_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(double_tx_hex, 0)
 
-    def test_opt_in(self):
+    def test_opt_in(self, fullrbf):
         """Replacing should only work if orig tx opted in"""
         tx0_outpoint = make_utxo(self.nodes[0], int(1.1 * COIN))
 
@@ -455,8 +464,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
         tx1b_hex = tx1b.serialize().hex()
 
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+        if fullrbf:
+            tx1a_txid = self.nodes[0].sendrawtransaction(tx1b_hex, 0)
+        else:
+            # This will raise an exception
+            assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
 
         tx1_outpoint = make_utxo(self.nodes[0], int(1.1 * COIN))
 
@@ -473,8 +485,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx2b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
         tx2b_hex = tx2b.serialize().hex()
 
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx2b_hex, 0)
+        if fullrbf:
+            tx2a_txid = self.nodes[0].sendrawtransaction(tx2b_hex, 0)
+        else:
+            # This will raise an exception
+            assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx2b_hex, 0)
 
         # Now create a new transaction that spends from tx1a and tx2a
         # opt-in on one of the inputs
@@ -486,7 +501,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx3a = CTransaction()
         tx3a.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0xffffffff),
                     CTxIn(COutPoint(tx2a_txid, 0), nSequence=0xfffffffd)]
-        tx3a.vout = [CTxOut(int(0.9 * COIN), CScript([b'c'])), CTxOut(int(0.9 * COIN), CScript([b'd']))]
+        tx3a.vout = [CTxOut(int(0.8 * COIN), CScript([b'c'])), CTxOut(int(0.9 * COIN), CScript([b'd']))]
         tx3a_hex = tx3a.serialize().hex()
 
         tx3a_txid = self.nodes[0].sendrawtransaction(tx3a_hex, 0)
