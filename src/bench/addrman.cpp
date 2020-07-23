@@ -98,7 +98,7 @@ static void AddrManGetAddr(benchmark::Bench& bench)
     FillAddrMan(addrman);
 
     bench.run([&] {
-        const auto& addresses = addrman.GetAddr();
+        const auto& addresses = addrman.GetAddr(2500, 23);
         assert(addresses.size() > 0);
     });
 }

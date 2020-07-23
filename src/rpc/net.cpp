@@ -727,7 +727,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
             RPCHelpMan{"getnodeaddresses",
                 "\nReturn known addresses which can potentially be used to find new nodes in the network\n",
                 {
-                    {"count", RPCArg::Type::NUM, /* default */ "1", "How many addresses to return. Limited to the smaller of " + ToString(ADDRMAN_GETADDR_MAX) + " or " + ToString(ADDRMAN_GETADDR_MAX_PCT) + "% of all known addresses."},
+                    {"count", RPCArg::Type::NUM, /* default */ "1", "The maximum number of addresses to return. Specify 0 to return all known addresses."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -754,18 +754,16 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
     int count = 1;
     if (!request.params[0].isNull()) {
         count = request.params[0].get_int();
-        if (count <= 0) {
+        if (count < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
         }
     }
     // returns a shuffled list of CAddress
-    std::vector<CAddress> vAddr = node.connman->GetAddresses();
+    std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0);
     UniValue ret(UniValue::VARR);
 
-    int address_return_count = std::min<int>(count, vAddr.size());
-    for (int i = 0; i < address_return_count; ++i) {
+    for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
-        const CAddress& addr = vAddr[i];
         obj.pushKV("time", (int)addr.nTime);
         obj.pushKV("services", (uint64_t)addr.nServices);
         obj.pushKV("address", addr.ToStringIP());
