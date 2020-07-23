@@ -312,8 +312,17 @@ void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
     dbenv->lsn_reset(strFile.c_str(), 0);
 }
 
+BerkeleyDatabase::~BerkeleyDatabase()
+{
+    if (env) {
+        LOCK(cs_db);
+        size_t erased = env->m_databases.erase(strFile);
+        assert(erased == 1);
+        env->m_fileids.erase(strFile);
+    }
+}
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr)
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr), m_database(database)
 {
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
     fFlushOnClose = fFlushOnCloseIn;
@@ -388,9 +397,14 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
                 fReadOnly = fTmp;
             }
         }
-        ++env->mapFileUseCount[strFilename];
+        database.AddRef();
         strFile = strFilename;
     }
+}
+
+void BerkeleyDatabase::Open(const char* mode)
+{
+    throw std::logic_error("BerkeleyDatabase does not implement Open. This function should not be called.");
 }
 
 void BerkeleyBatch::Flush()
@@ -426,11 +440,7 @@ void BerkeleyBatch::Close()
     if (fFlushOnClose)
         Flush();
 
-    {
-        LOCK(cs_db);
-        --env->mapFileUseCount[strFile];
-    }
-    env->m_db_in_use.notify_all();
+    m_database.RemoveRef();
 }
 
 void BerkeleyEnvironment::CloseDb(const std::string& strFile)
@@ -675,22 +685,17 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
     }
 }
 
-void BerkeleyDatabase::Flush(bool shutdown)
+void BerkeleyDatabase::Flush()
 {
     if (!IsDummy()) {
-        env->Flush(shutdown);
-        if (shutdown) {
-            LOCK(cs_db);
-            g_dbenvs.erase(env->Directory().string());
-            env = nullptr;
-        } else {
-            // TODO: To avoid g_dbenvs.erase erasing the environment prematurely after the
-            // first database shutdown when multiple databases are open in the same
-            // environment, should replace raw database `env` pointers with shared or weak
-            // pointers, or else separate the database and environment shutdowns so
-            // environments can be shut down after databases.
-            env->m_fileids.erase(strFile);
-        }
+        env->Flush(false);
+    }
+}
+
+void BerkeleyDatabase::Close()
+{
+    if (!IsDummy()) {
+        env->Flush(true);
     }
 }
 
@@ -832,7 +837,22 @@ bool BerkeleyBatch::HasKey(CDataStream&& key)
     return ret == 0;
 }
 
-std::unique_ptr<BerkeleyBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
+void BerkeleyDatabase::AddRef()
+{
+    LOCK(cs_db);
+    ++env->mapFileUseCount[strFile];
+}
+
+void BerkeleyDatabase::RemoveRef()
+{
+    {
+        LOCK(cs_db);
+        --env->mapFileUseCount[strFile];
+    }
+    env->m_db_in_use.notify_all();
+}
+
+std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
 {
     return MakeUnique<BerkeleyBatch>(*this, mode, flush_on_close);
 }
