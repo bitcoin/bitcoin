@@ -88,3 +88,75 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
     return TransactionError::OK;
 }
+
+
+TransactionError BroadcastPackage(NodeContext& node, std::list<CTransactionRef>& package, std::string& err_string, bool relay, bool wait_callback)
+{
+    // PackageTransaction can be called by either sendpackage RPC.
+    // node.connman is assigned both before chain clients and before RPC server is accepting calls,
+    // and reset after chain clients and RPC sever are stopped. node.connman should never be null here.
+    assert(node.connman);
+    assert(node.mempool);
+    std::promise<void> promise;
+    bool callback_set = false;
+
+    { // cs_main scope
+    LOCK(cs_main);
+    // If one of the package transaction is already confirmed in the chain, don't do anything
+    // and return early.
+    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
+    for (const CTransactionRef& ptx: package) {
+        uint256 hashTx = ptx->GetHash();
+        for (size_t o = 0; o < ptx->vout.size(); o++) {
+            const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
+            // IsSpent doesn't mean the coin is spent, it means the output doesn't exist.
+            // So if the output does exist, then this transaction exists in the chain.
+            if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
+        }
+    }
+    // If any package member is already in mempool, don't submit.
+    TxValidationState package_state;
+    if (!AcceptPackageToMemoryPool(*node.mempool, package_state, package,
+            nullptr /* plTxnReplaced */, 0 /* nAbsurdFee */, false /* test_accept */)) {
+        err_string = package_state.ToString();
+        if (package_state.IsInvalid()) {
+            if (package_state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+                return TransactionError::MISSING_INPUTS;
+            }
+            return TransactionError::MEMPOOL_REJECTED;
+        } else {
+            return TransactionError::MEMPOOL_ERROR;
+        }
+    }
+
+    // Transaction was accepted to the mempool.
+
+    if (wait_callback) {
+        // For transactions broadcast from outside the wallet, make sure
+        // that the wallet has been notified of the transaction before
+        // continuing.
+        //
+        // This prevents a race where a user might call sendrawtransaction
+        // with a transaction to/from their wallet, immediately call some
+        // wallet RPC, and get a stale result because callbacks have not
+        // yet been processed.
+        CallFunctionInValidationInterfaceQueue([&promise] {
+            promise.set_value();
+        });
+        callback_set = true;
+    }
+
+    } // cs_main
+
+    if (callback_set) {
+        // Wait until Validation Interface clients have been notified of the
+        // transaction entering the mempool.
+        promise.get_future().wait();
+    }
+
+    if (relay) {
+        RelayPackage(0, package);
+    }
+
+    return TransactionError::OK;
+}
