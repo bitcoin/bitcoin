@@ -62,7 +62,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         def force_old_mn_proto(mn):
             self.stop_node(mn.node.index)
-            self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70014"])
+            self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
             connect_nodes(mn.node, 0)
             self.reset_probe_timeouts()
         self.test_banning(force_old_mn_proto, False)
