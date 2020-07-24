@@ -2275,12 +2275,12 @@
         <translation>にバインド</translation>
     </message>
     <message>
-        <source>&amp;Check</source>
-        <translation>試験(&amp;C)</translation>
+        <source>&amp;Check/Generate</source>
+        <translation>チェック/生成(&amp;C)</translation>
     </message>
     <message>
-        <source>Check bind data</source>
-        <translation>バインディングデータを確認する</translation>
+        <source>Check and generate bind data</source>
+        <translation>バインドデータの確認と生成</translation>
     </message>
     <message>
         <source>Confirm bind plotter</source>

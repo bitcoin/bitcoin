@@ -1150,10 +1150,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         </size>
        </property>
        <property name="toolTip">
-        <string>Check bind data</string>
+        <string>Check and generate bind data</string>
        </property>
        <property name="text">
-        <string>&amp;Check</string>
+        <string>&amp;Check/Generate</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
