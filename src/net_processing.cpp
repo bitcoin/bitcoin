@@ -3716,32 +3716,49 @@ void ProcessMessage(
     return;
 }
 
+/** Maybe disconnect a peer and discourage future connections from its address.
+ *
+ * @param[in]   pnode     The node to check.
+ * @return                True if the peer was marked for disconnection in this function
+ */
 bool PeerLogicValidation::MaybeDiscourageAndDisconnect(CNode& pnode)
 {
-    AssertLockHeld(cs_main);
-    CNodeState &state = *State(pnode.GetId());
+    NodeId peer_id{pnode.GetId()};
+    {
+        LOCK(cs_main);
+        CNodeState &state = *State(peer_id);
 
-    if (state.m_should_discourage) {
+        // There's nothing to do if the m_should_discourage flag isn't set
+        if (!state.m_should_discourage) return false;
+
+        // Reset m_should_discourage
         state.m_should_discourage = false;
-        if (pnode.HasPermission(PF_NOBAN)) {
-            LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode.addr.ToString());
-        } else if (pnode.m_manual_connection) {
-            LogPrintf("Warning: not punishing manually-connected peer %s!\n", pnode.addr.ToString());
-        } else if (pnode.addr.IsLocal()) {
-            // Disconnect but don't discourage this local node
-            LogPrintf("Warning: disconnecting but not discouraging local peer %s!\n", pnode.addr.ToString());
-            pnode.fDisconnect = true;
-        } else {
-            // Disconnect and discourage all nodes sharing the address
-            LogPrintf("Disconnecting and discouraging peer %s!\n", pnode.addr.ToString());
-            if (m_banman) {
-                m_banman->Discourage(pnode.addr);
-            }
-            connman->DisconnectNode(pnode.addr);
-        }
+    } // cs_main
+
+    if (pnode.HasPermission(PF_NOBAN)) {
+        // Peer has the NOBAN permission flag - log but don't disconnect
+        LogPrintf("Warning: not punishing noban peer %d!\n", peer_id);
+        return false;
+    }
+
+    if (pnode.m_manual_connection) {
+        // Peer is a manual connection - log but don't disconnect
+        LogPrintf("Warning: not punishing manually connected peer %d!\n", peer_id);
+        return false;
+    }
+
+    if (pnode.addr.IsLocal()) {
+        // Peer is on a local address. Disconnect this peer, but don't discourage the local address
+        LogPrintf("Warning: disconnecting but not discouraging local peer %d!\n", peer_id);
+        pnode.fDisconnect = true;
         return true;
     }
-    return false;
+
+    // Normal case: Disconnect the peer and discourage all nodes sharing the address
+    LogPrintf("Disconnecting and discouraging peer %d!\n", peer_id);
+    if (m_banman) m_banman->Discourage(pnode.addr);
+    connman->DisconnectNode(pnode.addr);
+    return true;
 }
 
 bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
@@ -3833,9 +3850,6 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     } catch (...) {
         LogPrint(BCLog::NET, "%s(%s, %u bytes): Unknown exception caught\n", __func__, SanitizeString(msg_type), nMessageSize);
     }
-
-    LOCK(cs_main);
-    MaybeDiscourageAndDisconnect(*pfrom);
 
     return fMoreWork;
 }
@@ -3999,48 +4013,49 @@ public:
 bool PeerLogicValidation::SendMessages(CNode* pto)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
+
+    // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
+    // disconnect misbehaving peers even before the version handshake is complete.
+    if (MaybeDiscourageAndDisconnect(*pto)) return true;
+
+    // Don't send anything until the version handshake is complete
+    if (!pto->fSuccessfullyConnected || pto->fDisconnect)
+        return true;
+
+    // If we get here, the outgoing message serialization version is set and can't change.
+    const CNetMsgMaker msgMaker(pto->GetSendVersion());
+
+    //
+    // Message: ping
+    //
+    bool pingSend = false;
+    if (pto->fPingQueued) {
+        // RPC ping request by user
+        pingSend = true;
+    }
+    if (pto->nPingNonceSent == 0 && pto->m_ping_start.load() + PING_INTERVAL < GetTime<std::chrono::microseconds>()) {
+        // Ping automatically sent as a latency probe & keepalive.
+        pingSend = true;
+    }
+    if (pingSend) {
+        uint64_t nonce = 0;
+        while (nonce == 0) {
+            GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
+        }
+        pto->fPingQueued = false;
+        pto->m_ping_start = GetTime<std::chrono::microseconds>();
+        if (pto->nVersion > BIP0031_VERSION) {
+            pto->nPingNonceSent = nonce;
+            connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce));
+        } else {
+            // Peer is too old to support ping command with nonce, pong will never arrive.
+            pto->nPingNonceSent = 0;
+            connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING));
+        }
+    }
+
     {
-        // Don't send anything until the version handshake is complete
-        if (!pto->fSuccessfullyConnected || pto->fDisconnect)
-            return true;
-
-        // If we get here, the outgoing message serialization version is set and can't change.
-        const CNetMsgMaker msgMaker(pto->GetSendVersion());
-
-        //
-        // Message: ping
-        //
-        bool pingSend = false;
-        if (pto->fPingQueued) {
-            // RPC ping request by user
-            pingSend = true;
-        }
-        if (pto->nPingNonceSent == 0 && pto->m_ping_start.load() + PING_INTERVAL < GetTime<std::chrono::microseconds>()) {
-            // Ping automatically sent as a latency probe & keepalive.
-            pingSend = true;
-        }
-        if (pingSend) {
-            uint64_t nonce = 0;
-            while (nonce == 0) {
-                GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
-            }
-            pto->fPingQueued = false;
-            pto->m_ping_start = GetTime<std::chrono::microseconds>();
-            if (pto->nVersion > BIP0031_VERSION) {
-                pto->nPingNonceSent = nonce;
-                connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce));
-            } else {
-                // Peer is too old to support ping command with nonce, pong will never arrive.
-                pto->nPingNonceSent = 0;
-                connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING));
-            }
-        }
-
-        TRY_LOCK(cs_main, lockMain);
-        if (!lockMain)
-            return true;
-
-        if (MaybeDiscourageAndDisconnect(*pto)) return true;
+        LOCK(cs_main);
 
         CNodeState &state = *State(pto->GetId());
 
@@ -4602,7 +4617,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 pto->m_tx_relay->nextSendTimeFeeFilter = timeNow + GetRandInt(MAX_FEEFILTER_CHANGE_DELAY) * 1000000;
             }
         }
-    }
+    } // release cs_main
     return true;
 }
 
