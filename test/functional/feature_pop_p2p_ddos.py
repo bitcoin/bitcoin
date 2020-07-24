@@ -101,6 +101,32 @@ class PopP2P(BitcoinTestFramework):
 
         assert_equal(len(self.nodes[0].getpeerinfo()), 0)
 
+    def _run_case3(self):
+        bn = BaseNode()
+        self.nodes[0].add_p2p_connection(bn)
+        self.log.warning("running case3 for pop data sending")
+
+        # endorse block 5
+        addr = self.nodes[0].getnewaddress()
+        self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
+        atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
+        raw_atv = self.nodes[0].getrawatv(atv_id)
+
+        assert len(self.nodes[0].getpeerinfo()) == 1
+        peerinfo = self.nodes[0].getpeerinfo()[0]
+        assert(not 'noban' in peerinfo['permissions'])
+        assert peerinfo['banscore'] == 0
+
+        # spaming node1
+        self.log.info("send to node0 that it has not requested...")
+        msg = msg_atv(raw_atv)
+        # Send message is used to send a P2P message to the node over our P2PInterface
+        self.nodes[0].p2p.send_message(msg)
+
+        peerinfo = self.nodes[0].getpeerinfo()[0]
+        assert peerinfo['banscore'] == 20
+
+
     def run_test(self):
         """Main test logic"""
 
@@ -117,6 +143,9 @@ class PopP2P(BitcoinTestFramework):
             self.restart_node(0)
 
         self._run_case2()
+
+        self.restart_node(0)
+        self._run_case3()
 
 
 if __name__ == '__main__':

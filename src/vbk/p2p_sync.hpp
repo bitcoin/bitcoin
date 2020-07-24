@@ -20,33 +20,39 @@ namespace VeriBlock {
 
 namespace p2p {
 
+struct PopP2PState {
+    uint32_t known_pop_data{0};
+    uint32_t offered_pop_data{0};
+    uint32_t requested_pop_data{0};
+};
+
 // The state of the Node that stores already known Pop Data
 struct PopDataNodeState {
     // we use map to store DDoS prevention counter as a value in the map
-    std::map<altintegration::ATV::id_t, uint32_t> known_atv{};
-    std::map<altintegration::VTB::id_t, uint32_t> known_vtb{};
-    std::map<altintegration::VbkBlock::id_t, uint32_t> known_blocks{};
+    std::map<altintegration::ATV::id_t, PopP2PState> atv_state{};
+    std::map<altintegration::VTB::id_t, PopP2PState> vtb_state{};
+    std::map<altintegration::VbkBlock::id_t, PopP2PState> vbk_blocks_state{};
 
     template <typename T>
-    std::map<typename T::id_t, uint32_t>& getMap();
+    std::map<typename T::id_t, PopP2PState>& getMap();
 };
 
 template <>
-inline std::map<altintegration::ATV::id_t, uint32_t>& PopDataNodeState::getMap<altintegration::ATV>()
+inline std::map<altintegration::ATV::id_t, PopP2PState>& PopDataNodeState::getMap<altintegration::ATV>()
 {
-    return known_atv;
+    return atv_state;
 }
 
 template <>
-inline std::map<altintegration::VTB::id_t, uint32_t>& PopDataNodeState::getMap<altintegration::VTB>()
+inline std::map<altintegration::VTB::id_t, PopP2PState>& PopDataNodeState::getMap<altintegration::VTB>()
 {
-    return known_vtb;
+    return vtb_state;
 }
 
 template <>
-inline std::map<altintegration::VbkBlock::id_t, uint32_t>& PopDataNodeState::getMap<altintegration::VbkBlock>()
+inline std::map<altintegration::VbkBlock::id_t, PopP2PState>& PopDataNodeState::getMap<altintegration::VbkBlock>()
 {
-    return known_blocks;
+    return vbk_blocks_state;
 }
 
 /** Map maintaining peer PopData state  */
@@ -87,9 +93,12 @@ void offerPopDataToAllNodes(const pop_t& p)
     connman->ForEachNode([&connman, &msgMaker, &p_id](CNode* node) {
         LOCK(cs_main);
 
-        auto& known_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
-        known_map[p_id[0]];
-        connman->PushMessage(node, msgMaker.Make(offer_prefix + pop_t::name(), p_id));
+        auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
+        PopP2PState& pop_state = pop_state_map[p_id[0]];
+        if (pop_state.offered_pop_data == 0) {
+            ++pop_state.offered_pop_data;
+            connman->PushMessage(node, msgMaker.Make(offer_prefix + pop_t::name(), p_id));
+        }
     });
 }
 
@@ -101,14 +110,15 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
     auto& pop_mempool = VeriBlock::getService<VeriBlock::PopService>().getMemPool();
     const auto& data = pop_mempool.getMap<PopDataType>();
 
-    auto& known_map = getPopDataNodeState(node->GetId()).getMap<PopDataType>();
+    auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<PopDataType>();
 
     std::vector<std::vector<uint8_t>>
         hashes;
     for (const auto& el : data) {
-        if (known_map.count(el.first) == 0) {
+        PopP2PState& pop_state = pop_state_map[el.first];
+        if (pop_state.offered_pop_data == 0) {
+            ++pop_state.offered_pop_data;
             hashes.push_back(el.first.asVector());
-            known_map[el.first];
         }
 
         if (hashes.size() == MAX_POP_DATA_SENDING_AMOUNT) {
@@ -122,21 +132,21 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
     }
 }
 
-template <typename PopDataType>
-void sendPopData(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<PopDataType>& data)
+template <typename pop_t>
+void sendPopData(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<pop_t>& data)
 {
-    LogPrint(BCLog::NET, "send PopData: %s, count %d\n", PopDataType::name(), data.size());
+    LogPrint(BCLog::NET, "send PopData: %s, count %d\n", pop_t::name(), data.size());
 
     connman->ForEachNode([&connman, &msgMaker, &data](CNode* pnode) {
         LOCK(cs_main);
 
-        auto& known_map = getPopDataNodeState(pnode->GetId()).getMap<PopDataType>();
+        auto& pop_state_map = getPopDataNodeState(pnode->GetId()).getMap<pop_t>();
         for (const auto& el : data) {
             auto id = el.getId();
-            auto it = known_map.find(id);
-            if (it == known_map.end()) {
-                known_map.insert({id, 0});
-                connman->PushMessage(pnode, msgMaker.Make(PopDataType::name(), el));
+            PopP2PState& pop_state = pop_state_map[el.getId()];
+            if (pop_state.known_pop_data == 0) {
+                ++pop_state.known_pop_data;
+                connman->PushMessage(pnode, msgMaker.Make(pop_t::name(), el));
             }
         }
     });

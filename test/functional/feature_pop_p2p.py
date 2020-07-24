@@ -133,8 +133,8 @@ class PopP2P(BitcoinTestFramework):
 
         time.sleep(2)
 
-        assert bn.executed_msg_atv == 2
-        assert bn.executed_msg_offer_vbk == 1
+        assert bn.executed_msg_atv == 1
+        assert bn.executed_msg_offer_vbk == 2
 
 
     def run_test(self):
