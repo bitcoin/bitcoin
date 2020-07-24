@@ -92,7 +92,7 @@ class PopP2P(BitcoinTestFramework):
         self.sync_all(self.nodes)
 
     def _run_sync_case(self):
-        self.log.warning("running _run_sync_case")
+        self.log.info("running _run_sync_case")
 
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
@@ -116,9 +116,11 @@ class PopP2P(BitcoinTestFramework):
 
         assert bn.executed_msg_atv == 3
 
+        self.log.info("_run_sync_case successful")
+
 
     def _run_sync_after_generating(self):
-        self.log.warning("running _run_sync_after_generating")
+        self.log.info("running _run_sync_after_generating")
 
         bn = BaseNode(self.log)
         self.nodes[0].add_p2p_connection(bn)
@@ -136,6 +138,7 @@ class PopP2P(BitcoinTestFramework):
         assert bn.executed_msg_atv == 1
         assert bn.executed_msg_offer_vbk == 2
 
+        self.log.info("_run_sync_after_generating successful")
 
     def run_test(self):
         """Main test logic"""

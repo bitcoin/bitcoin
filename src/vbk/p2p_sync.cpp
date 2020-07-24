@@ -95,14 +95,14 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
     PopP2PState& pop_state = pop_state_map[data.getId()];
 
     if (pop_state.requested_pop_data == 0) {
-        Misbehaving(node->GetId(), 20, strprintf("peer send pop data that has not been requested dsata %s", pop_t::name()));
+        Misbehaving(node->GetId(), 20, strprintf("peer %s end pop data that has not been requested dsata %s", node->GetId(), pop_t::name()));
         return false;
     }
 
     uint32_t ddosPreventionCounter = pop_state.requested_pop_data++;
 
     if (ddosPreventionCounter > MAX_POP_MESSAGE_SENDING_COUNT) {
-        Misbehaving(node->GetId(), 20, strprintf("peer is spamming pop dsata %s", pop_t::name()));
+        Misbehaving(node->GetId(), 20, strprintf("peer %s is spamming pop dsata %s", node->GetId(), pop_t::name()));
         return false;
     }
 
