@@ -2485,12 +2485,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>綁定到</translation>
     </message>
     <message>
-        <source>&amp;Check</source>
-        <translation>檢查(&amp;C)</translation>
+        <source>&amp;Check/Generate</source>
+        <translation>檢查/生成(&amp;C)</translation>
     </message>
     <message>
-        <source>Check bind data</source>
-        <translation>檢查綁定數據</translation>
+        <source>Check and generate bind data</source>
+        <translation>檢查並生成綁定數據</translation>
     </message>
     <message>
         <source>Confirm bind plotter</source>

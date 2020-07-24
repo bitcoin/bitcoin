@@ -2162,12 +2162,12 @@
         <translation>에 바인딩</translation>
     </message>
     <message>
-        <source>&amp;Check</source>
-        <translation>검사 (&amp;C)</translation>
+        <source>&amp;Check/Generate</source>
+        <translation>확인 / 생성(&amp;C)</translation>
     </message>
     <message>
-        <source>Check bind data</source>
-        <translation>바인드 데이터 확인</translation>
+        <source>Check and generate bind data</source>
+        <translation>바인드 데이터 확인 및 생성</translation>
     </message>
     <message>
         <source>Confirm bind plotter</source>
