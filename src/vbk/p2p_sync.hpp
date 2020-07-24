@@ -132,26 +132,6 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
     }
 }
 
-template <typename pop_t>
-void sendPopData(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<pop_t>& data)
-{
-    LogPrint(BCLog::NET, "send PopData: %s, count %d\n", pop_t::name(), data.size());
-
-    connman->ForEachNode([&connman, &msgMaker, &data](CNode* pnode) {
-        LOCK(cs_main);
-
-        auto& pop_state_map = getPopDataNodeState(pnode->GetId()).getMap<pop_t>();
-        for (const auto& el : data) {
-            auto id = el.getId();
-            PopP2PState& pop_state = pop_state_map[el.getId()];
-            if (pop_state.known_pop_data == 0) {
-                ++pop_state.known_pop_data;
-                connman->PushMessage(pnode, msgMaker.Make(pop_t::name(), el));
-            }
-        }
-    });
-}
-
 int processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
 } // namespace p2p
