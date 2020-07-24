@@ -466,7 +466,7 @@ bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp) const
         return false;
     }
     if (filepath) {
-        std::string settings = GetArg("-settings", BITCOIN_SETTINGS_FILENAME);
+        std::string settings = GetArg("-settings", SYSCOIN_SETTINGS_FILENAME);
         *filepath = fs::absolute(temp ? settings + ".tmp" : settings, GetDataDir(/* net_specific= */ true));
     }
     return true;
