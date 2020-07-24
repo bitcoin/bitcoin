@@ -305,6 +305,7 @@ class CInv:
         MSG_BLOCK | MSG_WITNESS_FLAG: "WitnessBlock",
         MSG_FILTERED_BLOCK: "filtered Block",
         4: "CompactBlock",
+        5: "WTX",
         # SYSCOIN message types
         MSG_SPORK: "spork",
         MSG_GOVERNANCE_OBJECT: "govobj",
@@ -315,7 +316,6 @@ class CInv:
         MSG_QUORUM_JUSTIFICATION: "qjustify",
         MSG_QUORUM_PREMATURE_COMMITMENT: "qpcommit",
         MSG_QUORUM_RECOVERED_SIG: "qsigrec"
-        5: "WTX",
     }
 
     def __init__(self, t=0, h=0):
