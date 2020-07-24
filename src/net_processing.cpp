@@ -427,6 +427,9 @@ struct CNodeState {
     //! Whether this peer relays txs via wtxid
     bool m_wtxid_relay{false};
 
+    //! Whether this peer supports package relay
+    bool m_packagerelay;
+
     CNodeState(CAddress addrIn, std::string addrNameIn, bool is_inbound, bool is_manual) :
         address(addrIn), name(std::move(addrNameIn)), m_is_inbound(is_inbound),
         m_is_manual_connection (is_manual)
@@ -455,6 +458,7 @@ struct CNodeState {
         m_chain_sync = { 0, nullptr, false, false };
         m_last_block_announcement = 0;
         m_recently_announced_invs.reset();
+        m_packagerelay = false;
     }
 };
 
