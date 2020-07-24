@@ -854,7 +854,8 @@ std::chrono::microseconds CalculateTxGetDataTime(const CInv& inv, std::chrono::m
     if ((inv.type == MSG_TX || inv.type == MSG_WTX || inv.type == MSG_WITNESS_TX) && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
 
     // We delay processing announcements from peers that use txid-relay (instead of wtxid)
-    if (use_txid_delay) process_time += TXID_RELAY_DELAY;
+    // SYSCOIN
+    if ((inv.type == MSG_TX || inv.type == MSG_WTX || inv.type == MSG_WITNESS_TX) && !fMasternodeMode && use_txid_delay) process_time += TXID_RELAY_DELAY;
 
     return process_time;
 }
