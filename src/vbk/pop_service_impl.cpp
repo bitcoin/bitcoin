@@ -17,6 +17,7 @@
 #include <util/strencodings.h>
 #include <validation.h>
 
+#include <vbk/p2p_sync.hpp>
 #include <vbk/service_locator.hpp>
 #include <vbk/util.hpp>
 
@@ -200,6 +201,11 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config, const fs::p
 
     altTree = altintegration::Altintegration::create(config, *payloadsStore);
     mempool = std::make_shared<altintegration::MemPool>(altTree->getParams(), altTree->vbk().getParams(), altTree->btc().getParams());
+
+    //
+    mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
+    mempool->onAccepted<altintegration::VTB>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VTB>);
+    mempool->onAccepted<altintegration::VbkBlock>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VbkBlock>);
 }
 
 bool PopServiceImpl::setState(const uint256& block, altintegration::ValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)

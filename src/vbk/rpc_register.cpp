@@ -10,8 +10,6 @@
 #include "vbk/service_locator.hpp"
 #include <chainparams.h>
 #include <consensus/merkle.h>
-#include <node/context.h>
-#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/validation.h>
@@ -229,12 +227,6 @@ UniValue submitpop(const JSONRPCRequest& request)
         auto& alt_tree = pop_service.getAltTree();
 
         altintegration::MempoolResult result = pop_mempool.submitAll(popData, alt_tree);
-
-        const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
-        VeriBlock::p2p::sendPopData<altintegration::ATV>(g_rpc_node->connman.get(), msgMaker, popData.atvs);
-        VeriBlock::p2p::sendPopData<altintegration::VTB>(g_rpc_node->connman.get(), msgMaker, popData.vtbs);
-        VeriBlock::p2p::sendPopData<altintegration::VbkBlock>(g_rpc_node->connman.get(), msgMaker, popData.context);
-
         return altintegration::ToJSON<UniValue>(result);
     }
 }

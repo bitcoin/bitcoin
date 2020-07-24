@@ -10,6 +10,8 @@
 #include <map>
 #include <net_processing.h>
 #include <netmessagemaker.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 #include <vbk/pop_service.hpp>
 
 #include "veriblock/mempool.hpp"
@@ -75,6 +77,22 @@ const static std::string offer_prefix = "of";
 const static uint32_t MAX_POP_DATA_SENDING_AMOUNT = MAX_INV_SZ;
 const static uint32_t MAX_POP_MESSAGE_SENDING_COUNT = 30;
 
+template <typename pop_t>
+void offerPopDataToAllNodes(const pop_t& p)
+{
+    std::vector<std::vector<uint8_t>> p_id = {p.getId().asVector()};
+    CConnman* connman = g_rpc_node->connman.get();
+    const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+
+    connman->ForEachNode([&connman, &msgMaker, &p_id](CNode* node) {
+        LOCK(cs_main);
+
+        auto& known_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
+        known_map[p_id[0]];
+        connman->PushMessage(node, msgMaker.Make(offer_prefix + pop_t::name(), p_id));
+    });
+}
+
 
 template <typename PopDataType>
 void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -116,7 +134,7 @@ void sendPopData(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vec
         for (const auto& el : data) {
             auto id = el.getId();
             auto it = known_map.find(id);
-            if(it == known_map.end()) {
+            if (it == known_map.end()) {
                 known_map.insert({id, 0});
                 connman->PushMessage(pnode, msgMaker.Make(PopDataType::name(), el));
             }
