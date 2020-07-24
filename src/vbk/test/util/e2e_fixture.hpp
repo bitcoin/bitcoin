@@ -113,14 +113,13 @@ struct E2eFixture : public TestChain100Setup {
         });
 
         auto& pop_mempool = pop->getMemPool();
-        auto& alt_tree = pop->getAltTree();
         altintegration::ValidationState state;
         for (const auto& atv : atvs) {
-            pop_mempool.submit(atv, alt_tree, state);
+            pop_mempool.submit(atv, state);
         }
 
         for (const auto& vtb : vtbs) {
-            pop_mempool.submit(vtb, alt_tree, state);
+            pop_mempool.submit(vtb, state);
         }
 
         bool isValid = false;
