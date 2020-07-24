@@ -1435,6 +1435,7 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LO
     case MSG_TX:
     case MSG_WITNESS_TX:
     case MSG_WTX:
+    case MSG_PACKAGE:
         {
             assert(recentRejects);
             if (::ChainActive().Tip()->GetBlockHash() != hashRecentRejectsChainTip)
@@ -1723,7 +1724,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
     // Process as many TX items from the front of the getdata queue as
     // possible, since they're common and it's efficient to batch process
     // them.
-    while (it != pfrom.vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || it->type == MSG_WTX)) {
+    while (it != pfrom.vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || it->type == MSG_WTX || it->type == MSG_PACKAGE)) {
         if (interruptMsgProc) return;
         // The send buffer provides backpressure. If there's no space in
         // the buffer, pause processing until the next call.

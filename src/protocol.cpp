@@ -184,6 +184,7 @@ std::string CInv::GetCommand() const
     // WTX is not a message type, just an inv type
     case MSG_WTX:            return cmd.append("wtx");
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
+    case MSG_PACKAGE:        return cmd.append(NetMsgType::PACKAGE);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
     default:
