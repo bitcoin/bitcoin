@@ -199,7 +199,7 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config, const fs::p
     payloadsStore = &storeman->getPayloadsStorage();
 
     altTree = altintegration::Altintegration::create(config, *payloadsStore);
-    mempool = std::make_shared<altintegration::MemPool>(altTree->getParams(), altTree->vbk().getParams(), altTree->btc().getParams());
+    mempool = std::make_shared<altintegration::MemPool>(*altTree);
 }
 
 bool PopServiceImpl::setState(const uint256& block, altintegration::ValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -211,13 +211,13 @@ bool PopServiceImpl::setState(const uint256& block, altintegration::ValidationSt
 altintegration::PopData PopServiceImpl::getPopData() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    return mempool->getPop(*this->altTree);
+    return mempool->getPop();
 }
 
 void PopServiceImpl::removePayloadsFromMempool(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    mempool->removePayloads(popData, *this->altTree);
+    mempool->removePayloads(popData);
 }
 
 void PopServiceImpl::addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -228,7 +228,7 @@ void PopServiceImpl::addDisconnectedPopdata(const altintegration::PopData& popDa
 void PopServiceImpl::updatePopMempoolForReorg() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     for (const auto& popData : disconnected_popdata) {
-        mempool->submitAll(popData, *altTree);
+        mempool->submitAll(popData);
     }
     disconnected_popdata.clear();
 }
