@@ -3256,7 +3256,7 @@ void ProcessMessage(
 
         TxValidationState state;
         // SYSCOIN use inv not hash
-        EraseTxRequest(pfrom.GetId(), inv);
+        EraseTxRequest(pfrom.GetId(), CInv(nodestate->m_wtxid_relay ? MSG_WTX : MSG_TX, hash));
 
         std::list<CTransactionRef> lRemovedTxn;
 
