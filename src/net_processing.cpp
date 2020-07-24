@@ -1852,9 +1852,10 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             }
             CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, inv.type == MSG_WTX, mempool_req, now);
             if (tx) {
+                // WTX and WITNESS_TX imply we serialize with witness
                 int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
                 connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
-                mempool.RemoveUnbroadcastTx(inv.hash);
+                mempool.RemoveUnbroadcastTx(tx->GetHash());
                 // As we're going to send tx, make sure its unconfirmed parents are made requestable.
                 for (const auto& txin : tx->vin) {
                     auto txinfo = mempool.info(txin.prevout.hash);
