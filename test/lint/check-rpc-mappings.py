@@ -55,7 +55,7 @@ def process_commands(fname):
                     in_rpcs = False
                 elif '{' in line and '"' in line:
                     m = re.search(r'{ *("[^"]*"), *("[^"]*"), *&([^,]*), *{([^}]*)} *},', line)
-                    assert m, 'No match to table expression: %s' % line
+                    assert m, 'No match to table expression: {}'.format(line)
                     name = parse_string(m.group(2))
                     args_str = m.group(4).strip()
                     if args_str:
@@ -81,7 +81,7 @@ def process_mapping(fname):
                     in_rpcs = False
                 elif '{' in line and '"' in line:
                     m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *},', line)
-                    assert m, 'No match to table expression: %s' % line
+                    assert m, 'No match to table expression: {}'.format(line)
                     name = parse_string(m.group(1))
                     idx = int(m.group(2))
                     argname = parse_string(m.group(3))
@@ -117,11 +117,11 @@ def main():
         try:
             rargnames = cmds_by_name[cmdname].args[argidx].names
         except IndexError:
-            print('ERROR: %s argument %i (named %s in vRPCConvertParams) is not defined in dispatch table' % (cmdname, argidx, argname))
+            print('ERROR: {} argument {} (named {} in vRPCConvertParams) is not defined in dispatch table'.format(cmdname, argidx, argname))
             errors += 1
             continue
         if argname not in rargnames:
-            print('ERROR: %s argument %i is named %s in vRPCConvertParams but %s in dispatch table' % (cmdname, argidx, argname, rargnames), file=sys.stderr)
+            print('ERROR: {} argument {} is named {} in vRPCConvertParams but {} in dispatch table'.format(cmdname, argidx, argname, rargnames), file=sys.stderr)
             errors += 1
 
     # Check for conflicts in vRPCConvertParams conversion
@@ -132,7 +132,7 @@ def main():
         for arg in cmd.args:
             convert = [((cmd.name, arg.idx, argname) in mapping) for argname in arg.names]
             if any(convert) != all(convert):
-                print('ERROR: %s argument %s has conflicts in vRPCConvertParams conversion specifier %s' % (cmd.name, arg.names, convert))
+                print('ERROR: {} argument {} has conflicts in vRPCConvertParams conversion specifier {}'.format(cmd.name, arg.names, convert))
                 errors += 1
             arg.convert = all(convert)
 
@@ -152,8 +152,7 @@ def main():
             if argname in IGNORE_DUMMY_ARGS:
                 # these are testing or dummy, don't warn for them
                 continue
-            print('WARNING: conversion mismatch for argument named %s (%s)' %
-                  (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
+            print('WARNING: conversion mismatch for argument named {} ({})'.format(argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
 
     sys.exit(errors > 0)
 

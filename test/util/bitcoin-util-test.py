@@ -100,7 +100,7 @@ def bctest(testDir, testObj, buildenv):
             logging.error("Output data missing for " + outputFn)
             raise Exception
         if not outputType:
-            logging.error("Output file %s does not have a file extension" % outputFn)
+            logging.error("Output file {} does not have a file extension".format(outputFn))
             raise Exception
 
     # Run the test
@@ -108,7 +108,7 @@ def bctest(testDir, testObj, buildenv):
     try:
         outs = proc.communicate(input=inputData)
     except OSError:
-        logging.error("OSError, Failed to execute " + execprog)
+        logging.error("OSError, Failed to execute {}".format(execprog))
         raise
 
     if outputData:
@@ -117,20 +117,20 @@ def bctest(testDir, testObj, buildenv):
         try:
             a_parsed = parse_output(outs[0], outputType)
         except Exception as e:
-            logging.error('Error parsing command output as %s: %s' % (outputType, e))
+            logging.error('Error parsing command output as {}: {}'.format(outputType, e))
             raise
         try:
             b_parsed = parse_output(outputData, outputType)
         except Exception as e:
-            logging.error('Error parsing expected output %s as %s: %s' % (outputFn, outputType, e))
+            logging.error('Error parsing expected output {} as {}: {}'.format(outputFn, outputType, e))
             raise
         # Compare data
         if a_parsed != b_parsed:
-            logging.error("Output data mismatch for " + outputFn + " (format " + outputType + ")")
+            logging.error("Output data mismatch for {0} (format {0})".format(outputType))
             data_mismatch = True
         # Compare formatting
         if outs[0] != outputData:
-            error_message = "Output formatting mismatch for " + outputFn + ":\n"
+            error_message = "Output formatting mismatch for {}:\n".format(outputFn)
             error_message += "".join(difflib.context_diff(outputData.splitlines(True),
                                                           outs[0].splitlines(True),
                                                           fromfile=outputFn,
@@ -145,7 +145,7 @@ def bctest(testDir, testObj, buildenv):
     if "return_code" in testObj:
         wantRC = testObj['return_code']
     if proc.returncode != wantRC:
-        logging.error("Return code mismatch for " + outputFn)
+        logging.error("Return code mismatch for {}".format(outputFn))
         raise Exception
 
     if "error_txt" in testObj:
@@ -157,7 +157,8 @@ def bctest(testDir, testObj, buildenv):
         # linux through wine. Just assert that the expected error text appears
         # somewhere in stderr.
         if want_error not in outs[1]:
-            logging.error("Error mismatch:\n" + "Expected: " + want_error + "\nReceived: " + outs[1].rstrip())
+            recv_result = outs[1].rstrip()
+            logging.error("Error mismatch:\n" + "Expected: {}\nReceived: {}".format(want_error, recv_result))
             raise Exception
 
 def parse_output(a, fmt):
@@ -169,7 +170,7 @@ def parse_output(a, fmt):
     elif fmt == 'hex':  # hex: parse and compare binary data
         return binascii.a2b_hex(a.strip())
     else:
-        raise NotImplementedError("Don't know how to compare %s" % fmt)
+        raise NotImplementedError("Don't know how to compare {}".format(fmt))
 
 if __name__ == '__main__':
     main()
