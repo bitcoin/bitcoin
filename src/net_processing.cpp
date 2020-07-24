@@ -3723,32 +3723,32 @@ void ProcessMessage(
  */
 bool PeerLogicValidation::MaybeDiscourageAndDisconnect(CNode& pnode)
 {
-    NodeId peer_id{pnode.GetId()};
+    const NodeId peer_id{pnode.GetId()};
     {
         LOCK(cs_main);
-        CNodeState &state = *State(peer_id);
+        CNodeState& state = *State(peer_id);
 
         // There's nothing to do if the m_should_discourage flag isn't set
         if (!state.m_should_discourage) return false;
 
-        // Reset m_should_discourage
         state.m_should_discourage = false;
     } // cs_main
 
     if (pnode.HasPermission(PF_NOBAN)) {
-        // Peer has the NOBAN permission flag - log but don't disconnect
+        // We never disconnect or discourage peers for bad behavior if they have the NOBAN permission flag
         LogPrintf("Warning: not punishing noban peer %d!\n", peer_id);
         return false;
     }
 
     if (pnode.m_manual_connection) {
-        // Peer is a manual connection - log but don't disconnect
+        // We never disconnect or discourage manual peers for bad behavior
         LogPrintf("Warning: not punishing manually connected peer %d!\n", peer_id);
         return false;
     }
 
     if (pnode.addr.IsLocal()) {
-        // Peer is on a local address. Disconnect this peer, but don't discourage the local address
+        // We disconnect local peers for bad behavior but don't discourage (since that would discourage
+        // all peers on the same local address)
         LogPrintf("Warning: disconnecting but not discouraging local peer %d!\n", peer_id);
         pnode.fDisconnect = true;
         return true;
