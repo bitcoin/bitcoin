@@ -831,7 +831,7 @@ std::chrono::microseconds GetObjectExpiryInterval(int invType)
 }
 std::chrono::microseconds GetObjectRandomDelay(int invType)
 {
-    if (invType == MSG_TX || invType == MSG_WTX) {
+    if (invType == MSG_TX || invType == MSG_WTX || invType == MSG_WITNESS_TX) {
         return GetRandMicros(MAX_GETDATA_RANDOM_DELAY);
     }
     return {};
@@ -851,7 +851,7 @@ std::chrono::microseconds CalculateTxGetDataTime(const CInv& inv, std::chrono::m
 
     // We delay processing announcements from inbound peers
     // SYSCOIN
-    if ((inv.type == MSG_TX || inv.type == MSG_WTX) && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
+    if ((inv.type == MSG_TX || inv.type == MSG_WTX || inv.type == MSG_WITNESS_TX) && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
 
     // We delay processing announcements from peers that use txid-relay (instead of wtxid)
     if (use_txid_delay) process_time += TXID_RELAY_DELAY;

@@ -22,7 +22,7 @@ static const int MIN_PEER_PROTO_VERSION = 31800;
 
 // SYSCOIN
 //! minimum proto version of masternode to accept in DKGs
-static const int MIN_MASTERNODE_PROTO_VERSION = 70015;
+static const int MIN_MASTERNODE_PROTO_VERSION = 70016;
 
 
 //! BIP 0031, pong message, is enabled for all versions AFTER this one
