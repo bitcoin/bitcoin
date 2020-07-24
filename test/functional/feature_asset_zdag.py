@@ -106,7 +106,6 @@ class AssetZDAGTest(SyscoinTestFramework):
             out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
             assert_equal(len(out), 4)
 
-    # a = 1, b = 0.2, c = 0.1, a->b (0.2), b->a(0.2),  a->c(0.2), c->a(0.2), burn a(0.5), burn a(0.5), b->c(0.2), burn c(0.3) (a=0, b=0, c=0 and burn=1.3)
     def burn_zdag_doublespend(self):
         self.basic_asset()
         self.nodes[0].generate(1)
@@ -157,7 +156,33 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_blocks()
         # after block, even node4 should have removed conflicting tx
         assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[3].getrawtransaction, txdblspend)
-
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 2)
+        assert_equal(out[0]['amount'], int(0.99974820*COIN))
+        assert_equal(out[0]['asset_guid'], self.asset)
+        assert_equal(out[0]['asset_amount'], 0)
+        assert_equal(out[1]['amount'], int(0.00000980*COIN))
+        assert_equal(out[1]['asset_guid'], self.asset)
+        assert_equal(out[1]['asset_amount'], int(1.5*COIN))
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['amount'], int(0.99999088*COIN))
+        assert_equal(out[0]['asset_guid'], self.asset)
+        assert_equal(out[0]['asset_amount'], int(0.2*COIN))
+        out =  self.nodes[2].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 2)
+        assert_equal(out[0]['amount'], int(0.00000980*COIN))
+        assert_equal(out[0]['asset_guid'], self.asset)
+        assert_equal(out[0]['asset_amount'], int(0.2*COIN))
+        assert_equal(out[1]['amount'], int(0.00000980*COIN))
+        assert_equal(out[1]['asset_guid'], self.asset)
+        assert_equal(out[1]['asset_amount'], int(0.2*COIN))
+        out =  self.nodes[3].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 1)
+        # because of importing key of address1
+        assert_equal(out[1]['amount'], int(0.00000980*COIN))
+        assert_equal(out[1]['asset_guid'], self.asset)
+        assert_equal(out[1]['asset_amount'], int(1.5*COIN))
 
     def basic_asset(self):
         self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
