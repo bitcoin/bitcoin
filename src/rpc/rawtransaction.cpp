@@ -936,9 +936,9 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
             nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true, &fee);
     }
 
-    // TODO: move ATMP absurdFee check to here
-    if (state.GetRejectReason().find("absurdly-high-fee") != std::string::npos) {
-        result_0.pushKV("allowed", test_accept_res);
+    // Check that fee does not exceed maxfee
+    if (test_accept_res && max_raw_tx_fee && fee > max_raw_tx_fee) {
+        result_0.pushKV("allowed", false);
         result_0.pushKV("reject-reason", "max-fee-exceeded");
         result.push_back(std::move(result_0));
         return result;
