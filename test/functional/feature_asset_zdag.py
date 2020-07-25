@@ -216,9 +216,10 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[3].assetallocationburn(self.asset, int(0.0001*COIN), '')
         self.nodes[2].assetallocationburn(self.asset, int(0.00001*COIN), '')
         # ensure burning sysx gives new sys balance
-        assert_equal(self.nodes[1].getbalance(minconf=0), balanceBefore1+Decimal(0.1))
-        assert_equal(self.nodes[2].getbalance(minconf=0), balanceBefore2+Decimal(0.01101))
-        assert_equal(self.nodes[3].getbalance(minconf=0), balanceBefore3+Decimal(0.0001))
+        # account for rounding errors in Decimal
+        assert(self.nodes[1].getbalance(minconf=0) - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
+        assert(self.nodes[2].getbalance(minconf=0) - (balanceBefore+Decimal(0.01101)) < Decimal(0.001))
+        assert(self.nodes[3].getbalance(minconf=0) - (balanceBefore+Decimal(0.0001)) < Decimal(0.001))
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         out =  self.nodes[2].listunspent(minconf=0, query_options={'assetGuid': self.asset})
