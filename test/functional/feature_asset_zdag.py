@@ -29,14 +29,14 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.burn_zdag_doublespend_chain()
         self.burn_zdag_ancestor_nonzdag()
         self.burn_zdag_ancestor_doublespend()
-        
+
     def basic_zdag_doublespend(self):
         self.basic_asset(guid=None)
         self.nodes[0].generate(1)
         newaddress2 = self.nodes[1].getnewaddress()
         newaddress3 = self.nodes[1].getnewaddress()
         newaddress1 = self.nodes[0].getnewaddress()
-        self.nodes[2].importprivkey(self.nodes[1].dumpprivkey(newaddress2))
+        self.nodes[3].importprivkey(self.nodes[1].dumpprivkey(newaddress2))
         self.nodes[0].assetsend(self.asset, newaddress1, int(2*COIN))
         # create 2 utxo's so below newaddress1 recipient of 0.5 COIN uses 1 and the newaddress3 recipient on node3 uses the other on dbl spend
         self.nodes[0].sendtoaddress(newaddress2, 1)
@@ -53,22 +53,22 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         # should have 2 sys utxos and 2 asset utxos
-        out =  self.nodes[2].listunspent()
+        out =  self.nodes[3].listunspent()
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
         self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.4*COIN))
         self.sync_mempools(timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
-        out =  self.nodes[2].listunspent(minconf=0)
+        out =  self.nodes[3].listunspent(minconf=0)
         assert_equal(len(out), 2)
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
         # dbl spend
-        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
+        tx2 = self.nodes[3].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
         # use tx2 to build tx3
-        tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
+        tx3 = self.nodes[3].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
         # use tx2 to build tx4
-        tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
-        self.sync_mempools(timeout=30)
+        tx4 = self.nodes[3].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
+        self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
             # ensure the tx2 made it to mempool, should propogate dbl-spend first time
