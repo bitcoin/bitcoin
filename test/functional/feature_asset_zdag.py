@@ -25,6 +25,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(200)
         self.sync_blocks()
         self.burn_zdag_doublespend_chain()
+        self.burn_zdag_ancestor_nonzdag()
         #self.basic_zdag_doublespend()
         #self.burn_zdag_doublespend()
 
@@ -168,8 +169,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[3].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':1.5,'maximumAmountAsset':1.5})
         assert_equal(len(out), 1)
 
-
-
     def burn_zdag_doublespend_chain(self):
         # SYSX guid on regtest is 123456
         self.basic_asset(123456)
@@ -189,9 +188,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.001*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))
+        balanceBefore = self.nodes[0].getbalance(minconf=0)
         self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '')
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].assetallocationburn(self.asset, int(0.88889*COIN), '')
+        assert_equal(self.nodes[0].getbalance(minconf=0), balanceBefore+int(1.88889)*COIN))
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
         out =  self.nodes[0].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
@@ -205,11 +206,18 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_blocks()
         # listunspent for node0 should be have just 1 (asset ownership)
         # check that nodes have allocations in listunspent before burning
+        balanceBefore1 = self.nodes[1].getbalance(minconf=0)
+        balanceBefore2 = self.nodes[2].getbalance(minconf=0)
+        balanceBefore3 = self.nodes[3].getbalance(minconf=0)
         self.nodes[1].assetallocationburn(self.asset, int(0.1*COIN), '')
         self.nodes[2].assetallocationburn(self.asset, int(0.01*COIN), '')
         self.nodes[2].assetallocationburn(self.asset, int(0.001*COIN), '')
         self.nodes[3].assetallocationburn(self.asset, int(0.0001*COIN), '')
         self.nodes[2].assetallocationburn(self.asset, int(0.00001*COIN), '')
+        # ensure burning sysx gives new sys balance
+        assert_equal(self.nodes[1].getbalance(minconf=0), balanceBefore1+int(0.1)*COIN))
+        assert_equal(self.nodes[2].getbalance(minconf=0), balanceBefore2+int(0.01101)*COIN))
+        assert_equal(self.nodes[3].getbalance(minconf=0), balanceBefore3+int(0.0001)*COIN))
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         out =  self.nodes[2].listunspent(minconf=0, query_options={'assetGuid': self.asset})
@@ -219,18 +227,73 @@ class AssetZDAGTest(SyscoinTestFramework):
         # check listunspent is empty in mempool, all should be burned
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].generate(1)
+        assert_equal(self.nodes[1].getbalance(), balanceBefore1+int(0.1)*COIN))
+        assert_equal(self.nodes[2].getbalance(), balanceBefore2+int(0.01101)*COIN))
+        assert_equal(self.nodes[3].getbalance(), balanceBefore3+int(0.0001)*COIN))
+        # check listunspent is empty, all should be burned
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         out =  self.nodes[2].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         out =  self.nodes[3].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
-        # check listunspent is empty, all should be burned
 
     # dbl spend verify zdag will flag any descendents but not ancestor txs
     #def burn_zdag_ancestor_doublespend(self):
-    # verify zdag will flag any descendents if they are non-zdag but not ancestor txs
-    #def burn_zdag_ancestor_nonzdag(self):
+    # verify zdag will flag any descendents of non-zdag tx but not ancestors
+    def burn_zdag_ancestor_nonzdag(self):
+        self.basic_asset()
+        self.nodes[0].generate(1)
+        useraddress0 = self.nodes[0].getnewaddress()
+        useraddress1 = self.nodes[1].getnewaddress()
+        useraddress2 = self.nodes[2].getnewaddress()
+        useraddress3 = self.nodes[3].getnewaddress()
+        self.nodes[0].assetsend(self.asset, useraddress0, int(1.5*COIN))
+        self.nodes[0].generate(1)
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
+        tx3 = self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
+        self.sync_all()
+        for i in range(4):
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
+
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        for i in range(4):
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
+
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))
+        tx3 = self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))
+        self.sync_all()
+        for i in range(4):
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
+        
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        for i in range(4):
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
+
     def basic_asset(self, guid):
         if guid is None:
             self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
