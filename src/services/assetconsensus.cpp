@@ -640,17 +640,15 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
             }
+            if(theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
+            }
             if (theAsset.nUpdateFlags != storedAssetRef.nUpdateFlags) {
                 if (theAsset.nUpdateFlags > 0 && !(storedAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-flags-privileges", bSanityCheck);
                 }
-                if(theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
-                }
                 storedAssetRef.nUpdateFlags = std::move(theAsset.nUpdateFlags);
-            } else if (theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
-                return FormatSyscoinErrorMessage(state, "asset-mismatch-prevflags", bSanityCheck);
-            }     
+            }  
         }         
         break;
             
