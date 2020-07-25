@@ -199,7 +199,15 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(0.88889*COIN))
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
+        out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], 123456)
+        assert_equal(out[0]['asset_amount'], 0)
         self.nodes[0].generate(1)
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], 123456)
+        assert_equal(out[0]['asset_amount'], 0)
         self.sync_blocks()
         # listunspent for node0 should be have just 1 (asset ownership)
         # check that nodes have allocations in listunspent before burning
@@ -208,9 +216,21 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[2].assetallocationburn(self.asset, int(0.001*COIN), '')
         self.nodes[3].assetallocationburn(self.asset, int(0.0001*COIN), '')
         self.nodes[2].assetallocationburn(self.asset, int(0.00001*COIN), '')
+        out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
+        out =  self.nodes[2].listunspent(minconf=0, query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
+        out =  self.nodes[3].listunspent(minconf=0, query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
         # check listunspent is empty in mempool, all should be burned
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].generate(1)
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
+        out =  self.nodes[2].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
+        out =  self.nodes[3].listunspent(query_options={'assetGuid': self.asset})
+        assert_equal(len(out), 0)
         # check listunspent is empty, all should be burned
 
     # dbl spend verify zdag will flag any descendents but not ancestor txs
