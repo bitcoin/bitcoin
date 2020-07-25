@@ -178,6 +178,10 @@ class AssetZDAGTest(SyscoinTestFramework):
         useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
+        self.nodes[0].sendtoaddress(useraddress1, 1)
+        self.nodes[0].sendtoaddress(useraddress2, 1)
+        self.nodes[0].sendtoaddress(useraddress3, 1)
+        self.nodes[0].generate(1)
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.1*COIN))
@@ -196,6 +200,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(0.88889*COIN))
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
         self.nodes[0].generate(1)
+        self.sync_blocks()
         # listunspent for node0 should be have just 1 (asset ownership)
         # check that nodes have allocations in listunspent before burning
         self.nodes[1].assetallocationburn(self.asset, int(0.1*COIN), '')
