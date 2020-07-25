@@ -254,9 +254,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
-        tx3 = self.nodes[0].assetallocationsend(self.asset, int(1*COIN), '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
+        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1*COIN))['txid']
         # dbl spend
-        tx3a = self.nodes[2].assetallocationsend(self.asset, int(1.5*COIN), '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
+        tx3a = self.nodes[2].assetallocationsend(self.asset, useraddress1, int(1.5*COIN))['txid']
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
         self.sync_mempools(timeout=30)
