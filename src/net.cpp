@@ -42,10 +42,12 @@
 static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed");
 #endif
 
+#include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <unordered_map>
 
-#include <math.h>
 
 // How often to dump addresses to peers.dat
 static constexpr std::chrono::minutes DUMP_PEERS_INTERVAL{15};
@@ -2853,7 +2855,16 @@ int64_t CConnman::PoissonNextSendInbound(int64_t now, int average_interval_secon
 
 int64_t PoissonNextSend(int64_t now, int average_interval_seconds)
 {
-    return now + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_seconds * -1000000.0 + 0.5);
+    const int64_t average_interval_microseconds = average_interval_seconds * 1000000ULL;
+    int64_t delta_microseconds = -std::log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_microseconds + 0.5;
+
+    // Upper bound to avoid timeouts in the functional tests.
+    static const bool regtest = gArgs.GetChainName() == CBaseChainParams::REGTEST;
+    if (regtest) {
+        delta_microseconds = std::min(delta_microseconds, average_interval_microseconds);
+    }
+    assert(delta_microseconds > 0);
+    return now + delta_microseconds;
 }
 
 CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
