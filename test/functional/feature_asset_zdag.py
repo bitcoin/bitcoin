@@ -175,9 +175,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.basic_asset(123456)
         self.nodes[0].generate(1)
         useraddress0 = self.nodes[0].getnewaddress()
-        useraddress1 = self.nodes[0].getnewaddress()
-        useraddress2 = self.nodes[0].getnewaddress()
-        useraddress3 = self.nodes[0].getnewaddress()
+        useraddress1 = self.nodes[1].getnewaddress()
+        useraddress2 = self.nodes[2].getnewaddress()
+        useraddress3 = self.nodes[3].getnewaddress()
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.1*COIN))
@@ -193,12 +193,25 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationburn(self.asset, int(0.0001*COIN), '')
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
-        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
-        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
-        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
+        self.nodes[0].syscoinburntoassetallocation(self.asset, int(0.88889*COIN))
+        # listunspent for node0 should be have just 1 (asset ownership) in mempool
+        self.nodes[0].generate(1)
+        # listunspent for node0 should be have just 1 (asset ownership)
+        # check that nodes have allocations in listunspent before burning
+        self.nodes[1].assetallocationburn(self.asset, int(0.1*COIN), '')
+        self.nodes[2].assetallocationburn(self.asset, int(0.01*COIN), '')
+        self.nodes[2].assetallocationburn(self.asset, int(0.001*COIN), '')
+        self.nodes[3].assetallocationburn(self.asset, int(0.0001*COIN), '')
+        self.nodes[2].assetallocationburn(self.asset, int(0.00001*COIN), '')
+        # check listunspent is empty in mempool, all should be burned
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].generate(1)
+        # check listunspent is empty, all should be burned
 
+    # dbl spend verify zdag will flag any descendents but not ancestor txs
+    #def burn_zdag_ancestor_doublespend(self):
+    # verify zdag will flag any descendents if they are non-zdag but not ancestor txs
+    #def burn_zdag_ancestor_nonzdag(self):
     def basic_asset(self, guid):
         if guid is None:
             self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
