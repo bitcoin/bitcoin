@@ -25,8 +25,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(200)
         self.sync_blocks()
         self.burn_zdag_doublespend_chain()
-        self.basic_zdag_doublespend()
-        self.burn_zdag_doublespend()
+        #self.basic_zdag_doublespend()
+        #self.burn_zdag_doublespend()
 
     def basic_zdag_doublespend(self):
         self.basic_asset()
@@ -191,7 +191,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationburn(self.asset, int(0.001*COIN), '')
         self.nodes[0].assetallocationburn(self.asset, int(0.0001*COIN), '')
         self.nodes[0].assetallocationburn(self.asset, int(0.0001*COIN), '')
-        self.nodes[0].syscoinburntoassetallocation(self.asset, useraddress0, int(1*COIN))
+        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
