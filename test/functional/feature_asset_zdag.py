@@ -274,11 +274,11 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
 
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))
-        tx3 = self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
+        tx3 = self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
         self.sync_mempools(timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
