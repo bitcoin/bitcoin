@@ -45,7 +45,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset': 0.5})
         assert_equal(len(out), 1)
-        out =  self.nodes[2].listunspent()
+        out =  self.nodes[3].listunspent()
         assert_equal(len(out), 2)
         # send 2 asset UTXOs to newaddress2 same logic as explained above about dbl spend
         self.nodes[0].assetallocationsend(self.asset, newaddress2, int(0.4*COIN))
