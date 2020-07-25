@@ -27,8 +27,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.basic_zdag_doublespend()
         self.burn_zdag_doublespend()
         self.burn_zdag_doublespend_chain()
-        self.burn_zdag_ancestor_nonzdag()
-        self.burn_zdag_ancestor_doublespend()
 
     def basic_zdag_doublespend(self):
         self.basic_asset(guid=None)
@@ -240,104 +238,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_equal(len(out), 0)
         out =  self.nodes[3].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
-
-    # dbl spend verify zdag will flag any descendents but not ancestor txs
-    def burn_zdag_ancestor_doublespend(self):
-        self.basic_asset(guid=None)
-        self.nodes[0].generate(1)
-        useraddress0 = self.nodes[0].getnewaddress()
-        useraddress1 = self.nodes[1].getnewaddress()
-        useraddress2 = self.nodes[2].getnewaddress()
-        useraddress3 = self.nodes[3].getnewaddress()
-        self.nodes[0].sendtoaddress(useraddress3, 1)
-        self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress0))
-        self.nodes[0].assetsend(self.asset, useraddress0, int(1.5*COIN))
-        self.nodes[0].generate(1)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
-        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, int(1*COIN))['txid']
-        self.sync_mempools(timeout=30)
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, int(1*COIN))['txid']
-        # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
-        tx4a = self.nodes[3].assetallocationsend(self.asset, useraddress0, int(1*COIN))['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.0001*COIN))['txid']
-        tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(1*COIN))['txid']
-        self.sync_mempools(self.nodes[0:3], timeout=30)
-        for i in range(2):
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4a)['status'], ZDAG_MAJOR_CONFLICT)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
-            # this one uses output from tx2 so its not involved in the conflict chain
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx6)['status'], ZDAG_MAJOR_CONFLICT)
-
-        self.nodes[0].generate(1)
-        self.sync_blocks()
-        for i in range(2):
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4a)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
-
-    # verify zdag will flag any descendents of non-zdag tx but not ancestors
-    def burn_zdag_ancestor_nonzdag(self):
-        self.basic_asset(guid=None)
-        self.nodes[0].generate(1)
-        useraddress0 = self.nodes[0].getnewaddress()
-        useraddress1 = self.nodes[1].getnewaddress()
-        useraddress2 = self.nodes[2].getnewaddress()
-        useraddress3 = self.nodes[3].getnewaddress()
-        self.nodes[0].assetsend(self.asset, useraddress0, int(1.5*COIN))
-        self.nodes[0].generate(1)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
-        tx3 = self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
-        self.sync_mempools(timeout=30)
-        for i in range(3):
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
-
-        self.nodes[0].generate(1)
-        self.sync_blocks()
-        for i in range(3):
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
-
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
-        tx3 = self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})['txid']
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
-        self.sync_mempools(timeout=30)
-        for i in range(3):
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
-            # update won't be used as input, tx4 will us tx2 as input because asset update uses different UTXO for ownership which is
-            # not selected for zdag txs
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
-        
-        self.nodes[0].generate(1)
-        self.sync_blocks()
-        for i in range(3):
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
 
     def basic_asset(self, guid):
         if guid is None:
