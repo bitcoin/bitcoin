@@ -189,7 +189,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.001*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))
         self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))
-        self.nodes[0].assetallocationburn(self.asset, int(1*COIN). '')
+        self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '')
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].assetallocationburn(self.asset, int(0.88889*COIN), '')
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
