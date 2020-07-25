@@ -192,7 +192,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '')
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].assetallocationburn(self.asset, int(0.88889*COIN), '')
-        assert_equal(self.nodes[0].getbalance(minconf=0), balanceBefore+Decimal(1.88889))
+        # subtract balance with 0.001 threshold to account for update fee
+        assert(self.nodes[0].getbalance(minconf=0) - (balanceBefore+Decimal(1.88889)) < Decimal(0.001))
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
         out =  self.nodes[0].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
@@ -215,9 +216,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[3].assetallocationburn(self.asset, int(0.0001*COIN), '')
         self.nodes[2].assetallocationburn(self.asset, int(0.00001*COIN), '')
         # ensure burning sysx gives new sys balance
-        assert_equal(self.nodes[1].getbalance(minconf=0), balanceBefore1+0.1)
-        assert_equal(self.nodes[2].getbalance(minconf=0), balanceBefore2+0.01101)
-        assert_equal(self.nodes[3].getbalance(minconf=0), balanceBefore3+0.0001)
+        assert_equal(self.nodes[1].getbalance(minconf=0), balanceBefore1+Decimal(0.1))
+        assert_equal(self.nodes[2].getbalance(minconf=0), balanceBefore2+Decimal(0.01101))
+        assert_equal(self.nodes[3].getbalance(minconf=0), balanceBefore3+Decimal(0.0001))
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         out =  self.nodes[2].listunspent(minconf=0, query_options={'assetGuid': self.asset})
@@ -227,9 +228,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         # check listunspent is empty in mempool, all should be burned
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].generate(1)
-        assert_equal(self.nodes[1].getbalance(), balanceBefore1+0.1)
-        assert_equal(self.nodes[2].getbalance(), balanceBefore2+0.01101)
-        assert_equal(self.nodes[3].getbalance(), balanceBefore3+0.0001)
+        assert_equal(self.nodes[1].getbalance(), balanceBefore1+Decimal(0.1))
+        assert_equal(self.nodes[2].getbalance(), balanceBefore2+Decimal(0.01101))
+        assert_equal(self.nodes[3].getbalance(), balanceBefore3+Decimal(0.0001))
         # check listunspent is empty, all should be burned
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
