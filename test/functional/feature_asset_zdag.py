@@ -256,16 +256,17 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
         tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1*COIN))['txid']
-        # dbl spend
-        tx3a = self.nodes[2].assetallocationsend(self.asset, useraddress1, int(1.5*COIN))['txid']
+        self.sync_mempools(timeout=30)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
+        # dbl spend inputs from tx3 (tx3, tx4 and tx5 should be flagged as conflict)
+        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
         self.sync_mempools(timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3a)['status'], ZDAG_MAJOR_CONFLICT)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4a)['status'], ZDAG_MAJOR_CONFLICT)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_MAJOR_CONFLICT)
 
@@ -275,7 +276,7 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_NOT_FOUND)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx3a)['status'], ZDAG_NOT_FOUND)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4a)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
 
