@@ -219,7 +219,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         # account for rounding errors in Decimal
         assert(self.nodes[1].getbalance(minconf=0) - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
         assert(self.nodes[2].getbalance(minconf=0) - (balanceBefore+Decimal(0.01101)) < Decimal(0.001))
-        assert(self.nodes[3].getbalance(minconf=0) - (balanceBefore+Decimal(0.0001)) < Decimal(0.001))
+        assert(self.nodes[3].getbalance(minconf=0) - (balanceBefore+Decimal(0.0001)) < Decimal(0.0001))
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         out =  self.nodes[2].listunspent(minconf=0, query_options={'assetGuid': self.asset})
@@ -229,9 +229,9 @@ class AssetZDAGTest(SyscoinTestFramework):
         # check listunspent is empty in mempool, all should be burned
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
         self.nodes[0].generate(1)
-        assert_equal(self.nodes[1].getbalance(), balanceBefore1+Decimal(0.1))
-        assert_equal(self.nodes[2].getbalance(), balanceBefore2+Decimal(0.01101))
-        assert_equal(self.nodes[3].getbalance(), balanceBefore3+Decimal(0.0001))
+        assert(self.nodes[1].getbalance() - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
+        assert(self.nodes[2].getbalance() - (balanceBefore+Decimal(0.01101)) < Decimal(0.001))
+        assert(self.nodes[3].getbalance() - (balanceBefore+Decimal(0.0001)) < Decimal(0.0001))
         # check listunspent is empty, all should be burned
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
