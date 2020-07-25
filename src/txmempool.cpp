@@ -1051,7 +1051,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                 child_sizes += childit->GetTxSize();
             }
         }
-        assert(setChildrenCheck == GetMemPoolChildren(it));
+        if(!bAssetAllocationTX)
+            assert(setChildrenCheck == GetMemPoolChildren(it));
         // Also check to make sure size is greater than sum with immediate children.
         // just a sanity check, not definitive that this calc is correct...
         assert(it->GetSizeWithDescendants() >= child_sizes + it->GetTxSize());
