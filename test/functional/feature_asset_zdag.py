@@ -260,7 +260,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1*COIN))['txid']
         # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
         tx4a = self.nodes[3].assetallocationsend(self.asset, useraddress1, int(1*COIN))['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.0001*COIN))['txid']
+        tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(1*COIN))['txid']
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(2):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
@@ -268,7 +269,9 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4a)['status'], ZDAG_MAJOR_CONFLICT)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_MAJOR_CONFLICT)
+            # this one uses output from tx2 so its not involved in the conflict chain
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx6)['status'], ZDAG_MAJOR_CONFLICT)
 
         self.nodes[0].generate(1)
         self.sync_blocks()
