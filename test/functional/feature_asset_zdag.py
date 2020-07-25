@@ -30,7 +30,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         #self.burn_zdag_doublespend()
 
     def basic_zdag_doublespend(self):
-        self.basic_asset()
+        self.basic_asset(guid=None)
         self.nodes[0].generate(1)
         newaddress2 = self.nodes[1].getnewaddress()
         newaddress3 = self.nodes[1].getnewaddress()
@@ -109,7 +109,7 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(len(out), 4)
 
     def burn_zdag_doublespend(self):
-        self.basic_asset()
+        self.basic_asset(guid=None)
         self.nodes[0].generate(1)
         useraddress2 = self.nodes[1].getnewaddress()
         useraddress3 = self.nodes[2].getnewaddress()
@@ -244,7 +244,7 @@ class AssetZDAGTest(SyscoinTestFramework):
     #def burn_zdag_ancestor_doublespend(self):
     # verify zdag will flag any descendents of non-zdag tx but not ancestors
     def burn_zdag_ancestor_nonzdag(self):
-        self.basic_asset()
+        self.basic_asset(guid=None)
         self.nodes[0].generate(1)
         useraddress0 = self.nodes[0].getnewaddress()
         useraddress1 = self.nodes[1].getnewaddress()
