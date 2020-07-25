@@ -255,11 +255,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
-        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1*COIN))['txid']
+        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, int(1*COIN))['txid']
         self.sync_mempools(timeout=30)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
         # dbl spend inputs from tx3 (tx3, tx4 and tx5 should be flagged as conflict)
-        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
+        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress1, int(1*COIN))['txid']
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
         self.sync_mempools(timeout=30)
         for i in range(3):
