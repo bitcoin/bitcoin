@@ -24,6 +24,7 @@ class AssetZDAGTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         self.sync_blocks()
+        self.burn_zdag_doublespend_chain()
         self.basic_zdag_doublespend()
         self.burn_zdag_doublespend()
 
@@ -167,9 +168,42 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[3].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset':1.5,'maximumAmountAsset':1.5})
         assert_equal(len(out), 1)
 
-    def basic_asset(self):
-        self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
 
+
+    def burn_zdag_doublespend_chain(self):
+        # SYSX guid on regtest is 123456
+        self.basic_asset(123456)
+        self.nodes[0].generate(1)
+        useraddress0 = self.nodes[0].getnewaddress()
+        useraddress1 = self.nodes[0].getnewaddress()
+        useraddress2 = self.nodes[0].getnewaddress()
+        useraddress3 = self.nodes[0].getnewaddress()
+        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
+        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.1*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.01*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.001*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))
+        self.nodes[0].assetallocationburn(self.asset, int(0.01*COIN), '')
+        self.nodes[0].assetallocationburn(self.asset, int(0.01*COIN), '')
+        self.nodes[0].assetallocationburn(self.asset, int(0.001*COIN), '')
+        self.nodes[0].assetallocationburn(self.asset, int(0.001*COIN), '')
+        self.nodes[0].assetallocationburn(self.asset, int(0.0001*COIN), '')
+        self.nodes[0].assetallocationburn(self.asset, int(0.0001*COIN), '')
+        self.nodes[0].syscoinburntoassetallocation(self.asset, useraddress0, int(1*COIN))
+        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
+        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
+        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
+        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
+        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
+        self.nodes[0].generate(1)
+
+    def basic_asset(self, guid):
+        if guid is None:
+            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
+        else:
+            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
 
 if __name__ == '__main__':
     AssetZDAGTest().main()
