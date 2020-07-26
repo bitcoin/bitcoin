@@ -9,7 +9,7 @@ src/bitcoin-gui
 src/bitcoin-node
 src/bitcoin-tx
 src/bitcoin-wallet
-src/test/fuzz
+src/test/fuzz/*
 !src/test/fuzz/*.*
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
