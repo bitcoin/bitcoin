@@ -65,7 +65,7 @@ public:
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
         READWRITE(obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
-        Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
+        VARINT(obj.nBalance), VARINT(obj.nTotalSupply), VARINT(obj.nMaxSupply));
     }
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
