@@ -7,7 +7,6 @@
 #include <qt/addresstablemodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/transactiondesc.h>
 #include <qt/transactionrecord.h>
 #include <qt/walletmodel.h>
@@ -251,13 +250,12 @@ public:
     }
 };
 
-TransactionTableModel::TransactionTableModel(const PlatformStyle *_platformStyle, CWallet* _wallet, WalletModel *parent):
-        QAbstractTableModel(parent),
-        wallet(_wallet),
-        walletModel(parent),
-        priv(new TransactionTablePriv(_wallet, this)),
-        fProcessingQueuedTransactions(false),
-        platformStyle(_platformStyle)
+TransactionTableModel::TransactionTableModel(CWallet* _wallet, WalletModel* parent) :
+    QAbstractTableModel(parent),
+    wallet(_wallet),
+    walletModel(parent),
+    priv(new TransactionTablePriv(_wallet, this)),
+    fProcessingQueuedTransactions(false)
 {
     columns << QString() << QString() << QString() << tr("Date") << tr("Type") << tr("Address / Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet();

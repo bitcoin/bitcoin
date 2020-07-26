@@ -3,7 +3,6 @@
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/sendcoinsentry.h>
@@ -133,11 +132,10 @@ void TestGUI()
     wallet.SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.
-    std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
-    SendCoinsDialog sendCoinsDialog(platformStyle.get());
-    TransactionView transactionView(platformStyle.get());
+    SendCoinsDialog sendCoinsDialog;
+    TransactionView transactionView;
     OptionsModel optionsModel;
-    WalletModel walletModel(platformStyle.get(), &wallet, &optionsModel);
+    WalletModel walletModel(&wallet, &optionsModel);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -151,7 +149,7 @@ void TestGUI()
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
 
     // Check current balance on OverviewPage
-    OverviewPage overviewPage(platformStyle.get());
+    OverviewPage overviewPage;
     overviewPage.setWalletModel(&walletModel);
     QLabel* balanceLabel = overviewPage.findChild<QLabel*>("labelBalance");
     QString balanceText = balanceLabel->text();
@@ -161,7 +159,7 @@ void TestGUI()
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button
-    ReceiveCoinsDialog receiveCoinsDialog(platformStyle.get());
+    ReceiveCoinsDialog receiveCoinsDialog;
     receiveCoinsDialog.setModel(&walletModel);
     RecentRequestsTableModel* requestTableModel = walletModel.getRecentRequestsTableModel();
 

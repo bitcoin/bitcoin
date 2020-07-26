@@ -8,7 +8,6 @@
 
 #include <qt/addressbookpage.h>
 #include <qt/guiutil.h>
-#include <qt/platformstyle.h>
 #include <qt/walletmodel.h>
 
 #include <base58.h>
@@ -21,11 +20,10 @@
 
 #include <QClipboard>
 
-SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
+SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
-    model(0),
-    platformStyle(_platformStyle)
+    model(0)
 {
     ui->setupUi(this);
     pageButtons.addButton(ui->btnSignMessage, pageButtons.buttons().size());
@@ -35,19 +33,6 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 #endif
 
-#ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
-    ui->signMessageButton_SM->setIcon(QIcon());
-    ui->clearButton_SM->setIcon(QIcon());
-    ui->verifyMessageButton_VM->setIcon(QIcon());
-    ui->clearButton_VM->setIcon(QIcon());
-#else
-    ui->signMessageButton_SM->setIcon(QIcon(":/icons/edit"));
-    ui->clearButton_SM->setIcon(QIcon(":/icons/remove"));
-    ui->verifyMessageButton_VM->setIcon(QIcon(":/icons/transaction_0"));
-    ui->clearButton_VM->setIcon(QIcon(":/icons/remove"));
-#endif
-
-    // These icons are needed on Mac also
     ui->addressBookButton_SM->setIcon(QIcon(":/icons/address-book"));
     ui->pasteButton_SM->setIcon(QIcon(":/icons/editpaste"));
     ui->copySignatureButton_SM->setIcon(QIcon(":/icons/editcopy"));
@@ -132,7 +117,7 @@ void SignVerifyMessageDialog::on_addressBookButton_SM_clicked()
 {
     if (model && model->getAddressTableModel())
     {
-        AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
+        AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
         dlg.setModel(model->getAddressTableModel());
         if (dlg.exec())
         {
@@ -221,7 +206,7 @@ void SignVerifyMessageDialog::on_addressBookButton_VM_clicked()
 {
     if (model && model->getAddressTableModel())
     {
-        AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+        AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
         dlg.setModel(model->getAddressTableModel());
         if (dlg.exec())
         {

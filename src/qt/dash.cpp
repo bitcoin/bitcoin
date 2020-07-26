@@ -18,7 +18,6 @@
 #include <net.h>
 #include <qt/networkstyle.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/splashscreen.h>
 #include <qt/utilitydialog.h>
 #include <qt/winshutdownmonitor.h>
@@ -259,7 +258,6 @@ private:
     WalletModel *walletModel;
 #endif
     int returnValue;
-    const PlatformStyle *platformStyle;
     std::unique_ptr<QWidget> shutdownWindow;
 
     void startThread();
@@ -363,16 +361,6 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
-
-    // UI per-platform customization
-    // This must be done inside the BitcoinApplication constructor, or after it, because
-    // PlatformStyle::instantiate requires a QApplication
-    std::string platformName;
-    platformName = gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
-    platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
-    if (!platformStyle) // Fall back to "other" if specified name not found
-        platformStyle = PlatformStyle::instantiate("other");
-    assert(platformStyle);
 }
 
 BitcoinApplication::~BitcoinApplication()
@@ -399,8 +387,6 @@ BitcoinApplication::~BitcoinApplication()
     }
     delete optionsModel;
     optionsModel = 0;
-    delete platformStyle;
-    platformStyle = 0;
 }
 
 #ifdef ENABLE_WALLET
@@ -417,7 +403,7 @@ void BitcoinApplication::createOptionsModel(bool resetSettings)
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(platformStyle, networkStyle, 0);
+    window = new BitcoinGUI(networkStyle, 0);
 
     GUIUtil::loadTheme(window);
 
@@ -505,7 +491,7 @@ void BitcoinApplication::initializeResult(bool success)
     if(success)
     {
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
-        qWarning() << "Platform customization:" << platformStyle->getName();
+        qWarning() << "Platform customization:" << gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM).c_str();
 #ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
@@ -518,7 +504,7 @@ void BitcoinApplication::initializeResult(bool success)
         // TODO: Expose secondary wallets
         if (HasWallets())
         {
-            walletModel = new WalletModel(platformStyle, GetWallets()[0], optionsModel);
+            walletModel = new WalletModel(GetWallets()[0], optionsModel);
 
             window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
