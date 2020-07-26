@@ -109,8 +109,7 @@ static const std::map<QString, QString> mapStyleToTheme{
     {"general.css", ""},
     {"dark.css", "Dark"},
     {"light.css", "Light"},
-    {"traditional.css", "Traditional"},
-    {"scrollbars.css", ""}
+    {"traditional.css", "Traditional"}
 };
 
 /** loadFonts stores the SystemDefault font in osDefaultFont to be able to reference it later again */
@@ -1218,9 +1217,6 @@ void loadStyleSheet(QWidget* widget, bool fForceUpdate)
         std::vector<QString> vecFiles;
         // If light/dark theme is used load general styles first
         if (dashThemeActive()) {
-#ifndef Q_OS_MAC
-            vecFiles.push_back(pathToFile("scrollbars"));
-#endif
             vecFiles.push_back(pathToFile("general"));
         }
         vecFiles.push_back(pathToFile(getActiveTheme()));
