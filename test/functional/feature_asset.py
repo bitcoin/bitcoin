@@ -70,7 +70,7 @@ class AssetTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, {})
         # uint64 limits
         # largest amount that we can use, without compression overflow of uint (~2 quintillion) which is more than eth's 1 quintillion
-        maxUint = (2^64) / 9
+        maxUint = int((2**64) / 9)
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, maxUint-1, maxUint, 31, {})['asset_guid']
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(asset)
