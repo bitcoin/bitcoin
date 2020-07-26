@@ -29,7 +29,7 @@ class TestP2PConn(P2PInterface):
         self.block_receive_map[message.block.sha256] += 1
 
 class MaxUploadTest(BitcoinTestFramework):
- 
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

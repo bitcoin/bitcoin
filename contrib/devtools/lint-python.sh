@@ -15,6 +15,8 @@
 # E133 closing bracket is missing indentation
 # E223 tab before operator
 # E224 tab after operator
+# E242 tab after ','
+# E266 too many leading '#' for block comment
 # E271 multiple spaces after keyword
 # E272 multiple spaces before keyword
 # E273 tab after keyword
@@ -22,7 +24,10 @@
 # E275 missing whitespace after keyword
 # E304 blank lines found after function decorator
 # E306 expected 1 blank line before a nested definition
+# E401 multiple imports on one line
+# E402 module level import not at top of file
 # E502 the backslash is redundant between brackets
+# E701 multiple statements on one line (colon)
 # E702 multiple statements on one line (semicolon)
 # E703 statement ends with a semicolon
 # E714 test for object identity should be "is not"
@@ -30,6 +35,8 @@
 # E741 do not use variables named "l", "O", or "I" # disabled
 # E742 do not define classes named "l", "O", or "I"
 # E743 do not define functions named "l", "O", or "I"
+# E901 SyntaxError: invalid syntax
+# E902 TokenError: EOF in multi-line string
 # F401 module imported but unused
 # F402 import module from line N shadowed by loop variable
 # F404 future import(s) name after other statements
@@ -49,15 +56,18 @@
 # F707 an except: block as not the last exception handler
 # F811 redefinition of unused name from line N
 # F812 list comprehension redefines 'foo' from line N
+# F821 undefined name 'Foo'
 # F822 undefined name name in __all__
 # F823 local variable name … referenced before assignment
 # F831 duplicate argument name in function definition
 # W292 no newline at end of file
+# W293 blank line contains whitespace
 # W504 line break after binary operator # disabled
 # W601 .has_key() is deprecated, use "in"
 # W602 deprecated form of raising exception
 # W603 "<>" is deprecated, use "!="
 # W604 backticks are deprecated, use "repr()"
 # W605 invalid escape sequence "x" # disabled
+# W606 'async' and 'await' are reserved keywords starting with Python 3.7
 
-git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E271,E272,E273,E274,E275,E304,E306,E502,E702,E703,E714,E721,E742,E743,F401,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F822,F823,F831,W292,W601,W602,W603,W604 #,E741,W504,W605
+git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,W292,W293,W601,W602,W603,W604,W606 #,E741,W504,W605

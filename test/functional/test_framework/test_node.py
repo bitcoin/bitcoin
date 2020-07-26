@@ -10,7 +10,7 @@ import errno
 import http.client
 import json
 import logging
-import os
+import os.path
 import re
 import subprocess
 import time
@@ -46,7 +46,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, dirname, extra_args_from_options, rpchost, timewait, binary, stderr, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
+    def __init__(self, i, dirname, extra_args_from_options, rpchost, timewait, bitcoind, bitcoin_cli, stderr, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
         self.datadir = os.path.join(dirname, "node" + str(i))
         self.rpchost = rpchost
@@ -55,10 +55,7 @@ class TestNode():
         else:
             # Wait for up to 60 seconds for the RPC server to respond
             self.rpc_timeout = 60
-        if binary is None:
-            self.binary = os.getenv("BITCOIND", "dashd")
-        else:
-            self.binary = binary
+        self.binary = bitcoind
         self.stderr = stderr
         self.coverage_dir = coverage_dir
         self.mocktime = mocktime
@@ -70,7 +67,7 @@ class TestNode():
         self.extra_args_from_options = extra_args_from_options
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
-        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "dash-cli"), self.datadir)
+        self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli
 
         # Don't try auto backups (they fail a lot when running tests)

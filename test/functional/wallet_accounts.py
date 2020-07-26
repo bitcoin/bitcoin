@@ -114,7 +114,7 @@ class WalletAccountsTest(BitcoinTestFramework):
             expected_account_balances[account.name] = 0
         assert_equal(node.listaccounts(), expected_account_balances)
         assert_equal(node.getbalance(""), 52000)
-        
+
         # Check that setaccount can assign an account to a new unused address.
         for account in accounts:
             address = node.getaccountaddress("")
@@ -122,7 +122,7 @@ class WalletAccountsTest(BitcoinTestFramework):
             account.add_address(address)
             account.verify(node)
             assert(address not in node.getaddressesbyaccount(""))
-        
+
         # Check that addmultisigaddress can assign accounts.
         for account in accounts:
             addresses = []

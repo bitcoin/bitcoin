@@ -7,8 +7,8 @@ except ImportError as e:
     raise ImportError("This script must be run in GDB: ", str(e))
 import sys
 import os
-sys.path.append(os.getcwd())
 import common_helpers
+sys.path.append(os.getcwd())
 
 
 def find_type(orig, name):
