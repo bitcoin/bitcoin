@@ -297,14 +297,14 @@ struct AssetCoinInfoCompression
 {
     template<typename Stream, typename I> void Ser(Stream& s, I val)
     {
-        s << VARINT(val.nAsset);
+        s << val.nAsset;
         if(val.nAsset > 0) {
             s << VARINT(val.nValue);
         }
     }
     template<typename Stream, typename I> void Unser(Stream& s, I& val)
     {
-        s >> VARINT(val.nAsset);
+        s >> val.nAsset;
         if(val.nAsset > 0) {
             s >> VARINT(val.nValue);
         }
