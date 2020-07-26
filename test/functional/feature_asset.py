@@ -18,6 +18,7 @@ class AssetTest(SyscoinTestFramework):
         self.nodes[0].generate(200)
         self.basic_asset()
         self.asset_description_too_big()
+        self.asset_maxsupply()
 
     def basic_asset(self):
         asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
@@ -49,6 +50,28 @@ class AssetTest(SyscoinTestFramework):
 
         # data too big
         assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000*COIN, 10000*COIN, 31, {})
+    
+    def asset_maxsupply(self):
+        # 256 bytes long
+	    gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 0, 31, {})['asset_guid']
+        self.nodes[0].generate(1)
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 1*COIN, 31, {})['asset_guid']
+        self.nodes[0].generate(1)
+        # cannot increase supply
+        self.nodes[0].assetupdate(asset, '', '', 0.1, 31, {})
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 2*COIN, 31, {})['asset_guid']
+        self.nodes[0].generate(1)
+        self.nodes[0].assetupdate(asset, '', '', 0.1, 31, {})
+        self.nodes[0].generate(1)
+        self.nodes[0].assetupdate(asset, '', '', 0.9, 31, {})
+        self.nodes[0].generate(1)
+        # would go over 2 coins supply
+        self.nodes[0].assetupdate(asset, '', '', 0.1, 31, {})
+        self.nodes[0].generate(1)
+        # balance > max supply
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, {})['asset_guid']
+        
 
 if __name__ == '__main__':
     AssetTest().main()
