@@ -247,6 +247,9 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
+    if (nTotal > MAX_ASSET) {
+        return FormatSyscoinErrorMessage(state, "mint-value-overflow", bSanityCheck);
+    }
     if(!fJustCheck) {
         if(!bSanityCheck && nHeight > 0) {   
             LogPrint(BCLog::SYS,"CONNECTED ASSET MINT: op=%s asset=%d hash=%s height=%d fJustCheck=%s\n",
@@ -565,6 +568,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
             }
+            if (storedAssetRef.nMaxSupply > MAX_ASSET) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
+            }
             if (storedAssetRef.nTotalSupply != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
@@ -608,11 +614,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             storedAssetRef.nTotalSupply += theAsset.nBalance;
             storedAssetRef.nBalance += theAsset.nBalance;
             // overflow
-            if (theAsset.nBalance > 0 && storedAssetRef.nBalance <= theAsset.nBalance) {
+            if (theAsset.nBalance > MAX_ASSET) {
+                return FormatSyscoinErrorMessage(state, "asset-mint-overflow", bSanityCheck);
+            }
+            if (theAsset.nBalance > 0 && (storedAssetRef.nBalance <= theAsset.nBalance || storedAssetRef.nBalance > MAX_ASSET)) {
                 return FormatSyscoinErrorMessage(state, "asset-amount-overflow", bSanityCheck);
             }
             // overflow
-            if (theAsset.nBalance > 0 && storedAssetRef.nTotalSupply <= theAsset.nBalance) {
+            if (theAsset.nBalance > 0 && (storedAssetRef.nTotalSupply <= theAsset.nBalance || storedAssetRef.nTotalSupply > MAX_ASSET)) {
                 return FormatSyscoinErrorMessage(state, "asset-supply-overflow", bSanityCheck);
             }
             if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {

@@ -23,8 +23,7 @@ static const CAmount COIN = 100000000;
  * for the creation of coins out of thin air modification could lead to a fork.
  * */
 static const CAmount MAX_MONEY = 888000000 * COIN;
-inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
-
 // SYSCOIN
-static const uint64_t MAX_ASSET = std::numeric_limits<uint64_t>::max();
+static const uint64_t MAX_ASSET = std::numeric_limits<uint64_t>::max() / 9;
+inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 #endif //  SYSCOIN_AMOUNT_H

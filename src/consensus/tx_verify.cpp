@@ -191,7 +191,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-val-input");
                 }
                 // overflow
-                if(!zeroVal && inRes.first->second.second <= nPrevTotal) {
+                if(!zeroVal && (inRes.first->second.second <= nPrevTotal || inRes.first->second.second > MAX_ASSET)) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-overflow");
                 }
             }
