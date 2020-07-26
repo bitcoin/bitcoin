@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/client.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 
 #include <set>
@@ -196,10 +197,7 @@ public:
 
 CRPCConvertTable::CRPCConvertTable()
 {
-    const unsigned int n_elem =
-        (sizeof(vRPCConvertParams) / sizeof(vRPCConvertParams[0]));
-
-    for (unsigned int i = 0; i < n_elem; i++) {
+    for (unsigned int i = 0; i < ARRAYLEN(vRPCConvertParams); i++) {
         members.insert(std::make_pair(vRPCConvertParams[i].methodName,
                                       vRPCConvertParams[i].paramIdx));
         membersByName.insert(std::make_pair(vRPCConvertParams[i].methodName,

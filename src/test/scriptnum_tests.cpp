@@ -5,6 +5,7 @@
 #include <script/script.h>
 #include <test/scriptnum10.h>
 #include <test/util/setup_common.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 #include <limits.h>
@@ -164,9 +165,9 @@ static void RunOperators(const int64_t& num1, const int64_t& num2)
 
 BOOST_AUTO_TEST_CASE(creation)
 {
-    for(size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
+    for(size_t i = 0; i < ARRAYLEN(values); ++i)
     {
-        for(size_t j = 0; j < sizeof(offsets) / sizeof(offsets[0]); ++j)
+        for(size_t j = 0; j < ARRAYLEN(offsets); ++j)
         {
             RunCreate(values[i]);
             RunCreate(values[i] + offsets[j]);
@@ -177,9 +178,9 @@ BOOST_AUTO_TEST_CASE(creation)
 
 BOOST_AUTO_TEST_CASE(operators)
 {
-    for(size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
+    for(size_t i = 0; i < ARRAYLEN(values); ++i)
     {
-        for(size_t j = 0; j < sizeof(offsets) / sizeof(offsets[0]); ++j)
+        for(size_t j = 0; j < ARRAYLEN(offsets); ++j)
         {
             RunOperators(values[i], values[i]);
             RunOperators(values[i], -values[i]);

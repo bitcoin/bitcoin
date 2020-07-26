@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/platformstyle.h>
+#include <util/strencodings.h>
 
 #include <QApplication>
 #include <QColor>
@@ -23,7 +24,6 @@ static const struct {
     /* Other: linux, unix, ... */
     {"other", true, true, false}
 };
-static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
 namespace {
 /* Local functions for colorizing single-color images */
@@ -121,7 +121,7 @@ QIcon PlatformStyle::TextColorIcon(const QIcon& icon) const
 
 const PlatformStyle *PlatformStyle::instantiate(const QString &platformId)
 {
-    for (unsigned x=0; x<platform_styles_count; ++x)
+    for (unsigned x=0; x<ARRAYLEN(platform_styles); ++x)
     {
         if (platformId == platform_styles[x].platformId)
         {

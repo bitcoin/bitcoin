@@ -3,12 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/data.h>
+#include <util/strencodings.h>
 
 namespace benchmark {
 namespace data {
 
 #include <bench/data/block413567.raw.h>
-const std::vector<uint8_t> block413567{block413567_raw, block413567_raw + sizeof(block413567_raw) / sizeof(block413567_raw[0])};
+const std::vector<uint8_t> block413567{block413567_raw, block413567_raw + ARRAYLEN(block413567_raw)};
 
 } // namespace data
 } // namespace benchmark
