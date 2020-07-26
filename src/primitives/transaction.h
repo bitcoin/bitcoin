@@ -299,16 +299,14 @@ struct AssetCoinInfoCompression
     {
         s << VARINT(val.nAsset);
         if(val.nAsset > 0) {
-            s << VARINT(CompressAmount(val.nValue));
+            s << VARINT(val.nValue);
         }
     }
     template<typename Stream, typename I> void Unser(Stream& s, I& val)
     {
         s >> VARINT(val.nAsset);
         if(val.nAsset > 0) {
-            uint64_t v;
-            s >> VARINT(v);
-            val.nValue = DecompressAmount(v);
+            s >> VARINT(val.nValue);
         }
     }
 };
@@ -428,7 +426,7 @@ struct TxOutCompression
 // SYSCOIN
 struct TxOutCoinCompression
 {
-    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
+    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(VARINT(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
 
 
@@ -438,7 +436,7 @@ public:
     uint64_t nValue;
 
     SERIALIZE_METHODS(CAssetOut, obj) {
-        READWRITE(VARINT(obj.n), Using<AmountCompression>(obj.nValue));
+        READWRITE(VARINT(obj.n), VARINT(obj.nValue));
     }
 
     CAssetOut(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
