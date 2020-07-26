@@ -45,6 +45,10 @@ public:
         ThirdPartyTxUrls,       // QString
         Digits,                 // QString
         Theme,                  // QString
+        FontFamily,             // int
+        FontScale,              // int
+        FontWeightNormal,       // int
+        FontWeightBold,         // int
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
