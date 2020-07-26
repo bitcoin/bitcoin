@@ -56,7 +56,7 @@ class AssetTest(SyscoinTestFramework):
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 1*COIN, 31, {})['asset_guid']
         self.nodes[0].generate(1)
         # cannot increase supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate(asset, '', '', int(0.1*COIN), 31, {}))
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, {})
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 2*COIN, 31, {})['asset_guid']
         self.nodes[0].generate(1)
         self.nodes[0].assetupdate(asset, '', '', int(0.1*COIN), 31, {})
@@ -64,10 +64,10 @@ class AssetTest(SyscoinTestFramework):
         self.nodes[0].assetupdate(asset, '', '', int(0.9*COIN), 31, {})
         self.nodes[0].generate(1)
         # would go over 2 coins supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate(asset, '', '', int(0.1*COIN), 31, {}))
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, {})
         self.nodes[0].generate(1)
         # balance > max supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, {})['asset_guid'])
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, {})
         
 if __name__ == '__main__':
     AssetTest().main()
