@@ -47,7 +47,6 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], asset1)
         assetInfo = self.nodes[1].assetinfo(asset1)
         assert_equal(assetInfo['asset_guid'], asset1)
-
         # data too big
         assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000*COIN, 10000*COIN, 31, {})
     
@@ -72,6 +71,5 @@ class AssetTest(SyscoinTestFramework):
         # balance > max supply
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, {})['asset_guid']
         
-
 if __name__ == '__main__':
     AssetTest().main()
