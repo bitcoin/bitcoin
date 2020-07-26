@@ -62,6 +62,7 @@
 #include <walletinitinterface.h>
 
 #include <functional>
+#include <map>
 #include <set>
 #include <stdint.h>
 #include <stdio.h>
@@ -693,6 +694,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     // -reindex
     if (fReindex) {
         int nFile = 0;
+        std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
         while (true) {
             FlatFilePos pos(nFile, 0);
             if (!fs::exists(GetBlockPosFilename(pos)))
@@ -701,7 +703,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
             if (!file)
                 break; // This error is logged in OpenBlockFile
             LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-            LoadExternalBlockFile(chainparams, file, &pos);
+            LoadExternalBlockFile(chainparams, file, &pos, &blocks_with_unknown_parent);
             if (ShutdownRequested()) {
                 LogPrintf("Shutdown requested. Exit %s\n", __func__);
                 return;

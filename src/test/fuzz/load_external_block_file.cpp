@@ -11,6 +11,7 @@
 #include <validation.h>
 
 #include <cstdint>
+#include <map>
 #include <vector>
 
 void initialize()
@@ -26,6 +27,11 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     if (fuzzed_block_file == nullptr) {
         return;
     }
-    FlatFilePos flat_file_pos;
-    LoadExternalBlockFile(Params(), fuzzed_block_file, fuzzed_data_provider.ConsumeBool() ? &flat_file_pos : nullptr);
+    if (fuzzed_data_provider.ConsumeBool()) {
+        FlatFilePos flat_file_pos;
+        std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
+        LoadExternalBlockFile(Params(), fuzzed_block_file, &flat_file_pos, &blocks_with_unknown_parent);
+    } else {
+        LoadExternalBlockFile(Params(), fuzzed_block_file);
+    }
 }
