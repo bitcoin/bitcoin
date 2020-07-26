@@ -48,6 +48,9 @@ BOOST_AUTO_TEST_CASE(compress_amounts)
     // SYSCOIN
     auto compressed = CompressAmount(888000000*COIN);
     BOOST_CHECK_EQUAL(888000000*COIN, DecompressAmount(compressed));
+    // max amount that can be compressed without unsigned integer overflow its a bit above 2 quintillion range
+    compressed = CompressAmount((2^64)/9);
+    BOOST_CHECK_EQUAL((2^64)/9, DecompressAmount(compressed));
     for (uint64_t i = 1; i <= NUM_MULTIPLES_UNIT; i++)
         BOOST_CHECK(TestEncode(i));
 
