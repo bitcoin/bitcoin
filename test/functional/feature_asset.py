@@ -69,23 +69,25 @@ class AssetTest(SyscoinTestFramework):
         # balance > max supply
         assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, {})
         # uint64 limits
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 18446744073709551614, 18446744073709551615, 31, {})['asset_guid']
+        # largest amount that we can use, without compression overflow of uint (~2 quintillion) which is more than eth's 1 quintillion
+        maxUint = (2^64) / 9
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, maxUint-1, maxUint, 31, {})['asset_guid']
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
-        assert_equal(assetInfo['total_supply'], 18446744073709551614)
-        assert_equal(assetInfo['balance'], 18446744073709551614)
-        assert_equal(assetInfo['max_supply'], 18446744073709551615)
+        assert_equal(assetInfo['total_supply'], maxUint-1)
+        assert_equal(assetInfo['balance'], maxUint-1)
+        assert_equal(assetInfo['max_supply'], maxUint)
         self.nodes[0].assetupdate(asset, '', '', 1, 31, {})
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
-        assert_equal(assetInfo['total_supply'], 18446744073709551615)
-        assert_equal(assetInfo['balance'], 18446744073709551615)
-        assert_equal(assetInfo['max_supply'], 18446744073709551615)
+        assert_equal(assetInfo['total_supply'], maxUint)
+        assert_equal(assetInfo['balance'], maxUint)
+        assert_equal(assetInfo['max_supply'], maxUint)
         assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assetupdate, asset, '', '', 1, 31, {})
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 18446744073709551615, 18446744073709551616, 31, {})
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 18446744073709551616, 18446744073709551616, 31, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint, maxUint+1, 31, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint+1, maxUint+1, 31, {})
         
 if __name__ == '__main__':
     AssetTest().main()
