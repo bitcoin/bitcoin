@@ -362,6 +362,9 @@ void CMutableTransaction::LoadAssets()
                 if(nOut >= nVoutSize) {
                     throw std::ios_base::failure("asset vout out of range");
                 }
+                if(voutAsset.nValue > MAX_ASSET) {
+                    throw std::ios_base::failure("asset vout value overflow");
+                }
                 // store in vout
                 CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
                 coinInfo.nAsset = nAsset;
