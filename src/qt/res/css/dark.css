@@ -17,7 +17,7 @@ Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
 /* do not modify! section updated by update-css-files.py
 <colors>
 
-# Used colors in dark.css for commit a50bd2371b
+# Used colors in dark.css for commit 44de8a93f2
 
 #00000000
 #333
@@ -487,7 +487,8 @@ QScrollBar
 ******************************************************/
 
 /* Do NOT apply any styles to QScrollBar here,
-* it's OS dependent and should be handled via platform specific code.
+* it's OS dependent and should be handled via platform specific code at the
+* end of the file.
 */
 
 /******************************************************
@@ -829,11 +830,45 @@ be kept in mind when adding sections to avoid unexpected overwriting.
 *******************************************************
 ******************************************************/
 
-<os="macosx, windows, other">
+<os="windows,other">
 
-/* Example section to add styles for all operating systems
-   Remove any to exclude it.
-*/
+/******************************************************
+QScrollBar
+******************************************************/
+
+QScrollBar::add-page,
+QScrollBar::sub-page {
+    background-color: #39393b;
+}
+QScrollBar::handle:vertical,
+QScrollBar::handle:horizontal {
+    background-color: #4a4a4b;
+}
+QScrollBar:handle:horizontal:hover,
+QScrollBar:handle:vertical:hover {
+    background-color: #585858;
+}
+QScrollBar:handle:horizontal:pressed,
+QScrollBar:handle:vertical:pressed {
+    background-color: #4a4a4b;
+}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    background-color: #585858;
+}
+QScrollBar::add-line:vertical:hover,
+QScrollBar::sub-line:vertical:hover,
+QScrollBar::add-line:horizontal:hover,
+QScrollBar::sub-line:horizontal:hover {
+    background-color: #4a4a4b;
+}
+QScrollBar::add-line:vertical:pressed,
+QScrollBar::sub-line:vertical:pressed,
+QScrollBar::add-line:horizontal:pressed,
+QScrollBar::sub-line:horizontal:pressed {
+    background-color: #39393b;
+}
 
 </os>
-

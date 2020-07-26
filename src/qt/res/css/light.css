@@ -17,7 +17,7 @@ Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
 /* do not modify! section updated by update-css-files.py
 <colors>
 
-# Used colors in light.css for commit a50bd2371b
+# Used colors in light.css for commit 44de8a93f2
 
 #00000000
 #555
@@ -27,6 +27,7 @@ Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
 #c7c7c7
 #d2d2d2
 #dcdcdc
+#e0e0e0
 #eaeaec
 #f2f2f4
 #ccfafafa
@@ -468,7 +469,8 @@ QScrollBar
 ******************************************************/
 
 /* Do NOT apply any styles to QScrollBar here,
-* it's OS dependent and should be handled via platform specific code.
+* it's OS dependent and should be handled via platform specific code at the
+* end of the file.
 */
 
 /******************************************************
@@ -811,12 +813,46 @@ be kept in mind when adding sections to avoid unexpected overwriting.
 *******************************************************
 ******************************************************/
 
+<os="windows,other">
 
-<os="macosx, windows, other">
+/******************************************************
+QScrollBar
+******************************************************/
 
-/* Example section to add styles for all operating systems
-   Remove any to exclude it.
-*/
+QScrollBar::add-page,
+QScrollBar::sub-page {
+    background-color: #f2f2f4;
+}
+QScrollBar::handle:vertical,
+QScrollBar::handle:horizontal {
+    background-color: #dcdcdc;
+}
+QScrollBar:handle:horizontal:hover,
+QScrollBar:handle:vertical:hover {
+    background-color: #d2d2d2;
+}
+QScrollBar:handle:horizontal:pressed,
+QScrollBar:handle:vertical:pressed {
+    background-color: #c7c7c7;
+}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    background-color: #dcdcdc;
+}
+QScrollBar::add-line:vertical:hover,
+QScrollBar::sub-line:vertical:hover,
+QScrollBar::add-line:horizontal:hover,
+QScrollBar::sub-line:horizontal:hover {
+    background-color: #d2d2d2;
+}
+QScrollBar::add-line:vertical:pressed,
+QScrollBar::sub-line:vertical:pressed,
+QScrollBar::add-line:horizontal:pressed,
+QScrollBar::sub-line:horizontal:pressed {
+    background-color: #e0e0e0;
+}
 
 </os>
 

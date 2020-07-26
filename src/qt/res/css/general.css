@@ -11,8 +11,7 @@ loaded and combined in `GUIUtil::loadStyleSheet()` in guitil.cpp.
 Hierarchy:
 
 *   general.css - base layout: Loaded first if selected theme is not "Traditional" (traditional.css)
-*   scrollbars.css - custom scrollbars: Loaded second only for windows/linux if general.css is loaded
-*   <theme.css> - theme css file:  Always loaded and loaded last.
+*   <theme.css> - theme css file: Always loaded last.
 
 To replace <theme.css> there are currently the following themes available:
 
@@ -31,7 +30,7 @@ in the <theme.css> file.
 /* do not modify! section updated by update-css-files.py
 <colors>
 
-# Used colors in general.css for commit a50bd2371b
+# Used colors in general.css for commit 44de8a93f2
 
 #00000000
 #096e03
@@ -801,7 +800,8 @@ QScrollBar
 ******************************************************/
 
 /* Do NOT apply any styles to QScrollBar here,
-* it's OS dependent and should be handled via platform specific code.
+* it's OS dependent and should be handled via platform specific code at the
+* end of the file.
 */
 
 /******************************************************
@@ -1935,12 +1935,156 @@ be kept in mind when adding sections to avoid unexpected overwriting.
 *******************************************************
 ******************************************************/
 
+<os="windows,other">
 
-<os="macosx, windows, other">
+/******************************************************
+QScrollBar
+******************************************************/
 
-/* Example section to add styles for all operating systems
-   Remove any to exclude it.
-*/
+QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
+    border: 0;
+    width: 18px;
+    margin: 18px 0px 18px 0px;
+}
+
+QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
+    border: 0;
+    height: 18px;
+    padding: 0px 18px 0px 18px;
+}
+
+QScrollBar:handle:horizontal:hover,
+QScrollBar:handle:vertical:hover { /* Horizontal Scroll Bar Attributes */
+    background-color: red;
+}
+
+QScrollBar:handle:horizontal:pressed,
+QScrollBar:handle:vertical:pressed { /* Horizontal Scroll Bar Attributes */
+    background-color: red;
+}
+
+QScrollBar::handle:vertical { /* Scroll Bar Slider - vertical */
+    background-color: red;
+    min-height: 10px;
+}
+
+QScrollBar::handle:horizontal { /* Scroll Bar Slider - horizontal */
+    background-color: red;
+    min-width: 10px;
+}
+
+QScrollBar::add-page,
+QScrollBar::sub-page { /* Scroll Bar Background */
+    background-color: red;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal { /* Define Arrow Button Dimensions */
+    background-color: red;
+    border: 0px solid red;
+    width: 18px;
+    height: 18px;
+}
+
+QScrollBar::add-line:vertical:hover,
+QScrollBar::sub-line:vertical:hover,
+QScrollBar::add-line:horizontal:hover,
+QScrollBar::sub-line:horizontal:hover { /* Define Arrow Button Dimensions */
+    background-color: red;
+}
+
+QScrollBar::add-line:vertical:pressed,
+QScrollBar::sub-line:vertical:pressed,
+QScrollBar::add-line:horizontal:pressed,
+QScrollBar::sub-line:horizontal:pressed {
+    background-color: red;
+}
+
+QScrollBar::sub-line:vertical { /* Vertical - top button position */
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:vertical { /* Vertical - bottom button position */
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal { /* Vertical - left button position */
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:horizontal { /* Vertical - right button position */
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar:up-arrow,
+QScrollBar:down-arrow,
+QScrollBar:left-arrow,
+QScrollBar:right-arrow { /* Arrows Icon */
+    width: 18px;
+    height: 18px;
+}
+
+QScrollBar:up-arrow {
+    border-image: url(':/images/arrow_up_normal');
+}
+QScrollBar:up-arrow:hover {
+    border-image: url(':/images/arrow_up_hover');
+}
+QScrollBar:up-arrow:pressed {
+    border-image: url(':/images/arrow_up_pressed');
+}
+QScrollBar:up-arrow:disabled {
+    border-image: url(':/images/arrow_light_up_hover');
+}
+
+QScrollBar:down-arrow {
+    border-image: url(':/images/arrow_down_normal');
+}
+QScrollBar:down-arrow:hover {
+    border-image: url(':/images/arrow_down_hover');
+}
+QScrollBar:down-arrow:pressed {
+    border-image: url(':/images/arrow_down_pressed');
+}
+QScrollBar:down-arrow:disabled {
+    border-image: url(':/images/arrow_light_down_hover');
+}
+
+QScrollBar:left-arrow {
+    border-image: url(':/images/arrow_left_normal');
+}
+QScrollBar:left-arrow:hover {
+    border-image: url(':/images/arrow_left_hover');
+}
+QScrollBar:left-arrow:pressed {
+    border-image: url(':/images/arrow_left_pressed');
+}
+QScrollBar:left-arrow:disabled {
+    border-image: url(':/images/arrow_light_left_hover');
+}
+
+QScrollBar:right-arrow {
+    border-image: url(':/images/arrow_right_normal');
+}
+QScrollBar:right-arrow:hover {
+    border-image: url(':/images/arrow_right_hover');
+}
+QScrollBar:right-arrow:pressed {
+    border-image: url(':/images/arrow_right_pressed');
+}
+QScrollBar:right-arrow:disabled {
+    border-image: url(':/images/arrow_light_right_hover');
+}
+
+QDialog#HelpMessageDialog QScrollBar:vertical,
+QDialog#HelpMessageDialog QScrollBar:horizontal {
+    border: 0;
+}
 
 </os>
-

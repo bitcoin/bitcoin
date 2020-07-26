@@ -56,7 +56,6 @@
     </qresource>
     <qresource prefix="/css">
         <file alias="general">res/css/general.css</file>
-        <file alias="scrollbars">res/css/scrollbars.css</file>
         <file alias="Dark">res/css/dark.css</file>
         <file alias="Light">res/css/light.css</file>
         <file alias="Traditional">res/css/traditional.css</file>
