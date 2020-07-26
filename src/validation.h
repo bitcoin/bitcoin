@@ -685,7 +685,10 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Import blocks from an external file */
-    void LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp = nullptr);
+    void LoadExternalBlockFile(
+        FILE* fileIn,
+        FlatFilePos* dbp = nullptr,
+        std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
 
     /**
      * Update the on-disk chain state.

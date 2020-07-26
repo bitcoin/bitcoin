@@ -501,6 +501,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         // -reindex
         if (fReindex) {
             int nFile = 0;
+            std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
             while (true) {
                 FlatFilePos pos(nFile, 0);
                 if (!fs::exists(GetBlockPosFilename(pos))) {
@@ -511,7 +512,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
                     break; // This error is logged in OpenBlockFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos);
+                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
                 if (ShutdownRequested()) {
                     LogPrintf("Shutdown requested. Exit %s\n", __func__);
                     return;
