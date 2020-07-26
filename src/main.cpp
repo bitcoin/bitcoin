@@ -69,6 +69,7 @@ CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
+bool fPlatformReindex = false;
 bool fVerifying = false;
 bool fTxIndex = true;
 bool fIsBareMultisigStd = true;

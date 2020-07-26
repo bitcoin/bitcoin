@@ -73,6 +73,8 @@ namespace Platform
 
         void WriteTotalProtocolCount(std::size_t count);
         bool ReadTotalProtocolCount(std::size_t & count);
+        bool CleanupDb();
+        void Reindex();
 
     private:
         explicit PlatformDb(

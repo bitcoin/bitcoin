@@ -1229,6 +1229,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 7: load block chain
 
     fReindex = GetBoolArg("-reindex", false);
+    fPlatformReindex = GetBoolArg("-platformreindex", false);
 
     // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
     filesystem::path blocksDir = GetDataDir() / "blocks";
@@ -1295,7 +1296,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pblocktree;
                 Platform::PlatformDb::DestroyInstance();
 
-                Platform::PlatformDb::CreateInstance(nPlatformDbCache, opt, false, fReindex);
+                Platform::PlatformDb::CreateInstance(nPlatformDbCache, opt, false, fReindex || fPlatformReindex);
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
@@ -1329,6 +1330,10 @@ bool AppInit2(boost::thread_group& threadGroup)
                     break;
                 }
 
+                if (fPlatformReindex) {
+                    Platform::PlatformDb::Instance().Reindex();
+                }
+
                 uiInterface.InitMessage(_("Verifying blocks..."));
                 fVerifying = true;
                 if (!CVerifyDB().VerifyDB(pcoinsdbview, GetArg("-checklevel", 4),
@@ -1344,6 +1349,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 break;
             }
 
+            Platform::PlatformDb::Instance().CleanupDb();
             fLoaded = true;
         } while(false);
 

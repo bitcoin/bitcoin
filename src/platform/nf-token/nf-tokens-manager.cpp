@@ -533,7 +533,7 @@ namespace Platform
         }
         else
         {
-            LogPrintf("%s: Can't read NFT index %s:%s from the database", __func__, std::to_string(protocolId), tokenId.ToString());
+            LogPrintf("%s: Can't read NFT index %s:%s from the database\n", __func__, std::to_string(protocolId), tokenId.ToString());
             return nftIndex;
         }
     }

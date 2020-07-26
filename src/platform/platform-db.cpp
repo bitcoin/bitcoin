@@ -7,6 +7,7 @@
 #include "platform-db.h"
 #include "platform/specialtx.h"
 #include "platform/nf-token/nf-token-protocol-reg-tx.h"
+#include "platform/nf-token/nf-tokens-manager.h"
 #include "main.h"
 
 namespace Platform
@@ -334,5 +335,126 @@ namespace Platform
         }
 
         return {blockIndexIt->second, protoDiskIndex.RegTxHash(), protoDiskIndex.NftProtoPtr()};
+    }
+
+    bool PlatformDb::CleanupDb()
+    {
+        LogPrintf("%s", __func__);
+        std::unique_ptr<leveldb::Iterator> dbIt(m_db.NewIterator());
+        for (dbIt->SeekToFirst(); dbIt->Valid(); dbIt->Next())
+        {
+            if (dbIt->key().starts_with(std::string(1, DB_NFT)))
+            {
+                leveldb::Slice sliceValue = dbIt->value();
+                leveldb::Slice sliceKey = dbIt->key();
+                CDataStream streamValue(sliceValue.data(), sliceValue.data() + sliceValue.size(), SER_DISK, CLIENT_VERSION);
+                CDataStream keyStreamValue(sliceKey.data(), sliceKey.data() + sliceKey.size(), SER_DISK, CLIENT_VERSION);
+                NfTokenDiskIndex nftDiskIndex;
+                std::tuple<char, uint64_t, uint256> keyTuple;
+
+                try
+                {
+                    streamValue >> nftDiskIndex;
+                    keyStreamValue >> keyTuple;
+                }
+                catch (const std::exception & ex)
+                {
+                    LogPrintf("%s : Deserialize or I/O error - %s", __func__, ex.what());
+                    return false;
+                }
+
+                auto blockIndexIt = mapBlockIndex.find(nftDiskIndex.BlockHash());
+                if (blockIndexIt == mapBlockIndex.end())
+                {
+                    LogPrintf("Block index not found for nftDiskIndex. Removing from platform db\n");
+                    {
+                        auto platformDbTx = BeginTransaction();
+                        EraseNftDiskIndex(std::get<1>(keyTuple), std::get<2>(keyTuple));
+                        platformDbTx->Commit();
+                    }
+
+                    {
+                        auto platformDbTx = BeginTransaction();
+                        std::size_t totalCount = 0;
+                        this->Read(std::make_pair(DB_NFT_TOTAL, std::get<1>(keyTuple)), totalCount);
+                        this->Write(std::make_pair(DB_NFT_TOTAL, std::get<1>(keyTuple)), --totalCount);
+                        platformDbTx->Commit();
+                    }
+                }
+            }
+            else if (dbIt->key().starts_with(std::string(1, DB_NFT_PROTO)))
+            {
+                leveldb::Slice sliceValue = dbIt->value();
+                leveldb::Slice sliceKey = dbIt->key();
+                CDataStream streamValue(sliceValue.data(), sliceValue.data() + sliceValue.size(), SER_DISK, CLIENT_VERSION);
+                CDataStream keyStreamValue(sliceKey.data(), sliceKey.data() + sliceKey.size(), SER_DISK, CLIENT_VERSION);
+                NftProtoDiskIndex protoDiskIndex;
+                std::pair<char, uint64_t> keyTuple;
+
+                try
+                {
+                    streamValue >> protoDiskIndex;
+                    keyStreamValue >> keyTuple;
+                }
+                catch (const std::exception & ex)
+                {
+                    LogPrintf("%s : Deserialize or I/O error - %s", __func__, ex.what());
+                    return false;
+                }
+                auto blockIndexIt = mapBlockIndex.find(protoDiskIndex.BlockHash());
+                if (blockIndexIt == mapBlockIndex.end())
+                {
+                    LogPrintf("Block index not found for protoDiskIndex. Removing from platform db\n");
+                    {
+                        auto platformDbTx = BeginTransaction();
+                        EraseNftProtoDiskIndex(std::get<1>(keyTuple));
+                        platformDbTx->Commit();
+                    }
+
+                    {
+                        std::size_t totalProtoCount = 0;
+                        ReadTotalProtocolCount(totalProtoCount);
+
+                        auto platformDbTx = BeginTransaction();
+                        WriteTotalProtocolCount(--totalProtoCount);
+                        platformDbTx->Commit();
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    void PlatformDb::Reindex()
+    {
+        int height = chainActive.Height();
+        LogPrintf("%s : Height - %d\n", __func__, height);
+        for (int i = 2800000; i < height + 1; i++)
+        {
+            CBlockIndex* index = chainActive[i];
+
+            CValidationState state;
+            CBlock block;
+
+            // Reconsider last 50 blocks
+            if (i > height - 50)
+            {
+                ReconsiderBlock(state, index);
+            }
+
+            if(!ReadBlockFromDisk(block, index))
+            {
+                LogPrintf("%s : Failed to read block from disk %d", __func__, i);
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+            }
+
+            auto platformDbTx = BeginTransaction();
+            if (!Platform::ProcessSpecialTxsInBlock(false, block, index, state))
+            {
+                LogPrintf("%s : Failed to process special transaction %d\n", __func__, i);
+            }
+            bool committed = platformDbTx->Commit();
+        }
+        LogPrintf("%s : Reindex done\n", __func__);
     }
 }
