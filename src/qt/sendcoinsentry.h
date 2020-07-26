@@ -10,7 +10,6 @@
 #include <QStackedWidget>
 
 class WalletModel;
-class PlatformStyle;
 
 namespace Ui {
     class SendCoinsEntry;
@@ -26,7 +25,7 @@ class SendCoinsEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit SendCoinsEntry(QWidget* parent = 0);
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);
@@ -69,7 +68,6 @@ private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
-    const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);
 };
