@@ -426,7 +426,7 @@ struct TxOutCompression
 // SYSCOIN
 struct TxOutCoinCompression
 {
-    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(VARINT(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
+    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
 
 
