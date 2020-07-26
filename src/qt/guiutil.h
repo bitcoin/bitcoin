@@ -18,6 +18,7 @@
 #include <QLabel>
 
 class QValidatedLineEdit;
+class OptionsModel;
 class SendCoinsRecipient;
 
 QT_BEGIN_NAMESPACE
@@ -94,6 +95,9 @@ namespace GUIUtil
     // Set up widgets for address and amounts
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllowURI = false);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
+
+    // Setup appearance settings if not done yet
+    void setupAppearance(QWidget* parent, OptionsModel* model);
 
     // Parse "dash:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
@@ -322,8 +326,9 @@ namespace GUIUtil
         GUIUtil::setFont */
     void updateFonts();
 
-    /** Get a properly weighted QFont object with the font Montserrat
-        Use ExtraLight as default as this lines up with the default in css. */
+    /** Get a properly weighted QFont object with the selected font. */
+    QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic = false, int nPointSize = -1);
+    QFont getFont(QFont::Weight qWeight, bool fItalic = false, int nPointSize = -1);
     QFont getFont(FontWeight weight, bool fItalic = false, int nPointSize = -1);
 
     /** Get the default normal QFont */
@@ -331,6 +336,13 @@ namespace GUIUtil
 
     /** Get the default bold QFont */
     QFont getFontBold();
+
+    /** Return supported weights for the current font family */
+    std::vector<QFont::Weight> getSupportedWeights();
+    /** Convert an index to a weight in the supported weights vector */
+    QFont::Weight supportedWeightFromIndex(int nIndex);
+    /** Convert a weight to an index in the supported weights vector */
+    int supportedWeightToIndex(QFont::Weight weight);
 
     /** Return the name of the currently active theme.*/
     QString getActiveTheme();

@@ -5,9 +5,11 @@
 
 #include <qt/guiutil.h>
 
+#include <qt/appearancewidget.h>
 #include <qt/bitcoinaddressvalidator.h>
 #include <qt/bitcoingui.h>
 #include <qt/bitcoinunits.h>
+#include <qt/optionsdialog.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
@@ -47,6 +49,7 @@
 #include <QDebug>
 #include <QDesktopServices>
 #include <QDesktopWidget>
+#include <QDialogButtonBox>
 #include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
@@ -56,6 +59,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QMouseEvent>
+#include <QVBoxLayout>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -109,6 +113,8 @@ static const std::map<QString, QString> mapStyleToTheme{
     {"scrollbars.css", ""}
 };
 
+/** loadFonts stores the SystemDefault font in osDefaultFont to be able to reference it later again */
+static std::unique_ptr<QFont> osDefaultFont;
 /** Font related default values. */
 static const FontFamily defaultFontFamily = FontFamily::SystemDefault;
 static const int defaultFontSize = 12;
@@ -139,6 +145,8 @@ static std::map<QWidget*, std::pair<FontWeight, bool>> mapNormalFontUpdates;
 static std::set<QWidget*> setFixedPitchFontUpdates;
 // Contains all widgets where a non-default fontsize has been seet with GUIUtil::setFont
 static std::map<QWidget*, int> mapFontSizeUpdates;
+// Contains a list of supported font weights for all members of GUIUtil::FontFamily
+static std::map<FontFamily, std::vector<QFont::Weight>> mapSupportedWeights;
 
 #ifdef Q_OS_MAC
 // Contains all widgets where the macOS focus rect has been disabled.
@@ -276,6 +284,55 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
     amountValidator->setBottom(0.0);
     widget->setValidator(amountValidator);
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
+}
+
+void setupAppearance(QWidget* parent, OptionsModel* model)
+{
+    if (!QSettings().value("fAppearanceSetupDone", false).toBool()) {
+        // First make sure SystemDefault has reasonable default values if it does not support the full range of weights.
+        if (fontFamily == FontFamily::SystemDefault && getSupportedWeights().size() < 4) {
+            fontWeightNormal = mapSupportedWeights[FontFamily::SystemDefault].front();
+            fontWeightBold = mapSupportedWeights[FontFamily::SystemDefault].back();
+            QSettings().setValue("fontWeightNormal", weightToArg(fontWeightNormal));
+            QSettings().setValue("fontWeightBold", weightToArg(fontWeightBold));
+        }
+        // Create the dialog
+        QDialog dlg(parent);
+        dlg.setObjectName("AppearanceSetup");
+        dlg.setWindowTitle(QObject::tr("Appearance Setup"));
+        dlg.setWindowIcon(QIcon(":icons/bitcoin"));
+        // And the widgets we add to it
+        QLabel lblHeading(QObject::tr("Please choose your prefered settings for the appearance of %1").arg(QObject::tr(PACKAGE_NAME)), &dlg);
+        lblHeading.setObjectName("lblHeading");
+        lblHeading.setWordWrap(true);
+        QLabel lblSubHeading(QObject::tr("This can also be adjusted later in the \"Appearance\" tab of the preferences."), &dlg);
+        lblSubHeading.setObjectName("lblSubHeading");
+        lblSubHeading.setWordWrap(true);
+        AppearanceWidget appearance(&dlg);
+        appearance.setModel(model);
+        QFrame line(&dlg);
+        line.setFrameShape(QFrame::HLine);
+        QDialogButtonBox buttonBox(QDialogButtonBox::Save);
+        // Put them into a vbox and add the vbox to the dialog
+        QVBoxLayout layout;
+        layout.addWidget(&lblHeading);
+        layout.addWidget(&lblSubHeading);
+        layout.addWidget(&line);
+        layout.addWidget(&appearance);
+        layout.addWidget(&buttonBox);
+        dlg.setLayout(&layout);
+        // Adjust the headings
+        setFont({&lblHeading}, FontWeight::Bold, 16);
+        setFont({&lblSubHeading}, FontWeight::Normal, 14, true);
+        // Make sure the dialog closes and accepts the settings if save has been pressed
+        QObject::connect(&buttonBox, &QDialogButtonBox::accepted, [&]() {
+            QSettings().setValue("fAppearanceSetupDone", true);
+            appearance.accept();
+            dlg.accept();
+        });
+        // And fire it!
+        dlg.exec();
+    }
 }
 
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
@@ -1333,6 +1390,9 @@ double getScaledFontSize(int nSize)
 
 bool loadFonts()
 {
+    // Before any font changes store the applications default font to use it as SystemDefault.
+    osDefaultFont = std::make_unique<QFont>(QApplication::font());
+
     QString family = fontFamilyToString(FontFamily::Montserrat);
     QString italic = "Italic";
 
@@ -1389,15 +1449,60 @@ bool loadFonts()
         }
     }
 
+    // Load font related settings
+    QSettings settings;
+    QFont::Weight weight;
+
+    if (!gArgs.IsArgSet("-font-family")) {
+        fontFamily = fontFamilyFromString(settings.value("fontFamily").toString());
+    }
+
+    if (!gArgs.IsArgSet("-font-scale")) {
+        fontScale = settings.value("fontScale").toInt();
+    }
+
+    if (!gArgs.IsArgSet("-font-weight-normal") && weightFromArg(settings.value("fontWeightNormal").toInt(), weight)) {
+        fontWeightNormal = weight;
+    }
+
+    if (!gArgs.IsArgSet("-font-weight-bold") && weightFromArg(settings.value("fontWeightBold").toInt(), weight)) {
+        fontWeightBold = weight;
+    }
+
     setApplicationFont();
+
+    // Initialize supported font weights for all available fonts
+    // Generate a vector with supported font weights by comparing the width of a certain test text for all font weights
+    auto supportedWeights = [](FontFamily family) -> std::vector<QFont::Weight> {
+        auto getTestWidth = [&](QFont::Weight weight) -> int {
+            QFont font = getFont(family, weight, false, defaultFontSize);
+            return QFontMetrics(font).width("Check the width of this text to see if the weight change has an impact!");
+        };
+        std::vector<QFont::Weight> vecWeights{QFont::Thin, QFont::ExtraLight, QFont::Light,
+                                              QFont::Normal, QFont::Medium, QFont::DemiBold,
+                                              QFont::Bold, QFont::Black};
+        std::vector<QFont::Weight> vecSupported;
+        QFont::Weight prevWeight = vecWeights.front();
+        for (auto weight = vecWeights.begin() + 1; weight != vecWeights.end(); ++weight) {
+            if (getTestWidth(prevWeight) != getTestWidth(*weight)) {
+                if (vecSupported.empty()) {
+                    vecSupported.push_back(prevWeight);
+                }
+                vecSupported.push_back(*weight);
+            }
+            prevWeight = *weight;
+        }
+        return vecSupported;
+    };
+
+    mapSupportedWeights.insert(std::make_pair(FontFamily::SystemDefault, supportedWeights(FontFamily::SystemDefault)));
+    mapSupportedWeights.insert(std::make_pair(FontFamily::Montserrat, supportedWeights(FontFamily::Montserrat)));
 
     return true;
 }
 
 void setApplicationFont()
 {
-    static QFont osDefaultFont = QApplication::font();
-
     std::unique_ptr<QFont> font;
 
     if (fontFamily == FontFamily::Montserrat) {
@@ -1414,7 +1519,7 @@ void setApplicationFont()
         font->setWeight(getFontWeightNormal());
 #endif
     } else {
-        font = std::make_unique<QFont>(osDefaultFont);
+        font = std::make_unique<QFont>(*osDefaultFont);
     }
 
     font->setPointSizeF(defaultFontSize);
@@ -1515,13 +1620,11 @@ void updateFonts()
     }
 }
 
-QFont getFont(FontWeight weight, bool fItalic, int nPointSize)
+QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPointSize)
 {
     QFont font;
-    QFont::Weight qWeight = toQFontWeight(weight);
 
-    if (fontFamily == FontFamily::Montserrat) {
-
+    if (family == FontFamily::Montserrat) {
         static std::map<QFont::Weight, QString> mapMontserratMapping{
             {QFont::Thin, "Thin"},
             {QFont::ExtraLight, "ExtraLight"},
@@ -1561,7 +1664,7 @@ QFont getFont(FontWeight weight, bool fItalic, int nPointSize)
         font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
 #endif
     } else {
-        font.setFamily(QApplication::font().family());
+        font.setFamily(osDefaultFont->family());
         font.setWeight(qWeight);
         font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
     }
@@ -1571,10 +1674,19 @@ QFont getFont(FontWeight weight, bool fItalic, int nPointSize)
     }
 
     if (gArgs.GetBoolArg("-debug-ui", false)) {
-        qDebug() << __func__ << ": font size: " << font.pointSizeF() << " family: " << font.family() << ", style: " << font.styleName() << " match: " << font.exactMatch();
+        qDebug() << __func__ << ": font size: " << font.pointSizeF() << " family: " << font.family() << ", style: " << font.styleName() << ", weight:" << font.weight() << " match: " << font.exactMatch();
     }
 
     return font;
+}
+
+QFont getFont(QFont::Weight qWeight, bool fItalic, int nPointSize)
+{
+    return getFont(fontFamily, qWeight, fItalic, nPointSize);
+}
+QFont getFont(FontWeight weight, bool fItalic, int nPointSize)
+{
+    return getFont(toQFontWeight(weight), fItalic, nPointSize);
 }
 
 QFont getFontNormal()
@@ -1585,6 +1697,30 @@ QFont getFontNormal()
 QFont getFontBold()
 {
     return getFont(FontWeight::Bold);
+}
+
+std::vector<QFont::Weight> getSupportedWeights()
+{
+    assert(mapSupportedWeights.count(fontFamily));
+    return mapSupportedWeights[fontFamily];
+}
+
+QFont::Weight supportedWeightFromIndex(int nIndex)
+{
+    auto vecWeights = getSupportedWeights();
+    assert(vecWeights.size() > nIndex);
+    return vecWeights[nIndex];
+}
+
+int supportedWeightToIndex(QFont::Weight weight)
+{
+    auto vecWeights = getSupportedWeights();
+    for (int index = 0; index < vecWeights.size(); ++index) {
+        if (weight == vecWeights[index]) {
+            return index;
+        }
+    }
+    assert(false);
 }
 
 QString getActiveTheme()

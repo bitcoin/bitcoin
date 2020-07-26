@@ -9,6 +9,7 @@
 #include <qt/optionsdialog.h>
 #include <qt/forms/ui_optionsdialog.h>
 
+#include <qt/appearancewidget.h>
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
@@ -36,8 +37,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     mapper(0)
 {
     ui->setupUi(this);
-
-    previousTheme = GUIUtil::getActiveTheme();
 
     GUIUtil::setFont({ui->statusLabel}, GUIUtil::FontWeight::Bold, 16);
 
@@ -89,6 +88,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     pageButtons.addButton(ui->btnWindow, pageButtons.buttons().size());
 #endif
     pageButtons.addButton(ui->btnDisplay, pageButtons.buttons().size());
+    pageButtons.addButton(ui->btnAppearance, pageButtons.buttons().size());
 
     connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
 
@@ -102,12 +102,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         digits.setNum(index);
         ui->digits->addItem(digits, digits);
     }
-
-    /* Theme selector */
-    for (const QString& entry : GUIUtil::listThemes()) {
-        ui->theme->addItem(entry, QVariant(entry));
-    }
-    connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(updateTheme()));
 
     /* Language selector */
     QDir translations(":translations");
@@ -161,6 +155,12 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->proxyIpTor, SIGNAL(validationDidChange(QValidatedLineEdit *)), this, SLOT(updateProxyValidationState()));
     connect(ui->proxyPort, SIGNAL(textChanged(const QString&)), this, SLOT(updateProxyValidationState()));
     connect(ui->proxyPortTor, SIGNAL(textChanged(const QString&)), this, SLOT(updateProxyValidationState()));
+
+    QVBoxLayout* appearanceLayout = new QVBoxLayout();
+    appearanceLayout->setContentsMargins(0, 0, 0, 0);
+    appearance = new AppearanceWidget(ui->widgetAppearance);
+    appearanceLayout->addWidget(appearance);
+    ui->widgetAppearance->setLayout(appearanceLayout);
 }
 
 OptionsDialog::~OptionsDialog()
@@ -188,6 +188,8 @@ void OptionsDialog::setModel(OptionsModel *_model)
         mapper->setModel(_model);
         setMapper();
         mapper->toFirst();
+
+        appearance->setModel(_model);
 
         updateDefaultProxyNets();
     }
@@ -249,11 +251,13 @@ void OptionsDialog::setMapper()
 
     /* Display */
     mapper->addMapping(ui->digits, OptionsModel::Digits);
-    mapper->addMapping(ui->theme, OptionsModel::Theme);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
 
+    /* Appearance
+       See AppearanceWidget::setModel
+    */
 }
 
 void OptionsDialog::showPage(int index)
@@ -300,6 +304,7 @@ void OptionsDialog::on_resetButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
+    appearance->accept();
 #ifdef ENABLE_WALLET
     privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
     if(HasWallets())
@@ -311,9 +316,6 @@ void OptionsDialog::on_okButton_clicked()
 
 void OptionsDialog::on_cancelButton_clicked()
 {
-    if (previousTheme != GUIUtil::getActiveTheme()) {
-        updateTheme(previousTheme);
-    }
     reject();
 }
 
@@ -392,16 +394,6 @@ void OptionsDialog::updateDefaultProxyNets()
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
-}
-
-void OptionsDialog::updateTheme(const QString& theme)
-{
-    QString newValue = theme.isEmpty() ? ui->theme->value().toString() : theme;
-    if (GUIUtil::getActiveTheme() != newValue) {
-        QSettings().setValue("theme", newValue);
-        QSettings().sync();
-        Q_EMIT themeChanged();
-    }
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :

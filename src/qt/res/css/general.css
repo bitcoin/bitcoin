@@ -649,6 +649,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnNetwork,
 #btnWindow,
 #btnDisplay,
+#btnAppearance,
 /* Sign/Verify dialog buttons */
 #btnSignMessage,
 #btnVerifyMessage {
@@ -671,6 +672,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnNetwork:hover:checked,
 #btnWindow:hover:checked,
 #btnDisplay:hover:checked,
+#btnAppearance:hover:checked,
 /* Sign/Verify dialog buttons */
 #btnSignMessage:hover:checked,
 #btnVerifyMessage:hover:checked {
@@ -693,6 +695,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnNetwork:hover:!checked,
 #btnWindow:hover:!checked,
 #btnDisplay:hover:!checked,
+#btnAppearance:hover:!checked,
 /* Sign/Verify dialog buttons */
 #btnSignMessage:hover:!checked,
 #btnVerifyMessage:hover:!checked {
@@ -715,6 +718,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnNetwork:checked,
 #btnWindow:checked,
 #btnDisplay:checked,
+#btnAppearance:checked,
 /* Sign/Verify dialog buttons */
 #btnSignMessage:checked,
 #btnVerifyMessage:checked {
@@ -736,6 +740,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnNetwork:hover:pressed,
 #btnWindow:hover:pressed,
 #btnDisplay:hover:pressed,
+#btnAppearance:hover:pressed,
 /* Sign/Verify dialog buttons */
 #btnSignMessage:hover:pressed,
 #btnVerifyMessage:hover:pressed {
@@ -1052,6 +1057,71 @@ QWidget#AddressBookPage QTableView::item {
 
 QWidget#AddressBookPage QHeaderView::section { /* Min width for Windows fix */
     min-width: 260px;
+}
+
+/******************************************************
+AppearanceSetup
+******************************************************/
+
+QDialog#AppearanceSetup {
+    min-width: 600px;
+    min-height: 400px;
+}
+
+QDialog#AppearanceSetup > QFrame {
+    border-bottom: 1px solid red;
+}
+
+QDialog#AppearanceSetup > QLabel#lblHeading {
+    max-height: 50px;
+}
+
+QDialog#AppearanceSetup > QLabel#lblSubHeading {
+    min-height: 30px;
+    max-height: 50px;
+}
+
+QDialog#AppearanceSetup > AppearanceWidget {
+    min-height: 250px;
+    max-height: 250px;
+}
+
+/******************************************************
+AppearanceWidget
+******************************************************/
+
+AppearanceWidget #lblSmaller,
+AppearanceWidget #lblBigger,
+AppearanceWidget #lblBolderNormal,
+AppearanceWidget #lblBolderBold,
+AppearanceWidget #lblLighterNormal,
+AppearanceWidget #lblLighterBold {
+    /* Exceptional use of font-size here to
+    avoid changes of the slider postions */
+    font-size: 13px;
+}
+
+AppearanceWidget #lblTheme,
+AppearanceWidget #lblFontFamily,
+AppearanceWidget #lblFontScale,
+AppearanceWidget #lblFontWeightNormal,
+AppearanceWidget #lblFontWeightBold,
+AppearanceWidget #lblSmaller,
+AppearanceWidget #lblBigger,
+AppearanceWidget #lblBolderNormal,
+AppearanceWidget #lblBolderBold,
+AppearanceWidget #lblLighterNormal,
+AppearanceWidget #lblLighterBold {
+    min-height: 40px;
+}
+
+AppearanceWidget #lblTheme,
+AppearanceWidget #lblFontFamily,
+AppearanceWidget #lblFontScale,
+AppearanceWidget #lblFontWeightNormal,
+AppearanceWidget #lblFontWeightBold {
+    min-width: 170px;
+    max-width: 170px;
 }
 
 /******************************************************

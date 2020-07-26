@@ -855,7 +855,6 @@ void BitcoinGUI::optionsClicked()
 
     OptionsDialog dlg(this, enableWallet);
     dlg.setModel(clientModel->getOptionsModel());
-    connect(&dlg, &OptionsDialog::themeChanged, [=]() { GUIUtil::loadTheme(); });
     dlg.exec();
 }
 
