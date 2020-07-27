@@ -31,8 +31,13 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     pageButtons.addButton(ui->btnVerifyMessage, pageButtons.buttons().size());
     connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
 
+    ui->messageIn_SM->setPlaceholderText(tr("Enter a message to be signed"));
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 
+    ui->messageIn_VM->setPlaceholderText(tr("Enter a message to be verified"));
+    ui->signatureIn_VM->setPlaceholderText(tr("Enter a signature for the message to be verified"));
+
+    // These icons are needed on Mac also
     ui->addressBookButton_SM->setIcon(QIcon(":/icons/address-book"));
     ui->pasteButton_SM->setIcon(QIcon(":/icons/editpaste"));
     ui->copySignatureButton_SM->setIcon(QIcon(":/icons/editcopy"));
