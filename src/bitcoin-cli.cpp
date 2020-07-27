@@ -56,6 +56,8 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional boolean argument can be passed for a detailed peers listing (default: false).", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -288,6 +290,37 @@ public:
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
         return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+};
+
+/** Process netinfo requests */
+class NetinfoRequestHandler : public BaseRequestHandler
+{
+private:
+    bool m_verbose{false}; //!< Whether user requested verbose -netinfo report
+public:
+    const int ID_PEERINFO = 0;
+    const int ID_NETWORKINFO = 1;
+
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        if (!args.empty()) {
+            const std::string arg{ToLower(args.at(0))};
+            m_verbose = (arg == "true" || arg == "t");
+        }
+        UniValue result(UniValue::VARR);
+        result.push_back(JSONRPCRequestObj("getpeerinfo", NullUniValue, ID_PEERINFO));
+        result.push_back(JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO));
+        return result;
+    }
+
+    UniValue ProcessReply(const UniValue& batch_in) override
+    {
+        const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
+        if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
+        if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
+        std::string result;
+        return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
 };
 
@@ -618,6 +651,8 @@ static int CommandLineRPC(int argc, char *argv[])
         std::string method;
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
+        } else if (gArgs.GetBoolArg("-netinfo", false)) {
+            rh.reset(new NetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-generate", false)) {
             const UniValue getnewaddress{GetNewAddress()};
             const UniValue& error{find_value(getnewaddress, "error")};
