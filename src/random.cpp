@@ -246,6 +246,7 @@ static void Strengthen(const unsigned char (&seed)[32], int microseconds, CSHA51
     // Hash loop
     unsigned char buffer[64];
     int64_t stop = GetTimeMicros() + microseconds;
+    int trial = 0;
     do {
         for (int i = 0; i < 1000; ++i) {
             inner_hasher.Finalize(buffer);
@@ -255,7 +256,7 @@ static void Strengthen(const unsigned char (&seed)[32], int microseconds, CSHA51
         // Benchmark operation and feed it into outer hasher.
         int64_t perf = GetPerformanceCounter();
         hasher.Write((const unsigned char*)&perf, sizeof(perf));
-    } while (GetTimeMicros() < stop);
+    } while (GetTimeMicros() < stop && trial++ < 100);
 
     // Produce output from inner state and feed it to outer hasher.
     inner_hasher.Finalize(buffer);
