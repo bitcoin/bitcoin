@@ -400,6 +400,8 @@ enum GetDataMsg : uint32_t {
 /** inv message data */
 class CInv
 {
+private:
+    uint32_t type;
 public:
     CInv();
     CInv(uint32_t typeIn, const uint256& hashIn);
@@ -427,8 +429,8 @@ public:
     bool IsMsgBlkOrMsgWitnessBlk() const { return type == MSG_BLOCK || type == MSG_WITNESS_BLOCK; }
     bool IsGenBlkMsg() const { return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK; }
 
-    uint32_t type;
     uint256 hash;
+    void SetTypeBitwiseOr(uint32_t flags) { type |= flags; }
 };
 
 /** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */

@@ -2647,7 +2647,7 @@ void ProcessMessage(
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
             if (inv.IsMsgTx()) {
-                inv.type |= nFetchFlags;
+                inv.SetTypeBitwiseOr(nFetchFlags);
             }
 
             if (inv.IsMsgBlk()) {
@@ -2802,10 +2802,9 @@ void ProcessMessage(
             // expensive disk reads, because it will require the peer to
             // actually receive all the data read from disk over the network.
             LogPrint(BCLog::NET, "Peer %d sent us a getblocktxn for a block > %i deep\n", pfrom.GetId(), MAX_BLOCKTXN_DEPTH);
-            CInv inv;
-            inv.type = State(pfrom.GetId())->fWantsCmpctWitness ? MSG_WITNESS_BLOCK : MSG_BLOCK;
-            inv.hash = req.blockhash;
-            pfrom.vRecvGetData.push_back(inv);
+
+            uint32_t inv_type{State(pfrom.GetId())->fWantsCmpctWitness ? MSG_WITNESS_BLOCK : MSG_BLOCK};
+            pfrom.vRecvGetData.emplace_back(inv_type, req.blockhash);
             // The message processing loop will go around again (without pausing) and we'll respond then (without cs_main)
             return;
         }
