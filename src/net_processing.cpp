@@ -1422,45 +1422,35 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const BlockValidatio
 
 bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    switch (inv.type)
-    {
-    case MSG_TX:
-    case MSG_WITNESS_TX:
-    case MSG_WTX:
-        {
-            assert(recentRejects);
-            if (::ChainActive().Tip()->GetBlockHash() != hashRecentRejectsChainTip)
-            {
-                // If the chain tip has changed previously rejected transactions
-                // might be now valid, e.g. due to a nLockTime'd tx becoming valid,
-                // or a double-spend. Reset the rejects filter and give those
-                // txs a second chance.
-                hashRecentRejectsChainTip = ::ChainActive().Tip()->GetBlockHash();
-                recentRejects->reset();
-            }
-
-            {
-                LOCK(g_cs_orphans);
-                if (!inv.IsMsgWtx() && mapOrphanTransactions.count(inv.hash)) {
-                    return true;
-                } else if (inv.IsMsgWtx() && g_orphans_by_wtxid.count(inv.hash)) {
-                    return true;
-                }
-            }
-
-            {
-                LOCK(g_cs_recent_confirmed_transactions);
-                if (g_recent_confirmed_transactions->contains(inv.hash)) return true;
-            }
-
-            return recentRejects->contains(inv.hash) || mempool.exists(ToGenTxid(inv));
+    if (inv.IsGenTxMsg()) {
+        assert(recentRejects);
+        if (::ChainActive().Tip()->GetBlockHash() != hashRecentRejectsChainTip) {
+            // If the chain tip has changed previously rejected transactions
+            // might be now valid, e.g. due to a nLockTime'd tx becoming valid,
+            // or a double-spend. Reset the rejects filter and give those
+            // txs a second chance.
+            hashRecentRejectsChainTip = ::ChainActive().Tip()->GetBlockHash();
+            recentRejects->reset();
         }
-    case MSG_BLOCK:
-    case MSG_WITNESS_BLOCK:
+        {
+            LOCK(g_cs_orphans);
+            if (!inv.IsMsgWtx() && mapOrphanTransactions.count(inv.hash)) {
+                return true;
+            } else if (inv.IsMsgWtx() && g_orphans_by_wtxid.count(inv.hash)) {
+                return true;
+            }
+        }
+        {
+            LOCK(g_cs_recent_confirmed_transactions);
+            if (g_recent_confirmed_transactions->contains(inv.hash)) return true;
+        }
+        return recentRejects->contains(inv.hash) || mempool.exists(ToGenTxid(inv));
+    } else if (inv.IsMsgBlkOrMsgWitnessBlk()) {
         return LookupBlockIndex(inv.hash) != nullptr;
+    } else {
+        // Don't know what it is, just say we already got one
+        return true;
     }
-    // Don't know what it is, just say we already got one
-    return true;
 }
 
 void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman)
@@ -1562,7 +1552,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
     // disconnect node in case we have reached the outbound limit for serving historical blocks
     if (send &&
         connman.OutboundTargetReached(true) &&
-        (((pindexBestHeader != nullptr) && (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.type == MSG_FILTERED_BLOCK) &&
+        (((pindexBestHeader != nullptr) && (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.IsMsgFilteredBlk()) &&
         !pfrom.HasPermission(PF_DOWNLOAD) // nodes with the download permission may exceed target
     ) {
         LogPrint(BCLog::NET, "historical block serving limit reached, disconnect peer=%d\n", pfrom.GetId());
@@ -1588,7 +1578,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
         std::shared_ptr<const CBlock> pblock;
         if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
             pblock = a_recent_block;
-        } else if (inv.type == MSG_WITNESS_BLOCK) {
+        } else if (inv.IsMsgWitnessBlk()) {
             // Fast-path: in this case it is possible to serve the block directly from disk,
             // as the network format matches the format on disk
             std::vector<uint8_t> block_data;
@@ -1605,12 +1595,11 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
             pblock = pblockRead;
         }
         if (pblock) {
-            if (inv.type == MSG_BLOCK)
+            if (inv.IsMsgBlk()) {
                 connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, *pblock));
-            else if (inv.type == MSG_WITNESS_BLOCK)
+            } else if (inv.IsMsgWitnessBlk()) {
                 connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
-            else if (inv.type == MSG_FILTERED_BLOCK)
-            {
+            } else if (inv.IsMsgFilteredBlk()) {
                 bool sendMerkleBlock = false;
                 CMerkleBlock merkleBlock;
                 if (pfrom.m_tx_relay != nullptr) {
@@ -1634,9 +1623,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
                 }
                 // else
                     // no response
-            }
-            else if (inv.type == MSG_CMPCT_BLOCK)
-            {
+            } else if (inv.IsMsgCmpctBlk()) {
                 // If a peer is asking for old blocks, we're almost guaranteed
                 // they won't have a useful mempool to match against a compact block,
                 // and we don't feel like constructing the object for them, so
@@ -1753,7 +1740,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
     // expensive to process.
     if (it != pfrom.vRecvGetData.end() && !pfrom.fPauseSend) {
         const CInv &inv = *it++;
-        if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK) {
+        if (inv.IsGenBlkMsg()) {
             ProcessGetBlockData(pfrom, chainparams, inv, connman);
         }
         // else: If the first item on the queue is an unknown type, we erase it
@@ -2663,7 +2650,7 @@ void ProcessMessage(
                 inv.type |= nFetchFlags;
             }
 
-            if (inv.type == MSG_BLOCK) {
+            if (inv.IsMsgBlk()) {
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
                     // Headers-first is the primary method of announcement on
