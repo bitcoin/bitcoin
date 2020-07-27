@@ -351,7 +351,7 @@ namespace GUIUtil
     bool dashThemeActive();
 
     /** Load the theme and update all UI elements according to the appearance settings. */
-    void loadTheme(QWidget* widget = nullptr, bool fForce = true);
+    void loadTheme(QWidget* widget = nullptr, bool fForce = false);
 
     /** Disable the OS default focus rect for macOS because we have custom focus rects
      * set in the css files */
