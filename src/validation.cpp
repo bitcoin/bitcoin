@@ -583,6 +583,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     CAmount& nModifiedFees = ws.m_modified_fees;
     CAmount& nConflictingFees = ws.m_conflicting_fees;
     size_t& nConflictingSize = ws.m_conflicting_size;
+    const bool bypass_already_in = ws.m_cpfpable;
 
     if (!CheckTransaction(tx, state)) {
         return false; // state filled in by CheckTransaction
@@ -611,8 +612,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
     // is it already in the memory pool?
-    if (m_pool.exists(hash)) {
-        return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
+    if (m_pool.exists(hash) && !bypass_already_in) {
+            return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
     }
 
     // Check for conflicts with in-memory transactions
@@ -643,7 +644,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                         break;
                     }
                 }
-                if (fReplacementOptOut) {
+                // A package transaction opt-in by default to replacement.
+                if (fReplacementOptOut && !bypass_already_in) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
 
@@ -844,7 +846,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // or not to replace, we do require the replacement to pay more
             // overall fees too, mitigating most cases.
             CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize());
-            if (newFeeRate <= oldFeeRate)
+            if (newFeeRate <= oldFeeRate && !bypass_already_in)
             {
                 return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
                         strprintf("rejecting replacement %s; new feerate %s <= old feerate %s",
@@ -908,7 +910,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // The replacement must pay greater fees than the transactions it
         // replaces - if we did the bandwidth used by those conflicting
         // transactions would not be paid for.
-        if (nModifiedFees < nConflictingFees)
+        if (nModifiedFees < nConflictingFees && !bypass_already_in)
         {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
                     strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
@@ -918,7 +920,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // Finally in addition to paying more fees than the conflicts the
         // new transaction must pay for its own bandwidth.
         CAmount nDeltaFees = nModifiedFees - nConflictingFees;
-        if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize))
+        if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize) && !bypass_already_in)
         {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
                     strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
@@ -1101,13 +1103,6 @@ bool MemPoolAccept::AcceptMultipleTransactions(const std::list<CTransactionRef>&
 
         if (!PreChecks(args, ws)) return false;
 
-        // For now, do not allow replacements in package transactions. If we
-        // relax this, we would need to check that no child transaction depends
-        // on any in-mempool transaction that conflicts with any package
-        // transaction.
-        if (!ws.m_conflicts.empty()) {
-            return args.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "rbf-disallowed-in-package", strprintf("mempool conflicts with tx %s", ptx->GetHash().ToString()));
-        }
         // Add this transaction to our coinsview, so that subsequent
         // transactions in this package will have their inputs available.
         m_viewmempool.AddPotentialTransaction(ptx);
@@ -1115,13 +1110,25 @@ bool MemPoolAccept::AcceptMultipleTransactions(const std::list<CTransactionRef>&
 
     // Check overall package feerate
     size_t total_size=0;
+    size_t total_conflicting_size=0;
     CAmount total_fee=0;
+    CAmount total_conflicting_fee=0;
     uint64_t total_count = tx_list.size();
     for (const Workspace& ws : tx_workspaces) {
         total_size += ws.m_entry->GetTxSize();
+        total_conflicting_size += ws.m_conflicting_size;
         total_fee += ws.m_modified_fees;
+        total_conflicting_fee += ws.m_conflicting_fees;
     }
     if (!CheckFeeRate(total_size, total_fee, args.m_state)) return false;
+
+    // For now, don't evict conflicting duplicates, as a transaction might be
+    // in conflict with multiple package elements.
+    if (total_conflicting_size) {
+        CFeeRate oldFeeRate(total_conflicting_fee, total_conflicting_size);
+        CFeeRate newFeeRate(total_fee, total_size);
+        if (newFeeRate <= oldFeeRate) return false;
+    }
 
     // The ancestor/descendant limit calculations in PreChecks() will be overly
     // permissive, because not all ancestors will be known as we descend down
