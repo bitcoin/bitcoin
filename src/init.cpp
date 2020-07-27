@@ -983,11 +983,9 @@ void InitParameterInteraction()
     }
 
     if (gArgs.GetBoolArg("-litemode", false)) {
-        InitWarning(_("Warning: -litemode is deprecated, please use -disablegovernance.\n"));
         if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
             LogPrintf("%s: parameter interaction: -litemode=true -> setting -disablegovernance=true\n", __func__);
         }
-        gArgs.ForceRemoveArg("-litemode");
     }
 
     if (gArgs.GetArg("-prune", 0) > 0) {
@@ -1515,6 +1513,11 @@ bool AppInitParameterInteraction()
         if (gArgs.GetBoolArg("-disablegovernance", false)) {
             return InitError(_("You can not disable governance validation on a masternode."));
         }
+    }
+
+    if (gArgs.IsArgSet("-litemode")) {
+        InitWarning(_("-litemode is deprecated.") + (gArgs.GetBoolArg("-litemode", false) ? (" "  + _("Its replacement -disablegovernance has been forced instead.")) : ( " " + _("It has been replaced by -disablegovernance."))));
+        gArgs.ForceRemoveArg("-litemode");
     }
 
     fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
