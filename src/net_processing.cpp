@@ -751,34 +751,34 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
     }
 }
 
-void EraseTxRequest(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseTxRequest(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    g_already_asked_for.erase(txid);
+    g_already_asked_for.erase(gtxid.GetHash());
 }
 
-std::chrono::microseconds GetTxRequestTime(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds GetTxRequestTime(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    auto it = g_already_asked_for.find(txid);
+    auto it = g_already_asked_for.find(gtxid.GetHash());
     if (it != g_already_asked_for.end()) {
         return it->second;
     }
     return {};
 }
 
-void UpdateTxRequestTime(const uint256& txid, std::chrono::microseconds request_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void UpdateTxRequestTime(const GenTxid& gtxid, std::chrono::microseconds request_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    auto it = g_already_asked_for.find(txid);
+    auto it = g_already_asked_for.find(gtxid.GetHash());
     if (it == g_already_asked_for.end()) {
-        g_already_asked_for.insert(std::make_pair(txid, request_time));
+        g_already_asked_for.insert(std::make_pair(gtxid.GetHash(), request_time));
     } else {
         g_already_asked_for.update(it, request_time);
     }
 }
 
-std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chrono::microseconds current_time, bool use_inbound_delay, bool use_txid_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds CalculateTxGetDataTime(const GenTxid& gtxid, std::chrono::microseconds current_time, bool use_inbound_delay, bool use_txid_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::chrono::microseconds process_time;
-    const auto last_request_time = GetTxRequestTime(txid);
+    const auto last_request_time = GetTxRequestTime(gtxid);
     // First time requesting this tx
     if (last_request_time.count() == 0) {
         process_time = current_time;
@@ -811,7 +811,7 @@ void RequestTx(CNodeState* state, const GenTxid& gtxid, std::chrono::microsecond
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
-    const auto process_time = CalculateTxGetDataTime(gtxid.GetHash(), current_time, !state->fPreferredDownload, !state->m_wtxid_relay && g_wtxid_relay_peers > 0);
+    const auto process_time = CalculateTxGetDataTime(gtxid, current_time, !state->fPreferredDownload, !state->m_wtxid_relay && g_wtxid_relay_peers > 0);
 
     peer_download_state.m_tx_process_time.emplace(process_time, gtxid);
 }
@@ -2933,10 +2933,10 @@ void ProcessMessage(
 
         TxValidationState state;
 
-        for (uint256 hash : {txid, wtxid}) {
-            nodestate->m_tx_download.m_tx_announced.erase(hash);
-            nodestate->m_tx_download.m_tx_in_flight.erase(hash);
-            EraseTxRequest(hash);
+        for (const GenTxid& gtxid : {GenTxid(false, txid), GenTxid(true, wtxid)}) {
+            nodestate->m_tx_download.m_tx_announced.erase(gtxid.GetHash());
+            nodestate->m_tx_download.m_tx_in_flight.erase(gtxid.GetHash());
+            EraseTxRequest(gtxid);
         }
 
         std::list<CTransactionRef> lRemovedTxn;
@@ -4539,7 +4539,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             if (!AlreadyHave(inv, m_mempool)) {
                 // If this transaction was last requested more than 1 minute ago,
                 // then request.
-                const auto last_request_time = GetTxRequestTime(gtxid.GetHash());
+                const auto last_request_time = GetTxRequestTime(gtxid);
                 if (last_request_time <= current_time - GETDATA_TX_INTERVAL) {
                     LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
                     vGetData.push_back(inv);
@@ -4547,7 +4547,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
                         vGetData.clear();
                     }
-                    UpdateTxRequestTime(gtxid.GetHash(), current_time);
+                    UpdateTxRequestTime(gtxid, current_time);
                     state.m_tx_download.m_tx_in_flight.emplace(gtxid.GetHash(), current_time);
                 } else {
                     // This transaction is in flight from someone else; queue
@@ -4562,7 +4562,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // would open us up to an attacker using inbound
                     // wtxid-relay to prevent us from requesting transactions
                     // from outbound txid-relay peers).
-                    const auto next_process_time = CalculateTxGetDataTime(gtxid.GetHash(), current_time, !state.fPreferredDownload, false);
+                    const auto next_process_time = CalculateTxGetDataTime(gtxid, current_time, !state.fPreferredDownload, false);
                     tx_process_time.emplace(next_process_time, gtxid);
                 }
             } else {
