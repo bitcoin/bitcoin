@@ -393,7 +393,7 @@ BitcoinApplication::~BitcoinApplication()
 #endif
     // Delete Qt-settings if user clicked on "Reset Options"
     QSettings settings;
-    if(optionsModel && optionsModel->resetSettings){
+    if(optionsModel && optionsModel->resetSettingsOnShutdown){
         settings.clear();
         settings.sync();
     }

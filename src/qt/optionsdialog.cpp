@@ -254,6 +254,7 @@ void OptionsDialog::on_resetButton_clicked()
 
         /* reset all options and close GUI */
         model->Reset();
+        model->resetSettingsOnShutdown = true;
         QApplication::quit();
     }
 }
