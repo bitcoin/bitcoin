@@ -438,7 +438,7 @@ public:
     uint64_t nValue;
 
     SERIALIZE_METHODS(CAssetOut, obj) {
-        READWRITE(VARINT(obj.n), Using<AmountCompression>(obj.nValue));
+        READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue));
     }
 
     CAssetOut(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
