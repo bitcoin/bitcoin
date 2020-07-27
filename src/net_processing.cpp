@@ -1490,6 +1490,24 @@ void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman&
     });
 }
 
+void RelayPackage(uint64_t downstream_peer, const std::list<CTransactionRef>& package)
+{
+    uint256 package_id;
+    CSHA256 hasher;
+    std::vector<uint256> package_wtxids;
+    for (const CTransactionRef& ptx: package) {
+        hasher.Write(ptx->GetHash().begin(), ptx->GetHash().size());
+        package_wtxids.push_back(ptx->GetHash());
+    }
+    hasher.Finalize(package_id.begin());
+    const auto current_time = GetTime<std::chrono::microseconds>();
+    {
+        //XXX: own lock
+        LOCK(cs_main);
+        g_packagecache.ReceivedPackage(downstream_peer, package_id, package_wtxids, current_time);
+    }
+}
+
 static void RelayAddress(const CAddress& addr, bool fReachable, const CConnman& connman)
 {
     unsigned int nRelayNodes = fReachable ? 2 : 1; // limited relaying of addresses outside our network(s)
