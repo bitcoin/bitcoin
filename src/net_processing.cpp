@@ -1734,14 +1734,25 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
             mempool.RemoveUnbroadcastTx(tx->GetHash());
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
-            for (const auto& txin : tx->vin) {
-                auto txinfo = mempool.info(txin.prevout.hash);
-                if (txinfo.tx && txinfo.m_time > now - UNCONDITIONAL_RELAY_DELAY) {
-                    // Relaying a transaction with a recent but unconfirmed parent.
-                    if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(txin.prevout.hash))) {
-                        LOCK(cs_main);
-                        State(pfrom.GetId())->m_recently_announced_invs.insert(txin.prevout.hash);
+            std::vector<uint256> parent_ids_to_add;
+            {
+                LOCK(mempool.cs);
+                auto txiter = mempool.GetIter(tx->GetHash());
+                if (txiter) {
+                    const CTxMemPool::setEntries& parents = mempool.GetMemPoolParents(*txiter);
+                    parent_ids_to_add.reserve(parents.size());
+                    for (CTxMemPool::txiter parent_iter : parents) {
+                        if (parent_iter->GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
+                            parent_ids_to_add.push_back(parent_iter->GetTx().GetHash());
+                        }
                     }
+                }
+            }
+            for (const uint256& parent_txid : parent_ids_to_add) {
+                // Relaying a transaction with a recent but unconfirmed parent.
+                if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
+                    LOCK(cs_main);
+                    State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
                 }
             }
         } else {
