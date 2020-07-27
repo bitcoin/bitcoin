@@ -3177,6 +3177,14 @@ DBErrors CWallet::ZapWalletTx(std::list<CWalletTx>& vWtx)
     if (nZapWalletTxRet != DBErrors::LOAD_OK)
         return nZapWalletTxRet;
 
+    // Clear mapWallet and mapTxSpends
+    {
+        LOCK(cs_wallet);
+        mapWallet.clear();
+        mapTxSpends.clear();
+        wtxOrdered.clear();
+    }
+
     return DBErrors::LOAD_OK;
 }
 

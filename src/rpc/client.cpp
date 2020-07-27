@@ -173,6 +173,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createwallet", 4, "avoid_reuse"},
     { "createwallet", 5, "descriptors"},
     { "getnodeaddresses", 0, "count"},
+    { "zapwallettxes", 0, "keep_metadata"},
+    { "zapwallettxes", 1, "rescan"},
+    { "zapwallettxes", 2, "start_height"},
+    { "zapwallettxes", 3, "stop_height"},
+    { "zapwallettxes", 4, "scan_mempool"},
     { "stop", 0, "wait" },
 };
 // clang-format on

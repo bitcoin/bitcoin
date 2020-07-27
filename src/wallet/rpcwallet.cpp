@@ -4113,6 +4113,119 @@ static UniValue upgradewallet(const JSONRPCRequest& request)
     return error.original;
 }
 
+static UniValue zapwallettxes(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"zapwallettxes",
+        "\nRemoves all of the wallet's transactions with the option to keep transaction metadata and to rescan the blockchain.",
+        {
+            {"keep_metadata", RPCArg::Type::BOOL, /* default */ "true", "Whether to keep transaction metadata for transactions that are found to be in the wallet. This only works rescan is true."},
+            {"rescan", RPCArg::Type::BOOL, /* default */ "true", "Whether to rescan the blockchain for transactions"},
+            {"start_height", RPCArg::Type::NUM, /* default */ "0", "block height where the rescan should start"},
+            {"stop_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "The last block height that should be scanned. If none is provided, the rescan will proceed to the tip at the return time of this call."},
+            {"scan_mempool", RPCArg::Type::BOOL, /* default */ "false", "Whether to also scan the mempool for transactions"},
+        },
+        RPCResults{},
+        RPCExamples{
+            HelpExampleCli("zapwallettxes", "")
+            + HelpExampleRpc("zapwallettxes", "")
+        }
+    }.Check(request);
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+
+    RPCTypeCheck(request.params, {UniValue::VBOOL, UniValue::VBOOL, UniValue::VNUM, UniValue::VNUM}, true);
+
+    bool keep_meta = request.params[0].isNull() ? true : request.params[0].get_bool();
+    bool rescan = request.params[1].isNull() ? true : request.params[1].get_bool();
+    bool scan_mempool = request.params[4].isNull() ? false : request.params[4].get_bool();
+
+    // Do the zap
+    std::list<CWalletTx> wtxs;
+    DBErrors res = wallet->ZapWalletTx(wtxs);
+    if (res != DBErrors::LOAD_OK) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Unable to remove the wallet transactions");
+    }
+
+    // Rescan
+    if (rescan) {
+        WalletRescanReserver reserver(*wallet);
+        if (!reserver.reserve()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+        }
+        int start_height = 0;
+        Optional<int> stop_height;
+        uint256 start_block;
+        {
+            LOCK(wallet->cs_wallet);
+            int tip_height = wallet->GetLastBlockHeight();
+
+            if (!request.params[2].isNull()) {
+                start_height = request.params[2].get_int();
+                if (start_height < 0 || start_height > tip_height) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid start_height");
+                }
+            }
+
+            if (!request.params[3].isNull()) {
+                stop_height = request.params[3].get_int();
+                if (*stop_height < 0 || *stop_height > tip_height) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid stop_height");
+                } else if (*stop_height < start_height) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "stop_height must be greater than start_height");
+                }
+            }
+
+            // We can't rescan beyond non-pruned blocks, stop and throw an error
+            if (!wallet->chain().hasBlocks(wallet->GetLastBlockHash(), start_height, stop_height)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.");
+            }
+
+            CHECK_NONFATAL(wallet->chain().findAncestorByHeight(wallet->GetLastBlockHash(), start_height, FoundBlock().hash(start_block)));
+        }
+
+        CWallet::ScanResult result =
+            wallet->ScanForWalletTransactions(start_block, start_height, stop_height, reserver, true /* fUpdate */);
+        switch (result.status) {
+        case CWallet::ScanResult::SUCCESS:
+            break;
+        case CWallet::ScanResult::FAILURE:
+            throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
+        case CWallet::ScanResult::USER_ABORT:
+            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted.");
+            // no default case, so the compiler can warn about missing cases
+        }
+    }
+
+    // Scan the mempool
+    if (scan_mempool) {
+        LOCK(wallet->cs_wallet);
+        wallet->chain().requestMempoolTransactions(*wallet);
+    }
+
+    // Keep the metadata
+    if (keep_meta) {
+        LOCK(wallet->cs_wallet);
+        WalletBatch batch(wallet->GetDatabase());
+        for (const CWalletTx& wtx_old : wtxs) {
+            uint256 hash = wtx_old.GetHash();
+            const auto it = wallet->mapWallet.find(hash);
+            if (it != wallet->mapWallet.end()) {
+                CWalletTx& new_wtx = it->second;
+                new_wtx.mapValue = wtx_old.mapValue;
+                new_wtx.vOrderForm = wtx_old.vOrderForm;
+                new_wtx.nTimeReceived = wtx_old.nTimeReceived;
+                new_wtx.nTimeSmart = wtx_old.nTimeSmart;
+                new_wtx.fFromMe = wtx_old.fFromMe;
+                new_wtx.nOrderPos = wtx_old.nOrderPos;
+                batch.WriteTx(new_wtx);
+            }
+        }
+    }
+
+    return NullUniValue;
+}
+
 UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
@@ -4184,6 +4297,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
     { "wallet",             "unloadwallet",                     &unloadwallet,                  {"wallet_name"} },
     { "wallet",             "upgradewallet",                    &upgradewallet,                 {"version"} },
+    { "wallet",             "zapwallettxes",                    &zapwallettxes,                 {"keep_metadata", "rescan", "start_height", "stop_height", "scan_mempool"} },
     { "wallet",             "walletcreatefundedpsbt",           &walletcreatefundedpsbt,        {"inputs","outputs","locktime","options","bip32derivs"} },
     { "wallet",             "walletlock",                       &walletlock,                    {} },
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
