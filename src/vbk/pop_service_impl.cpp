@@ -200,12 +200,12 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config, const fs::p
     payloadsStore = &storeman->getPayloadsStorage();
 
     altTree = altintegration::Altintegration::create(config, *payloadsStore);
+      
+    mempool = std::make_shared<altintegration::MemPool>(*altTree);
     //
     mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
     mempool->onAccepted<altintegration::VTB>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VTB>);
     mempool->onAccepted<altintegration::VbkBlock>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VbkBlock>);
-  
-    mempool = std::make_shared<altintegration::MemPool>(*altTree);
 }
 
 bool PopServiceImpl::setState(const uint256& block, altintegration::ValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
