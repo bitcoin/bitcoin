@@ -224,9 +224,9 @@ UniValue submitpop(const JSONRPCRequest& request)
         LOCK(cs_main);
         auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
         auto& pop_mempool = pop_service.getMemPool();
-        auto& alt_tree = pop_service.getAltTree();
 
-        altintegration::MempoolResult result = pop_mempool.submitAll(popData, alt_tree);
+        altintegration::MempoolResult result = pop_mempool.submitAll(popData);
+
         return altintegration::ToJSON<UniValue>(result);
     }
 }

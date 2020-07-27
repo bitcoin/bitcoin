@@ -88,7 +88,8 @@ def endorse_block(node, apm, height: int, addr: str) -> str:
     node.submitpop([], vtbs, [payloads.atv.toVbkEncodingHex()])
     return payloads.atv.getId()
 
-def mine_vbk_blocks(node, apm, amount : int) -> str:
+
+def mine_vbk_blocks(node, apm, amount: int) -> str:
     vbks = []
     for i in range(amount):
         vbks.append(apm.mineVbkBlocks(1))
@@ -156,6 +157,31 @@ class ContextInfoContainer:
         return "ContextInfo(height={}, ks1={}, ks2={}, mroot={})".format(self.height, self.keystone1,
                                                                          self.keystone2,
                                                                          self.txRoot)
+
+
+def sync_pop_tips(rpc_connections, *, wait=1, timeout=10, flush_scheduler=True):
+    """
+    Wait until everybody has the same POP TIPS (BTC tip and VBK tip)
+    """
+
+    def test(s):
+        return s.count(s[0]) == len(rpc_connections)
+
+    stop_time = time.time() + timeout
+    while time.time() <= stop_time:
+        btc = [r.getbtcbestblockhash() for r in rpc_connections]
+        vbk = [r.getvbkbestblockhash() for r in rpc_connections]
+
+        if test(btc) and test(vbk):
+            if flush_scheduler:
+                for r in rpc_connections:
+                    r.syncwithvalidationinterfacequeue()
+            return
+        time.sleep(wait)
+    raise AssertionError("POP data sync timed out: \nbtc: {}\nvbk: {}\n".format(
+        "".join("\n  {!r}".format(m) for m in btc),
+        "".join("\n  {!r}".format(m) for m in vbk),
+    ))
 
 
 def sync_pop_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
