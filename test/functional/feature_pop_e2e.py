@@ -99,8 +99,10 @@ class PopE2E(BitcoinTestFramework):
         self.nodes[0].submitpop([b.toVbkEncodingHex() for b in vbk_blocks], vtbs, [pop_data.atv.toVbkEncodingHex()])
 
         assert len(self.nodes[0].getpeerinfo()) == 1
+        print(self.nodes[0].getpeerinfo()[0]['banscore'])
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
         assert len(self.nodes[1].getpeerinfo()) == 1
+        print(self.nodes[1].getpeerinfo()[0]['banscore'])
         assert self.nodes[1].getpeerinfo()[0]['banscore'] == 0
 
         containingblock = self.nodes[0].generate(nblocks=1)

@@ -19,6 +19,8 @@ from test_framework.mininode import (
     msg_atv,
 )
 
+import time
+
 class BaseNode(P2PInterface):
     def __init__(self):
         super().__init__()
@@ -122,7 +124,9 @@ class PopP2P(BitcoinTestFramework):
         msg = msg_atv(raw_atv)
         # Send message is used to send a P2P message to the node over our P2PInterface
         self.nodes[0].p2p.send_message(msg)
-
+        
+        time.sleep(1)
+        
         peerinfo = self.nodes[0].getpeerinfo()[0]
         assert peerinfo['banscore'] == 20
 
