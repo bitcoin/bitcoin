@@ -107,7 +107,7 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
     }
 
     altintegration::ValidationState state;
-    if (!pop_mempool.submit(data, altTree, state)) {
+    if (!pop_mempool.submit(data, state)) {
         LogPrint(BCLog::NET, "peer %d sent statelessly invalid pop data: %s\n", node->GetId(), state.GetPath());
         Misbehaving(node->GetId(), 20, strprintf("invalid pop data getdata, reason: %s", state.GetPath()));
         return false;
