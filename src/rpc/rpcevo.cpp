@@ -915,7 +915,6 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
     if (!detailed) {
         return dmn->proTxHash.ToString();
     }
-
     UniValue o(UniValue::VOBJ);
 
     dmn->ToJson(o);
@@ -988,7 +987,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
         }
 #ifdef ENABLE_WALLET
-        LOCK2(cs_main, pwallet->cs_wallet);
+        LOCK(cs_main);
 
         if (request.params.size() > 4) {
             protx_list_help(request);
@@ -1063,7 +1062,6 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help(request);
     }
-    LOCK2(cs_main, pwallet->cs_wallet);
     CWallet* pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1079,6 +1077,7 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
+    LOCK(cs_main);
     return BuildDMNListEntry(node, pwallet, dmn, true);
 }
 
