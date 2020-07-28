@@ -16,6 +16,7 @@
 #include <core_io.h>
 #include <boost/thread/thread.hpp>
 #include <util/system.h>
+#include <rpc/blockchain.h>
 extern std::string exePath;
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -414,7 +415,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     CTransactionRef tx;
     if (pblockindex == nullptr)
     {
-        tx = GetTransaction(nullptr, nullptr, txhash, tx, Params().GetConsensus(), hashBlock);
+        tx = GetTransaction(nullptr, nullptr, txhash, Params().GetConsensus(), hashBlock);
         if(!tx || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         pblockindex = LookupBlockIndex(hashBlock);
