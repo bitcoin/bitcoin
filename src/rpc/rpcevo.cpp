@@ -934,9 +934,10 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
         LOCK(cs_main);
         blockindex = ::ChainActive()[nBlockHeight];
     } 
-    if (GetTransaction(blockindex, node.mempool, dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
+    collateralTx = GetTransaction(blockindex, node.mempool, dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+    if(!collateralTx)
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
-    }
+    
 
 #ifdef ENABLE_WALLET
     if (pwallet) {

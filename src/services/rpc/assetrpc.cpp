@@ -267,10 +267,10 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
     // block may not be found
-    GetTransaction(blockindex, node.mempool, rawTx->GetHash(), rawTx, Params().GetConsensus(), hashBlock);
+    rawTx = GetTransaction(blockindex, node.mempool, rawTx->GetHash(), Params().GetConsensus(), hashBlock);
 
     UniValue output(UniValue::VOBJ);
-    if(!DecodeSyscoinRawtransaction(*rawTx, hashBlock, output))
+    if(rawTx && !DecodeSyscoinRawtransaction(*rawTx, hashBlock, output))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
     return output;
 }
@@ -414,7 +414,8 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     CTransactionRef tx;
     if (pblockindex == nullptr)
     {
-        if (!GetTransaction(nullptr, nullptr, txhash, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
+        tx = GetTransaction(nullptr, nullptr, txhash, tx, Params().GetConsensus(), hashBlock);
+        if(!tx || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         pblockindex = LookupBlockIndex(hashBlock);
         if (!pblockindex) {
