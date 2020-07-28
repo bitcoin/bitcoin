@@ -67,13 +67,32 @@ static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string me
 }
 
 /**
+ * Get the node context.
+ *
+ * @param[in]  req  The HTTP request, whose status code will be set if node
+ *                  context is not found.
+ * @returns         Pointer to the node context or nullptr if not found.
+ */
+static NodeContext* GetNodeContext(const util::Ref& context, HTTPRequest* req)
+{
+    NodeContext* node = context.Has<NodeContext>() ? &context.Get<NodeContext>() : nullptr;
+    if (!node) {
+        RESTERR(req, HTTP_INTERNAL_SERVER_ERROR,
+                strprintf("%s:%d (%s)\n"
+                          "Internal bug detected: Node context not found!\n"
+                          "You may report this issue here: %s\n",
+                          __FILE__, __LINE__, __func__, PACKAGE_BUGREPORT));
+        return nullptr;
+    }
+    return node;
+}
+
+/**
  * Get the node context mempool.
  *
- * Set the HTTP error and return nullptr if node context
- * mempool is not found.
- *
- * @param[in]  req the HTTP request
- * return pointer to the mempool or nullptr if no mempool found
+ * @param[in]  req The HTTP request, whose status code will be set if node
+ *                 context mempool is not found.
+ * @returns        Pointer to the mempool or nullptr if no mempool found.
  */
 static CTxMemPool* GetMemPool(const util::Ref& context, HTTPRequest* req)
 {
@@ -370,11 +389,28 @@ static bool rest_tx(const util::Ref& context, HTTPRequest* req, const std::strin
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
-
-    CTransactionRef tx;
-   
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, blockindex))
+    // SYSCOIN
+    else{
+        uint32_t nBlockHeight;
+        if(!pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	 
+            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");    
+        } 
+        {
+            LOCK(cs_main);
+            blockindex = ::ChainActive()[nBlockHeight];
+        }
+        if(!blockindex){
+            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found"); 
+        }
+    }
+    const NodeContext* const node = GetNodeContext(context, req);
+    if (!node) return false;
+    uint256 hashBlock = uint256();
+    // SYSCOIN
+    const CTransactionRef tx = GetTransaction(blockindex, node->mempool, hash, Params().GetConsensus(), hashBlock);
+    if (!tx) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
+    }
 
     switch (rf) {
     case RetFormat::BINARY: {
