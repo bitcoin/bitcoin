@@ -273,9 +273,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
     // SYSCOIN
     } else if(!oneTxid.IsNull()){      
         uint32_t nBlockHeight;
-        if(!pblockindexdb->ReadBlockHeight(oneTxid, nBlockHeight)){	 
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block height not found in asset index"); 
-        } 
+        pblockindexdb->ReadBlockHeight(oneTxid, nBlockHeight);
         {
             LOCK(cs_main);
             pblockindex = ::ChainActive()[nBlockHeight];
