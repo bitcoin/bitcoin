@@ -405,7 +405,6 @@ static bool rest_tx(const util::Ref& context, HTTPRequest* req, const std::strin
     }
     const NodeContext* const node = GetNodeContext(context, req);
     if (!node) return false;
-    uint256 hashBlock = uint256();
     // SYSCOIN
     const CTransactionRef tx = GetTransaction(blockindex, node->mempool, hash, Params().GetConsensus(), hashBlock);
     if (!tx) {
