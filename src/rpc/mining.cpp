@@ -34,6 +34,11 @@
 #include <memory>
 #include <stdint.h>
 
+// for coinflip
+#include <boost/thread.hpp>
+// for coinflip - added by HJKIM
+#include <random>
+
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.
@@ -140,6 +145,86 @@ static UniValue generateBlocks(const CScript& coinbase_script, int nGenerate, ui
     return blockHashes;
 }
 
+bool _check_new_block_accepted(CBlock *pblock) {
+    LOCK(cs_main);
+    if(pblock->hashPrevBlock != ::ChainActive().Tip()->GetBlockHash()) {
+        return true;
+    }
+    return false;
+}
+unsigned int shadow_assign_virtual_id() {
+    // dummy function for interposer
+    return 0;
+}
+unsigned long long int _expected_mining_usec(unsigned int nBits) {
+    static std::default_random_engine* default_random_source = NULL;
+    if(default_random_source==NULL) {
+        struct timespec cur;
+        clock_gettime(CLOCK_MONOTONIC, &cur);
+        unsigned int randtime = (unsigned int)cur.tv_nsec;
+        unsigned int randvalue = rand();
+        unsigned int random_num = randtime + shadow_assign_virtual_id() +randvalue;
+        static std::default_random_engine generator(random_num);
+        default_random_source = &generator;
+    }
+#define POW_LIMIT_RANDOM_BASE 10000
+    arith_uint256 bnTarget;
+    bnTarget.SetCompact(nBits);
+    unsigned int nonBits = UintToArith256(Params().GetConsensus().powLimit).bits() - bnTarget.bits();
+    unsigned long long int multiplier = 1;
+    if(nonBits>63) {
+        std::cout<<"Error: Too High Difficulties\n";
+        ::exit(EXIT_FAILURE);
+    }
+    while(nonBits>0) {
+        multiplier*=2;
+        nonBits--;
+    }
+    long double result = -1;
+    std::exponential_distribution<long double> distribution(POW_LIMIT_RANDOM_BASE);
+    result = distribution(*default_random_source);
+    result = result * 1000000 * multiplier;
+    return (unsigned long long int)result;
+}
+void setgenerateBlocks(const CScript& coinbase_script)
+{
+    unsigned int nExtraNonce = 0;
+    UniValue blockHashes(UniValue::VARR);
+
+    while (!ShutdownRequested()) {
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbase_script));
+        if (!pblocktemplate.get())
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
+        CBlock *pblock = &pblocktemplate->block;
+        {
+            LOCK(cs_main);
+            IncrementExtraNonce(pblock, ::ChainActive().Tip(), nExtraNonce);
+        }
+        // init condition flag, monitoring unit microseconds, and elapsed time
+        bool conflict_flag = false;
+        unsigned long long int MONITOR_INT_USEC = 500000;
+        unsigned long long int elapsed_usec = 0;
+        // get a random micro seconds
+        unsigned long long int rand_usec = _expected_mining_usec(pblock->nBits);
+        while(elapsed_usec < rand_usec) {
+            usleep(MONITOR_INT_USEC);
+            if((conflict_flag = _check_new_block_accepted(pblock)) || ShutdownRequested()) {
+                break;
+            }
+            elapsed_usec += MONITOR_INT_USEC;
+        }
+        if(ShutdownRequested()) {
+            break;
+        } else if(conflict_flag) {
+            continue;
+        }
+        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+        blockHashes.push_back(pblock->GetHash().GetHex());
+    }
+}
+
 static UniValue generatetoaddress(const JSONRPCRequest& request)
 {
             RPCHelpMan{"generatetoaddress",
@@ -174,6 +259,39 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     CScript coinbase_script = GetScriptForDestination(destination);
 
     return generateBlocks(coinbase_script, nGenerate, nMaxTries);
+}
+
+static UniValue setgeneratetoaddress(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"setgeneratetoaddress",
+               "\nMine forever with given wallet address as a coinbase tx's wallet\n",
+               {
+                       {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
+               },
+               RPCResult{
+                       "true              (boolean) Returns true\n"
+               },
+               RPCExamples{
+                       HelpExampleCli("setgeneratetoaddress", "\"myaddress\"")
+                       + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
+                       + HelpExampleCli("getnewaddress", "")
+               },
+    }.Check(request);
+
+    static boost::thread_group* minerThreads = NULL;
+    if(minerThreads) {
+        return false;
+    }
+
+    CTxDestination destination = DecodeDestination(request.params[0].get_str());
+    if (!IsValidDestination(destination)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
+    }
+
+    CScript coinbase_script = GetScriptForDestination(destination);
+    minerThreads = new boost::thread_group();
+    minerThreads->create_thread(boost::bind(&setgenerateBlocks, coinbase_script));
+    return true;
 }
 
 static UniValue getmininginfo(const JSONRPCRequest& request)
@@ -961,6 +1079,7 @@ static const CRPCCommand commands[] =
 
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
+    { "generating",         "setgeneratetoaddress",   &setgeneratetoaddress,   {"address"} },
 
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
