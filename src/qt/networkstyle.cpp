@@ -28,6 +28,20 @@ static const struct {
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
+void NetworkStyle::rotateColor(QColor& col, const int iconColorHueShift, const int iconColorSaturationReduction)
+{
+    int h, s, l, a;
+    col.getHsl(&h, &s, &l, &a);
+
+    // rotate color on RGB color circle
+    h += iconColorHueShift;
+    // change saturation value
+    s -= iconColorSaturationReduction;
+    s = std::max(s, 0);
+
+    col.setHsl(h,s,l,a);
+}
+
 void NetworkStyle::rotateColors(QImage& img, const int iconColorHueShift, const int iconColorSaturationReduction) {
     int h,s,l,a;
 
@@ -39,24 +53,9 @@ void NetworkStyle::rotateColors(QImage& img, const int iconColorHueShift, const 
         // loop through pixels
         for(int x=0;x<img.width();x++)
         {
-            // preserve alpha because QColor::getHsl doesn't return the alpha value
-            a = qAlpha(scL[x]);
-            QColor col(scL[x]);
-
-            // get hue value
-            col.getHsl(&h,&s,&l);
-
-            // rotate color on RGB color circle
-            // 70° should end up with the typical "testnet" green (in bitcoin)
-            h+=iconColorHueShift;
-
-            // change saturation value
-            s -= iconColorSaturationReduction;
-            s = std::max(s, 0);
-
-            col.setHsl(h,s,l,a);
-
-            // set the pixel
+            QColor col;
+            col.setRgba(scL[x]);
+            rotateColor(col, iconColorHueShift, iconColorSaturationReduction);
             scL[x] = col.rgba();
         }
     }
@@ -65,7 +64,8 @@ void NetworkStyle::rotateColors(QImage& img, const int iconColorHueShift, const 
 // titleAddText needs to be const char* for tr()
 NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
     appName(_appName),
-    titleAddText(qApp->translate("SplashScreen", _titleAddText))
+    titleAddText(qApp->translate("SplashScreen", _titleAddText)),
+    badgeColor(QColor(0, 141, 228)) // default badge color is the original Dash's blue, regardless of the current theme
 {
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(appName);
@@ -73,30 +73,25 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
     GUIUtil::migrateQtSettings();
     // load pixmap
     QPixmap appIconPixmap(":/icons/bitcoin");
-    QPixmap splashImagePixmap(":/images/splash");
 
     if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
     {
         // generate QImage from QPixmap
         QImage appIconImg = appIconPixmap.toImage();
-        QImage splashImageImg = splashImagePixmap.toImage();
-
         rotateColors(appIconImg, iconColorHueShift, iconColorSaturationReduction);
-        rotateColors(splashImageImg, iconColorHueShift, iconColorSaturationReduction);
-
         //convert back to QPixmap
 #if QT_VERSION >= 0x040700
         appIconPixmap.convertFromImage(appIconImg);
-        splashImagePixmap.convertFromImage(splashImageImg);
 #else
         appIconPixmap = QPixmap::fromImage(appIconImg);
-        splashImagePixmap = QPixmap::fromImage(splashImageImg);
 #endif
+        // tweak badge color
+        rotateColor(badgeColor, iconColorHueShift, iconColorSaturationReduction);
     }
 
     appIcon             = QIcon(appIconPixmap);
     trayAndWindowIcon   = QIcon(appIconPixmap.scaled(QSize(256,256)));
-    splashImage         = splashImagePixmap;
+    splashImage         = QPixmap(":/images/splash");
 }
 
 const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)

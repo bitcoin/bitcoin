@@ -22,6 +22,7 @@ public:
     const QPixmap &getSplashImage() const { return splashImage; }
     const QIcon &getTrayAndWindowIcon() const { return trayAndWindowIcon; }
     const QString &getTitleAddText() const { return titleAddText; }
+    const QColor &getBadgeColor() const { return badgeColor; }
 
 private:
     NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
@@ -31,7 +32,9 @@ private:
     QPixmap splashImage;
     QIcon trayAndWindowIcon;
     QString titleAddText;
+    QColor badgeColor;
 
+    void rotateColor(QColor& col, const int iconColorHueShift, const int iconColorSaturationReduction);
     void rotateColors(QImage& img, const int iconColorHueShift, const int iconColorSaturationReduction);
 };
 
