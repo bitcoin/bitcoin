@@ -74,9 +74,6 @@
 #include <malloc.h>
 #endif
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -1039,55 +1036,6 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
     }
     return strCopyrightHolders;
 }
-
-uint32_t StringVersionToInt(const std::string& strVersion)
-{
-    std::vector<std::string> tokens;
-    boost::split(tokens, strVersion, boost::is_any_of("."));
-    if(tokens.size() != 3)
-        throw std::bad_cast();
-    uint32_t nVersion = 0;
-    for(unsigned idx = 0; idx < 3; idx++)
-    {
-        if(tokens[idx].length() == 0)
-            throw std::bad_cast();
-        uint32_t value = boost::lexical_cast<uint32_t>(tokens[idx]);
-        if(value > 255)
-            throw std::bad_cast();
-        nVersion <<= 8;
-        nVersion |= value;
-    }
-    return nVersion;
-}
-
-std::string IntVersionToString(uint32_t nVersion)
-{
-    if((nVersion >> 24) > 0) // MSB is always 0
-        throw std::bad_cast();
-    if(nVersion == 0)
-        throw std::bad_cast();
-    std::array<std::string, 3> tokens;
-    for(unsigned idx = 0; idx < 3; idx++)
-    {
-        unsigned shift = (2 - idx) * 8;
-        uint32_t byteValue = (nVersion >> shift) & 0xff;
-        tokens[idx] = boost::lexical_cast<std::string>(byteValue);
-    }
-    return boost::join(tokens, ".");
-}
-
-std::string SafeIntVersionToString(uint32_t nVersion)
-{
-    try
-    {
-        return IntVersionToString(nVersion);
-    }
-    catch(const std::bad_cast&)
-    {
-        return "invalid_version";
-    }
-}
-
 
 // Obtain the application startup time (used for uptime calculation)
 int64_t GetStartupTime()

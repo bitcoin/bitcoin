@@ -246,6 +246,7 @@ BITCOIN_CORE_H = \
   undo.h \
   unordered_lru_cache.h \
   util.h \
+  utilmemory.h \
   utilmoneystr.h \
   utiltime.h \
   validation.h \

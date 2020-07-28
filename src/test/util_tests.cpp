@@ -1069,21 +1069,6 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
 }
 
-BOOST_AUTO_TEST_CASE(version_info_helper)
-{
-    BOOST_CHECK(StringVersionToInt("1.1.1") == 0x010101);
-    BOOST_CHECK(IntVersionToString(0x010101) == "1.1.1");
-
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.hgdghfgf"), std::bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1"), std::bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.1f"), std::bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.1000"), std::bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("10"), std::bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.1.1"), std::bad_cast);
-    BOOST_CHECK_THROW(IntVersionToString(0x01010101), std::bad_cast);
-    BOOST_CHECK_THROW(IntVersionToString(0), std::bad_cast);
-}
-
 static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
 {
     *result = LockDirectory(dirname, lockname);

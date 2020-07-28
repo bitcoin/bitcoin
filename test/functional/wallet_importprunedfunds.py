@@ -68,22 +68,20 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         #Import with no affiliated address
         assert_raises_rpc_error(-5, "No addresses", self.nodes[1].importprunedfunds, rawtxn1, proof1)
 
-        balance1 = self.nodes[1].getbalance("", 0, False, True)
+        balance1 = self.nodes[1].getbalance()
         assert_equal(balance1, Decimal(0))
 
         #Import with affiliated address with no rescan
-        self.nodes[1].importaddress(address2, "add2", False)
+        self.nodes[1].importaddress(address=address2, rescan=False)
         self.nodes[1].importprunedfunds(rawtxn2, proof2)
-        balance2 = self.nodes[1].getbalance("add2", 0, False, True)
-        assert_equal(balance2, Decimal('0.05'))
+        assert [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
 
-        #Import with private key with no rescan
-        self.nodes[1].importprivkey(privkey=address3_privkey, label="add3", rescan=False)
+        # Import with private key with no rescan
+        self.nodes[1].importprivkey(privkey=address3_privkey, rescan=False)
         self.nodes[1].importprunedfunds(rawtxn3, proof3)
-        balance3 = self.nodes[1].getbalance("add3", 0, False, False)
+        assert [tx for tx in self.nodes[1].listtransactions() if tx['txid'] == txnid3]
+        balance3 = self.nodes[1].getbalance()
         assert_equal(balance3, Decimal('0.025'))
-        balance3 = self.nodes[1].getbalance("*", 0, False, True)
-        assert_equal(balance3, Decimal('0.075'))
 
         #Addresses Test - after import
         address_info = self.nodes[1].validateaddress(address1)
@@ -98,17 +96,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         #Remove transactions
         assert_raises_rpc_error(-8, "Transaction does not exist in wallet.", self.nodes[1].removeprunedfunds, txnid1)
-
-        balance1 = self.nodes[1].getbalance("*", 0, False, True)
-        assert_equal(balance1, Decimal('0.075'))
+        assert not [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid1]
 
         self.nodes[1].removeprunedfunds(txnid2)
-        balance2 = self.nodes[1].getbalance("*", 0, False, True)
-        assert_equal(balance2, Decimal('0.025'))
+        assert not [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
 
         self.nodes[1].removeprunedfunds(txnid3)
-        balance3 = self.nodes[1].getbalance("*", 0, False, True)
-        assert_equal(balance3, Decimal('0.0'))
+        assert not [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid3]
 
 if __name__ == '__main__':
     ImportPrunedFundsTest().main()

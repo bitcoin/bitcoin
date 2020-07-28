@@ -55,7 +55,6 @@
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/join.hpp>
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
@@ -2514,6 +2513,13 @@ static void DoWarning(const std::string& strWarning)
     }
 }
 
+/** Private helper function that concatenates warning messages. */
+static void AppendWarning(std::string& res, const std::string& warn)
+{
+    if (!res.empty()) res += ", ";
+    res += warn;
+}
+
 /** Check warning conditions and do some notifications on new chain tip set. */
 void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainParams) {
     // New best block
@@ -2525,7 +2531,7 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
         g_best_block_cv.notify_all();
     }
 
-    std::vector<std::string> warningMessages;
+    std::string warningMessages;
     if (!IsInitialBlockDownload())
     {
         int nUpgraded = 0;
@@ -2538,7 +2544,7 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
                 if (state == ThresholdState::ACTIVE) {
                     DoWarning(strWarning);
                 } else {
-                    warningMessages.push_back(strWarning);
+                    AppendWarning(warningMessages, strWarning);
                 }
             }
         }
@@ -2551,7 +2557,7 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            warningMessages.push_back(strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
+            AppendWarning(warningMessages, strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
         if (nUpgraded > 100/2)
         {
             std::string strWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
@@ -2566,7 +2572,7 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
       GuessVerificationProgress(chainParams.TxData(), pindexNew), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
     strMessage += strprintf(" evodb_cache=%.1fMiB", evoDb->GetMemoryUsage() * (1.0 / (1<<20)));
     if (!warningMessages.empty())
-        strMessage += strprintf(" warning='%s'", boost::algorithm::join(warningMessages, ", "));
+        strMessage += strprintf(" warning='%s'", warningMessages);
     LogPrintf("%s\n", strMessage);
 }
 
@@ -3974,6 +3980,15 @@ static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfte
     int count=0;
 
     if (nCurrentUsage + nBuffer >= nPruneTarget) {
+        // On a prune event, the chainstate DB is flushed.
+        // To avoid excessive prune events negating the benefit of high dbcache
+        // values, we should not prune too rapidly.
+        // So when pruning in IBD, increase the buffer a bit to avoid a re-prune too soon.
+        if (IsInitialBlockDownload()) {
+            // Since this is only relevant during IBD, we use a fixed 10%
+            nBuffer += nPruneTarget / 10;
+        }
+
         for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
             nBytesToPrune = vinfoBlockFile[fileNumber].nSize + vinfoBlockFile[fileNumber].nUndoSize;
 

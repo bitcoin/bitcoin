@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -21,12 +21,12 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <utiltime.h>
+#include <utilmemory.h>
 #include <amount.h>
 
 #include <atomic>
 #include <exception>
 #include <map>
-#include <memory>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -316,40 +316,5 @@ template <typename Callable> void TraceThread(const std::string name,  Callable 
 }
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
-
-/**
- * @brief Converts version strings to 4-byte unsigned integer
- * @param strVersion version in "x.x.x" format (decimal digits only)
- * @return 4-byte unsigned integer, most significant byte is always 0
- * Throws std::bad_cast if format doesn\t match.
- */
-uint32_t StringVersionToInt(const std::string& strVersion);
-
-
-/**
- * @brief Converts version as 4-byte unsigned integer to string
- * @param nVersion 4-byte unsigned integer, most significant byte is always 0
- * @return version string in "x.x.x" format (last 3 bytes as version parts)
- * Throws std::bad_cast if format doesn\t match.
- */
-std::string IntVersionToString(uint32_t nVersion);
-
-
-/**
- * @brief Copy of the IntVersionToString, that returns "Invalid version" string
- * instead of throwing std::bad_cast
- * @param nVersion 4-byte unsigned integer, most significant byte is always 0
- * @return version string in "x.x.x" format (last 3 bytes as version parts)
- * or "Invalid version" if can't cast the given value
- */
-std::string SafeIntVersionToString(uint32_t nVersion);
-
-
-//! Substitute for C++14 std::make_unique.
-template <typename T, typename... Args>
-std::unique_ptr<T> MakeUnique(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
 
 #endif // BITCOIN_UTIL_H
