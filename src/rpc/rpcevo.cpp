@@ -933,11 +933,10 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
     uint32_t nBlockHeight;
     CBlockIndex* blockindex = nullptr;
     if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
-        LOCK(cs_main);
         blockindex = ::ChainActive()[nBlockHeight];
     } 
     collateralTx = GetTransaction(blockindex, node.mempool, dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
-    if(!collateralTx)
+    if(collateralTx)
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     
 
@@ -1025,7 +1024,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             protx_list_help(request);
         }
 
-        LOCK(cs_main);
+        LOCK2(cs_main, pwallet->cs_wallet);
 
         bool detailed = !request.params[2].isNull() ? request.params[2].get_bool() : false;
 
@@ -1064,6 +1063,7 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help(request);
     }
+    LOCK2(cs_main, pwallet->cs_wallet);
     CWallet* pwallet;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
