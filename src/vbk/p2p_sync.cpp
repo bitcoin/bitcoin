@@ -22,7 +22,7 @@ bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altin
     vRecv >> requested_data;
 
     if (requested_data.size() > MAX_POP_DATA_SENDING_AMOUNT) {
-        LogPrintf("processGetPopData(), banscore 1 \n");
+        LogPrint(BCLog::NET, "peer %d send oversized message getdata size() = %u \n", node->GetId(), requested_data.size());
         Misbehaving(node->GetId(), 20, strprintf("message getdata size() = %u", requested_data.size()));
         return false;
     }
@@ -35,7 +35,7 @@ bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altin
         uint32_t ddosPreventionCounter = pop_state.known_pop_data++;
 
         if (ddosPreventionCounter > MAX_POP_MESSAGE_SENDING_COUNT) {
-            LogPrintf("processGetPopData(), banscore 2 \n");
+            LogPrint(BCLog::NET, "peer %d is spamming pop data %s \n", node->GetId(), pop_t::name());
             Misbehaving(node->GetId(), 20, strprintf("peer %d is spamming pop data %s", node->GetId(), pop_t::name()));
             return false;
         }
@@ -58,7 +58,7 @@ bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, alt
     vRecv >> offered_data;
 
     if (offered_data.size() > MAX_POP_DATA_SENDING_AMOUNT) {
-        LogPrintf("processOfferPopData(), banscore 1 \n");
+        LogPrint(BCLog::NET, "peer %d send oversized message getdata size() = %u \n", node->GetId(), offered_data.size());
         Misbehaving(node->GetId(), 20, strprintf("message getdata size() = %u", offered_data.size()));
         return false;
     }
@@ -74,7 +74,7 @@ bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, alt
         if (!pop_mempool.get<pop_t>(data_hash)) {
             requested_data.push_back(data_hash);
         } else if (ddosPreventionCounter > MAX_POP_MESSAGE_SENDING_COUNT) {
-            LogPrintf("processOfferPopData(), banscore 2 \n");
+            LogPrint(BCLog::NET, "peer %d is spamming pop data %s \n", node->GetId(), pop_t::name());
             Misbehaving(node->GetId(), 20, strprintf("peer %d is spamming pop data %s", node->GetId(), pop_t::name()));
             return false;
         }
@@ -99,23 +99,22 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
     PopP2PState& pop_state = pop_state_map[data.getId()];
 
     if (pop_state.requested_pop_data == 0) {
-        LogPrintf("processPopData(), banscore 1 data: %s \n", data.toPrettyString());
-        Misbehaving(node->GetId(), 20, strprintf("peer %d end pop data that has not been requested dsata %s", node->GetId(), pop_t::name()));
+        LogPrint(BCLog::NET, "peer %d send pop data %s that has not been requested \n", node->GetId(), pop_t::name());
+        Misbehaving(node->GetId(), 20, strprintf("peer %d send pop data %s that has not been requested", node->GetId(), pop_t::name()));
         return false;
     }
 
     uint32_t ddosPreventionCounter = pop_state.requested_pop_data++;
 
     if (ddosPreventionCounter > MAX_POP_MESSAGE_SENDING_COUNT) {
-        LogPrintf("processPopData(), banscore 2 data: %s \n", data.toPrettyString());
-        Misbehaving(node->GetId(), 20, strprintf("peer %d is spamming pop dsata %s", node->GetId(), pop_t::name()));
+        LogPrint(BCLog::NET, "peer %d is spaming pop data %s\n", node->GetId(), pop_t::name());
+        Misbehaving(node->GetId(), 20, strprintf("peer %d is spamming pop data %s", node->GetId(), pop_t::name()));
         return false;
     }
 
     altintegration::ValidationState state;
     if (!pop_mempool.submit(data, state)) {
         LogPrint(BCLog::NET, "peer %d sent statefull invalid pop data: %s\n", node->GetId(), state.GetPath());
-        LogPrintf("processPopData(), banscore 3 data: %s \n", data.toPrettyString());
         Misbehaving(node->GetId(), 20, strprintf("invalid pop data getdata, reason: %s", state.GetPath()));
         return false;
     }

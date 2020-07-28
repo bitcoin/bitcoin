@@ -16,6 +16,10 @@ from test_framework.util import (
     sync_mempools,
 )
 
+from pypopminer import MockMiner, PublicationData
+
+import time
+
 
 class PopE2E(BitcoinTestFramework):
     def set_test_params(self):
@@ -34,14 +38,7 @@ class PopE2E(BitcoinTestFramework):
             connect_nodes(self.nodes[i + 1], i)
             self.sync_all()
 
-    def run_test(self):
-        """Main test logic"""
-
-        self.sync_all(self.nodes)
-
-        from pypopminer import MockMiner, PublicationData
-        self.apm = MockMiner()
-
+    def _test_case(self):
         assert len(self.nodes[0].getpeerinfo()) == 1
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
         assert len(self.nodes[1].getpeerinfo()) == 1
@@ -74,6 +71,8 @@ class PopE2E(BitcoinTestFramework):
         vtbs = [x.toVbkEncodingHex() for x in pop_data.vtbs]
         self.nodes[0].submitpop([b.toVbkEncodingHex() for b in vbk_blocks], vtbs, [pop_data.atv.toVbkEncodingHex()])
 
+        self.sync_all(self.nodes)
+
         assert len(self.nodes[0].getpeerinfo()) == 1
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
         assert len(self.nodes[1].getpeerinfo()) == 1
@@ -98,11 +97,11 @@ class PopE2E(BitcoinTestFramework):
         vtbs = [x.toVbkEncodingHex() for x in pop_data.vtbs]
         self.nodes[0].submitpop([b.toVbkEncodingHex() for b in vbk_blocks], vtbs, [pop_data.atv.toVbkEncodingHex()])
 
+        self.sync_all(self.nodes)
+
         assert len(self.nodes[0].getpeerinfo()) == 1
-        print(self.nodes[0].getpeerinfo()[0]['banscore'])
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
         assert len(self.nodes[1].getpeerinfo()) == 1
-        print(self.nodes[1].getpeerinfo()[0]['banscore'])
         assert self.nodes[1].getpeerinfo()[0]['banscore'] == 0
 
         containingblock = self.nodes[0].generate(nblocks=1)
@@ -116,5 +115,14 @@ class PopE2E(BitcoinTestFramework):
         assert len(self.nodes[1].getpeerinfo()) == 1
         assert self.nodes[1].getpeerinfo()[0]['banscore'] == 0
 
+    def run_test(self):
+        """Main test logic"""
+
+        self.sync_all(self.nodes)
+
+        self.apm = MockMiner()
+
+        self._test_case()
+       
 if __name__ == '__main__':
     PopE2E().main()

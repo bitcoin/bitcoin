@@ -116,7 +116,7 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
         hashes;
     for (const auto& el : data) {
         PopP2PState& pop_state = pop_state_map[el.first];
-        if (pop_state.offered_pop_data == 0) {
+        if (pop_state.offered_pop_data == 0 && pop_state.known_pop_data == 0) {
             ++pop_state.offered_pop_data;
             hashes.push_back(el.first.asVector());
         }
