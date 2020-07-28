@@ -17,6 +17,7 @@
 #include <boost/thread/thread.hpp>
 #include <util/system.h>
 #include <rpc/blockchain.h>
+#include <node/context.h>
 extern std::string exePath;
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
