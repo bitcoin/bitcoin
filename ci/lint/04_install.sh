@@ -11,5 +11,5 @@ travis_retry pip3 install flake8==3.7.8
 travis_retry pip3 install yq
 
 SHELLCHECK_VERSION=v0.6.0
-curl -s "https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
+curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
 export PATH="/tmp/shellcheck-${SHELLCHECK_VERSION}:${PATH}"
