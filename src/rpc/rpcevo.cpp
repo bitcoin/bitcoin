@@ -29,6 +29,7 @@
 
 #include <masternode/masternode-meta.h>
 #include <rpc/util.h>
+#include <rpc/blockchain.h>
 #include <util/translation.h>
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
