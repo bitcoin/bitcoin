@@ -8,6 +8,8 @@ The following interfaces are defined here:
 
 * [`Node`](node.h) — used by GUI to start & stop bitcoin node. Added in [#10244](https://github.com/bitcoin/bitcoin/pull/10244).
 
+* [`TxMempool`](txmempool.h) — used by validation to access mempool state.
+
 * [`Wallet`](wallet.h) — used by GUI to access wallets. Added in [#10244](https://github.com/bitcoin/bitcoin/pull/10244).
 
 * [`Handler`](handler.h) — returned by `handleEvent` methods on interfaces above and used to manage lifetimes of event handlers.

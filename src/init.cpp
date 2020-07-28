@@ -1566,7 +1566,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
             const int64_t load_block_index_start_time = GetTimeMillis();
             try {
                 LOCK(cs_main);
-                chainman.InitializeChainstate();
+                chainman.InitializeChainstate(node.mempool);
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 
