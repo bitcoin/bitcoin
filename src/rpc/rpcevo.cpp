@@ -31,6 +31,7 @@
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
 #include <util/translation.h>
+#include <node/context.h>
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
