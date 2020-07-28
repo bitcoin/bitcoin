@@ -65,6 +65,7 @@ BASE_SCRIPTS= [
     'feature_block.py', # NOTE: needs dash_hash to pass
     'rpc_fundrawtransaction.py',
     'rpc_fundrawtransaction_hd.py',
+    'wallet_multiwallet.py --usecli',
     # vv Tests less than 2m vv
     'p2p_instantsend.py',
     'wallet_basic.py',
@@ -105,7 +106,6 @@ BASE_SCRIPTS= [
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
-    'wallet_multiwallet.py --usecli',
     'interface_http.py',
     'rpc_users.py',
     'feature_proxy.py',
