@@ -89,7 +89,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
     if (vRecv.size() < 1) {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        Misbehaving(pfrom->GetId(), 100, "invalid recv size for DKG session");
         return;
     }
 
@@ -97,7 +97,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     uint8_t llmqType = *vRecv.begin();
     if (!dkgSessionHandlers.count(llmqType)) {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        Misbehaving(pfrom->GetId(), 100, "DKG session invalid LLMQ typ");
         return;
     }
 

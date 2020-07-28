@@ -42,7 +42,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         if (qc.IsNull()) {
             LOCK(cs_main);
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, pfrom->GetId());
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom->GetId(), 100, "null commitment from peer");
             return;
         }
 
@@ -50,7 +50,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             LOCK(cs_main);
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                     qc.llmqType, pfrom->GetId());
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom->GetId(), 100, "invalid commitment type");
             return;
         }
         auto type = qc.llmqType;
@@ -78,7 +78,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             if (quorumHeight != pquorumIndex->nHeight) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
-                Misbehaving(pfrom->GetId(), 100);
+                Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
                 return;
             }
         }
@@ -105,7 +105,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             LOCK(cs_main);
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
                       qc.quorumHash.ToString(), qc.llmqType, pfrom->GetId());
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom->GetId(), 100, "invalid commitment for quorum");
             return;
         }
 

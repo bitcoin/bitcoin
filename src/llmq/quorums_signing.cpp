@@ -477,7 +477,7 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
     if (!PreVerifyRecoveredSig(pfrom->GetId(), recoveredSig, ban)) {
         if (ban) {
             LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom->GetId(), 100, "error PreVerifyRecoveredSig");
         }
         return;
     }
@@ -651,7 +651,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
         if (batchVerifier.badSources.count(nodeId)) {
             LOCK(cs_main);
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
-            Misbehaving(nodeId, 100);
+            Misbehaving(nodeId, 100, "invalid recSig from other node");
             continue;
         }
 
