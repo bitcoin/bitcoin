@@ -271,9 +271,9 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     // SYSCOIN
-    } else if(setTxids.size() == 1){      
+    } else if(!oneTxid.IsNull()){      
         uint32_t nBlockHeight;
-        if(!pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	 
+        if(!pblockindexdb->ReadBlockHeight(oneTxid, nBlockHeight)){	 
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block height not found in asset index"); 
         } 
         {
