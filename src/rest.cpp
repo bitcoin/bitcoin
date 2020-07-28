@@ -392,15 +392,9 @@ static bool rest_tx(const util::Ref& context, HTTPRequest* req, const std::strin
     // SYSCOIN
     else{
         uint32_t nBlockHeight;
-        if(!pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	 
-            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");    
-        } 
-        {
+        if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)) {
             LOCK(cs_main);
             blockindex = ::ChainActive()[nBlockHeight];
-        }
-        if(!blockindex){
-            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found"); 
         }
     }
     const NodeContext* const node = GetNodeContext(context, req);
