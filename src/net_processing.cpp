@@ -889,15 +889,16 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
 
 void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
 {
-    std::map<uint256, uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+    std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
 
-    for (const auto& elem : unbroadcast_txids) {
-        // Sanity check: all unbroadcast txns should exist in the mempool
-        if (m_mempool.exists(elem.first)) {
+    for (const auto& txid : unbroadcast_txids) {
+        CTransactionRef tx = m_mempool.get(txid);
+
+        if (tx != nullptr) {
             LOCK(cs_main);
-            RelayTransaction(elem.first, elem.second, m_connman);
+            RelayTransaction(txid, tx->GetWitnessHash(), m_connman);
         } else {
-            m_mempool.RemoveUnbroadcastTx(elem.first, true);
+            m_mempool.RemoveUnbroadcastTx(txid, true);
         }
     }
 
