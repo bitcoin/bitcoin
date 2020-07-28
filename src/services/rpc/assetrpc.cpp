@@ -248,6 +248,8 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     }
     }.Check(request);
 
+    const NodeContext& node = EnsureNodeContext(request.context);
+
     std::string hexstring = params[0].get_str();
     CMutableTransaction tx;
     if(!DecodeHexTx(tx, hexstring, false, true)) {
@@ -265,7 +267,7 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
     // block may not be found
-    GetTransaction(rawTx->GetHash(), rawTx, Params().GetConsensus(), hashBlock, blockindex);
+    GetTransaction(blockindex, node.mempool, rawTx->GetHash(), rawTx, Params().GetConsensus(), hashBlock);
 
     UniValue output(UniValue::VOBJ);
     if(!DecodeSyscoinRawtransaction(*rawTx, hashBlock, output))
@@ -405,7 +407,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
         }
     }
 
-
+    const NodeContext& node = EnsureNodeContext(request.context);
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.
     if (g_txindex && !pblockindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
@@ -413,7 +415,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     CTransactionRef tx;
     if (pblockindex == nullptr)
     {
-        if (!GetTransaction(txhash, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
+        if (!GetTransaction(nullptr, node.mempool, txhash, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         pblockindex = LookupBlockIndex(hashBlock);
         if (!pblockindex) {
