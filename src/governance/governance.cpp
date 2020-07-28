@@ -174,7 +174,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             } else {
                 LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
                 // apply node's ban score
-                Misbehaving(pfrom->GetId(), 20);
+                Misbehaving(pfrom->GetId(), 20, "invalid governance object");
             }
 
             return;
@@ -221,7 +221,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
             if ((exception.GetNodePenalty() != 0) && masternodeSync.IsSynced()) {
                 LOCK(cs_main);
-                Misbehaving(pfrom->GetId(), exception.GetNodePenalty());
+                Misbehaving(pfrom->GetId(), exception.GetNodePenalty(), "rejected vote");
             }
             return;
         }
@@ -637,7 +637,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
         LOCK(cs_main);
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
-        Misbehaving(pnode->GetId(), 20);
+        Misbehaving(pnode->GetId(), 20, "peer already asked for list");
         return;
     }
     netfulfilledman.AddFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC);
