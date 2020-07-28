@@ -407,7 +407,6 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
         }
     }
 
-    const NodeContext& node = EnsureNodeContext(request.context);
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.
     if (g_txindex && !pblockindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
@@ -415,7 +414,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     CTransactionRef tx;
     if (pblockindex == nullptr)
     {
-        if (!GetTransaction(nullptr, node.mempool, txhash, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
+        if (!GetTransaction(nullptr, nullptr, txhash, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         pblockindex = LookupBlockIndex(hashBlock);
         if (!pblockindex) {
