@@ -62,7 +62,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards.\n"
         },
         {"operatorKey",
-            "%d. \"operatorKey\"              (string, required) The operator private key belonging to the\n"
+            "%d. \"operatorKey\"              (string, required) The operator BLS private key associated with the\n"
             "                              registered operator public key.\n"
         },
         {"operatorPayoutAddress",
@@ -71,12 +71,12 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              If set to an empty string, the currently active payout address is reused.\n"
         },
         {"operatorPubKey_register",
-            "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
-            "                              It has to match the private key which is later used when operating the masternode.\n"
+            "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The BLS private key does not have to be known.\n"
+            "                              It has to match the BLS private key which is later used when operating the masternode.\n"
         },
         {"operatorPubKey_update",
-            "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
-            "                              It has to match the private key which is later used when operating the masternode.\n"
+            "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The BLS private key does not have to be known.\n"
+            "                              It has to match the BLS private key which is later used when operating the masternode.\n"
             "                              If set to an empty string, the currently active operator BLS public key is reused.\n"
         },
         {"operatorReward",
