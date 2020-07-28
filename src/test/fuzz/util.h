@@ -208,9 +208,6 @@ NODISCARD bool AdditionOverflow(const T i, const T j) noexcept
     return std::numeric_limits<T>::max() - i < j;
 }
 
-<<<<<<< HEAD
-#endif // SYSCOIN_TEST_FUZZ_UTIL_H
-=======
 NODISCARD inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
 {
     for (const CTxIn& tx_in : tx.vin) {
@@ -473,5 +470,4 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
     }
 }
 
-#endif // BITCOIN_TEST_FUZZ_UTIL_H
->>>>>>> d3b0ef80f... Merge #18867: tests: Add fuzzing harness for CCoinsViewCache
+#endif // SYSCOIN_TEST_FUZZ_UTIL_H
