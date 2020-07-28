@@ -54,7 +54,7 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, Optional<bool> load_on
 bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, Optional<bool> load_on_start);
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, Optional<bool> load_on_start, bilingual_str& error, std::vector<bilingual_str>& warnings);
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, Optional<bool> load_on_start, bilingual_str& error, std::vector<bilingual_str>& warnings);
 std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet);
 
 enum class WalletCreationStatus {
@@ -700,8 +700,8 @@ private:
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
-    /** Wallet location which includes wallet name (see WalletLocation). */
-    WalletLocation m_location;
+    /** Wallet name: relative directory name or "" for default wallet. */
+    std::string m_name;
 
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> database;
@@ -755,20 +755,18 @@ public:
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
                     const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    const WalletLocation& GetLocation() const { return m_location; }
-
     /** Get a name for this wallet for logging/debugging purposes.
      */
-    const std::string& GetName() const { return m_location.GetName(); }
+    const std::string& GetName() const { return m_name; }
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database)
+    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
-          m_location(location),
+          m_name(name),
           database(std::move(database))
     {
     }
@@ -1154,10 +1152,10 @@ public:
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     //! Verify wallet naming and perform salvage on the wallet if required
-    static bool Verify(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
+    static bool Verify(interfaces::Chain& chain, const std::string& name, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings, uint64_t wallet_creation_flags = 0);
+    static std::shared_ptr<CWallet> CreateWalletFromFile(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, uint64_t wallet_creation_flags = 0);
 
     /**
      * Wallet post-init setup

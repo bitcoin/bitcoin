@@ -28,7 +28,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
         return nullptr;
     }
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), CreateWalletDatabase(path)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, name, CreateWalletDatabase(path)), WalletToolReleaseWallet);
     LOCK(wallet_instance->cs_wallet);
     bool first_run = true;
     DBErrors load_wallet_ret = wallet_instance->LoadWallet(first_run);
@@ -57,7 +57,7 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
     }
 
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), CreateWalletDatabase(path)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, name, CreateWalletDatabase(path)), WalletToolReleaseWallet);
     DBErrors load_wallet_ret;
     try {
         bool first_run;
