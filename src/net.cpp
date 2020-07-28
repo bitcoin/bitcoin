@@ -1648,7 +1648,7 @@ void CConnman::ThreadDNSAddressSeed()
                     {
                         LOCK(cs_vNodes);
                         for (const CNode* pnode : vNodes) {
-                            nRelevant += pnode->fSuccessfullyConnected && !pnode->IsFeelerConn() && !pnode->m_addr_fetch && !pnode->IsManualConn() && !pnode->fInbound;
+                            nRelevant += pnode->fSuccessfullyConnected && !pnode->IsFeelerConn() && !pnode->IsAddrFetchConn() && !pnode->IsManualConn() && !pnode->fInbound;
                         }
                     }
                     if (nRelevant >= 2) {
@@ -1758,7 +1758,7 @@ int CConnman::GetExtraOutboundCount()
     {
         LOCK(cs_vNodes);
         for (const CNode* pnode : vNodes) {
-            if (!pnode->fInbound && !pnode->IsManualConn() && !pnode->IsFeelerConn() && !pnode->fDisconnect && !pnode->m_addr_fetch && pnode->fSuccessfullyConnected) {
+            if (!pnode->fInbound && !pnode->IsManualConn() && !pnode->IsFeelerConn() && !pnode->fDisconnect && !pnode->IsAddrFetchConn() && pnode->fSuccessfullyConnected) {
                 ++nOutbound;
             }
         }
@@ -2739,7 +2739,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     : nTimeConnected(GetSystemTimeInSeconds()),
     addr(addrIn),
     addrBind(addrBindIn),
-    m_addr_fetch(conn_type_in == ConnectionType::ADDR_FETCH),
     fInbound(conn_type_in == ConnectionType::INBOUND),
     nKeyedNetGroup(nKeyedNetGroupIn),
     // Don't relay addr messages to peers that we connect to as block-relay-only

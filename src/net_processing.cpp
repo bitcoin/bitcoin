@@ -473,7 +473,7 @@ static void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUS
     nPreferredDownload -= state->fPreferredDownload;
 
     // Whether this node should be marked as a preferred download node.
-    state->fPreferredDownload = (!node.fInbound || node.HasPermission(PF_NOBAN)) && !node.m_addr_fetch && !node.fClient;
+    state->fPreferredDownload = (!node.fInbound || node.HasPermission(PF_NOBAN)) && !node.IsAddrFetchConn() && !node.fClient;
 
     nPreferredDownload += state->fPreferredDownload;
 }
@@ -829,7 +829,7 @@ void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 
 static bool IsOutboundDisconnectionCandidate(const CNode& node)
 {
-    return !(node.fInbound || node.IsManualConn() || node.IsFeelerConn() || node.m_addr_fetch);
+    return !(node.fInbound || node.IsManualConn() || node.IsFeelerConn() || node.IsAddrFetchConn());
 }
 
 void PeerLogicValidation::InitializeNode(CNode *pnode) {
@@ -2581,7 +2581,7 @@ void ProcessMessage(
         connman.AddNewAddresses(vAddrOk, pfrom.addr, 2 * 60 * 60);
         if (vAddr.size() < 1000)
             pfrom.fGetAddr = false;
-        if (pfrom.m_addr_fetch)
+        if (pfrom.IsAddrFetchConn())
             pfrom.fDisconnect = true;
         return;
     }
@@ -4094,7 +4094,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         // Start block sync
         if (pindexBestHeader == nullptr)
             pindexBestHeader = ::ChainActive().Tip();
-        bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->m_addr_fetch); // Download if this is a nice peer, or we have no nice peers and this one might do.
+        bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->IsAddrFetchConn()); // Download if this is a nice peer, or we have no nice peers and this one might do.
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
