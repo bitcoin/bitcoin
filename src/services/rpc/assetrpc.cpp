@@ -407,6 +407,11 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
+    } else {
+        const Coin& coin = AccessByTxid(::ChainstateActive().CoinsTip(), txhash);
+        if (!coin.IsSpent()) {
+            pblockindex = ::ChainActive()[coin.nHeight];
+        }
     }
 
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.

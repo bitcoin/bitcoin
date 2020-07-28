@@ -270,15 +270,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-    // SYSCOIN
-    } else if(!oneTxid.IsNull()){      
-        uint32_t nBlockHeight;
-        pblockindexdb->ReadBlockHeight(oneTxid, nBlockHeight);
-        {
-            LOCK(cs_main);
-            pblockindex = ::ChainActive()[nBlockHeight];
-        }    
-    }else {
+    } else {
         LOCK(cs_main);
 
         // Loop through txids and try to find which block they're in. Exit loop once a block is found.
