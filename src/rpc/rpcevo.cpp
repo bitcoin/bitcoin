@@ -908,7 +908,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 #endif
 }
 
-UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
+UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
 {
     if (!detailed) {
         return dmn->proTxHash.ToString();
@@ -928,7 +928,13 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     bool ownsCollateral = false;
     CTransactionRef collateralTx;
     uint256 tmpHashBlock;
-    if (GetTransaction(dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
+    uint32_t nBlockHeight;
+    CBlockIndex* blockindex = nullptr;
+    if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
+        LOCK(cs_main);
+        blockindex = ::ChainActive()[nBlockHeight];
+    } 
+    if (GetTransaction(blockindex, node.mempool, dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     }
 
@@ -965,7 +971,7 @@ UniValue protx_list(const JSONRPCRequest& request)
     pwallet = nullptr;
 #endif
 
-
+    const NodeContext& node = EnsureNodeContext(request.context);
     std::string type = "registered";
     if (!request.params[1].isNull()) {
         type = request.params[1].get_str();
@@ -1007,7 +1013,7 @@ UniValue protx_list(const JSONRPCRequest& request)
                 CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting) ||
                 CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout) ||
                 CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)) {
-                ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
+                ret.push_back(BuildDMNListEntry(node, pwallet, dmn, detailed));
             }
         });
 #endif
@@ -1028,7 +1034,7 @@ UniValue protx_list(const JSONRPCRequest& request)
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
-            ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
+            ret.push_back(BuildDMNListEntry(node, pwallet, dmn, detailed));
         });
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type specified");
@@ -1063,14 +1069,14 @@ UniValue protx_info(const JSONRPCRequest& request)
 #else
     pwallet = nullptr;
 #endif
-
+    const NodeContext& node = EnsureNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    return BuildDMNListEntry(pwallet, dmn, true);
+    return BuildDMNListEntry(node, pwallet, dmn, true);
 }
 
 void protx_diff_help(const JSONRPCRequest& request)
