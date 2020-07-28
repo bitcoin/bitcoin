@@ -987,7 +987,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
         }
 #ifdef ENABLE_WALLET
-        LOCK(cs_main);
+        LOCK2(cs_main, pwallet->cs_wallet);
 
         if (request.params.size() > 4) {
             protx_list_help(request);
@@ -1023,7 +1023,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             protx_list_help(request);
         }
 
-        LOCK2(cs_main, pwallet->cs_wallet);
+        LOCK(cs_main);
 
         bool detailed = !request.params[2].isNull() ? request.params[2].get_bool() : false;
 
