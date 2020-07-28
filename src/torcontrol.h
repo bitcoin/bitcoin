@@ -11,6 +11,8 @@
 
 extern const std::string DEFAULT_TOR_CONTROL;
 static const bool DEFAULT_LISTEN_ONION = true;
+/** Allow onion address to be created ephemeral on every node restart */
+static const bool DEFAULT_EPHEMERAL_TOR_ONION = false;
 
 void StartTorControl();
 void InterruptTorControl();
