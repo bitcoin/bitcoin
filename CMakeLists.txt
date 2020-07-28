@@ -23,7 +23,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/bitcoind
   DEPENDS bdb_4.8.30
   DEPENDS ${BITCOIN_0_19_1_SRCS}
   COMMAND ./autogen.sh
-  COMMAND ./configure CPPFLAGS=-I${CMAKE_INSTALL_PREFIX}/bdb_4.8.30/include LDFLAGS=-L${CMAKE_INSTALL_PREFIX}/bdb_4.8.30/lib --with-pic --disable-bench --disable-tests --enable-debug
+  COMMAND ./configure CPPFLAGS=-I${CMAKE_INSTALL_PREFIX}/bdb_4.8.30/include LDFLAGS=-L${CMAKE_INSTALL_PREFIX}/bdb_4.8.30/lib --with-pic --disable-bench --disable-tests --enable-debug --disable-threadlocal
   COMMAND make -j4
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
