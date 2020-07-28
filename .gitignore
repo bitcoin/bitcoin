@@ -9,7 +9,7 @@ src/syscoin-gui
 src/syscoin-node
 src/syscoin-tx
 src/syscoin-wallet
-src/test/fuzz
+src/test/fuzz/*
 !src/test/fuzz/*.*
 src/test/test_syscoin
 src/qt/test/test_syscoin-qt
