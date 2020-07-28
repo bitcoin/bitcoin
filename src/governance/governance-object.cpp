@@ -520,7 +520,6 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);	
         return false;   	
     }
-    const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock
     txCollateral = GetTransaction(::ChainActive()[nBlockHeight], nullptr, nCollateralHash, Params().GetConsensus(), nBlockHash);
     if(!txCollateral) {
         strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
