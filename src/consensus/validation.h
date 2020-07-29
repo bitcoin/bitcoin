@@ -26,7 +26,8 @@ enum class TxValidationResult {
      * is uninteresting.
      */
     TX_RECENT_CONSENSUS_CHANGE,
-    TX_NOT_STANDARD,          //!< didn't meet our local policy rules
+    TX_INPUTS_NOT_STANDARD,   //!< inputs (covered by txid) failed policy rules
+    TX_NOT_STANDARD,          //!< otherwise didn't meet our local policy rules
     TX_MISSING_INPUTS,        //!< transaction was missing some of its inputs
     TX_PREMATURE_SPEND,       //!< transaction spends a coinbase too early, or violates locktime/sequence locks
     /**
