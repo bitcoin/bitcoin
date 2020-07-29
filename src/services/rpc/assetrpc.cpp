@@ -29,6 +29,7 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsse
     oAsset.__pushKV("symbol", asset.strSymbol);
 	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
+    oAsset.__pushKV("witness", asset.witnessKeyID.IsNull()? "" : EncodeDestination(WitnessV0KeyHash(asset.witnessKeyID)));
 	oAsset.__pushKV("balance", asset.nBalance);
 	oAsset.__pushKV("total_supply", asset.nTotalSupply);
 	oAsset.__pushKV("max_supply", asset.nMaxSupply);

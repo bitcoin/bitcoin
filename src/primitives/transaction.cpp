@@ -353,7 +353,7 @@ void CMutableTransaction::LoadAssets()
         }
         const size_t &nVoutSize = vout.size();
         for(const auto &it: voutAssets) {
-            const uint32_t &nAsset = it.key.nAsset;
+            const uint32_t &nAsset = it.key;
             if(it.second.empty()) {
                 throw std::ios_base::failure("asset empty outputs");
             }
@@ -382,7 +382,7 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
         if(it.second.empty()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
         }
-        const uint32_t &nAsset = it.key.nAsset;
+        const uint32_t &nAsset = it.key;
         const size_t &nVoutSize = vout.size();
         bool zeroVal = false;
         for(const auto& voutAsset: it.value) {
@@ -419,6 +419,14 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
         }
     }
     return true;
+}
+
+uint256 CTransaction::GetWitnessSigHash() {
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    for(const auto &vin: vin) {
+        ss << vin.prevout;
+    }
+    return ss.GetHash();
 }
 
 bool IsSyscoinMintTx(const int &nVersion) {
@@ -534,13 +542,6 @@ void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
     Serialize(dsAsset);
 	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
-}
-uint256 CAssetAllocation::GetWitnessSigHash(const CTransactionRef& tx) {
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    for(const auto &vin: tx.vin) {
-        ss << vin.prevout;
-    }
-    return ss.GetHash();
 }
 bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {

@@ -31,7 +31,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     }
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key.nAsset;
+    const uint32_t &nAsset = it->key;
     const std::vector<CAssetOut> &vecVout = it->value;
     // do this check only when not in IBD (initial block download)
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
@@ -337,13 +337,26 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
+    // fill witness signatures for every asset that requires it
+    for(const auto& vecOut: tx.voutAssets) {
+        // get asset
+        CAsset theAsset;
+        // if asset has witness signature requirement set
+        if(GetAsset(vecOut.key, theAsset) && !theAsset.witnessKeyID.IsNull()) {
+            if (!CHashSigner::VerifyHash(tx.GetWitnessSigHash(), theAsset.witnessKeyID, vecOut.vchWitnessSig)) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-witness-sig", fJustCheck);
+            }
+            // only first one needs to be checked since all inputs are covered by the signature
+            break;
+        }
+    }
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
         break; 
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
         {   
             auto it = tx.voutAssets.begin();
-            const uint32_t &nAsset = it->key.nAsset;
+            const uint32_t &nAsset = it->key;
             const std::vector<CAssetOut> &vecVout = it->value;
             const CAmount &nBurnAmount = tx.vout[nOut].nValue;
             if(nBurnAmount <= 0) {
@@ -395,7 +408,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
 
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key.nAsset;
+    const uint32_t &nAsset = it->key;
     const std::vector<CAssetOut> &vecVout = it->value;
     const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
@@ -470,6 +483,9 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     if(!theAsset.vchContract.empty()) {
         storedAssetRef.vchContract = theAsset.vchPrevContract;
     }
+    if(!theAsset.witnessKeyID.IsNull()) {
+        storedAssetRef.witnessKeyID = theAsset.prevWitnessKeyID;
+    }
     // enforced to be equal or represent prev value on actual change of field
     storedAssetRef.nUpdateFlags = theAsset.nPrevUpdateFlags;    
     return true;  
@@ -509,7 +525,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key.nAsset;
+    const uint32_t &nAsset = it->key;
     const std::vector<CAssetOut> &vecVout = it->value;
     CAsset dbAsset;
     #if __cplusplus > 201402 
@@ -553,6 +569,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!storedAssetRef.vchContract.empty() && storedAssetRef.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
+            if (!storedAssetRef.witnessKeyID.empty() && storedAssetRef.witnessKeyID.size() != MAX_GUID_LENGTH) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
+            }  
             if (storedAssetRef.nPrecision > 8) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
@@ -561,6 +580,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             }
             if (!storedAssetRef.vchPrevContract.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
+            }
+            if (!storedAssetRef.prevWitnessKeyID.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-prevwitness", bSanityCheck);
             }
             if (storedAssetRef.strSymbol.size() > 8 || storedAssetRef.strSymbol.size() < 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
@@ -595,6 +617,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
+            if (!theAsset.witnessKeyID.empty() && theAsset.witnessKeyID.size() != MAX_GUID_LENGTH) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
+            } 
             if (theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             }
@@ -648,6 +673,16 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
                 }
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
+            }
+
+            if (!theAsset.witnessKeyID.empty()) {
+                if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_WITNESS)) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-witness-privileges", bSanityCheck);
+                }
+                if(theAsset.prevWitnessKeyID != storedAssetRef.witnessKeyID) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevwitness", bSanityCheck);
+                }
+                storedAssetRef.witnessKeyID = std::move(theAsset.witnessKeyID);
             }
             if(theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
