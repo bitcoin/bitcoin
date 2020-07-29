@@ -305,6 +305,17 @@ class PruneTest(BitcoinTestFramework):
         node.pruneblockchain(height(0))
         assert has_block(0), "blk00000.dat is missing when should still be there"
 
+        # height=500 shouldn't prune first file if there's a prune lock
+        node.setprunelock("test", {
+            "desc": "Testing",
+            "height": [2, 2],
+        })
+        assert_equal(node.listprunelocks(), {'prune_locks': [{'id': 'test', 'desc': 'Testing', 'height': [2, 2]}]})
+        prune(500)
+        assert has_block(0), "blk00000.dat is missing when should still be there"
+        node.setprunelock("test", {})  # delete prune lock
+        assert_equal(node.listprunelocks(), {'prune_locks': []})
+
         # height=500 should prune first file
         prune(500)
         assert not has_block(0), "blk00000.dat is still there, should be pruned by now"
