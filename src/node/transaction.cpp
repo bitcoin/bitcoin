@@ -76,6 +76,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
     if (callback_set) {
         // Wait until Validation Interface clients have been notified of the
         // transaction entering the mempool.
+        usleep(1);
         promise.get_future().wait();
     }
 

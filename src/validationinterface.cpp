@@ -125,6 +125,7 @@ void SyncWithValidationInterfaceQueue() {
     CallFunctionInValidationInterfaceQueue([&promise] {
         promise.set_value();
     });
+    usleep(1);
     promise.get_future().wait();
 }
 
