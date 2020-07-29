@@ -76,6 +76,9 @@ class ExampleTest(BitcoinTestFramework):
         """Override test parameters for your individual test.
 
         This method must be overridden and num_nodes must be explicitly set."""
+        # By default every test loads a pre-mined chain of 200 blocks from cache.
+        # Set use_cached_chain to False to skip this and start from the Genesis
+        # block.
         self.use_cached_chain = False
         self.num_nodes = 3
         # Use self.extra_args to change command-line arguments for the nodes

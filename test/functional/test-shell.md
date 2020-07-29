@@ -51,7 +51,7 @@ The following sections demonstrate how to initialize, run, and shut down a
 ## 3. Initializing a `TestShell` object
 
 ```
->>> test = TestShell().setup(num_nodes=2, setup_clean_chain=True)
+>>> test = TestShell().setup(num_nodes=2, use_cached_chain=False)
 20XX-XX-XXTXX:XX:XX.XXXXXXX TestFramework (INFO): Initializing test directory /path/to/bitcoin_func_test_XXXXXXX
 ```
 The `TestShell` forwards all functional test parameters of the parent
@@ -178,7 +178,7 @@ can be called after the TestShell is shut down.
 | `num_nodes` | `1` | Sets the number of initialized bitcoind processes. |
 | `perf` | False | Profiles running nodes with `perf` for the duration of the test if set to `True`. |
 | `rpc_timeout` | `60` | Sets the RPC server timeout for the underlying bitcoind processes. |
-| `setup_clean_chain` | `False` | Initializes an empty blockchain by default. A 199-block-long chain is initialized if set to `True`. |
+| `use_cached_chain` | `True` | A 200-block-long chain is initialized from cache by default. Initializes an empty blockchain if set to `False`. |
 | `randomseed` | Random Integer | `TestShell.options.randomseed` is a member of `TestShell` which can be accessed during a test to seed a random generator. User can override default with a constant value for reproducible test runs. |
 | `supports_cli` | `False` | Whether the bitcoin-cli utility is compiled and available for the test. |
 | `tmpdir` | `"/var/folders/.../"` | Sets directory for test logs. Will be deleted upon a successful test run unless `nocleanup` is set to `True` |
