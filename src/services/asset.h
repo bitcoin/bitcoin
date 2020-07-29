@@ -23,8 +23,8 @@ enum {
     ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below
     ASSET_UPDATE_DATA=2, // can you update public data field?
     ASSET_UPDATE_CONTRACT=4, // can you update smart contract?
-    ASSET_UPDATE_WITNESS=8, // can you update asset witness?
-    ASSET_UPDATE_SUPPLY=16, // can you update supply?
+    ASSET_UPDATE_SUPPLY=8, // can you update supply?
+    ASSET_UPDATE_WITNESS=16, // can you update witness?
     ASSET_UPDATE_FLAGS=32, // can you update flags? if you would set permanently disable this one and admin flag as well
     ASSET_UPDATE_ALL=63
 };
