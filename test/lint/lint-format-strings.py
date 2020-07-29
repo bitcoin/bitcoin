@@ -13,15 +13,19 @@ import re
 import sys
 
 FALSE_POSITIVES = [
+    ("src/batchedlogger.h", "strprintf(fmt, args...)"),
     ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
     ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
+    ("src/qt/networkstyle.cpp", "strprintf(appName, gArgs.GetDevNetName())"),
+    ("src/qt/networkstyle.cpp", "strprintf(titleAddText, gArgs.GetDevNetName())"),
+    ("src/rpc/rpcevo.cpp", "strprintf(it->second, nParamNum)"),
+    ("src/stacktraces.cpp", "strprintf(fmtStr, i, si.pc, lstr, fstr)"),
     ("src/util.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
     ("src/util.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
 ]
-
 
 def parse_function_calls(function_name, source_code):
     """Return an array with all calls to function function_name in string source_code.
