@@ -24,7 +24,6 @@ MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 class PSBTTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 3
         self.extra_args = [
             ["-walletrbf=1"],

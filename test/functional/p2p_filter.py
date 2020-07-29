@@ -81,7 +81,6 @@ class P2PBloomFilter(P2PInterface):
 
 class FilterTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 1
         self.extra_args = [[
             '-peerbloomfilters',

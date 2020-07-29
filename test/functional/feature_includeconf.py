@@ -20,7 +20,6 @@ from test_framework.test_framework import BitcoinTestFramework
 
 class IncludeConfTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 1
 
     def setup_chain(self):
