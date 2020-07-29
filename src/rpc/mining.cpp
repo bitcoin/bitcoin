@@ -168,9 +168,10 @@ unsigned long long int _expected_mining_usec(unsigned int nBits) {
         default_random_source = &generator;
     }
 #define POW_LIMIT_RANDOM_BASE 10000
+#define XFF_BITS 256
     arith_uint256 bnTarget;
     bnTarget.SetCompact(nBits);
-    unsigned int nonBits = UintToArith256(Params().GetConsensus().powLimit).bits() - bnTarget.bits();
+    unsigned int nonBits = XFF_BITS - bnTarget.bits();
     unsigned long long int multiplier = 1;
     if(nonBits>63) {
         std::cout<<"Error: Too High Difficulties\n";
