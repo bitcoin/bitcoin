@@ -431,33 +431,6 @@ struct TxOutCoinCompression
     FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
 
-class CAssetOutKey {
-public:
-    uint32_t nAsset;
-    std::vector<unsigned char> vchWitnessSig;
-
-    SERIALIZE_METHODS(CAssetOutKey, obj) {
-        READWRITE(obj.nAsset, obj.vchWitnessSig);
-    }
-
-    CAssetOutKey(const uint32_t &nAssetIn, const std::vector<unsigned char> &vchWitnessSigIn): nAsset(nAssetIn), vchWitnessSig(vchWitnessSigIn) {}
-    CAssetOutKey(const uint32_t &nAssetIn): nAsset(nAssetIn)) {
-        vchWitnessSig.clear();
-    }
-	CAssetOutKey() {
-        SetNull();
-	}
-    inline SetNull() {
-	    nAssetIn = 0;
-        vchWitnessSig.clear();
-    }
-    inline friend bool operator==(const CAssetOutKey &a, const CAssetOutKey &b) {
-		return (a.nAssetIn == b.nAssetIn && a.vchWitnessSig == b.vchWitnessSig);
-	}
-    inline friend bool operator!=(const CAssetOutKey &a, const CAssetOutKey &b) {
-		return !(a == b);
-	}
-};
 class CAssetOutValue {
 public:
     uint32_t n;
@@ -484,20 +457,21 @@ public:
 };
 class CAssetOut {
 public:
-    CAssetOutKey key;
+    uint32_t key;
     std::vector<CAssetOutValue> values;
-
+    std::vector<unsigned char> vchWitnessSig;
     SERIALIZE_METHODS(CAssetOut, obj) {
-        READWRITE(obj.key, obj.values);
+        READWRITE(obj.key, obj.values, obj.vchWitnessSig);
     }
 
-    CAssetOut(const CAssetOutKey &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
+    CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
 	CAssetOut() {
 		SetNull();
 	}
     inline SetNull() {
         key.SetNull();
         values.clear();
+        vchWitnessSig.clear();
     }
     inline friend bool operator==(const CAssetOut &a, const CAssetOut &b) {
 		return (a.key == b.key && a.values == b.values);
@@ -571,6 +545,7 @@ public:
     CAmount GetValueOut() const;
     // SYSCOIN
     bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut, TxValidationState& state) const;
+    uint256 GetWitnessSigHash();
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
