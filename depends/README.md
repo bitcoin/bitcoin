@@ -110,9 +110,9 @@ The following can be set when running make: `make FOO=bar`
 <dt>BUILD_ID_SALT</dt>
 <dd>Optional salt to use when generating build package ids</dd>
 <dt>FORCE_USE_SYSTEM_CLANG</dt>
-<dd>(EXPERTS ONLY) When cross-compiling for macOS, use clang found in the
-system's <code>$PATH</code> rather than the default prebuilt release of clang
-from llvm.org</dd>
+<dd>(EXPERTS ONLY) When cross-compiling for macOS, use Clang found in the
+system's <code>$PATH</code> rather than the default prebuilt release of Clang
+from llvm.org. Clang 8 or later is required.</dd>
 </dl>
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
