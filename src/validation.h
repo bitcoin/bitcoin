@@ -127,7 +127,6 @@ extern bool g_parallel_script_checks;
 extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
-extern size_t nCoinCacheUsage;
 /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
 extern CFeeRate minRelayTxFee;
 /** If the tip is older than this (in seconds), the node is considered to be in initial block download. */
@@ -532,7 +531,7 @@ public:
 
     //! Initialize the in-memory coins cache (to be done after the health of the on-disk database
     //! is verified).
-    void InitCoinsCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void InitCoinsCache(size_t cache_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! @returns whether or not the CoinsViews object has been fully initialized and we can
     //!          safely flush this object to disk.
@@ -580,6 +579,17 @@ public:
 
     //! Destructs all objects related to accessing the UTXO set.
     void ResetCoinsViews() { m_coins_views.reset(); }
+
+    //! The cache size of the on-disk coins view.
+    size_t m_coinsdb_cache_size_bytes{0};
+
+    //! The cache size of the in-memory coins view.
+    size_t m_coinstip_cache_size_bytes{0};
+
+    //! Resize the CoinsViews caches dynamically and flush state to disk.
+    //! @returns true unless an error occurred during the flush.
+    bool ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Update the on-disk chain state.
@@ -797,6 +807,14 @@ public:
     //! chainstate to avoid duplicating block metadata.
     BlockManager m_blockman GUARDED_BY(::cs_main);
 
+    //! The total number of bytes available for us to use across all in-memory
+    //! coins caches. This will be split somehow across chainstates.
+    int64_t m_total_coinstip_cache{0};
+    //
+    //! The total number of bytes available for us to use across all leveldb
+    //! coins databases. This will be split somehow across chainstates.
+    int64_t m_total_coinsdb_cache{0};
+
     //! Instantiate a new chainstate and assign it based upon whether it is
     //! from a snapshot.
     //!
@@ -885,6 +903,10 @@ public:
 
     //! Clear (deconstruct) chainstate data.
     void Reset();
+
+    //! Check to see if caches are out of balance and if so, call
+    //! ResizeCoinsCaches() as needed.
+    void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 /** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
