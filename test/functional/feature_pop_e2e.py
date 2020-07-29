@@ -16,8 +16,6 @@ from test_framework.util import (
     sync_mempools,
 )
 
-from pypopminer import MockMiner, PublicationData
-
 import time
 
 
@@ -39,6 +37,8 @@ class PopE2E(BitcoinTestFramework):
             self.sync_all()
 
     def _test_case(self):
+        from pypopminer import PublicationData
+
         assert len(self.nodes[0].getpeerinfo()) == 1
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
         assert len(self.nodes[1].getpeerinfo()) == 1
@@ -114,6 +114,8 @@ class PopE2E(BitcoinTestFramework):
         """Main test logic"""
 
         self.sync_all(self.nodes)
+
+        from pypopminer import MockMiner
 
         self.apm = MockMiner()
 
