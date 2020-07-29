@@ -40,25 +40,48 @@ def get_ELF_program_headers(executable):
     stdout = run_command([READELF_CMD, '-l', '-W', executable])
 
     in_headers = False
-    count = 0
     headers = []
     for line in stdout.splitlines():
         if line.startswith('Program Headers:'):
             in_headers = True
+            count = 0
         if line == '':
             in_headers = False
         if in_headers:
             if count == 1: # header line
-                ofs_typ = line.find('Type')
-                ofs_offset = line.find('Offset')
-                ofs_flags = line.find('Flg')
-                ofs_align = line.find('Align')
-                if ofs_typ == -1 or ofs_offset == -1 or ofs_flags == -1 or ofs_align  == -1:
+                header = [x.strip() for x in line.split()]
+                ofs_typ = header.index('Type')
+                ofs_flags = header.index('Flg')
+                # assert readelf output is what we expect
+                if ofs_typ == -1 or ofs_flags == -1:
                     raise ValueError('Cannot parse elfread -lW output')
             elif count > 1:
-                typ = line[ofs_typ:ofs_offset].rstrip()
-                flags = line[ofs_flags:ofs_align].rstrip()
-                headers.append((typ, flags))
+                splitline = [x.strip() for x in line.split()]
+                typ = splitline[ofs_typ]
+                if not typ.startswith('[R'): # skip [Requesting ...]
+                    splitline = [x.strip() for x in line.split()]
+                    flags = splitline[ofs_flags]
+                    # check for 'R', ' E'
+                    if splitline[ofs_flags + 1] is 'E':
+                        flags += ' E'
+                    headers.append((typ, flags, []))
+            count += 1
+
+        if line.startswith(' Section to Segment mapping:'):
+            in_mapping = True
+            count = 0
+        if line == '':
+            in_mapping = False
+        if in_mapping:
+            if count == 1: # header line
+                ofs_segment = line.find('Segment')
+                ofs_sections = line.find('Sections...')
+                if ofs_segment == -1 or ofs_sections == -1:
+                    raise ValueError('Cannot parse elfread -lW output')
+            elif count > 1:
+                segment = int(line[ofs_segment:ofs_sections].strip())
+                sections = line[ofs_sections:].strip().split()
+                headers[segment][2].extend(sections)
             count += 1
     return headers
 
@@ -68,7 +91,7 @@ def check_ELF_NX(executable) -> bool:
     '''
     have_wx = False
     have_gnu_stack = False
-    for (typ, flags) in get_ELF_program_headers(executable):
+    for (typ, flags, _) in get_ELF_program_headers(executable):
         if typ == 'GNU_STACK':
             have_gnu_stack = True
         if 'W' in flags and 'E' in flags: # section is both writable and executable
@@ -82,7 +105,7 @@ def check_ELF_RELRO(executable) -> bool:
     Dynamic section must have BIND_NOW flag
     '''
     have_gnu_relro = False
-    for (typ, flags) in get_ELF_program_headers(executable):
+    for (typ, flags, _) in get_ELF_program_headers(executable):
         # Note: not checking flags == 'R': here as linkers set the permission differently
         # This does not affect security: the permission flags of the GNU_RELRO program
         # header are ignored, the PT_LOAD header determines the effective permissions.
@@ -112,6 +135,62 @@ def check_ELF_Canary(executable) -> bool:
         if '__stack_chk_fail' in line:
             ok = True
     return ok
+
+def check_ELF_separate_code(executable):
+    '''
+    Check that sections are appropriately separated in virtual memory,
+    based on their permissions. This checks for missing -Wl,-z,separate-code
+    and potentially other problems.
+    '''
+    EXPECTED_FLAGS = {
+        # Read + execute
+        '.init': 'R E',
+        '.plt': 'R E',
+        '.plt.got': 'R E',
+        '.plt.sec': 'R E',
+        '.text': 'R E',
+        '.fini': 'R E',
+        # Read-only data
+        '.interp': 'R',
+        '.note.gnu.property': 'R',
+        '.note.gnu.build-id': 'R',
+        '.note.ABI-tag': 'R',
+        '.gnu.hash': 'R',
+        '.dynsym': 'R',
+        '.dynstr': 'R',
+        '.gnu.version': 'R',
+        '.gnu.version_r': 'R',
+        '.rela.dyn': 'R',
+        '.rela.plt': 'R',
+        '.rodata': 'R',
+        '.eh_frame_hdr': 'R',
+        '.eh_frame': 'R',
+        '.qtmetadata': 'R',
+        '.gcc_except_table': 'R',
+        '.stapsdt.base': 'R',
+        # Writable data
+        '.init_array': 'RW',
+        '.fini_array': 'RW',
+        '.dynamic': 'RW',
+        '.got': 'RW',
+        '.data': 'RW',
+        '.bss': 'RW',
+    }
+    # For all LOAD program headers get mapping to the list of sections,
+    # and for each section, remember the flags of the associated program header.
+    flags_per_section = {}
+    for (typ, flags, sections) in get_ELF_program_headers(executable):
+        if typ == 'LOAD':
+            for section in sections:
+                assert(section not in flags_per_section)
+                flags_per_section[section] = flags
+    # Spot-check ELF LOAD program header flags per section
+    # If these sections exist, check them against the expected R/W/E flags
+    for (section, flags) in flags_per_section.items():
+        if section in EXPECTED_FLAGS:
+            if EXPECTED_FLAGS[section] != flags:
+                return False
+    return True
 
 def get_PE_dll_characteristics(executable) -> int:
     '''Get PE DllCharacteristics bits'''
@@ -225,7 +304,8 @@ CHECKS = {
     ('PIE', check_ELF_PIE),
     ('NX', check_ELF_NX),
     ('RELRO', check_ELF_RELRO),
-    ('Canary', check_ELF_Canary)
+    ('Canary', check_ELF_Canary),
+    ('separate_code', check_ELF_separate_code),
 ],
 'PE': [
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
