@@ -32,7 +32,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
     ui->deleteButton->setIcon(QIcon(":/icons/remove"));
     ui->deleteButton_is->setIcon(QIcon(":/icons/remove"));
     ui->deleteButton_s->setIcon(QIcon(":/icons/remove"));
-      
+
     // normal dash address field
     GUIUtil::setupAddressWidget(ui->payTo, this, true);
     // just a label for displaying dash address(es)

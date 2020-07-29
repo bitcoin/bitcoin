@@ -167,7 +167,7 @@ struct std_distance_supports : std::false_type {};
 
 template<typename T, typename U>
 struct std_distance_supports
-<T, U, void_t<decltype(std::distance(std::declval<T>(), std::declval<U>()))>> : 
+<T, U, void_t<decltype(std::distance(std::declval<T>(), std::declval<U>()))>> :
   std::true_type {};
 
 template<typename T, typename U>
@@ -180,11 +180,11 @@ template<typename T, typename U, typename V>
 struct std_uninitialized_copy_supports
 <T, U, V, void_t<decltype(std::uninitialized_copy(std::declval<T>(),
 						  std::declval<U>(),
-						  std::declval<V>()))>> : 
+						  std::declval<V>()))>> :
   std::true_type {};
 
 template<typename T, typename U, typename V>
-constexpr bool std_uninitialized_copy_supports_v = 
+constexpr bool std_uninitialized_copy_supports_v =
   std_uninitialized_copy_supports<T, U, V>::value;
 
 }

@@ -5,7 +5,7 @@ etc.
 
 There are currently two sets of tests in this directory:
 
-- [functional](/test/functional) which test the functionality of 
+- [functional](/test/functional) which test the functionality of
 dashd and dash-qt by interacting with them through the RPC and P2P
 interfaces.
 - [util](/test/util) which tests the dash utilities, currently only
@@ -188,5 +188,5 @@ Use the `-v` option for verbose output.
 # Writing functional tests
 
 You are encouraged to write functional tests for new or existing features.
-Further information about the functional test framework and individual 
+Further information about the functional test framework and individual
 tests is found in [test/functional](/test/functional).

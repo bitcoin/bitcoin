@@ -12,7 +12,7 @@
 #include <streams.h>
 #include <util.h>
 
-/** 
+/**
 *   Generic Dumping and Loading
 *   ---------------------------
 */
