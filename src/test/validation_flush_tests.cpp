@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     BlockManager blockman{};
     CChainState chainstate{blockman};
     chainstate.InitCoinsDB(/*cache_size_bytes*/ 1 << 10, /*in_memory*/ true, /*should_wipe*/ false);
-    WITH_LOCK(::cs_main, chainstate.InitCoinsCache());
+    WITH_LOCK(::cs_main, chainstate.InitCoinsCache(1 << 10));
     CTxMemPool tx_pool{};
 
     constexpr bool is_64_bit = sizeof(void*) == 8;

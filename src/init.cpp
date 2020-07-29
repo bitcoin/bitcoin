@@ -1817,7 +1817,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
-    nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
+    int64_t nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t nEvoDbCache = 1024 * 1024 * 16; // TODO
     LogPrintf("Cache configuration:\n");
@@ -1848,6 +1848,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
             try {
                 LOCK(cs_main);
                 chainman.InitializeChainstate();
+                chainman.m_total_coinstip_cache = nCoinCacheUsage;
+                chainman.m_total_coinsdb_cache = nCoinDBCache;
+
                 UnloadBlockIndex();
                                 
                 // SYSCOIN
@@ -1952,7 +1955,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                         break;
                     }
                     // The on-disk coinsdb is now in a good state, create the cache
-                    chainstate->InitCoinsCache();
+                    chainstate->InitCoinsCache(nCoinCacheUsage);
                     assert(chainstate->CanFlushToDisk());
 
                     if (!is_coinsview_empty(chainstate)) {
