@@ -988,12 +988,13 @@ void InitParameterInteraction()
         }
     }
 
-    if (gArgs.GetArg("-prune", 0) > 0) {
+    int64_t nPruneArg = gArgs.GetArg("-prune", 0);
+    if (nPruneArg > 0) {
         if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
-            LogPrintf("%s: parameter interaction: -prune=%d -> setting -disablegovernance=true\n", __func__);
+            LogPrintf("%s: parameter interaction: -prune=%d -> setting -disablegovernance=true\n", __func__, nPruneArg);
         }
         if (gArgs.SoftSetBoolArg("-txindex", false)) {
-            LogPrintf("%s: parameter interaction: -prune=%d -> setting -txindex=false\n", __func__);
+            LogPrintf("%s: parameter interaction: -prune=%d -> setting -txindex=false\n", __func__, nPruneArg);
         }
     }
 
