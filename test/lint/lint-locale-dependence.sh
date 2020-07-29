@@ -1,14 +1,18 @@
 #!/bin/bash
 
 export LC_ALL=C
+
 KNOWN_VIOLATIONS=(
     "src/base58.cpp:.*isspace"
-    "src/bitcoin-tx.cpp.*stoul"
-    "src/bitcoin-tx.cpp.*trim_right"
-    "src/bitcoin-tx.cpp:.*atoi"
+    "src/bench/string_cast.cpp.*atoi"
+    "src/dash-tx.cpp.*stoul"
+    "src/dash-tx.cpp.*trim_right"
+    "src/dash-tx.cpp:.*atoi"
     "src/core_read.cpp.*is_digit"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
+    "src/governance/governance-validators.cpp.*isspace"
+    "src/governance/governance-validators.cpp.*tolower"
     "src/httprpc.cpp.*trim"
     "src/init.cpp:.*atoi"
     "src/netbase.cpp.*to_lower"
@@ -16,6 +20,11 @@ KNOWN_VIOLATIONS=(
     "src/qt/rpcconsole.cpp:.*isdigit"
     "src/rest.cpp:.*strtol"
     "src/rpc/server.cpp.*to_upper"
+    "src/rpc/blockchain.cpp.*atoi"
+    "src/rpc/governance.cpp.*atoi"
+    "src/rpc/masternode.cpp.*atoi"
+    "src/rpc/masternode.cpp.*tolower"
+    "src/rpc/server.cpp.*tolower"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
     "src/test/getarg_tests.cpp.*split"
     "src/torcontrol.cpp:.*atoi"
@@ -34,6 +43,7 @@ KNOWN_VIOLATIONS=(
     "src/utilstrencodings.cpp:.*strtoul"
     "src/utilstrencodings.cpp:.*strtoull"
     "src/utilstrencodings.h:.*atoi"
+    "src/wallet/wallet.cpp:.*atoi"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
