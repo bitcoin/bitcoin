@@ -177,9 +177,9 @@ TestingSetup::~TestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.connman.reset();
     m_node.banman.reset();
+    UnloadBlockIndex(m_node.mempool);
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
-    UnloadBlockIndex();
     llmq::DestroyLLMQSystem();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
