@@ -12,14 +12,13 @@ packages:
 - "bsdmainutils"
 - "curl"
 - "faketime"
-- "g++-8-multilib"
 - "libtool"
 - "pkg-config"
 # Host dependencies.
-- "g++-8"
-- "g++-8-arm-linux-gnueabihf"
-- "g++-8-aarch64-linux-gnu"
-- "g++-8-riscv64-linux-gnu"
+- "g++"
+- "g++-arm-linux-gnueabihf"
+- "g++-aarch64-linux-gnu"
+- "g++-riscv64-linux-gnu"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
@@ -29,8 +28,7 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-  FAKETIME_HOST_PROGS="gcc g++"
+  CONFIGFLAGS="--enable-determinism --enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
@@ -59,26 +57,9 @@ script: |
   done
   }
 
-  function create_per-host_faketime_wrappers {
-  for i in $HOSTS; do
-    for prog in ${FAKETIME_HOST_PROGS}; do
-        if which ${i}-${prog}-8
-        then
-            echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
-            echo "REAL=\`which -a ${i}-${prog}-8 | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-            echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
-            echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-            echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
-            chmod +x ${WRAP_DIR}/${i}-${prog}
-        fi
-    done
-  done
-  }
-
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
   create_global_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
   cd bitcoin
@@ -91,7 +72,6 @@ script: |
   # Faketime for binaries
   export PATH=${PATH_orig}
   create_global_faketime_wrappers "${REFERENCE_DATETIME}"
-  create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
   # Define DISTNAME variable.
