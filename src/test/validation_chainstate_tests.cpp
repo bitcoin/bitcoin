@@ -34,9 +34,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         return outp;
     };
 
-    ENTER_CRITICAL_SECTION(cs_main);
-    CChainState& c1 = manager.InitializeChainstate();
-    LEAVE_CRITICAL_SECTION(cs_main);
+    CChainState& c1 = *WITH_LOCK(cs_main, return &manager.InitializeChainstate());
     c1.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
