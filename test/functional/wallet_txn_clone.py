@@ -63,8 +63,7 @@ class TxnMallTest(BitcoinTestFramework):
         pos0 = 2*(4+1+36+1+4+1)
         hex400 = "00902f5009000000"
         output_len = 16 + 2 + 2 * int("0x" + clone_raw[pos0 + 16 : pos0 + 16 + 2], 0)
-        if (rawtx1["vout"][0]["value"] == 400 and clone_raw[pos0 : pos0 + 16] != hex400 or
-            rawtx1["vout"][0]["value"] != 400 and clone_raw[pos0 : pos0 + 16] == hex400):
+        if (rawtx1["vout"][0]["value"] == 400 and clone_raw[pos0 : pos0 + 16] != hex400 or rawtx1["vout"][0]["value"] != 400 and clone_raw[pos0 : pos0 + 16] == hex400):
             output0 = clone_raw[pos0 : pos0 + output_len]
             output1 = clone_raw[pos0 + output_len : pos0 + 2 * output_len]
             clone_raw = clone_raw[:pos0] + output1 + output0 + clone_raw[pos0 + 2 * output_len:]
