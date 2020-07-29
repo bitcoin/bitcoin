@@ -41,7 +41,7 @@ class CFiltersClient(P2PInterface):
 
 class CompactFiltersTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.rpc_timeout = 480
         self.num_nodes = 2
         self.extra_args = [

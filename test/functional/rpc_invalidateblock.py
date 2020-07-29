@@ -13,7 +13,7 @@ from test_framework.util import (
 
 class InvalidateTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 3
 
     def setup_network(self):

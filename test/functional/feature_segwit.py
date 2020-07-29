@@ -48,7 +48,7 @@ txs_mined = {} # txindex from txid to blockhash
 
 class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [

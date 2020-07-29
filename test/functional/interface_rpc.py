@@ -21,7 +21,7 @@ def expect_http_status(expected_http_status, expected_rpc_code,
 class RPCInterfaceTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.supports_cli = False
 
     def test_getrpcinfo(self):

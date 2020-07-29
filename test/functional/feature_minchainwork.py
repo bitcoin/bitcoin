@@ -25,7 +25,7 @@ REGTEST_WORK_PER_BLOCK = 2
 
 class MinimumChainWorkTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 3
 
         self.extra_args = [[], ["-minimumchainwork=0x65"], ["-minimumchainwork=0x65"]]

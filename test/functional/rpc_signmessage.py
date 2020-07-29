@@ -9,7 +9,7 @@ from test_framework.util import assert_equal
 
 class SignMessagesTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 1
         self.extra_args = [["-addresstype=legacy"]]
 

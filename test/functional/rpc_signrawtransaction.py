@@ -17,7 +17,7 @@ from decimal import Decimal
 
 class SignRawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
 
     def skip_test_if_missing_module(self):

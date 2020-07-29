@@ -147,7 +147,7 @@ def create_bip112txs(node, bip112inputs, varyOP_CSV, txversion, address, locktim
 class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
             '-addresstype=legacy',

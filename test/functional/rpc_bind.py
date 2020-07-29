@@ -12,7 +12,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, get_rpc_p
 
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.bind_to_localhost_only = False
         self.num_nodes = 1
         self.supports_cli = False

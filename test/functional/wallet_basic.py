@@ -24,7 +24,7 @@ class WalletTest(BitcoinTestFramework):
         self.extra_args = [[
             "-acceptnonstdtxn=1",
         ]] * self.num_nodes
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):

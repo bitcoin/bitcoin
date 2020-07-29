@@ -46,7 +46,7 @@ def deser_keymeta(f):
 
 class UpgradeWalletTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 3
         self.extra_args = [
             ["-addresstype=bech32", "-keypool=2"], # current wallet version

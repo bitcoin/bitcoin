@@ -17,7 +17,7 @@ import os
 
 class AbortNodeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
         self.rpc_timeout = 240
 

@@ -26,7 +26,7 @@ VB_PATTERN = re.compile("Warning: unknown new rules activated.*versionbit")
 
 class VersionBitsWarningTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 1
 
     def setup_network(self):

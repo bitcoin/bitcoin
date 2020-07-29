@@ -15,7 +15,7 @@ def test_long_call(node):
 class ShutdownTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 1
         self.supports_cli = False
 

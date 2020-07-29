@@ -14,7 +14,7 @@ from test_framework.util import assert_equal
 class UacommentTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
 
     def run_test(self):
         self.log.info("test multiple -uacomment")

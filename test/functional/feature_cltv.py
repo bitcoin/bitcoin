@@ -59,7 +59,7 @@ class BIP65Test(BitcoinTestFramework):
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
         ]]
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.rpc_timeout = 480
 
     def skip_test_if_missing_module(self):

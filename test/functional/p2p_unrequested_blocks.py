@@ -65,7 +65,7 @@ from test_framework.util import (
 
 class AcceptBlockTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
         self.extra_args = [[], ["-minimumchainwork=0x10"]]
 

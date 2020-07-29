@@ -33,7 +33,7 @@ from test_framework.util import (
 
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 6
         # Add new version after each release:
         self.extra_args = [

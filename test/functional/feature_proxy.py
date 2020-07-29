@@ -57,7 +57,7 @@ NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION})
 class ProxyTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
 
     def setup_nodes(self):
         self.have_ipv6 = test_ipv6_local()

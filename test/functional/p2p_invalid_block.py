@@ -21,7 +21,7 @@ from test_framework.util import assert_equal
 class InvalidBlockRequestTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.extra_args = [["-whitelist=noban@127.0.0.1"]]
 
     def run_test(self):

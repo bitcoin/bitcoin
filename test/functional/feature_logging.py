@@ -13,7 +13,7 @@ from test_framework.test_node import ErrorMatch
 class LoggingTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
 
     def relative_log_path(self, name):
         return os.path.join(self.nodes[0].datadir, self.chain, name)

@@ -27,7 +27,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.extra_args = [[
             "-acceptnonstdtxn=1",
         ]]
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
 
     def bootstrap_p2p(self, *, num_connections=1):
         """Add a P2P connection to the node.

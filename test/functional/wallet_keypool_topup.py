@@ -21,7 +21,7 @@ from test_framework.util import (
 
 class KeypoolRestoreTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 4
         self.extra_args = [[], ['-keypool=100'], ['-keypool=100'], ['-keypool=100']]
 

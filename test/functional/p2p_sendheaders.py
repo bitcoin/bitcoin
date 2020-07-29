@@ -197,7 +197,7 @@ class BaseNode(P2PInterface):
 
 class SendHeadersTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
 
     def mine_blocks(self, count):

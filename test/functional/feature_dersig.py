@@ -43,7 +43,7 @@ class BIP66Test(BitcoinTestFramework):
             '-whitelist=noban@127.0.0.1',
             '-par=1',  # Use only one script thread to get the exact log msg for testing
         ]]
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.rpc_timeout = 240
 
     def skip_test_if_missing_module(self):

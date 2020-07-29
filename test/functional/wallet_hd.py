@@ -16,7 +16,7 @@ from test_framework.util import (
 
 class WalletHDTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
         self.extra_args = [[], ['-keypool=0']]
         self.supports_cli = False

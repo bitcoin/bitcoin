@@ -21,7 +21,7 @@ from test_framework.wallet_util import bytes_to_wif
 
 class RpcCreateMultiSigTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 3
         self.supports_cli = False
 

@@ -76,7 +76,7 @@ class ExampleTest(BitcoinTestFramework):
         """Override test parameters for your individual test.
 
         This method must be overridden and num_nodes must be explicitly set."""
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 3
         # Use self.extra_args to change command-line arguments for the nodes
         self.extra_args = [[], ["-logips"], []]

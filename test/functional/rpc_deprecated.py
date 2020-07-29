@@ -9,7 +9,7 @@ from test_framework.util import assert_raises_rpc_error, find_vout_for_address
 class DeprecatedRpcTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.extra_args = [[], ['-deprecatedrpc=bumpfee']]
 
     def run_test(self):

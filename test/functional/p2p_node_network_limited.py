@@ -33,7 +33,7 @@ class P2PIgnoreInv(P2PInterface):
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 3
         self.extra_args = [['-prune=550', '-addrmantest'], [], []]
 

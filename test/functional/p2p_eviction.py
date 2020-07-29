@@ -34,7 +34,7 @@ class SlowP2PInterface(P2PInterface):
 
 class P2PEvict(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 1
         # The choice of maxconnections=32 results in a maximum of 21 inbound connections
         # (32 - 10 outbound - 1 feeler). 20 inbound peers are protected from eviction:

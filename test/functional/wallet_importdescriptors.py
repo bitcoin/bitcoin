@@ -34,7 +34,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.extra_args = [["-addresstype=legacy"],
                            ["-addresstype=bech32", "-keypool=5"]
                           ]
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.wallet_names = []
 
     def skip_test_if_missing_module(self):

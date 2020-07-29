@@ -1198,7 +1198,7 @@ class TaprootTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         # Node 0 has Taproot inactive, Node 1 active.
         self.extra_args = [["-par=1", "-vbparams=taproot:1:1"], ["-par=1"]]
 

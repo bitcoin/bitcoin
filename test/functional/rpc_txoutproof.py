@@ -13,7 +13,7 @@ from test_framework.wallet import MiniWallet
 class MerkleBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.extra_args = [
             [],
             ["-txindex"],

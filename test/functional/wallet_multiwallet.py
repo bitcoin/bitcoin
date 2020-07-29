@@ -39,7 +39,7 @@ def test_load_unload(node, name):
 
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
         self.rpc_timeout = 120
         self.extra_args = [["-nowallet"], []]

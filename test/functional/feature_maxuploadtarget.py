@@ -33,7 +33,7 @@ class TestP2PConn(P2PInterface):
 class MaxUploadTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 1
         self.extra_args = [[
             "-maxuploadtarget=800",

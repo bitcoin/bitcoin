@@ -12,7 +12,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, create_co
 
 class PrioritiseTransactionTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
         self.extra_args = [[
             "-printpriority=1",

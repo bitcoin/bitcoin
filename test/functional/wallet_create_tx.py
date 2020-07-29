@@ -15,7 +15,7 @@ from test_framework.blocktools import (
 
 class CreateTxWalletTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):

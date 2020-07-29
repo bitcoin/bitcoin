@@ -12,7 +12,7 @@ from test_framework.util import (
 class SetBanTests(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.extra_args = [[],[]]
 
     def run_test(self):

@@ -15,7 +15,7 @@ NORMAL_FEE_FILTER = Decimal(100) / COIN
 
 class P2PIBDTxRelayTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
         self.extra_args = [
             ["-minrelaytxfee={}".format(NORMAL_FEE_FILTER)],

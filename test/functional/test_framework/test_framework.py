@@ -90,12 +90,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     This class also contains various public and private helper methods."""
 
     chain = None  # type: str
-    setup_clean_chain = None  # type: bool
+    use_cached_chain = None  # type: bool
 
     def __init__(self):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
         self.chain = 'regtest'
-        self.setup_clean_chain = False
+        self.use_cached_chain = True
         self.nodes = []
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
@@ -346,7 +346,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def setup_chain(self):
         """Override this method to customize blockchain setup"""
         self.log.info("Initializing test directory " + self.options.tmpdir)
-        if self.setup_clean_chain:
+        if not self.use_cached_chain:
             self._initialize_chain_clean()
         else:
             self._initialize_chain()
@@ -381,7 +381,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.start_nodes()
         if self.is_wallet_compiled():
             self.import_deterministic_coinbase_privkeys()
-        if not self.setup_clean_chain:
+        if self.use_cached_chain:
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
             # To ensure that all nodes are out of IBD, the most recent block

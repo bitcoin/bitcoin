@@ -27,7 +27,7 @@ class SignetBasicTest(BitcoinTestFramework):
     def set_test_params(self):
         self.chain = "signet"
         self.num_nodes = 6
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         shared_args1 = ["-signetchallenge=51"]  # OP_TRUE
         shared_args2 = []  # default challenge
         # we use the exact same challenge except we do it as a 2-of-2, which means it should fail

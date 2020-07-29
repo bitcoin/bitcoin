@@ -41,7 +41,7 @@ def filter_output_indices_by_value(vouts, value):
 
 class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 2
         self.extra_args = [["-rest"], []]
         self.supports_cli = False

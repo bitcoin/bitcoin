@@ -47,7 +47,7 @@ def create_transactions(node, address, amt, fees):
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.extra_args = [
             ['-limitdescendantcount=3'],  # Limit mempool descendants as a hack to have wallet txs rejected from the mempool
             [],

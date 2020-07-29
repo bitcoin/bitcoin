@@ -28,7 +28,7 @@ from test_framework.util import (
 
 class P2PFingerprintTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
+        self.use_cached_chain = False
         self.num_nodes = 1
 
     # Build a chain of blocks on top of given one
