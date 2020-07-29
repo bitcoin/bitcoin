@@ -7,29 +7,29 @@ suites:
 architectures:
 - "amd64"
 packages:
-- "curl"
-- "g++-aarch64-linux-gnu"
-- "g++-8-aarch64-linux-gnu"
-- "gcc-8-aarch64-linux-gnu"
-- "binutils-aarch64-linux-gnu"
-- "g++-arm-linux-gnueabihf"
-- "g++-8-arm-linux-gnueabihf"
-- "gcc-8-arm-linux-gnueabihf"
-- "binutils-arm-linux-gnueabihf"
-- "g++-riscv64-linux-gnu"
-- "g++-8-riscv64-linux-gnu"
-- "gcc-8-riscv64-linux-gnu"
-- "binutils-riscv64-linux-gnu"
-- "binutils-gold"
-- "git"
-- "pkg-config"
+# Common dependencies.
 - "autoconf"
-- "libtool"
 - "automake"
-- "faketime"
+- "binutils"
 - "bsdmainutils"
 - "ca-certificates"
+- "curl"
+- "faketime"
+- "git"
+- "libtool"
+- "patch"
+- "pkg-config"
 - "python3"
+# Cross compilation HOSTS:
+#  - arm-linux-gnueabihf
+- "binutils-arm-linux-gnueabihf"
+- "g++-8-arm-linux-gnueabihf"
+#  - aarch64-linux-gnu
+- "binutils-aarch64-linux-gnu"
+- "g++-8-aarch64-linux-gnu"
+#  - riscv64-linux-gnu
+- "binutils-riscv64-linux-gnu"
+- "g++-8-riscv64-linux-gnu"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
