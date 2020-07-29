@@ -3,6 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+export LC_ALL=C
+
 DIR=$(dirname "$0")
 [ "/${DIR#/}" != "$DIR" ] && DIR=$(dirname "$(pwd)/$0")
 

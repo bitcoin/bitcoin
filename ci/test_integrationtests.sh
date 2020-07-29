@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-
+#
 # This script is executed inside the builder image
+
+export LC_ALL=C
 
 set -e
 
