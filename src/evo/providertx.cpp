@@ -46,8 +46,7 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, TxValidat
 template <typename ProTx>
 static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, TxValidationState& state, bool fJustCheck)
 {
-    std::string strError;
-    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError)) {
+    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig)) {
         return FormatSyscoinErrorMessage(state, "bad-protx-sig", fJustCheck);
     }
     return true;
@@ -56,8 +55,7 @@ static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, TxValidationSt
 template <typename ProTx>
 static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, TxValidationState& state, bool fJustCheck)
 {
-    std::string strError;
-    if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig, proTx.MakeSignString(), strError)) {
+    if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig, proTx.MakeSignString())) {
         return FormatSyscoinErrorMessage(state, "bad-protx-sig", fJustCheck);
     }
     return true;

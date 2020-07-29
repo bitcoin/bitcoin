@@ -31,8 +31,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     }
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->first;
-    const std::vector<CAssetOut> &vecVout = it->second;
+    const uint32_t &nAsset = it->key.nAsset;
+    const std::vector<CAssetOut> &vecVout = it->value;
     // do this check only when not in IBD (initial block download)
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
@@ -343,8 +343,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
         {   
             auto it = tx.voutAssets.begin();
-            const uint32_t &nAsset = it->first;
-            const std::vector<CAssetOut> &vecVout = it->second;
+            const uint32_t &nAsset = it->key.nAsset;
+            const std::vector<CAssetOut> &vecVout = it->value;
             const CAmount &nBurnAmount = tx.vout[nOut].nValue;
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
@@ -395,8 +395,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
 
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->first;
-    const std::vector<CAssetOut> &vecVout = it->second;
+    const uint32_t &nAsset = it->key.nAsset;
+    const std::vector<CAssetOut> &vecVout = it->value;
     const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
@@ -509,8 +509,8 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->first;
-    const std::vector<CAssetOut> &vecVout = it->second;
+    const uint32_t &nAsset = it->key.nAsset;
+    const std::vector<CAssetOut> &vecVout = it->value;
     CAsset dbAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
