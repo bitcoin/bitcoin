@@ -14,7 +14,7 @@ TEMPLIST=${TEMPDIR}/signatures.txt
 OUT=signature-osx.tar.gz
 OUTROOT=osx
 
-if [ ! -n "$1" ]; then
+if [ -z "$1" ]; then
   echo "usage: $0 <codesign args>"
   echo "example: $0 -s MyIdentity"
   exit 1

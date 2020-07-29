@@ -19,7 +19,7 @@ find_latest_squash()
 	sub=
 	git log --grep="^git-subtree-dir: $dir/*\$" \
 		--pretty=format:'START %H%n%s%n%n%b%nEND%n' "$COMMIT" |
-	while read a b junk; do
+	while read a b _; do
 		case "$a" in
 			START) sq="$b" ;;
 			git-subtree-mainline:) main="$b" ;;
@@ -49,7 +49,7 @@ if [ -z "$latest_squash" ]; then
 fi
 
 set $latest_squash
-old=$1
+# old=$1
 rev=$2
 if [ "d$(git cat-file -t $rev 2>/dev/null)" != dcommit ]; then
     echo "ERROR: subtree commit $rev unavailable. Fetch/update the subtree repository" >&2

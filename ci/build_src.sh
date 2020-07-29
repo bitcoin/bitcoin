@@ -38,7 +38,7 @@ fi
 
 BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$BUILD_DIR/depends/$HOST --bindir=$OUT_DIR/bin --libdir=$OUT_DIR/lib"
 
-test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
+( test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' ) || ./autogen.sh
 
 rm -rf build-ci
 mkdir build-ci

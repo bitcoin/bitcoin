@@ -96,9 +96,9 @@ while true; do
 		FILE_HASHES=""
 		for FILE in $(git ls-tree --full-tree -r --name-only "$CURRENT_COMMIT" | LC_ALL=C sort); do
 			if [ "$HAVE_GNU_SHA512" = 1 ]; then
-				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST OTHER; echo $FIRST; } )
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST _; echo $FIRST; } )
 			else
-				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | shasum -a 512 | { read FIRST OTHER; echo $FIRST; } )
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | shasum -a 512 | { read FIRST _; echo $FIRST; } )
 			fi
 			[ "$FILE_HASHES" != "" ] && FILE_HASHES="$FILE_HASHES"'
 '

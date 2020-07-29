@@ -6,7 +6,7 @@ export LC_ALL=C
 
 set -e
 
-PASS_ARGS="$@"
+PASS_ARGS="$*"
 
 source ./ci/matrix.sh
 
@@ -42,7 +42,9 @@ echo "Collecting logs..."
 BASEDIR=$(ls testdatadirs)
 if [ "$BASEDIR" != "" ]; then
   mkdir testlogs
-  for d in $(ls testdatadirs/$BASEDIR | grep -v '^cache$'); do
+  for d in testdatadirs/$BASEDIR; do
+    [[ -e "$d" ]] || break # found nothing
+    [[ "$d" == "cache" ]] && continue # skip cache dir
     mkdir testlogs/$d
     ./test/functional/combine_logs.py -c ./testdatadirs/$BASEDIR/$d > ./testlogs/$d/combined.log
     ./test/functional/combine_logs.py --html ./testdatadirs/$BASEDIR/$d > ./testlogs/$d/combined.html
