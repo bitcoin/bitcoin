@@ -101,11 +101,8 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   BITCOIN_QT_CHECK([_BITCOIN_QT_FIND_LIBS])
 
   dnl This is ugly and complicated. Yuck. Works as follows:
-  dnl For Qt5, we can check a header to find out whether Qt is build
-  dnl statically. When Qt is built statically, some plugins must be linked into
-  dnl the final binary as well.
-  dnl With Qt5, languages moved into core and the WindowsIntegration plugin was
-  dnl added.
+  dnl Check a header to find out whether Qt is built statically. When Qt is built
+  dnl statically, some plugins must be linked into the final binary as well.
   dnl _BITCOIN_QT_CHECK_STATIC_PLUGINS does a quick link-check and appends the
   dnl results to QT_LIBS.
   BITCOIN_QT_CHECK([
@@ -122,12 +119,20 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       AC_DEFINE(QT_QPA_PLATFORM_MINIMAL, 1, [Define this symbol if the minimal qt platform exists])
     fi
     if test "x$TARGET_OS" = xwindows; then
+      dnl Linking against is wtsapi32 is required. See #17749 and
+      dnl https://bugreports.qt.io/browse/QTBUG-27097.
+      AX_CHECK_LINK_FLAG([[-lwtsapi32]],[QT_LIBS="$QT_LIBS -lwtsapi32"],[AC_MSG_ERROR(could not link against -lwtsapi32)])
       _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)],[-lqwindows])
       AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
     elif test "x$TARGET_OS" = xlinux; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)],[-lqxcb -lxcb-static])
+      _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)],[-lqxcb])
       AC_DEFINE(QT_QPA_PLATFORM_XCB, 1, [Define this symbol if the qt platform is xcb])
     elif test "x$TARGET_OS" = xdarwin; then
+      dnl Linking against various frameworks is required when using qcocoa.
+      dnl See platforms/cocoa.pro in the Qt source.
+      AX_CHECK_LINK_FLAG([[-framework Carbon]],[QT_LIBS="$QT_LIBS -framework Carbon"],[AC_MSG_ERROR(could not link against Carbon framework)])
+      AX_CHECK_LINK_FLAG([[-framework QuartzCore]],[QT_LIBS="$QT_LIBS -framework QuartzCore"],[AC_MSG_ERROR(could not link against QuartzCore framework)])
+      AX_CHECK_LINK_FLAG([[-framework IOSurface]],[QT_LIBS="$QT_LIBS -framework IOSurface"],[AC_MSG_ERROR(could not link against IOSurface framework)])
       _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin)],[-lqcocoa])
       AC_DEFINE(QT_QPA_PLATFORM_COCOA, 1, [Define this symbol if the qt platform is cocoa])
     elif test "x$TARGET_OS" = xandroid; then
@@ -251,12 +256,10 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   AC_SUBST(MOC_DEFS)
 ])
 
-dnl All macros below are internal and should _not_ be used from the main
-dnl configure.ac.
+dnl All macros below are internal and should _not_ be used from configure.ac.
 dnl ----
 
 dnl Internal. Check if the linked version of Qt was built as static libs.
-dnl Requires: Qt5.
 dnl Requires: INCLUDES and LIBS must be populated as necessary.
 dnl Output: bitcoin_cv_static_qt=yes|no
 AC_DEFUN([_BITCOIN_QT_IS_STATIC],[
@@ -308,18 +311,21 @@ AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
       if test -d "$qt_plugin_path/platforms/android"; then
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms/android -lqtfreetype -lEGL"
       fi
-      PKG_CHECK_MODULES([QTFONTDATABASE], [Qt5FontDatabaseSupport], [QT_LIBS="-lQt5FontDatabaseSupport $QT_LIBS"])
-      PKG_CHECK_MODULES([QTEVENTDISPATCHER], [Qt5EventDispatcherSupport], [QT_LIBS="-lQt5EventDispatcherSupport $QT_LIBS"])
-      PKG_CHECK_MODULES([QTTHEME], [Qt5ThemeSupport], [QT_LIBS="-lQt5ThemeSupport $QT_LIBS"])
-      PKG_CHECK_MODULES([QTDEVICEDISCOVERY], [Qt5DeviceDiscoverySupport], [QT_LIBS="-lQt5DeviceDiscoverySupport $QT_LIBS"])
       PKG_CHECK_MODULES([QTACCESSIBILITY], [Qt5AccessibilitySupport], [QT_LIBS="-lQt5AccessibilitySupport $QT_LIBS"])
+      PKG_CHECK_MODULES([QTDEVICEDISCOVERY], [Qt5DeviceDiscoverySupport], [QT_LIBS="-lQt5DeviceDiscoverySupport $QT_LIBS"])
+      PKG_CHECK_MODULES([QTEDID], [Qt5EdidSupport], [QT_LIBS="-lQt5EdidSupport $QT_LIBS"])
+      PKG_CHECK_MODULES([QTEVENTDISPATCHER], [Qt5EventDispatcherSupport], [QT_LIBS="-lQt5EventDispatcherSupport $QT_LIBS"])
       PKG_CHECK_MODULES([QTFB], [Qt5FbSupport], [QT_LIBS="-lQt5FbSupport $QT_LIBS"])
+      PKG_CHECK_MODULES([QTFONTDATABASE], [Qt5FontDatabaseSupport], [QT_LIBS="-lQt5FontDatabaseSupport $QT_LIBS"])
+      PKG_CHECK_MODULES([QTTHEME], [Qt5ThemeSupport], [QT_LIBS="-lQt5ThemeSupport $QT_LIBS"])
       if test "x$TARGET_OS" = xlinux; then
+        PKG_CHECK_MODULES([QTSERVICE], [Qt5ServiceSupport], [QT_LIBS="-lQt5ServiceSupport $QT_LIBS"])
         PKG_CHECK_MODULES([QTXCBQPA], [Qt5XcbQpa], [QT_LIBS="$QTXCBQPA_LIBS $QT_LIBS"])
       elif test "x$TARGET_OS" = xdarwin; then
         PKG_CHECK_MODULES([QTCLIPBOARD], [Qt5ClipboardSupport], [QT_LIBS="-lQt5ClipboardSupport $QT_LIBS"])
         PKG_CHECK_MODULES([QTGRAPHICS], [Qt5GraphicsSupport], [QT_LIBS="-lQt5GraphicsSupport $QT_LIBS"])
-        PKG_CHECK_MODULES([QTCGL], [Qt5CglSupport], [QT_LIBS="-lQt5CglSupport $QT_LIBS"])
+      elif test "x$TARGET_OS" = xwindows; then
+        PKG_CHECK_MODULES([QTWINDOWSUIAUTOMATION], [Qt5WindowsUIAutomationSupport], [QT_LIBS="-lQt5WindowsUIAutomationSupport $QT_LIBS"])
       fi
     fi
 ])

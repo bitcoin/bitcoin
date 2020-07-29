@@ -56,6 +56,7 @@ OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
 # Allowed NEEDED libraries
+# TODO: additions need to be reviewed and trimmed
 ELF_ALLOWED_LIBRARIES = {
 # bitcoind and bitcoin-qt
 'libgcc_s.so.1', # GCC base support
@@ -75,7 +76,21 @@ ELF_ALLOWED_LIBRARIES = {
 'libxcb.so.1', # part of X11
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
-'libdl.so.2' # programming interface to dynamic linker
+'libdl.so.2', # programming interface to dynamic linker
+'libxcb-icccm.so.4',
+'libxcb-image.so.0',
+'libxcb-shm.so.0',
+'libxcb-keysyms.so.1',
+'libxcb-randr.so.0',
+'libxcb-render-util.so.0',
+'libxcb-render.so.0',
+'libxcb-shape.so.0',
+'libxcb-sync.so.1',
+'libxcb-xfixes.so.0',
+'libxcb-xinerama.so.0',
+'libxcb-xkb.so.1',
+'libxkbcommon-x11.so.0',
+'libxkbcommon.so.0',
 }
 ARCH_MIN_GLIBC_VER = {
 pixie.EM_386:    (2,1),
@@ -94,13 +109,19 @@ MACHO_ALLOWED_LIBRARIES = {
 'AppKit', # user interface
 'ApplicationServices', # common application tasks.
 'Carbon', # deprecated c back-compat API
+'ColorSync',
 'CoreFoundation', # low level func, data types
 'CoreGraphics', # 2D rendering
 'CoreServices', # operating system services
 'CoreText', # interface for laying out text and handling fonts.
+'CoreVideo',
 'Foundation', # base layer functionality for apps/frameworks
 'ImageIO', # read and write image file formats.
 'IOKit', # user-space access to hardware devices and drivers.
+'IOSurface',
+'Metal',
+'Security',
+'QuartzCore',
 'libobjc.A.dylib', # Objective-C runtime library
 }
 
@@ -116,12 +137,15 @@ PE_ALLOWED_LIBRARIES = {
 'dwmapi.dll', # desktop window manager
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor
+'NETAPI32.dll'
 'ole32.dll', # component object model
 'OLEAUT32.dll', # OLE Automation API
 'SHLWAPI.dll', # light weight shell API
+'USERENV.dll',
 'UxTheme.dll',
 'VERSION.dll', # version checking
 'WINMM.dll', # WinMM audio API
+'WTSAPI32.dll'
 }
 
 class CPPFilt(object):
