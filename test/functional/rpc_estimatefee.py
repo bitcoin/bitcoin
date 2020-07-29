@@ -14,7 +14,6 @@ from test_framework.util import assert_raises_rpc_error
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 1
 
     def run_test(self):
