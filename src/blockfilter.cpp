@@ -78,7 +78,7 @@ GCSFilter::GCSFilter(const Params& params)
     : m_params(params), m_N(0), m_F(0), m_encoded{0}
 {}
 
-GCSFilter::GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter)
+GCSFilter::GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter, const bool filter_checked)
     : m_params(params), m_encoded(std::move(encoded_filter))
 {
     VectorReader stream(GCS_SER_TYPE, GCS_SER_VERSION, m_encoded, 0);
@@ -90,14 +90,16 @@ GCSFilter::GCSFilter(const Params& params, std::vector<unsigned char> encoded_fi
     }
     m_F = static_cast<uint64_t>(m_N) * static_cast<uint64_t>(m_params.m_M);
 
-    // Verify that the encoded filter contains exactly N elements. If it has too much or too little
-    // data, a std::ios_base::failure exception will be raised.
-    BitStreamReader<VectorReader> bitreader(stream);
-    for (uint64_t i = 0; i < m_N; ++i) {
-        GolombRiceDecode(bitreader, m_params.m_P);
-    }
-    if (!stream.empty()) {
-        throw std::ios_base::failure("encoded_filter contains excess data");
+    if (!filter_checked) {
+        // Verify that the encoded filter contains exactly N elements. If it has too much or too little
+        // data, a std::ios_base::failure exception will be raised.
+        BitStreamReader<VectorReader> bitreader(stream);
+        for (uint64_t i = 0; i < m_N; ++i) {
+            GolombRiceDecode(bitreader, m_params.m_P);
+        }
+        if (!stream.empty()) {
+            throw std::ios_base::failure("encoded_filter contains excess data");
+        }
     }
 }
 
@@ -250,14 +252,14 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
 }
 
 BlockFilter::BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
-                         std::vector<unsigned char> filter)
+                         std::vector<unsigned char> filter, const bool filter_checked)
     : m_filter_type(filter_type), m_block_hash(block_hash)
 {
     GCSFilter::Params params;
     if (!BuildParams(params)) {
         throw std::invalid_argument("unknown filter_type");
     }
-    m_filter = GCSFilter(params, std::move(filter));
+    m_filter = GCSFilter(params, std::move(filter), filter_checked);
 }
 
 BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo)

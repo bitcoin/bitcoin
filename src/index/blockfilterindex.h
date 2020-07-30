@@ -35,7 +35,7 @@ private:
     FlatFilePos m_next_filter_pos;
     std::unique_ptr<FlatFileSeq> m_filter_fileseq;
 
-    bool ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const;
+    bool ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter, const uint256& hash) const;
     size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter);
 
     Mutex m_cs_headers_cache;
