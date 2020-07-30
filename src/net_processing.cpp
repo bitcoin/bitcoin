@@ -848,11 +848,11 @@ std::chrono::microseconds CalculateTxGetDataTime(const CInv& inv, std::chrono::m
 
     // We delay processing announcements from inbound peers
     // SYSCOIN
-    if ((inv.type == MSG_TX || inv.type == MSG_WTX || inv.type == MSG_WITNESS_TX) && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
+    if (inv.IsGenTxMsg() && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
 
     // We delay processing announcements from peers that use txid-relay (instead of wtxid)
     // SYSCOIN
-    if ((inv.type == MSG_TX || inv.type == MSG_WTX || inv.type == MSG_WITNESS_TX) && use_txid_delay) process_time += TXID_RELAY_DELAY;
+    if (inv.IsGenTxMsg() && use_txid_delay) process_time += TXID_RELAY_DELAY;
 
     return process_time;
 }
@@ -1536,9 +1536,9 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LO
 
             {
                 LOCK(g_cs_orphans);
-                if (inv.type != MSG_WTX && mapOrphanTransactions.count(inv.hash)) {
+                if (!inv.IsMsgWtx() && mapOrphanTransactions.count(inv.hash)) {
                     return true;
-                } else if (inv.type == MSG_WTX && g_orphans_by_wtxid.count(inv.hash)) {
+                } else if (inv.IsMsgWtx() && g_orphans_by_wtxid.count(inv.hash)) {
                     return true;
                 }
             }
@@ -1548,8 +1548,7 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LO
                 if (g_recent_confirmed_transactions->contains(inv.hash)) return true;
             }
 
-            const bool by_wtxid = (inv.type == MSG_WTX);
-            return recentRejects->contains(inv.hash) || mempool.exists(inv.hash, by_wtxid);
+            return recentRejects->contains(inv.hash) || mempool.exists(inv.hash, inv.IsMsgWtx());
         }
     case MSG_BLOCK:
     case MSG_WITNESS_BLOCK:
@@ -1834,7 +1833,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
     // possible, since they're common and it's efficient to batch process
     // them.
     // SYSCOIN
-    while (it != pfrom.vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || it->type == MSG_WTX || it->IsMnType())) {
+    while (it != pfrom.vRecvGetData.end() && (it->IsGenTxMsg() || it->IsMnType())) {
         if (interruptMsgProc) return;
         // The send buffer provides backpressure. If there's no space in
         // the buffer, pause processing until the next call.
@@ -1842,15 +1841,15 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
 
         const CInv &inv = *it++;
         // SYSCOIN
-        if(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX || inv.type == MSG_WTX) {
+        if(inv.IsGenTxMsg()) {
             if (pfrom.m_tx_relay == nullptr) {
                 // Ignore GETDATA requests for transactions from blocks-only peers.
                 continue;	
             }
-            CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, inv.type == MSG_WTX, mempool_req, now);
+            CTransactionRef tx = FindTxForGetData(pfrom, inv.hash,  inv.IsMsgWtx(), mempool_req, now);
             if (tx) {
                 // WTX and WITNESS_TX imply we serialize with witness
-                int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
+                int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
                 connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
                 mempool.RemoveUnbroadcastTx(tx->GetHash());
                 // As we're going to send tx, make sure its unconfirmed parents are made requestable.
@@ -2943,15 +2942,15 @@ void ProcessMessage(
 
             // ignore INVs that don't match wtxidrelay setting
             if (State(pfrom.GetId())->m_wtxid_relay) {
-                if (inv.type == MSG_TX) continue;
+                if (inv.IsMsgTx()) continue;
             } else {
-                if (inv.type == MSG_WTX) continue;
+                if (inv.IsMsgWtx()) continue;
             }
 
             bool fAlreadyHave = AlreadyHave(inv, mempool);
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
-            if (inv.type == MSG_TX) {
+            if (inv.IsMsgTx()) {
                 inv.type |= nFetchFlags;
             }
 
@@ -4034,7 +4033,7 @@ void ProcessMessage(
         if (vInv.size() <= MAX_PEER_TX_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv : vInv) {
                 // SYSCOIN
-                if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX || inv.type == MSG_WTX || inv.IsMnType()) {
+                if (inv.IsGenTxMsg() || inv.IsMnType()) {
                     // If we receive a NOTFOUND message for a txid we requested, erase
                     // it from our data structures for this peer.
                     auto in_flight_it = state->m_tx_download.m_tx_in_flight.find(inv);
