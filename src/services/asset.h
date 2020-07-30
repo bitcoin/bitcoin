@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_SERVICES_ASSET_H
 #define SYSCOIN_SERVICES_ASSET_H
 #include <primitives/transaction.h>
+#include <pubkey.h>
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 // this should be set well after mempool expiry (DEFAULT_MEMPOOL_EXPIRY)
