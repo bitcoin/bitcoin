@@ -24,8 +24,9 @@ enum {
     ASSET_UPDATE_DATA=2, // can you update public data field?
     ASSET_UPDATE_CONTRACT=4, // can you update smart contract?
     ASSET_UPDATE_SUPPLY=8, // can you update supply?
-    ASSET_UPDATE_FLAGS=16, // can you update flags? if you would set permanently disable this one and admin flag as well
-    ASSET_UPDATE_ALL=31
+    ASSET_UPDATE_WITNESS=16, // can you update witness?
+    ASSET_UPDATE_FLAGS=32, // can you update flags? if you would set permanently disable this one and admin flag as well
+    ASSET_UPDATE_ALL=63
 };
 
 class CAsset: public CAssetAllocation {
@@ -41,6 +42,8 @@ public:
     unsigned char nPrecision;
     unsigned char nUpdateFlags;
     unsigned char nPrevUpdateFlags;
+    CKeyID witnessKeyID;
+    CKeyID prevWitnessKeyID;
     CAsset() {
         SetNull();
     }
@@ -60,11 +63,13 @@ public:
         nBalance = 0;
         nTotalSupply = 0;
         nMaxSupply = 0;
+        witnessKeyID.SetNull();
+        prevWitnessKeyID.SetNull();
     }
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
+        READWRITE(obj.witnessKeyID, obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevWitnessKeyID, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 

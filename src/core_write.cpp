@@ -31,10 +31,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
     for(const auto &it: tx.voutAssets) {
         CAmount nTotal = 0;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        const uint32_t &nAsset = it.first;
+        const uint32_t &nAsset = it.key;
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-        for(const auto& voutAsset: it.second){
+        for(const auto& voutAsset: it.value){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
@@ -90,10 +90,10 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         for(const auto &it: mintSyscoin.voutAssets) {
             CAmount nTotal = 0;
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            const uint32_t &nAsset = it.first;
+            const uint32_t &nAsset = it.key;
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-            for(const auto& voutAsset: it.second){
+            for(const auto& voutAsset: it.value){
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
@@ -120,10 +120,10 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     for(const auto &it: tx.voutAssets) {
         CAmount nTotal = 0;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        const uint32_t &nAsset = it.first;
+        const uint32_t &nAsset = it.key;
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-        for(const auto& voutAsset: it.second){
+        for(const auto& voutAsset: it.value){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
@@ -144,6 +144,10 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 
 	if (!asset.vchContract.empty())
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
+    
+    if (!asset.witnessKeyID.empty())
+		entry.__pushKV("witness", EncodeDestination(WitnessV0KeyHash(asset.witnessKeyID)));
+
 
 	if (asset.nUpdateFlags > 0)
 		entry.__pushKV("update_flags", asset.nUpdateFlags);

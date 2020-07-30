@@ -431,29 +431,55 @@ struct TxOutCoinCompression
     FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
 
-
-class CAssetOut {
+class CAssetOutValue {
 public:
     uint32_t n;
     uint64_t nValue;
 
-    SERIALIZE_METHODS(CAssetOut, obj) {
+    SERIALIZE_METHODS(CAssetOutValue, obj) {
         READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue));
     }
 
-    CAssetOut(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
-	CAssetOut() {
-		nValue = 0;
-        n = 0;
+    CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
+	CAssetOutValue() {
+        SetNull();
 	}
-    inline friend bool operator==(const CAssetOut &a, const CAssetOut &b) {
+    inline SetNull() {
+        nValue = 0;
+        n = 0;
+    }
+    inline friend bool operator==(const CAssetOutValue &a, const CAssetOutValue &b) {
 		return (a.n == b.n && a.nValue == b.nValue);
+	}
+    inline friend bool operator!=(const CAssetOutValue &a, const CAssetOutValue &b) {
+		return !(a == b);
+	}
+};
+class CAssetOut {
+public:
+    uint32_t key;
+    std::vector<CAssetOutValue> values;
+    std::vector<unsigned char> vchWitnessSig;
+    SERIALIZE_METHODS(CAssetOut, obj) {
+        READWRITE(obj.key, obj.values, obj.vchWitnessSig);
+    }
+
+    CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
+	CAssetOut() {
+		SetNull();
+	}
+    inline SetNull() {
+        key.SetNull();
+        values.clear();
+        vchWitnessSig.clear();
+    }
+    inline friend bool operator==(const CAssetOut &a, const CAssetOut &b) {
+		return (a.key == b.key && a.values == b.values);
 	}
     inline friend bool operator!=(const CAssetOut &a, const CAssetOut &b) {
 		return !(a == b);
 	}
 };
-typedef std::vector<std::pair<uint32_t, std::vector<CAssetOut> > > assetOutputType;
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
@@ -481,7 +507,7 @@ public:
     const int32_t nVersion;
     const uint32_t nLockTime;
     // SYSCOIN
-    const assetOutputType voutAssets;
+    const std::vector<CAssetOut> voutAssets;
 
 private:
     /** Memory only. */
@@ -519,6 +545,7 @@ public:
     CAmount GetValueOut() const;
     // SYSCOIN
     bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut, TxValidationState& state) const;
+    uint256 GetWitnessSigHash();
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
@@ -565,7 +592,7 @@ struct CMutableTransaction
     int32_t nVersion;
     uint32_t nLockTime;
     // SYSCOIN
-    assetOutputType voutAssets;
+    std::vector<CAssetOut> voutAssets;
 
     CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);
@@ -638,8 +665,7 @@ enum {
 };
 class CAssetAllocation {
 public:
-    assetOutputType voutAssets;
-    
+    std::vector<CAssetOut> voutAssets;
     SERIALIZE_METHODS(CAssetAllocation, obj) {
         READWRITE(obj.voutAssets);
     }
@@ -656,7 +682,6 @@ public:
 		return (a.voutAssets == b.voutAssets
 			);
 	}
-
     CAssetAllocation(const CAssetAllocation&) = delete;
     CAssetAllocation(CAssetAllocation && other) = default;
     CAssetAllocation& operator=( CAssetAllocation& a ) = delete;
@@ -665,7 +690,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { voutAssets.clear();}
+	inline void SetNull() { voutAssets.clear(); vchWitnessSig.clear();}
     inline bool IsNull() const { return voutAssets.empty();}
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
