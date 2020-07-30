@@ -531,12 +531,20 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
             SetReachable(NET_ONION, true);
         }
 
+        // Validate the target of the hidden service
+        std::string targetArg = gArgs.GetArg("-tortarget", "127.0.0.1");
+        CService targetAddr;
+        if (!Lookup(targetArg, targetAddr, GetListenPort(), false)) {
+            LogPrintf("tor: Invalid -tortarget address or hostname: '%s'\n", targetArg);
+            return;
+        }
+
         // Finally - now create the service
         if (private_key.empty()) // No private key, generate one
             private_key = "NEW:RSA1024"; // Explicitly request RSA1024 - see issue #9214
         // Request hidden service, redirect port.
         // Note that the 'virtual' port is always the default port to avoid decloaking nodes using other ports.
-        _conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, Params().GetDefaultPort(), GetListenPort()),
+        _conn.Command(strprintf("ADD_ONION %s Port=%i,%s", private_key, Params().GetDefaultPort(), targetAddr.ToStringIPPort()),
             std::bind(&TorController::add_onion_cb, this, std::placeholders::_1, std::placeholders::_2));
     } else {
         LogPrintf("tor: Authentication failed\n");
