@@ -444,7 +444,7 @@ public:
 	CAssetOutValue() {
         SetNull();
 	}
-    inline SetNull() {
+    inline void SetNull() {
         nValue = 0;
         n = 0;
     }
@@ -690,7 +690,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { voutAssets.clear(); vchWitnessSig.clear();}
+	inline void SetNull() { voutAssets.clear();}
     inline bool IsNull() const { return voutAssets.empty();}
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
