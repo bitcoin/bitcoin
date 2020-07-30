@@ -1451,7 +1451,7 @@ bool static AlreadyHaveTx(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_
     return recentRejects->contains(inv.hash) || mempool.exists(ToGenTxid(inv));
 }
 
-bool static AlreadyHaveBlock(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool static AlreadyHaveBlock(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     return LookupBlockIndex(inv.hash) != nullptr;
 }
@@ -2662,7 +2662,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             }
 
             if (inv.type == MSG_BLOCK) {
-                bool fAlreadyHave = AlreadyHaveBlock(inv, m_mempool);
+                bool fAlreadyHave = AlreadyHaveBlock(inv);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
