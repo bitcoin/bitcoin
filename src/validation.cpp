@@ -3715,8 +3715,9 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         *ppindex = pindex;
 
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    bool res = pop.acceptBlock(*pindex, state);
-    assert(res && "pop alt tree have not accepted block header");
+    if(!pop.acceptBlock(*pindex, state)){
+        return return error("%s: ALT tree could not accept block ALT:%d:%s, reason: %s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
+    }
     return true;
 }
 
