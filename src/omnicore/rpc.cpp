@@ -89,6 +89,8 @@ void PopulateFailure(int error)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Omni Layer Protocol transaction");
         case MP_TXINDEX_STILL_SYNCING:
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No such mempool transaction. Blockchain transactions are still in the process of being indexed.");
+        case MP_RPC_DECODE_INPUTS_MISSING:
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction inputs were not found. Please provide inputs explicitly (see help description) or fully synchronize node.");
 
     }
     throw JSONRPCError(RPC_INTERNAL_ERROR, "Generic transaction population failure");
