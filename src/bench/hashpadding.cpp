@@ -8,7 +8,7 @@
 #include <uint256.h>
 
 
-static void PrePadded(benchmark::State& state)
+static void PrePadded(benchmark::Bench& bench)
 {
 
     CSHA256 hasher;
@@ -18,30 +18,30 @@ static void PrePadded(benchmark::State& state)
     hasher.Write(nonce.begin(), 32);
     hasher.Write(nonce.begin(), 32);
     uint256 data = GetRandHash();
-    while (state.KeepRunning()) {
+    bench.run([&] {
         unsigned char out[32];
         CSHA256 h = hasher;
         h.Write(data.begin(), 32);
         h.Finalize(out);
-    }
+    });
 }
 
-BENCHMARK(PrePadded, 10000);
+BENCHMARK(PrePadded);
 
-static void RegularPadded(benchmark::State& state)
+static void RegularPadded(benchmark::Bench& bench)
 {
     CSHA256 hasher;
 
     // Setup the salted hasher
     uint256 nonce = GetRandHash();
     uint256 data = GetRandHash();
-    while (state.KeepRunning()) {
+    bench.run([&] {
         unsigned char out[32];
         CSHA256 h = hasher;
         h.Write(nonce.begin(), 32);
         h.Write(data.begin(), 32);
         h.Finalize(out);
-    }
+    });
 }
 
-BENCHMARK(RegularPadded, 10000);
+BENCHMARK(RegularPadded);

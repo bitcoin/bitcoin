@@ -11,30 +11,31 @@ static constexpr uint64_t BUFFER_SIZE_TINY  = 64;
 static constexpr uint64_t BUFFER_SIZE_SMALL = 256;
 static constexpr uint64_t BUFFER_SIZE_LARGE = 1024*1024;
 
-static void POLY1305(benchmark::State& state, size_t buffersize)
+static void POLY1305(benchmark::Bench& bench, size_t buffersize)
 {
     std::vector<unsigned char> tag(POLY1305_TAGLEN, 0);
     std::vector<unsigned char> key(POLY1305_KEYLEN, 0);
     std::vector<unsigned char> in(buffersize, 0);
-    while (state.KeepRunning())
+    bench.batch(in.size()).unit("byte").run([&] {
         poly1305_auth(tag.data(), in.data(), in.size(), key.data());
+    });
 }
 
-static void POLY1305_64BYTES(benchmark::State& state)
+static void POLY1305_64BYTES(benchmark::Bench& bench)
 {
-    POLY1305(state, BUFFER_SIZE_TINY);
+    POLY1305(bench, BUFFER_SIZE_TINY);
 }
 
-static void POLY1305_256BYTES(benchmark::State& state)
+static void POLY1305_256BYTES(benchmark::Bench& bench)
 {
-    POLY1305(state, BUFFER_SIZE_SMALL);
+    POLY1305(bench, BUFFER_SIZE_SMALL);
 }
 
-static void POLY1305_1MB(benchmark::State& state)
+static void POLY1305_1MB(benchmark::Bench& bench)
 {
-    POLY1305(state, BUFFER_SIZE_LARGE);
+    POLY1305(bench, BUFFER_SIZE_LARGE);
 }
 
-BENCHMARK(POLY1305_64BYTES, 500000);
-BENCHMARK(POLY1305_256BYTES, 250000);
-BENCHMARK(POLY1305_1MB, 340);
+BENCHMARK(POLY1305_64BYTES);
+BENCHMARK(POLY1305_256BYTES);
+BENCHMARK(POLY1305_1MB);
