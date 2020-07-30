@@ -616,6 +616,7 @@ libsyscoin_common_a_SOURCES = \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
+  messagesigner.cpp \
   netaddress.cpp \
   netbase.cpp \
   net_permissions.cpp \
@@ -636,7 +637,6 @@ libsyscoin_common_a_SOURCES = \
   services/assetconsensus.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
-  messagesigner.cpp \
   $(SYSCOIN_CORE_H)
 
 # util: shared between all executables.
