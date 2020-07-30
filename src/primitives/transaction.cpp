@@ -421,7 +421,7 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
     return true;
 }
 
-uint256 CTransaction::GetWitnessSigHash() {
+uint256 CTransaction::GetWitnessSigHash() const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     for(const auto &vin: vin) {
         ss << vin.prevout;
