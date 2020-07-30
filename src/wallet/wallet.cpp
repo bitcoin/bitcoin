@@ -2951,7 +2951,7 @@ bool FillWitnessSigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
                 const UniValue &witnessObj = find_value(publicObj, "witness_endpoint");
                 if(witnessObj.is_str()) {
                     // get signature from end-point
-                    //vecOut.key.vchWitnessSig = vchSig;
+                    //vecOut.vchWitnessSig = vchSig;
                     return true;
                 }
             }
