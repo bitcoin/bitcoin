@@ -817,7 +817,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     }
     const size_t len = it->values.size();
     // add change for asset
-    it->second.push_back(CAssetOutValue(len, 0));
+    it->values.push_back(CAssetOutValue(len, 0));
     CScript scriptPubKey;
     std::vector<unsigned char> data;
     theAssetAllocation.SerializeData(data);
@@ -977,7 +977,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                 theAssetAllocation.voutAssets.emplace_back(assetOut);
                 itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             }
-            itVout->second.push_back(CAssetOutValue(idx, nAmount));
+            itVout->values.push_back(CAssetOutValue(idx, nAmount));
 
             CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
