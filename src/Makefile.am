@@ -172,6 +172,7 @@ BITCOIN_CORE_H = \
   noui.h \
   optional.h \
   outputtype.h \
+  packagecache.h\
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
@@ -307,6 +308,7 @@ libbitcoin_server_a_SOURCES = \
   node/transaction.cpp \
   node/ui_interface.cpp \
   noui.cpp \
+  packagecache.cpp\
   policy/fees.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \

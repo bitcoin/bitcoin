@@ -47,6 +47,8 @@ const char *CFHEADERS="cfheaders";
 const char *GETCFCHECKPT="getcfcheckpt";
 const char *CFCHECKPT="cfcheckpt";
 const char *WTXIDRELAY="wtxidrelay";
+const char *PACKAGE="package";
+const char *SENDPACKAGE="sendpackage";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
@@ -85,6 +87,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETCFCHECKPT,
     NetMsgType::CFCHECKPT,
     NetMsgType::WTXIDRELAY,
+    NetMsgType::PACKAGE,
+    NetMsgType::SENDPACKAGE,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
@@ -182,6 +186,7 @@ std::string CInv::GetCommand() const
     // WTX is not a message type, just an inv type
     case MSG_WTX:            return cmd.append("wtx");
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
+    case MSG_PACKAGE:        return cmd.append(NetMsgType::PACKAGE);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
     default:

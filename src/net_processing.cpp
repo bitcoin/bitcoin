@@ -16,6 +16,7 @@
 #include <merkleblock.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
+#include <packagecache.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -424,6 +425,9 @@ struct CNodeState {
     //! Whether this peer relays txs via wtxid
     bool m_wtxid_relay{false};
 
+    //! Whether this peer supports package relay
+    bool m_packagerelay;
+
     CNodeState(CAddress addrIn, std::string addrNameIn, bool is_inbound, bool is_manual) :
         address(addrIn), name(std::move(addrNameIn)), m_is_inbound(is_inbound),
         m_is_manual_connection (is_manual)
@@ -452,11 +456,14 @@ struct CNodeState {
         m_chain_sync = { 0, nullptr, false, false };
         m_last_block_announcement = 0;
         m_recently_announced_invs.reset();
+        m_packagerelay = false;
     }
 };
 
 // Keeps track of the time (in microseconds) when transactions were requested last time
 limitedmap<uint256, std::chrono::microseconds> g_already_asked_for GUARDED_BY(cs_main)(MAX_INV_SZ);
+
+static PackageCache g_packagecache GUARDED_BY(cs_main);
 
 /** Map maintaining per-node state. */
 static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
@@ -1427,6 +1434,7 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LO
     case MSG_TX:
     case MSG_WITNESS_TX:
     case MSG_WTX:
+    case MSG_PACKAGE:
         {
             assert(recentRejects);
             if (::ChainActive().Tip()->GetBlockHash() != hashRecentRejectsChainTip)
@@ -1476,6 +1484,24 @@ void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman&
             pnode->PushTxInventory(txid);
         }
     });
+}
+
+void RelayPackage(uint64_t downstream_peer, const std::list<CTransactionRef>& package)
+{
+    uint256 package_id;
+    CSHA256 hasher;
+    std::vector<uint256> package_wtxids;
+    for (const CTransactionRef& ptx: package) {
+        hasher.Write(ptx->GetHash().begin(), ptx->GetHash().size());
+        package_wtxids.push_back(ptx->GetHash());
+    }
+    hasher.Finalize(package_id.begin());
+    const auto current_time = GetTime<std::chrono::microseconds>();
+    {
+        //XXX: own lock
+        LOCK(cs_main);
+        g_packagecache.ReceivedPackage(downstream_peer, package_id, package_wtxids, current_time);
+    }
 }
 
 static void RelayAddress(const CAddress& addr, bool fReachable, const CConnman& connman)
@@ -1699,6 +1725,25 @@ CTransactionRef static FindTxForGetData(const CNode& peer, const uint256& txid_o
     return {};
 }
 
+//! Determine whether or not a peer can request a package and assemble it (or nullptr if failure or not allowed)
+static void FindPackageForGetData(CNode& peer, const uint256 package_id, std::vector<CTransactionRef>& package_txn) LOCKS_EXCLUDED(cs_main)
+{
+    std::vector<uint256> package_wtxids;
+    {
+        LOCK(cs_main);
+        if (!State(peer.GetId())->m_packagerelay) return;
+
+        g_packagecache.GetPackageWtxids(peer.GetId(), package_id, package_wtxids);
+    }
+
+    for (auto& hash : package_wtxids) {
+        auto txinfo = mempool.info(hash);
+        if (txinfo.tx) {
+            package_txn.emplace_back(txinfo.tx);
+        }
+    }
+}
+
 void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnman& connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
 {
     AssertLockNotHeld(cs_main);
@@ -1715,7 +1760,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
     // Process as many TX items from the front of the getdata queue as
     // possible, since they're common and it's efficient to batch process
     // them.
-    while (it != pfrom.vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || it->type == MSG_WTX)) {
+    while (it != pfrom.vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || it->type == MSG_WTX || it->type == MSG_PACKAGE)) {
         if (interruptMsgProc) return;
         // The send buffer provides backpressure. If there's no space in
         // the buffer, pause processing until the next call.
@@ -1725,6 +1770,14 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
 
         if (pfrom.m_tx_relay == nullptr) {
             // Ignore GETDATA requests for transactions from blocks-only peers.
+            continue;
+        }
+
+        std::vector<CTransactionRef> package_txn;
+        FindPackageForGetData(pfrom, inv.hash, package_txn);
+        if (!package_txn.empty()) {
+            CPackageRelay package(std::move(package_txn));
+            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::PACKAGE, package));
             continue;
         }
 
@@ -2278,6 +2331,87 @@ static void ProcessGetCFCheckPt(CNode& pfrom, CDataStream& vRecv, const CChainPa
     connman.PushMessage(&pfrom, std::move(msg));
 }
 
+static void ProcessPackage(CNode& pfrom, CDataStream& vRecv, CConnman& connman)
+{
+    {
+        LOCK(cs_main);
+        if ((!g_relay_txes && !pfrom.HasPermission(PF_RELAY)) || (pfrom.m_tx_relay == nullptr)  || !State(pfrom.GetId())->m_packagerelay)
+        {
+            LogPrint(BCLog::NET, "package sent in violation of protocol peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+    }
+
+    CPackageRelay package;
+    vRecv >> package;
+
+    uint256 package_id;
+    CSHA256 hasher;
+    std::vector<uint256> package_txids;
+    for (const CTransactionRef& ptx: package.package_txn) {
+        hasher.Write(ptx->GetHash().begin(), ptx->GetHash().size());
+        package_txids.push_back(ptx->GetHash());
+    }
+    hasher.Finalize(package_id.begin());
+
+    CInv inv(MSG_PACKAGE, package_id);
+
+    LOCK2(cs_main, g_cs_orphans);
+
+    g_packagecache.AddPackageKnown(pfrom.GetId(), package_id);
+
+    TxValidationState package_state;
+
+    CNodeState *nodestate = State(pfrom.GetId());
+    nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
+    nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash);
+    EraseTxRequest(inv.hash);
+
+    std::list<CTransactionRef> lRemovedTxn;
+    std::list<CTransactionRef> tx_list;
+
+    std::copy(package.package_txn.begin(), package.package_txn.end(), std::back_inserter(tx_list));
+    if (!AlreadyHave(inv, mempool) &&
+        AcceptPackageToMemoryPool(mempool, package_state, tx_list,
+            &lRemovedTxn, 0 /* nAbsurdFee */, false /* test_accept */)) {
+        mempool.check(&::ChainstateActive().CoinsTip());
+        RelayPackage(pfrom.GetId(), tx_list);
+
+        pfrom.nLastTXTime = GetTime();
+
+    } else {
+        assert(recentRejects);
+        recentRejects->insert(package_id);
+        for (const CTransactionRef& ptx: package.package_txn) {
+            if (RecursiveDynamicUsage(*ptx) < 100000) {
+                AddToCompactExtraTransactions(ptx);
+            }
+        }
+
+        if (pfrom.HasPermission(PF_FORCERELAY)) {
+            bool package_in_mempool = true;
+            for (const CTransactionRef& ptx: package.package_txn) {
+                if (!mempool.exists(ptx->GetHash())) {
+                    package_in_mempool = false;
+                }
+            }
+            if (!package_in_mempool) {
+                RelayPackage(pfrom.GetId(), tx_list);
+            }
+        }
+    }
+
+    for (const CTransactionRef& removedTx: lRemovedTxn)
+        AddToCompactExtraTransactions(removedTx);
+
+    if (package_state.IsInvalid()) {
+        MaybePunishNodeForTx(pfrom.GetId(), package_state);
+    }
+
+    return;
+}
+
 void ProcessMessage(
     CNode& pfrom,
     const std::string& msg_type,
@@ -2371,6 +2505,10 @@ void ProcessMessage(
 
         if (nVersion >= WTXID_RELAY_VERSION) {
             connman.PushMessage(&pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::WTXIDRELAY));
+        }
+
+        if (nVersion >= PACKAGE_RELAY_VERSION) {
+            connman.PushMessage(&pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::SENDPACKAGE));
         }
 
         connman.PushMessage(&pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERACK));
@@ -2524,6 +2662,14 @@ void ProcessMessage(
                 State(pfrom.GetId())->m_wtxid_relay = true;
                 g_wtxid_relay_peers++;
             }
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::SENDPACKAGE) {
+        if (pfrom.nVersion >= PACKAGE_RELAY_VERSION) {
+            LOCK(cs_main);
+            State(pfrom.GetId())->m_packagerelay = true;
         }
         return;
     }
@@ -3512,6 +3658,10 @@ void ProcessMessage(
         return;
     }
 
+    if (msg_type == NetMsgType::PACKAGE) {
+        ProcessPackage(pfrom, vRecv, connman);
+    }
+
     if (msg_type == NetMsgType::PING) {
         if (pfrom.nVersion > BIP0031_VERSION)
         {
@@ -4363,6 +4513,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         if (pto->m_tx_relay->filterInventoryKnown.contains(hash)) {
                             continue;
                         }
+
+                        // Walk away if this hash is going to be announced as part of a package.
+                        if (state.m_packagerelay && g_packagecache.HasPackage(hash)) {
+                            continue;
+                        }
+
                         // Not in the mempool anymore? don't bother sending it.
                         auto txinfo = m_mempool.info(hash, state.m_wtxid_relay);
                         if (!txinfo.tx) {
@@ -4409,6 +4565,19 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             // filter, when a child tx is requested. See
                             // ProcessGetData().
                             pto->m_tx_relay->filterInventoryKnown.insert(txid);
+                        }
+                    }
+
+                    // If peer signals tx-relay _and_ package relay, announce package it
+                    if (state.m_packagerelay) {
+                        std::vector<uint256> package_ids;
+                        g_packagecache.GetAnnouncable(pto->GetId(), package_ids);
+                        for (const uint256& hash : package_ids) {
+                            vInv.push_back(CInv(MSG_PACKAGE, hash));
+                            if (vInv.size() == MAX_INV_SZ) {
+                                connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+                                vInv.clear();
+                            }
                         }
                     }
                 }

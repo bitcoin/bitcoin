@@ -9,7 +9,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70016;
+static const int PROTOCOL_VERSION = 80002;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -37,5 +37,8 @@ static const int INVALID_CB_NO_BAN_VERSION = 70015;
 
 //! "wtxidrelay" command for wtxid-based relay starts with this version
 static const int WTXID_RELAY_VERSION = 70016;
+
+//! package-relay starts with this version
+static const int PACKAGE_RELAY_VERSION = 80002;
 
 #endif // BITCOIN_VERSION_H
