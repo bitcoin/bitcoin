@@ -355,7 +355,7 @@ bool CMPTransaction::interpret_MetaDExTrade()
     memcpy(&desired_value, &pkt[20], 8);
     SwapByteOrder64(desired_value);
 
-    action = CMPTransaction::ADD; // depreciated
+    action = CMPTransaction::ADD; // deprecated
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
@@ -383,7 +383,7 @@ bool CMPTransaction::interpret_MetaDExCancelPrice()
     memcpy(&desired_value, &pkt[20], 8);
     SwapByteOrder64(desired_value);
 
-    action = CMPTransaction::CANCEL_AT_PRICE; // depreciated
+    action = CMPTransaction::CANCEL_AT_PRICE; // deprecated
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
@@ -406,10 +406,10 @@ bool CMPTransaction::interpret_MetaDExCancelPair()
     memcpy(&desired_property, &pkt[8], 4);
     SwapByteOrder32(desired_property);
 
-    nValue = 0; // depreciated
-    nNewValue = nValue; // depreciated
-    desired_value = 0; // depreciated
-    action = CMPTransaction::CANCEL_ALL_FOR_PAIR; // depreciated
+    nValue = 0; // deprecated
+    nNewValue = nValue; // deprecated
+    desired_value = 0; // deprecated
+    action = CMPTransaction::CANCEL_ALL_FOR_PAIR; // deprecated
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
@@ -427,12 +427,12 @@ bool CMPTransaction::interpret_MetaDExCancelEcosystem()
     }
     memcpy(&ecosystem, &pkt[4], 1);
 
-    property = ecosystem; // depreciated
-    desired_property = ecosystem; // depreciated
-    nValue = 0; // depreciated
-    nNewValue = nValue; // depreciated
-    desired_value = 0; // depreciated
-    action = CMPTransaction::CANCEL_EVERYTHING; // depreciated
+    property = ecosystem; // deprecated
+    desired_property = ecosystem; // deprecated
+    nValue = 0; // deprecated
+    nNewValue = nValue; // deprecated
+    desired_value = 0; // deprecated
+    action = CMPTransaction::CANCEL_EVERYTHING; // deprecated
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", (int)ecosystem);

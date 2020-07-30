@@ -1612,7 +1612,7 @@ static UniValue trade_MP(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 6)
         throw runtime_error(
             RPCHelpMan{"trade_MP",
-               "\nNote: this command is depreciated, and was replaced by:\n",
+               "\nNote: this command is deprecated, and was replaced by:\n",
                {
                    {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
                    {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
@@ -1713,7 +1713,7 @@ static const CRPCCommand commands[] =
     { "omni layer (transaction creation)", "omni_funded_send",             &omni_funded_send,             {"fromaddress", "toaddress", "propertyid", "amount", "feeaddress"} },
     { "omni layer (transaction creation)", "omni_funded_sendall",          &omni_funded_sendall,          {"fromaddress", "toaddress", "ecosystem", "feeaddress"} },
 
-    /* depreciated: */
+    /* deprecated: */
     { "hidden",                            "sendrawtx_MP",                 &omni_sendrawtx,               {"fromaddress", "rawtransaction", "referenceaddress", "redeemaddress", "referenceamount"} },
     { "hidden",                            "send_MP",                      &omni_send,                    {"fromaddress", "toaddress", "propertyid", "amount", "redeemaddress", "referenceamount"} },
     { "hidden",                            "sendtoowners_MP",              &omni_sendsto,                 {"fromaddress", "propertyid", "amount", "redeemaddress", "distributionproperty"} },
