@@ -2845,7 +2845,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
         CMintSyscoin mintSyscoin(*tx);
         // for any output that would be invalidated by a new output at position nChangePosInOut, update them
         for(auto& vout: mintSyscoin.voutAssets) {
-            for(auto& out: vout.second) {
+            for(auto& out: vout.values) {
                 if(nChangePosInOut <= out.n) {
                     out.n++;
                 }
@@ -2860,13 +2860,13 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 mintSyscoin.voutAssets.emplace_back(assetInfo.nAsset, vecOut);
                 it = std::find_if( mintSyscoin.voutAssets.begin(), mintSyscoin.voutAssets.end(), [&assetInfo](const CAssetOut& element){ return element.key == assetInfo.nAsset;} );
             }
-            it->second.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
+            it->values.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
         }
         mintSyscoin.SerializeData(data);
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
         CBurnSyscoin burnSyscoin(*tx);
         for(auto& vout: burnSyscoin.voutAssets) {
-            for(auto& out: vout.second) {
+            for(auto& out: vout.values) {
                 if(nChangePosInOut <= out.n) {
                     out.n++;
                 }
@@ -2879,13 +2879,13 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 burnSyscoin.voutAssets.emplace_back(CAssetOut(assetInfo.nAsset, vecOut));
                 it = std::find_if( burnSyscoin.voutAssets.begin(), burnSyscoin.voutAssets.end(), [&assetInfo](const CAssetOut& element){ return element.key == assetInfo.nAsset;} );
             }
-            it->second.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
+            it->values.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
         }
         burnSyscoin.SerializeData(data);
     } else if(IsAssetTx(tx->nVersion)) {
         CAsset asset(*tx);
         for(auto& vout: asset.voutAssets) {
-            for(auto& out: vout.second) {
+            for(auto& out: vout.values) {
                 if(nChangePosInOut <= out.n) {
                     out.n++;
                 }
@@ -2898,13 +2898,13 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 asset.voutAssets.emplace_back(CAssetOut(assetInfo.nAsset, vecOut));
                 it = std::find_if( asset.voutAssets.begin(), asset.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
             }
-            it->second.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
+            it->values.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
         }
         asset.SerializeData(data); 
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);
         for(auto& vout: allocation.voutAssets) {
-            for(auto& out: vout.second) {
+            for(auto& out: vout.values) {
                 if(nChangePosInOut <= out.n) {
                     out.n++;
                 }
@@ -2917,7 +2917,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 allocation.voutAssets.emplace_back(CAssetOut(assetInfo.nAsset, vecOut));
                 it = std::find_if( allocation.voutAssets.begin(), allocation.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
             }
-            it->second.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
+            it->values.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
         }
         allocation.SerializeData(data); 
     }
