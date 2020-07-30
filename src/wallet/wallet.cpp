@@ -2875,7 +2875,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
         if(assetInfo.nValue > 0) {
             auto it = std::find_if( burnSyscoin.voutAssets.begin(), burnSyscoin.voutAssets.end(), [&assetInfo](const CAssetOut& element){ return element.key == assetInfo.nAsset;} );
             if(it == burnSyscoin.voutAssets.end()) {
-                std::vector<CAssetOut> vecOut;
+                std::vector<CAssetOutValue> vecOut;
                 burnSyscoin.voutAssets.emplace_back(CAssetOut(assetInfo.nAsset, vecOut));
                 it = std::find_if( burnSyscoin.voutAssets.begin(), burnSyscoin.voutAssets.end(), [&assetInfo](const CAssetOut& element){ return element.key == assetInfo.nAsset;} );
             }
