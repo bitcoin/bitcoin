@@ -1257,7 +1257,7 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
     if (request.fHelp)
         throw runtime_error(
             RPCHelpMan{"omni_listproperties",
-               "\nLists all tokens or smart properties.\n",
+               "\nLists all tokens or smart properties. To get the total number of tokens, please use omni_getproperty.\n",
                {},
                RPCResult{
                    "[                                (array of JSON objects)\n"
@@ -1935,7 +1935,7 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
         if ((sellOfferAmount > 0) && (sellBitcoinDesired > 0)) {
             unitPriceFloat = (double) sellBitcoinDesired / (double) sellOfferAmount; // divide by zero protection
             if (!isPropertyDivisible(propertyId)) {
-                unitPriceFloat /= 100000000;
+                unitPriceFloat /= 100000000.0;
             }
         }
         int64_t unitPrice = rounduint64(unitPriceFloat * COIN);
@@ -1945,14 +1945,14 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
         responseObj.pushKV("txid", txid);
         responseObj.pushKV("propertyid", (uint64_t) propertyId);
         responseObj.pushKV("seller", seller);
-        responseObj.pushKV("amountavailable", isPropertyDivisible(propertyId) ? FormatDivisibleMP(amountAvailable) : FormatIndivisibleMP(amountAvailable));
+        responseObj.pushKV("amountavailable", FormatMP(propertyId, amountAvailable));
         responseObj.pushKV("bitcoindesired", FormatDivisibleMP(bitcoinDesired));
         responseObj.pushKV("unitprice", FormatDivisibleMP(unitPrice));
         responseObj.pushKV("timelimit", timeLimit);
         responseObj.pushKV("minimumfee", FormatDivisibleMP(minFee));
 
         // display info about accepts related to sell
-        responseObj.pushKV("amountaccepted", FormatDivisibleMP(amountAccepted));
+        responseObj.pushKV("amountaccepted", FormatMP(propertyId, amountAccepted));
         UniValue acceptsMatched(UniValue::VARR);
         for (AcceptMap::const_iterator ait = my_accepts.begin(); ait != my_accepts.end(); ++ait) {
             UniValue matchedAccept(UniValue::VOBJ);
@@ -1971,7 +1971,7 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
                 matchedAccept.pushKV("buyer", buyer);
                 matchedAccept.pushKV("block", blockOfAccept);
                 matchedAccept.pushKV("blocksleft", blocksLeftToPay);
-                matchedAccept.pushKV("amount", (isPropertyDivisible(propertyId) ? FormatDivisibleMP(amountAccepted) : FormatIndivisibleMP(amountAccepted)));
+                matchedAccept.pushKV("amount", FormatMP(propertyId, amountAccepted));
                 matchedAccept.pushKV("amounttopay", FormatDivisibleMP(amountToPayInBTC));
                 acceptsMatched.push_back(matchedAccept);
             }
