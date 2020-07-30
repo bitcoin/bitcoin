@@ -155,8 +155,6 @@ uint256 CGovernanceVote::GetSignatureHash() const
 
 bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 {
-    std::string strError;
-
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
@@ -178,8 +176,8 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
             return false;
         }
 
-        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
-            LogPrintf("CGovernanceVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage)) {
+            LogPrintf("CGovernanceVote::Sign -- VerifyMessage() faileds\n");
             return false;
         }
     }
