@@ -269,4 +269,4 @@ if (x) {;}
   fi
 
   unset _libcurl_with
-])dnl
+])
