@@ -430,6 +430,14 @@ public:
     std::string GetCommand() const;
     std::string ToString() const;
 
+    // Single-message helper methods
+    bool IsMsgTx()        const { return type == MSG_TX; }
+    bool IsMsgWtx()       const { return type == MSG_WTX; }
+    bool IsMsgWitnessTx() const { return type == MSG_WITNESS_TX; }
+
+    // Combined-message helper methods
+    bool IsGenTxMsg()     const { return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX; }
+
     int type;
     uint256 hash;
 };
