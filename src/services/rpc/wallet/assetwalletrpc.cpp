@@ -804,8 +804,8 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
             theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
             it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         }
-        const size_t len = it->second.size();
-        it->second.push_back(CAssetOutValue(len, nAmount));
+        const size_t len = it->values.size();
+        it->values.push_back(CAssetOutValue(len, nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
@@ -815,7 +815,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
         it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
     }
-    const size_t len = it->second.size();
+    const size_t len = it->values.size();
     // add change for asset
     it->second.push_back(CAssetOutValue(len, 0));
     CScript scriptPubKey;
@@ -1225,13 +1225,14 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::vector<CRecipient> vecSend;
     
     CMintSyscoin mintSyscoin;
+    std::vector<unsigned char> emptyWitnessSig;
     // fund tx expecting 65 byte signature to be filled in
     emptyWitnessSig.resize(65);
+    std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)};
     CAssetOut assetOut(nAsset, vecOut);
     if(!theAsset.witnessKeyID.IsNull()) {
         assetOut.vchWitnessSig = emptyWitnessSig;    
     }
-    std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)};
     mintSyscoin.voutAssets.emplace_back(assetOut);
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.nBridgeTransferID = nBridgeTransferID;
