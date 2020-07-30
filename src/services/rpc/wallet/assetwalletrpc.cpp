@@ -133,7 +133,7 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
             const uint32_t &nAsset = it.key;
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-            for(const auto& voutAsset: it.value){
+            for(const auto& voutAsset: it.values){
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);

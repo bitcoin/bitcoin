@@ -34,7 +34,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
         const uint32_t &nAsset = it.key;
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-        for(const auto& voutAsset: it.value){
+        for(const auto& voutAsset: it.values){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
@@ -93,7 +93,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
             const uint32_t &nAsset = it.key;
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-            for(const auto& voutAsset: it.value){
+            for(const auto& voutAsset: it.values){
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
@@ -123,7 +123,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
         const uint32_t &nAsset = it.key;
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-        for(const auto& voutAsset: it.value){
+        for(const auto& voutAsset: it.values){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
