@@ -449,7 +449,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         return false;
     }
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->first;
+    const uint32_t &nAsset = it->key;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -493,7 +493,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
 
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->first;
+    const uint32_t &nAsset = it->key;
     #if __cplusplus > 201402 
     mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
