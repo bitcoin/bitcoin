@@ -55,7 +55,7 @@ private:
 
     // Sum the total feerate of all tx's in each bucket
     // Track the historical moving average of this total over blocks
-    std::vector<double> avg;
+    std::vector<double> m_feerate_avg;
 
     // Combine the conf counts with tx counts to calculate the confirmation % for each Y,X
     // Combine the total value with the tx counts to calculate the avg feerate per bucket
@@ -137,11 +137,9 @@ public:
 TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
                                 const std::map<double, unsigned int>& defaultBucketMap,
                                unsigned int maxPeriods, double _decay, unsigned int _scale)
-    : buckets(defaultBuckets), bucketMap(defaultBucketMap)
+    : buckets(defaultBuckets), bucketMap(defaultBucketMap), decay(_decay), scale(_scale)
 {
-    decay = _decay;
     assert(_scale != 0 && "_scale must be non-zero");
-    scale = _scale;
     confAvg.resize(maxPeriods);
     for (unsigned int i = 0; i < maxPeriods; i++) {
         confAvg[i].resize(buckets.size());
@@ -152,7 +150,7 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
     }
 
     txCtAvg.resize(buckets.size());
-    avg.resize(buckets.size());
+    m_feerate_avg.resize(buckets.size());
 
     resizeInMemoryCounters(buckets.size());
 }
@@ -170,24 +168,24 @@ void TxConfirmStats::resizeInMemoryCounters(size_t newbuckets) {
 void TxConfirmStats::ClearCurrent(unsigned int nBlockHeight)
 {
     for (unsigned int j = 0; j < buckets.size(); j++) {
-        oldUnconfTxs[j] += unconfTxs[nBlockHeight%unconfTxs.size()][j];
+        oldUnconfTxs[j] += unconfTxs[nBlockHeight % unconfTxs.size()][j];
         unconfTxs[nBlockHeight%unconfTxs.size()][j] = 0;
     }
 }
 
 
-void TxConfirmStats::Record(int blocksToConfirm, double val)
+void TxConfirmStats::Record(int blocksToConfirm, double feerate)
 {
     // blocksToConfirm is 1-based
     if (blocksToConfirm < 1)
         return;
-    int periodsToConfirm = (blocksToConfirm + scale - 1)/scale;
-    unsigned int bucketindex = bucketMap.lower_bound(val)->second;
+    int periodsToConfirm = (blocksToConfirm + scale - 1) / scale;
+    unsigned int bucketindex = bucketMap.lower_bound(feerate)->second;
     for (size_t i = periodsToConfirm; i <= confAvg.size(); i++) {
         confAvg[i - 1][bucketindex]++;
     }
     txCtAvg[bucketindex]++;
-    avg[bucketindex] += val;
+    m_feerate_avg[bucketindex] += feerate;
 }
 
 void TxConfirmStats::UpdateMovingAverages()
@@ -197,8 +195,8 @@ void TxConfirmStats::UpdateMovingAverages()
             confAvg[i][j] = confAvg[i][j] * decay;
         for (unsigned int i = 0; i < failAvg.size(); i++)
             failAvg[i][j] = failAvg[i][j] * decay;
-        avg[j] = avg[j] * decay;
-        txCtAvg[j] = txCtAvg[j] * decay;
+        m_feerate_avg[j] *= decay;
+        txCtAvg[j] *= decay;
     }
 }
 
@@ -212,8 +210,8 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     double totalNum = 0; // Total number of tx's that were ever confirmed
     int extraNum = 0;  // Number of tx's still in mempool for confTarget or longer
     double failNum = 0; // Number of tx's that were never confirmed but removed from the mempool after confTarget
-    int periodTarget = (confTarget + scale - 1)/scale;
-    int maxbucketindex = buckets.size() - 1;
+    const int periodTarget = (confTarget + scale - 1) / scale;
+    const int maxbucketindex = buckets.size() - 1;
 
     // We'll combine buckets until we have enough samples.
     // The near and far variables will define the range we've combined
@@ -243,7 +241,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         totalNum += txCtAvg[bucket];
         failNum += failAvg[periodTarget - 1][bucket];
         for (unsigned int confct = confTarget; confct < GetMaxConfirms(); confct++)
-            extraNum += unconfTxs[(nBlockHeight - confct)%bins][bucket];
+            extraNum += unconfTxs[(nBlockHeight - confct) % bins][bucket];
         extraNum += oldUnconfTxs[bucket];
         // If we have enough transaction data points in this range of buckets,
         // we can test for success
@@ -307,7 +305,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
             if (txCtAvg[j] < txSum)
                 txSum -= txCtAvg[j];
             else { // we're in the right bucket
-                median = avg[j] / txCtAvg[j];
+                median = m_feerate_avg[j] / txCtAvg[j];
                 break;
             }
         }
@@ -351,7 +349,7 @@ void TxConfirmStats::Write(CAutoFile& fileout) const
 {
     fileout << decay;
     fileout << scale;
-    fileout << avg;
+    fileout << m_feerate_avg;
     fileout << txCtAvg;
     fileout << confAvg;
     fileout << failAvg;
@@ -374,8 +372,8 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
         throw std::runtime_error("Corrupt estimates file. Scale must be non-zero");
     }
 
-    filein >> avg;
-    if (avg.size() != numBuckets) {
+    filein >> m_feerate_avg;
+    if (m_feerate_avg.size() != numBuckets) {
         throw std::runtime_error("Corrupt estimates file. Mismatch in feerate average bucket count");
     }
     filein >> txCtAvg;
