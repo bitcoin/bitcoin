@@ -1422,7 +1422,7 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const BlockValidatio
 //
 
 
-bool static AlreadyHaveTx(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     assert(recentRejects);
     if (::ChainActive().Tip()->GetBlockHash() != hashRecentRejectsChainTip) {
@@ -1436,19 +1436,19 @@ bool static AlreadyHaveTx(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_
 
     {
         LOCK(g_cs_orphans);
-        if (!inv.IsMsgWtx() && mapOrphanTransactions.count(inv.hash)) {
+        if (!gtxid.IsWtxid() && mapOrphanTransactions.count(gtxid.GetHash())) {
             return true;
-        } else if (inv.IsMsgWtx() && g_orphans_by_wtxid.count(inv.hash)) {
+        } else if (gtxid.IsWtxid() && g_orphans_by_wtxid.count(gtxid.GetHash())) {
             return true;
         }
     }
 
     {
         LOCK(g_cs_recent_confirmed_transactions);
-        if (g_recent_confirmed_transactions->contains(inv.hash)) return true;
+        if (g_recent_confirmed_transactions->contains(gtxid.GetHash())) return true;
     }
 
-    return recentRejects->contains(inv.hash) || mempool.exists(ToGenTxid(inv));
+    return recentRejects->contains(gtxid.GetHash()) || mempool.exists(gtxid);
 }
 
 bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -2675,7 +2675,8 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
                     best_block = &inv.hash;
                 }
             } else {
-                bool fAlreadyHave = AlreadyHaveTx(inv, mempool);
+                GenTxid gtxid = ToGenTxid(inv);
+                bool fAlreadyHave = AlreadyHaveTx(gtxid, mempool);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 pfrom.AddKnownTx(inv.hash);
@@ -2684,7 +2685,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
                     pfrom.fDisconnect = true;
                     return;
                 } else if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
-                    RequestTx(State(pfrom.GetId()), ToGenTxid(inv), current_time);
+                    RequestTx(State(pfrom.GetId()), gtxid, current_time);
                 }
             }
         }
@@ -2957,7 +2958,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         // already; and an adversary can already relay us old transactions
         // (older than our recency filter) if trying to DoS us, without any need
         // for witness malleation.
-        if (!AlreadyHaveTx(CInv(MSG_WTX, wtxid), m_mempool) &&
+        if (!AlreadyHaveTx(GenTxid(/* is_wtxid=*/true, wtxid), m_mempool) &&
             AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             m_mempool.check(&::ChainstateActive().CoinsTip());
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
@@ -3009,9 +3010,9 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
                     // wtxidrelay peers.
                     // Eventually we should replace this with an improved
                     // protocol for getting all unconfirmed parents.
-                    CInv _inv(MSG_TX, parent_txid);
+                    GenTxid gtxid{/* is_wtxid=*/false, parent_txid};
                     pfrom.AddKnownTx(parent_txid);
-                    if (!AlreadyHaveTx(_inv, m_mempool)) RequestTx(State(pfrom.GetId()), ToGenTxid(_inv), current_time);
+                    if (!AlreadyHaveTx(gtxid, m_mempool)) RequestTx(State(pfrom.GetId()), gtxid, current_time);
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
 
@@ -4562,7 +4563,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             // processing at a later time, see below)
             tx_process_time.erase(tx_process_time.begin());
             CInv inv(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*pto)), gtxid.GetHash());
-            if (!AlreadyHaveTx(inv, m_mempool)) {
+            if (!AlreadyHaveTx(ToGenTxid(inv), m_mempool)) {
                 // If this transaction was last requested more than 1 minute ago,
                 // then request.
                 const auto last_request_time = GetTxRequestTime(gtxid);
