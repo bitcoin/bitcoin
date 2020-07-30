@@ -32,7 +32,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
-    const std::vector<CAssetOut> &vecVout = it->value;
+    const std::vector<CAssetOutValue> &vecVout = it->values;
     // do this check only when not in IBD (initial block download)
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
@@ -357,7 +357,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         {   
             auto it = tx.voutAssets.begin();
             const uint32_t &nAsset = it->key;
-            const std::vector<CAssetOut> &vecVout = it->value;
+            const std::vector<CAssetOutValue> &vecVout = it->values;
             const CAmount &nBurnAmount = tx.vout[nOut].nValue;
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
@@ -409,7 +409,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
-    const std::vector<CAssetOut> &vecVout = it->value;
+    const std::vector<CAssetOutValue> &vecVout = it->values;
     const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
@@ -526,7 +526,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     } 
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
-    const std::vector<CAssetOut> &vecVout = it->value;
+    const std::vector<CAssetOutValue> &vecVout = it->values;
     CAsset dbAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
