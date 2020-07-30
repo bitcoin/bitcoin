@@ -151,10 +151,20 @@ bool PopServiceImpl::acceptBlock(const CBlockIndex& indexNew, BlockValidationSta
     return true;
 }
 
-bool PopServiceImpl::addAllBlockPayloads(const CBlockIndex* indexPrev, const CBlock& connecting, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool PopServiceImpl::addAllBlockPayloads(int height, const CBlock& connecting, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    return addAllPayloadsToBlockImpl(*altTree, indexPrev, connecting, state);
+    if(height == 0) {
+        // do not add anything to genesis block
+        return true;
+    }
+
+    // add payloads only from blocks with POP data
+    if (connecting.nVersion & POP_BLOCK_VERSION_BIT) {
+        return addAllPayloadsToBlockImpl(*altTree, height, connecting, state);
+    }
+
+    return true;
 }
 
 std::vector<BlockBytes> PopServiceImpl::getLastKnownVBKBlocks(size_t blocks)
@@ -200,7 +210,7 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config, const fs::p
     payloadsStore = &storeman->getPayloadsStorage();
 
     altTree = altintegration::Altintegration::create(config, *payloadsStore);
-      
+
     mempool = std::make_shared<altintegration::MemPool>(*altTree);
     //
     mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
@@ -276,7 +286,7 @@ bool popdataStatelessValidation(const altintegration::PopData& popData, altinteg
     return true;
 }
 
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, int height, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
@@ -287,24 +297,12 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex*
             instate.toString());
     }
 
-    int height = 0;
-    if (indexPrev != nullptr) {
-        height = indexPrev->nHeight + 1;
-    }
-
     auto containing = VeriBlock::blockToAltBlock(height, block.GetBlockHeader());
 
-    if (!tree.acceptBlock(containing, instate)) {
-        return error("[%s] block %s is not accepted by altTree: %s", __func__, block.GetHash().ToString(),
+    if (!tree.addPayloads(containing, block.popData, instate)) {
+        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, instate.toString(), "");
+        return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(),
             instate.toString());
-    }
-
-    if (indexPrev != nullptr) {
-        if (!tree.addPayloads(containing, block.popData, instate)) {
-            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, instate.toString(), "");
-            return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(),
-                instate.toString());
-        }
     }
 
     return true;
