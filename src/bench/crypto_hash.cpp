@@ -4,6 +4,7 @@
 
 
 #include <bench/bench.h>
+#include <crypto/muhash.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
@@ -91,6 +92,18 @@ static void FastRandom_1bit(benchmark::State& state)
     }
 }
 
+static void MuHash(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32] = {0};
+    int i = 0;
+    while (state.KeepRunning()) {
+        key[0] = ++i;
+        acc *= MuHash3072(key);
+    }
+}
+
 BENCHMARK(RIPEMD160, 440);
 BENCHMARK(SHA1, 570);
 BENCHMARK(SHA256, 340);
@@ -101,3 +114,5 @@ BENCHMARK(SipHash_32b, 40 * 1000 * 1000);
 BENCHMARK(SHA256D64_1024, 7400);
 BENCHMARK(FastRandom_32bit, 110 * 1000 * 1000);
 BENCHMARK(FastRandom_1bit, 440 * 1000 * 1000);
+
+BENCHMARK(MuHash, 5000);
