@@ -285,6 +285,9 @@ $ omnicore-cli "omni_senddexaccept" \
 
 Create and broadcast payment for an accept offer.
 
+Please note:
+Partial purchases are not possible and the whole accepted amount must be paid.
+
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
