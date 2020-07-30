@@ -569,7 +569,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!storedAssetRef.vchContract.empty() && storedAssetRef.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
-            if (!storedAssetRef.witnessKeyID.empty() && storedAssetRef.witnessKeyID.size() != MAX_GUID_LENGTH) {
+            if (!storedAssetRef.witnessKeyID.IsNull() && storedAssetRef.witnessKeyID.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
             }  
             if (storedAssetRef.nPrecision > 8) {
@@ -581,7 +581,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!storedAssetRef.vchPrevContract.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
             }
-            if (!storedAssetRef.prevWitnessKeyID.empty()) {
+            if (!storedAssetRef.prevWitnessKeyID.IsNull()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevwitness", bSanityCheck);
             }
             if (storedAssetRef.strSymbol.size() > 8 || storedAssetRef.strSymbol.size() < 1) {
@@ -617,7 +617,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
-            if (!theAsset.witnessKeyID.empty() && theAsset.witnessKeyID.size() != MAX_GUID_LENGTH) {
+            if (!theAsset.witnessKeyID.IsNull() && theAsset.witnessKeyID.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
             } 
             if (theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
@@ -675,7 +675,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
             }
 
-            if (!theAsset.witnessKeyID.empty()) {
+            if (!theAsset.witnessKeyID.IsNull()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_WITNESS)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-witness-privileges", bSanityCheck);
                 }

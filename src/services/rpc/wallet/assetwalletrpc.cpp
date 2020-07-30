@@ -62,7 +62,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         if (!asset.vchContract.empty())
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
 
-        if (!asset.witnessKeyID.empty())
+        if (!asset.witnessKeyID.IsNull())
             entry.__pushKV("witness", EncodeDestination(WitnessV0KeyHash(asset.witnessKeyID)));
 
         if (asset.nUpdateFlags > 0)
