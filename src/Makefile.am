@@ -302,8 +302,6 @@ libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   vbk/pop_service_impl.cpp \
   vbk/pop_service_impl.hpp \
-  vbk/adaptors/repository.cpp \
-  vbk/adaptors/repository.hpp \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
