@@ -468,7 +468,7 @@ public:
 	CAssetOut() {
 		SetNull();
 	}
-    inline SetNull() {
+    inline void SetNull() {
         key.SetNull();
         values.clear();
         vchWitnessSig.clear();
