@@ -1451,9 +1451,9 @@ bool static AlreadyHaveTx(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_
     return recentRejects->contains(inv.hash) || mempool.exists(ToGenTxid(inv));
 }
 
-bool static AlreadyHaveBlock(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    return LookupBlockIndex(inv.hash) != nullptr;
+    return LookupBlockIndex(block_hash) != nullptr;
 }
 
 void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman)
@@ -2662,7 +2662,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             }
 
             if (inv.type == MSG_BLOCK) {
-                bool fAlreadyHave = AlreadyHaveBlock(inv);
+                bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
