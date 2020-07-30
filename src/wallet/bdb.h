@@ -98,10 +98,7 @@ class BerkeleyBatch;
 class BerkeleyDatabase : public WalletDatabase
 {
 public:
-    /** Create dummy DB handle */
-    BerkeleyDatabase() : WalletDatabase(), env(nullptr)
-    {
-    }
+    BerkeleyDatabase() = delete;
 
     /** Create DB handle to real database */
     BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, std::string filename) :
@@ -166,14 +163,6 @@ public:
 
     /** Make a BerkeleyBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) override;
-
-private:
-
-    /** Return whether this database handle is a dummy for testing.
-     * Only to be used at a low level, application should ideally not care
-     * about this.
-     */
-    bool IsDummy() const { return env == nullptr; }
 };
 
 /** RAII class that provides access to a Berkeley database */
