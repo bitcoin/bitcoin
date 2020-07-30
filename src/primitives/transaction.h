@@ -469,7 +469,7 @@ public:
 		SetNull();
 	}
     inline void SetNull() {
-        key.SetNull();
+        key = 0;
         values.clear();
         vchWitnessSig.clear();
     }
