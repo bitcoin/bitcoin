@@ -55,7 +55,7 @@ after_build:
 #- 7z a syscoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
 - cmd: src\test_syscoin.exe -l test_suite
-- cmd: src\bench_syscoin.exe -evals=1 -scaling=0 > NUL
+- cmd: src\bench_syscoin.exe > NUL
 - ps:  python test\util\syscoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
