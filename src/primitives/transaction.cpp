@@ -354,10 +354,10 @@ void CMutableTransaction::LoadAssets()
         const size_t &nVoutSize = vout.size();
         for(const auto &it: voutAssets) {
             const uint32_t &nAsset = it.key;
-            if(it.second.empty()) {
+            if(it.second.values.empty()) {
                 throw std::ios_base::failure("asset empty outputs");
             }
-            for(const auto& voutAsset: it.value) {
+            for(const auto& voutAsset: it.values) {
                 const uint32_t& nOut = voutAsset.n;
                 if(nOut >= nVoutSize) {
                     throw std::ios_base::failure("asset vout out of range");
@@ -379,13 +379,13 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
     uint64_t nTotal = 0;
     uint64_t nPrevTotal;
     for(const auto &it: voutAssets) {
-        if(it.second.empty()) {
+        if(it.second.values.empty()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
         }
         const uint32_t &nAsset = it.key;
         const size_t &nVoutSize = vout.size();
         bool zeroVal = false;
-        for(const auto& voutAsset: it.value) {
+        for(const auto& voutAsset: it.values) {
             const uint32_t& nOut = voutAsset.n;
             if(nOut >= nVoutSize) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
