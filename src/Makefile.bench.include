@@ -33,6 +33,8 @@ bench_bench_bitcoin_SOURCES = \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
   bench/mempool_stress.cpp \
+  bench/nanobench.h \
+  bench/nanobench.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/util_time.cpp \

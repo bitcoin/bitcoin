@@ -55,7 +55,7 @@ after_build:
 #- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
 - cmd: src\test_bitcoin.exe -l test_suite
-- cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
+- cmd: src\bench_bitcoin.exe > NUL
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
