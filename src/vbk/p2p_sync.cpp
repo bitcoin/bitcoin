@@ -87,7 +87,7 @@ bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, alt
     return true;
 }
 
-template <typename PopDataType>
+template <typename pop_t>
 bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& pop_mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
