@@ -25,58 +25,6 @@
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
-uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxDestination & address) {
-    UniValue publicObj;
-    if(!publicObj.read(public_data))
-        return 0;
-    const UniValue &auxFeesObj = find_value(publicObj, "aux_fees");
-    if(!auxFeesObj.isObject())
-        return 0;
-    const UniValue &addressObj = find_value(auxFeesObj, "address");
-    if(!addressObj.isStr())
-        return 0;
-    address = DecodeDestination(addressObj.get_str());
-    const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
-    if(!feeStructObj.isArray())
-        return 0;
-    const UniValue &feeStructArray = feeStructObj.get_array();
-    if(feeStructArray.size() == 0)
-        return 0;
-     
-    uint64_t nAccumulatedFee = 0;
-    uint64_t nBoundAmount = 0;
-    uint64_t nNextBoundAmount = 0;
-    double nRate = 0;
-    for(unsigned int i =0;i<feeStructArray.size();i++){
-        if(!feeStructArray[i].isArray())
-            return 0;
-        const UniValue &feeStruct = feeStructArray[i].get_array();
-        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
-        if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
-            return 0;
-        if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
-                return 0;   
-        UniValue boundValue = feeStruct[0]; 
-        UniValue nextBoundValue = feeStructNext[0]; 
-        nBoundAmount = boundValue.get_uint64();
-        nNextBoundAmount = nextBoundValue.get_uint64();
-        if(!feeStruct[1].isStr())
-            return 0;
-        if(!ParseDouble(feeStruct[1].get_str(), &nRate))
-            return 0;
-        // case where amount is in between the bounds
-        if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
-            break;    
-        }
-        nBoundAmount = nNextBoundAmount - nBoundAmount;
-        // must be last bound
-        if(nBoundAmount <= 0){
-            return (nAmount - nNextBoundAmount) * nRate + nAccumulatedFee;
-        }
-        nAccumulatedFee += (nBoundAmount * nRate);
-    }
-    return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
-}
 
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
     CRecipient recp = { scriptPubKey, 0, false };
@@ -113,6 +61,9 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
 
         if (!asset.vchContract.empty())
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
+
+        if (!asset.witnessKeyID.empty())
+            entry.__pushKV("witness", EncodeDestination(WitnessV0KeyHash(asset.witnessKeyID)));
 
         if (asset.nUpdateFlags > 0)
             entry.__pushKV("update_flags", asset.nUpdateFlags);
@@ -179,10 +130,10 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
         for(const auto &it: mintSyscoin.voutAssets) {
             CAmount nTotal = 0;
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            const uint32_t &nAsset = it.first;
+            const uint32_t &nAsset = it.key;
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
-            for(const auto& voutAsset: it.second){
+            for(const auto& voutAsset: it.value){
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
@@ -288,8 +239,8 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     CMutableTransaction mtx;
     UniValue amountObj = params[1];
 	uint64_t nAmount = amountObj.get_uint64();
-    std::vector<CAssetOut> outVec = {CAssetOut(1, nAmount)};
-    theAssetAllocation.voutAssets.emplace_back(nAsset, outVec);
+    std::vector<CAssetOutValue> outVec = {CAssetOutValue(1, nAmount)};
+    theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
 
     std::vector<unsigned char> data;
@@ -337,18 +288,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
-        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
-            {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
-                    {
-                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
-                    },
-                }
-            }
-        }
+        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"}
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -357,8 +298,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 {}")
-    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}")
+    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 '")
+    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, ''")
     }
     }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -408,22 +349,29 @@ UniValue assetnew(const JSONRPCRequest& request) {
         nMaxSupply = 0;
     }
     uint32_t nUpdateFlags = params[7].get_uint();
-
+    std::string strWitness = params[8].get_str();
+    CTxDestination txDest = DecodeDestination(strWitness);
+    CKeyID witnessKeyID;
+    if (!IsValidDestination(txDest)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
+    }
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+        witnessKeyID = ToKeyID(*witness_id);
+    } else {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
+    }
     // calculate net
     // build asset object
     CAsset newAsset;
 
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
-    UniValue feesStructArr = find_value(params[8].get_obj(), "fee_struct");
-    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
-        publicData.pushKV("aux_fees", params[8]);
-
-    std::vector<CAssetOut> outVec = {CAssetOut(0, 0)};
-    newAsset.voutAssets.emplace_back(0, outVec);
+    std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
+    newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
     newAsset.strSymbol = strSymbol;
     newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
+    newAsset.witnessKeyID = witnessKeyID;
     newAsset.nBalance = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
@@ -475,7 +423,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // generate deterministic guid based on input txid
     const uint32_t &nAsset = nCustomGuid != 0? nCustomGuid: GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.voutAssets.clear();
-    newAsset.voutAssets.emplace_back(nAsset, outVec);
+    newAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
     newAsset.SerializeData(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
@@ -513,20 +461,10 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
-        {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
-        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
-            {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
-                    {
-                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
-                    },
-                }
-            }
-        }
+        {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
+        {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
+        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"}
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -535,8 +473,8 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 {}")
-    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}")
+    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 ''")
+    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, '")
     }
     }.Check(request);
     UniValue paramsFund(UniValue::VARR);
@@ -642,18 +580,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
             {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
-            {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
-            {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
-                {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                    {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
-                        {
-                            {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
-                            {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
-                        },
-                    }
-                }
-            }
+            {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+            {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -661,8 +589,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"}
             }},
         RPCExamples{
-            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"supply\" \"update_flags\" {}")
-            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", {}")
+            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"supply\" \"update_flags\" ''")
+            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", ''")
         }
         }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -695,15 +623,26 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         
     const std::string& oldData = stringFromVch(theAsset.vchPubData);
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
+    CKeyID oldWitnessKeyID = theAsset.witnessKeyID;
+
     theAsset.ClearAsset();
     UniValue params3 = params[3];
     uint64_t nBalance = 0;
     nBalance = params3.get_uint64();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
-    UniValue feesStructArr = find_value(params[5].get_obj(), "fee_struct");
-    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
-        publicData.pushKV("aux_fees", params[5]);
+    std::string strWitness = params[5].get_str();
+    CTxDestination txDest = DecodeDestination(strWitness);
+    CKeyID witnessKeyID;
+    if (!IsValidDestination(txDest)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
+    }
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+        witnessKeyID = ToKeyID(*witness_id);
+    } else {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
+    }
+
     strPubData = publicData.write();
     if(strPubData != oldData) {
         theAsset.vchPrevPubData = vchFromString(oldData);
@@ -715,8 +654,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract = vchContract;
     }
 
-    std::vector<CAssetOut> outVec = {CAssetOut(0, 0)};
-    theAsset.voutAssets.emplace_back(nAsset, outVec);
+    if(witnessKeyID != oldWitnessKeyID) {
+        theAsset.prevWitnessKeyID = oldWitnessKeyID;
+        theAsset.witnessKeyID = witnessKeyID;
+    }
+
+    std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
+    theAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
     theAsset.nBalance = nBalance;
     theAsset.nPrevUpdateFlags = theAsset.nUpdateFlags;
@@ -771,8 +715,8 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
-    std::vector<CAssetOut> outVec = {CAssetOut(0, 0)};
-    theAsset.voutAssets.emplace_back(nAsset, outVec);
+    std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
+    theAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
     std::vector<unsigned char> data;
     theAsset.SerializeData(data);
@@ -837,7 +781,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     CAssetAllocation theAssetAllocation;
     UniValue receivers = valueTo.get_array();
     std::vector<CRecipient> vecSend;
-    std::vector<CAssetOut> vecOut;
+    std::vector<CAssetOutValue> vecOut;
     for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         const UniValue& receiver = receivers[idx];
         if (!receiver.isObject())
@@ -855,25 +799,25 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         }
         else
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in asset output array");
-        auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+        auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         if(it == theAssetAllocation.voutAssets.end()) {
-            theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
-            it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
+            it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         }
         const size_t len = it->second.size();
-        it->second.push_back(CAssetOut(len, nAmount));
+        it->second.push_back(CAssetOutValue(len, nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
     }
-    auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+    auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
     if(it == theAssetAllocation.voutAssets.end()) {
-        theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
-        it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+        theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
+        it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
     }
     const size_t len = it->second.size();
     // add change for asset
-    it->second.push_back(CAssetOut(len, 0));
+    it->second.push_back(CAssetOutValue(len, 0));
     CScript scriptPubKey;
     std::vector<unsigned char> data;
     theAssetAllocation.SerializeData(data);
@@ -997,7 +941,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, uint64_t> mapAssetTotals;
-    std::vector<CAssetOut> vecOut;
+    std::vector<CAssetOutValue> vecOut;
+    std::vector<unsigned char> emptyWitnessSig;
+    // fund tx expecting 65 byte signature to be filled in
+    emptyWitnessSig.resize(65);
     unsigned int idx;
 	for (idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
@@ -1019,12 +966,18 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			const uint64_t &nAmount = amountObj.get_uint64();
 			if (nAmount == 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
-                theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
-                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+                CAssetOut assetOut(nAsset, vecOut);
+                // only use first witness signature for asset that requires witness, subsequent ones are covered by witness signature through input sighash
+                if(!theAsset.witnessKeyID.IsNull() && !emptyWitnessSig.empty()) {
+                    assetOut.vchWitnessSig = emptyWitnessSig;   
+                    emptyWitnessSig.clear(); 
+                }
+                theAssetAllocation.voutAssets.emplace_back(assetOut);
+                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             }
-            itVout->second.push_back(CAssetOut(idx, nAmount));
+            itVout->second.push_back(CAssetOutValue(idx, nAmount));
 
             CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
@@ -1036,25 +989,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         }
 		else
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
-        
-        CTxDestination auxFeeAddress;
-        const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
-        if(nAuxFee > 0){
-            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
-            if(itVout == theAssetAllocation.voutAssets.end()) {
-                theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
-                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
-            }
-            itVout->second.push_back(CAssetOut(idx, nAuxFee));
-            const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
-            CTxOut change_prototype_txout(0, scriptPubKey);
-            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
-            mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-            auto it = mapAssetTotals.emplace(nAsset, nAuxFee);
-            if(!it.second) {
-                it.first->second += nAuxFee;
-            }
-        }
 	}
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1095,7 +1029,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
-
 UniValue assetallocationburn(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     RPCHelpMan{"assetallocationburn",
@@ -1142,18 +1075,29 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
     CBurnSyscoin burnSyscoin;
     int nChangePosRet = 1; 
+    std::vector<unsigned char> emptyWitnessSig;
+    // fund tx expecting 65 byte signature to be filled in
+    emptyWitnessSig.resize(65);
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
-        std::vector<CAssetOut> vecOut = {CAssetOut(1, (CAmount)nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
-        burnSyscoin.voutAssets.emplace_back(nAsset, vecOut);
+        std::vector<CAssetOutValue> vecOut = {CAssetOutValue(1, (CAmount)nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
+        CAssetOut assetOut(nAsset, vecOut);
+        if(!theAsset.witnessKeyID.IsNull()) {
+            assetOut.vchWitnessSig = emptyWitnessSig;    
+        }
+        burnSyscoin.voutAssets.emplace_back(assetOut);
         nChangePosRet++;
     }
     else {
         burnSyscoin.vchEthAddress = ParseHex(ethAddress);
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
-        std::vector<CAssetOut> vecOut = {CAssetOut(0, (CAmount)nAmount)}; // burn has to be in index 0, any change in index 1
-        burnSyscoin.voutAssets.emplace_back(nAsset, vecOut);
+        std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, (CAmount)nAmount)}; // burn has to be in index 0, any change in index 1
+        CAssetOut assetOut(nAsset, vecOut);
+        if(!theAsset.witnessKeyID.IsNull()) {
+            assetOut.vchWitnessSig = emptyWitnessSig;    
+        }
+        burnSyscoin.voutAssets.emplace_back(assetOut);
     }
 
     std::string label = "";
@@ -1281,8 +1225,14 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::vector<CRecipient> vecSend;
     
     CMintSyscoin mintSyscoin;
-    std::vector<CAssetOut> vecOut = {CAssetOut(0, nAmount)};
-    mintSyscoin.voutAssets.emplace_back(nAsset, vecOut);
+    // fund tx expecting 65 byte signature to be filled in
+    emptyWitnessSig.resize(65);
+    CAssetOut assetOut(nAsset, vecOut);
+    if(!theAsset.witnessKeyID.IsNull()) {
+        assetOut.vchWitnessSig = emptyWitnessSig;    
+    }
+    std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)};
+    mintSyscoin.voutAssets.emplace_back(assetOut);
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.nBridgeTransferID = nBridgeTransferID;
     mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
@@ -1707,9 +1657,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees"}},
-    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","aux_fees"}},
+    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness"}},
+    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness"}},
+    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","witness"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},

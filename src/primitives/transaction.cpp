@@ -353,11 +353,11 @@ void CMutableTransaction::LoadAssets()
         }
         const size_t &nVoutSize = vout.size();
         for(const auto &it: voutAssets) {
-            const uint32_t &nAsset = it.first;
+            const uint32_t &nAsset = it.key;
             if(it.second.empty()) {
                 throw std::ios_base::failure("asset empty outputs");
             }
-            for(const auto& voutAsset: it.second) {
+            for(const auto& voutAsset: it.value) {
                 const uint32_t& nOut = voutAsset.n;
                 if(nOut >= nVoutSize) {
                     throw std::ios_base::failure("asset vout out of range");
@@ -382,10 +382,10 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
         if(it.second.empty()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
         }
-        const uint32_t &nAsset = it.first;
+        const uint32_t &nAsset = it.key;
         const size_t &nVoutSize = vout.size();
         bool zeroVal = false;
-        for(const auto& voutAsset: it.second) {
+        for(const auto& voutAsset: it.value) {
             const uint32_t& nOut = voutAsset.n;
             if(nOut >= nVoutSize) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
@@ -419,6 +419,14 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
         }
     }
     return true;
+}
+
+uint256 CTransaction::GetWitnessSigHash() {
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    for(const auto &vin: vin) {
+        ss << vin.prevout;
+    }
+    return ss.GetHash();
 }
 
 bool IsSyscoinMintTx(const int &nVersion) {
@@ -535,7 +543,6 @@ void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
 	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-
 bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
         CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
