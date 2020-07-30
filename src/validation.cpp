@@ -3627,17 +3627,6 @@ bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, cons
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
 
-    {
-        LOCK(cs_main);
-        auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-        if (!pop.addAllBlockPayloads(pindexPrev, block, state)) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
-                strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
-                    (pindexPrev->nHeight + 1), block.GetHash().ToString(),
-                    FormatStateMessage(state)));
-        }
-    }
-
     return true;
 }
 
@@ -3835,6 +3824,16 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return error("%s: %s", __func__, FormatStateMessage(state));
     }
 
+    {
+        auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+        if (!pop.addAllBlockPayloads(pindex->nHeight, block, state)) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
+                                 strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
+                                           pindex->nHeight, block.GetHash().ToString(),
+                                           FormatStateMessage(state)));
+        }
+    }
+
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
     if (!IsInitialBlockDownload() && m_chain.Tip() == pindex->pprev)
@@ -3917,10 +3916,13 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
     // in this case, add it and then remove
     auto& tree = VeriBlock::getService<VeriBlock::PopService>().getAltTree();
     auto _hash = block.GetHash().asVector();
-    auto* _index = tree.getBlockIndex(_hash);
     bool shouldRemove = false;
-    if (!_index) {
+    if (!tree.getBlockIndex(_hash)) {
         shouldRemove = true;
+        auto containing = VeriBlock::blockToAltBlock(indexDummy);
+        altintegration::ValidationState _state;
+        bool ret = tree.acceptBlock(containing, _state);
+        assert(ret && "alt tree can not accept alt block");
     }
 
     auto _f = altintegration::Finalizer([shouldRemove, _hash, &tree]() {
