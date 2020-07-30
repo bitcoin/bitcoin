@@ -9,16 +9,16 @@
 #include "pop_service_impl.hpp"
 #include "vbk/config.hpp"
 #include "vbk/service_locator.hpp"
-#include <util/system.h>
+#include "dbwrapper.h"
 
 #include <utility>
 
 namespace VeriBlock {
 
-inline PopService& InitPopService(const fs::path& dbpath)
+inline PopService& InitPopService(CDBWrapper& db)
 {
     auto& config = getService<VeriBlock::Config>();
-    auto* ptr = new PopServiceImpl(config.popconfig, dbpath);
+    auto* ptr = new PopServiceImpl(config.popconfig, db);
     setService<PopService>(ptr);
     return *ptr;
 }

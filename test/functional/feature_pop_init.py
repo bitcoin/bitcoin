@@ -26,7 +26,8 @@ class PopInit(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [[], ["-txindex"], ["-txindex"]]
+        self.extra_args = [[], ["-txindex"], ["-reindex"]]
+        self.extra_args = [x + ["-checklevel=4"] for x in self.extra_args]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

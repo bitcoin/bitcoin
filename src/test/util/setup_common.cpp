@@ -77,7 +77,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SelectParams(chainName);
     VeriBlock::InitConfig();
     selectPopConfig("regtest", "regtest", true);
-    VeriBlock::InitPopService(m_path_root / "pop");
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
     InitLogging();
@@ -117,6 +116,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
+    VeriBlock::InitPopService(*pblocktree);
+
     g_chainstate = MakeUnique<CChainState>();
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);

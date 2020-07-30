@@ -21,7 +21,7 @@ import time
 
 from .authproxy import JSONRPCException
 from . import coverage
-from .pop import sync_pop_mempools, sync_pop_tips
+from .pop import sync_pop_mempools, sync_pop_tips, assert_pop_state_equal
 from .test_node import TestNode
 from .mininode import NetworkThread
 from .util import (

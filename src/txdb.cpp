@@ -17,6 +17,9 @@
 #include <stdint.h>
 
 #include <boost/thread.hpp>
+#include <vbk/adaptors/batch_adapter.hpp>
+#include <vbk/pop_service.hpp>
+#include <vbk/service_locator.hpp>
 
 static const char DB_COIN = 'C';
 static const char DB_COINS = 'c';
@@ -231,6 +234,12 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
+
+    // write BTC/VBK/ALT blocks
+    auto adaptor = VeriBlock::BatchAdapter(batch);
+    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    pop.saveTrees(adaptor);
+
     return WriteBatch(batch, true);
 }
 

@@ -57,6 +57,7 @@
 
 #include <string>
 
+#include "vbk/adaptors/batch_adapter.hpp"
 #include "vbk/merkle.hpp"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
@@ -3714,10 +3715,9 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         *ppindex = pindex;
 
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    if(!pop.acceptBlock(*pindex, state)) {
+    if(!pop.acceptBlock(*pindex, state)){
         return error("%s: ALT tree could not accept block ALT:%d:%s, reason: %s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
     }
-
     return true;
 }
 
@@ -4157,6 +4157,14 @@ bool BlockManager::LoadBlockIndex(
     if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }))
         return false;
 
+    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    bool hasPopData = pop.hasPopData(blocktree);
+
+    if(!hasPopData) {
+        LogPrintf("BTC/VBK/ALT tips not found... skipping block index loading\n");
+        return true;
+    }
+
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*>> vSortedByHeight;
     vSortedByHeight.reserve(m_block_index.size());
@@ -4195,11 +4203,29 @@ bool BlockManager::LoadBlockIndex(
             pindexBestInvalid = pindex;
         if (pindex->pprev)
             pindex->BuildSkip();
-        if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
-            pindexBestHeader = pindex;
+        // do not set best chain here
+    }
 
-        BlockValidationState state;
-        if (!VeriBlock::getService<VeriBlock::PopService>().acceptBlock(*pindex, state)) {
+    // get best chain from ALT tree and update vBTC's best chain
+    {
+        AssertLockHeld(cs_main);
+
+        // load blocks
+        std::unique_ptr<CDBIterator> pcursor(blocktree.NewIterator());
+        if (!pop.loadTrees(*pcursor)) {
+            return false;
+        }
+
+        // ALT tree tip should be set - this is our last best tip
+        auto* tip = pop.getAltTree().getBestChain().tip();
+        assert(tip && "we could not load tip of alt block");
+        uint256 hash(tip->getHash());
+
+        CBlockIndex* index = LookupBlockIndex(hash);
+        assert(index);
+        if (index->IsValid(BLOCK_VALID_TREE)) {
+            pindexBestHeader = index;
+        } else {
             return false;
         }
     }

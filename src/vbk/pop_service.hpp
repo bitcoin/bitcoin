@@ -13,7 +13,10 @@
 #include <consensus/validation.h>
 #include <script/interpreter.h>
 #include <vbk/entity/context_info_container.hpp>
+#include <veriblock/storage/batch_adaptor.hpp>
 
+class CBlockTreeDB;
+class CDBIterator;
 class CBlock;
 class CTransaction;
 class COutPoint;
@@ -59,6 +62,11 @@ struct PopService {
     virtual void updatePopMempoolForReorg() = 0;
 
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
+
+    //! returns true if all tips are stored in database, false otherwise
+    virtual bool hasPopData(CBlockTreeDB& db) = 0 ;
+    virtual void saveTrees(altintegration::BatchAdaptor& batch) = 0;
+    virtual bool loadTrees(CDBIterator& iter) = 0;
 
     virtual std::string toPrettyString() const = 0;
 };
