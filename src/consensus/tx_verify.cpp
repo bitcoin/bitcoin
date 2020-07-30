@@ -214,7 +214,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return false; // state is filled by GetAssetValueOut
         }
         // if input was used, validate it against output (note, no fees for assets in == out)
-        if(!CheckTxInputsAssets(tx, state, tx.voutAssets.begin()->first, mapAssetIn, mapAssetOut)) {
+        if(!CheckTxInputsAssets(tx, state, tx.voutAssets.begin()->key, mapAssetIn, mapAssetOut)) {
             return false; // state filled by CheckTxInputsAssets
         }
     }
