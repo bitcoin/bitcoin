@@ -6,7 +6,7 @@ DIST_SUBDIRS = secp256k1 univalue
 
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
 AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
-AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS) $(LIBCURL_CPPFLAGS)
+AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
 
@@ -604,6 +604,8 @@ libsyscoin_consensus_a_SOURCES = \
 libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
+  services/asset.cpp \
+  services/assetconsensus.cpp \
   auxpow.cpp \
   base58.cpp \
   bech32.cpp \
@@ -633,8 +635,6 @@ libsyscoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
-  services/asset.cpp \
-  services/assetconsensus.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
   $(SYSCOIN_CORE_H)
@@ -714,7 +714,7 @@ nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 
 # syscoind & syscoin-node binaries #
 syscoin_daemon_sources = syscoind.cpp
-syscoin_bin_cppflags = $(AM_CPPFLAGS) ($LIBCURL_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_bin_cppflags = $(AM_CPPFLAGS) $(LIBCURL_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -773,7 +773,7 @@ syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 
 # syscoin-tx binary #
 syscoin_tx_SOURCES = syscoin-tx.cpp
-syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) ($LIBCURL_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCURL_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
