@@ -547,7 +547,6 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-pushversion=<n>", "Specify running with a protocol version. Only useful for regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blockfilterindex=<type>",
-    argsman.AddArg("-blockfilterindex=<type>",
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
