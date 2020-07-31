@@ -676,7 +676,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
     CInv inv(MSG_QUORUM_RECOVERED_SIG, hash);
     {
         LOCK(cs_main);
-        EraseOtherRequest(hash);
+        EraseOtherRequest(nodeId, hash);
     }
 
     if (db.HasRecoveredSigForHash(hash)) {

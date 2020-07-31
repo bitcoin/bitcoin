@@ -123,7 +123,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseOtherRequest(nHash);
+            EraseOtherRequest(pfrom->GetId(), nHash);
         }
 
         if (!masternodeSync.IsBlockchainSynced()) {
@@ -192,7 +192,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseOtherRequest(nHash);
+            EraseOtherRequest(pfrom->GetId(), nHash);
         }
 
 
