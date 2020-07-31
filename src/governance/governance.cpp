@@ -123,7 +123,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(MSG_GOVERNANCE_OBJECT, nHash));
+            EraseOtherRequest(nHash);
         }
 
         if (!masternodeSync.IsBlockchainSynced()) {
@@ -192,7 +192,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(MSG_GOVERNANCE_OBJECT_VOTE, nHash));
+            EraseOtherRequest(nHash);
         }
 
 
@@ -1002,7 +1002,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // stop early to prevent setAskFor overflow
             {
                 LOCK(cs_main);
-                size_t nProjectedSize = GetRequestedTxCount(pnode->GetId()) + nProjectedVotes;
+                size_t nProjectedSize = GetRequestedOtherCount(pnode->GetId()) + nProjectedVotes;
                 if (nProjectedSize > MAX_INV_SZ) continue;
                 // to early to ask the same node
                 if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;

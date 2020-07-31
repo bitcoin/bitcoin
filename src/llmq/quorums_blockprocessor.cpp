@@ -33,10 +33,10 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         CFinalCommitment qc;
         vRecv >> qc;
 
-        auto hash = ::SerializeHash(qc);
+        const uint256& hash = ::SerializeHash(qc);
         {
             LOCK(cs_main);
-            EraseTxRequest(pfrom->GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, hash));
+            EraseOtherRequest(hash));
         }
 
         if (qc.IsNull()) {
