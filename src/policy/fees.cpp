@@ -141,11 +141,9 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
 {
     assert(_scale != 0 && "_scale must be non-zero");
     confAvg.resize(maxPeriods);
-    for (unsigned int i = 0; i < maxPeriods; i++) {
-        confAvg[i].resize(buckets.size());
-    }
     failAvg.resize(maxPeriods);
     for (unsigned int i = 0; i < maxPeriods; i++) {
+        confAvg[i].resize(buckets.size());
         failAvg[i].resize(buckets.size());
     }
 
@@ -190,11 +188,12 @@ void TxConfirmStats::Record(int blocksToConfirm, double feerate)
 
 void TxConfirmStats::UpdateMovingAverages()
 {
+    assert(confAvg.size() == failAvg.size());
     for (unsigned int j = 0; j < buckets.size(); j++) {
-        for (unsigned int i = 0; i < confAvg.size(); i++)
-            confAvg[i][j] = confAvg[i][j] * decay;
-        for (unsigned int i = 0; i < failAvg.size(); i++)
-            failAvg[i][j] = failAvg[i][j] * decay;
+        for (unsigned int i = 0; i < confAvg.size(); i++) {
+            confAvg[i][j] *= decay;
+            failAvg[i][j] *= decay;
+        }
         m_feerate_avg[j] *= decay;
         txCtAvg[j] *= decay;
     }
