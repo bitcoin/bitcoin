@@ -956,6 +956,7 @@ void RequestTx(CNodeState* state, const GenTxid& gtxid, std::chrono::microsecond
     const auto process_time = CalculateTxGetDataTime(gtxid, current_time, !state->fPreferredDownload, !state->m_wtxid_relay && g_wtxid_relay_peers > 0);
 
     peer_download_state.m_tx_process_time.emplace(process_time, gtxid);
+}
 } // namespace
 
 // This function is used for testing the stale tip eviction logic, see
