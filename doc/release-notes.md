@@ -92,6 +92,15 @@ notifications were sent previously before the v0.19 release, but had been
 broken since that release (bug
 [#18325](https://github.com/bitcoin/bitcoin/issues/18325)).
 
+PSBT changes
+------------
+
+PSBTs will contain both the non-witness utxo and the witness utxo for segwit
+inputs in order to restore compatibility with wallet software that are now
+requiring the full previous transaction for segwit inputs. The witness utxo
+is still provided to maintain compatibility with software which relied on its
+existence to determine whether an input was segwit.
+
 0.20.1 change log
 =================
 
@@ -108,6 +117,7 @@ broken since that release (bug
 ### RPC and other APIs
 - #19524 Increment input value sum only once per UTXO in decodepsbt (fanquake)
 - #19517 psbt: Increment input value sum only once per UTXO in decodepsbt (achow101)
+- #19215 psbt: Include and allow both non_witness_utxo and witness_utxo for segwit inputs (achow101)
 
 ### GUI
 - #19097 Add missing QPainterPath include (achow101)
