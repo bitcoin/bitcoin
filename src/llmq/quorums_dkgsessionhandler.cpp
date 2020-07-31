@@ -42,7 +42,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
 
     CHashWriter hw(SER_GETHASH, 0);
     hw.write(pm->data(), pm->size());
-    uint256 hash = hw.GetHash();
+    const uint256 &hash = hw.GetHash();
 
     LOCK2(cs_main, cs);
 
@@ -51,7 +51,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
         return;
     }
 
-    EraseTxRequest(from, CInv(invType, hash));
+    EraseOtherRequest(hash);
 
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
 }
@@ -454,10 +454,10 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         }
         const auto& msg = *p.second;
 
-        auto hash = ::SerializeHash(msg);
+        const uint256& hash = ::SerializeHash(msg);
         {
             LOCK(cs_main);
-            EraseTxRequest(p.first, CInv(MessageType, hash));
+            EraseOtherRequest(hash);
         }
 
         bool ban = false;

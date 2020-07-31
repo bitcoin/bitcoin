@@ -13,6 +13,9 @@
 #include <uint256.h>
 class TxValidationState;
 class CAsset;
+
+#include <tuple>
+
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -765,4 +768,17 @@ bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData,
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
 typedef std::unordered_map<uint32_t, CAsset > AssetMap;
+/** A generic txid reference (txid or wtxid). */
+class GenTxid
+{
+    const bool m_is_wtxid;
+    const uint256 m_hash;
+public:
+    GenTxid(bool is_wtxid, const uint256& hash) : m_is_wtxid(is_wtxid), m_hash(hash) {}
+    bool IsWtxid() const { return m_is_wtxid; }
+    const uint256& GetHash() const { return m_hash; }
+    friend bool operator==(const GenTxid& a, const GenTxid& b) { return a.m_is_wtxid == b.m_is_wtxid && a.m_hash == b.m_hash; }
+    friend bool operator<(const GenTxid& a, const GenTxid& b) { return std::tie(a.m_is_wtxid, a.m_hash) < std::tie(b.m_is_wtxid, b.m_hash); }
+};
+
 #endif // SYSCOIN_PRIMITIVES_TRANSACTION_H
