@@ -51,7 +51,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
         return;
     }
 
-    EraseOtherRequest(hash);
+    EraseOtherRequest(from, hash);
 
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
 }
@@ -457,7 +457,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         const uint256& hash = ::SerializeHash(msg);
         {
             LOCK(cs_main);
-            EraseOtherRequest(hash);
+            EraseOtherRequest(p.first, hash);
         }
 
         bool ban = false;

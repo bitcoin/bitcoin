@@ -498,6 +498,9 @@ struct CNodeState {
 // Keeps track of the time (in microseconds) when transactions were requested last time
 limitedmap<uint256, std::chrono::microseconds> g_already_asked_for GUARDED_BY(cs_main)(MAX_INV_SZ);
 
+// SYSCOIN Keeps track of the time (in microseconds) when MN objects were requested last time
+limitedmap<uint256, std::chrono::microseconds> g_already_asked_for_other GUARDED_BY(cs_main)(MAX_INV_SZ);
+
 /** Map maintaining per-node state. */
 static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
 
@@ -816,14 +819,22 @@ std::chrono::microseconds GetOtherRequestTime(const uint256& txid) EXCLUSIVE_LOC
 void UpdateOtherRequestTime(const uint256& txid, std::chrono::microseconds request_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     auto it = g_already_asked_for_other.find(txid);
-    if (it == g_already_asked_g_already_asked_for_otherfor.end()) {
+    if (it == g_already_asked_for_other.end()) {
         g_already_asked_for_other.insert(std::make_pair(txid, request_time));
     } else {
         g_already_asked_for_other.update(it, request_time);
     }
 }
 
-void EraseOtherRequest(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    CNodeState *nodestate = State(nodeId);
+    if (!nodestate) {
+        return;
+    }
+    EraseOtherRequest(nodestate, hash);
+}
+void EraseOtherRequest(CNodeState *nodestate, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     nodestate->m_tx_download.m_other_announced.erase(hash);
     nodestate->m_tx_download.m_other_in_flight.erase(hash);
