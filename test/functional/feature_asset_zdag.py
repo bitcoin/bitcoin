@@ -189,7 +189,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))
         balanceBefore = self.nodes[0].getbalance(minconf=0)
         self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '')
-        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
+        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, '')
         self.nodes[0].assetallocationburn(self.asset, int(0.88889*COIN), '')
         # subtract balance with 0.001 threshold to account for update fee
         assert(self.nodes[0].getbalance(minconf=0) - (balanceBefore+Decimal(1.88889)) < Decimal(0.001))
@@ -226,7 +226,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[3].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         # check listunspent is empty in mempool, all should be burned
-        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, {})
+        self.nodes[0].assetupdate(self.asset, '', '', 0, 31, '')
         self.nodes[0].generate(1)
         assert(self.nodes[1].getbalance() - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
         assert(self.nodes[2].getbalance() - (balanceBefore+Decimal(0.01101)) < Decimal(0.001))
@@ -241,9 +241,9 @@ class AssetZDAGTest(SyscoinTestFramework):
 
     def basic_asset(self, guid):
         if guid is None:
-            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
+            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, '')['asset_guid']
         else:
-            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, {})['asset_guid']
+            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, '')['asset_guid']
 
 if __name__ == '__main__':
     AssetZDAGTest().main()
