@@ -350,9 +350,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     uint32_t nUpdateFlags = params[7].get_uint();
     std::string strWitness = params[8].get_str();
+    CKeyID witnessKeyID;
     if(!strWitness.empty()) {
         CTxDestination txDest = DecodeDestination(strWitness);
-        CKeyID witnessKeyID;
         if (!IsValidDestination(txDest)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
         }
