@@ -4100,7 +4100,7 @@ void ProcessMessage(
         if (vInv.size() <= MAX_PEER_TX_IN_FLIGHT + MAX_PEER_OTHER_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv : vInv) {
                 // SYSCOIN
-                if (inv.IsMnType()) {
+                if (!inv.IsMnType()) {
                     // If we receive a NOTFOUND message for a txid we requested, erase
                     // it from our data structures for this peer.
                     auto in_flight_it = state->m_tx_download.m_tx_in_flight.find(inv.hash);
@@ -4111,7 +4111,7 @@ void ProcessMessage(
                     }
                     state->m_tx_download.m_tx_in_flight.erase(in_flight_it);
                     state->m_tx_download.m_tx_announced.erase(inv.hash);
-                } else if (inv.IsMnType()) {
+                } else {
                     // If we receive a NOTFOUND message for a txid we requested, erase
                     // it from our data structures for this peer.
                     auto in_flight_it = state->m_tx_download.m_other_in_flight.find(inv.hash);
