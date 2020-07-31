@@ -825,7 +825,12 @@ void UpdateOtherRequestTime(const uint256& txid, std::chrono::microseconds reque
         g_already_asked_for_other.update(it, request_time);
     }
 }
-
+void EraseOtherRequest(CNodeState *nodestate, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    nodestate->m_tx_download.m_other_announced.erase(hash);
+    nodestate->m_tx_download.m_other_in_flight.erase(hash);
+    g_already_asked_for_other.erase(hash);
+}
 void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CNodeState *nodestate = State(nodeId);
@@ -833,12 +838,6 @@ void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUI
         return;
     }
     EraseOtherRequest(nodestate, hash);
-}
-void EraseOtherRequest(CNodeState *nodestate, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    nodestate->m_tx_download.m_other_announced.erase(hash);
-    nodestate->m_tx_download.m_other_in_flight.erase(hash);
-    g_already_asked_for_other.erase(hash);
 }
 std::chrono::microseconds GetObjectInterval(int invType)
 {
@@ -871,7 +870,7 @@ void RequestOther(CNodeState* state, const CInv& inv, std::chrono::microseconds 
     CNodeState::TxDownloadState& peer_download_state = state->m_tx_download;
     if (peer_download_state.m_other_announced.size() >= MAX_PEER_OTHER_ANNOUNCEMENTS ||
             peer_download_state.m_other_process_time.size() >= MAX_PEER_OTHER_ANNOUNCEMENTS ||
-            peer_download_state.m_other_announced.count(inv.hash) {
+            peer_download_state.m_other_announced.count(inv.hash)) {
         // Too many queued announcements from this peer, or we already have
         // this announcement
         return;
