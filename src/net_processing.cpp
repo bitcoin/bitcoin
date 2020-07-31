@@ -834,14 +834,6 @@ void EraseOtherRequest(CNodeState *nodestate, const uint256& hash) EXCLUSIVE_LOC
     nodestate->m_tx_download.m_other_in_flight.erase(hash);
     g_already_asked_for_other.erase(hash);
 }
-void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    CNodeState *nodestate = State(nodeId);
-    if (!nodestate) {
-        return;
-    }
-    EraseOtherRequest(nodestate, hash);
-}
 std::chrono::microseconds GetObjectInterval(int invType)
 {
     // some messages need to be re-requested faster when the first announcing peer did not answer to GETDATA
@@ -884,14 +876,6 @@ void RequestOther(CNodeState* state, const CInv& inv, std::chrono::microseconds 
     // fPreferredDownload as a proxy for outbound peers.
     const auto process_time = CalculateOtherGetDataTime(inv, current_time);
     peer_download_state.m_other_process_time.emplace(process_time, inv);
-}
-size_t GetRequestedOtherCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    CNodeState *nodestate = State(nodeId);
-    if (!nodestate) {
-        return 0;
-    }
-    return nodestate->m_tx_download.m_other_process_time.size();
 }
 
 void EraseTxRequest(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -958,7 +942,23 @@ void RequestTx(CNodeState* state, const GenTxid& gtxid, std::chrono::microsecond
     peer_download_state.m_tx_process_time.emplace(process_time, gtxid);
 }
 } // namespace
-
+// SYSCOIN
+size_t GetRequestedOtherCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    CNodeState *nodestate = State(nodeId);
+    if (!nodestate) {
+        return 0;
+    }
+    return nodestate->m_tx_download.m_other_process_time.size();
+}
+void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    CNodeState *nodestate = State(nodeId);
+    if (!nodestate) {
+        return;
+    }
+    EraseOtherRequest(nodestate, hash);
+}
 // This function is used for testing the stale tip eviction logic, see
 // denialofservice_tests.cpp
 void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
