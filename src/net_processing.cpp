@@ -448,6 +448,9 @@ struct CNodeState {
 
         //! Periodically check for stuck getdata requests
         std::chrono::microseconds m_check_expiry_timer{0};
+        
+        //! Periodically check for stuck getdata MN requests
+        std::chrono::microseconds m_check_expiry_timer_other{0};
     };
 
     TxDownloadState m_tx_download;
