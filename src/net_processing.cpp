@@ -501,7 +501,7 @@ private:
 
     void ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBlock>& pblock, bool fForceProcessing);
 
-    /** Relay map */
+    /** Relay map (txid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
@@ -1043,22 +1043,22 @@ void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED
     EraseObjectRequest(state, inv);
 }
 
-std::chrono::microseconds GetObjectRequestTime(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds GetObjectRequestTime(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    auto it = g_already_asked_for.find(hash);
+    auto it = g_already_asked_for.find(inv.hash);
     if (it != g_already_asked_for.end()) {
         return it->second;
     }
     return {};
 }
 
-void UpdateObjectRequestTime(const uint256& hash, std::chrono::microseconds request_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void UpdateObjectRequestTime(const CInv& inv, std::chrono::microseconds request_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    auto it = g_already_asked_for.find(hash);
+    auto it = g_already_asked_for.find(inv.hash);
     if (it == g_already_asked_for.end()) {
-        g_already_asked_for.insert(std::make_pair(hash, request_time));
+        g_already_asked_for.insert(std::make_pair(inv.hash, request_time));
     } else {
         g_already_asked_for.update(it, request_time);
     }
@@ -1097,7 +1097,7 @@ std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chron
 {
     AssertLockHeld(cs_main);
     std::chrono::microseconds process_time;
-    const auto last_request_time = GetObjectRequestTime(inv.hash);
+    const auto last_request_time = GetObjectRequestTime(inv);
     // First time requesting this tx
     if (last_request_time.count() == 0) {
         process_time = current_time;
@@ -5231,7 +5231,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             if (!AlreadyHave(inv)) {
                 // If this object was last requested more than GetObjectInterval ago,
                 // then request.
-                const auto last_request_time = GetObjectRequestTime(inv.hash);
+                const auto last_request_time = GetObjectRequestTime(inv);
                 if (last_request_time <= current_time - GetObjectInterval(inv.type)) {
                     LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
                     vGetData.push_back(inv);
@@ -5239,7 +5239,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
                         vGetData.clear();
                     }
-                    UpdateObjectRequestTime(inv.hash, current_time);
+                    UpdateObjectRequestTime(inv, current_time);
                     state.m_object_download.m_object_in_flight.emplace(inv, current_time);
                 } else {
                     // This object is in flight from someone else; queue

@@ -11,6 +11,7 @@
 #define BITCOIN_PROTOCOL_H
 
 #include <netaddress.h>
+#include <primitives/transaction.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
