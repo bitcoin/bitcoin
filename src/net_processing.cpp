@@ -5064,19 +5064,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     UpdateOtherRequestTime(inv.hash, current_time);
                     state.m_tx_download.m_other_in_flight.emplace(inv.hash, current_time);
                 } else {
-                    // This transaction is in flight from someone else; queue
-                    // up processing to happen after the download times out
-                    // (with a slight delay for inbound peers, to prefer
-                    // requests to outbound peers).
-                    // Don't apply the txid-delay to re-requests of a
-                    // transaction; the heuristic of delaying requests to
-                    // txid-relay peers is to save bandwidth on initial
-                    // announcement of a transaction, and doesn't make sense
-                    // for a followup request if our first peer times out (and
-                    // would open us up to an attacker using inbound
-                    // wtxid-relay to prevent us from requesting transactions
-                    // from outbound txid-relay peers).
-                    const auto next_process_time = CalculateOtherGetDataTime(inv, current_time, !state.fPreferredDownload, false);
+                    const auto next_process_time = CalculateOtherGetDataTime(inv, current_time);
                     other_process_time.emplace(next_process_time, inv.hash);
                 }
             } else {
