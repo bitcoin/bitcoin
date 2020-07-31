@@ -569,9 +569,9 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
                             {RPCResult::Type::STR_HEX, "", "The transaction id"},
                         }},
                     RPCResult{"for verbose = true",
-                        RPCResult::Type::OBJ, "", "",
+                        RPCResult::Type::OBJ_DYN, "", "",
                         {
-                            {RPCResult::Type::OBJ_DYN, "transactionid", "", MempoolEntryDescription()},
+                            {RPCResult::Type::OBJ, "transactionid", "", MempoolEntryDescription()},
                         }},
                 },
                 RPCExamples{
@@ -600,7 +600,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
                         RPCResult::Type::ARR, "", "",
                         {{RPCResult::Type::STR_HEX, "", "The transaction id of an in-mempool ancestor transaction"}}},
                     RPCResult{"for verbose = true",
-                        RPCResult::Type::OBJ_DYN, "transactionid", "", MempoolEntryDescription()},
+                        RPCResult::Type::OBJ, "transactionid", "", MempoolEntryDescription()},
                 },
                 RPCExamples{
                     HelpExampleCli("getmempoolancestors", "\"mytxid\"")
@@ -660,9 +660,9 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
                         RPCResult::Type::ARR, "", "",
                         {{RPCResult::Type::STR_HEX, "", "The transaction id of an in-mempool descendant transaction"}}},
                     RPCResult{"for verbose = true",
-                        RPCResult::Type::OBJ, "", "",
+                        RPCResult::Type::OBJ_DYN, "", "",
                         {
-                            {RPCResult::Type::OBJ_DYN, "transactionid", "", MempoolEntryDescription()},
+                            {RPCResult::Type::OBJ, "transactionid", "", MempoolEntryDescription()},
                         }},
                 },
                 RPCExamples{
@@ -718,7 +718,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
                 },
                 RPCResult{
-                    RPCResult::Type::OBJ_DYN, "", "", MempoolEntryDescription()},
+                    RPCResult::Type::OBJ, "", "", MempoolEntryDescription()},
                 RPCExamples{
                     HelpExampleCli("getmempoolentry", "\"mytxid\"")
             + HelpExampleRpc("getmempoolentry", "\"mytxid\"")
