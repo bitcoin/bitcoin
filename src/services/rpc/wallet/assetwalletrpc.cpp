@@ -350,15 +350,17 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     uint32_t nUpdateFlags = params[7].get_uint();
     std::string strWitness = params[8].get_str();
-    CTxDestination txDest = DecodeDestination(strWitness);
-    CKeyID witnessKeyID;
-    if (!IsValidDestination(txDest)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
-    }
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-        witnessKeyID = ToKeyID(*witness_id);
-    } else {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
+    if(!strWitness.empty()) {
+        CTxDestination txDest = DecodeDestination(strWitness);
+        CKeyID witnessKeyID;
+        if (!IsValidDestination(txDest)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
+        }
+        if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+            witnessKeyID = ToKeyID(*witness_id);
+        } else {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
+        }
     }
     // calculate net
     // build asset object
@@ -632,15 +634,17 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     std::string strWitness = params[5].get_str();
-    CTxDestination txDest = DecodeDestination(strWitness);
     CKeyID witnessKeyID;
-    if (!IsValidDestination(txDest)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
-    }
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-        witnessKeyID = ToKeyID(*witness_id);
-    } else {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
+    if(!strWitness.empty()) {
+        CTxDestination txDest = DecodeDestination(strWitness);
+        if (!IsValidDestination(txDest)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
+        }
+        if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+            witnessKeyID = ToKeyID(*witness_id);
+        } else {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
+        }
     }
 
     strPubData = publicData.write();
