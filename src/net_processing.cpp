@@ -5065,7 +5065,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     state.m_tx_download.m_other_in_flight.emplace(inv.hash, current_time);
                 } else {
                     const auto next_process_time = CalculateOtherGetDataTime(inv, current_time);
-                    other_process_time.emplace(next_process_time, inv.hash);
+                    other_process_time.emplace(next_process_time, inv);
                 }
             } else {
                 // We have already seen this transaction, no need to download.
