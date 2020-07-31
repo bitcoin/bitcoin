@@ -448,7 +448,7 @@ struct CNodeState {
 
         //! Periodically check for stuck getdata requests
         std::chrono::microseconds m_check_expiry_timer{0};
-        
+
         //! Periodically check for stuck getdata MN requests
         std::chrono::microseconds m_check_expiry_timer_other{0};
     };
@@ -1916,6 +1916,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                         if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(txin.prevout.hash))) {
                             LOCK(cs_main);
                             State(pfrom.GetId())->m_recently_announced_invs.insert(txin.prevout.hash);
+                        }
                     }
                 }
             } else {
