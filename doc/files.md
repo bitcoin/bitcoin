@@ -56,7 +56,7 @@ Subdirectory       | File(s)               | Description
 `./`               | `fee_estimates.dat`   | Stores statistics used to estimate minimum transaction fees and priorities required for confirmation
 `./`               | `guisettings.ini.bak` | Backup of former [GUI settings](#gui-settings) after `-resetguisettings` option is used
 `./`               | `mempool.dat`         | Dump of the mempool's transactions
-`./`               | `onion_private_key`   | Cached Tor hidden service private key for `-listenonion` option
+`./`               | `onion_private_key`   | Cached Tor onion service private key for `-listenonion` option
 `./`               | `peers.dat`           | Peer IP address database (custom format)
 `./`               | `settings.json`       | Read-write settings set through GUI or RPC interfaces, augmenting manual settings from [bitcoin.conf](bitcoin-conf.md). File is created automatically if read-write settings storage is not disabled with `-nosettings` option. Path can be specified with `-settings` option
 `./`               | `.cookie`             | Session RPC authentication cookie; if used, created at start and deleted on shutdown; can be specified by `-rpccookiefile` option

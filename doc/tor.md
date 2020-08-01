@@ -1,6 +1,6 @@
 # TOR SUPPORT IN BITCOIN
 
-It is possible to run Bitcoin Core as a Tor hidden service, and connect to such services.
+It is possible to run Bitcoin Core as a Tor onion service, and connect to such services.
 
 The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
 configure Tor.
@@ -14,12 +14,12 @@ outgoing connections, but more is possible.
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
 	                server will be used to try to reach .onion addresses as well.
 
-	-onion=ip:port  Set the proxy server to use for Tor hidden services. You do not
+	-onion=ip:port  Set the proxy server to use for Tor onion services. You do not
 	                need to set this if it's the same as -proxy. You can use -noonion
-	                to explicitly disable access to hidden services.
+	                to explicitly disable access to onion services.
 
 	-listen         When using -proxy, listening is disabled by default. If you want
-	                to run a hidden service (see next section), you'll need to enable
+	                to run an onion service (see next section), you'll need to enable
 	                it explicitly.
 
 	-connect=X      When behind a Tor proxy, you can specify .onion addresses instead
@@ -94,11 +94,11 @@ for normal IPv4/IPv6 communication, use:
 ## 3. Automatically listen on Tor
 
 Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
-API, to create and destroy 'ephemeral' hidden services programmatically.
+API, to create and destroy 'ephemeral' onion services programmatically.
 Bitcoin Core has been updated to make use of this.
 
 This means that if Tor is running (and proper authentication has been configured),
-Bitcoin Core automatically creates a hidden service to listen on. This will positively
+Bitcoin Core automatically creates an onion service to listen on. This will positively
 affect the number of available .onion nodes.
 
 This new feature is enabled by default if Bitcoin Core is listening (`-listen`), and
@@ -110,7 +110,7 @@ Connecting to Tor's control socket API requires one of two authentication method
 configured. It also requires the control socket to be enabled, e.g. put `ControlPort 9051`
 in `torrc` config file. For cookie authentication the user running bitcoind must have read
 access to the `CookieAuthFile` specified in Tor configuration. In some cases this is
-preconfigured and the creation of a hidden service is automatic. If permission problems
+preconfigured and the creation of an onion service is automatic. If permission problems
 are seen with `-debug=tor` they can be resolved by adding both the user running Tor and
 the user running bitcoind to the same group and setting permissions appropriately. On
 Debian-based systems the user running bitcoind can be added to the debian-tor group,
@@ -127,8 +127,8 @@ in the tor configuration file. The hashed password can be obtained with the comm
 
 ## 4. Privacy recommendations
 
-- Do not add anything but Bitcoin Core ports to the hidden service created in section 2.
-  If you run a web service too, create a new hidden service for that.
+- Do not add anything but Bitcoin Core ports to the onion service created in section 2.
+  If you run a web service too, create a new onion service for that.
   Otherwise it is trivial to link them, which may reduce privacy. Hidden
   services created automatically (as in section 3) always have only one port
   open.

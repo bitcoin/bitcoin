@@ -459,10 +459,10 @@
        <item>
         <widget class="QCheckBox" name="connectSocksTor">
          <property name="toolTip">
-          <string>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</string>
+          <string>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</string>
          </property>
          <property name="text">
-          <string>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</string>
+          <string>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</string>
          </property>
         </widget>
        </item>

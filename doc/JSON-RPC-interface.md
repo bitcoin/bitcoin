@@ -60,7 +60,7 @@ RPC interface will be abused.
   are sent as clear text that can be read by anyone on your network
   path.  Additionally, the RPC interface has not been hardened to
   withstand arbitrary Internet traffic, so changing the above settings
-  to expose it to the Internet (even using something like a Tor hidden
+  to expose it to the Internet (even using something like a Tor onion
   service) could expose you to unconsidered vulnerabilities.  See
   `bitcoind -help` for more information about these settings and other
   settings described in this document.
