@@ -89,7 +89,7 @@ include:
 Examples:
 
     feat(consensus): add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
-    feat(net): automatically create hidden service, listen on Tor
+    feat(net): automatically create onion service, listen on Tor
     feat(qt): add feed bump button
     fix(log): fix typo in log message
     feat(rpc)!: modify gettransaction parameter type
