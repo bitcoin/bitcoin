@@ -111,7 +111,7 @@ struct LLMQParams {
     // Number of quorums to consider "active" for signing sessions
     int signingActiveQuorumCount;
 
-    // Used for inter-quorum communication. This is the number of quorums for which we should keep old connections. This
+    // Used for intra-quorum communication. This is the number of quorums for which we should keep old connections. This
     // should be at least one more then the active quorums set.
     int keepOldConnections;
 
