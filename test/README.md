@@ -38,13 +38,13 @@ The ZMQ functional test requires a python ZMQ library. To install it:
 Individual tests can be run by directly calling the test script, eg:
 
 ```
-test/functional/wallet-hd.py
+test/functional/wallet_hd.py
 ```
 
 or can be run through the test_runner harness, eg:
 
 ```
-test/functional/test_runner.py wallet-hd.py
+test/functional/test_runner.py wallet_hd.py
 ```
 
 You can run any combination (incl. duplicates) of tests by calling:
