@@ -23,6 +23,7 @@ env:
     # DOCKER_HUB_PASSWORD
     - secure: "RLzlMhfLqwSBrZqJOVOd61suXBn+HtUR3vOZfuFYF/Qmjjj5TE41+rObZmzc54hP/ZL+OH6blnibpvfDXlX+eN38ivFQfuxkJIGL68SJsEwNBRwW39Yw6Hl5RdI41MLCH7ByN15wifLp1JKBilHJ7XGMOUjI7P0yl7JjX8GBXUCtJbVLRugo80/yn+XQ1NdnlpbpYHNjMEQFWSODPa3pSK5McWvyQjDZDgS+IkdrZmIYJPMa7bmKH5I/edUPSmXQT905FgEwq9u8XR0SyBopli21EK9l6GkXIIvmDTYz5vT26Apvi2B4Aoazlklg+KNRUJuLGerpt6kbnU0gMSUChVkFfFhOk6GRSN3a/AUfD2FOudvMhet2QvlPHx+GYdEUr5XVo5HW42pHsqfD6eDtHd8VLTsHP0q4C8V85fNMv21lkkehy2ry8fx/RRy6x4O2wg2mua+79UkGKXp75gMKzWEcth34PCFCOu37l2F8R/ANnrQ52K/8vIQ88TtU2OpYX89fHjLojBxu+WKEBGZH2LRPsZBOUHeeO5C/xKDrhZU24ORnMW8wg66Qg5GIX1KI4a8yp73Mpues5hzpJ6wkMuRrQt40ymKndLCjv8KSd+5BfP6Or/KIrzDNYdZaasjk7JNi6rcZmm9d3fTAo+Ja/mjpUCIOo3SX14luzVCJIig="
     - DOCKER_BUILD=false
+    - BUILD_TARGET=$TRAVIS_JOB_NAME
 
 stages:
   - build depends
@@ -60,54 +61,58 @@ jobs:
   include:
     # build depends
     - <<: *builddepends
-      env: BUILD_TARGET=arm-linux
+      name: arm-linux
     - <<: *builddepends
-      env: BUILD_TARGET=win32
+      name: win32
     - <<: *builddepends
-      env: BUILD_TARGET=win64
+      name: win64
     - <<: *builddepends
-      env: BUILD_TARGET=linux32
+      name: linux32
     - <<: *builddepends
-      env: BUILD_TARGET=linux64
+      name: linux64
     - <<: *builddepends
-      env: BUILD_TARGET=linux64_nowallet
+      name: linux64_nowallet
     - <<: *builddepends
-      env: BUILD_TARGET=linux64_release DOCKER_BUILD=true
+      name: linux64_release
+      env: DOCKER_BUILD=true
     - <<: *builddepends
-      env: BUILD_TARGET=mac
+      name: mac
     # build source
     - <<: *buildsrc
-      env: BUILD_TARGET=arm-linux
+      name: arm-linux
     - <<: *buildsrc
-      env: BUILD_TARGET=win32
+      name: win32
     - <<: *buildsrc
-      env: BUILD_TARGET=win64
+      name: win64
     - <<: *buildsrc
-      env: BUILD_TARGET=linux32
+      name: linux32
     - <<: *buildsrc
-      env: BUILD_TARGET=linux64
+      name: linux64
     - <<: *buildsrc
-      env: BUILD_TARGET=linux64_nowallet
+      name: linux64_nowallet
     - <<: *buildsrc
-      env: BUILD_TARGET=linux64_release DOCKER_BUILD=true
+      name: linux64_release
+      env: DOCKER_BUILD=true
     - <<: *buildsrc
-      env: BUILD_TARGET=mac
+      name: mac
     # run tests (no tests for arm-linux and mac)
     - <<: *runtests
-      env: BUILD_TARGET=win32
+      name: win32
     - <<: *runtests
-      env: BUILD_TARGET=win64
+      name: win64
     - <<: *runtests
-      env: BUILD_TARGET=linux32
+      name: linux32
     - <<: *runtests
-      env: BUILD_TARGET=linux64
+      name: linux64
     - <<: *runtests
-      env: BUILD_TARGET=linux64_nowallet
+      name: linux64_nowallet
     - <<: *runtests
-      env: BUILD_TARGET=linux64_release DOCKER_BUILD=true
+      name: linux64_release
+      env: DOCKER_BUILD=true
     # build docker
     - <<: *builddocker
-      env: BUILD_TARGET=linux64_release DOCKER_BUILD=true
+      name: linux64_release
+      env: DOCKER_BUILD=true
 
 before_cache:
   # Save builder image
