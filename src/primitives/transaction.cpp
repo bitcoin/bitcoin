@@ -423,8 +423,18 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
 
 uint256 CTransaction::GetWitnessSigHash() const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    for(const auto &vin: vin) {
-        ss << vin.prevout;
+    for(const auto &vinObj: vin) {
+        ss << vinObj.prevout;
+    }
+    CTxDestination txDest;
+    for(const auto &it: tx.voutAssets) {
+        ss << it.key;
+        for(const auto& voutAsset: it.values){
+            if (ExtractDestination(tx.vout[voutAsset.n].scriptPubKey, txDest)) {
+                ss << txDest;
+                ss << voutAsset.nValue;
+            }
+        }
     }
     return ss.GetHash();
 }
