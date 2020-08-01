@@ -1209,10 +1209,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CTxDestination auxFeeAddress;
         const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
         if(nAuxFee > 0){
-            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
                 theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
-                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             }
             itVout->values.push_back(CAssetOutValue(idx, nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
