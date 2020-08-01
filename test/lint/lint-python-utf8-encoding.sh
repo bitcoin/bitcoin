@@ -7,6 +7,7 @@
 # Make sure we explicitly open all text files using UTF-8 (or ASCII) encoding to
 # avoid potential issues on the BSDs where the locale is not always set.
 
+export LC_ALL=C
 EXIT_CODE=0
 OUTPUT=$(git grep " open(" -- "*.py" | grep -vE "encoding=.(ascii|utf8|utf-8)." | grep -vE "open\([^,]*, ['\"][^'\"]*b[^'\"]*['\"]")
 if [[ ${OUTPUT} != "" ]]; then

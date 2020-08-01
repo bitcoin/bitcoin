@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+export LC_ALL=C
 set -e
 
 ROOTDIR=dist
@@ -13,7 +14,7 @@ TEMPLIST=${TEMPDIR}/signatures.txt
 OUT=signature-osx.tar.gz
 OUTROOT=osx
 
-if [ ! -n "$1" ]; then
+if [ -z "$1" ]; then
   echo "usage: $0 <codesign args>"
   echo "example: $0 -s MyIdentity"
   exit 1

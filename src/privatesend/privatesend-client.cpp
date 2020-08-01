@@ -196,7 +196,7 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
             return;
         }
 
-        LogPrint(BCLog::PRIVATESEND, "DSFINALTX -- txNew %s", txNew.ToString());
+        LogPrint(BCLog::PRIVATESEND, "DSFINALTX -- txNew %s", txNew.ToString()); /* Continued */
 
         // check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(txNew, pfrom, connman);
@@ -488,7 +488,7 @@ bool CPrivateSendClientSession::SendDenominate(const std::vector<std::pair<CTxDS
         tx.vout.emplace_back(pair.second);
     }
 
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::SendDenominate -- Submitting partial tx %s", tx.ToString());
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::SendDenominate -- Submitting partial tx %s", tx.ToString()); /* Continued */
 
     // store our entry for later use
     vecEntries.emplace_back(vecTxDSInTmp, vecTxOutTmp, txMyCollateral);
@@ -559,7 +559,7 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
     if (!mixingMasternode) return false;
 
     finalMutableTransaction = finalTransactionNew;
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString());
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString()); /* Continued */
 
     // STEP 1: check final transaction general rules
 
@@ -602,7 +602,7 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
             if (!fFound) {
                 // Something went wrong and we'll refuse to sign. It's possible we'll be charged collateral. But that's
                 // better than signing if the transaction doesn't look like what we wanted.
-                LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- an output is missing, refusing to sign! txout=%s\n", txout.ToString());
+                LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- an output is missing, refusing to sign! txout=%s\n", __func__, txout.ToString());
                 UnlockCoins();
                 keyHolderStorage.ReturnAll();
                 SetNull();
@@ -658,7 +658,7 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
     }
 
     // push all of our signatures to the Masternode
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- pushing sigs to the masternode, finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString());
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- pushing sigs to the masternode, finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString()); /* Continued */
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
     SetState(POOL_STATE_SIGNING);
@@ -1139,7 +1139,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
         int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
         int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, nMnCount);
         if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Too early to mix on this masternode!"
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Too early to mix on this masternode!" /* Continued */
                       " masternode=%s  addr=%s  nLastDsq=%d  nDsqThreshold=%d  nDsqCount=%d\n",
                 dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(), nLastDsq,
                 nDsqThreshold, mmetaman.GetDsqCount());
@@ -1616,7 +1616,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
                                && nBalanceToDenominate < nDenomValue);
                 if (fFinal) {
                     fAddFinal = false; // add final denom only once, only the smalest possible one
-                    LogPrint(BCLog::PRIVATESEND,
+                    LogPrint(BCLog::PRIVATESEND, /* Continued */
                              "CPrivateSendClientSession::CreateDenominated -- 1 - FINAL - nDenomValue: %f, nValueLeft: %f, nBalanceToDenominate: %f\n",
                              (float) nDenomValue / COIN, (float) nValueLeft / COIN, (float) nBalanceToDenominate / COIN);
                 }
@@ -1635,7 +1635,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
                 currentDenomIt->second++;
                 nValueLeft -= nDenomValue + nOutputFee;
                 nBalanceToDenominate -= nDenomValue;
-                LogPrint(BCLog::PRIVATESEND,
+                LogPrint(BCLog::PRIVATESEND, /* Continued */
                          "CPrivateSendClientSession::CreateDenominated -- 1 - nDenomValue: %f, totalOutputs: %d, nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f, nBalanceToDenominate: %f\n",
                          (float) nDenomValue / COIN, nOutputsTotal + nOutputs, nOutputsTotal, nOutputs, (float) nValueLeft / COIN, (float) nBalanceToDenominate / COIN);
             }
@@ -1650,12 +1650,12 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
             // denom and that our nValueLeft/nBalanceToDenominate is enough to create one of these denoms, if so, loop again.
             if (it.second < CPrivateSendClientOptions::GetDenomsGoal() && (nValueLeft >= it.first + nOutputFee) && nBalanceToDenominate > 0) {
                 finished = false;
-                LogPrint(BCLog::PRIVATESEND,
+                LogPrint(BCLog::PRIVATESEND, /* Continued */
                         "CPrivateSendClientSession::CreateDenominated -- 1 - NOT finished - nDenomValue: %f, count: %d, nValueLeft: %f, nBalanceToDenominate: %f\n",
                         (float) it.first / COIN, it.second, (float) nValueLeft / COIN, (float) nBalanceToDenominate / COIN);
                 break;
             }
-            LogPrint(BCLog::PRIVATESEND,
+            LogPrint(BCLog::PRIVATESEND, /* Continued */
                     "CPrivateSendClientSession::CreateDenominated -- 1 - FINSHED - nDenomValue: %f, count: %d, nValueLeft: %f, nBalanceToDenominate: %f\n",
                     (float) it.first / COIN, it.second, (float) nValueLeft / COIN, (float) nBalanceToDenominate / COIN);
         }
@@ -1698,7 +1698,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
                 it->second++;
                 nValueLeft -= nDenomValue + nOutputFee;
                 nBalanceToDenominate -= nDenomValue;
-                LogPrint(BCLog::PRIVATESEND,
+                LogPrint(BCLog::PRIVATESEND, /* Continued */
                          "CPrivateSendClientSession::CreateDenominated -- 2 - nDenomValue: %f, totalOutputs: %d, nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f, nBalanceToDenominate: %f\n",
                          (float) nDenomValue / COIN, nOutputsTotal + nOutputs, nOutputsTotal, nOutputs, (float) nValueLeft / COIN, (float) nBalanceToDenominate / COIN);
                 if (nOutputs + nOutputsTotal >= PRIVATESEND_DENOM_OUTPUTS_THRESHOLD) break;
@@ -1712,7 +1712,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
             nOutputsTotal, (float)nValueLeft / COIN, (float)nBalanceToDenominate / COIN);
 
     for (const auto it : mapDenomCount) {
-        LogPrint(BCLog::PRIVATESEND,
+        LogPrint(BCLog::PRIVATESEND, /* Continued */
                 "CPrivateSendClientSession::CreateDenominated -- 3 - DONE - nDenomValue: %f, count: %d\n",
                 (float) it.first / COIN, it.second);
     }

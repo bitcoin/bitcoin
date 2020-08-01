@@ -285,7 +285,7 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
         // should be a bit faster.
         // However, if we happen to be in the middle of processing a reorg, then
         // the mempool can be in an inconsistent state.  In this case, the set
-        // of ancestors reachable via mapLinks will be the same as the set of 
+        // of ancestors reachable via mapLinks will be the same as the set of
         // ancestors whose packages include this transaction, because when we
         // add a new transaction to the mempool in addUnchecked(), we assume it
         // has no children, and in the case of a reorg where that assumption is
@@ -793,7 +793,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
 void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
-    LOCK(cs);
+    AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
@@ -898,7 +898,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return;
         }
 
@@ -916,7 +916,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return;
         }
 
@@ -929,7 +929,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return;
         }
 
@@ -938,7 +938,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return;
         }
 
@@ -1244,7 +1244,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
         if (mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash()))
@@ -1263,7 +1263,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
         auto it = mapProTxAddresses.find(proTx.addr);
@@ -1271,7 +1271,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
 
@@ -1293,7 +1293,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
 

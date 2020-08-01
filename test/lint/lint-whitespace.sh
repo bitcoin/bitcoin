@@ -8,6 +8,7 @@
 
 # We can't run this check unless we know the commit range for the PR.
 
+export LC_ALL=C
 while getopts "?" opt; do
   case $opt in
     ?)
@@ -22,7 +23,7 @@ while getopts "?" opt; do
 done
 
 if [ -z "${COMMIT_RANGE}" ]; then
-  if [ "$1" ]; then
+  if [ -n "$1" ]; then
     COMMIT_RANGE="HEAD~$1...HEAD"
   else
     COMMIT_RANGE="HEAD"

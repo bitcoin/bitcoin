@@ -2380,7 +2380,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // Note: do not break the flow here
 
         if (pfrom->fMasternodeProbe && !pfrom->fFirstMessageIsMNAUTH) {
-            LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d", pfrom->GetId());
+            LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d\n", pfrom->GetId());
             pfrom->fDisconnect = true;
             return false;
         }
@@ -2678,7 +2678,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // might maliciously send lots of getblocktxn requests to trigger
             // expensive disk reads, because it will require the peer to
             // actually receive all the data read from disk over the network.
-            LogPrint(BCLog::NET, "Peer %d sent us a getblocktxn for a block > %i deep", pfrom->GetId(), MAX_BLOCKTXN_DEPTH);
+            LogPrint(BCLog::NET, "Peer %d sent us a getblocktxn for a block > %i deep\n", pfrom->GetId(), MAX_BLOCKTXN_DEPTH);
             CInv inv;
             inv.type = MSG_BLOCK;
             inv.hash = req.blockhash;

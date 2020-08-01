@@ -3,11 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+export LC_ALL=C
 if [ -z "$OSSLSIGNCODE" ]; then
   OSSLSIGNCODE=osslsigncode
 fi
 
-if [ ! -n "$1" ]; then
+if [ -z "$1" ]; then
   echo "usage: $0 <osslcodesign args>"
   echo "example: $0 -key codesign.key"
   exit 1

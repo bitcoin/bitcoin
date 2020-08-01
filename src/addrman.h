@@ -183,7 +183,7 @@ public:
 #define ADDRMAN_SET_TRIED_COLLISION_SIZE 10
 
 /**
- * Stochastical (IP) address manager 
+ * Stochastical (IP) address manager
  */
 class CAddrMan
 {

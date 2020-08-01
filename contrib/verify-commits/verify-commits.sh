@@ -3,6 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+export LC_ALL=C
+
 DIR=$(dirname "$0")
 [ "/${DIR#/}" != "$DIR" ] && DIR=$(dirname "$(pwd)/$0")
 
@@ -94,9 +96,9 @@ while true; do
 		FILE_HASHES=""
 		for FILE in $(git ls-tree --full-tree -r --name-only "$CURRENT_COMMIT" | LC_ALL=C sort); do
 			if [ "$HAVE_GNU_SHA512" = 1 ]; then
-				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST OTHER; echo $FIRST; } )
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST _; echo $FIRST; } )
 			else
-				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | shasum -a 512 | { read FIRST OTHER; echo $FIRST; } )
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | shasum -a 512 | { read FIRST _; echo $FIRST; } )
 			fi
 			[ "$FILE_HASHES" != "" ] && FILE_HASHES="$FILE_HASHES"'
 '
