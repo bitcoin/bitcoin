@@ -3396,10 +3396,9 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
 
 int GetWitnessCommitmentIndex(const CBlock& block)
 {
-    int commitpos = -1;
     if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            const CTxOut& vout = block.vtx[0]->vout[o];
+        for (size_t o = block.vtx[0]->vout.size(); o > 0;) {
+            const CTxOut& vout = block.vtx[0]->vout[--o];
             if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
                 vout.scriptPubKey[0] == OP_RETURN &&
                 vout.scriptPubKey[1] == 0x24 &&
@@ -3407,11 +3406,11 @@ int GetWitnessCommitmentIndex(const CBlock& block)
                 vout.scriptPubKey[3] == 0x21 &&
                 vout.scriptPubKey[4] == 0xa9 &&
                 vout.scriptPubKey[5] == 0xed) {
-                commitpos = o;
+                return o;
             }
         }
     }
-    return commitpos;
+    return -1;
 }
 
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
