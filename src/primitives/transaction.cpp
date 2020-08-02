@@ -15,6 +15,7 @@
 #include <pubkey.h>
 #include <script/standard.h>
 #include <services/asset.h>
+#include <key_io.h>
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -430,7 +431,7 @@ uint256 CTransaction::GetWitnessSigHash() const {
     for(const auto &it: voutAssets) {
         ss << it.key;
         for(const auto& voutAsset: it.values){
-            if (ExtractDestination(tx.vout[voutAsset.n].scriptPubKey, txDest)) {
+            if (ExtractDestination(vout[voutAsset.n].scriptPubKey, txDest)) {
                 ss << EncodeDestination(txDest);
                 ss << voutAsset.nValue;
             }
