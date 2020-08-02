@@ -25,7 +25,58 @@
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
-
+uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxDestination & address) {
+    UniValue publicObj;
+    if(!publicObj.read(public_data))
+        return 0;
+    const UniValue &auxFeesObj = find_value(publicObj, "aux_fees");
+    if(!auxFeesObj.isObject())
+        return 0;
+    const UniValue &addressObj = find_value(auxFeesObj, "address");
+    if(!addressObj.isStr())
+        return 0;
+    address = DecodeDestination(addressObj.get_str());
+    const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
+    if(!feeStructObj.isArray())
+        return 0;
+    const UniValue &feeStructArray = feeStructObj.get_array();
+    if(feeStructArray.size() == 0)
+        return 0;
+     
+    uint64_t nAccumulatedFee = 0;
+    uint64_t nBoundAmount = 0;
+    uint64_t nNextBoundAmount = 0;
+    double nRate = 0;
+    for(unsigned int i =0;i<feeStructArray.size();i++){
+        if(!feeStructArray[i].isArray())
+            return 0;
+        const UniValue &feeStruct = feeStructArray[i].get_array();
+        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
+        if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
+            return 0;
+        if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
+                return 0;   
+        UniValue boundValue = feeStruct[0]; 
+        UniValue nextBoundValue = feeStructNext[0]; 
+        nBoundAmount = boundValue.get_uint64();
+        nNextBoundAmount = nextBoundValue.get_uint64();
+        if(!feeStruct[1].isStr())
+            return 0;
+        if(!ParseDouble(feeStruct[1].get_str(), &nRate))
+            return 0;
+        // case where amount is in between the bounds
+        if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
+            break;    
+        }
+        nBoundAmount = nNextBoundAmount - nBoundAmount;
+        // must be last bound
+        if(nBoundAmount <= 0){
+            return (nAmount - nNextBoundAmount) * nRate + nAccumulatedFee;
+        }
+        nAccumulatedFee += (nBoundAmount * nRate);
+    }
+    return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+}
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
     CRecipient recp = { scriptPubKey, 0, false };
     recipient = recp;
@@ -289,7 +340,20 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"}
+        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"},
+        {"witness_endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness API endpoint (if applicable)"},
+        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                    {
+                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                    },
+                }
+            }
+        }
+
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -298,8 +362,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 '")
-    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, ''")
+    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 '' '' {}")
+    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, '', '', {}")
     }
     }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -368,6 +432,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
 
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
+    UniValue feesStructArr = find_value(params[10].get_obj(), "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", params[10]);
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
     newAsset.strSymbol = strSymbol;
@@ -466,7 +533,19 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"}
+        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"},
+        {"witness_endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness API endpoint (if applicable)"},
+        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                    {
+                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                    },
+                }
+            }
+        }
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -475,13 +554,13 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 ''")
-    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, '")
+    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 '' '' {}")
+    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, '', '', {}")
     }
     }.Check(request);
     UniValue paramsFund(UniValue::VARR);
     nCustomAssetGuid = params[0].get_uint();
-    for(int i = 1;i<=9;i++)
+    for(int i = 1;i<=11;i++)
         paramsFund.push_back(params[i]);
     JSONRPCRequest assetNewRequest(request.context);
     assetNewRequest.params = paramsFund;
@@ -580,10 +659,22 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
-            {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
+            {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
             {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-            {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"}
+            {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"},
+            {"witness_endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness API endpoint (if applicable)"},
+            {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                    {
+                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                    },
+                }
+            }
+        }
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -591,8 +682,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"}
             }},
         RPCExamples{
-            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"supply\" \"update_flags\" ''")
-            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", ''")
+            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"supply\" \"update_flags\" '' '' {}")
+            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", '', '', {}")
         }
         }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -633,6 +724,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     nBalance = params3.get_uint64();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
+    UniValue feesStructArr = find_value(params[7].get_obj(), "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", params[7]);
     std::string strWitness = params[5].get_str();
     CKeyID witnessKeyID;
     if(!strWitness.empty()) {
@@ -993,7 +1087,26 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         }
 		else
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
-	}
+	        
+        CTxDestination auxFeeAddress;
+        const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
+        if(nAuxFee > 0){
+            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            if(itVout == theAssetAllocation.voutAssets.end()) {
+                theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
+                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            }
+            itVout->second.push_back(CAssetOutValue(idx, nAuxFee));
+            const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
+            CTxOut change_prototype_txout(0, scriptPubKey);
+            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
+            mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+            auto it = mapAssetTotals.emplace(nAsset, nAuxFee);
+            if(!it.second) {
+                it.first->second += nAuxFee;
+            }
+        }
+    }
     EnsureWalletIsUnlocked(pwallet);
 
 	std::vector<unsigned char> data;
@@ -1662,9 +1775,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness"}},
-    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","witness"}},
+    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness","witness_endpoint","aux_fees"}},
+    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness","witness_endpoint","aux_fees"}},
+    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","witness","witness_endpoint","aux_fees"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
