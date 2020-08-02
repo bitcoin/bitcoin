@@ -74,6 +74,10 @@ extern const char* VERACK;
 /**
  * The addr (IP address) message relays connection information for peers on the
  * network.
+ */
+extern const char* ADDR;
+/**
+ * The inv message (inventory message) transmits one or more inventories of
  * objects known to the transmitting peer.
  */
 extern const char* INV;
@@ -100,8 +104,20 @@ extern const char* GETBLOCKS;
 extern const char* GETHEADERS;
 /**
  * The tx message transmits a single transaction.
+ */
+extern const char* TX;
+/**
+ * The headers message sends one or more block headers to a node which
  * previously requested certain headers with a getheaders message.
  * @since protocol version 31800.
+ */
+extern const char* HEADERS;
+/**
+ * The block message transmits a single serialized block.
+ */
+extern const char* BLOCK;
+/**
+ * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
  */
 extern const char* GETADDR;
@@ -190,29 +206,6 @@ extern const char* GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char* BLOCKTXN;
-// SYSCOIN message types
-extern const char *SPORK;
-extern const char *GETSPORKS;
-extern const char *SYNCSTATUSCOUNT;
-extern const char *MNGOVERNANCESYNC;
-extern const char *MNGOVERNANCEOBJECT;
-extern const char *MNGOVERNANCEOBJECTVOTE;
-extern const char *GETMNLISTDIFF;
-extern const char *MNLISTDIFF;
-extern const char *QSENDRECSIGS;
-extern const char *QFCOMMITMENT;
-extern const char *QCONTRIB;
-extern const char *QCOMPLAINT;
-extern const char *QJUSTIFICATION;
-extern const char *QPCOMMITMENT;
-extern const char *QWATCH;
-extern const char *QSIGSESANN;
-extern const char *QSIGSHARESINV;
-extern const char *QGETSIGSHARES;
-extern const char *QBSIGSHARES;
-extern const char *QSIGREC;
-extern const char *QSIGSHARE;
-extern const char *MNAUTH;
 /**
  * getcfilters requests compact filters for a range of blocks.
  * Only available with service bit NODE_COMPACT_FILTERS as described by
@@ -255,6 +248,29 @@ extern const char* CFCHECKPT;
  * @since protocol version 70016 as described by BIP 339.
  */
 extern const char *WTXIDRELAY;
+// SYSCOIN message types
+extern const char *SPORK;
+extern const char *GETSPORKS;
+extern const char *SYNCSTATUSCOUNT;
+extern const char *MNGOVERNANCESYNC;
+extern const char *MNGOVERNANCEOBJECT;
+extern const char *MNGOVERNANCEOBJECTVOTE;
+extern const char *GETMNLISTDIFF;
+extern const char *MNLISTDIFF;
+extern const char *QSENDRECSIGS;
+extern const char *QFCOMMITMENT;
+extern const char *QCONTRIB;
+extern const char *QCOMPLAINT;
+extern const char *QJUSTIFICATION;
+extern const char *QPCOMMITMENT;
+extern const char *QWATCH;
+extern const char *QSIGSESANN;
+extern const char *QSIGSHARESINV;
+extern const char *QGETSIGSHARES;
+extern const char *QBSIGSHARES;
+extern const char *QSIGREC;
+extern const char *QSIGSHARE;
+extern const char *MNAUTH;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -269,7 +285,7 @@ enum ServiceFlags : uint64_t {
     // set by all Syscoin Core non pruned nodes, and is unset by SPV clients or other light clients.
     NODE_NETWORK = (1 << 0),
     // NODE_GETUTXO means the node is capable of responding to the getutxo protocol request.
-    // Syscoin Core does not support this but a patch set called Syscoin XT does.
+    // Syscoin Core does not support this but a patch set called Bitcoin XT does.
     // See BIP 64 for details on how this is implemented.
     NODE_GETUTXO = (1 << 1),
     // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.
