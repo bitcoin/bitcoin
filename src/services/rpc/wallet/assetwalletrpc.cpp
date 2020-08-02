@@ -1121,9 +1121,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	UniValue valueTo = params[0];
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
-
+    bool m_signal_bip125_rbf = false;
     if (!request.params[1].isNull()) {
-        coin_control.m_signal_bip125_rbf = request.params[1].get_bool();
+        m_signal_bip125_rbf = request.params[1].get_bool();
     }
     mapValue_t mapValue;
     if (!request.params[2].isNull() && !request.params[2].get_str().empty())
@@ -1145,7 +1145,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     // fund tx expecting 65 byte signature to be filled in
     emptyNotarySig.resize(65);
     unsigned int idx;
-    bool notaryRBF = coin_control.m_signal_bip125_rbf;
+    bool &notaryRBF = m_signal_bip125_rbf;
 	for (idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
@@ -1225,7 +1225,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             }
         }
     }
-    coin_control.m_signal_bip125_rbf = notaryRBF;
+    coin_control.m_signal_bip125_rbf = m_signal_bip125_rbf;
     EnsureWalletIsUnlocked(pwallet);
 
 	std::vector<unsigned char> data;
@@ -1373,14 +1373,13 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, (CAmount)nAmount);
-    int nChangePosRet = -1;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignature(mtx) {
+    if(UpdateNotarySignature(mtx)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
@@ -1519,7 +1518,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignature(mtx) {
+    if(UpdateNotarySignature(mtx)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
