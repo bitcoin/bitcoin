@@ -854,7 +854,6 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
 
 void CTxMemPool::ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const
 {
-    LOCK(cs);
     std::map<uint256, CAmount>::const_iterator pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
         return;
@@ -864,7 +863,6 @@ void CTxMemPool::ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const
 
 void CTxMemPool::ClearPrioritisation(const uint256 hash)
 {
-    LOCK(cs);
     mapDeltas.erase(hash);
 }
 
