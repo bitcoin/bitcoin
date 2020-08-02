@@ -427,11 +427,11 @@ uint256 CTransaction::GetWitnessSigHash() const {
         ss << vinObj.prevout;
     }
     CTxDestination txDest;
-    for(const auto &it: tx.voutAssets) {
+    for(const auto &it: voutAssets) {
         ss << it.key;
         for(const auto& voutAsset: it.values){
             if (ExtractDestination(tx.vout[voutAsset.n].scriptPubKey, txDest)) {
-                ss << txDest;
+                ss << EncodeDestination(txDest);
                 ss << voutAsset.nValue;
             }
         }
