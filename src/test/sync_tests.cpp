@@ -27,6 +27,31 @@ void TestPotentialDeadLockDetected(MutexType& mutex1, MutexType& mutex2)
     BOOST_CHECK(!error_thrown);
     #endif
 }
+
+void TestPotentialDeadLockDetectedRecursiveMutex() NO_THREAD_SAFETY_ANALYSIS
+{
+    RecursiveMutex a, b, r;
+    bool error_thrown{false};
+
+    {
+        LOCK2(r, b);
+    }
+    LOCK(a);
+    LOCK(r);
+    LOCK(b);
+    try {
+        LOCK(r);
+    } catch (const std::logic_error& e) {
+        BOOST_CHECK_EQUAL(e.what(), "potential deadlock detected: r -> b -> r");
+        error_thrown = true;
+    }
+
+    #ifdef DEBUG_LOCKORDER
+    BOOST_CHECK(error_thrown);
+    #else
+    BOOST_CHECK(!error_thrown);
+    #endif // DEBUG_LOCKORDER
+}
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(sync_tests, BasicTestingSetup)
@@ -43,6 +68,8 @@ BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
 
     Mutex mutex1, mutex2;
     TestPotentialDeadLockDetected(mutex1, mutex2);
+
+    TestPotentialDeadLockDetectedRecursiveMutex();
 
     #ifdef DEBUG_LOCKORDER
     g_debug_lockorder_abort = prev;
