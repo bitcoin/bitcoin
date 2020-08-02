@@ -712,14 +712,14 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     for(const auto& recipient: vecSend) {
         mtx.vout.push_back(CTxOut(recipient.nAmount, recipient.scriptPubKey));
         if(recipient.fSubtractFeeFromAmount)
-            setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
+            setSubtractFeeFromOutputs.insert(mtx.vout.size()-1);
     }
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     if(recp.fSubtractFeeFromAmount)
-        setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
+        setSubtractFeeFromOutputs.insert(mtx.vout.size()-1);
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     if(opreturnRecipient.fSubtractFeeFromAmount)
-        setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
+        setSubtractFeeFromOutputs.insert(mtx.vout.size()-1);
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
