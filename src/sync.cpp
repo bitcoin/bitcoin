@@ -143,8 +143,7 @@ static void push_lock(void* c, const CLockLocation& locklocation)
     LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     lock_stack.emplace_back(c, locklocation);
     for (const LockStackItem& i : lock_stack) {
-        if (i.first == c)
-            break;
+        if (i.first == c) continue;
 
         const LockPair p1 = std::make_pair(i.first, c);
         if (lockdata.lockorders.count(p1))
