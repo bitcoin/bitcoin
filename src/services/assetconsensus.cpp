@@ -338,14 +338,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
-    // fill witness signatures for every asset that requires it
+    // fill notary signatures for every asset that requires it
     for(const auto& vecOut: tx.voutAssets) {
         // get asset
         CAsset theAsset;
-        // if asset has witness signature requirement set
+        // if asset has notary signature requirement set
         if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
-            if (!CHashSigner::VerifyHash(tx.GetWitnessSigHash(), theAsset.notaryKeyID, vecOut.vchWitnessSig)) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-witness-sig", fJustCheck);
+            if (!CHashSigner::VerifyHash(tx.GetNotarySigHash(), theAsset.notaryKeyID, vecOut.vchNotarySig)) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
             // only first one needs to be checked since all inputs are covered by the signature
             break;
