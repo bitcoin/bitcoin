@@ -2699,7 +2699,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         vecSend.push_back(recipient);
     }
     // SYSCOIN
-    if(vOutpoints.empty())
+    if(!coinControl.HasSelected())
         coinControl.fAllowOtherInputs = true;
 
     for (const CTxIn& txin : tx.vin) {
