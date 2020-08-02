@@ -718,14 +718,14 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     if(recp.fSubtractFeeFromAmount)
         setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
-    if(recp.opreturnRecipient)
+    if(opreturnRecipient.fSubtractFeeFromAmount)
         setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
-    mtx.nVersion = nVersionIn
+    mtx.nVersion = nVersionIn;
 
     bool lockUnspents = false;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
@@ -773,7 +773,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                     }
                 }
             }
-        }
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
