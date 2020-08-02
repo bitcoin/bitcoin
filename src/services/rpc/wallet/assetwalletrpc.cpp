@@ -79,21 +79,21 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxD
 }
 
 bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
-    // fill witness signatures for first asset that requires it, only need 1 witness signature for tx
+    // fill notary signatures for first asset that requires it, only need 1 notary signature for tx
     for(auto& vecOut: voutAssets) {
         // get asset
         CAsset theAsset;
-        // if asset has witness signature requirement set
+        // if asset has notary signature requirement set
         if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
             // get endpoint from JSON
             UniValue publicObj;
             if(publicObj.read(stringFromVch(theAsset.vchPubData))) {
                 const UniValue &notaryObj = find_value(publicObj, "notary");
-                if(notaryObj.isObj()) {
+                if(notaryObj.isObject()) {
                     const UniValue &endpointObj = find_value(notaryObj.get_obj(), "endpoint");
                     if(endpointObj.isStr()) {
                         // get signature from end-point
-                        //vecOut.vchWitnessSig = vchSig;
+                        //vecOut.vchNotarySig = vchSig;
                         return true;
                     }
                 }
@@ -111,19 +111,19 @@ bool UpdateNotarySignature(CMutableTransaction& mtx) {
     if(IsSyscoinMintTx(tx->nVersion)) {
         CMintSyscoin mintSyscoin(*tx);
         if(FillNotarySigFromEndpoint(mintSyscoin.voutAssets)) {
-            bFilledWitnessSig = true;
+            bFilledNotarySig = true;
             mintSyscoin.SerializeData(data);
         }
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
         CBurnSyscoin burnSyscoin(*tx);
         if(FillNotarySigFromEndpoint(burnSyscoin.voutAssets)) {
-            bFilledWitnessSig = true;
+            bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);
         if(FillNotarySigFromEndpoint(allocation.voutAssets)) {
-            bFilledWitnessSig = true;
+            bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
     }
@@ -504,7 +504,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     UniValue notaryStruct = find_value(params[9].get_obj(), "notary");
-    if(notaryStruct.isObj())
+    if(notaryStruct.isObject())
         publicData.pushKV("notary", params[9]);
     UniValue feesStructArr = find_value(params[10].get_obj(), "fee_struct");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
@@ -824,7 +824,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     UniValue notaryStruct = find_value(params[6].get_obj(), "notary");
-    if(notaryStruct.isObj())
+    if(notaryStruct.isObject())
         publicData.pushKV("notary", params[6]);
     UniValue feesStructArr = find_value(params[7].get_obj(), "fee_struct");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
@@ -1142,9 +1142,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, uint64_t> mapAssetTotals;
     std::vector<CAssetOutValue> vecOut;
-    std::vector<unsigned char> emptyWitnessSig;
+    std::vector<unsigned char> emptyNotarySig;
     // fund tx expecting 65 byte signature to be filled in
-    emptyWitnessSig.resize(65);
+    emptyNotarySig.resize(65);
     unsigned int idx;
     bool &notaryRBF = coin_control.m_signal_bip125_rbf;
 	for (idx = 0; idx < receivers.size(); idx++) {
@@ -1164,7 +1164,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             UniValue publicObj;
             if(publicObj.read(stringFromVch(theAsset.vchPubData))) {
                 const UniValue &notaryObj = find_value(publicObj, "notary");
-                if(notaryObj.isObj()) {
+                if(notaryObj.isObject()) {
                     notaryRBF = true;
                     const UniValue &itObj = find_value(notaryObj.get_obj(), "instant_transfers");
                     if(itObj.isBool()) {
@@ -1186,10 +1186,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
                 CAssetOut assetOut(nAsset, vecOut);
-                // only use first witness signature for asset that requires witness, subsequent ones are covered by witness signature through input sighash
-                if(!theAsset.notaryKeyID.IsNull() && !emptyWitnessSig.empty()) {
-                    assetOut.vchWitnessSig = emptyWitnessSig;   
-                    emptyWitnessSig.clear(); 
+                // only use first notary signature for asset that requires notary, subsequent ones are covered by notary signature through input sighash
+                if(!theAsset.notaryKeyID.IsNull() && !emptyNotarySig.empty()) {
+                    assetOut.vchNotarySig = emptyNotarySig;   
+                    emptyNotarySig.clear(); 
                 }
                 theAssetAllocation.voutAssets.emplace_back(assetOut);
                 itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
@@ -1318,16 +1318,16 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
     CBurnSyscoin burnSyscoin;
     int nChangePosRet = 1; 
-    std::vector<unsigned char> emptyWitnessSig;
+    std::vector<unsigned char> emptyNotarySig;
     // fund tx expecting 65 byte signature to be filled in
-    emptyWitnessSig.resize(65);
+    emptyNotarySig.resize(65);
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(1, (CAmount)nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
         CAssetOut assetOut(nAsset, vecOut);
         if(!theAsset.notaryKeyID.IsNull()) {
-            assetOut.vchWitnessSig = emptyWitnessSig;    
+            assetOut.vchNotarySig = emptyNotarySig;    
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
         nChangePosRet++;
@@ -1338,7 +1338,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, (CAmount)nAmount)}; // burn has to be in index 0, any change in index 1
         CAssetOut assetOut(nAsset, vecOut);
         if(!theAsset.notaryKeyID.IsNull()) {
-            assetOut.vchWitnessSig = emptyWitnessSig;    
+            assetOut.vchNotarySig = emptyNotarySig;    
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
     }
@@ -1475,13 +1475,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::vector<CRecipient> vecSend;
     
     CMintSyscoin mintSyscoin;
-    std::vector<unsigned char> emptyWitnessSig;
+    std::vector<unsigned char> emptyNotarySig;
     // fund tx expecting 65 byte signature to be filled in
-    emptyWitnessSig.resize(65);
+    emptyNotarySig.resize(65);
     std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)};
     CAssetOut assetOut(nAsset, vecOut);
     if(!theAsset.notaryKeyID.IsNull()) {
-        assetOut.vchWitnessSig = emptyWitnessSig;    
+        assetOut.vchNotarySig = emptyNotarySig;    
     }
     mintSyscoin.voutAssets.emplace_back(assetOut);
     mintSyscoin.nBlockNumber = nBlockNumber;

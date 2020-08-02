@@ -462,9 +462,9 @@ class CAssetOut {
 public:
     uint32_t key;
     std::vector<CAssetOutValue> values;
-    std::vector<unsigned char> vchWitnessSig;
+    std::vector<unsigned char> vchNotarySig;
     SERIALIZE_METHODS(CAssetOut, obj) {
-        READWRITE(obj.key, obj.values, obj.vchWitnessSig);
+        READWRITE(obj.key, obj.values, obj.vchNotarySig);
     }
 
     CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
@@ -474,7 +474,7 @@ public:
     inline void SetNull() {
         key = 0;
         values.clear();
-        vchWitnessSig.clear();
+        vchNotarySig.clear();
     }
     inline friend bool operator==(const CAssetOut &a, const CAssetOut &b) {
 		return (a.key == b.key && a.values == b.values);
@@ -548,7 +548,7 @@ public:
     CAmount GetValueOut() const;
     // SYSCOIN
     bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut, TxValidationState& state) const;
-    uint256 GetWitnessSigHash() const;
+    uint256 GetNotarySigHash() const;
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
