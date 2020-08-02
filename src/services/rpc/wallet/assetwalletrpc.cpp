@@ -77,6 +77,69 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxD
     }
     return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
 }
+
+bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
+    // fill witness signatures for first asset that requires it, only need 1 witness signature for tx
+    for(auto& vecOut: voutAssets) {
+        // get asset
+        CAsset theAsset;
+        // if asset has witness signature requirement set
+        if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
+            // get endpoint from JSON
+            UniValue publicObj;
+            if(publicObj.read(stringFromVch(theAsset.vchPubData))) {
+                const UniValue &notaryObj = find_value(publicObj, "notary");
+                if(notaryObj.isObj()) {
+                    const UniValue &endpointObj = find_value(notaryObj.get_obj(), "endpoint");
+                    if(endpointObj.isStr()) {
+                        // get signature from end-point
+                        //vecOut.vchWitnessSig = vchSig;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool UpdateNotarySignature(CMutableTransaction& mtx) {
+    const CTransactionRef& tx = MakeTransactionRef(mtx);
+    std::vector<unsigned char> data;
+    bool bFilledNotarySig = false;
+     // call API endpoint or notary signatures and fill them in for every asset
+    if(IsSyscoinMintTx(tx->nVersion)) {
+        CMintSyscoin mintSyscoin(*tx);
+        if(FillNotarySigFromEndpoint(mintSyscoin.voutAssets)) {
+            bFilledWitnessSig = true;
+            mintSyscoin.SerializeData(data);
+        }
+    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+        CBurnSyscoin burnSyscoin(*tx);
+        if(FillNotarySigFromEndpoint(burnSyscoin.voutAssets)) {
+            bFilledWitnessSig = true;
+            burnSyscoin.SerializeData(data);
+        }
+    } else if(IsAssetAllocationTx(tx->nVersion)) {
+        CAssetAllocation allocation(*tx);
+        if(FillNotarySigFromEndpoint(allocation.voutAssets)) {
+            bFilledWitnessSig = true;
+            allocation.SerializeData(data);
+        }
+    }
+    if(bFilledNotarySig) {
+        // find previous commitment (OP_RETURN) and replace script
+        CScript scriptDataNew;
+        scriptDataNew << OP_RETURN << data;
+        for(auto& vout: mtx.vout) {
+            if(vout.scriptPubKey.IsUnspendable()) {
+                vout.scriptPubKey = scriptDataNew;
+                return true;
+            }
+        }
+    }
+    return false;
+}
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
     CRecipient recp = { scriptPubKey, 0, false };
     recipient = recp;
@@ -113,8 +176,8 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         if (!asset.vchContract.empty())
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
 
-        if (!asset.witnessKeyID.IsNull())
-            entry.__pushKV("witness", EncodeDestination(WitnessV0KeyHash(asset.witnessKeyID)));
+        if (!asset.notaryKeyID.IsNull())
+            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(asset.notaryKeyID)));
 
         if (asset.nUpdateFlags > 0)
             entry.__pushKV("update_flags", asset.nUpdateFlags);
@@ -310,13 +373,15 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     int nChangePosRet = -1;
     bilingual_str error;
     CAmount nFeeRequired = 0;
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
@@ -340,9 +405,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"},
-        {"witness_endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness API endpoint (if applicable)"},
-        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+        {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address",
+        {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
+            {
+                {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
+                {"instant_transfers", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
+                {"require_xpub", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
+            }
+        },
+        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                 {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
@@ -362,8 +433,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 '' '' {}")
-    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, '', '', {}")
+    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 '' {} {}")
+    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, '', {}, {}")
     }
     }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -414,14 +485,14 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     uint32_t nUpdateFlags = params[7].get_uint();
     std::string strWitness = params[8].get_str();
-    CKeyID witnessKeyID;
+    CKeyID notaryKeyID;
     if(!strWitness.empty()) {
         CTxDestination txDest = DecodeDestination(strWitness);
         if (!IsValidDestination(txDest)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
         }
         if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-            witnessKeyID = ToKeyID(*witness_id);
+            notaryKeyID = ToKeyID(*witness_id);
         } else {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
         }
@@ -432,6 +503,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
 
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
+    UniValue notaryStruct = find_value(params[9].get_obj(), "notary");
+    if(notaryStruct.isObj())
+        publicData.pushKV("notary", params[9]);
     UniValue feesStructArr = find_value(params[10].get_obj(), "fee_struct");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
         publicData.pushKV("aux_fees", params[10]);
@@ -440,7 +514,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.strSymbol = strSymbol;
     newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
-    newAsset.witnessKeyID = witnessKeyID;
+    newAsset.notaryKeyID = notaryKeyID;
     newAsset.nBalance = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
@@ -508,7 +582,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     if(!pwallet->SignTransaction(mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
@@ -533,9 +607,15 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"},
-        {"witness_endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness API endpoint (if applicable)"},
-        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+        {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address",
+        {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
+            {
+                {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
+                {"instant_transfers", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
+                {"require_xpub", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
+            }
+        },
+        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                 {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
@@ -554,8 +634,8 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 '' '' {}")
-    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, '', '', {}")
+    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 {} {}")
+    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, {}, {}")
     }
     }.Check(request);
     UniValue paramsFund(UniValue::VARR);
@@ -625,25 +705,37 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
         else
             recp.nAmount -= nTotalOther;
     }
-
+    CMutableTransaction mtx;
+    std::set<int> setSubtractFeeFromOutputs;
     // order matters here as vecSend is in sync with asset commitment, it may change later when
     // change is added but it will resync the commitment there
-    vecSend.push_back(recp);
-    vecSend.push_back(opreturnRecipient);
-    CMutableTransaction mtx;
+    for(const auto& recipient: vecSend) {
+        mtx.vout.push_back(CTxOut(recipient.nAmount, recipient.scriptPubKey));
+        if(recipient.fSubtractFeeFromAmount)
+            setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
+    }
+    mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+    if(recp.fSubtractFeeFromAmount)
+        setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
+    mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
+    if(recp.opreturnRecipient)
+        setSubtractFeeFromOutputs.insert(setSubtractFeeFromOutputs.size());
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    mtx.nVersion = nVersionIn;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+    mtx.nVersion = nVersionIn
+
+    bool lockUnspents = false;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
+    }
+
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
@@ -662,16 +754,23 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
             {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-            {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address"},
-            {"witness_endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness API endpoint (if applicable)"},
-            {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
-            {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
-                    {
-                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
-                    },
+            {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address",
+            {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
+                {
+                    {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
+                    {"instant_transfers", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
+                    {"require_xpub", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
+                }
+            },
+            {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                    {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                        {
+                            {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                            {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                        },
+                    }
                 }
             }
         }
@@ -682,8 +781,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"}
             }},
         RPCExamples{
-            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"supply\" \"update_flags\" '' '' {}")
-            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", '', '', {}")
+            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"supply\" \"update_flags\" '' {} {}")
+            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", '', {}, {}")
         }
         }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -716,7 +815,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         
     const std::string& oldData = stringFromVch(theAsset.vchPubData);
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
-    CKeyID oldWitnessKeyID = theAsset.witnessKeyID;
+    CKeyID oldWitnessKeyID = theAsset.notaryKeyID;
 
     theAsset.ClearAsset();
     UniValue params3 = params[3];
@@ -724,18 +823,21 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     nBalance = params3.get_uint64();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
+    UniValue notaryStruct = find_value(params[6].get_obj(), "notary");
+    if(notaryStruct.isObj())
+        publicData.pushKV("notary", params[6]);
     UniValue feesStructArr = find_value(params[7].get_obj(), "fee_struct");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
         publicData.pushKV("aux_fees", params[7]);
     std::string strWitness = params[5].get_str();
-    CKeyID witnessKeyID;
+    CKeyID notaryKeyID;
     if(!strWitness.empty()) {
         CTxDestination txDest = DecodeDestination(strWitness);
         if (!IsValidDestination(txDest)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
         }
         if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-            witnessKeyID = ToKeyID(*witness_id);
+            notaryKeyID = ToKeyID(*witness_id);
         } else {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
         }
@@ -752,9 +854,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract = vchContract;
     }
 
-    if(witnessKeyID != oldWitnessKeyID) {
-        theAsset.prevWitnessKeyID = oldWitnessKeyID;
-        theAsset.witnessKeyID = witnessKeyID;
+    if(notaryKeyID != oldWitnessKeyID) {
+        theAsset.prevNotaryKeyID = oldWitnessKeyID;
+        theAsset.notaryKeyID = notaryKeyID;
     }
 
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
@@ -1044,6 +1146,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     // fund tx expecting 65 byte signature to be filled in
     emptyWitnessSig.resize(65);
     unsigned int idx;
+    bool &notaryRBF = coin_control.m_signal_bip125_rbf;
 	for (idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
@@ -1055,7 +1158,23 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-    
+        // if RBF is disabled we want to see if we override it if notarization with instant transfers is defined for all assets being sent
+       if(!notaryRBF && !theAsset.notaryKeyID.IsNull()) {
+            // get endpoint from JSON
+            UniValue publicObj;
+            if(publicObj.read(stringFromVch(theAsset.vchPubData))) {
+                const UniValue &notaryObj = find_value(publicObj, "notary");
+                if(notaryObj.isObj()) {
+                    notaryRBF = true;
+                    const UniValue &itObj = find_value(notaryObj.get_obj(), "instant_transfers");
+                    if(itObj.isBool()) {
+                        // may toggle to false if any asset being sent does not enable instant transfers
+                        notaryRBF = notaryRBF && itObj.get_bool();
+                    }
+                }
+            }
+        }
+
         const std::string &toStr = find_value(receiverObj, "address").get_str();
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));   
         CTxOut change_prototype_txout(0, scriptPubKey);
@@ -1068,7 +1187,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             if(itVout == theAssetAllocation.voutAssets.end()) {
                 CAssetOut assetOut(nAsset, vecOut);
                 // only use first witness signature for asset that requires witness, subsequent ones are covered by witness signature through input sighash
-                if(!theAsset.witnessKeyID.IsNull() && !emptyWitnessSig.empty()) {
+                if(!theAsset.notaryKeyID.IsNull() && !emptyWitnessSig.empty()) {
                     assetOut.vchWitnessSig = emptyWitnessSig;   
                     emptyWitnessSig.clear(); 
                 }
@@ -1123,6 +1242,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     int nChangePosRet = -1;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
+
+
     // if zdag double the fee rate
     if(coin_control.m_signal_bip125_rbf == false) {
         coin_control.m_feerate = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE*2);
@@ -1137,7 +1258,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         }
     }
     if(!pwallet->SignTransaction(mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
+    }
+    if(UpdateNotarySignature(mtx)) {
+        if(!pwallet->SignTransaction(mtx)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
+        }
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
@@ -1200,7 +1326,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(1, (CAmount)nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
         CAssetOut assetOut(nAsset, vecOut);
-        if(!theAsset.witnessKeyID.IsNull()) {
+        if(!theAsset.notaryKeyID.IsNull()) {
             assetOut.vchWitnessSig = emptyWitnessSig;    
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
@@ -1211,7 +1337,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, (CAmount)nAmount)}; // burn has to be in index 0, any change in index 1
         CAssetOut assetOut(nAsset, vecOut);
-        if(!theAsset.witnessKeyID.IsNull()) {
+        if(!theAsset.notaryKeyID.IsNull()) {
             assetOut.vchWitnessSig = emptyWitnessSig;    
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
@@ -1237,22 +1363,29 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     std::vector<CRecipient> vecSend;
     // output to new sys output
     if(nVersionIn == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
-        vecSend.push_back(recp);
+        mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     // burn output
     vecSend.push_back(fee);
     CAmount nFeeRequired = 0;
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
     bilingual_str error;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, (CAmount)nAmount);
-    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+    int nChangePosRet = -1;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
+    }
+    if(UpdateNotarySignature(mtx) {
+        if(!pwallet->SignTransaction(mtx)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
+        }
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
@@ -1347,7 +1480,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     emptyWitnessSig.resize(65);
     std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)};
     CAssetOut assetOut(nAsset, vecOut);
-    if(!theAsset.witnessKeyID.IsNull()) {
+    if(!theAsset.notaryKeyID.IsNull()) {
         assetOut.vchWitnessSig = emptyWitnessSig;    
     }
     mintSyscoin.voutAssets.emplace_back(assetOut);
@@ -1378,13 +1511,20 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     bilingual_str error;
     int nChangePosRet = -1;
     CCoinControl coin_control;
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
+    }
+    if(UpdateNotarySignature(mtx) {
+        if(!pwallet->SignTransaction(mtx)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
+        }
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
@@ -1775,9 +1915,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness","witness_endpoint","aux_fees"}},
-    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","witness","witness_endpoint","aux_fees"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","witness","witness_endpoint","aux_fees"}},
+    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","notary","aux_fees"}},
+    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","notary","aux_fees"}},
+    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","notary_address","notary","aux_fees"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},

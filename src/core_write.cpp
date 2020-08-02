@@ -145,8 +145,8 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 	if (!asset.vchContract.empty())
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
     
-    if (!asset.witnessKeyID.IsNull())
-		entry.__pushKV("witness", EncodeDestination(WitnessV0KeyHash(asset.witnessKeyID)));
+    if (!asset.notaryKeyID.IsNull())
+		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(asset.notaryKeyID)));
 
 
 	if (asset.nUpdateFlags > 0)

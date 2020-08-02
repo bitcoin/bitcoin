@@ -21,7 +21,7 @@ class AssetTest(SyscoinTestFramework):
         self.asset_maxsupply()
 
     def basic_asset(self):
-        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', '', {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
@@ -35,8 +35,8 @@ class AssetTest(SyscoinTestFramework):
         gooddata = "SfsddfdfsdsdffsdfdfsdsfDsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdssfsddSfdddssfsddSfdddSfddas"
         # 495 bytes long (makes 513 with the pubdata overhead)
         baddata = gooddata + "a"
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', '', {})['asset_guid']
-        asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', '', {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+        asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(asset)
@@ -48,47 +48,47 @@ class AssetTest(SyscoinTestFramework):
         assetInfo = self.nodes[1].assetinfo(asset1)
         assert_equal(assetInfo['asset_guid'], asset1)
         # data too big
-        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', '', {})
+        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
     
     def asset_maxsupply(self):
         # 494 bytes long (512 with overhead)
         gooddata = "SfsddfdfsdsdffsdfdfsdsfDsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdssfsddSfdddssfsddSfdddSfddas"
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 1*COIN, 31, '', '', {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 1*COIN, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         # cannot increase supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, '', '', {})
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 2*COIN, 31, '', '', {})['asset_guid']
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, '', {}, {})
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 2*COIN, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
-        self.nodes[0].assetupdate(asset, '', '', int(0.1*COIN), 31, '', '', {})
+        self.nodes[0].assetupdate(asset, '', '', int(0.1*COIN), 31, '', {}, {})
         self.nodes[0].generate(1)
-        self.nodes[0].assetupdate(asset, '', '', int(0.9*COIN), 31, '', '', {})
+        self.nodes[0].assetupdate(asset, '', '', int(0.9*COIN), 31, '', {}, {})
         self.nodes[0].generate(1)
         # would go over 2 coins supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, '', '', {})
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, '', {}, {})
         self.nodes[0].generate(1)
         # balance > max supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, '', '', {})
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, '', {}, {})
         # uint64 limits
         # largest amount that we can use, without compression overflow of uint (~2 quintillion) which is more than eth's 1 quintillion
         # 2^64 / 9
         maxUint = 2049638230412172401
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, maxUint-1, maxUint, 31, '', '', {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, maxUint-1, maxUint, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
         assert_equal(assetInfo['total_supply'], maxUint-1)
         assert_equal(assetInfo['balance'], maxUint-1)
         assert_equal(assetInfo['max_supply'], maxUint)
-        self.nodes[0].assetupdate(asset, '', '', 1, 31, '', '', {})
+        self.nodes[0].assetupdate(asset, '', '', 1, 31, '', {}, {})
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
         assert_equal(assetInfo['total_supply'], maxUint)
         assert_equal(assetInfo['balance'], maxUint)
         assert_equal(assetInfo['max_supply'], maxUint)
-        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assetupdate, asset, '', '', 1, 31, '', '', {})
-        assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint, maxUint+1, 31, '', '', {})
-        assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint+1, maxUint+1, 31, '', '', {})
+        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assetupdate, asset, '', '', 1, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint, maxUint+1, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint+1, maxUint+1, 31, '', {}, {})
         
 if __name__ == '__main__':
     AssetTest().main()

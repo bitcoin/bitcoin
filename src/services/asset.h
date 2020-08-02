@@ -43,8 +43,8 @@ public:
     unsigned char nPrecision;
     unsigned char nUpdateFlags;
     unsigned char nPrevUpdateFlags;
-    CKeyID witnessKeyID;
-    CKeyID prevWitnessKeyID;
+    CKeyID notaryKeyID;
+    CKeyID prevNotaryKeyID;
     CAsset() {
         SetNull();
     }
@@ -64,13 +64,13 @@ public:
         nBalance = 0;
         nTotalSupply = 0;
         nMaxSupply = 0;
-        witnessKeyID.SetNull();
-        prevWitnessKeyID.SetNull();
+        notaryKeyID.SetNull();
+        prevNotaryKeyID.SetNull();
     }
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.witnessKeyID, obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevWitnessKeyID, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
+        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevNotaryKeyID, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
