@@ -405,7 +405,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-        {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address",
+        {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
                 {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
@@ -607,7 +607,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-        {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address",
+        {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
                 {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
@@ -754,7 +754,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
             {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
-            {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address",
+            {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
             {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
                 {
                     {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
