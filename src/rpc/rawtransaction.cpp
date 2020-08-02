@@ -744,7 +744,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
                     {
                         {RPCResult::Type::STR_HEX, "hex", "The hex-encoded raw transaction with signature(s)"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
-                        {RPCResult::Type::ARR, "errors", "Script verification errors (if there are any)",
+                        {RPCResult::Type::ARR, "errors", /* optional */ true, "Script verification errors (if there are any)",
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
@@ -1722,7 +1722,7 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
                     {RPCResult::Type::STR_AMOUNT, "estimated_feerate", /* optional */ true, "Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kB. Shown only if all UTXO slots in the PSBT have been filled"},
                     {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid. Shown only if all UTXO slots in the PSBT have been filled"},
                     {RPCResult::Type::STR, "next", "Role of the next person that this psbt needs to go to"},
-                    {RPCResult::Type::STR, "error", "Error message if there is one"},
+                    {RPCResult::Type::STR, "error", /* optional */ true, "Error message (if there is one)"},
                 }
             },
             RPCExamples {
