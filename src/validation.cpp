@@ -484,7 +484,7 @@ private:
     // All the intermediate state that gets passed between the various levels
     // of checking a given transaction.
     struct Workspace {
-        Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
+        Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()), m_wtxid(ptx->GetWitnessHash()) {}
         std::set<uint256> m_conflicts;
         CTxMemPool::setEntries m_all_conflicting;
         CTxMemPool::setEntries m_ancestors;
@@ -497,6 +497,7 @@ private:
 
         const CTransactionRef& m_ptx;
         const uint256& m_hash;
+        const uint256& m_wtxid;
     };
 
     // Run the policy checks on a given transaction, excluding any script checks.
@@ -554,6 +555,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const CTransactionRef& ptx = ws.m_ptx;
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
+    const uint256& wtxid = ws.m_wtxid;
 
     // Copy/alias what we need out of args
     TxValidationState &state = args.m_state;
@@ -598,8 +600,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
-    // is it already in the memory pool?
-    if (m_pool.exists(hash)) {
+    // Reject transaction already in the mempool. We proceed check on wtxid to allow for
+    // replacement with a higher-feerate witness between identical non-witness data transactions.
+    GenTxid gtxid(true, wtxid);
+    if (m_pool.exists(gtxid)) {
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
     }
 
@@ -837,8 +841,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             if (newFeeRate <= oldFeeRate)
             {
                 return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
-                        strprintf("rejecting replacement %s; new feerate %s <= old feerate %s",
+                        strprintf("rejecting replacement txid:%s wtxid:%s ; new feerate %s <= old feerate %s",
                             hash.ToString(),
+                            wtxid.ToString(),
                             newFeeRate.ToString(),
                             oldFeeRate.ToString()));
             }
@@ -865,8 +870,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             }
         } else {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too many potential replacements",
-                    strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
+                    strprintf("rejecting replacement txid:%s wtxid:%s ; too many potential replacements (%d > %d)\n",
                         hash.ToString(),
+                        wtxid.ToString(),
                         nConflictingCount,
                         maxDescendantsToVisit));
         }
@@ -889,8 +895,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // tx that's in the mempool.
                 if (m_pool.exists(tx.vin[j].prevout.hash)) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "replacement-adds-unconfirmed",
-                            strprintf("replacement %s adds unconfirmed input, idx %d",
-                                hash.ToString(), j));
+                            strprintf("replacement txid:%s wtxid:%s adds unconfirmed input, idx %d",
+                                hash.ToString(),
+                                wtxid.ToString(), j));
                 }
             }
         }
@@ -901,8 +908,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         if (nModifiedFees < nConflictingFees)
         {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
-                    strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
-                        hash.ToString(), FormatMoney(nModifiedFees), FormatMoney(nConflictingFees)));
+                    strprintf("rejecting replacement txid:%s wtxid:%s, less fees than conflicting txs; %s < %s",
+                        hash.ToString(),
+                        wtxid.ToString(), FormatMoney(nModifiedFees), FormatMoney(nConflictingFees)));
         }
 
         // Finally in addition to paying more fees than the conflicts the
@@ -911,8 +919,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize))
         {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
-                    strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
+                    strprintf("rejecting replacement txid:%s wtxid:%s, not enough additional fees to relay; %s < %s",
                         hash.ToString(),
+                        wtxid.ToString(),
                         FormatMoney(nDeltaFees),
                         FormatMoney(::incrementalRelayFee.GetFee(nSize))));
         }

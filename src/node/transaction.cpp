@@ -22,6 +22,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     assert(node.mempool);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
+    GenTxid gtxid(true, tx->GetWitnessHash());
     bool callback_set = false;
 
     { // cs_main scope
@@ -35,7 +36,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // So if the output does exist, then this transaction exists in the chain.
         if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
     }
-    if (!node.mempool->exists(hashTx)) {
+    if (!node.mempool->exists(gtxid)) {
         // Transaction is not already in the mempool. Submit it.
         TxValidationState state;
         if (!AcceptToMemoryPool(*node.mempool, state, std::move(tx),
