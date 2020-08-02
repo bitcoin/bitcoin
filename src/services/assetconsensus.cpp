@@ -343,8 +343,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         // get asset
         CAsset theAsset;
         // if asset has witness signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.witnessKeyID.IsNull()) {
-            if (!CHashSigner::VerifyHash(tx.GetWitnessSigHash(), theAsset.witnessKeyID, vecOut.vchWitnessSig)) {
+        if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
+            if (!CHashSigner::VerifyHash(tx.GetWitnessSigHash(), theAsset.notaryKeyID, vecOut.vchWitnessSig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-witness-sig", fJustCheck);
             }
             // only first one needs to be checked since all inputs are covered by the signature
@@ -484,8 +484,8 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     if(!theAsset.vchContract.empty()) {
         storedAssetRef.vchContract = theAsset.vchPrevContract;
     }
-    if(!theAsset.witnessKeyID.IsNull()) {
-        storedAssetRef.witnessKeyID = theAsset.prevWitnessKeyID;
+    if(!theAsset.notaryKeyID.IsNull()) {
+        storedAssetRef.notaryKeyID = theAsset.prevNotaryKeyID;
     }
     // enforced to be equal or represent prev value on actual change of field
     storedAssetRef.nUpdateFlags = theAsset.nPrevUpdateFlags;    
@@ -570,7 +570,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!storedAssetRef.vchContract.empty() && storedAssetRef.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
-            if (!storedAssetRef.witnessKeyID.IsNull() && storedAssetRef.witnessKeyID.size() != MAX_GUID_LENGTH) {
+            if (!storedAssetRef.notaryKeyID.IsNull() && storedAssetRef.notaryKeyID.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
             }  
             if (storedAssetRef.nPrecision > 8) {
@@ -582,7 +582,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!storedAssetRef.vchPrevContract.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
             }
-            if (!storedAssetRef.prevWitnessKeyID.IsNull()) {
+            if (!storedAssetRef.prevNotaryKeyID.IsNull()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevwitness", bSanityCheck);
             }
             if (storedAssetRef.strSymbol.size() > 8 || storedAssetRef.strSymbol.size() < 1) {
@@ -618,7 +618,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
-            if (!theAsset.witnessKeyID.IsNull() && theAsset.witnessKeyID.size() != MAX_GUID_LENGTH) {
+            if (!theAsset.notaryKeyID.IsNull() && theAsset.notaryKeyID.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
             } 
             if (theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
@@ -676,14 +676,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
             }
 
-            if (!theAsset.witnessKeyID.IsNull()) {
+            if (!theAsset.notaryKeyID.IsNull()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_WITNESS)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-witness-privileges", bSanityCheck);
                 }
-                if(theAsset.prevWitnessKeyID != storedAssetRef.witnessKeyID) {
+                if(theAsset.prevNotaryKeyID != storedAssetRef.notaryKeyID) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevwitness", bSanityCheck);
                 }
-                storedAssetRef.witnessKeyID = std::move(theAsset.witnessKeyID);
+                storedAssetRef.notaryKeyID = std::move(theAsset.notaryKeyID);
             }
             if(theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);

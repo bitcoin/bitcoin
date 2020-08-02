@@ -2698,8 +2698,9 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
-
-    coinControl.fAllowOtherInputs = true;
+    // SYSCOIN
+    if(vOutpoints.empty())
+        coinControl.fAllowOtherInputs = true;
 
     for (const CTxIn& txin : tx.vin) {
         coinControl.Select(txin.prevout);
@@ -2937,64 +2938,6 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
         return false;
     }
     return true;
-}
-bool FillWitnessSigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
-    // fill witness signatures for first asset that requires it, only need 1 witness signature for tx
-    for(auto& vecOut: voutAssets) {
-        // get asset
-        CAsset theAsset;
-        // if asset has witness signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.witnessKeyID.IsNull()) {
-            // get endpoint from JSON
-            UniValue publicObj;
-            if(publicObj.read(stringFromVch(theAsset.vchPubData))) {
-                const UniValue &witnessObj = find_value(publicObj, "witness_endpoint");
-                if(witnessObj.isStr()) {
-                    // get signature from end-point
-                    //vecOut.vchWitnessSig = vchSig;
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-void UpdateWitnessSignature(CMutableTransaction& mtx) {
-    const CTransactionRef& tx = MakeTransactionRef(mtx);
-    std::vector<unsigned char> data;
-    bool bFilledWitnessSig = false;
-     // call API endpoint or witness signatures and fill them in for every asset
-    if(IsSyscoinMintTx(tx->nVersion)) {
-        CMintSyscoin mintSyscoin(*tx);
-        if(FillWitnessSigFromEndpoint(mintSyscoin.voutAssets)) {
-            bFilledWitnessSig = true;
-            mintSyscoin.SerializeData(data);
-        }
-    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
-        CBurnSyscoin burnSyscoin(*tx);
-        if(FillWitnessSigFromEndpoint(burnSyscoin.voutAssets)) {
-            bFilledWitnessSig = true;
-            burnSyscoin.SerializeData(data);
-        }
-    } else if(IsAssetAllocationTx(tx->nVersion)) {
-        CAssetAllocation allocation(*tx);
-        if(FillWitnessSigFromEndpoint(allocation.voutAssets)) {
-            bFilledWitnessSig = true;
-            allocation.SerializeData(data);
-        }
-    }
-    if(bFilledWitnessSig) {
-        // find previous commitment (OP_RETURN) and replace script
-        CScript scriptDataNew;
-        scriptDataNew << OP_RETURN << data;
-        for(auto& vout: mtx.vout) {
-            if(vout.scriptPubKey.IsUnspendable()) {
-                vout.scriptPubKey = scriptDataNew;
-                break;
-            }
-        }
-    }
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, bool sign)
@@ -3348,8 +3291,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         for (const auto& coin : selected_coins) {
             txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
         }
-        // SYSCOIN
-        UpdateWitnessSignature(txNew);
         if (sign && !SignTransaction(txNew)) {
             error = _("Signing transaction failed");
             return false;
