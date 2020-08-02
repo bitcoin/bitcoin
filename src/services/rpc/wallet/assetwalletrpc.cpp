@@ -1145,7 +1145,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     // fund tx expecting 65 byte signature to be filled in
     emptyNotarySig.resize(65);
     unsigned int idx;
-    bool &notaryRBF = coin_control.m_signal_bip125_rbf;
+    bool notaryRBF = coin_control.m_signal_bip125_rbf;
 	for (idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
@@ -1214,7 +1214,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                 theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
                 itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
             }
-            itVout->second.push_back(CAssetOutValue(idx, nAuxFee));
+            itVout->values.push_back(CAssetOutValue(idx, nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
@@ -1225,6 +1225,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             }
         }
     }
+    coin_control.m_signal_bip125_rbf = notaryRBF;
     EnsureWalletIsUnlocked(pwallet);
 
 	std::vector<unsigned char> data;
