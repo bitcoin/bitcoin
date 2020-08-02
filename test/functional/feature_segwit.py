@@ -126,11 +126,11 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(bip173_ms_addr, script_to_p2wsh(multiscript))
             p2sh_ids.append([])
             wit_ids.append([])
-            for v in range(2):
+            for _ in range(2):
                 p2sh_ids[i].append([])
                 wit_ids[i].append([])
 
-        for i in range(5):
+        for _ in range(5):
             for n in range(3):
                 for v in range(2):
                     wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))

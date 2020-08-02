@@ -116,7 +116,7 @@ class WalletDumpTest(BitcoinTestFramework):
         test_addr_count = 10
         addrs = []
         for address_type in ['legacy', 'p2sh-segwit', 'bech32']:
-            for i in range(0, test_addr_count):
+            for _ in range(test_addr_count):
                 addr = self.nodes[0].getnewaddress(address_type=address_type)
                 vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
                 addrs.append(vaddr)

@@ -166,7 +166,7 @@ class ExampleTest(BitcoinTestFramework):
 
         height = self.nodes[0].getblockcount()
 
-        for i in range(10):
+        for _ in range(10):
             # Use the mininode and blocktools functionality to manually build a block
             # Calling the generate() rpc is easier, but this allows us to exactly
             # control the blocks and transactions.

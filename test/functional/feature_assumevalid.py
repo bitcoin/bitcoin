@@ -123,7 +123,7 @@ class AssumeValidTest(BitcoinTestFramework):
         height += 1
 
         # Bury the block 100 deep so the coinbase output is spendable
-        for i in range(100):
+        for _ in range(100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             self.blocks.append(block)
@@ -149,7 +149,7 @@ class AssumeValidTest(BitcoinTestFramework):
         height += 1
 
         # Bury the assumed valid block 2100 deep
-        for i in range(2100):
+        for _ in range(2100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.nVersion = 4
             block.solve()

@@ -195,7 +195,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         while len(utxo_list) >= 2 and num_transactions < count:
             tx = CTransaction()
             input_amount = 0
-            for i in range(2):
+            for _ in range(2):
                 utxo = utxo_list.pop()
                 tx.vin.append(CTxIn(COutPoint(int(utxo['txid'], 16), utxo['vout'])))
                 input_amount += int(utxo['amount'] * COIN)
@@ -205,7 +205,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 # Sanity check -- if we chose inputs that are too small, skip
                 continue
 
-            for i in range(3):
+            for _ in range(3):
                 tx.vout.append(CTxOut(output_amount, hex_str_to_bytes(utxo['scriptPubKey'])))
 
             # Sign and send the transaction to get into the mempool

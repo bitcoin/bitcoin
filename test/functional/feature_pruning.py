@@ -147,7 +147,7 @@ class PruneTest(BitcoinTestFramework):
         # Create stale blocks in manageable sized chunks
         self.log.info("Mine 24 (stale) blocks on Node 1, followed by 25 (main chain) block reorg from Node 0, for 12 rounds")
 
-        for j in range(12):
+        for _ in range(12):
             # Disconnect node 0 so it can mine a longer reorg chain without knowing about node 1's soon-to-be-stale chain
             # Node 2 stays connected, so it hears about the stale blocks and then reorg's when node0 reconnects
             disconnect_nodes(self.nodes[0], 1)

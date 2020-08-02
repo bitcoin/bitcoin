@@ -31,7 +31,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for (txid, vout) in zip(parent_txids, vouts):
             inputs.append({'txid' : txid, 'vout' : vout})
         outputs = {}
-        for i in range(num_outputs):
+        for _ in range(num_outputs):
             outputs[node.getnewaddress()] = send_value
         rawtx = node.createrawtransaction(inputs, outputs, 0, True)
         signedtx = node.signrawtransactionwithwallet(rawtx)

@@ -62,7 +62,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.log.info("Mining blocks...")
         peer_node.generate(110)
         self.sync_all()
-        for i in range(25):
+        for _ in range(25):
             peer_node.sendtoaddress(rbf_node_address, 0.001)
         self.sync_all()
         peer_node.generate(1)

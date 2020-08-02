@@ -646,7 +646,7 @@ def LegacySignatureHash(script, txTo, inIdx, hashtype):
 
         tmp = txtmp.vout[outIdx]
         txtmp.vout = []
-        for i in range(outIdx):
+        for _ in range(outIdx):
             txtmp.vout.append(CTxOut(-1))
         txtmp.vout.append(tmp)
 

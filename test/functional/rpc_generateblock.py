@@ -55,7 +55,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         node.generatetoaddress(110, address)
 
         # Generate some extra mempool transactions to verify they don't get mined
-        for i in range(10):
+        for _ in range(10):
             node.sendtoaddress(address, 0.001)
 
         self.log.info('Generate block with txid')
