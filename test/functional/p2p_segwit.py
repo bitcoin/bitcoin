@@ -1319,9 +1319,11 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program2]
         tx3.rehash()
 
-        # Node will not be blinded to the transaction
+        # Node will not be blinded to the transaction, requesting it any number of times
+        # since it is being announced via txid relay.
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
         test_transaction_acceptance(self.nodes[1], self.std_node, tx3, True, False, 'tx-size')
+        self.std_node.announce_tx_and_wait_for_getdata(tx3)
 
         # Remove witness stuffing, instead add extra witness push on stack
         tx3.vout[0] = CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))
