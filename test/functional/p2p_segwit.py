@@ -1418,7 +1418,7 @@ class SegWitTest(BitcoinTestFramework):
         temp_utxo.pop()  # last entry in temp_utxo was the output we just spent
         temp_utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
-        # Spend everything in temp_utxo back to an OP_TRUE output.
+        # Spend everything in temp_utxo into an segwit v1 output.
         tx3 = CTransaction()
         total_value = 0
         for i in temp_utxo:
@@ -1426,8 +1426,16 @@ class SegWitTest(BitcoinTestFramework):
             tx3.wit.vtxinwit.append(CTxInWitness())
             total_value += i.nValue
         tx3.wit.vtxinwit[-1].scriptWitness.stack = [witness_program]
-        tx3.vout.append(CTxOut(total_value - 1000, CScript([OP_TRUE])))
+        tx3.vout.append(CTxOut(total_value - 1000, script_pubkey))
         tx3.rehash()
+
+        # First we test this transaction against fRequireStandard=true node
+        # making sure the txid is added to the reject filter
+        self.std_node.announce_tx_and_wait_for_getdata(tx3)
+        test_transaction_acceptance(self.nodes[1], self.std_node, tx3, with_witness=True, accepted=False, reason="bad-txns-nonstandard-inputs")
+        # Now the node will no longer ask for getdata of this transaction when advertised by same txid
+        self.std_node.announce_tx_and_wait_for_getdata(tx3, timeout=5, success=False)
+
         # Spending a higher version witness output is not allowed by policy,
         # even with fRequireStandard=false.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False, reason="reserved for soft-fork upgrades")
