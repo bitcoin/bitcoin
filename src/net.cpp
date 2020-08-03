@@ -2530,7 +2530,24 @@ void CConnman::AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddres
 
 std::vector<CAddress> CConnman::GetAddresses()
 {
-    return addrman.GetAddr();
+    std::vector<CAddress> addresses = addrman.GetAddr();
+    if (m_banman) {
+        addresses.erase(std::remove_if(addresses.begin(), addresses.end(),
+                        [this](const CAddress& addr){return m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr);}),
+                        addresses.end());
+    }
+    return addresses;
+}
+
+std::vector<CAddress> CConnman::GetAddresses(Network requestor_network)
+{
+    const auto current_time = GetTime<std::chrono::microseconds>();
+    if (m_addr_response_caches.find(requestor_network) == m_addr_response_caches.end() ||
+        m_addr_response_caches[requestor_network].m_update_addr_response < current_time) {
+        m_addr_response_caches[requestor_network].m_addrs_response_cache = GetAddresses();
+        m_addr_response_caches[requestor_network].m_update_addr_response = current_time + std::chrono::hours(21) + GetRandMillis(std::chrono::hours(6));
+    }
+    return m_addr_response_caches[requestor_network].m_addrs_response_cache;
 }
 
 bool CConnman::AddNode(const std::string& strNode)
