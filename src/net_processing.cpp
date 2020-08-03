@@ -84,6 +84,8 @@ static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 static constexpr std::chrono::minutes PING_INTERVAL{2};
 /** The maximum number of entries in a locator */
 static const unsigned int MAX_LOCATOR_SZ = 101;
+/** The maximum number of entries in an 'inv' protocol message */
+static const unsigned int MAX_INV_SZ = 50000;
 /** Maximum number of in-flight transactions from a peer */
 static constexpr int32_t MAX_PEER_TX_IN_FLIGHT = 100;
 /** Maximum number of announced transactions from a peer */
@@ -2884,7 +2886,7 @@ void ProcessMessage(
         if (!pfrom.IsAddrRelayPeer()) {
             return;
         }
-        if (vAddr.size() > 1000)
+        if (vAddr.size() > MAX_ADDR_TO_SEND)
         {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20, strprintf("addr message size = %u", vAddr.size()));
@@ -3857,13 +3859,15 @@ void ProcessMessage(
         pfrom.fSentAddr = true;
 
         pfrom.vAddrToSend.clear();
-        std::vector<CAddress> vAddr = connman.GetAddresses();
+        std::vector<CAddress> vAddr;
+        if (pfrom.HasPermission(PF_ADDR)) {
+            vAddr = connman.GetAddresses();
+        } else {
+            vAddr = connman.GetAddresses(pfrom.addr.GetNetwork());
+        }
         FastRandomContext insecure_rand;
         for (const CAddress &addr : vAddr) {
-            bool banned_or_discouraged = banman && (banman->IsDiscouraged(addr) || banman->IsBanned(addr));
-            if (!banned_or_discouraged) {
-                pfrom.PushAddress(addr, insecure_rand);
-            }
+            pfrom.PushAddress(addr, insecure_rand);
         }
         return;
     }
@@ -4520,8 +4524,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 {
                     pto->m_addr_known->insert(addr.GetKey());
                     vAddr.push_back(addr);
-                    // receiver rejects addr messages larger than 1000
-                    if (vAddr.size() >= 1000)
+                    // receiver rejects addr messages larger than MAX_ADDR_TO_SEND
+                    if (vAddr.size() >= MAX_ADDR_TO_SEND)
                     {
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::ADDR, vAddr));
                         vAddr.clear();
