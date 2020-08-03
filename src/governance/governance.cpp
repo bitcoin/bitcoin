@@ -1003,7 +1003,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             {
                 LOCK(cs_main);
                 size_t nProjectedSize = GetRequestedOtherCount(pnode->GetId()) + nProjectedVotes;
-                if (nProjectedSize > MAX_INV_SZ) continue;
+                if (nProjectedSize > GetMaxInv()) continue;
                 // to early to ask the same node
                 if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
             }
