@@ -430,7 +430,6 @@ public:
     bool IsGenBlkMsg() const { return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK; }
 
     uint256 hash;
-    void SetTypeBitwiseOr(uint32_t flags) { type |= flags; }
 };
 
 /** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */

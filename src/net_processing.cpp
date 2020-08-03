@@ -2625,14 +2625,12 @@ void ProcessMessage(
 
         LOCK(cs_main);
 
-        uint32_t nFetchFlags = GetFetchFlags(pfrom);
         const auto current_time = GetTime<std::chrono::microseconds>();
         uint256* best_block{nullptr};
 
         for (CInv &inv : vInv)
         {
-            if (interruptMsgProc)
-                return;
+            if (interruptMsgProc) return;
 
             // Ignore INVs that don't match wtxidrelay setting.
             // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
@@ -2645,10 +2643,6 @@ void ProcessMessage(
 
             bool fAlreadyHave = AlreadyHave(inv, mempool);
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
-
-            if (inv.IsMsgTx()) {
-                inv.SetTypeBitwiseOr(nFetchFlags);
-            }
 
             if (inv.IsMsgBlk()) {
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
