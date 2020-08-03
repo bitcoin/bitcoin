@@ -107,7 +107,7 @@ void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCL
 // SYSCOIN
 void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 size_t GetRequestedOtherCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-unsigned int GetMaxInv() const;
+unsigned int GetMaxInv();
 /** Relay transaction to every node */
 void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 

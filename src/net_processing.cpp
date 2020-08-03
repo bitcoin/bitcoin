@@ -953,7 +953,7 @@ size_t GetRequestedOtherCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     }
     return nodestate->m_tx_download.m_other_process_time.size();
 }
-unsigned int GetMaxInv() const {
+unsigned int GetMaxInv() {
     return MAX_INV_SZ;
 }
 void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
