@@ -2698,9 +2698,8 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
-    // SYSCOIN
-    if(!coinControl.HasSelected())
-        coinControl.fAllowOtherInputs = true;
+
+    coinControl.fAllowOtherInputs = true;
 
     for (const CTxIn& txin : tx.vin) {
         coinControl.Select(txin.prevout);
