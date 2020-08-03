@@ -36,7 +36,7 @@ class AddrReceiver(P2PInterface):
         for addr in message.addrs:
             assert_equal(addr.nServices, 9)
             assert addr.ip.startswith('123.123.123.')
-            assert (8333 <= addr.port < 8343)
+            assert (8369 <= addr.port < 8379)
 
 
 class AddrTest(SyscoinTestFramework):
