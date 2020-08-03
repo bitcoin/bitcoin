@@ -1343,12 +1343,11 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
     CMutableTransaction mtx;
-    std::vector<CRecipient> vecSend;
     // output to new sys output
     if(nVersionIn == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
         mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     // burn output
-    vecSend.push_back(fee);
+    mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     CAmount nFeeRequired = 0;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
