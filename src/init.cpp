@@ -323,6 +323,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -pid=<file>            " + strprintf(_("Specify pid file (default: %s)"), "crownd.pid") + "\n";
 #endif
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
+    strUsage += "  -platformreindex       " + _("Rebuild platform database") + " " + _("on startup") + "\n";
 #if !defined(WIN32)
     strUsage += "  -sysperms              " + _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)") + "\n";
 #endif

@@ -1331,6 +1331,35 @@
         <bool>true</bool>
        </property>
       </widget>
+      <widget class="QPushButton" name="btn_platformreindex">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>390</y>
+         <width>301</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rebuild platform db</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_platform_reindex">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>380</y>
+         <width>411</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>-platformreindex: Rebuild platform database.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
      </widget>
     </widget>
    </item>

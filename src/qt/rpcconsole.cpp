@@ -50,6 +50,7 @@ const QString ZAPTXES1("-zapwallettxes=1");
 const QString ZAPTXES2("-zapwallettxes=2");
 const QString UPGRADEWALLET("-upgradewallet");
 const QString REINDEX("-reindex");
+const QString PLATFORMREINDEX("-platformreindex");
 
 const struct {
     const char *url;
@@ -237,6 +238,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
     connect(ui->btn_zapwallettxes2, SIGNAL(clicked()), this, SLOT(walletZaptxes2()));
     connect(ui->btn_upgradewallet, SIGNAL(clicked()), this, SLOT(walletUpgrade()));
     connect(ui->btn_reindex, SIGNAL(clicked()), this, SLOT(walletReindex()));
+    connect(ui->btn_platformreindex, SIGNAL(clicked()), this, SLOT(walletPlatformReindex()));
 
     // set library version labels
     ui->openSSLVersion->setText(SSLeay_version(SSLEAY_VERSION));
@@ -392,6 +394,12 @@ void RPCConsole::walletReindex()
     buildParameterlist(REINDEX);
 }
 
+/** Restart wallet with "-platformreindex" */
+void RPCConsole::walletPlatformReindex()
+{
+    buildParameterlist(PLATFORMREINDEX);
+}
+
 /** Build command-line parameter list for restart */
 void RPCConsole::buildParameterlist(QString arg)
 {
@@ -406,6 +414,7 @@ void RPCConsole::buildParameterlist(QString arg)
     args.removeAll(ZAPTXES2);
     args.removeAll(UPGRADEWALLET);
     args.removeAll(REINDEX);
+    args.removeAll(PLATFORMREINDEX);
    
     // Append repair parameter to command line.
     args.append(arg);
