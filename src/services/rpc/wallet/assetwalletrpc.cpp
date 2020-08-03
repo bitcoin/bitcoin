@@ -373,15 +373,12 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     int nChangePosRet = -1;
     bilingual_str error;
     CAmount nFeeRequired = 0;
-    bool lockUnspents = false;
-    std::set<int> setSubtractFeeFromOutputs;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
-    if(!pwallet->SignTransaction(mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
-    }
+    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
+        if (tx->GetValueOut() + nFeeRequired > curBalance)
+            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+ 
     TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
@@ -706,34 +703,22 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
             recp.nAmount -= nTotalOther;
     }
     CMutableTransaction mtx;
-    std::set<int> setSubtractFeeFromOutputs;
     // order matters here as vecSend is in sync with asset commitment, it may change later when
     // change is added but it will resync the commitment there
-    for(const auto& recipient: vecSend) {
-        mtx.vout.push_back(CTxOut(recipient.nAmount, recipient.scriptPubKey));
-        if(recipient.fSubtractFeeFromAmount)
-            setSubtractFeeFromOutputs.insert(mtx.vout.size()-1);
-    }
-    mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-    if(recp.fSubtractFeeFromAmount)
-        setSubtractFeeFromOutputs.insert(mtx.vout.size()-1);
-    mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
-    if(opreturnRecipient.fSubtractFeeFromAmount)
-        setSubtractFeeFromOutputs.insert(mtx.vout.size()-1);
+    vecSend.push_back(recp);
+    vecSend.push_back(opreturnRecipient);
+    CMutableTransaction mtx;
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
+    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     mtx.nVersion = nVersionIn;
-
-    bool lockUnspents = false;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
-    if(!pwallet->SignTransaction(mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
-    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
+        if (tx->GetValueOut() + nFeeRequired > curBalance)
+            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
 
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, context);
@@ -1504,8 +1489,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     
     CMutableTransaction mtx;
     mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
-    vecSend.push_back(recp);
-    vecSend.push_back(fee);
+    mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+    mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
