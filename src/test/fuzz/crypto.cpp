@@ -44,8 +44,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                 }
             }
 
-            (void)hash160.Write(data.data(), data.size());
-            (void)hash256.Write(data.data(), data.size());
+            (void)hash160.Write(data);
+            (void)hash256.Write(data);
             (void)hmac_sha256.Write(data.data(), data.size());
             (void)hmac_sha512.Write(data.data(), data.size());
             (void)ripemd160.Write(data.data(), data.size());
@@ -54,9 +54,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             (void)sha512.Write(data.data(), data.size());
             (void)sip_hasher.Write(data.data(), data.size());
 
-            (void)Hash(data.begin(), data.end());
+            (void)Hash(data);
             (void)Hash160(data);
-            (void)Hash160(data.begin(), data.end());
             (void)sha512.Size();
             break;
         }
@@ -73,12 +72,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 8)) {
             case 0: {
                 data.resize(CHash160::OUTPUT_SIZE);
-                hash160.Finalize(data.data());
+                hash160.Finalize(data);
                 break;
             }
             case 1: {
                 data.resize(CHash256::OUTPUT_SIZE);
-                hash256.Finalize(data.data());
+                hash256.Finalize(data);
                 break;
             }
             case 2: {
