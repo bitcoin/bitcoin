@@ -2417,7 +2417,7 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
     auto* btctip = pop.getAltTree().btc().getBestChain().tip();
     LogPrintf("%s: new best=ALT:%d:%s %s %s version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n", __func__,
         pindexNew->nHeight,
-        pindexNew->GetBlockHash().ToString(),
+        pindexNew->GetBlockHash().GetHex(),
         (vbktip ? vbktip->toShortPrettyString() : "VBK:nullptr"),
         (btctip ? btctip->toShortPrettyString() : "BTC:nullptr"),
         pindexNew->nVersion,
