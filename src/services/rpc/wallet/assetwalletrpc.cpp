@@ -378,7 +378,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
- 
+    }
     TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
@@ -719,7 +719,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
-
+    }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, context);
     mapValue_t mapValue;
