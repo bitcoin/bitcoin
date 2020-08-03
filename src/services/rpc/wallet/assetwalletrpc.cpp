@@ -707,7 +707,6 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     // change is added but it will resync the commitment there
     vecSend.push_back(recp);
     vecSend.push_back(opreturnRecipient);
-    CMutableTransaction mtx;
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
@@ -720,7 +719,6 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
     }
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
