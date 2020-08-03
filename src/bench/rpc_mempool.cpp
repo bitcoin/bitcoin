@@ -18,6 +18,7 @@ static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& poo
 static void RpcMempool(benchmark::Bench& bench)
 {
     CTxMemPool pool;
+    {
     LOCK2(cs_main, pool.cs);
 
     for (int i = 0; i < 1000; ++i) {
@@ -30,6 +31,7 @@ static void RpcMempool(benchmark::Bench& bench)
         tx.vout[0].nValue = i;
         const CTransactionRef tx_r{MakeTransactionRef(tx)};
         AddTx(tx_r, /* fee */ i, pool);
+    }
     }
 
     bench.run([&] {
