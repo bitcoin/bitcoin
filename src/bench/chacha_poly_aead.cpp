@@ -93,7 +93,7 @@ static void HASH(benchmark::Bench& bench, size_t buffersize)
     uint8_t hash[CHash256::OUTPUT_SIZE];
     std::vector<uint8_t> in(buffersize,0);
     bench.batch(in.size()).unit("byte").run([&] {
-        CHash256().Write(in.data(), in.size()).Finalize(hash);
+        CHash256().Write(in).Finalize(hash);
     });
 }
 

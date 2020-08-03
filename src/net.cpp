@@ -685,7 +685,7 @@ int V1TransportDeserializer::readData(const char *pch, unsigned int nBytes)
         vRecv.resize(std::min(hdr.nMessageSize, nDataPos + nCopy + 256 * 1024));
     }
 
-    hasher.Write((const unsigned char*)pch, nCopy);
+    hasher.Write({(const unsigned char*)pch, nCopy});
     memcpy(&vRecv[nDataPos], pch, nCopy);
     nDataPos += nCopy;
 
@@ -696,7 +696,7 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
 {
     assert(Complete());
     if (data_hash.IsNull())
-        hasher.Finalize(data_hash.begin());
+        hasher.Finalize(data_hash);
     return data_hash;
 }
 
@@ -736,7 +736,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageSta
 
 void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) {
     // create dbl-sha256 checksum
-    uint256 hash = Hash(msg.data.begin(), msg.data.end());
+    uint256 hash = Hash(msg.data);
 
     // create header
     CMessageHeader hdr(Params().MessageStart(), msg.m_type.c_str(), msg.data.size());

@@ -103,7 +103,7 @@ bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
-    return WriteIC(std::make_pair(DBKeys::KEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
+    return WriteIC(std::make_pair(DBKeys::KEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
 }
 
 bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
@@ -115,7 +115,7 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
     }
 
     // Compute a checksum of the encrypted key
-    uint256 checksum = Hash(vchCryptedSecret.begin(), vchCryptedSecret.end());
+    uint256 checksum = Hash(vchCryptedSecret);
 
     const auto key = std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey);
     if (!WriteIC(key, std::make_pair(vchCryptedSecret, checksum), false)) {
@@ -209,7 +209,7 @@ bool WalletBatch::WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubk
     key.insert(key.end(), pubkey.begin(), pubkey.end());
     key.insert(key.end(), privkey.begin(), privkey.end());
 
-    return WriteIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)), std::make_pair(privkey, Hash(key.begin(), key.end())), false);
+    return WriteIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)), std::make_pair(privkey, Hash(key)), false);
 }
 
 bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret)
@@ -365,7 +365,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
                 vchKey.insert(vchKey.end(), pkey.begin(), pkey.end());
 
-                if (Hash(vchKey.begin(), vchKey.end()) != hash)
+                if (Hash(vchKey) != hash)
                 {
                     strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
                     return false;
@@ -414,7 +414,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!ssValue.eof()) {
                 uint256 checksum;
                 ssValue >> checksum;
-                if ((checksum_valid = Hash(vchPrivKey.begin(), vchPrivKey.end()) != checksum)) {
+                if ((checksum_valid = Hash(vchPrivKey) != checksum)) {
                     strErr = "Error reading wallet database: Crypted key corrupt";
                     return false;
                 }
@@ -621,7 +621,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             to_hash.insert(to_hash.end(), pubkey.begin(), pubkey.end());
             to_hash.insert(to_hash.end(), pkey.begin(), pkey.end());
 
-            if (Hash(to_hash.begin(), to_hash.end()) != hash)
+            if (Hash(to_hash) != hash)
             {
                 strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
                 return false;
