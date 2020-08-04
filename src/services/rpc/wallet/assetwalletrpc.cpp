@@ -1189,6 +1189,13 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 		else
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 	        
+    }
+    // aux fees if applicable
+    for(const auto &it: mapAssetTotals) {
+        const uint32_t &nAsset = it->first;
+        CAsset theAsset;
+        if (!GetAsset(nAsset, theAsset))
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         CTxDestination auxFeeAddress;
         const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
         if(nAuxFee > 0){
@@ -1197,6 +1204,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                 theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
                 itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             }
+            idx++;
             itVout->values.push_back(CAssetOutValue(idx, nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
             CTxOut change_prototype_txout(0, scriptPubKey);
