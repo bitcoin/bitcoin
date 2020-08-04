@@ -18,6 +18,8 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         self.nodes[0].generate(200)
         self.basic_asset()
         self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), int(1000*COIN))
+        self.nodes[0].generate(3)
+        self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(250*COIN))
         self.sync_mempools()
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
