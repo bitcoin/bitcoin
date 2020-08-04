@@ -673,19 +673,19 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     }
     const CInputCoin &inputCoin = vecOutputs[nFoundOutput].GetInputCoin();
     const CAmount &nGas = inputCoin.effective_value;  
-    // Parse the label first so we don't generate a key if there's an error
-    std::string label = "";
-    CTxDestination dest;
-    std::string errorStr;
-    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
-    }
     // subtract fee from this output (it should pay the gas which was funded by asset new)
     CRecipient recp;
     if(recpIn) {
         recp = *recpIn;
     }
     else {
+        // Parse the label first so we don't generate a key if there's an error
+        std::string label = "";
+        CTxDestination dest;
+        std::string errorStr;
+        if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, errorStr)) {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
+        }
         recp = { GetScriptForDestination(dest), nGas, false };  
     }
     // if enough for change + max fee, we try to take fee from this output
