@@ -53,6 +53,7 @@ class AssetTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
     
     def asset_symbol_size(self):
+        gooddata = 'asset description'
         self.nodes[0].assetnew('1', 'T', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
         self.nodes[0].assetnew('1', '', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
         self.nodes[0].assetnew('1', 'ABCDEFGH', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
