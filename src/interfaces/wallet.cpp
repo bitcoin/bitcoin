@@ -514,15 +514,22 @@ public:
     void setMockTime(int64_t time) override { return SetMockTime(time); }
 
     //! WalletClient methods
-    std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, WalletCreationStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         std::shared_ptr<CWallet> wallet;
-        status = CreateWallet(*m_context.chain, passphrase, wallet_creation_flags, name, true /* load_on_start */, error, warnings, wallet);
-        return MakeWallet(std::move(wallet));
+        DatabaseOptions options;
+        DatabaseStatus status;
+        options.require_create = true;
+        options.create_flags = wallet_creation_flags;
+        options.create_passphrase = passphrase;
+        return MakeWallet(CreateWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
-        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, error, warnings));
+        DatabaseOptions options;
+        DatabaseStatus status;
+        options.require_existing = true;
+        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::string getWalletDir() override
     {
