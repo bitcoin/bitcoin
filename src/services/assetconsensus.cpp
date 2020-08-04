@@ -574,15 +574,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nPrecision > 8) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
-            if (!storedAssetRef.strPrevPubData.empty()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
-            }
-            if (!storedAssetRef.vchPrevContract.empty()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
-            }
-            if (!storedAssetRef.prevNotaryKeyID.IsNull()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-prevwitness", bSanityCheck);
-            }
             if (storedAssetRef.strSymbol.size() > MAX_SYMBOL_SIZE || storedAssetRef.strSymbol.size() < MIN_SYMBOL_SIZE) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
