@@ -218,7 +218,11 @@ class FilterTest(BitcoinTestFramework):
         # Add peer but do not send version yet
         filter_peer_without_nrelay = self.nodes[0].add_p2p_connection(P2PBloomFilter(), send_version=False, wait_for_verack=False)
         # Send version with fRelay=False
-        filter_peer_without_nrelay.wait_until(lambda: filter_peer_without_nrelay.is_connected, timeout=10)
+        filter_peer_without_nrelay.wait_until(
+            lambda: filter_peer_without_nrelay.is_connected,
+            timeout=10,
+            check_connected=False,
+        )
         version_without_fRelay = msg_version()
         version_without_fRelay.nRelay = 0
         filter_peer_without_nrelay.send_message(version_without_fRelay)
