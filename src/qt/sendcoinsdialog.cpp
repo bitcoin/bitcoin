@@ -51,14 +51,14 @@ int getIndexForConfTarget(int target) {
     return confTargets.size() - 1;
 }
 
-SendCoinsDialog::SendCoinsDialog(QWidget* parent) :
+SendCoinsDialog::SendCoinsDialog(bool _fPrivateSend, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
     clientModel(0),
     model(0),
     fNewRecipientAllowed(true),
     fFeeMinimized(true),
-    fPrivateSend(false)
+    fPrivateSend(_fPrivateSend)
 {
     ui->setupUi(this);
 
@@ -155,6 +155,14 @@ SendCoinsDialog::SendCoinsDialog(QWidget* parent) :
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
+
+    if (fPrivateSend) {
+        ui->sendButton->setText("PrivateS&end");
+        ui->sendButton->setToolTip("Confirm the PrivateSend action");
+    } else {
+        ui->sendButton->setText("S&end");
+        ui->sendButton->setToolTip("Confirm the send action");
+    }
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
@@ -629,7 +637,6 @@ void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-    CoinControlDialog::coinControl()->UsePrivateSend(fPrivateSend);
     coinControlUpdateLabels();
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
@@ -788,19 +795,11 @@ void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
     ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
 }
 
-void SendCoinsDialog::setPrivateSend(bool privateSend)
+void SendCoinsDialog::showEvent(QShowEvent* event)
 {
-    if (fPrivateSend != privateSend) {
-        fPrivateSend = privateSend;
-        coinControlUpdateLabels();
-        updateDisplayUnit();
-        if (privateSend) {
-            ui->sendButton->setText("PrivateS&end");
-            ui->sendButton->setToolTip("Confirm the PrivateSend action");
-        } else {
-            ui->sendButton->setText("S&end");
-            ui->sendButton->setToolTip("Confirm the send action");
-        }
+    QWidget::showEvent(event);
+    if (!event->spontaneous()) {
+        CoinControlDialog::usePrivateSend(fPrivateSend);
     }
 }
 

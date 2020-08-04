@@ -34,6 +34,7 @@
 
 QList<CAmount> CoinControlDialog::payAmounts;
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
+CoinControlDialog::Mode CoinControlDialog::mode{CoinControlDialog::Mode::NORMAL};
 
 bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
     int column = treeWidget()->sortColumn();
@@ -514,16 +515,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             continue;
         }
 
-        // unselect non-fully-mixed, this can happen when users switch from Send to PrivateSend
-        if (coinControl()->IsUsingPrivateSend()) {
-            int nRounds = model->getRealOutpointPrivateSendRounds(outpt);
-            if (nRounds < privateSendClient.nPrivateSendRounds) {
-                coinControl()->UnSelect(outpt);
-                fUnselectedNonMixed = true;
-                continue;
-            }
-        }
-
         // Quantity
         nQuantity++;
 
@@ -669,10 +660,22 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     }
 }
 
+void CoinControlDialog::usePrivateSend(bool fUsePrivateSend)
+{
+    CoinControlDialog::mode = fUsePrivateSend ? CoinControlDialog::Mode::PRIVATESEND : CoinControlDialog::Mode::NORMAL;
+}
+
 CCoinControl* CoinControlDialog::coinControl()
 {
-    static CCoinControl coin_control;
-    return &coin_control;
+    if (CoinControlDialog::mode == CoinControlDialog::Mode::NORMAL) {
+        static CCoinControl coinControlNormal;
+        coinControlNormal.UsePrivateSend(false);
+        return &coinControlNormal;
+    } else {
+        static CCoinControl coinControlPrivateSend;
+        coinControlPrivateSend.UsePrivateSend(true);
+        return &coinControlPrivateSend;
+    }
 }
 
 void CoinControlDialog::updateView()

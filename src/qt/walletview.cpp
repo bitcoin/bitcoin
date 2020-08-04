@@ -71,6 +71,7 @@ WalletView::WalletView(QWidget* parent) :
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
+    privateSendCoinsPage = new SendCoinsDialog(true);
 
     usedSendingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
@@ -79,6 +80,7 @@ WalletView::WalletView(QWidget* parent) :
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+    addWidget(privateSendCoinsPage);
 
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
@@ -99,8 +101,9 @@ WalletView::WalletView(QWidget* parent) :
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, SIGNAL(clicked()), transactionView, SLOT(exportClicked()));
 
-    // Pass through messages from sendCoinsPage
+    // Pass through messages from SendCoinsDialog
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    connect(privateSendCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
 
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
@@ -139,6 +142,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
+    privateSendCoinsPage->setClientModel(_clientModel);
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage->setClientModel(_clientModel);
@@ -158,6 +162,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
+    privateSendCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
 
@@ -239,7 +244,6 @@ void WalletView::gotoReceiveCoinsPage()
 
 void WalletView::gotoSendCoinsPage(QString addr)
 {
-    sendCoinsPage->setPrivateSend(false);
     setCurrentWidget(sendCoinsPage);
 
     if (!addr.isEmpty()) {
@@ -249,11 +253,10 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
 void WalletView::gotoPrivateSendCoinsPage(QString addr)
 {
-    sendCoinsPage->setPrivateSend(true);
-    setCurrentWidget(sendCoinsPage);
+    setCurrentWidget(privateSendCoinsPage);
 
     if (!addr.isEmpty())
-        sendCoinsPage->setAddress(addr);
+        privateSendCoinsPage->setAddress(addr);
 }
 
 void WalletView::gotoSignMessageTab(QString addr)
