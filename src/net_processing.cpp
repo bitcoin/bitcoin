@@ -2972,7 +2972,6 @@ void ProcessMessage(
                 }
             }
             if (!fRejectedParents) {
-                uint32_t nFetchFlags = GetFetchFlags(pfrom);
                 const auto current_time = GetTime<std::chrono::microseconds>();
 
                 for (const CTxIn& txin : tx.vin) {
@@ -2981,7 +2980,7 @@ void ProcessMessage(
                     // wtxidrelay peers.
                     // Eventually we should replace this with an improved
                     // protocol for getting all unconfirmed parents.
-                    CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
+                    CInv _inv(MSG_TX, txin.prevout.hash);
                     pfrom.AddKnownTx(txin.prevout.hash);
                     if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom.GetId()), ToGenTxid(_inv), current_time);
                 }
