@@ -8,7 +8,7 @@
 #include <pubkey.h>
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 1024;
-static const unsigned int MAX_SYMBOL_SIZE = 11; // up to 8 characters
+static const unsigned int MAX_SYMBOL_SIZE = 12; // up to 9 characters
 static const unsigned int MIN_SYMBOL_SIZE = 4;
 // this should be set well after mempool expiry (DEFAULT_MEMPOOL_EXPIRY)
 // so that miner will expire txs before they hit expiry errors if for some reason they aren't getting mined (geth issue etc)
