@@ -38,7 +38,7 @@ public:
     std::vector<unsigned char> vchPrevContract;
     std::string strSymbol;
     std::string strPubData;
-    std::vector<unsigned char> strPrevPubData;
+    std::string strPrevPubData;
     uint64_t nBalance;
     uint64_t nTotalSupply;
     uint64_t nMaxSupply;
