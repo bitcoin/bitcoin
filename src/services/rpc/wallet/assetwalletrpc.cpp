@@ -1127,9 +1127,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     std::vector<unsigned char> emptyNotarySig;
     // fund tx expecting 65 byte signature to be filled in
     emptyNotarySig.resize(65);
-    unsigned int idx;
     bool &notaryRBF = m_signal_bip125_rbf;
-	for (idx = 0; idx < receivers.size(); idx++) {
+	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
@@ -1176,7 +1175,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                 theAssetAllocation.voutAssets.emplace_back(assetOut);
                 itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             }
-            itVout->values.push_back(CAssetOutValue(idx, nAmount));
+            itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
 
             CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
@@ -1201,11 +1200,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         if(nAuxFee > 0){
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
-                theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
-                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+                 throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
             }
-            idx++;
-            itVout->values.push_back(CAssetOutValue(idx, nAuxFee));
+            itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
