@@ -149,9 +149,9 @@ CAuxPow::CheckMerkleBranch (uint256 hash,
        it != vMerkleBranch.end (); ++it)
   {
     if (nIndex & 1)
-      hash = Hash (it->begin (), it->end (), hash.begin (), hash.end ());
+      hash = Hash (*it, hash);
     else
-      hash = Hash (hash.begin (), hash.end (), it->begin (), it->end ());
+      hash = Hash (hash, *it);
     nIndex >>= 1;
   }
   return hash;
