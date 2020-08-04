@@ -87,7 +87,7 @@ bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
         if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
             // get endpoint from JSON
             UniValue publicObj;
-            if(publicObj.read(stringFromVch(theAsset.vchPubData))) {
+            if(publicObj.read(DecodeBase64(theAsset.strPubData))) {
                 const UniValue &notaryObj = find_value(publicObj, "notary");
                 if(notaryObj.isObject()) {
                     const UniValue &endpointObj = find_value(notaryObj.get_obj(), "endpoint");
@@ -169,8 +169,8 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         return false;
     CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
-        if (!asset.vchPubData.empty())
-            entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
+        if (!asset.strPubData.empty())
+            entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
 
         if (!asset.vchContract.empty())
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
@@ -507,14 +507,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
         publicData.pushKV("aux_fees", params[10]);
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
-    newAsset.strSymbol = strSymbol;
-    newAsset.vchPubData = vchFromString(publicData.write());
+    newAsset.strSymbol = EncodeBase64(strSymbol);
+    newAsset.strPubData = EncodeBase64(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
     newAsset.notaryKeyID = notaryKeyID;
     newAsset.nBalance = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
     newAsset.nUpdateFlags = nUpdateFlags;
+    newAsset.nTotalSupply = 0;
     newAsset.nPrevUpdateFlags = nUpdateFlags;
     std::vector<unsigned char> data;
     newAsset.SerializeData(data);
@@ -795,7 +796,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if (!GetAsset( nAsset, theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
-    const std::string& oldData = stringFromVch(theAsset.vchPubData);
+    const std::string& oldData = DecodeBase64(theAsset.strPubData);
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
     CKeyID oldWitnessKeyID = theAsset.notaryKeyID;
 
@@ -827,8 +828,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 
     strPubData = publicData.write();
     if(strPubData != oldData) {
-        theAsset.vchPrevPubData = vchFromString(oldData);
-        theAsset.vchPubData = vchFromString(strPubData);
+        theAsset.strPrevPubData = EncodeBase64(oldData);
+        theAsset.strPubData = EncodeBase64(strPubData);
     }
 
     if(vchContract != oldContract) {
@@ -1144,7 +1145,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
        if(!notaryRBF && !theAsset.notaryKeyID.IsNull()) {
             // get endpoint from JSON
             UniValue publicObj;
-            if(publicObj.read(stringFromVch(theAsset.vchPubData))) {
+            if(publicObj.read(DecodeBase64(theAsset.strPubData))) {
                 const UniValue &notaryObj = find_value(publicObj, "notary");
                 if(notaryObj.isObject()) {
                     notaryRBF = true;
@@ -1197,7 +1198,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         CTxDestination auxFeeAddress;
-        const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), it.second, auxFeeAddress);
+        const uint64_t &nAuxFee = getAuxFee(DecodeBase64(theAsset.strPubData), it.second, auxFeeAddress);
         if(nAuxFee > 0){
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
