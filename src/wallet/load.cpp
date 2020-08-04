@@ -52,11 +52,11 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
             return false;
         }
 
+        DatabaseOptions options;
+        DatabaseStatus status;
+        options.verify = true;
         bilingual_str error_string;
-        std::vector<bilingual_str> warnings;
-        bool verify_success = CWallet::Verify(chain, wallet_file, error_string, warnings);
-        if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
-        if (!verify_success) {
+        if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
             chain.initError(error_string);
             return false;
         }
