@@ -16,9 +16,11 @@ class AssetTest(SyscoinTestFramework):
 
     def run_test(self):
         self.nodes[0].generate(200)
+        self.asset_transfer()
         self.basic_asset()
         self.asset_description_too_big()
         self.asset_maxsupply()
+        #self.asset_transfer()
 
     def basic_asset(self):
         asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
@@ -90,5 +92,46 @@ class AssetTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint, maxUint+1, 31, '', {}, {})
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint+1, maxUint+1, 31, '', {}, {})
         
+        BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
+
+    def asset_transfer(self):
+        useraddress1 = self.nodes[1].getnewaddress()
+        self.nodes[0].sendtoaddress(useraddress1, 1)
+        asset0 = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+        asset1 = self.nodes[1].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].assetupdate(asset0, '', '', 0, 31, '', {}, {})
+        self.nodes[1].assetupdate(asset1, '', '', 0, 31, '', {}, {})
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].assettransfer(asset0, self.nodes[1].getnewaddress)
+        self.nodes[1].assettransfer(asset1, self.nodes[0].getnewaddress)
+        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assetupdate, asset0, '', '', 0, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[1].assetupdate, asset1, '', '', 0, 31, '', {}, {})
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assetupdate, asset0, '', '', 0, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[1].assetupdate, asset1, '', '', 0, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assettransfer, asset0, self.nodes[1].getnewaddress)
+        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[1].assettransfer, asset1, self.nodes[0].getnewaddress)
+        self.nodes[0].assetupdate(asset1, '', '', 0, 31, '', {}, {})
+        self.nodes[1].assetupdate(asset0, '', '', 0, 31, '', {}, {})
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].assettransfer(asset1, self.nodes[0].getnewaddress)
+        self.nodes[1].assettransfer(asset0, self.nodes[1].getnewaddress)
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].assetupdate(asset0, '', '', 0, 31, '', {}, {})
+        self.nodes[1].assetupdate(asset1, '', '', 0, 31, '', {}, {})
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+
 if __name__ == '__main__':
     AssetTest().main()
