@@ -897,6 +897,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
+    theAsset.nPrevUpdateFlags = theAsset.nUpdateFlags;
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     theAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
