@@ -38,7 +38,7 @@ public:
     std::vector<unsigned char> vchPrevContract;
     std::string strSymbol;
     std::string strPubData;
-    std::vector<unsigned char> vchPrevPubData;
+    std::vector<unsigned char> strPrevPubData;
     uint64_t nBalance;
     uint64_t nTotalSupply;
     uint64_t nMaxSupply;
@@ -58,7 +58,7 @@ public:
         strPubData.clear();
         vchContract.clear();
         voutAssets.clear();
-        vchPrevPubData.clear();
+        strPrevPubData.clear();
         vchPrevContract.clear();
         voutAssets.clear();
         strSymbol.clear();
@@ -72,7 +72,7 @@ public:
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevNotaryKeyID, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
+        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevNotaryKeyID, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
