@@ -18,7 +18,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         self.nodes[0].generate(200)
         self.basic_asset()
         self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), int(1000*COIN))
-        self.nodes[0].generate(3)
+        self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(250*COIN))
         self.sync_mempools()
@@ -28,13 +28,15 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         assert_equal(out[0]['asset_amount'], 106000000)
         # remove aux fees
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, '', {}, {})
+        self.nodes[0].generate(1)
+        self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(250*COIN))
         self.sync_mempools()
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], self.asset)
         assert_equal(out[0]['asset_amount'], 106000000)
-        self.nodes[0].generate(3)
+        self.nodes[0].generate(1)
         self.sync_blocks()
 
     def basic_asset(self):
@@ -42,7 +44,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         auxfees = {'address': newaddressfee, 'fee_struct': [[0,'0.01'],[int(10*COIN),'0.004'],[int(250*COIN),'0.002'],[int(2500*COIN),'0.0007'],[int(25000*COIN),'0.00007'],[int(250000*COIN),'0']]}
         self.asset = self.nodes[0].assetnew('1', 'AGX', 'AGX silver backed token, licensed and operated by Interfix corporation', '0x', 8, 1000*COIN, 10000*COIN, 63, '', {}, auxfees)['asset_guid']
         self.sync_mempools()
-        self.nodes[0].generate(3)
+        self.nodes[0].generate(1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
