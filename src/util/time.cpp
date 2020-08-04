@@ -6,7 +6,9 @@
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
 #endif
-
+#include <sys/time.h>
+#include <time.h>
+#include <stdlib.h>
 #include <util/time.h>
 
 #include <atomic>
@@ -50,6 +52,7 @@ int64_t GetMockTime()
 {
     return nMockTime.load(std::memory_order_relaxed);
 }
+#include <iostream>
 
 int64_t GetTimeMillis()
 {
@@ -61,8 +64,15 @@ int64_t GetTimeMillis()
 
 int64_t GetTimeMicros()
 {
-    int64_t now = (boost::posix_time::microsec_clock::universal_time() -
-                   boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
+    // ------ add 3 Lines ------
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    int64_t now = tv.tv_sec*1000000+tv.tv_usec;
+    // ------
+
+    // int64_t now = (boost::posix_time::microsec_clock::universal_time() -
+    //               boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
+
     assert(now > 0);
     return now;
 }
