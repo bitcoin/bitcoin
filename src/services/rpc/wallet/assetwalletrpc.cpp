@@ -675,9 +675,9 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     // subtract fee from this output (it should pay the gas which was funded by asset new)
     CRecipient recp;
     if(recpIn) {
-        recp = *recpIn;
+        vecSend.push_back(*recpIn);
     }
-    else {
+    if(!recpIn || nGas > (MIN_CHANGE + pwallet->m_default_max_tx_fee)) {
         // Parse the label first so we don't generate a key if there's an error
         std::string label = "";
         CTxDestination dest;
@@ -704,13 +704,14 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     CMutableTransaction mtx;
     // order matters here as vecSend is in sync with asset commitment, it may change later when
     // change is added but it will resync the commitment there
-    vecSend.push_back(recp);
+    if(recp.nAmount > 0)
+        vecSend.push_back(recp);
     vecSend.push_back(opreturnRecipient);
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
     coin_control.Select(inputCoin.outpoint);
-    coin_control.fAllowOtherInputs = !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
+    coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     mtx.nVersion = nVersionIn;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
