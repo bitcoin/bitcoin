@@ -9,6 +9,7 @@
 
 #include <QDialog>
 #include <QMessageBox>
+#include <QShowEvent>
 #include <QString>
 #include <QTimer>
 
@@ -32,7 +33,7 @@ class SendCoinsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendCoinsDialog(QWidget* parent = 0);
+    explicit SendCoinsDialog(bool fPrivateSend = false, QWidget* parent = 0);
     ~SendCoinsDialog();
 
     void setClientModel(ClientModel *clientModel);
@@ -45,7 +46,6 @@ public:
     void setAddress(const QString &address);
     void pasteEntry(const SendCoinsRecipient &rv);
     bool handlePaymentRequest(const SendCoinsRecipient &recipient);
-    void setPrivateSend(bool privateSend);
 
 public Q_SLOTS:
     void clear();
@@ -76,6 +76,8 @@ private:
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
+
+    void showEvent(QShowEvent* event);
 
 private Q_SLOTS:
     void on_sendButton_clicked();
