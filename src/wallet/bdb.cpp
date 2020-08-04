@@ -824,3 +824,35 @@ std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(const char* mode, boo
 {
     return MakeUnique<BerkeleyBatch>(*this, mode, flush_on_close);
 }
+
+bool ExistsBerkeleyDatabase(const fs::path& path)
+{
+    fs::path env_directory;
+    std::string data_filename;
+    SplitWalletPath(path, env_directory, data_filename);
+    return IsBerkeleyBtree(env_directory / data_filename);
+}
+
+std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
+{
+    std::unique_ptr<BerkeleyDatabase> db;
+    {
+        LOCK(cs_db); // Lock env.m_databases until insert in BerkeleyDatabase constructor
+        std::string data_filename;
+        std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(path, data_filename);
+        if (env->m_databases.count(data_filename)) {
+            error = Untranslated(strprintf("Refusing to load database. Data file '%s' is already loaded.", (env->Directory() / data_filename).string()));
+            status = DatabaseStatus::FAILED_ALREADY_LOADED;
+            return nullptr;
+        }
+        db = MakeUnique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
+    }
+
+    if (options.verify && !db->Verify(error)) {
+        status = DatabaseStatus::FAILED_VERIFY;
+        return nullptr;
+    }
+
+    status = DatabaseStatus::SUCCESS;
+    return db;
+}

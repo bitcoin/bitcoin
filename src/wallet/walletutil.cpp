@@ -29,7 +29,7 @@ fs::path GetWalletDir()
     return path;
 }
 
-static bool IsBerkeleyBtree(const fs::path& path)
+bool IsBerkeleyBtree(const fs::path& path)
 {
     if (!fs::exists(path)) return false;
 
