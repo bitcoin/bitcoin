@@ -16,11 +16,10 @@ class AssetTest(SyscoinTestFramework):
 
     def run_test(self):
         self.nodes[0].generate(200)
-        self.asset_transfer()
         self.basic_asset()
         self.asset_description_too_big()
         self.asset_maxsupply()
-        #self.asset_transfer()
+        self.asset_transfer()
 
     def basic_asset(self):
         asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
@@ -91,8 +90,6 @@ class AssetTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assetupdate, asset, '', '', 1, 31, '', {}, {})
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint, maxUint+1, 31, '', {}, {})
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, maxUint+1, maxUint+1, 31, '', {}, {})
-        
-        BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
 
     def asset_transfer(self):
         useraddress1 = self.nodes[1].getnewaddress()
