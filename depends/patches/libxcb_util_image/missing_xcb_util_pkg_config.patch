@@ -1,0 +1,18 @@
+commit 0b7ff292d621ea9c5a2324295c62ec3dc01945c9
+Author: fanquake <fanquake@gmail.com>
+Date:   Mon Aug 24 19:47:12 2020 +0800
+
+    xcb-util is required but is missing from pkg-config
+
+diff --git a/image/xcb-image.pc.in b/image/xcb-image.pc.in
+index 403fdd0..155d7c2 100644
+--- a/image/xcb-image.pc.in
++++ b/image/xcb-image.pc.in
+@@ -6,6 +6,6 @@ includedir=@includedir@
+ Name: XCB Image library
+ Description: XCB image convenience library
+ Version: @PACKAGE_VERSION@
+-Requires: xcb xcb-shm
++Requires: xcb xcb-shm xcb-util
+ Libs: -L${libdir} -lxcb-image @LIBS@
+ Cflags: -I${includedir}
