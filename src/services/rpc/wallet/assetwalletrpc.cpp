@@ -673,7 +673,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     const CInputCoin &inputCoin = vecOutputs[nFoundOutput].GetInputCoin();
     const CAmount &nGas = inputCoin.effective_value;  
     // subtract fee from this output (it should pay the gas which was funded by asset new)
-    CRecipient recp;
+    CRecipient recp = { CScript(), 0, false };
     if(recpIn) {
         vecSend.push_back(*recpIn);
     }
