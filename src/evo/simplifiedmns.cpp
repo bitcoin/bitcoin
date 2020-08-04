@@ -23,7 +23,7 @@ CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     service(dmn.pdmnState->addr),
     pubKeyOperator(dmn.pdmnState->pubKeyOperator),
     keyIDVoting(dmn.pdmnState->keyIDVoting),
-    isValid(dmn.pdmnState->nPoSeBanHeight == -1)
+    isValid(!dmn.pdmnState->IsBanned())
 {
 }
 

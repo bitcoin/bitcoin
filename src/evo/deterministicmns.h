@@ -30,12 +30,16 @@ namespace llmq
 
 class CDeterministicMNState
 {
+private:
+    int nPoSeBanHeight{-1};
+
+    friend class CDeterministicMNStateDiff;
+
 public:
     int nRegisteredHeight{-1};
     int nLastPaidHeight{0};
     int nPoSePenalty{0};
     int nPoSeRevivedHeight{-1};
-    int nPoSeBanHeight{-1};
     uint16_t nRevocationReason{CProUpRevTx::REASON_NOT_SPECIFIED};
 
     // the block hash X blocks after registration, used in quorum calculations
@@ -97,9 +101,23 @@ public:
     }
     void BanIfNotBanned(int height)
     {
-        if (nPoSeBanHeight == -1) {
+        if (!IsBanned()) {
             nPoSeBanHeight = height;
         }
+    }
+    int GetBannedHeight() const
+    {
+        return nPoSeBanHeight;
+    }
+    bool IsBanned() const
+    {
+        return nPoSeBanHeight != -1;
+    }
+    void Revive(int nRevivedHeight)
+    {
+        nPoSePenalty = 0;
+        nPoSeBanHeight = -1;
+        nPoSeRevivedHeight = nRevivedHeight;
     }
     void UpdateConfirmedHash(const uint256& _proTxHash, const uint256& _confirmedHash)
     {
