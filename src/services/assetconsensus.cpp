@@ -592,9 +592,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nMaxSupply > MAX_ASSET) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
-            if (storedAssetRef.nTotalSupply != 0) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
-            }
             if (storedAssetRef.nUpdateFlags > ASSET_UPDATE_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
