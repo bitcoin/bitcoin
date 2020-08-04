@@ -79,7 +79,7 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxD
 }
 
 bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
-    // fill notary signatures for first asset that requires it, only need 1 notary signature for tx
+    // fill notary signatures for assets that require them
     for(auto& vecOut: voutAssets) {
         // get asset
         CAsset theAsset;
@@ -94,7 +94,6 @@ bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
                     if(endpointObj.isStr()) {
                         // get signature from end-point
                         //vecOut.vchNotarySig = vchSig;
-                        return true;
                     }
                 }
             }
