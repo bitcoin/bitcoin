@@ -55,9 +55,9 @@ class AssetTest(SyscoinTestFramework):
     def asset_symbol_size(self):
         gooddata = 'asset description'
         self.nodes[0].assetnew('1', 'T', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
-        self.nodes[0].assetnew('1', '', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', '', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
         self.nodes[0].assetnew('1', 'ABCDEFGH', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
-        self.nodes[0].assetnew('1', 'ABCDEFGI', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', 'ABCDEFGHI', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
         self.nodes[0].generate(1)
 
     def asset_maxsupply(self):
