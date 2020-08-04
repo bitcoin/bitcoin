@@ -574,7 +574,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nPrecision > 8) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
-            if (!storedAssetRef.vchPrevPubData.empty()) {
+            if (!storedAssetRef.strPrevPubData.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
             }
             if (!storedAssetRef.vchPrevContract.empty()) {
