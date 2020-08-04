@@ -34,7 +34,12 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
         // It does not protect against:
         //   node1 -> Eve -> node2
         // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
-        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound));
+        int nOurNodeVersion{PROTOCOL_VERSION};
+        if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
+            nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+        }
+        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound, nOurNodeVersion));
+        
     }
 
     CMNAuth mnauth;
@@ -103,7 +108,9 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         {
             LOCK(pnode->cs_mnauth);
             // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
-            signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->fInbound));
+            signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->fInbound, pnode->nVersion.load()));
+            
+            LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- constructed signHash for nVersion %d, peer=%d\n", __func__, pnode->nVersion, pnode->GetId());
         }
 
         if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
