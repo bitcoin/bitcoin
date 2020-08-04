@@ -35,6 +35,9 @@ don't have test cases for.
   `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
   the subclass, then locally-defined helper methods, then the `run_test()` method.
 - Use `'{}'.format(x)` for string formatting, not `'%s' % x`.
+- In Python, single and double quotes can be used interchangeably; use single
+  quotes for strings that functionality depends on (for example, `self.restart_node(0, ['-nowallet'])`)
+  and double quotes for informational strings, such as logging.
 
 #### Naming guidelines
 
@@ -54,7 +57,7 @@ don't have test cases for.
 #### General test-writing advice
 
 - Instead of inline comments or no test documentation at all, log the comments to the test log, e.g.
-  `self.log.info('Create enough transactions to fill a block')`. Logs make the test code easier to read and the test
+  `self.log.info("Create enough transactions to fill a block")`. Logs make the test code easier to read and the test
   logic easier [to debug](/test/README.md#test-logging).
 - Set `self.num_nodes` to the minimum number of nodes necessary for the test.
   Having additional unrequired nodes adds to the execution time of the test as
