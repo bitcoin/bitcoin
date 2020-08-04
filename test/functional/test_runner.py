@@ -262,6 +262,7 @@ BASE_SCRIPTS = [
     'feature_sporks.py',
     'feature_multikeysporks.py',
     'feature_asset.py',
+    'feature_asset_auxfees.py',
     'feature_asset_reorg.py',
     'feature_asset_mint.py',
     'feature_asset_txroots.py',

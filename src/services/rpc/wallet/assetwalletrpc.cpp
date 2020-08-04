@@ -55,7 +55,7 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxD
         if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
             return 0;
         if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
-                return 0;   
+            return 0;   
         UniValue boundValue = feeStruct[0]; 
         UniValue nextBoundValue = feeStructNext[0]; 
         nBoundAmount = boundValue.get_uint64();
