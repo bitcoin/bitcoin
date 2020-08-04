@@ -347,8 +347,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if (!CHashSigner::VerifyHash(tx.GetNotarySigHash(), theAsset.notaryKeyID, vecOut.vchNotarySig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
-            // only first one needs to be checked since all inputs are covered by the signature
-            break;
         }
     }
     switch (tx.nVersion) {
