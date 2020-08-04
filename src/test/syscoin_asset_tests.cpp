@@ -120,43 +120,5 @@ BOOST_AUTO_TEST_CASE(generate_auxfees1)
     BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 7500*COIN,8, address), 906000000);
 }
 
-BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
-{
-    UniValue r;
-	tfm::format(std::cout,"Running generate_assettransfer_address...\n");
-	GenerateBlocks(15, "node1");
-	GenerateBlocks(15, "node2");
-	GenerateBlocks(15, "node3");
-	string newaddres1 = GetNewFundedAddress("node1");
-    string newaddres2 = GetNewFundedAddress("node2");
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
-    string newaddres3 = r.get_str();
-	string guid1 = AssetNew("node1", newaddres1, "pubdata");
-	string guid2 = AssetNew("node2", newaddres2, "pubdata");
-    	
-	AssetUpdate("node1", guid1, "pub3");
-	AssetTransfer("node1", "node2", guid1, newaddres2);
-
-	AssetTransfer("node2", "node3", guid2, newaddres3);
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid1 + "\""));
-    BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);
-
-	// xfer an asset that isn't yours
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assettransfer" , guid1 + ",\"" + newaddres3 + "\",\"''\""));
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
-    string hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
-    GenerateBlocks(5, "node1");
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid1 + "\""));
-    BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);
-
-	// update xferred asset
-	AssetUpdate("node2", guid1, "public");
-
-	// retransfer asset
-	AssetTransfer("node2", "node3", guid1, newaddres3);
-}
-
 
 BOOST_AUTO_TEST_SUITE_END ()
