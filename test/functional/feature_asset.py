@@ -96,7 +96,7 @@ class AssetTest(SyscoinTestFramework):
 
     def asset_transfer(self):
         useraddress1 = self.nodes[1].getnewaddress()
-        self.nodes[0].sendtoaddress(useraddress1, 501)
+        self.nodes[0].sendtoaddress(useraddress1, 151)
         asset0 = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
         asset1 = self.nodes[1].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
         self.sync_mempools()
