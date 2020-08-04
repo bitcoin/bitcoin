@@ -1192,12 +1192,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     }
     // aux fees if applicable
     for(const auto &it: mapAssetTotals) {
-        const uint32_t &nAsset = it->first;
+        const uint32_t &nAsset = it.first;
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         CTxDestination auxFeeAddress;
-        const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
+        const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), it.second, auxFeeAddress);
         if(nAuxFee > 0){
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
