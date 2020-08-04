@@ -476,8 +476,8 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     }
     // undo data fields from last update
     // if fields changed then undo them using prev fields
-    if(!theAsset.vchPubData.empty()) {
-        storedAssetRef.vchPubData = theAsset.vchPrevPubData;
+    if(!theAsset.strPubData.empty()) {
+        storedAssetRef.strPubData = theAsset.strPrevPubData;
     }
     if(!theAsset.vchContract.empty()) {
         storedAssetRef.vchContract = theAsset.vchPrevContract;
@@ -550,7 +550,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         }
     }
     CAsset &storedAssetRef = mapAsset->second; 
-    if (storedAssetRef.vchPubData.size() > MAX_VALUE_LENGTH) {
+    if (storedAssetRef.strPubData.size() > MAX_VALUE_LENGTH) {
         return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
     } 
     switch (tx.nVersion) {
@@ -583,7 +583,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!storedAssetRef.prevNotaryKeyID.IsNull()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevwitness", bSanityCheck);
             }
-            if (storedAssetRef.strSymbol.size() > 8 || storedAssetRef.strSymbol.size() < 1) {
+            if (storedAssetRef.strSymbol.size() > MAX_SYMBOL_SIZE || storedAssetRef.strSymbol.size() < MIN_SYMBOL_SIZE) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
             if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
@@ -652,16 +652,16 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
             }
    
-            if (!theAsset.vchPubData.empty()) {
+            if (!theAsset.strPubData.empty()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_DATA)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-pubdata-privileges", bSanityCheck);
                 }
                 // ensure prevdata is set to what db is now to be able to undo in disconnectblock
-                if(theAsset.vchPrevPubData != storedAssetRef.vchPubData) {
+                if(theAsset.strPrevPubData != storedAssetRef.strPubData) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
                 }
                 // replace db data with new data
-                storedAssetRef.vchPubData = std::move(theAsset.vchPubData);
+                storedAssetRef.strPubData = std::move(theAsset.strPubData);
             }
                                         
             if (!theAsset.vchContract.empty()) {

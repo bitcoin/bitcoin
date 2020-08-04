@@ -7,7 +7,9 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 static const unsigned int MAX_GUID_LENGTH = 20;
-static const unsigned int MAX_VALUE_LENGTH = 512;
+static const unsigned int MAX_VALUE_LENGTH = 1024;
+static const unsigned int MAX_SYMBOL_SIZE = 12;
+static const unsigned int MIN_SYMBOL_SIZE = 4;
 // this should be set well after mempool expiry (DEFAULT_MEMPOOL_EXPIRY)
 // so that miner will expire txs before they hit expiry errors if for some reason they aren't getting mined (geth issue etc)
 static const int64_t MAINNET_MAX_MINT_AGE = 302400; // 0.5 week in seconds, should send to network in half a week or less
@@ -35,7 +37,7 @@ public:
     std::vector<unsigned char> vchContract;
     std::vector<unsigned char> vchPrevContract;
     std::string strSymbol;
-    std::vector<unsigned char> vchPubData;
+    std::string strPubData;
     std::vector<unsigned char> vchPrevPubData;
     uint64_t nBalance;
     uint64_t nTotalSupply;
@@ -53,7 +55,7 @@ public:
         UnserializeFromTx(tx);
     }
     inline void ClearAsset() {
-        vchPubData.clear();
+        strPubData.clear();
         vchContract.clear();
         voutAssets.clear();
         vchPrevPubData.clear();
@@ -70,7 +72,7 @@ public:
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevNotaryKeyID, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
+        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevNotaryKeyID, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
