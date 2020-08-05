@@ -253,13 +253,6 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
         wallet_creation_flags |= WALLET_FLAG_BLANK_WALLET;
     }
 
-    // Check the wallet file location
-    if (fs::symlink_status(fs::absolute(name.empty() ? "wallet.dat" : name, GetWalletDir())).type() != fs::file_not_found) {
-        error = strprintf(Untranslated("Wallet %s already exists."), name);
-        status = DatabaseStatus::FAILED_CREATE;
-        return nullptr;
-    }
-
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
     if (!database) {
