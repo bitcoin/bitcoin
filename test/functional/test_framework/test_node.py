@@ -637,7 +637,7 @@ class TestNodeCLI():
             raise subprocess.CalledProcessError(returncode, self.binary, output=cli_stderr)
         try:
             return json.loads(cli_stdout, parse_float=decimal.Decimal)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, decimal.InvalidOperation):
             return cli_stdout.rstrip("\n")
 
 class RPCOverloadWrapper():
