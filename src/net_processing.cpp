@@ -3094,15 +3094,18 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         {
             uint64_t nonce = 0;
             vRecv >> nonce;
-            // VeriBlock: immediately after nonce, receive best block hash
-            try {
+
+            if(pfrom->nVersion > PING_BESTCHAIN_VERSION) {
+                // VeriBlock: immediately after nonce, receive best block hash
                 LOCK(cs_main);
                 uint256 bestHash;
                 vRecv >> bestHash;
                 UpdateBestChainTip(pfrom->GetId(), bestHash);
-            } catch(const std::exception& e) {
-                // ignore
+
+                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::PONG, nonce, ::ChainActive().Tip()->GetBlockHash()));
+                return true;
             }
+
             // Echo the message back with the nonce. This allows for two useful features:
             //
             // 1) A remote node can quickly check if the connection is operational
@@ -3114,7 +3117,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // it, if the remote node sends a ping once per second and this node takes 5
             // seconds to respond to each, the 5th ping the remote sends would appear to
             // return very quickly.
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::PONG, nonce, ::ChainActive().Tip()->GetBlockHash()));
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::PONG, nonce));
         }
         return true;
     }
@@ -3153,14 +3156,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     }
                 }
 
-                // VeriBlock: handle best chain updates
-                try {
+                if(pfrom->nVersion > PING_BESTCHAIN_VERSION) {
                     LOCK(cs_main);
                     uint256 bestHash;
                     vRecv >> bestHash;
                     UpdateBestChainTip(pfrom->GetId(), bestHash);
-                } catch(std::exception& e){
-                    // ignore
                 }
             } else {
                 sProblem = "Unsolicited pong without ping";
@@ -3622,7 +3622,11 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             pto->nPingUsecStart = GetTimeMicros();
             if (pto->nVersion > BIP0031_VERSION) {
                 pto->nPingNonceSent = nonce;
-                connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce, ::ChainActive().Tip()->GetBlockHash()));
+                if(pto->nVersion > PING_BESTCHAIN_VERSION) {
+                    connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce, ::ChainActive().Tip()->GetBlockHash()));
+                } else {
+                    connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce));
+                }
             } else {
                 // Peer is too old to support ping command with nonce, pong will never arrive.
                 pto->nPingNonceSent = 0;
