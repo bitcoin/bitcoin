@@ -22,6 +22,7 @@
 #include <services/asset.h>
 #include <node/transaction.h>
 #include <rpc/auxpow_miner.h>
+#include <curl/curl.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
@@ -77,14 +78,92 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxD
     }
     return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
 }
-
-bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
+struct MemoryStruct {
+  char *memory;
+  size_t size;
+};
+ 
+static size_t
+WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+  size_t realsize = size * nmemb;
+  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+ 
+  char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+  if(!ptr) {
+    /* out of memory! */ 
+    LogPrint(BCLog::SYS, "not enough memory (realloc returned NULL)\n");
+    return 0;
+  }
+ 
+  mem->memory = ptr;
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+ 
+  return realsize;
+}
+ 
+char* curl_fetch_url(CURL *curl, const char *url, const char* payload)
+{
+  CURLcode res;
+  struct MemoryStruct chunk;
+  struct curl_slist *headers = NULL;                      /* http headers to send with request */
+  chunk.memory = malloc(1);  /* will be grown as needed by realloc above */ 
+  chunk.size = 0;    /* no data at this point */ 
+ 
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    
+    headers = curl_slist_append(headers, "Accept: application/json");
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(ch, CURLOPT_HTTPHEADER, headers);
+    /* send all data to this function  */ 
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+ 
+    /* we pass our 'chunk' struct to the callback function */ 
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+ 
+    /* some servers don't like requests that are made without a user-agent
+       field, so we provide one */ 
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+ 
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+ 
+    /* if we don't provide POSTFIELDSIZE, libcurl will strlen() by
+       itself */ 
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(payload));
+ 
+    /* Perform the request, res will get the return code */ 
+    res = curl_easy_perform(curl);
+    /* Check for errors */ 
+    if(res != CURLE_OK) {
+      LogPrint(BCLog::SYS, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+      return nullptr;
+    } 
+    curl_slist_free_all(headers);
+  }
+  return chunk.memory;
+}
+bool FillNotarySigFromEndpoint(const CTransactionRef& tx, const std::vector<CAssetOut> & voutAssets) {
+    curl_global_init(CURL_GLOBAL_ALL);
+    CURL *curl = curl_easy_init();
+    std::string strHex = EncodeHexTx(*tx);
+    UniValue reqObj(UniValue::VOBJ);
+    reqObj.push_back("tx", strHex); 
+    std::string reqJSON = reqObj.write();
+    bool bFilled = false;
     // fill notary signatures for assets that require them
     for(auto& vecOut: voutAssets) {
         // get asset
         CAsset theAsset;
         // if asset has notary signature requirement set
         if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
+            bFilled = false;
             // get endpoint from JSON
             UniValue publicObj;
             if(publicObj.read(DecodeBase64(theAsset.strPubData))) {
@@ -92,14 +171,32 @@ bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
                 if(notaryObj.isObject()) {
                     const UniValue &endpointObj = find_value(notaryObj.get_obj(), "e");
                     if(endpointObj.isStr()) {
-                        // get signature from end-point
-                        //vecOut.vchNotarySig = vchSig;
+                        char* response = curl_fetch_url(curl, endpointObj.get_str().c_str(), reqJSON.c_str());
+                        if(response != nullptr) {
+                            UniValue resObj;
+                            if(resObj.read((const char*)response)) {
+                                const UniValue &sigObj = find_value(resObj.get_obj(), "sig");  
+                                if(sigObj.isStr()) {
+                                    // get signature from end-point
+                                    vecOut.vchNotarySig = ParseHex(sigObj.get_str());
+                                    // ensure sig is 65 bytes exactly for ECDSA
+                                    if(vecOut.vchNotarySig.size() == 65)
+                                        bFilled = true;
+                                }
+                            }
+                            free(response);
+                        }
                     }
                 }
             }
+            if(!bFilled)
+                break;
         }
     }
-    return false;
+    if(curl)
+        curl_easy_cleanup(curl);
+    curl_global_cleanup();
+    return bFilled;
 }
 
 bool UpdateNotarySignature(CMutableTransaction& mtx) {
