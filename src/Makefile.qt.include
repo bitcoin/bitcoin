@@ -319,7 +319,7 @@ if TARGET_WINDOWS
 endif
 syscoin_qt_ldadd = qt/libsyscoinqt.a $(LIBSYSCOIN_SERVER)
 if ENABLE_WALLET
-syscoin_qt_ldadd += $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_WALLET)
+syscoin_qt_ldadd += $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_WALLET) $(LIBCURL)
 endif
 if ENABLE_ZMQ
 syscoin_qt_ldadd += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
