@@ -89,7 +89,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
   size_t realsize = size * nmemb;
   struct MemoryStruct *mem = (struct MemoryStruct *)userp;
  
-  char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+  char *ptr = (char*)realloc(mem->memory, mem->size + realsize + 1);
   if(!ptr) {
     /* out of memory! */ 
     LogPrint(BCLog::SYS, "not enough memory (realloc returned NULL)\n");
@@ -109,19 +109,19 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload)
   CURLcode res;
   struct MemoryStruct chunk;
   struct curl_slist *headers = NULL;                      /* http headers to send with request */
-  chunk.memory = malloc(1);  /* will be grown as needed by realloc above */ 
+  chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
   chunk.size = 0;    /* no data at this point */ 
  
   if(curl) {
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl, CURLOPT_URL, url);
     
     headers = curl_slist_append(headers, "Accept: application/json");
     headers = curl_slist_append(headers, "Content-Type: application/json");
-    curl_easy_setopt(ch, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     /* send all data to this function  */ 
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
  
@@ -149,8 +149,8 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload)
   }
   return chunk.memory;
 }
-bool FillNotarySigFromEndpoint(const CTransactionRef& tx, const std::vector<CAssetOut> & voutAssets) {
-    CURLcode resInit = curl_global_init(CURL_GLOBAL_ALL)
+bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets) {
+    CURLcode resInit = curl_global_init(CURL_GLOBAL_ALL);
     if(resInit != 0) {
         LogPrint(BCLog::SYS, "curl_global_init() failed: %s\n", curl_easy_strerror(resInit));
         return false;
@@ -159,7 +159,7 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, const std::vector<CAss
     CURL *curl = curl_easy_init();
     std::string strHex = EncodeHexTx(*tx);
     UniValue reqObj(UniValue::VOBJ);
-    reqObj.push_back("tx", strHex); 
+    reqObj.pushKV("tx", strHex); 
     std::string reqJSON = reqObj.write();
     bool bFilled = false;
     // fill notary signatures for assets that require them
@@ -211,19 +211,19 @@ bool UpdateNotarySignature(CMutableTransaction& mtx) {
      // call API endpoint or notary signatures and fill them in for every asset
     if(IsSyscoinMintTx(tx->nVersion)) {
         CMintSyscoin mintSyscoin(*tx);
-        if(FillNotarySigFromEndpoint(mintSyscoin.voutAssets)) {
+        if(FillNotarySigFromEndpoint(tx, mintSyscoin.voutAssets)) {
             bFilledNotarySig = true;
             mintSyscoin.SerializeData(data);
         }
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
         CBurnSyscoin burnSyscoin(*tx);
-        if(FillNotarySigFromEndpoint(burnSyscoin.voutAssets)) {
+        if(FillNotarySigFromEndpoint(tx, burnSyscoin.voutAssets)) {
             bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);
-        if(FillNotarySigFromEndpoint(allocation.voutAssets)) {
+        if(FillNotarySigFromEndpoint(tx, allocation.voutAssets)) {
             bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
