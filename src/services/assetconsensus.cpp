@@ -12,6 +12,7 @@
 #include <boost/thread/thread.hpp>
 #include <util/system.h>
 #include <messagesigner.h>
+#include <util/rbf.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
