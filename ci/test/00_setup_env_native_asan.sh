@@ -12,4 +12,4 @@ export TEST_RUNNER_EXTRA="--timeout-factor=4"  # Increase timeout because saniti
 export FUNCTIONAL_TESTS_CONFIG="--exclude wallet_multiwallet.py" # Temporarily suppress ASan heap-use-after-free (see issue #14163)
 export RUN_BENCH=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
+export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++ --with-boost-process"

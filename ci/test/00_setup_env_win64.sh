@@ -13,5 +13,5 @@ export DPKG_ADD_ARCH="i386"
 export RUN_INTEGRATION_TESTS=false
 export RUN_SECURITY_TESTS="false"
 export GOAL="deploy"
-export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner"
+export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner --without-boost-process"
 export DIRECT_WINE_EXEC_TESTS=true

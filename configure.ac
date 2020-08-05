@@ -1457,6 +1457,9 @@ if test x$want_boost = xno; then
 fi
 AX_BOOST_FILESYSTEM
 
+dnl Opt-in to boost-process
+AS_IF([ test x$with_boost_process != x ], [ AX_BOOST_PROCESS ], [ ax_cv_boost_process=no ] )
+
 if test x$suppress_external_warnings != xno; then
     dnl Prevent use of std::unary_function, which was removed in C++17,
     dnl and will generate warnings with newer compilers.
@@ -1932,6 +1935,7 @@ esac
 
 echo
 echo "Options used to compile and link:"
+echo "  boost process = $ax_cv_boost_process"
 echo "  multiprocess  = $build_multiprocess"
 echo "  with wallet         = $enable_wallet"
 echo "  with gui / qt       = $bitcoin_enable_qt"

@@ -10,4 +10,4 @@ export CONTAINER_NAME=ci_native_nowallet
 export PACKAGES="python3-zmq"
 export DEP_OPTS="NO_WALLET=1"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-reduce-exports"
+export BITCOIN_CONFIG="--enable-reduce-exports --with-boost-process"

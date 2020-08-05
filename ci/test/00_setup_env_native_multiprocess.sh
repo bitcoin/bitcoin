@@ -10,5 +10,5 @@ export CONTAINER_NAME=ci_native_multiprocess
 export PACKAGES="cmake python3"
 export DEP_OPTS="MULTIPROCESS=1"
 export GOAL="install"
-export BITCOIN_CONFIG=""
+export BITCOIN_CONFIG="--with-boost-process"
 export TEST_RUNNER_ENV="BITCOIND=dash-node"
