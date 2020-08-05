@@ -31,7 +31,9 @@ $(package)_cxxflags_linux=-fPIC
 $(package)_cxxflags_android=-fPIC
 endef
 
+# Fix unused variable in boost_process, can be removed after upgrading to 1.72
 define $(package)_preprocess_cmds
+  sed -i.old "s/int ret_sig = 0;//" boost/process/detail/posix/wait_group.hpp && \
   echo "using $($(package)_toolset_$(host_os)) : : $($(package)_cxx) : <cxxflags>\"$($(package)_cxxflags) $($(package)_cppflags)\" <linkflags>\"$($(package)_ldflags)\" <archiver>\"$($(package)_archiver_$(host_os))\" <striper>\"$(host_STRIP)\"  <ranlib>\"$(host_RANLIB)\" <rc>\"$(host_WINDRES)\" : ;" > user-config.jam
 endef
 
