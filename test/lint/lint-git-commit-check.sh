@@ -14,21 +14,22 @@ while getopts "?" opt; do
   case $opt in
     ?)
       echo "Usage: $0 [N]"
-      echo "       TRAVIS_COMMIT_RANGE='<commit range>' $0"
+      echo "       COMMIT_RANGE='<commit range>' $0"
       echo "       $0 -?"
       echo "Checks unmerged commits, the previous N commits, or a commit range."
-      echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' $0"
+      echo "COMMIT_RANGE='47ba2c3...ee50c9e' $0"
       exit ${EXIT_CODE}
     ;;
   esac
 done
 
-if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
-  if [ -n "$1" ]; then
-    TRAVIS_COMMIT_RANGE="HEAD~$1...HEAD"
-  else
-    TRAVIS_COMMIT_RANGE="origin/master..HEAD"
-  fi
+if [ -z "${COMMIT_RANGE}" ]; then
+    if [ -n "$1" ]; then
+      COMMIT_RANGE="HEAD~$1...HEAD"
+    else
+      MERGE_BASE=$(git merge-base HEAD master)
+      COMMIT_RANGE="$MERGE_BASE..HEAD"
+    fi
 fi
 
 while IFS= read -r commit_hash  || [[ -n "$commit_hash" ]]; do
@@ -41,6 +42,6 @@ while IFS= read -r commit_hash  || [[ -n "$commit_hash" ]]; do
             EXIT_CODE=1
         fi
     done < <(git log --format=%B -n 1 "$commit_hash")
-done < <(git log "${TRAVIS_COMMIT_RANGE}" --format=%H)
+done < <(git log "${COMMIT_RANGE}" --format=%H)
 
 exit ${EXIT_CODE}
