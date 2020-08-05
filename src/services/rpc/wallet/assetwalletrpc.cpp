@@ -29,14 +29,14 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxD
     UniValue publicObj;
     if(!publicObj.read(public_data))
         return 0;
-    const UniValue &auxFeesObj = find_value(publicObj, "aux_fees");
+    const UniValue &auxFeesObj = find_value(publicObj, "af");
     if(!auxFeesObj.isObject())
         return 0;
-    const UniValue &addressObj = find_value(auxFeesObj, "address");
+    const UniValue &addressObj = find_value(auxFeesObj, "a");
     if(!addressObj.isStr())
         return 0;
     address = DecodeDestination(addressObj.get_str());
-    const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
+    const UniValue &feeStructObj = find_value(auxFeesObj, "fs");
     if(!feeStructObj.isArray())
         return 0;
     const UniValue &feeStructArray = feeStructObj.get_array();
@@ -88,9 +88,9 @@ bool FillNotarySigFromEndpoint(const std::vector<CAssetOut> & voutAssets) {
             // get endpoint from JSON
             UniValue publicObj;
             if(publicObj.read(DecodeBase64(theAsset.strPubData))) {
-                const UniValue &notaryObj = find_value(publicObj, "notary");
+                const UniValue &notaryObj = find_value(publicObj, "n");
                 if(notaryObj.isObject()) {
-                    const UniValue &endpointObj = find_value(notaryObj.get_obj(), "endpoint");
+                    const UniValue &endpointObj = find_value(notaryObj.get_obj(), "e");
                     if(endpointObj.isStr()) {
                         // get signature from end-point
                         //vecOut.vchNotarySig = vchSig;
@@ -402,17 +402,17 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
-        {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
+        {"n", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
-                {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
-                {"instant_transfers", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
-                {"require_xpub", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
+                {"e", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
+                {"it", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
+                {"rx", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
             }
         },
-        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
+        {"af", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
             {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                {"a", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fs", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
                         {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
@@ -498,13 +498,13 @@ UniValue assetnew(const JSONRPCRequest& request) {
     CAsset newAsset;
 
     UniValue publicData(UniValue::VOBJ);
-    publicData.pushKV("description", strPubData);
-    UniValue notaryStruct = find_value(params[9].get_obj(), "notary");
+    publicData.pushKV("d", strPubData);
+    UniValue notaryStruct = find_value(params[9].get_obj(), "n");
     if(notaryStruct.isObject())
-        publicData.pushKV("notary", params[9]);
-    UniValue feesStructArr = find_value(params[10].get_obj(), "fee_struct");
+        publicData.pushKV("n", params[9]);
+    UniValue feesStructArr = find_value(params[10].get_obj(), "fs");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
-        publicData.pushKV("aux_fees", params[10]);
+        publicData.pushKV("af", params[10]);
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
     newAsset.strSymbol = EncodeBase64(strSymbol);
@@ -605,17 +605,17 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
-        {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
+        {"n", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
-                {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
-                {"instant_transfers", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
-                {"require_xpub", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
+                {"e", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
+                {"it", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
+                {"rx", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
             }
         },
-        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
+        {"af", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
             {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                {"a", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fs", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
                         {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
@@ -739,17 +739,17 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
             {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
-            {"notary", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
+            {"n", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
                 {
-                    {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
-                    {"instant_transfers", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
-                    {"require_xpub", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
+                    {"e", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
+                    {"it", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Enforced double-spend prevention on Notary for Instant Transfers"},
+                    {"rx", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires master XPUB key + path for sender address monitoring and KYC/AML"},  
                 }
             },
-            {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
+            {"af", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
-                    {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                    {"a", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                    {"fs", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                         {
                             {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                             {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
@@ -805,13 +805,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     uint64_t nBalance = 0;
     nBalance = params3.get_uint64();
     UniValue publicData(UniValue::VOBJ);
-    publicData.pushKV("description", strPubData);
-    UniValue notaryStruct = find_value(params[6].get_obj(), "notary");
+    publicData.pushKV("d", strPubData);
+    UniValue notaryStruct = find_value(params[6].get_obj(), "n");
     if(notaryStruct.isObject())
-        publicData.pushKV("notary", params[6]);
-    UniValue feesStructArr = find_value(params[7].get_obj(), "fee_struct");
+        publicData.pushKV("n", params[6]);
+    UniValue feesStructArr = find_value(params[7].get_obj(), "fs");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
-        publicData.pushKV("aux_fees", params[7]);
+        publicData.pushKV("af", params[7]);
     std::string strWitness = params[5].get_str();
     CKeyID notaryKeyID;
     if(!strWitness.empty()) {
@@ -1146,10 +1146,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             // get endpoint from JSON
             UniValue publicObj;
             if(publicObj.read(DecodeBase64(theAsset.strPubData))) {
-                const UniValue &notaryObj = find_value(publicObj, "notary");
+                const UniValue &notaryObj = find_value(publicObj, "n");
                 if(notaryObj.isObject()) {
                     notaryRBF = true;
-                    const UniValue &itObj = find_value(notaryObj.get_obj(), "instant_transfers");
+                    const UniValue &itObj = find_value(notaryObj.get_obj(), "it");
                     if(itObj.isBool()) {
                         // may toggle to false if any asset being sent does not enable instant transfers
                         notaryRBF = notaryRBF && itObj.get_bool();
@@ -1903,9 +1903,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","notary","aux_fees"}},
-    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","notary","aux_fees"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","notary_address","notary","aux_fees"}},
+    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","n","af"}},
+    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","n","af"}},
+    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","notary_address","n","af"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
