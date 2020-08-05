@@ -3864,21 +3864,24 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
             EthereumTxRoot txRootDB;
             CMintSyscoin mintSyscoin(*txRef);
+            bool readTxRootFail;
             if(!mintSyscoin.IsNull()) {
                 const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && fLoaded && fGethSynced;
                 {
                     LOCK(cs_setethstatus);
-                    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-                    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-                    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-                        if(ethTxRootShouldExist) {
-                            // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
-                            UninterruptibleSleep(std::chrono::milliseconds{1000});
-                            // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
-                            return state.Error(strprintf("%s: %s - %d", __func__, "mint-txroot-missing", mintSyscoin.nBlockNumber));
-                        }
+                    readTxRootFail = !pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB);
+                }
+                // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
+                // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
+                if(readTxRootFail){
+                    if(ethTxRootShouldExist) {
+                        // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
+                        UninterruptibleSleep(std::chrono::milliseconds{1000});
+                        // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
+                        return state.Error(strprintf("%s: %s - %d", __func__, "mint-txroot-missing", mintSyscoin.nBlockNumber));
                     }
-                }  
+                }
+                
                 if(ethTxRootShouldExist) {
                     const int64_t &nTime = pindexPrev->GetMedianTimePast();
                     // time must be between 2.5 week and 1 hour old to be accepted
