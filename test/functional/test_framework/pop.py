@@ -6,16 +6,14 @@
 """Test framework addition to include VeriBlock PoP functions"""
 import struct
 import time
-from typing import List, Optional
+from typing import Optional
 
 from .messages import ser_uint256, hash256, uint256_from_str
+from .pop_const import KEYSTONE_INTERVAL, NETWORK_ID
 from .script import hash160, CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
 from .test_node import TestNode
 from .util import hex_str_to_bytes
 
-KEYSTONE_INTERVAL = 5
-POP_PAYOUT_DELAY = 50
-NETWORK_ID = 0x3ae6ca
 
 
 def isKeystone(height):

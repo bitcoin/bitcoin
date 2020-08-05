@@ -9,12 +9,10 @@
 Feature POP popdata max size test
 
 """
-
-from test_framework.pop import POP_PAYOUT_DELAY, mine_vbk_blocks, endorse_block
+from test_framework.pop import mine_vbk_blocks, endorse_block
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
-    sync_mempools,
 )
 
 class PopPayouts(BitcoinTestFramework):

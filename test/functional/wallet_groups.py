@@ -12,7 +12,7 @@ from test_framework.util import (
     assert_approx,
     assert_equal,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 class WalletGroupTest(BitcoinTestFramework):
     def set_test_params(self):

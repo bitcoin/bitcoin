@@ -10,7 +10,7 @@ from test_framework.messages import msg_tx, CTransaction, FromHex
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 
 class P2PBlocksOnly(BitcoinTestFramework):

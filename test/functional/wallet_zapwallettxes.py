@@ -22,7 +22,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     wait_until,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 class ZapWalletTXesTest (BitcoinTestFramework):
     def set_test_params(self):

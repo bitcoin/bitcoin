@@ -34,6 +34,7 @@ class PopFr(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 4
         self.extra_args = [["-txindex"], ["-txindex"], ["-txindex"], ["-txindex"]]
+        self.extra_args = [x + ['-debug=cmpctblock'] for x in self.extra_args]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -61,7 +62,7 @@ class PopFr(BitcoinTestFramework):
         # all nodes start with 103 blocks
         self.nodes[0].generate(nblocks=103)
         self.log.info("node0 mined 103 blocks")
-        self.sync_blocks([self.nodes[0], self.nodes[1], self.nodes[2]])
+        self.sync_blocks([self.nodes[0], self.nodes[1], self.nodes[2]], timeout=20)
         assert self.get_best_block(self.nodes[0])['height'] == 103
         assert self.get_best_block(self.nodes[1])['height'] == 103
         assert self.get_best_block(self.nodes[2])['height'] == 103

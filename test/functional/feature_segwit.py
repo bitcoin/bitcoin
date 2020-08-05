@@ -27,7 +27,7 @@ from test_framework.util import (
     hex_str_to_bytes,
     try_rpc,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 NODE_0 = 0
 NODE_2 = 2

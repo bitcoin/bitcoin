@@ -17,12 +17,11 @@ Expected balance is POW_PAYOUT * 10 + pop payout. (node0 has only 10 mature coin
 
 """
 
-from test_framework.payout import POW_PAYOUT
-from test_framework.pop import POP_PAYOUT_DELAY, endorse_block
+from test_framework.pop import endorse_block
+from test_framework.pop_const import POW_PAYOUT, POP_PAYOUT_DELAY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
-    sync_mempools,
 )
 
 

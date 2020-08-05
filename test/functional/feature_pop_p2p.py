@@ -4,22 +4,18 @@
 # https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.pop import POP_PAYOUT_DELAY, endorse_block
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    connect_nodes,
-    sync_mempools,
-    p2p_port, assert_equal,
-)
+import time
 
 from test_framework.mininode import (
     P2PInterface,
-    msg_offer_atv,
     msg_get_atv,
-    msg_atv,
+)
+from test_framework.pop import endorse_block
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    connect_nodes,
 )
 
-import time
 
 class BaseNode(P2PInterface):
     def __init__(self, log = None):

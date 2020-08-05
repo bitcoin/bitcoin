@@ -18,7 +18,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 FEATURE_LATEST = 169900
 
