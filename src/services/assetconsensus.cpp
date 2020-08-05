@@ -595,7 +595,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             } 
             if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning && nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
-            }         
+            }
+            // activate not allowed to use RBF because GUID is deterministic of first input which cannot be reused       
+            if (SignalsOptInRBF(tx)) { 
+                return FormatSyscoinErrorMessage(state, "asset-activate-using-rbf", bSanityCheck);
+            }
             // starting supply is the supplied balance upon init
             storedAssetRef.nTotalSupply = storedAssetRef.nBalance;
             // clear vouts as we don't need to store them once we have processed.
