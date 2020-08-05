@@ -601,7 +601,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("d", strPubData);
-    UniValue notaryStruct = find_value(params[9].get_obj(), "n");
+    UniValue notaryStruct = find_value(params[9].get_obj(), "e");
     if(notaryStruct.isObject())
         publicData.pushKV("n", params[9]);
     UniValue feesStructArr = find_value(params[10].get_obj(), "fs");
@@ -910,7 +910,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     nBalance = params3.get_uint64();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("d", strPubData);
-    UniValue notaryStruct = find_value(params[6].get_obj(), "n");
+    UniValue notaryStruct = find_value(params[6].get_obj(), "e");
     if(notaryStruct.isObject())
         publicData.pushKV("n", params[6]);
     UniValue feesStructArr = find_value(params[7].get_obj(), "fs");
@@ -1358,6 +1358,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
+    } else {
+        UniValue res(UniValue::VOBJ);
+        res.__pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+        return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
@@ -1476,6 +1480,10 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
+    } else {
+        UniValue res(UniValue::VOBJ);
+        res.__pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+        return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
@@ -1615,6 +1623,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
+    } else {
+        UniValue res(UniValue::VOBJ);
+        res.__pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+        return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx, request.context);
