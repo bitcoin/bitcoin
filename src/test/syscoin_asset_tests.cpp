@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(generate_auxfees)
     boundsArr5.push_back("2500000");
     boundsArr5.push_back("0");
     feestructArr.push_back(boundsArr5);
-    auxfeesObj.pushKV("fee_struct", feestructArr);
-    pubDataObj.pushKV("aux_fees", auxfeesObj);
+    auxfeesObj.pushKV("fs", feestructArr);
+    pubDataObj.pushKV("af", auxfeesObj);
     CWitnessAddress address;
     const std::string& pubDataStr = pubDataObj.write();
  
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(generate_auxfees1)
     boundsArr3.push_back("2500");
     boundsArr3.push_back("0.0007");
     feestructArr.push_back(boundsArr3);
-    auxfeesObj.pushKV("fee_struct", feestructArr);
-    pubDataObj.pushKV("aux_fees", auxfeesObj);
+    auxfeesObj.pushKV("fs", feestructArr);
+    pubDataObj.pushKV("af", auxfeesObj);
     CWitnessAddress address;
     const std::string& pubDataStr = pubDataObj.write();
  
