@@ -77,8 +77,10 @@ bool CAsset::UnserializeFromTx(const CTransaction &tx) {
 
 
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
-    const arith_uint256 &txidArith = UintToArith256(outPoint.hash);
-    return txidArith.GetLow32();
+    CHashWriter hasher(SER_DISK, CLIENT_VERSION);
+    hasher << outPoint;
+    const arith_uint256 &txidArith = UintToArith256(hasher.GetHash());
+    return dsOutPoint.GetLow32();
 }
 
 void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
