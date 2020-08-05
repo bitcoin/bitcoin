@@ -80,7 +80,7 @@ uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     CHashWriter hasher(SER_DISK, CLIENT_VERSION);
     hasher << outPoint;
     const arith_uint256 &txidArith = UintToArith256(hasher.GetHash());
-    return dsOutPoint.GetLow32();
+    return txidArith.GetLow32();
 }
 
 void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
