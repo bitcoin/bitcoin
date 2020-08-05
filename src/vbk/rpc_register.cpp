@@ -487,7 +487,7 @@ bool GetPayload(const typename T::id_t& pid, T& out, const Consensus::Params& co
         auto* index = alttree.getBlockIndex(p);
         if (index == nullptr) continue;
 
-        const auto& pids = index->getPayloadIds<T>();
+        const auto& pids = index->template getPayloadIds<T>();
         auto it = std::find(pids.begin(), pids.end(), pid);
         if (it == pids.end()) continue;
 
