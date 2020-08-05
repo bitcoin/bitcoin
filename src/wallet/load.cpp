@@ -68,10 +68,14 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
 bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
     try {
-        for (const std::string& walletFile : wallet_files) {
+        for (const std::string& name : wallet_files) {
+            DatabaseOptions options;
+            DatabaseStatus status;
+            options.verify = false; // No need to verify, assuming verified earlier in VerifyWallets()
             bilingual_str error;
             std::vector<bilingual_str> warnings;
-            std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, walletFile, error, warnings);
+            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
+            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(chain, name, std::move(database), options.create_flags, error, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
                 chain.initError(error);

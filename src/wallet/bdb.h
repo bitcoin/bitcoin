@@ -144,6 +144,9 @@ public:
     /** Verifies the environment and database file */
     bool Verify(bilingual_str& error);
 
+    /** Return path to main database filename */
+    std::string Filename() override { return (env->Directory() / strFile).string(); }
+
     /**
      * Pointer to shared database environment.
      *
