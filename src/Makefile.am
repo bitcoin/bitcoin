@@ -773,7 +773,7 @@ syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 
 # syscoin-tx binary #
 syscoin_tx_SOURCES = syscoin-tx.cpp
-syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCURL_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -791,8 +791,7 @@ syscoin_tx_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBETHEREUM) \
-  $(LIBCURL)
+  $(LIBETHEREUM)
 
 syscoin_tx_LDADD += $(BOOST_LIBS) $(BLS_LIBS)
   
