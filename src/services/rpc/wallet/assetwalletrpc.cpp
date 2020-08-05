@@ -554,6 +554,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     bilingual_str error;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    // assetnew must not be replaceable
+    coin_control.m_signal_bip125_rbf = false;
     bool lockUnspents = false;   
     mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
