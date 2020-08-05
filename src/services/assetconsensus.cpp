@@ -553,7 +553,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             }
             mapAsset->second = std::move(dbAsset);      
         }
-    } if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
         return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
     }
     CAsset &storedAssetRef = mapAsset->second; 
