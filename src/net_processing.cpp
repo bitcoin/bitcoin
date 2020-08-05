@@ -212,14 +212,15 @@ struct CNodeState {
     //! String name of this peer (debugging/logging purposes).
     const std::string name;
     //! The best known block we know this peer has announced.
-    const CBlockIndex *pindexBestKnownBlock;
+    const CBlockIndex *pindexBestKnownBlock = nullptr;
     //! The block this peer thinks is current tip.
-    const CBlockIndex *pindexLastAnnouncedBlock;
+    const CBlockIndex *pindexLastAnnouncedBlock = nullptr;
     //! The hash of the last unknown block this peer has announced.
     uint256 hashLastUnknownBlock;
     //! The last full block we both have.
-    const CBlockIndex *pindexLastCommonBlock;
-    const CBlockIndex *pindexLastCommonAnnouncedBlock;
+    const CBlockIndex *pindexLastCommonBlock = nullptr;
+    //! The last full block we both have from announced chain.
+    const CBlockIndex *pindexLastCommonAnnouncedBlock = nullptr;
     //! The best header we have sent our peer.
     const CBlockIndex *pindexBestHeaderSent;
     //! Length of current-streak of unconnecting headers announcements
@@ -2812,7 +2813,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 status = tempBlock.FillBlock(*pblock, dummy);
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
-                    if(pblock->nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) {
+                    if(pblock && pblock->nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) {
                         assert(!pblock->popData.empty() && "POP bit is set and POP data is empty");
                     }
                 }
@@ -4074,7 +4075,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 // are they in the same chain?
                 if (state.pindexBestKnownBlock->GetAncestor(state.pindexLastAnnouncedBlock->nHeight) != state.pindexLastAnnouncedBlock) {
                     // no, additionally sync 'announced' chain
-                    LogPrint(BCLog::NET, "Requesting announced best chain %d:%s peer=%d\n", state.pindexLastAnnouncedBlock->GetBlockHash().ToString(),
+                    LogPrint(BCLog::NET, "Requesting announced best chain %d:%s from peer=%d\n", state.pindexLastAnnouncedBlock->GetBlockHash().ToString(),
                         state.pindexLastAnnouncedBlock->nHeight, pto->GetId());
                     FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams, state.pindexLastAnnouncedBlock, &state.pindexLastCommonAnnouncedBlock);
                 }
