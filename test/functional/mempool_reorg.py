@@ -13,7 +13,7 @@ that spend (directly or indirectly) coinbase transactions.
 from test_framework.blocktools import create_raw_transaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 
 class MempoolCoinbaseTest(BitcoinTestFramework):

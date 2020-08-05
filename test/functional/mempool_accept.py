@@ -31,7 +31,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     hex_str_to_bytes,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 
 class MempoolAcceptanceTest(BitcoinTestFramework):

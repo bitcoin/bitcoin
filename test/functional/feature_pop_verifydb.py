@@ -59,17 +59,17 @@ class PoPVerifyDB(BitcoinTestFramework):
         self.sync_all(self.nodes, timeout=20)
         assert_pop_state_equal(self.nodes)
 
-        for checkblocks in range(10):
-            # 0, 1, 2, 3, 4
-            for checklevel in range(5):
-                self.log.info("checkblocks={} checklevel={}".format(checkblocks, checklevel))
-                self.restart_node(0, extra_args=[
-                    "-checkblocks={}".format(checkblocks),
-                    "-checklevel={}".format(checklevel)
-                ])
-                self.sync_all(self.nodes, timeout=60)
-                assert_pop_state_equal(self.nodes)
-                self.log.info("success")
+        checkblocks = 0  # all blocks
+        # 0, 1, 2, 3, 4
+        for checklevel in range(5):
+            self.log.info("checkblocks={} checklevel={}".format(checkblocks, checklevel))
+            self.restart_node(0, extra_args=[
+                "-checkblocks={}".format(checkblocks),
+                "-checklevel={}".format(checklevel)
+            ])
+            self.sync_all(self.nodes, timeout=60)
+            assert_pop_state_equal(self.nodes)
+            self.log.info("success")
 
 
 if __name__ == '__main__':

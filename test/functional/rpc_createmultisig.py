@@ -13,7 +13,7 @@ from test_framework.util import (
     assert_equal,
 )
 from test_framework.key import ECPubKey
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 import binascii
 import decimal

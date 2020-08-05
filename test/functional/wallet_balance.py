@@ -16,7 +16,7 @@ from test_framework.util import (
     connect_nodes,
     sync_blocks,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 
 def create_transactions(node, address, amt, fees):

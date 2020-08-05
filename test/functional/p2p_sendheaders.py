@@ -116,6 +116,7 @@ class BaseNode(P2PInterface):
         super().__init__()
 
         self.block_announced = False
+        self.best_block = None
         self.last_blockhash_announced = None
         self.recent_headers_announced = []
 

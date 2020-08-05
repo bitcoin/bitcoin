@@ -44,7 +44,7 @@ from .script import (
 from .test_node import TestNode
 from .util import assert_equal
 from io import BytesIO
-from .payout import POW_PAYOUT
+from .pop_const import POW_PAYOUT
 
 MAX_BLOCK_SIGOPS = 20000
 

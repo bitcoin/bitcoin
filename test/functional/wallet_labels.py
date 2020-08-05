@@ -19,7 +19,7 @@ from test_framework.wallet_util import (
     labels_value,
     test_address,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 class WalletLabelsTest(BitcoinTestFramework):
     def set_test_params(self):

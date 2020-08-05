@@ -18,7 +18,7 @@ from test_framework.util import (
     count_bytes,
     find_vout_for_address,
 )
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 
 def get_unspent(listunspent, amount):

@@ -5,19 +5,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    connect_nodes,
-    sync_mempools,
-)
-
-from test_framework.pop import POP_PAYOUT_DELAY, mine_vbk_blocks, endorse_block
+from test_framework.pop import mine_vbk_blocks
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
     disconnect_nodes,
-    sync_mempools,
     assert_equal,
 )
 

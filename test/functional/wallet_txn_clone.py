@@ -14,7 +14,7 @@ from test_framework.util import (
     disconnect_nodes,
 )
 from test_framework.messages import CTransaction, COIN
-from test_framework.payout import POW_PAYOUT
+from test_framework.pop_const import POW_PAYOUT
 
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):

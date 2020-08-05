@@ -29,6 +29,7 @@ import socket
 import struct
 import time
 
+from test_framework.pop_const import POP_BLOCK_VERSION_BIT
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
 
@@ -709,7 +710,7 @@ class PrefilledTransaction:
 # This is what we send on the wire, in a cmpctblock message.
 class P2PHeaderAndShortIDs:
     __slots__ = ("header", "nonce", "prefilled_txn", "prefilled_txn_length",
-                 "shortids", "shortids_length")
+                 "shortids", "shortids_length", "popdata", )
 
     def __init__(self):
         self.header = CBlockHeader()
@@ -718,6 +719,7 @@ class P2PHeaderAndShortIDs:
         self.shortids = []
         self.prefilled_txn_length = 0
         self.prefilled_txn = []
+        self.popdata = None
 
     def deserialize(self, f):
         self.header.deserialize(f)
@@ -727,6 +729,8 @@ class P2PHeaderAndShortIDs:
             # shortids are defined to be 6 bytes in the spec, so append
             # two zero bytes and read it in as an 8-byte number
             self.shortids.append(struct.unpack("<Q", f.read(6) + b'\x00\x00')[0])
+        if self.header.nVersion & POP_BLOCK_VERSION_BIT:
+            assert False, "Deserialization of PopData is not implemented"
         self.prefilled_txn = deser_vector(f, PrefilledTransaction)
         self.prefilled_txn_length = len(self.prefilled_txn)
 
@@ -739,6 +743,10 @@ class P2PHeaderAndShortIDs:
         for x in self.shortids:
             # We only want the first 6 bytes
             r += struct.pack("<Q", x)[0:6]
+
+        if self.header.nVersion & POP_BLOCK_VERSION_BIT:
+            assert False, "Serialization of PopData is not implemented"
+
         if with_witness:
             r += ser_vector(self.prefilled_txn, "serialize_with_witness")
         else:
@@ -1185,41 +1193,54 @@ class msg_getaddr:
 
 
 class msg_ping:
-    __slots__ = ("nonce",)
+    __slots__ = ("nonce", "tip", )
     command = b"ping"
 
-    def __init__(self, nonce=0):
+    def __init__(self, nonce=0, tip=0):
         self.nonce = nonce
+        self.tip = tip
 
     def deserialize(self, f):
         self.nonce = struct.unpack("<Q", f.read(8))[0]
+        try:
+            self.tip = deser_uint256(f)
+        except:
+            self.tip = 0
+
 
     def serialize(self):
         r = b""
         r += struct.pack("<Q", self.nonce)
+        r += ser_uint256(self.tip)
         return r
 
     def __repr__(self):
-        return "msg_ping(nonce=%08x)" % self.nonce
+        return "msg_ping(nonce=%08x, tip=%s)" % (self.nonce, self.tip)
 
 
 class msg_pong:
-    __slots__ = ("nonce",)
+    __slots__ = ("nonce", "tip", )
     command = b"pong"
 
-    def __init__(self, nonce=0):
+    def __init__(self, nonce=0, tip=0):
         self.nonce = nonce
+        self.tip = tip
 
     def deserialize(self, f):
         self.nonce = struct.unpack("<Q", f.read(8))[0]
+        try:
+            self.tip = deser_uint256(f)
+        except:
+            self.tip = 0
 
     def serialize(self):
         r = b""
         r += struct.pack("<Q", self.nonce)
+        r += ser_uint256(self.tip)
         return r
 
     def __repr__(self):
-        return "msg_pong(nonce=%08x)" % self.nonce
+        return "msg_pong(nonce=%08x, tip=%s)" % (self.nonce, self.tip)
 
 
 class msg_mempool:
