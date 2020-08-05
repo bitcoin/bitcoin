@@ -57,7 +57,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "The Times 24/Map/2019 Theresa May abandons plan for vote on Brexit bill";
+    const char* pszTimestamp = "The Times 23/May/2019 Theresa May abandons plan for vote on Brexit bill";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -78,8 +78,8 @@ public:
         consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 60 * 60; // 1 hour
         consensus.nPowTargetSpacing = 1 * 60; // 1 min
-        consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = true;
+        consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 57; // 95% of 2016
         consensus.nMinerConfirmationWindow = 60; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -146,8 +146,8 @@ public:
         //std::cout << "mainnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
 #endif
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0ccc07b781737bf3c901307dd92ed0548215b745b38daee5fdbb4f042dc4885c"));
-        assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));        
+        assert(consensus.hashGenesisBlock == uint256S("01a92cfc6a9949ae39ae5c58918138414beedad0e5a4f921612bc182bef280d2"));
+        assert(genesis.hashMerkleRoot == uint256S("0873377ff3078f39a4f1470e7e15d1234c4be9980b41724e714fa953ba04824b"));        
 	base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
@@ -159,7 +159,6 @@ public:
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
         // Todo: Remove
-        vFixedSeeds.clear();
         vSeeds.clear();
       
         fDefaultConsistencyChecks = false;
@@ -261,8 +260,8 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("83432832323855c30a104d61467ecb339ffa988cb8abe420c67acb95667bdd42"));
-        assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
+        assert(consensus.hashGenesisBlock == uint256S("a87dba5cd7a4aac4d6578cd9f7769b03ae355b8a1addd580a5267f61809060ff"));
+        assert(genesis.hashMerkleRoot == uint256S("0873377ff3078f39a4f1470e7e15d1234c4be9980b41724e714fa953ba04824b"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -383,8 +382,8 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("db20aafd0c626db7cf83b4b3d9ba0a024a862fdff203074e06aaa64e31619461"));
-        assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
+        assert(consensus.hashGenesisBlock == uint256S("18ee3423ef59e53f04050afdac265374a25a501cef29c8178326dd3353b1d315"));
+        assert(genesis.hashMerkleRoot == uint256S("0873377ff3078f39a4f1470e7e15d1234c4be9980b41724e714fa953ba04824b"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
