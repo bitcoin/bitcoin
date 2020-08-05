@@ -72,11 +72,8 @@ public:
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags);
-        READWRITE(obj.prevNotaryKeyID, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags);
-        READWRITE(Using<AmountCompression>(obj.nBalance));
-        READWRITE(Using<AmountCompression>(obj.nTotalSupply));
-        READWRITE(Using<AmountCompression>(obj.nMaxSupply));
+        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevNotaryKeyID, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
+        Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
