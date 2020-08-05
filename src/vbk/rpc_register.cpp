@@ -467,29 +467,46 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
 namespace {
 
 template <typename T>
-bool GetPayload(const typename T::id_t& hash, T& out, const Consensus::Params& consensusParams, uint256& hashBlock, const CBlockIndex* const block_index)
+bool GetPayload(const typename T::id_t& pid, T& out, const Consensus::Params& consensusParams, CBlockIndex** block_index)
 {
     LOCK(cs_main);
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
 
-    if (!block_index) {
-        auto& mp = pop.getMemPool();
-        auto* pl = mp.get<T>(hash);
-        if (pl) {
-            out = *pl;
-            return true;
+    auto& mp = pop.getMemPool();
+    auto* pl = mp.get<T>(pid);
+    if (pl) {
+        out = *pl;
+        return true;
+    }
+
+    // search in the alttree storage
+    const auto& alttree = pop.getAltTree();
+    const auto& payloads = alttree.getStorage().getContainingAltBlocks(pid.asVector());
+
+    for (const auto& p : payloads) {
+        auto* index = alttree.getBlockIndex(p);
+        if (index == nullptr) continue;
+
+        const auto& pids = index->getPayloadIds<T>();
+        auto it = std::find(pids.begin(), pids.end(), pid);
+        if (it == pids.end()) continue;
+
+        auto* blockindexTmp = LookupBlockIndex(uint256(index->getHash()));
+        if (!blockindexTmp) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
+        }
+        *block_index = blockindexTmp;
+
+        CBlock block;
+        if (!ReadBlockFromDisk(block, blockindexTmp, consensusParams)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found on disk");
         }
 
-        // TODO: when payload repository is implemented, search here for payload by ID
-        return false;
-    } else {
-        CBlock block;
-        if (ReadBlockFromDisk(block, block_index, consensusParams)) {
-            if (VeriBlock::FindPayloadInBlock<T>(block, hash, out)) {
-                hashBlock = block_index->GetBlockHash();
-                return true;
-            }
+        if (!VeriBlock::FindPayloadInBlock<T>(block, pid, out)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Payload not found in the block data");
         }
+
+        return true;
     }
 
     return false;
@@ -504,17 +521,11 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
         cmdname,
         "\nReturn the raw " + name + " data.\n"
 
-        "\nBy default this function only works for mempool " + name + ". When called with a blockhash\n"
-        "argument, " + cmdname + " will return the " +name+ " if the specified block is available and\n"
-        "the " + name + " is found in that block. When called without a blockhash argument, " + cmdname + "\n"
-        "will return the " + name + " if it is in the POP mempool, or in local payload repository.\n"
-
         "\nIf verbose is 'true', returns an Object with information about 'id'.\n"
         "If verbose is 'false' or omitted, returns a string that is serialized, hex-encoded data for 'id'.\n",
         {
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The " + name + " id"},
             {"verbose", RPCArg::Type::BOOL, /* default */ "false", "If false, return a string, otherwise return a json object"},
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "The block in which to look for the " + name + ""},
         },
         {
             RPCResult{"if verbose is not set or set to false",
@@ -524,23 +535,18 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
         RPCExamples{
             HelpExampleCli(cmdname, "\"id\"") +
             HelpExampleCli(cmdname, "\"id\" true") +
-            HelpExampleRpc(cmdname, "\"id\", true") +
-            HelpExampleCli(cmdname, "\"id\" false \"myblockhash\"") +
-            HelpExampleCli(cmdname, "\"id\" true \"myblockhash\"")},
+            HelpExampleRpc(cmdname, "\"id\", true")},
     }
         .Check(request);
     // clang-format on
 
-    bool in_active_chain = true;
     using id_t = typename T::id_t;
-    id_t hash;
+    id_t pid;
     try {
-        hash = id_t::fromHex(request.params[0].get_str());
+        pid = id_t::fromHex(request.params[0].get_str());
     } catch (const std::exception& e) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Bad hash: %s", e.what()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Bad id: %s", e.what()));
     }
-
-    CBlockIndex* blockindex = nullptr;
 
     // Accept either a bool (true) or a num (>=1) to indicate verbose output.
     bool fVerbose = false;
@@ -548,20 +554,9 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
         fVerbose = request.params[1].isNum() ? (request.params[1].get_int() != 0) : request.params[1].get_bool();
     }
 
-    if (!request.params[2].isNull()) {
-        LOCK(cs_main);
-
-        uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
-        blockindex = LookupBlockIndex(blockhash);
-        if (!blockindex) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
-        }
-        in_active_chain = ::ChainActive().Contains(blockindex);
-    }
-
     T out;
-    uint256 hash_block;
-    if (!GetPayload<T>(hash, out, Params().GetConsensus(), hash_block, blockindex)) {
+    CBlockIndex* blockindex = nullptr;
+    if (!GetPayload<T>(pid, out, Params().GetConsensus(), &blockindex)) {
         std::string errmsg;
         if (blockindex) {
             if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
@@ -580,6 +575,7 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
 
     UniValue result(UniValue::VOBJ);
     if (blockindex) {
+        bool in_active_chain = ::ChainActive().Contains(blockindex);
         result.pushKV("in_active_chain", in_active_chain);
         result.pushKV("blockheight", blockindex->nHeight);
         if (::ChainActive().Contains(blockindex)) {
@@ -588,11 +584,10 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
         } else {
             result.pushKV("confirmations", 0);
         }
+        result.pushKV("blockhash", blockindex->GetBlockHash().GetHex());
     }
 
     result.pushKV(name, altintegration::ToJSON<UniValue>(out));
-    result.pushKV("blockhash", hash_block.GetHex());
-
     return result;
 }
 
