@@ -542,17 +542,19 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     if (mapAssetNotFound) {
         if (!GetAsset(nAsset, dbAsset)) {
             if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                return FormatSyscoinErrorMessage(state, "asset-non-existing-asset", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-non-existing", bSanityCheck);
             }
             else
                 mapAsset->second = std::move(theAsset);      
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                return FormatSyscoinErrorMessage(state, "asset-already-existing-asset", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
             }
             mapAsset->second = std::move(dbAsset);      
         }
+    } if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+        return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
     }
     CAsset &storedAssetRef = mapAsset->second; 
     if (storedAssetRef.strPubData.size() > MAX_VALUE_LENGTH) {
