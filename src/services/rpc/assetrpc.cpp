@@ -310,7 +310,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
     UniValue oAsset(UniValue::VOBJ);
 
     CAsset txPos;
-    if (passetdb == nullptr || !passetdb->ReadAsset(nAsset, txPos))
+    if (!passetdb || !passetdb->ReadAsset(nAsset, txPos))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from asset DB");
     
     if(!BuildAssetJson(txPos, nAsset, oAsset))

@@ -508,7 +508,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
 
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck) {
-    if (passetdb == nullptr)
+    if (!passetdb)
         return false;
     if (!bSanityCheck)
         LogPrint(BCLog::SYS, "*** ASSET %d %s %s\n", nHeight,
