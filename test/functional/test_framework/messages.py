@@ -1193,54 +1193,41 @@ class msg_getaddr:
 
 
 class msg_ping:
-    __slots__ = ("nonce", "tip", )
+    __slots__ = ("nonce", )
     command = b"ping"
 
-    def __init__(self, nonce=0, tip=0):
+    def __init__(self, nonce=0):
         self.nonce = nonce
-        self.tip = tip
 
     def deserialize(self, f):
         self.nonce = struct.unpack("<Q", f.read(8))[0]
-        try:
-            self.tip = deser_uint256(f)
-        except:
-            self.tip = 0
-
 
     def serialize(self):
         r = b""
         r += struct.pack("<Q", self.nonce)
-        r += ser_uint256(self.tip)
         return r
 
     def __repr__(self):
-        return "msg_ping(nonce=%08x, tip=%s)" % (self.nonce, self.tip)
+        return "msg_ping(nonce=%08x)" % (self.nonce)
 
 
 class msg_pong:
-    __slots__ = ("nonce", "tip", )
+    __slots__ = ("nonce", )
     command = b"pong"
 
-    def __init__(self, nonce=0, tip=0):
+    def __init__(self, nonce=0):
         self.nonce = nonce
-        self.tip = tip
 
     def deserialize(self, f):
         self.nonce = struct.unpack("<Q", f.read(8))[0]
-        try:
-            self.tip = deser_uint256(f)
-        except:
-            self.tip = 0
 
     def serialize(self):
         r = b""
         r += struct.pack("<Q", self.nonce)
-        r += ser_uint256(self.tip)
         return r
 
     def __repr__(self):
-        return "msg_pong(nonce=%08x, tip=%s)" % (self.nonce, self.tip)
+        return "msg_pong(nonce=%08x)" % self.nonce
 
 
 class msg_mempool:
