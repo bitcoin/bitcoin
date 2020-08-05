@@ -3148,7 +3148,7 @@ void ProcessMessage(
 
         // If this was a new header with more work than our tip, update the
         // peer's last block announcement time
-        if (received_new_header && pindex->nChainWork > ::ChainActive().Tip()->nChainWork) {
+        if (received_new_header && pindex->nChainWork >= ::ChainActive().Tip()->nChainWork) {
             nodestate->m_last_block_announcement = GetTime();
         }
 
@@ -3158,7 +3158,7 @@ void ProcessMessage(
         if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
             return;
 
-        if (pindex->nChainWork <= ::ChainActive().Tip()->nChainWork || // We know something better
+        if (pindex->nChainWork < ::ChainActive().Tip()->nChainWork || // We know something better
                 pindex->nTx != 0) { // We had this block at some point, but pruned it
             if (fAlreadyInFlight) {
                 // We requested this block for some reason, but our mempool will probably be useless

@@ -84,7 +84,8 @@ const std::vector<std::string> CHECKLEVEL_DOC {
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
     // First sort by most total work, ...
-    if (pa->nChainWork > pb->nChainWork) return false;
+    //A fitness test will be sued a a chainwork tie breaker
+    if (pa->nChainWork >= pb->nChainWork) return false;
     if (pa->nChainWork < pb->nChainWork) return true;
 
     // ... then by earliest time received, ...
@@ -2638,27 +2639,77 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     return true;
 }
 
+/** A method of resolving a Nakamoto-based disagreement.
+ *  Even if both chains are the same length, one side will be more fit to succeed. */
+CBlockIndex* GreatestNakamotoFitness(const CBlockIndex* pa, const CBlockIndex* pb) {
+    const CBlockIndex* result;
+    uint256 pa_fitness;
+    uint256 pb_fitness;
+
+    // Beling alive makes you a contender.
+    if(pa == nullptr){
+        result = pb;
+    }else if(pb == nullptr){
+        result = pa;
+    // Nakamoto Consensus forms around the longest chain:
+    }else if(pb->nChainWork > pa->nChainWork){
+        result = pb;
+    }else if(pb->nChainWork < pa->nChainWork){
+        result = pa;
+    }else{
+        // If we are here, then both sides must be equal,
+        // This is a diagreement in the network on which block should be the tip.
+        // Neighboring nodes will get the same block advertisements and will have to go 
+        // through this same fitness selection process
+        LogPrint(BCLog::BENCH, "- Disagreement in the Nakamoto Protocol:");
+
+        // Which side has a better solution for the same work spent?
+        // This is a measurement between two chains that disagree:
+        while (pa != pb && pa && pb) {
+            // We acclumulate the non-zero remainder of the blockhash
+            pa_fitness += pa->GetBlockHash();
+            pb_fitness += pb->GetBlockHash();
+            // Go back to when the disagreement started.
+            pa = pa->pprev;
+            pb = pb->pprev;            
+        }
+
+        // Eventually all chain branches meet at the genesis block.
+        assert(pa == pb);
+
+        // Which ever side has the same number of zero-prefixed solutions, but the larged remainder wins.
+        // This is Floating-Point Nakamoto Consensus
+        if(pa_fitness < pb_fitness){
+            result = pb;
+           // LogPrint(BCLog::BENCH, " Loosing Block's Fitness Score: %s ", pa_fitness.ToString());
+           // LogPrint(BCLog::BENCH, " Winning Block's Fitness Score: %s ", pb_fitness.ToString());
+        }else{
+            result = pa;
+           // LogPrint(BCLog::BENCH, " Loosing Block's Fitness Score: %s ", pb_fitness.ToString());
+         //   LogPrint(BCLog::BENCH, " Winning Block's Fitness Score: %s ", pa_fitness.ToString());
+        }
+        LogPrint(BCLog::BENCH, " Winning Block: %s", result->GetBlockHash().ToString());
+    }
+    return (CBlockIndex*)result;
+}
+
 /**
  * Return the tip of the chain with the most work in it, that isn't
  * known to be invalid (it's however far from certain to be valid).
  */
 CBlockIndex* CChainState::FindMostWorkChain() {
-    do {
-        CBlockIndex *pindexNew = nullptr;
-
-        // Find the best candidate header.
-        {
-            std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexCandidates.rbegin();
-            if (it == setBlockIndexCandidates.rend())
-                return nullptr;
-            pindexNew = *it;
-        }
-
+    CBlockIndex* mostWorkChain = m_chain.Tip();
+    
+    // Find the best candidate chain:
+    std::set<CBlockIndex*, CBlockIndexWorkComparator>::iterator itBlockChain = setBlockIndexCandidates.begin();
+    for(uint32_t currentCanidate = 0; currentCanidate < setBlockIndexCandidates.size(); currentCanidate++){
+        CBlockIndex* pindexNew = *(itBlockChain++);
+        CBlockIndex* pindexTest = pindexNew;
         // Check whether all blocks on the path between the currently active chain and the candidate are valid.
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
-        CBlockIndex *pindexTest = pindexNew;
+        //CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
-        while (pindexTest && !m_chain.Contains(pindexTest)) {
+        while (pindexTest){//} && !m_chain.Contains(pindexTest)) {
             assert(pindexTest->HaveTxsDownloaded() || pindexTest->nHeight == 0);
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
@@ -2669,8 +2720,10 @@ CBlockIndex* CChainState::FindMostWorkChain() {
             bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
             if (fFailedChain || fMissingData) {
                 // Candidate chain is not usable (either invalid or missing data)
-                if (fFailedChain && (pindexBestInvalid == nullptr || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
+                if (fFailedChain && (pindexBestInvalid == nullptr || pindexNew->nChainWork > pindexBestInvalid->nChainWork)){
                     pindexBestInvalid = pindexNew;
+                }
+
                 CBlockIndex *pindexFailed = pindexNew;
                 // Remove the entire chain from the set.
                 while (pindexTest != pindexFailed) {
@@ -2692,9 +2745,15 @@ CBlockIndex* CChainState::FindMostWorkChain() {
             }
             pindexTest = pindexTest->pprev;
         }
-        if (!fInvalidAncestor)
-            return pindexNew;
-    } while(true);
+        // Make sure that this chain is still a contendor, is it still valid?
+        if (!fInvalidAncestor){
+            // Keep track of the leading chain:
+            mostWorkChain = GreatestNakamotoFitness(pindexNew, mostWorkChain);
+        }
+    }
+
+    // We compaired all canidates and this chain is the winner:
+    return mostWorkChain;
 }
 
 /** Delete all entries in setBlockIndexCandidates that are worse than the current tip. */
@@ -3765,7 +3824,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     // process an unrequested block if it's new and has enough work to
     // advance our tip, and isn't too many blocks ahead.
     bool fAlreadyHave = pindex->nStatus & BLOCK_HAVE_DATA;
-    bool fHasMoreOrSameWork = (m_chain.Tip() ? pindex->nChainWork >= m_chain.Tip()->nChainWork : true);
+    bool fHasMoreWork = (m_chain.Tip() ? pindex->nChainWork > m_chain.Tip()->nChainWork : true);
     // Blocks that are too out-of-order needlessly limit the effectiveness of
     // pruning, because pruning will not delete block files that contain any
     // blocks which are too close in height to the tip.  Apply this test
@@ -3783,7 +3842,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     if (fAlreadyHave) return true;
     if (!fRequested) {  // If we didn't ask for it:
         if (pindex->nTx != 0) return true;    // This is a previously-processed block that was pruned
-        if (!fHasMoreOrSameWork) return true; // Don't process less-work chains
+        if (!fHasMoreWork) return true;       // Don't process less-work chains
         if (fTooFarAhead) return true;        // Block height is too high
 
         // Protect against DoS attacks from low-work chains.
@@ -4851,7 +4910,7 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
         assert((pindexFirstNeverProcessed == nullptr) == pindex->HaveTxsDownloaded());
         assert((pindexFirstNotTransactionsValid == nullptr) == pindex->HaveTxsDownloaded());
         assert(pindex->nHeight == nHeight); // nHeight must be consistent.
-        assert(pindex->pprev == nullptr || pindex->nChainWork >= pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
+        assert(pindex->pprev == nullptr || pindex->nChainWork > pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
         assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.
         assert(pindexFirstNotTreeValid == nullptr); // All m_blockman.m_block_index entries must at least be TREE valid
         if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE) assert(pindexFirstNotTreeValid == nullptr); // TREE valid implies all parents are TREE valid

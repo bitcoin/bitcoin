@@ -45,6 +45,20 @@ public:
     friend inline bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
     friend inline bool operator!=(const base_blob& a, const base_blob& b) { return a.Compare(b) != 0; }
     friend inline bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }
+    friend inline bool operator>(const base_blob& a, const base_blob& b) { return a.Compare(b) > 0; }
+    void operator+=(const base_blob& a) {
+        uint64_t cur = 0;
+        uint64_t overflow = 0;
+        const unsigned char * source = a.data();
+        for (int i = WIDTH - 1; i >= 0; i--){
+            cur = m_data[i] + source[i] + overflow;
+            //record the low byte:
+            m_data[i] = cur & 0xff;
+            //keep track of the rest.
+            overflow = (cur >> 8);
+        }
+        //fitness tests will not lead to an int overflow
+    }
 
     std::string GetHex() const;
     void SetHex(const char* psz);
