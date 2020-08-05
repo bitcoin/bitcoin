@@ -2813,35 +2813,37 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
-    size_t nMessageSize = msg.data.size();
-    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n",  SanitizeString(msg.m_type), nMessageSize, pnode->GetId());
+    const size_t message_size{msg.data.size()};
+    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", SanitizeString(msg.m_type), message_size, pnode->GetId());
 
     // make sure we use the appropriate network transport format
-    std::vector<unsigned char> serializedHeader;
-    pnode->m_serializer->prepareForTransport(msg, serializedHeader);
-    size_t nTotalSize = nMessageSize + serializedHeader.size();
+    std::vector<unsigned char> serialized_header;
+    pnode->m_serializer->prepareForTransport(msg, serialized_header);
+    const size_t total_size{message_size + serialized_header.size()};
 
-    size_t nBytesSent = 0;
+    size_t bytes_sent{0};
     {
         LOCK(pnode->cs_vSend);
-        bool optimisticSend(pnode->vSendMsg.empty());
+        bool optimistic_send{pnode->vSendMsg.empty()};
 
         //log total amount of bytes per message type
-        pnode->mapSendBytesPerMsgCmd[msg.m_type] += nTotalSize;
-        pnode->nSendSize += nTotalSize;
+        pnode->mapSendBytesPerMsgCmd[msg.m_type] += total_size;
+        pnode->nSendSize += total_size;
 
-        if (pnode->nSendSize > nSendBufferMaxSize)
+        if (pnode->nSendSize > nSendBufferMaxSize) {
             pnode->fPauseSend = true;
-        pnode->vSendMsg.push_back(std::move(serializedHeader));
-        if (nMessageSize)
+        }
+        pnode->vSendMsg.push_back(std::move(serialized_header));
+        if (message_size) {
             pnode->vSendMsg.push_back(std::move(msg.data));
+        }
 
         // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
+        if (optimistic_send) {
+            bytes_sent = SocketSendData(pnode);
+        }
     }
-    if (nBytesSent)
-        RecordBytesSent(nBytesSent);
+    if (bytes_sent) RecordBytesSent(bytes_sent);
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
