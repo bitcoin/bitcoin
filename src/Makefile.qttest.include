@@ -48,7 +48,7 @@ nodist_qt_test_test_syscoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
 qt_test_test_syscoin_qt_LDADD = $(LIBSYSCOINQT) $(LIBSYSCOIN_SERVER) $(LIBTEST_UTIL)
 if ENABLE_WALLET
-qt_test_test_syscoin_qt_LDADD += $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_WALLET)
+qt_test_test_syscoin_qt_LDADD += $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_WALLET) $(LIBCURL)
 endif
 if ENABLE_ZMQ
 qt_test_test_syscoin_qt_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
