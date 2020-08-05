@@ -4064,7 +4064,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             // VeriBlock: find "blocks to download" in 2 chains: one that has "best chainwork", and second that is reported by peer as best.
             ProcessBlockAvailability(pto->GetId());
             // always download chain with higher chainwork
-            if(state.pindexBestKnownBlock && state.pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork) {
+            if(state.pindexBestKnownBlock) {
                 FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams, state.pindexBestKnownBlock, &state.pindexLastCommonBlock);
             }
             // should we fetch announced chain?
