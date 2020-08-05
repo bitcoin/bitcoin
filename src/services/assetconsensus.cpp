@@ -39,20 +39,23 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     EthereumTxRoot txRootDB;
    
     const bool &ethTxRootShouldExist = !ibd && fLoaded && fGethSynced;
+    bool readTxRootFail;
     {
         LOCK(cs_setethstatus);
-        // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-        // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-        if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)) {
-            if(ethTxRootShouldExist) {
-                // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
-                UninterruptibleSleep(std::chrono::milliseconds{1000});
-                // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
-                // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
-                return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
-            }
+        readTxRootFail = !pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB);
+    }
+    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
+    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
+    if(readTxRootFail) {
+        if(ethTxRootShouldExist) {
+            // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
+            UninterruptibleSleep(std::chrono::milliseconds{1000});
+            // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
+            // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
+            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
         }
-    }  
+    }
+     
     // if we checking this on block we would have already verified this in checkblock
     if(ethTxRootShouldExist){
         // time must be between 2.5 week and 1 hour old to be accepted
