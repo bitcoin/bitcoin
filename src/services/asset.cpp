@@ -89,7 +89,7 @@ void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
 
 bool GetAsset(const uint32_t &nAsset,
         CAsset& txPos) {
-    if (passetdb == nullptr || !passetdb->ReadAsset(nAsset, txPos))
+    if (!passetdb || !passetdb->ReadAsset(nAsset, txPos))
         return false;
     return true;
 }
