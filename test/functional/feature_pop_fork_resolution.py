@@ -21,7 +21,7 @@ node[3] started with 0 blocks.
 After sync has been completed, expect all nodes to be on same height (fork A, block 123)
 """
 
-from test_framework.pop import endorse_block
+from test_framework.pop import endorse_block, create_endorsed_chain
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -143,9 +143,43 @@ class PopFr(BitcoinTestFramework):
         for n in blockchaininfo:
             assert_equal(n['blocks'], n['headers'])
 
-
         self.log.info("all nodes selected fork A as best chain")
         self.log.warning("_shorter_endorsed_chain_wins() succeeded!")
+
+
+    def _4_chains_converge(self):
+        self.log.warning("_4_chains_converge() started!")
+
+        # disconnect all nodes
+        for i in range(self.num_nodes):
+            for node in self.nodes:
+                disconnect_nodes(node, i)
+
+        self.log.info("all nodes disconnected")
+
+        # node[i] creates endorsed chain
+        for i, node in enumerate(self.nodes):
+            self.log.info("node[{}] started to create endorsed chain of 100 blocks".format(i))
+            addr = node.getnewaddress()
+            create_endorsed_chain(node, self.apm, 100, addr)
+
+        # all nodes have different tips at height 223
+        bestblocks = [self.get_best_block(x) for x in self.nodes]
+        for b in bestblocks:
+            assert b['height'] == 223
+        assert len(set([x['hash'] for x in bestblocks])) == len(bestblocks)
+        self.log.info("all nodes have different tips")
+
+        # connect all nodes to each other
+        for i in range(self.num_nodes):
+            for node in self.nodes:
+                connect_nodes(node, i)
+
+        self.log.info("all nodes connected")
+        self.sync_blocks(self.nodes, timeout=60)
+        self.sync_pop_tips(self.nodes, timeout=60)
+        self.log.warning("_4_chains_converge() succeeded!")
+
 
     def run_test(self):
         """Main test logic"""
@@ -156,6 +190,7 @@ class PopFr(BitcoinTestFramework):
         self.apm = MockMiner()
 
         self._shorter_endorsed_chain_wins()
+        self._4_chains_converge()
 
 
 if __name__ == '__main__':
