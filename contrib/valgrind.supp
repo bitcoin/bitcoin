@@ -123,7 +123,6 @@
    Memcheck:Cond
    ...
    fun:_ZN5boost10filesystem6detail11unique_pathERKNS0_4pathEPNS_6system10error_codeE
-   fun:unique_path
 }
 {
    Suppress boost warning
