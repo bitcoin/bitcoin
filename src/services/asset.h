@@ -95,5 +95,5 @@ public:
 };
 static CAsset emptyAsset;
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetIn, const std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut);
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetIn, const std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut);
 #endif // SYSCOIN_SERVICES_ASSET_H

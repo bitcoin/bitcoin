@@ -228,7 +228,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-invalid-contract-manager", bSanityCheck);
     }
     
-    uint64_t outputAmount;
+    CAmount outputAmount;
     uint32_t nAssetEth = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
@@ -250,12 +250,12 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
-    const uint64_t &nTotal = vecVout[0].nValue;
+    const CAmount &nTotal = vecVout[0].nValue;
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
-    if (nTotal > MAX_ASSET) {
-        return FormatSyscoinErrorMessage(state, "mint-value-overflow", bSanityCheck);
+    if (!MoneyRangeAsset(nTotal)) {
+        return FormatSyscoinErrorMessage(state, "mint-value-outofrange", bSanityCheck);
     }
     if(!fJustCheck) {
         if(!bSanityCheck && nHeight > 0) {   
@@ -367,9 +367,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
             }
-            const uint64_t &nAmountAsset = vecVout[0].nValue;
+            const CAmount &nAmountAsset = vecVout[0].nValue;
             // the burn amount in opreturn (SYS) should match the first asset output (SYSX)
-            if(((CAmount)nAmountAsset) != nBurnAmount) {
+            if(nAmountAsset) != nBurnAmount) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-mismatch-amount", bSanityCheck);
             }
             if(nAsset != Params().GetConsensus().nSYSXAsset) {
@@ -380,13 +380,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
         {
-            const uint64_t &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
-            if (nBurnAmount == 0) {
+            const CAmount &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
+            if (nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
             }
             if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
                 // the burn of asset in opreturn should match the output value of index 0 (sys)
-                if(((CAmount)nBurnAmount) != tx.vout[0].nValue) {
+                if(nBurnAmount != tx.vout[0].nValue) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-mismatch-burn-amount", bSanityCheck);
                 }  
                 if(tx.vout[nOut].assetInfo.nAsset != Params().GetConsensus().nSYSXAsset) {
@@ -588,7 +588,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
             }
-            if (storedAssetRef.nMaxSupply > MAX_ASSET) {
+            if (!MoneyRangeAsset(storedAssetRef.nMaxSupply)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
             if (storedAssetRef.nUpdateFlags > ASSET_UPDATE_ALL) {
@@ -637,16 +637,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // increase total supply
             storedAssetRef.nTotalSupply += theAsset.nBalance;
             storedAssetRef.nBalance += theAsset.nBalance;
-            // overflow
-            if (theAsset.nBalance > MAX_ASSET) {
-                return FormatSyscoinErrorMessage(state, "asset-mint-overflow", bSanityCheck);
+            if (!MoneyRangeAsset(storedAssetRef.nBalance) || MoneyRangeAsset(theAsset.nBalance)) {
+                return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
             }
-            if (theAsset.nBalance > 0 && (storedAssetRef.nBalance <= theAsset.nBalance || storedAssetRef.nBalance > MAX_ASSET)) {
-                return FormatSyscoinErrorMessage(state, "asset-amount-overflow", bSanityCheck);
-            }
-            // overflow
-            if (theAsset.nBalance > 0 && (storedAssetRef.nTotalSupply <= theAsset.nBalance || storedAssetRef.nTotalSupply > MAX_ASSET)) {
-                return FormatSyscoinErrorMessage(state, "asset-supply-overflow", bSanityCheck);
+            if (!MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
+                return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
             }
             if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);

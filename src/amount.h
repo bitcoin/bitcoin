@@ -24,6 +24,7 @@ static const CAmount COIN = 100000000;
  * */
 static const CAmount MAX_MONEY = 888000000 * COIN;
 // SYSCOIN
-static const uint64_t MAX_ASSET = std::numeric_limits<uint64_t>::max() / 9;
+static const CAmount MAX_ASSET = std::numeric_limits<uint64_t>::max() / 9;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+inline bool MoneyRangeAsset(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_ASSET); }
 #endif //  SYSCOIN_AMOUNT_H

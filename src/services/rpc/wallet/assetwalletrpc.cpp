@@ -27,7 +27,7 @@
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
-uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxDestination & address) {
+CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
     UniValue publicObj;
     if(!publicObj.read(public_data))
         return 0;
@@ -45,23 +45,17 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, CTxD
     if(feeStructArray.size() == 0)
         return 0;
      
-    uint64_t nAccumulatedFee = 0;
-    uint64_t nBoundAmount = 0;
-    uint64_t nNextBoundAmount = 0;
+    CAmount nAccumulatedFee = 0;
+    CAmount nBoundAmount = 0;
+    CAmount nNextBoundAmount = 0;
     double nRate = 0;
     for(unsigned int i =0;i<feeStructArray.size();i++){
         if(!feeStructArray[i].isArray())
             return 0;
         const UniValue &feeStruct = feeStructArray[i].get_array();
-        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
-        if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
-            return 0;
-        if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
-            return 0;   
-        UniValue boundValue = feeStruct[0]; 
-        UniValue nextBoundValue = feeStructNext[0]; 
-        nBoundAmount = boundValue.get_uint64();
-        nNextBoundAmount = nextBoundValue.get_uint64();
+        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();  
+        nBoundAmount = AssetAmountFromValue(feeStruct[0], nPrecision);
+        nNextBoundAmount = AssetAmountFromValue(feeStructNext[0], nPrecision);
         if(!feeStruct[1].isStr())
             return 0;
         if(!ParseDouble(feeStruct[1].get_str(), &nRate))
@@ -474,7 +468,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
         "\nBurns Syscoin to the SYSX asset\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid of SYSX"},
-            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of SYS to burn."},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -520,8 +514,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
 
     CMutableTransaction mtx;
-    UniValue amountObj = params[1];
-	uint64_t nAmount = amountObj.get_uint64();
+	CAmount nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(1, nAmount)};
     theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
@@ -568,8 +561,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
-        {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
+        {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
+        {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"n", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -584,7 +577,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
                 {"a", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                 {"fs", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
-                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
                     },
                 }
@@ -632,23 +625,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     catch(...){
         nGas = 0;
     }
-    UniValue param4 = params[5];
-    UniValue param5 = params[6];
-    
-    uint64_t nBalance;
-    try{
-        nBalance = param4.get_uint64();
-    }
-    catch(...){
-        nBalance = 0;
-    }
-    uint64_t nMaxSupply;
-    try{
-        nMaxSupply = param5.get_uint64();
-    }
-    catch(...){
-        nMaxSupply = 0;
-    }
+    CAmount nBalance = AssetAmountFromValue(params[5], precision);
+    CAmount nMaxSupply = AssetAmountFromValue(params[6], precision);
     uint32_t nUpdateFlags = params[7].get_uint();
     std::string strWitness = params[8].get_str();
     CKeyID notaryKeyID;
@@ -789,7 +767,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
                 {"a", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                 {"fs", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
-                        {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
                     },
                 }
@@ -819,9 +797,9 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
 UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
-    uint64_t nMinimumAmountAsset = 0;
-    uint64_t nMaximumAmountAsset = 0;
-    uint64_t nMinimumSumAmountAsset = 0;
+    CAmount nMinimumAmountAsset = 0;
+    CAmount nMaximumAmountAsset = 0;
+    CAmount nMinimumSumAmountAsset = 0;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     std::vector<COutput> vecOutputs;
     pwallet->AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
@@ -908,7 +886,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
-            {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
+            {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
             {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
             {"n", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -923,7 +901,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                     {"a", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
                     {"fs", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                         {
-                            {"", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                            {"", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
                             {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
                         },
                     }
@@ -973,9 +951,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CKeyID oldWitnessKeyID = theAsset.notaryKeyID;
 
     theAsset.ClearAsset();
-    UniValue params3 = params[3];
-    uint64_t nBalance = 0;
-    nBalance = params3.get_uint64();
+    CAmount nBalance = AssetAmountFromValue(params[3], theAsset.nPrecision);
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("d", strPubData);
     UniValue notaryStruct = find_value(params[6].get_obj(), "e");
@@ -1095,7 +1071,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
                 {"", RPCArg::Type::OBJ, RPCArg::Optional::NO, "An assetsend obj",
                     {
                         {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to transfer to"},
-                        {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Quantity of asset to send"}
+                        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"}
                     }
                 }
             },
@@ -1146,15 +1122,8 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str(); 
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));             
-        UniValue amountObj = find_value(receiverObj, "amount");
-        uint64_t nAmount;
-        if (amountObj.isNum()) {
-            nAmount = amountObj.get_uint64();
-            if (nAmount == 0)
-                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-        }
-        else
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in asset output array");
+        CAmount nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
+
         auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         if(it == theAssetAllocation.voutAssets.end()) {
             theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
@@ -1192,7 +1161,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
     {
         {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the asset to (creates an asset allocation)."},
-        {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quantity of asset to send."}
+        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send."}
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -1205,18 +1174,11 @@ UniValue assetsend(const JSONRPCRequest& request) {
         }
 
     }.Check(request);
-    const uint32_t &nAsset = params[0].get_uint();
-	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
-		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
-    UniValue amountValue = request.params[2];
-    uint64_t nAmount = amountValue.get_uint64();
-    if (nAmount == 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetsend");
+    const uint32_t &nAsset = params[0].get_uint();          
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("address", params[1].get_str());
-    outputObj.__pushKV("amount", amountValue);
+    outputObj.__pushKV("amount", request.params[2]);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(nAsset);
@@ -1238,7 +1200,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                         {
                             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                             {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to transfer to"},
-                            {"amount", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Quantity of asset to send"}
+                            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of asset to send"}
                         }
                     },
                     },
@@ -1333,34 +1295,27 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         const std::string &toStr = find_value(receiverObj, "address").get_str();
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));   
         CTxOut change_prototype_txout(0, scriptPubKey);
-		UniValue amountObj = find_value(receiverObj, "amount");
-		if (amountObj.isNum()) {
-			const uint64_t &nAmount = amountObj.get_uint64();
-			if (nAmount == 0)
-				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-            if(itVout == theAssetAllocation.voutAssets.end()) {
-                CAssetOut assetOut(nAsset, vecOut);
-                // only use first notary signature for asset that requires notary, subsequent ones are covered by notary signature through input sighash
-                if(!theAsset.notaryKeyID.IsNull() && !emptyNotarySig.empty()) {
-                    assetOut.vchNotarySig = emptyNotarySig;   
-                    emptyNotarySig.clear(); 
-                }
-                theAssetAllocation.voutAssets.emplace_back(assetOut);
-                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        const CAmount &nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
+        auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        if(itVout == theAssetAllocation.voutAssets.end()) {
+            CAssetOut assetOut(nAsset, vecOut);
+            // only use first notary signature for asset that requires notary, subsequent ones are covered by notary signature through input sighash
+            if(!theAsset.notaryKeyID.IsNull() && !emptyNotarySig.empty()) {
+                assetOut.vchNotarySig = emptyNotarySig;   
+                emptyNotarySig.clear(); 
             }
-            itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
-
-            CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
-            mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-            auto it = mapAssetTotals.emplace(nAsset, nAmount);
-            if(!it.second) {
-                it.first->second += nAmount;
-            }
-            nTotalSending += nAmount;
+            theAssetAllocation.voutAssets.emplace_back(assetOut);
+            itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         }
-		else
-			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
+        itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
+
+        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
+        mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+        auto it = mapAssetTotals.emplace(nAsset, nAmount);
+        if(!it.second) {
+            it.first->second += nAmount;
+        }
+        nTotalSending += nAmount;
 	        
     }
     // aux fees if applicable
@@ -1370,7 +1325,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         CTxDestination auxFeeAddress;
-        const uint64_t &nAuxFee = getAuxFee(DecodeBase64(theAsset.strPubData), it.second, auxFeeAddress);
+        const CAmount &nAuxFee = getAuxFee(DecodeBase64(theAsset.strPubData), it.second, theAsset.nPrecision, auxFeeAddress);
         if(nAuxFee > 0){
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
@@ -1446,7 +1401,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         "\nBurn an asset allocation in order to use the bridge or move back to Syscoin\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
             {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Set to '' to burn to Syscoin."}
         },
         RPCResult{
@@ -1474,11 +1429,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
-    UniValue amountObj = params[1];
-	uint64_t nAmount = amountObj.get_uint64();
-    if (nAmount == 0) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-    }
+	CAmount nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
 	std::string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     CScript scriptData;
@@ -1492,7 +1443,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
-        std::vector<CAssetOutValue> vecOut = {CAssetOutValue(1, (CAmount)nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
+        std::vector<CAssetOutValue> vecOut = {CAssetOutValue(1, nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
         CAssetOut assetOut(nAsset, vecOut);
         if(!theAsset.notaryKeyID.IsNull()) {
             assetOut.vchNotarySig = emptyNotarySig;    
@@ -1503,7 +1454,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     else {
         burnSyscoin.vchEthAddress = ParseHex(ethAddress);
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
-        std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, (CAmount)nAmount)}; // burn has to be in index 0, any change in index 1
+        std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)}; // burn has to be in index 0, any change in index 1
         CAssetOut assetOut(nAsset, vecOut);
         if(!theAsset.notaryKeyID.IsNull()) {
             assetOut.vchNotarySig = emptyNotarySig;    
@@ -1519,7 +1470,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     }
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
-    CRecipient recp = {scriptPubKey, (CAmount)nAmount, false };
+    CRecipient recp = {scriptPubKey, nAmount, false };
 
 
     std::vector<unsigned char> data;
@@ -1539,7 +1490,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     bilingual_str error;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
-    coin_control.assetInfo = CAssetCoinInfo(nAsset, (CAmount)nAmount);
+    coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
@@ -1580,7 +1531,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
-            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
             {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
             {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unique Bridge Transfer ID for this event from Ethereum. It is the low 32 bits of the transferIdAndPrecisions field in the TokenFreeze Event on freezeBurnERC20 call."},
             {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
@@ -1613,11 +1564,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
-    UniValue amountValue = request.params[2];
-    const uint64_t &nAmount = amountValue.get_uint64();
-    if (nAmount == 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationmint");  
-
+    const CAmount &nAmount = AssetAmountFromValue(request.params[2], theAsset.nPrecision);
     const uint32_t &nBlockNumber = params[3].get_uint(); 
     const uint32_t &nBridgeTransferID = params[4].get_uint(); 
     
@@ -1718,7 +1665,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
-            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quantity of asset to send"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
         },
         RPCResult{
@@ -1731,14 +1678,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\" \"false\"")
         }
     }.Check(request);
-    const uint32_t &nAsset = params[0].get_uint();
-	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
-		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
-    UniValue amountValue = request.params[2];
-    uint64_t nAmount = amountValue.get_uint64();
-    if (nAmount == 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");  
+    const uint32_t &nAsset = params[0].get_uint();          
     bool m_signal_bip125_rbf = false;
     if (!request.params[3].isNull()) {
         m_signal_bip125_rbf = request.params[3].get_bool();
@@ -1755,7 +1695,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("asset_guid", nAsset);
     outputObj.__pushKV("address", params[1].get_str());
-    outputObj.__pushKV("amount", nAmount);
+    outputObj.__pushKV("amount", request.params[2]);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);

@@ -319,12 +319,12 @@ struct AssetCoinInfoCompression
 class CAssetCoinInfo {
 public:
 	uint32_t nAsset;
-	uint64_t nValue;
+	CAmount nValue;
 	CAssetCoinInfo() {
 		SetNull();
         nValue = 0;
 	}
-    CAssetCoinInfo(const uint32_t &nAssetIn, const uint64_t& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
+    CAssetCoinInfo(const uint32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
  
     friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
     {
@@ -437,7 +437,7 @@ struct TxOutCoinCompression
 class CAssetOutValue {
 public:
     uint32_t n;
-    uint64_t nValue;
+    CAmount nValue;
 
     SERIALIZE_METHODS(CAssetOutValue, obj) {
         READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue));
@@ -547,7 +547,7 @@ public:
     // Return sum of txouts.
     CAmount GetValueOut() const;
     // SYSCOIN
-    bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut, TxValidationState& state) const;
+    bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const;
     uint256 GetNotarySigHash() const;
     /**
      * Get the total transaction size in bytes, including witness data.
