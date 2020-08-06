@@ -518,7 +518,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     try{
         nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
     }
-    catch(const std::exception& e){
+    catch(...) {
         nAmount = params[1].get_int64();
     }
 
@@ -629,21 +629,21 @@ UniValue assetnew(const JSONRPCRequest& request) {
     try{
         nGas = AmountFromValue(param0);
     }
-    catch(const std::exception& e){
+    catch(...) {
         nGas = 0;
     }
     CAmount nBalance;
     try{
         nBalance = AssetAmountFromValue(params[5], precision);
     }
-    catch(const std::exception& e){
+    catch(...) {
         nBalance = params[5].get_int64();
     }
     CAmount nMaxSupply;
     try{
         nMaxSupply = AssetAmountFromValue(params[6], precision);
     }
-    catch(const std::exception& e){
+    catch(...) {
         nMaxSupply = params[6].get_int64();
     }
     uint32_t nUpdateFlags = params[7].get_uint();
@@ -974,7 +974,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     try{
         nBalance = AssetAmountFromValue(params[3], theAsset.nPrecision);
     }
-    catch(const std::exception& e){
+    catch(...) {
         nBalance = params[3].get_int64();
     }
     UniValue publicData(UniValue::VOBJ);
@@ -1458,7 +1458,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     try{
         nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
     }
-    catch(const std::exception& e){
+    catch(...) {
         nAmount = params[1].get_int64();
     }
 	std::string ethAddress = params[2].get_str();
@@ -1599,7 +1599,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     try{
         nAmount = AssetAmountFromValue(request.params[2], theAsset.nPrecision);
     }
-    catch(const std::exception& e){
+    catch(...) {
         nAmount = request.params[2].get_int64();
     }        
     const uint32_t &nBlockNumber = params[3].get_uint(); 
