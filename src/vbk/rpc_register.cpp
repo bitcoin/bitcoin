@@ -500,6 +500,7 @@ bool GetPayload(
 
     // search in the alttree storage
     const auto& containing = pop.getAltTree().getStorage().getContainingAltBlocks(pid.asVector());
+    if (containing.size() == 0) return false;
 
     // fill containing blocks
     containingBlocks.reserve(containing.size());
@@ -638,7 +639,7 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
     for (const auto& b : containingBlocks) {
         univalueContainingBlocks.push_back(b.GetHex());
     }
-    result.pushKV("containingBlocks", univalueContainingBlocks);
+    result.pushKV("containing_blocks", univalueContainingBlocks);
     result.pushKV("blockhash", activeHashBlock.GetHex());
     return result;
 }
