@@ -122,7 +122,7 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, uint64_t& outputAmount, uint32_t& nAsset, CTxDestination& witnessAddress) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint32_t& nAsset, CTxDestination& witnessAddress) {
     // total 5 to 7 fields are expected @ 32 bytes each field, > 5 fields if address is bigger, bech32 can be up to 91 characters so it will span up to 3 fields and as little as 1 field
     if(vchInputData.size() < 164 || vchInputData.size() > 228) {
       return false;  
@@ -148,7 +148,7 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     } else if(nLocalPrecision < nERC20Precision){
       outputAmountArith /= pow(10, nERC20Precision-nLocalPrecision);
     }
-    outputAmount = outputAmountArith.GetLow64();
+    outputAmount = (CAmount)outputAmountArith.GetLow64();
     
     // convert the vch into a uint32_t (nAsset)
     // should be in position 68 walking backwards
