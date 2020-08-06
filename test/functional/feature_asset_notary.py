@@ -17,10 +17,10 @@ class AssetNotaryTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         self.basic_asset()
-        self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), int(2*COIN))
+        self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), 2)
         self.nodes[0].generate(1)
         # will give back hex because notarization doesn't happen in assetallocationsend
-        hextx = self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(0.4*COIN))['hex']
+        hextx = self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 0.4)['hex']
         sighash = self.nodes[0].getnotarysighash(hextx)
         notarysig = self.nodes[0].signhash(self.notary_address, sighash)
         hextx_notarized = self.nodes[0].assettransactionnotarize(hextx, notarysig)['hex']
@@ -37,7 +37,7 @@ class AssetNotaryTest(SyscoinTestFramework):
     def basic_asset(self):
         self.notary_address = self.nodes[0].getnewaddress()
         notary = {'e': 'https://jsonplaceholder.typicode.com/posts/', 'it': True, 'rx': True}
-        self.asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, self.notary_address, notary, {})['asset_guid']
+        self.asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000, 10000, 31, self.notary_address, notary, {})['asset_guid']
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
