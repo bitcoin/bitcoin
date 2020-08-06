@@ -1088,7 +1088,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     int64_t nTime = request.params[5].get_int64();
     std::string strSig = request.params[6].get_str();
     bool fInvalid = false;
-    std::vector<unsigned char> vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
+    std::vector<unsigned char> vchSig = DecodeBase64(strSig, &fInvalid);
 
     if (fInvalid) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");

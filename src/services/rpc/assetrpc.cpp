@@ -119,7 +119,7 @@ bool UpdateNotarySignature(CMutableTransaction& mtx, const std::vector<unsigned 
         }
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);
-        if(FillNotarySigFromEndpoint(tx, allocation.voutAssets, vchSig)) {
+        if(FillNotarySig(tx, allocation.voutAssets, vchSig)) {
             bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
@@ -156,15 +156,15 @@ UniValue assettransactionnotarize(const JSONRPCRequest& request) {
         }	
     }.Check(request);	
 
-    std::string hexstring = params[0].get_str();
-    std::vector<unsigned char> vchSig = ParseHex(DecodeBase64(params[1].get_str());
+    std::string hexstring = request.params[0].get_str();
+    std::vector<unsigned char> vchSig = ParseHex(DecodeBase64(request.params[1].get_str());
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
              throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
         }
     }
-    UpdateNotarySignature(mtx);
+    UpdateNotarySignature(mtx, vchSig);
     UniValue ret(UniValue::VOBJ);	
     ret.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
     return ret;
@@ -186,7 +186,7 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
             + HelpExampleRpc("getnotarysighash", "\"hex\"")	
         }	
     }.Check(request);	
-    std::string hexstring = params[0].get_str();
+    std::string hexstring = request.params[0].get_str();
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
