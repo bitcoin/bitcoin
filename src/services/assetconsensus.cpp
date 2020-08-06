@@ -369,7 +369,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             }
             const CAmount &nAmountAsset = vecVout[0].nValue;
             // the burn amount in opreturn (SYS) should match the first asset output (SYSX)
-            if(nAmountAsset) != nBurnAmount) {
+            if(nAmountAsset != nBurnAmount) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-mismatch-amount", bSanityCheck);
             }
             if(nAsset != Params().GetConsensus().nSYSXAsset) {
