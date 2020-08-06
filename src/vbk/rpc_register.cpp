@@ -638,7 +638,7 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
     for (const auto& b : containingBlocks) {
         univalueContainingBlocks.push_back(b.GetHex());
     }
-    result.pushKV("containingBlocks", univalueContainingBlocks);
+    result.pushKV("containing_blocks", univalueContainingBlocks);
     result.pushKV("blockhash", activeHashBlock.GetHex());
     return result;
 }
