@@ -210,6 +210,7 @@ protected:
     CTxMemPool* pool;
 public:
     CBlockHeader header;
+    altintegration::PopData popData;
     explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
