@@ -625,7 +625,7 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
         bool in_active_chain = ::ChainActive().Contains(verboseBlockIndex);
         result.pushKV("in_active_chain", in_active_chain);
         result.pushKV("blockheight", verboseBlockIndex->nHeight);
-        if (::ChainActive().Contains(verboseBlockIndex)) {
+        if (in_active_chain) {
             result.pushKV("confirmations", 1 + ::ChainActive().Height() - verboseBlockIndex->nHeight);
             result.pushKV("blocktime", verboseBlockIndex->GetBlockTime());
         } else {
