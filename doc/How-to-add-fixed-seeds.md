@@ -12,7 +12,7 @@
 
 
 ## Install the [dnspython](https://github.com/rthalley/dnspython) package
-`generate-seeds` 스크립트는 `dnspython` 패키지에 종속성이 있습니다. pip 를 이용하여 설치해줍니다.
+`generate-seeds` 스크립트는 `dnspython` 패키지에 종속성이 있습니다.
 
 ```shell
 $ pip install dnspython
@@ -44,7 +44,7 @@ $ cat nodes.main.txt
 
 ### 스크립트 실행
 
-이제 다음 파이썬 스크립트를 실행합니다.  
+이제 `generate-seeds.py` 파이썬 스크립트를 실행합니다.  
 
 ```shell
 $ python3 generate-seeds.py . > ../../src/chainparamsseeds.h
