@@ -19,7 +19,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.basic_asset()
         self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), int(2*COIN))
         self.nodes[0].generate(1)
-        # cannot send without notarization
+        # will give back hex because notarization doesn't happen in assetallocationsend
         hextx = self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(0.4*COIN))['hex']
         sighash = self.nodes[0].getnotarysighash(hextx)
         notarysig = self.nodes[0].signhash(self.notary_address, sighash)
@@ -29,6 +29,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         assert(hextx != hextx_notarized)
         assert_equal(len(tx_resigned), len(hextx_notarized))
         assert(tx_resigned != hextx_notarized)
+         # cannot send without notarization
         assert_raises_rpc_error(-26, 'assetallocation-notary-sig', self.nodes[0].sendrawtransaction, hextx)
         assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag', self.nodes[0].sendrawtransaction, hextx_notarized)
         self.nodes[0].sendrawtransaction(tx_resigned)
