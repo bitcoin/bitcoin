@@ -29,8 +29,8 @@ class AssetNotaryTest(SyscoinTestFramework):
         assert(hextx != hextx_notarized)
         assert_equal(len(tx_resigned), len(hextx_notarized))
         assert(tx_resigned != hextx_notarized)
-        self.nodes[0].sendrawtransaction(hextx)
-        self.nodes[0].sendrawtransaction(hextx_notarized)
+        assert_raises_rpc_error(-26, 'assetallocation-notary-sig', self.nodes[0].sendrawtransaction, hextx)
+        assert_raises_rpc_error(-26, 'assetallocation-notary-sig', self.nodes[0].sendrawtransaction, hextx_notarized)
         self.nodes[0].sendrawtransaction(tx_resigned)
         self.nodes[0].generate(1)
 
