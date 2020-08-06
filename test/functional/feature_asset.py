@@ -65,7 +65,7 @@ class AssetTest(SyscoinTestFramework):
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1, 1, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         # cannot increase supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1), 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-amount-outofrange', self.nodes[0].assetupdate, asset, '', '', int(0.1), 31, '', {}, {})
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1, 2, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.nodes[0].assetupdate(asset, '', '', int(0.1), 31, '', {}, {})
@@ -73,10 +73,10 @@ class AssetTest(SyscoinTestFramework):
         self.nodes[0].assetupdate(asset, '', '', int(0.9), 31, '', {}, {})
         self.nodes[0].generate(1)
         # would go over 2 coins supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1), 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-amount-outofrange', self.nodes[0].assetupdate, asset, '', '', int(0.1), 31, '', {}, {})
         self.nodes[0].generate(1)
         # balance > max supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2, 1, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-amount-outofrange', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2, 1, 31, '', {}, {})
         # uint64 limits
         # largest amount that we can use, without compression overflow of uint (~2 quintillion) which is more than eth's 1 quintillion
         # 2^64 / 9
