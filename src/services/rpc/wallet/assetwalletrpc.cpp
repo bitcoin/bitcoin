@@ -105,7 +105,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
   return realsize;
 }
  
-char* curl_fetch_url(CURL *curl, const char *url, const char* payload)
+char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::string& strError)
 {
   CURLcode res;
   struct MemoryStruct chunk;
@@ -143,17 +143,17 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload)
     res = curl_easy_perform(curl);
     /* Check for errors */ 
     if(res != CURLE_OK) {
-      LogPrint(BCLog::SYS, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+      strError = strprintf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
       return nullptr;
     } 
     curl_slist_free_all(headers);
   }
   return chunk.memory;
 }
-bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets) {
+bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, std::string& strError) {
     CURLcode resInit = curl_global_init(CURL_GLOBAL_ALL);
     if(resInit != 0) {
-        LogPrint(BCLog::SYS, "curl_global_init() failed: %s\n", curl_easy_strerror(resInit));
+        strError = strprintf("curl_global_init() failed: %s\n", curl_easy_strerror(resInit));
         return false;
     }
 
@@ -177,7 +177,7 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
                 if(notaryObj.isObject()) {
                     const UniValue &endpointObj = find_value(notaryObj.get_obj(), "e");
                     if(endpointObj.isStr()) {
-                        char* response = curl_fetch_url(curl, endpointObj.get_str().c_str(), reqJSON.c_str());
+                        char* response = curl_fetch_url(curl, endpointObj.get_str().c_str(), reqJSON.c_str(), strError);
                         if(response != nullptr) {
                             UniValue resObj;
                             if(resObj.read((const char*)response)) {
@@ -188,10 +188,19 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
                                     // ensure sig is 65 bytes exactly for ECDSA
                                     if(vecOut.vchNotarySig.size() == 65)
                                         bFilled = true;
+                                    else {
+                                        strError = strprintf("Invalid signature size %d (required 65)\n", vecOut.vchNotarySig.size());
+                                    }
+                                } else {
+                                    strError = "Cannot find signature field in JSON response from endpoint";
                                 }
+                            } else {
+                                strError = "Cannot read response from endpoint";
                             }
                             free(response);
                         }
+                    } else {
+                        strError = "endpoint not found in notary object in public description of asset";
                     }
                 }
             }
@@ -205,26 +214,26 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
     return bFilled;
 }
 
-bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx) {
+bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, std::string& strError) {
     const CTransactionRef& tx = MakeTransactionRef(mtx);
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
     if(IsSyscoinMintTx(tx->nVersion)) {
         CMintSyscoin mintSyscoin(*tx);
-        if(FillNotarySigFromEndpoint(tx, mintSyscoin.voutAssets)) {
+        if(FillNotarySigFromEndpoint(tx, mintSyscoin.voutAssets, strError)) {
             bFilledNotarySig = true;
             mintSyscoin.SerializeData(data);
         }
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
         CBurnSyscoin burnSyscoin(*tx);
-        if(FillNotarySigFromEndpoint(tx, burnSyscoin.voutAssets)) {
+        if(FillNotarySigFromEndpoint(tx, burnSyscoin.voutAssets, strError)) {
             bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);
-        if(FillNotarySigFromEndpoint(tx, allocation.voutAssets)) {
+        if(FillNotarySigFromEndpoint(tx, allocation.voutAssets, strError)) {
             bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
@@ -1413,13 +1422,15 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignatureFromEndpoint(mtx)) {
+    std::string strError = "";
+    if(UpdateNotarySignatureFromEndpoint(mtx, strError)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
-    } else {
+    } else if(!strError.empty()) {
         UniValue res(UniValue::VOBJ);
         res.__pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+        res.__pushKV("error", strError);
         return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
@@ -1535,13 +1546,15 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignatureFromEndpoint(mtx)) {
+    std::string strError = "";
+    if(UpdateNotarySignatureFromEndpoint(mtx, strError)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
-    } else {
+    } else if(!strError.empty()) {
         UniValue res(UniValue::VOBJ);
         res.__pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+        res.__pushKV("error", strError);
         return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
@@ -1678,13 +1691,15 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignatureFromEndpoint(mtx)) {
+    std::string strError = "";
+    if(UpdateNotarySignatureFromEndpoint(mtx, strError)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
-    } else {
+    } else if(!strError.empty()) {
         UniValue res(UniValue::VOBJ);
         res.__pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+        res.__pushKV("error", strError);
         return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
