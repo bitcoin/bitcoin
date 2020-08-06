@@ -607,13 +607,16 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
 
     uint256 activeHashBlock{};
     CBlockIndex* verboseBlockIndex = nullptr;
-    for (const auto& b : containingBlocks) {
-        auto* index = LookupBlockIndex(b);
-        if (index == nullptr) continue;
-        verboseBlockIndex = index;
-        if (::ChainActive().Contains(index)) {
-            activeHashBlock = b;
-            break;
+    {
+        LOCK(cs_main);
+        for (const auto& b : containingBlocks) {
+            auto* index = LookupBlockIndex(b);
+            if (index == nullptr) continue;
+            verboseBlockIndex = index;
+            if (::ChainActive().Contains(index)) {
+                activeHashBlock = b;
+                break;
+            }
         }
     }
 
