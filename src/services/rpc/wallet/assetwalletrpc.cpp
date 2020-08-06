@@ -457,7 +457,7 @@ UniValue signhash(const JSONRPCRequest& request)
         LogPrintf("CSporkMessage::Sign -- VerifyHash() failed\n");
         return false;
     }
-    return EncodeBase64(vchSig.data());
+    return EncodeBase64(vchSig.data(), vchSig.size());
 }
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
