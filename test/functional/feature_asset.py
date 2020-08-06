@@ -5,7 +5,6 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-from test_framework.messages import COIN
 
 class AssetTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -23,7 +22,7 @@ class AssetTest(SyscoinTestFramework):
         self.asset_transfer()
 
     def basic_asset(self):
-        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000, 10000, 31, '', {}, {})['asset_guid']
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
@@ -37,8 +36,8 @@ class AssetTest(SyscoinTestFramework):
         gooddata = "SfsddfdfsdsdffsdfdfsdsfDsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdssfDsddsdsdssfsdsfdsfdssfsdSfdddssfsddSfdddSfddasdsfSfsfsdsSfsdfdffsfsdsSfsdfdffsfsdsSfsdfdfsdfdfsdsdfdfsd"
         # 768 bytes long + 1 (base64 encoded should be more than 1024 bytes)
         baddata = gooddata + "a"
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
-        asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000, 10000, 31, '', {}, {})['asset_guid']
+        asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000, 10000, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(asset)
@@ -50,34 +49,34 @@ class AssetTest(SyscoinTestFramework):
         assetInfo = self.nodes[1].assetinfo(asset1)
         assert_equal(assetInfo['asset_guid'], asset1)
         # data too big
-        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-pubdata-too-big', self.nodes[0].assetnew, '1', 'TST', baddata, '0x', 8, 1000, 10000, 31, '', {}, {})
     
     def asset_symbol_size(self):
         gooddata = 'asset description'
-        self.nodes[0].assetnew('1', 'T', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
-        assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', '', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
-        self.nodes[0].assetnew('1', 'ABCDEFGHI', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
-        assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', 'ABCDEFGHIJ', gooddata, '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})
+        self.nodes[0].assetnew('1', 'T', gooddata, '0x', 8, 1000, 10000, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', '', gooddata, '0x', 8, 1000, 10000, 31, '', {}, {})
+        self.nodes[0].assetnew('1', 'ABCDEFGHI', gooddata, '0x', 8, 1000, 10000, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', 'ABCDEFGHIJ', gooddata, '0x', 8, 1000, 10000, 31, '', {}, {})
         self.nodes[0].generate(1)
 
     def asset_maxsupply(self):
         # 494 bytes long (512 with overhead)
         gooddata = "SfsddfdfsdsdffsdfdfsdsfDsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdssfsddSfdddssfsddSfdddSfddas"
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 1*COIN, 31, '', {}, {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1, 1, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         # cannot increase supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, '', {}, {})
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1*COIN, 2*COIN, 31, '', {}, {})['asset_guid']
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1), 31, '', {}, {})
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1, 2, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
-        self.nodes[0].assetupdate(asset, '', '', int(0.1*COIN), 31, '', {}, {})
+        self.nodes[0].assetupdate(asset, '', '', int(0.1), 31, '', {}, {})
         self.nodes[0].generate(1)
-        self.nodes[0].assetupdate(asset, '', '', int(0.9*COIN), 31, '', {}, {})
+        self.nodes[0].assetupdate(asset, '', '', int(0.9), 31, '', {}, {})
         self.nodes[0].generate(1)
         # would go over 2 coins supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1*COIN), 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', int(0.1), 31, '', {}, {})
         self.nodes[0].generate(1)
         # balance > max supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2*COIN, 1*COIN, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2, 1, 31, '', {}, {})
         # uint64 limits
         # largest amount that we can use, without compression overflow of uint (~2 quintillion) which is more than eth's 1 quintillion
         # 2^64 / 9
@@ -105,8 +104,8 @@ class AssetTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress1, 152)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        asset0 = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
-        asset1 = self.nodes[1].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+        asset0 = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000, 10000, 31, '', {}, {})['asset_guid']
+        asset1 = self.nodes[1].assetnew('1', 'TST', 'asset description', '0x', 8, 1000, 10000, 31, '', {}, {})['asset_guid']
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()

@@ -5,7 +5,7 @@
 from decimal import Decimal
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times, disconnect_nodes, connect_nodes, bump_node_times
-from test_framework.messages import COIN
+
 import time
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
@@ -35,7 +35,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         newaddress3 = self.nodes[1].getnewaddress()
         newaddress1 = self.nodes[0].getnewaddress()
         self.nodes[3].importprivkey(self.nodes[1].dumpprivkey(newaddress2))
-        self.nodes[0].assetsend(self.asset, newaddress1, int(2*COIN))
+        self.nodes[0].assetsend(self.asset, newaddress1, 2)
         # create 2 utxo's so below newaddress1 recipient of 0.5 COIN uses 1 and the newaddress3 recipient on node3 uses the other on dbl spend
         self.nodes[0].sendtoaddress(newaddress2, 1)
         self.nodes[0].sendtoaddress(newaddress2, 1)
@@ -46,26 +46,26 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[3].listunspent()
         assert_equal(len(out), 2)
         # send 2 asset UTXOs to newaddress2 same logic as explained above about dbl spend
-        self.nodes[0].assetallocationsend(self.asset, newaddress2, int(0.4*COIN))
-        self.nodes[0].assetallocationsend(self.asset, newaddress2, int(1*COIN))
+        self.nodes[0].assetallocationsend(self.asset, newaddress2, 0.4)
+        self.nodes[0].assetallocationsend(self.asset, newaddress2, 1)
         self.nodes[0].generate(1)
         self.sync_blocks()
         # should have 2 sys utxos and 2 asset utxos
         out =  self.nodes[3].listunspent()
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
-        self.nodes[1].assetallocationsend(self.asset, newaddress1, int(0.4*COIN))
+        self.nodes[1].assetallocationsend(self.asset, newaddress1, 0.4)
         self.sync_mempools(timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[3].listunspent(minconf=0)
         assert_equal(len(out), 2)
-        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, int(1*COIN))['txid']
+        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, 1)['txid']
         # dbl spend
-        tx2 = self.nodes[3].assetallocationsend(self.asset, newaddress1, int(0.9*COIN))['txid']
+        tx2 = self.nodes[3].assetallocationsend(self.asset, newaddress1, 0.9)['txid']
         # use tx2 to build tx3
-        tx3 = self.nodes[3].assetallocationsend(self.asset, newaddress1, int(0.05*COIN))['txid']
+        tx3 = self.nodes[3].assetallocationsend(self.asset, newaddress1, 0.05)['txid']
         # use tx2 to build tx4
-        tx4 = self.nodes[3].assetallocationsend(self.asset, newaddress1, int(0.025*COIN))['txid']
+        tx4 = self.nodes[3].assetallocationsend(self.asset, newaddress1, 0.025)['txid']
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
@@ -121,32 +121,32 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[0].sendtoaddress(useraddress4, 1)
-        self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':int(1.0*COIN)},{'address': useraddress2,'amount':int(0.4*COIN)},{'address': useraddress3,'amount':int(0.5*COIN)}])
+        self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':1.0},{'address': useraddress2,'amount':0.4},{'address': useraddress3,'amount':0.5}])
         self.nodes[0].generate(1)
         self.sync_blocks()
         # create seperate output for dbl spend
-        self.nodes[0].assetsend(self.asset, useraddress1, int(0.5*COIN))
+        self.nodes[0].assetsend(self.asset, useraddress1, 0.5)
         # try to do multiple asset sends in one block
-        assert_raises_rpc_error(-4, 'bad-txns-asset-inputs-missingorspent', self.nodes[0].assetsend, self.asset, useraddress1, int(2*COIN))
+        assert_raises_rpc_error(-4, 'bad-txns-asset-inputs-missingorspent', self.nodes[0].assetsend, self.asset, useraddress1, 2)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.2*COIN))
-        self.nodes[1].assetallocationsend(self.asset, useraddress1, int(0.2*COIN))
-        self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
-        self.nodes[2].assetallocationsend(self.asset, useraddress1, int(0.2*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.2)
+        self.nodes[1].assetallocationsend(self.asset, useraddress1, 0.2)
+        self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.2)
+        self.nodes[2].assetallocationsend(self.asset, useraddress1, 0.2)
         self.sync_mempools(timeout=30)
         # put all in useraddress1 so node4 can access in dbl spend, its probably in change address prior to this on node0
-        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.5*COIN))
+        self.nodes[0].assetallocationsend(self.asset, useraddress1, 1.5)
         self.sync_mempools(timeout=30)
-        txid = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(1.5*COIN))['txid']
+        txid = self.nodes[0].assetallocationsend(self.asset, useraddress1, 1.5)['txid']
         # dbl spend
-        txdblspend = self.nodes[3].assetallocationburn(self.asset, int(1.1*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
+        txdblspend = self.nodes[3].assetallocationburn(self.asset, 1.1, "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
         rawtx = self.nodes[0].getrawtransaction(txid)
         self.nodes[1].sendrawtransaction(rawtx)
         self.nodes[2].sendrawtransaction(rawtx)
 
-        self.nodes[1].assetallocationsend(self.asset, useraddress3, int(0.2*COIN))
-        self.nodes[2].assetallocationburn(self.asset, int(0.3*COIN), "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        self.nodes[1].assetallocationsend(self.asset, useraddress3, 0.2)
+        self.nodes[2].assetallocationburn(self.asset, 0.3, "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.sync_mempools(self.nodes[0:3], timeout=30)
         # node1/node2/node3 shouldn't have dbl spend tx because no RBF and not zdag tx
         assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[0].getrawtransaction, txdblspend)
@@ -180,17 +180,17 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[0].generate(1)
-        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
-        self.nodes[0].syscoinburntoassetallocation(self.asset, int(1*COIN))
-        self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.1*COIN))
-        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.01*COIN))
-        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.001*COIN))
-        self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))
-        self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))
+        self.nodes[0].syscoinburntoassetallocation(self.asset, 1)
+        self.nodes[0].syscoinburntoassetallocation(self.asset, 1)
+        self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.1)
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.01)
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.001)
+        self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)
+        self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)
         balanceBefore = self.nodes[0].getbalance(minconf=0)
-        self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '')
+        self.nodes[0].assetallocationburn(self.asset, 1, '')
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, '', {}, {})
-        self.nodes[0].assetallocationburn(self.asset, int(0.88889*COIN), '')
+        self.nodes[0].assetallocationburn(self.asset, 0.88889, '')
         # subtract balance with 0.001 threshold to account for update fee
         assert(self.nodes[0].getbalance(minconf=0) - (balanceBefore+Decimal(1.88889)) < Decimal(0.001))
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
@@ -209,11 +209,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         balanceBefore1 = self.nodes[1].getbalance(minconf=0)
         balanceBefore2 = self.nodes[2].getbalance(minconf=0)
         balanceBefore3 = self.nodes[3].getbalance(minconf=0)
-        self.nodes[1].assetallocationburn(self.asset, int(0.1*COIN), '')
-        self.nodes[2].assetallocationburn(self.asset, int(0.01*COIN), '')
-        self.nodes[2].assetallocationburn(self.asset, int(0.001*COIN), '')
-        self.nodes[3].assetallocationburn(self.asset, int(0.0001*COIN), '')
-        self.nodes[2].assetallocationburn(self.asset, int(0.00001*COIN), '')
+        self.nodes[1].assetallocationburn(self.asset, 0.1, '')
+        self.nodes[2].assetallocationburn(self.asset, 0.01, '')
+        self.nodes[2].assetallocationburn(self.asset, 0.001, '')
+        self.nodes[3].assetallocationburn(self.asset, 0.0001, '')
+        self.nodes[2].assetallocationburn(self.asset, 0.00001, '')
         # ensure burning sysx gives new sys balance
         # account for rounding errors in Decimal
         assert(self.nodes[1].getbalance(minconf=0) - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
@@ -241,9 +241,9 @@ class AssetZDAGTest(SyscoinTestFramework):
 
     def basic_asset(self, guid):
         if guid is None:
-            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 31, '', {}, {})['asset_guid']
         else:
-            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 31, '', {}, {})['asset_guid']
 
 if __name__ == '__main__':
     AssetZDAGTest().main()

@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times, disconnect_nodes, connect_nodes, bump_node_times
-from test_framework.messages import COIN
+
 import time
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
@@ -35,17 +35,17 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         useraddress3 = self.nodes[3].getnewaddress()
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress0))
-        self.nodes[0].assetsend(self.asset, useraddress0, int(1.5*COIN))
+        self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
-        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, int(1*COIN))['txid']
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1)['txid']
         self.sync_mempools(timeout=30)
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, int(1*COIN))['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1)['txid']
         # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
-        tx4a = self.nodes[3].assetallocationsend(self.asset, useraddress0, int(1*COIN))['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.0001*COIN))['txid']
-        tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(1*COIN))['txid']
+        tx4a = self.nodes[3].assetallocationsend(self.asset, useraddress0, 1)['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.0001)['txid']
+        tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 1)['txid']
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(2):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
@@ -75,13 +75,13 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
-        self.nodes[0].assetsend(self.asset, useraddress0, int(1.5*COIN))
+        self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
-        tx3 = self.nodes[0].assetallocationburn(self.asset, int(1*COIN), '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        tx3 = self.nodes[0].assetallocationburn(self.asset, 1, '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
         self.sync_mempools(timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
@@ -99,11 +99,11 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
 
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.00001*COIN))['txid']
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, int(0.0001*COIN))['txid']
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
         tx3 = self.nodes[0].assetupdate(self.asset, '', '', 0, 31, '', {}, {})['txid']
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, int(0.001*COIN))['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, int(0.002*COIN))['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
         self.sync_mempools(timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
@@ -125,9 +125,9 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
 
     def basic_asset(self, guid):
         if guid is None:
-            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 31, '', {}, {})['asset_guid']
         else:
-            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000*COIN, 10000*COIN, 31, '', {}, {})['asset_guid']
+            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 31, '', {}, {})['asset_guid']
 
 if __name__ == '__main__':
     AssetVerifyZDAGTest().main()
