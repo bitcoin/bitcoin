@@ -568,11 +568,13 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level) noexcept
     }
 
     // Combine with and update state
-    if (!rng.MixExtract(out, num, hasher, false)) {
+    // NOLINTNEXTLINE
+    if (!rng.MixExtract(out, num, std::move(hasher), false)) {
         // On the first invocation, also seed with SeedStartup().
         CSHA512 startup_hasher;
         SeedStartup(startup_hasher, rng);
-        rng.MixExtract(out, num, startup_hasher, true);
+        // NOLINTNEXTLINE
+        rng.MixExtract(out, num, std::move(startup_hasher), true);
     }
 }
 
@@ -674,7 +676,8 @@ bool Random_SanityCheck()
     CSHA512 to_add;
     to_add.Write((const unsigned char*)&start, sizeof(start));
     to_add.Write((const unsigned char*)&stop, sizeof(stop));
-    GetRNGState().MixExtract(nullptr, 0, to_add, false);
+    // NOLINTNEXTLINE
+    GetRNGState().MixExtract(nullptr, 0, std::move(to_add), false);
 
     return true;
 }
