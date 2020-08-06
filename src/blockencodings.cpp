@@ -170,7 +170,10 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             break;
     }
 
-    LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, PROTOCOL_VERSION));
+    // VeriBlock: set pop data
+    this->popData = cmpctblock.popData;
+
+    LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu with %d VBK %d VTB %d ATV\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, PROTOCOL_VERSION), this->popData.context.size(), this->popData.vtbs.size(), this->popData.atvs.size());
 
     return READ_STATUS_OK;
 }
@@ -182,8 +185,8 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
 }
 
 ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, const altintegration::PopData& popData) {
-    ReadStatus status = FillBlock(block, vtx_missing);
     block.popData = popData;
+    ReadStatus status = FillBlock(block, vtx_missing);
     return status;
 }
 
@@ -210,6 +213,9 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
     if (vtx_missing.size() != tx_missing_offset)
         return READ_STATUS_INVALID;
 
+    // VeriBlock: set popData before CheckBlock
+    block.popData = this->popData;
+
     BlockValidationState state;
     if (!CheckBlock(block, state, Params().GetConsensus())) {
         // TODO: We really want to just check merkle tree manually here,
@@ -221,12 +227,13 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_CHECKBLOCK_FAILED;
     }
 
-    LogPrint(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool (incl at least %lu from extra pool) and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size());
+    LogPrint(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool (incl at least %lu from extra pool) and %lu txn requested, and %d VBK %d VTB %d ATV\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size(), this->popData.context.size(), this->popData.vtbs.size(), this->popData.atvs.size());
     if (vtx_missing.size() < 5) {
         for (const auto& tx : vtx_missing) {
             LogPrint(BCLog::CMPCTBLOCK, "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
         }
     }
+
 
     return READ_STATUS_OK;
 }
