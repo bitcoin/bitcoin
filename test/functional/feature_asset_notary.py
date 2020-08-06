@@ -27,7 +27,6 @@ class AssetNotaryTest(SyscoinTestFramework):
         tx_resigned = self.nodes[0].signrawtransactionwithwallet(hextx_notarized)['hex']
         assert_equal(len(hextx), len(hextx_notarized))
         assert(hextx != hextx_notarized)
-        assert_equal(len(tx_resigned), len(hextx_notarized))
         assert(tx_resigned != hextx_notarized)
          # cannot send without notarization
         assert_raises_rpc_error(-26, 'assetallocation-notary-sig', self.nodes[0].sendrawtransaction, hextx)
