@@ -77,7 +77,7 @@ class AssetTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         # balance > max supply
         assert_raises_rpc_error(-4, 'asset-amount-outofrange', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 8, 2, 1, 31, '', {}, {})
-        # uint64 limits
+        # int64 limits
         # largest amount that we can use, without compression overflow of uint (~2 quintillion) which is more than eth's 1 quintillion
         # 2^64 / 9
         maxUint = 2049638230412172401
