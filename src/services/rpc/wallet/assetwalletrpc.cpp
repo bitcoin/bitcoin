@@ -514,7 +514,14 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
 
     CMutableTransaction mtx;
-	CAmount nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
+    CAmount nAmount;
+    try{
+        nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
+    }
+    catch(const std::exception& e){
+        nAmount = params[1].get_int64();
+    }
+
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(1, nAmount)};
     theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
@@ -622,11 +629,23 @@ UniValue assetnew(const JSONRPCRequest& request) {
     try{
         nGas = AmountFromValue(param0);
     }
-    catch(...){
+    catch(const std::exception& e){
         nGas = 0;
     }
-    CAmount nBalance = AssetAmountFromValue(params[5], precision);
-    CAmount nMaxSupply = AssetAmountFromValue(params[6], precision);
+    CAmount nBalance;
+    try{
+        nBalance = AssetAmountFromValue(params[5], precision);
+    }
+    catch(const std::exception& e){
+        nBalance = params[5].get_int64();
+    }
+    CAmount nMaxSupply;
+    try{
+        nMaxSupply = AssetAmountFromValue(params[6], precision);
+    }
+    catch(const std::exception& e){
+        nMaxSupply = params[6].get_int64();
+    }
     uint32_t nUpdateFlags = params[7].get_uint();
     std::string strWitness = params[8].get_str();
     CKeyID notaryKeyID;
@@ -951,7 +970,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CKeyID oldWitnessKeyID = theAsset.notaryKeyID;
 
     theAsset.ClearAsset();
-    CAmount nBalance = AssetAmountFromValue(params[3], theAsset.nPrecision);
+    CAmount nBalance;
+    try{
+        nBalance = AssetAmountFromValue(params[3], theAsset.nPrecision);
+    }
+    catch(const std::exception& e){
+        nBalance = params[3].get_int64();
+    }
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("d", strPubData);
     UniValue notaryStruct = find_value(params[6].get_obj(), "e");
@@ -1121,7 +1146,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 
         const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str(); 
-        const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));             
+        const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));           
         CAmount nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
 
         auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
@@ -1429,7 +1454,13 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
-	CAmount nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
+    CAmount nAmount;
+    try{
+        nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
+    }
+    catch(const std::exception& e){
+        nAmount = params[1].get_int64();
+    }
 	std::string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     CScript scriptData;
@@ -1563,8 +1594,14 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::string strAddress = params[1].get_str();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
-		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
-    const CAmount &nAmount = AssetAmountFromValue(request.params[2], theAsset.nPrecision);
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");    
+    CAmount nAmount;
+    try{
+        nAmount = AssetAmountFromValue(request.params[2], theAsset.nPrecision);
+    }
+    catch(const std::exception& e){
+        nAmount = request.params[2].get_int64();
+    }        
     const uint32_t &nBlockNumber = params[3].get_uint(); 
     const uint32_t &nBridgeTransferID = params[4].get_uint(); 
     
