@@ -95,7 +95,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['total_supply'], maxUint)
         assert_equal(assetInfo['balance'], maxUint)
         assert_equal(assetInfo['max_supply'], maxUint)
-        assert_raises_rpc_error(-4, 'asset-amount-overflow', self.nodes[0].assetupdate, asset, '', '', 1, 31, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-amount-outofrange', self.nodes[0].assetupdate, asset, '', '', 1, 31, '', {}, {})
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 0, maxUint, maxUint+1, 31, '', {}, {})
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 0, maxUint+1, maxUint+1, 31, '', {}, {})
 
