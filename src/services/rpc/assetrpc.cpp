@@ -157,7 +157,7 @@ UniValue assettransactionnotarize(const JSONRPCRequest& request) {
     }.Check(request);	
 
     std::string hexstring = request.params[0].get_str();
-    std::vector<unsigned char> vchSig = ParseHex(DecodeBase64(request.params[1].get_str().c_str()));
+    std::vector<unsigned char> vchSig = DecodeBase64(request.params[1].get_str().c_str());
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
