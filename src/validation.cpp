@@ -1396,6 +1396,11 @@ void CChainState::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSt
 {
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
+
+        VeriBlock::getService<VeriBlock::PopService>()
+            .getAltTree()
+            .invalidateSubtree(pindex->GetBlockHash().asVector(), altintegration::BLOCK_FAILED_BLOCK);
+
         m_blockman.m_failed_blocks.insert(pindex);
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
@@ -3154,7 +3159,8 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex* pindex)
     int nHeight = pindex->nHeight;
 
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    pop.getAltTree().revalidateSubtree(pindex->GetBlockHash().asVector(), altintegration::BLOCK_FAILED_MASK, true);
+    auto blockHash = pindex->GetBlockHash().asVector();
+    pop.getAltTree().revalidateSubtree(blockHash, altintegration::BLOCK_FAILED_BLOCK, true);
 
     // Remove the invalidity flag from this block and all its descendants.
     BlockMap::iterator it = m_blockman.m_block_index.begin();
