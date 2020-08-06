@@ -164,9 +164,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                          strprintf("%s: inputs missing/spent", __func__));
     }
     CAmount nValueIn = 0;
-    std::unordered_map<uint32_t, std::pair<bool, uint64_t> > mapAssetIn;
-    std::unordered_map<uint32_t, std::pair<bool, uint64_t> > mapAssetOut;
-    uint64_t nPrevTotal;
+    std::unordered_map<uint32_t, std::pair<bool, CAmount> > mapAssetIn;
+    std::unordered_map<uint32_t, std::pair<bool, CAmount> > mapAssetOut;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -181,7 +180,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             const bool &zeroVal = coin.out.assetInfo.nValue == 0;
             auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, std::make_pair(zeroVal, coin.out.assetInfo.nValue));
             if (!inRes.second) {
-                nPrevTotal = inRes.first->second.second;
                 inRes.first->second.second += coin.out.assetInfo.nValue;
                 if (!inRes.first->second.first) {
                     inRes.first->second.first = zeroVal;
@@ -190,9 +188,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                 else if (zeroVal) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-val-input");
                 }
-                // overflow
-                if(!zeroVal && (inRes.first->second.second <= nPrevTotal || inRes.first->second.second > MAX_ASSET)) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-overflow");
+                if(!MoneyRangeAsset(inRes.first->second.second) || !MoneyRangeAsset(coin.out.assetInfo.nValue)) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
                 }
             }
         }

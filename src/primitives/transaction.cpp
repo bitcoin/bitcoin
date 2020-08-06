@@ -363,8 +363,8 @@ void CMutableTransaction::LoadAssets()
                 if(nOut >= nVoutSize) {
                     throw std::ios_base::failure("asset vout out of range");
                 }
-                if(voutAsset.nValue > MAX_ASSET) {
-                    throw std::ios_base::failure("asset vout value overflow");
+                if(voutAsset.nValue > MAX_ASSET || voutAsset.nValue < 0) {
+                    throw std::ios_base::failure("asset vout value out of range");
                 }
                 // store in vout
                 CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
@@ -374,11 +374,10 @@ void CMutableTransaction::LoadAssets()
         }       
     }
 }
-bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut, TxValidationState& state) const
+bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
-    uint64_t nTotal = 0;
-    uint64_t nPrevTotal;
+    CAmount nTotal = 0;
     for(const auto &it: voutAssets) {
         if(it.values.empty()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
@@ -391,12 +390,11 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
             if(nOut >= nVoutSize) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
             }
-            const uint64_t& nAmount = voutAsset.nValue;
+            const CAmount& nAmount = voutAsset.nValue;
             // make sure the vout assetinfo matches the asset commitment in OP_RETURN
             if(vout[nOut].assetInfo.nAsset != nAsset || vout[nOut].assetInfo.nValue != nAmount) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-assetinfo-mismatch");
             }
-            nPrevTotal = nTotal;
             nTotal += nAmount;
             if(nAmount == 0) {
                 // only one zero val per asset is allowed
@@ -405,8 +403,7 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
                 }
                 zeroVal = true;
             }
-            // overflow
-            else if(nTotal <= nPrevTotal) {
+            if(!MoneyRangeAsset(nTotal) || !MoneyRangeAsset(nAmount)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
             }
             auto itSet = setUsedIndex.emplace(nOut);

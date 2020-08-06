@@ -2830,9 +2830,9 @@ UniValue listunspent(const JSONRPCRequest& request)
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
     // SYSCOIN
-    uint64_t nMinimumAmountAsset = 0;
-    uint64_t nMaximumAmountAsset = MAX_ASSET;
-    uint64_t nMinimumSumAmountAsset = MAX_ASSET;
+    CAmount nMinimumAmountAsset = 0;
+    CAmount nMaximumAmountAsset = MAX_ASSET;
+    CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
     uint32_t nAsset = 0;
 

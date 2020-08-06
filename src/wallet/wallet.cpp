@@ -2124,7 +2124,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 // SYSCOIN
-void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMinimumAmountAsset, const uint64_t& nMaximumAmountAsset, const uint64_t& nMinimumSumAmountAsset, const uint64_t nMaximumCount, const bool bIncludeLocked) const
+void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const CAmount& nMinimumAmountAsset, const CAmount& nMaximumAmountAsset, const CAmount& nMinimumSumAmountAsset, const uint64_t nMaximumCount, const bool bIncludeLocked) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -2262,8 +2262,8 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             }
             // SYSCOIN
             if (nMinimumSumAmountAsset != MAX_ASSET && isAssetCoin) {
-                nTotalAsset += (CAmount)wtx.tx->vout[i].assetInfo.nValue;
-                if (nTotalAsset >= (CAmount)nMinimumSumAmountAsset) {
+                nTotalAsset += wtx.tx->vout[i].assetInfo.nValue;
+                if (nTotalAsset >= nMinimumSumAmountAsset) {
                     return;
                 }
             }         
@@ -2480,7 +2480,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             setCoinsRet.insert(out.GetInputCoin());
         }
         // SYSCOIN
-        return (nValueRet >= nTargetValue && nValueRetAsset >= (CAmount)nTargetValueAsset.nValue);
+        return (nValueRet >= nTargetValue && nValueRetAsset >= nTargetValueAsset.nValue);
     }
 
     // calculate value from preset inputs and store them
