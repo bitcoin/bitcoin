@@ -3154,7 +3154,8 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex* pindex)
     int nHeight = pindex->nHeight;
 
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    pop.getAltTree().revalidateSubtree(pindex->GetBlockHash().asVector(), altintegration::BLOCK_FAILED_MASK, true);
+    auto blockHash = pindex->GetBlockHash().asVector();
+    pop.getAltTree().revalidateSubtree(blockHash, altintegration::BLOCK_FAILED_BLOCK, true);
 
     // Remove the invalidity flag from this block and all its descendants.
     BlockMap::iterator it = m_blockman.m_block_index.begin();
