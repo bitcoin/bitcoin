@@ -504,7 +504,7 @@ bool GetPayload(
     // fill containing blocks
     containingBlocks.reserve(containing.size());
     std::transform(
-        containing.begin(), containing.end(), std::back_inserter(containingBlocks), [](const auto& blockHash) {
+        containing.begin(), containing.end(), std::back_inserter(containingBlocks), [](const decltype(*containing.begin())& blockHash) {
             return uint256(blockHash);
         });
 
