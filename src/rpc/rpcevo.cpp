@@ -585,7 +585,7 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "payload signature not empty");
     }
 
-    ptx.vchSig = DecodeBase64(request.params[2].get_str().c_str());
+    ptx.vchSig = DecodeBase64(request.params[2].get_str());
 
     SetTxPayload(tx, ptx);
     return SignAndSendSpecialTx(request.context, tx);
