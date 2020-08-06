@@ -178,6 +178,13 @@ class PopFr(BitcoinTestFramework):
         self.log.info("all nodes connected")
         self.sync_blocks(self.nodes, timeout=60)
         self.sync_pop_tips(self.nodes, timeout=60)
+        self.log.info("all nodes have common tip")
+
+        expected_best = bestblocks[0]
+        bestblocks = [self.get_best_block(x) for x in self.nodes]
+        for best in bestblocks:
+            assert_equal(best, expected_best)
+
         self.log.warning("_4_chains_converge() succeeded!")
 
 
