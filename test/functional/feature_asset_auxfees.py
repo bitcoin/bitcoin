@@ -5,7 +5,6 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-from test_framework.messages import COIN
 
 class AssetAuxFeesTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -17,10 +16,10 @@ class AssetAuxFeesTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         self.basic_asset()
-        self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), int(1000*COIN))
+        self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), 1000)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(250*COIN))
+        self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 250)
         self.sync_mempools()
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
@@ -30,7 +29,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         self.nodes[0].assetupdate(self.asset, '', '', 0, 31, '', {}, {})
         self.nodes[0].generate(1)
         self.sync_blocks()
-        self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(250*COIN))
+        self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 250)
         self.sync_mempools()
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
@@ -41,8 +40,8 @@ class AssetAuxFeesTest(SyscoinTestFramework):
 
     def basic_asset(self):
         newaddressfee = self.nodes[1].getnewaddress()
-        auxfees = {'a': newaddressfee, 'fs': [[0,'0.01'],[int(10*COIN),'0.004'],[int(250*COIN),'0.002'],[int(2500*COIN),'0.0007'],[int(25000*COIN),'0.00007'],[int(250000*COIN),'0']]}
-        self.asset = self.nodes[0].assetnew('1', 'AGX', 'AGX silver backed token, licensed and operated by Interfix corporation', '0x', 8, 1000*COIN, 10000*COIN, 63, '', {}, auxfees)['asset_guid']
+        auxfees = {'a': newaddressfee, 'fs': [[0,'0.01'],[10,'0.004'],[250,'0.002'],[2500,'0.0007'],[25000,'0.00007'],[250000,'0']]}
+        self.asset = self.nodes[0].assetnew('1', 'AGX', 'AGX silver backed token, licensed and operated by Interfix corporation', '0x', 8, 1000, 10000, 63, '', {}, auxfees)['asset_guid']
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
