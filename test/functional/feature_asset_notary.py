@@ -33,7 +33,7 @@ class AssetNotaryTest(SyscoinTestFramework):
     def basic_asset(self):
         self.notary_address = self.nodes[0].getnewaddress()
         notary = {'e': 'http://jsonplaceholder.typicode.com/posts/', 'it': True, 'rx': True}
-        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, self.notary_address, notary, {}})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000*COIN, 10000*COIN, 31, self.notary_address, notary, {})['asset_guid']
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
