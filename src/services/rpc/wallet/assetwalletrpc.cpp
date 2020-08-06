@@ -23,6 +23,7 @@
 #include <node/transaction.h>
 #include <rpc/auxpow_miner.h>
 #include <curl/curl.h>
+#include <messagesigner.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
@@ -204,7 +205,7 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
     return bFilled;
 }
 
-bool UpdateNotarySignature(CMutableTransaction& mtx) {
+bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx) {
     const CTransactionRef& tx = MakeTransactionRef(mtx);
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
@@ -399,7 +400,65 @@ void TestTransaction(const CTransactionRef& tx, const util::Ref& context) {
         }
     }
 }
+UniValue signhash(const JSONRPCRequest& request)
+{
+        RPCHelpMan{"signhash",
+                "\nSign a hash with the private key of an address" +
+        HELP_REQUIRING_PASSPHRASE,
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to use for the private key."},
+                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash to create a signature of."},
+                },
+                RPCResult{
+                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
+                },
+                RPCExamples{
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signhash", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"hash\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("signhash", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"hash\"")
+                },
+            }.Check(request);
 
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    const CWallet* const pwallet = wallet.get();
+
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
+
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    std::string strAddress = request.params[0].get_str();
+    uint256 hash = ParseHashV(request.params[1], "hash");
+
+    CTxDestination dest = DecodeDestination(strAddress);
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+    }
+
+    auto keyid = GetKeyForDestination(spk_man, dest);
+    if (keyid.IsNull()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    }
+    CKey vchSecret;
+    if (!spk_man.GetKey(keyid, vchSecret)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+    }
+    std::vector<unsigned char> vchSig;
+    if(!CHashSigner::SignHash(hash, vchSecret, vchSig)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "SignHash failed");
+    }
+   
+    if (!CHashSigner::VerifyHash(hash, vchSecret.GetPubKey(), vchSig)) {
+        LogPrintf("CSporkMessage::Sign -- VerifyHash() failed\n");
+        return false;
+    }
+    return HexStr(vchSig);
+}
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"syscoinburntoassetallocation",
@@ -1354,7 +1413,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignature(mtx)) {
+    if(UpdateNotarySignatureFromEndpoint(mtx)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
@@ -1476,7 +1535,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignature(mtx)) {
+    if(UpdateNotarySignatureFromEndpoint(mtx)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
@@ -1619,7 +1678,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
-    if(UpdateNotarySignature(mtx)) {
+    if(UpdateNotarySignatureFromEndpoint(mtx)) {
         if(!pwallet->SignTransaction(mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign notarized transaction");
         }
@@ -2028,6 +2087,8 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_receiver","amount","replaceable"}},
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable","comment","conf_target","estimate_mode"}},
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
+    { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},
+    
     /** Auxpow wallet functions */
     { "syscoinwallet",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
 };

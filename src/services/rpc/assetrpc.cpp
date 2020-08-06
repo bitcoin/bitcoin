@@ -87,8 +87,115 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	}
 	return true;
 }
+bool FillNotarySig(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, const std::vector<unsigned char> &vchSig) {
+    // fill notary signatures for assets that require them
+    for(auto& vecOut: voutAssets) {
+        // get asset
+        CAsset theAsset;
+        // if asset has notary signature requirement set
+        if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
+            vecOut.vchNotarySig = vchSig;
+        }
+    }
+    return true;
+}
 
+bool UpdateNotarySignature(CMutableTransaction& mtx, const std::vector<unsigned char> &vchSig) {
+    const CTransactionRef& tx = MakeTransactionRef(mtx);
+    std::vector<unsigned char> data;
+    bool bFilledNotarySig = false;
+     // call API endpoint or notary signatures and fill them in for every asset
+    if(IsSyscoinMintTx(tx->nVersion)) {
+        CMintSyscoin mintSyscoin(*tx);
+        if(FillNotarySig(tx, mintSyscoin.voutAssets, vchSig)) {
+            bFilledNotarySig = true;
+            mintSyscoin.SerializeData(data);
+        }
+    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+        CBurnSyscoin burnSyscoin(*tx);
+        if(FillNotarySig(tx, burnSyscoin.voutAssets, vchSig)) {
+            bFilledNotarySig = true;
+            burnSyscoin.SerializeData(data);
+        }
+    } else if(IsAssetAllocationTx(tx->nVersion)) {
+        CAssetAllocation allocation(*tx);
+        if(FillNotarySigFromEndpoint(tx, allocation.voutAssets, vchSig)) {
+            bFilledNotarySig = true;
+            allocation.SerializeData(data);
+        }
+    }
+    if(bFilledNotarySig) {
+        // find previous commitment (OP_RETURN) and replace script
+        CScript scriptDataNew;
+        scriptDataNew << OP_RETURN << data;
+        for(auto& vout: mtx.vout) {
+            if(vout.scriptPubKey.IsUnspendable()) {
+                vout.scriptPubKey = scriptDataNew;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+UniValue assettransactionnotarize(const JSONRPCRequest& request) {	
 
+    RPCHelpMan{"assettransactionnotarize",	
+        "\nUpdate notary signature on an asset transaction. Will require re-signing transaction before submitting to network.\n",	
+        {	
+            {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to notarize."},
+            {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "Base64 encoded notary signature to add to transaction."}	
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "hex", "The notarized transaction hex, which you must sign prior to submitting."},
+            }},	
+        RPCExamples{	
+            HelpExampleCli("assettransactionnotarize", "\"hex\" \"signature\"")	
+            + HelpExampleRpc("assettransactionnotarize", "\"hex\",\"signature\"")	
+        }	
+    }.Check(request);	
+
+    std::string hexstring = params[0].get_str();
+    std::vector<unsigned char> vchSig = ParseHex(DecodeBase64(params[1].get_str());
+    CMutableTransaction mtx;
+    if(!DecodeHexTx(mtx, hexstring, false, true)) {
+        if(!DecodeHexTx(mtx, hexstring, true, true)) {
+             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
+        }
+    }
+    UpdateNotarySignature(mtx);
+    UniValue ret(UniValue::VOBJ);	
+    ret.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+    return ret;
+}
+UniValue getnotarysighash(const JSONRPCRequest& request) {	
+
+    RPCHelpMan{"getnotarysighash",	
+        "\nGet sighash for notary to sign off on, use assettransactionnotarize to update the transaction after re-singing once sighash is used to create a notarized signature.\n",	
+        {	
+            {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to get sighash for."}	
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "sighash", "Notary sighash (uint256)"},
+            }},	
+        RPCExamples{	
+            HelpExampleCli("getnotarysighash", "\"hex\"")
+            + HelpExampleRpc("getnotarysighash", "\"hex\"")	
+        }	
+    }.Check(request);	
+    std::string hexstring = params[0].get_str();
+    CMutableTransaction mtx;
+    if(!DecodeHexTx(mtx, hexstring, false, true)) {
+        if(!DecodeHexTx(mtx, hexstring, true, true)) {
+             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
+        }
+    }
+    CTransaction tx(mtx);
+    return tx.GetNotarySigHash().GetHex();	
+}
 UniValue convertaddress(const JSONRPCRequest& request)	 {	
 
     RPCHelpMan{"convertaddress",	
@@ -753,6 +860,8 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
     { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
     { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"ethtxid"} },
+    { "syscoin",            "assettransactionnotarize",         &assettransactionnotarize,      {"hex","signature"} },
+    { "syscoin",            "getnotarysighash",                 &getnotarysighash,              {"hex"} },
 };
 // clang-format on
 void RegisterAssetRPCCommands(CRPCTable &t)

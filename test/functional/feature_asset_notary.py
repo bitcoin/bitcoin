@@ -23,7 +23,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         hextx = self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), int(0.4*COIN))['hex']
         sighash = self.nodes[0].getnotarysighash(hextx)
         notarysig = self.nodes[0].signhash(self.notary_address, sighash)
-        hextx_notarized = self.nodes[0].assettransactionnotarize(tx, notarysig)
+        hextx_notarized = self.nodes[0].assettransactionnotarize(hextx, notarysig)['hex']
         tx_resigned = self.nodes[0].signrawtransactionwithwallet(hextx_notarized)['hex']
         assert_equal(hextx.length, hextx_notarized.length)
         assert_equal(tx_resigned.length, hextx_notarized.length)
