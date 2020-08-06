@@ -66,12 +66,12 @@ static struct CRPCSignals
     boost::signals2::signal<void ()> Stopped;
 } g_rpcSignals;
 
-void RPCServer::OnStarted(std::function<void ()> slot)
+void RPCServer::OnStarted(const std::function<void ()>& slot)
 {
     g_rpcSignals.Started.connect(slot);
 }
 
-void RPCServer::OnStopped(std::function<void ()> slot)
+void RPCServer::OnStopped(const std::function<void ()>& slot)
 {
     g_rpcSignals.Stopped.connect(slot);
 }

@@ -12,6 +12,8 @@
 #include <util/strencodings.h>
 
 #include <string>
+#include <utility>
+
 #include <vector>
 
 struct TestDerivation {
@@ -24,13 +26,13 @@ struct TestVector {
     std::string strHexMaster;
     std::vector<TestDerivation> vDerive;
 
-    explicit TestVector(std::string strHexMasterIn) : strHexMaster(strHexMasterIn) {}
+    explicit TestVector(std::string strHexMasterIn) : strHexMaster(std::move(strHexMasterIn)) {}
 
     TestVector& operator()(std::string pub, std::string prv, unsigned int nChild) {
         vDerive.push_back(TestDerivation());
         TestDerivation &der = vDerive.back();
-        der.pub = pub;
-        der.prv = prv;
+        der.pub = std::move(pub);
+        der.prv = std::move(prv);
         der.nChild = nChild;
         return *this;
     }

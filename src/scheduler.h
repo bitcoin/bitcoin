@@ -38,7 +38,7 @@ public:
     typedef std::function<void()> Function;
 
     /** Call func at/after time t */
-    void schedule(Function f, std::chrono::system_clock::time_point t);
+    void schedule(const Function& f, std::chrono::system_clock::time_point t);
 
     /** Call f once after the delta has passed */
     void scheduleFromNow(Function f, std::chrono::milliseconds delta)
@@ -52,7 +52,7 @@ public:
      * The timing is not exact: Every time f is finished, it is rescheduled to run again after delta. If you need more
      * accurate scheduling, don't use this method.
      */
-    void scheduleEvery(Function f, std::chrono::milliseconds delta);
+    void scheduleEvery(const Function& f, std::chrono::milliseconds delta);
 
     /**
      * Mock the scheduler to fast forward in time.

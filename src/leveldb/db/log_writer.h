@@ -32,7 +32,7 @@ class Writer {
   Writer(const Writer&) = delete;
   Writer& operator=(const Writer&) = delete;
 
-  ~Writer();
+  ~Writer() = default;
 
   Status AddRecord(const Slice& slice);
 

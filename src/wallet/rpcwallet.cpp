@@ -2914,7 +2914,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
-void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl)
+void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, const UniValue& options, CCoinControl& coinControl)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -3496,7 +3496,7 @@ public:
             subobj.pushKV("scriptPubKey", HexStr(subscript));
             // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
             if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
-            obj.pushKV("embedded", std::move(subobj));
+            obj.pushKV("embedded", subobj);
         } else if (which_type == TxoutType::MULTISIG) {
             // Also report some information on multisig scripts (which do not have a corresponding address).
             // TODO: abstract out the common functionality between this logic and ExtractDestinations.
@@ -3506,7 +3506,7 @@ public:
                 CPubKey key(solutions_data[i].begin(), solutions_data[i].end());
                 pubkeys.push_back(HexStr(key));
             }
-            obj.pushKV("pubkeys", std::move(pubkeys));
+            obj.pushKV("pubkeys", pubkeys);
         }
     }
 
@@ -3703,7 +3703,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     if (address_book_entry) {
         labels.push_back(address_book_entry->GetLabel());
     }
-    ret.pushKV("labels", std::move(labels));
+    ret.pushKV("labels", labels);
 
     return ret;
 }

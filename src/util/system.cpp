@@ -90,7 +90,7 @@ static Mutex cs_dir_locks;
  */
 static std::map<std::string, std::unique_ptr<fsbridge::FileLock>> dir_locks GUARDED_BY(cs_dir_locks);
 
-bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only)
+bool LockDirectory(const fs::path& directory, const std::string& lockfile_name, bool probe_only)
 {
     LOCK(cs_dir_locks);
     fs::path pathLockFile = directory / lockfile_name;
@@ -407,7 +407,7 @@ bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp) const
     return true;
 }
 
-static void SaveErrors(const std::vector<std::string> errors, std::vector<std::string>* error_out)
+static void SaveErrors(const std::vector<std::string>& errors, std::vector<std::string>* error_out)
 {
     for (const auto& error : errors) {
         if (error_out) {
@@ -982,7 +982,7 @@ void ArgsManager::LogArgs() const
     logArgsPrefix("Command-line arg:", "", m_settings.command_line_options);
 }
 
-bool RenameOver(fs::path src, fs::path dest)
+bool RenameOver(const fs::path& src, const fs::path& dest)
 {
 #ifdef WIN32
     return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),

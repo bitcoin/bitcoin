@@ -514,7 +514,7 @@ public:
         wallet.reset();
     }
 
-    CWalletTx& AddTx(CRecipient recipient)
+    CWalletTx& AddTx(const CRecipient& recipient)
     {
         CTransactionRef tx;
         CAmount fee;
@@ -663,7 +663,7 @@ BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
     BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
 }
 
-bool malformed_descriptor(std::ios_base::failure e)
+bool malformed_descriptor(const std::ios_base::failure& e)
 {
     std::string s(e.what());
     return s.find("Missing checksum") != std::string::npos;

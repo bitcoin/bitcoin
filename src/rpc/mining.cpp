@@ -112,7 +112,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
         IncrementExtraNonce(&block, ::ChainActive().Tip(), extra_nonce);
     }
 
-    CChainParams chainparams(Params());
+    const CChainParams& chainparams(Params());
 
     while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
@@ -339,7 +339,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
         }
     }
 
-    CChainParams chainparams(Params());
+    const CChainParams& chainparams(Params());
     CBlock block;
 
     {
@@ -660,7 +660,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         if (lpval.isStr())
         {
             // Format: <hashBestChain><nTransactionsUpdatedLast>
-            std::string lpstr = lpval.get_str();
+            const std::string& lpstr = lpval.get_str();
 
             hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
             nTransactionsUpdatedLastLP = atoi64(lpstr.substr(64));

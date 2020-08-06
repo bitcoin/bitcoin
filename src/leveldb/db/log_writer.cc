@@ -29,7 +29,7 @@ Writer::Writer(WritableFile* dest, uint64_t dest_length)
   InitTypeCrc(type_crc_);
 }
 
-Writer::~Writer() = default;
+
 
 Status Writer::AddRecord(const Slice& slice) {
   const char* ptr = slice.data();

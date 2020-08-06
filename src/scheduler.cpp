@@ -68,7 +68,7 @@ void CScheduler::serviceQueue()
     newTaskScheduled.notify_one();
 }
 
-void CScheduler::schedule(CScheduler::Function f, std::chrono::system_clock::time_point t)
+void CScheduler::schedule(const CScheduler::Function& f, std::chrono::system_clock::time_point t)
 {
     {
         LOCK(newTaskMutex);
@@ -99,13 +99,13 @@ void CScheduler::MockForward(std::chrono::seconds delta_seconds)
     newTaskScheduled.notify_one();
 }
 
-static void Repeat(CScheduler& s, CScheduler::Function f, std::chrono::milliseconds delta)
+static void Repeat(CScheduler& s, const CScheduler::Function& f, std::chrono::milliseconds delta)
 {
     f();
     s.scheduleFromNow([=, &s] { Repeat(s, f, delta); }, delta);
 }
 
-void CScheduler::scheduleEvery(CScheduler::Function f, std::chrono::milliseconds delta)
+void CScheduler::scheduleEvery(const CScheduler::Function& f, std::chrono::milliseconds delta)
 {
     scheduleFromNow([=] { Repeat(*this, f, delta); }, delta);
 }

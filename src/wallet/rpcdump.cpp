@@ -603,7 +603,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             const CKey& key = std::get<0>(key_tuple);
             int64_t time = std::get<1>(key_tuple);
             bool has_label = std::get<2>(key_tuple);
-            std::string label = std::get<3>(key_tuple);
+            const std::string& label = std::get<3>(key_tuple);
 
             CPubKey pubkey = key.GetPubKey();
             CHECK_NONFATAL(key.VerifyPubKey(pubkey));
@@ -757,7 +757,9 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
-    for (const auto& entry : mapKeyBirth) {
+    vKeyBirth.reserve(mapKeyBirth.size());
+
+for (const auto& entry : mapKeyBirth) {
         vKeyBirth.push_back(std::make_pair(entry.second, entry.first));
     }
     mapKeyBirth.clear();
@@ -1415,7 +1417,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
                                       "and -rescan options).",
                                 GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
-                    response.push_back(std::move(result));
+                    response.push_back(result);
                 }
                 ++i;
             }
@@ -1706,7 +1708,7 @@ UniValue importdescriptors(const JSONRPCRequest& main_request)
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
                                       "and -rescan options).",
                                 GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
-                    response.push_back(std::move(result));
+                    response.push_back(result);
                 }
             }
         }

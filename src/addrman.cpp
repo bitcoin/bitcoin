@@ -624,7 +624,7 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     return mapInfo[id_old];
 }
 
-std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
+std::vector<bool> CAddrMan::DecodeAsmap(const fs::path& path)
 {
     std::vector<bool> bits;
     FILE *filestr = fsbridge::fopen(path, "rb");

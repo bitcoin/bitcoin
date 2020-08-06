@@ -73,10 +73,10 @@ void RPCTypeCheckObj(const UniValue& o,
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
-extern uint256 ParseHashV(const UniValue& v, std::string strName);
-extern uint256 ParseHashO(const UniValue& o, std::string strKey);
-extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
-extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+extern uint256 ParseHashV(const UniValue& v, const std::string& strName);
+extern uint256 ParseHashO(const UniValue& o, const std::string& strKey);
+extern std::vector<unsigned char> ParseHexV(const UniValue& v, const std::string& strName);
+extern std::vector<unsigned char> ParseHexO(const UniValue& o, const std::string& strKey);
 
 CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType default_type);
 

@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(util_FormatISO8601Date)
 struct TestArgsManager : public ArgsManager
 {
     TestArgsManager() { m_network_only_args.clear(); }
-    void ReadConfigString(const std::string str_config)
+    void ReadConfigString(const std::string& str_config)
     {
         std::istringstream streamConfig(str_config);
         {
@@ -195,7 +195,7 @@ struct TestArgsManager : public ArgsManager
         std::string error;
         BOOST_REQUIRE(ReadConfigStream(streamConfig, "", error));
     }
-    void SetNetworkOnlyArg(const std::string arg)
+    void SetNetworkOnlyArg(const std::string& arg)
     {
         LOCK(cs_args);
         m_network_only_args.insert(arg);
@@ -1673,7 +1673,7 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
 
 static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
 {
-    *result = LockDirectory(dirname, lockname);
+    *result = LockDirectory(dirname, std::move(lockname));
 }
 
 #ifndef WIN32 // Cannot do this test on WIN32 due to lack of fork()
@@ -1681,7 +1681,7 @@ static constexpr char LockCommand = 'L';
 static constexpr char UnlockCommand = 'U';
 static constexpr char ExitCommand = 'X';
 
-static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
+static void TestOtherProcess(const fs::path& dirname, const std::string& lockname, int fd)
 {
     char ch;
     while (true) {

@@ -1248,7 +1248,7 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
     std::vector<struct pollfd> vpollfds;
     vpollfds.reserve(pollfds.size());
     for (auto it : pollfds) {
-        vpollfds.push_back(std::move(it.second));
+        vpollfds.push_back(it.second);
     }
 
     if (poll(vpollfds.data(), vpollfds.size(), SELECT_TIMEOUT_MILLISECONDS) < 0) return;
@@ -1775,7 +1775,7 @@ int CConnman::GetExtraOutboundCount()
     return std::max(nOutbound - m_max_outbound_full_relay - m_max_outbound_block_relay, 0);
 }
 
-void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
+void CConnman::ThreadOpenConnections(const std::vector<std::string>& connect)
 {
     // Connect to specific addresses
     if (!connect.empty())
@@ -2844,7 +2844,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         RecordBytesSent(nBytesSent);
 }
 
-bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
+bool CConnman::ForNode(NodeId id, const std::function<bool(CNode* pnode)>& func)
 {
     CNode* found = nullptr;
     LOCK(cs_vNodes);

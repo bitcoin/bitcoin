@@ -926,7 +926,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     bool test_accept_res;
     {
         LOCK(cs_main);
-        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
+        test_accept_res = AcceptToMemoryPool(mempool, state, tx,
             nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
     }
     result_0.pushKV("allowed", test_accept_res);
@@ -942,7 +942,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
         }
     }
 
-    result.push_back(std::move(result_0));
+    result.push_back(result_0);
     return result;
 }
 
@@ -1080,7 +1080,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
 
     // Unknown data
     UniValue unknowns(UniValue::VOBJ);
-    for (auto entry : psbtx.unknown) {
+    for (const auto& entry : psbtx.unknown) {
         unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
     }
     result.pushKV("unknown", unknowns);
@@ -1187,7 +1187,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         // Unknown data
         if (input.unknown.size() > 0) {
             UniValue unknowns(UniValue::VOBJ);
-            for (auto entry : input.unknown) {
+            for (const auto& entry : input.unknown) {
                 unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
             }
             in.pushKV("unknown", unknowns);
@@ -1231,7 +1231,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         // Unknown data
         if (output.unknown.size() > 0) {
             UniValue unknowns(UniValue::VOBJ);
-            for (auto entry : output.unknown) {
+            for (const auto& entry : output.unknown) {
                 unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
             }
             out.pushKV("unknown", unknowns);

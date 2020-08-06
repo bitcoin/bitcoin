@@ -40,7 +40,7 @@ struct CoinEntry {
 
 }
 
-CCoinsViewDB::CCoinsViewDB(fs::path ldb_path, size_t nCacheSize, bool fMemory, bool fWipe) :
+CCoinsViewDB::CCoinsViewDB(const fs::path& ldb_path, size_t nCacheSize, bool fMemory, bool fWipe) :
     m_db(MakeUnique<CDBWrapper>(ldb_path, nCacheSize, fMemory, fWipe, true)),
     m_ldb_path(ldb_path),
     m_is_memory(fMemory) { }
@@ -243,7 +243,7 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
+bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, const std::function<CBlockIndex*(const uint256&)>& insertBlockIndex)
 {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
 

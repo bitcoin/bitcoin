@@ -452,7 +452,7 @@ void BerkeleyEnvironment::ReloadDbEnv()
     });
 
     std::vector<std::string> filenames;
-    for (auto it : m_databases) {
+    for (const auto& it : m_databases) {
         filenames.push_back(it.first);
     }
     // Close the individual Db's

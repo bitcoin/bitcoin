@@ -270,7 +270,7 @@ static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
                          __func__, index_name, DB_BLOCK_HEIGHT, height);
         }
 
-        batch.Write(DBHashKey(value.first), std::move(value.second));
+        batch.Write(DBHashKey(value.first), value.second);
 
         db_it.Next();
     }
@@ -309,7 +309,7 @@ static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVa
         return false;
     }
     if (read_out.first == block_index->GetBlockHash()) {
-        result = std::move(read_out.second);
+        result = read_out.second;
         return true;
     }
 
@@ -360,7 +360,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 
         size_t i = static_cast<size_t>(block_index->nHeight - start_height);
         if (block_hash == values[i].first) {
-            results[i] = std::move(values[i].second);
+            results[i] = values[i].second;
             continue;
         }
 
@@ -456,7 +456,7 @@ BlockFilterIndex* GetBlockFilterIndex(BlockFilterType filter_type)
     return it != g_filter_indexes.end() ? &it->second : nullptr;
 }
 
-void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn)
+void ForEachBlockFilterIndex(const std::function<void (BlockFilterIndex&)>& fn)
 {
     for (auto& entry : g_filter_indexes) fn(entry.second);
 }

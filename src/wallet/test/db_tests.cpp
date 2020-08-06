@@ -16,7 +16,7 @@ BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(getwalletenv_file)
 {
     std::string test_name = "test_name.dat";
-    const fs::path datadir = GetDataDir();
+    const fs::path& datadir = GetDataDir();
     fs::path file_path = datadir / test_name;
     std::ofstream f(file_path.BOOST_FILESYSTEM_C_STR);
     f.close();
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_file)
 BOOST_AUTO_TEST_CASE(getwalletenv_directory)
 {
     std::string expected_name = "wallet.dat";
-    const fs::path datadir = GetDataDir();
+    const fs::path& datadir = GetDataDir();
 
     std::string filename;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(datadir, filename);

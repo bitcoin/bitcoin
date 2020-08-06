@@ -84,7 +84,7 @@ public:
 BlockFilterIndex* GetBlockFilterIndex(BlockFilterType filter_type);
 
 /** Iterate over all running block filter indexes, invoking fn on each. */
-void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn);
+void ForEachBlockFilterIndex(const std::function<void (BlockFilterIndex&)>& fn);
 
 /**
  * Initialize a block filter index for the given type if one does not already exist. Returns true if

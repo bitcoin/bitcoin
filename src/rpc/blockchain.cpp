@@ -2131,7 +2131,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             for (const auto& script : scripts) {
                 std::string inferred = InferDescriptor(script, provider)->ToString();
                 needles.emplace(script);
-                descriptors.emplace(std::move(script), std::move(inferred));
+                descriptors.emplace(script, std::move(inferred));
             }
         }
 

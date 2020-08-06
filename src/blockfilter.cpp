@@ -198,7 +198,7 @@ const std::set<BlockFilterType>& AllBlockFilterTypes()
 
     static std::once_flag flag;
     std::call_once(flag, []() {
-            for (auto entry : g_filter_types) {
+            for (const auto& entry : g_filter_types) {
                 types.insert(entry.first);
             }
         });
@@ -214,7 +214,7 @@ const std::string& ListBlockFilterTypes()
     std::call_once(flag, []() {
             std::stringstream ret;
             bool first = true;
-            for (auto entry : g_filter_types) {
+            for (const auto& entry : g_filter_types) {
                 if (!first) ret << ", ";
                 ret << entry.second;
                 first = false;

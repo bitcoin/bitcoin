@@ -35,7 +35,9 @@ void LocalTestingSetup :: ResetArgs(const std::string& strArg)
 
     // Convert to char*:
     std::vector<const char*> vecChar;
-    for (const std::string& s : vecArg)
+    vecChar.reserve(vecArg.size());
+
+for (const std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 
     std::string error;

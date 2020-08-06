@@ -274,7 +274,9 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         key[i].MakeNewKey(true);
         BOOST_CHECK(keystore.AddKey(key[i]));
     }
-    for (int i = 0; i < 3; i++)
+    keys.reserve(3);
+
+for (int i = 0; i < 3; i++)
         keys.push_back(key[i].GetPubKey());
 
     CMutableTransaction txFrom;

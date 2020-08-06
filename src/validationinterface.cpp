@@ -132,7 +132,7 @@ void RegisterValidationInterface(CValidationInterface* callbacks)
     RegisterSharedValidationInterface({callbacks, [](CValidationInterface*){}});
 }
 
-void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
+void UnregisterSharedValidationInterface(const std::shared_ptr<CValidationInterface>& callbacks)
 {
     UnregisterValidationInterface(callbacks.get());
 }

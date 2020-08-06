@@ -287,7 +287,7 @@ public:
     std::vector<bool> m_asmap;
 
     // Read asmap from provided binary file
-    static std::vector<bool> DecodeAsmap(fs::path path);
+    static std::vector<bool> DecodeAsmap(const fs::path& path);
 
 
     /**

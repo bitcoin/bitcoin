@@ -86,20 +86,20 @@ CAmount AmountFromValue(const UniValue& value)
     return amount;
 }
 
-uint256 ParseHashV(const UniValue& v, std::string strName)
+uint256 ParseHashV(const UniValue& v, const std::string& strName)
 {
-    std::string strHex(v.get_str());
+    const std::string& strHex(v.get_str());
     if (64 != strHex.length())
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", strName, 64, strHex.length(), strHex));
     if (!IsHex(strHex)) // Note: IsHex("") is false
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
     return uint256S(strHex);
 }
-uint256 ParseHashO(const UniValue& o, std::string strKey)
+uint256 ParseHashO(const UniValue& o, const std::string& strKey)
 {
     return ParseHashV(find_value(o, strKey), strKey);
 }
-std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName)
+std::vector<unsigned char> ParseHexV(const UniValue& v, const std::string& strName)
 {
     std::string strHex;
     if (v.isStr())
@@ -108,7 +108,7 @@ std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
     return ParseHex(strHex);
 }
-std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
+std::vector<unsigned char> ParseHexO(const UniValue& o, const std::string& strKey)
 {
     return ParseHexV(find_value(o, strKey), strKey);
 }
@@ -118,7 +118,7 @@ CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType d
     if (param.isNull()) {
         return default_type;
     } else {
-        std::string hash_type_input = param.get_str();
+        const std::string& hash_type_input = param.get_str();
 
         if (hash_type_input == "hash_serialized_2") {
             return CoinStatsHashType::HASH_SERIALIZED;
@@ -550,12 +550,12 @@ std::string RPCHelpMan::ToString() const
 
 std::string RPCArg::GetFirstName() const
 {
-    return m_names.substr(0, m_names.find("|"));
+    return m_names.substr(0, m_names.find('|'));
 }
 
 std::string RPCArg::GetName() const
 {
-    CHECK_NONFATAL(std::string::npos == m_names.find("|"));
+    CHECK_NONFATAL(std::string::npos == m_names.find('|'));
     return m_names;
 }
 

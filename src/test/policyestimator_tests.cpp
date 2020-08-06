@@ -25,7 +25,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     std::vector<CAmount> feeV;
 
     // Populate vectors of increasing fees
-    for (int j = 0; j < 10; j++) {
+    feeV.reserve(10);
+
+for (int j = 0; j < 10; j++) {
         feeV.push_back(basefee * (j+1));
     }
 

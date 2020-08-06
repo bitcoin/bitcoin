@@ -23,8 +23,8 @@ class CRPCCommand;
 
 namespace RPCServer
 {
-    void OnStarted(std::function<void ()> slot);
-    void OnStopped(std::function<void ()> slot);
+    void OnStarted(const std::function<void ()>& slot);
+    void OnStopped(const std::function<void ()>& slot);
 }
 
 /** Query whether RPC is running */

@@ -37,7 +37,7 @@ void UnregisterAllValidationInterfaces();
 /** Register subscriber */
 void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
 /** Unregister subscriber */
-void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
+void UnregisterSharedValidationInterface(const std::shared_ptr<CValidationInterface>& callbacks);
 
 /**
  * Pushes a function to callback onto the notification queue, guaranteeing any

@@ -17,6 +17,8 @@
 #include <validationinterface.h>
 
 #include <thread>
+#include <utility>
+
 
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
 
@@ -160,7 +162,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     bool ignored;
     BlockValidationState state;
     std::vector<CBlockHeader> headers;
-    std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](std::shared_ptr<const CBlock> b) { return b->GetBlockHeader(); });
+    std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](const std::shared_ptr<const CBlock>& b) { return b->GetBlockHeader(); });
 
     // Process all the headers so we understand the toplogy of the chain
     BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders(headers, state, Params()));
@@ -182,7 +184,9 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     // this will create parallelism and randomness inside validation - the ValidationInterface
     // will subscribe to events generated during block validation and assert on ordering invariance
     std::vector<std::thread> threads;
-    for (int i = 0; i < 10; i++) {
+    threads.reserve(10);
+
+for (int i = 0; i < 10; i++) {
         threads.emplace_back([&]() {
             bool ignored;
             FastRandomContext insecure;
@@ -192,7 +196,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             }
 
             // to make sure that eventually we process the full chain - do it here
-            for (auto block : blocks) {
+            for (const auto& block : blocks) {
                 if (block->vtx.size() == 1) {
                     bool processed = Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, &ignored);
                     assert(processed);
@@ -233,7 +237,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
     auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
-        return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+        return Assert(m_node.chainman)->ProcessNewBlock(Params(), std::move(block), /* fForceProcessing */ true, /* fNewBlock */ &ignored);
     };
 
     // Process all mined blocks

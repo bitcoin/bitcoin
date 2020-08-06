@@ -60,7 +60,7 @@ struct CCoin {
     }
 };
 
-static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string message)
+static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, const std::string& message)
 {
     req->WriteHeader("Content-Type", "text/plain");
     req->WriteReply(status, message + "\r\n");
