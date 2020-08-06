@@ -5,6 +5,7 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.messages import COIN
 
 class AssetBurnTest(SyscoinTestFramework):
     def set_test_params(self):
