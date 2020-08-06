@@ -637,7 +637,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // increase total supply
             storedAssetRef.nTotalSupply += theAsset.nBalance;
             storedAssetRef.nBalance += theAsset.nBalance;
-            if (!MoneyRangeAsset(storedAssetRef.nBalance) || MoneyRangeAsset(theAsset.nBalance)) {
+            if (!MoneyRangeAsset(storedAssetRef.nBalance) || !MoneyRangeAsset(theAsset.nBalance)) {
                 return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
             }
             if (!MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
