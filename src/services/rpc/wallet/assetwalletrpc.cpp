@@ -181,7 +181,7 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
                         if(response != nullptr) {
                             UniValue resObj;
                             if(resObj.read((const char*)response)) {
-                                const UniValue &sigObj = find_value(resObj.get_obj(), "sig");  
+                                const UniValue &sigObj = find_value(resObj, "sig");  
                                 if(sigObj.isStr()) {
                                     // get signature from end-point
                                     vecOut.vchNotarySig = ParseHex(sigObj.get_str());
