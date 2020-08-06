@@ -661,7 +661,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("d", strPubData);
     UniValue notaryStruct = find_value(params[9].get_obj(), "e");
-    if(notaryStruct.isObject())
+    if(notaryStruct.isStr())
         publicData.pushKV("n", params[9]);
     UniValue feesStructArr = find_value(params[10].get_obj(), "fs");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
@@ -970,7 +970,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("d", strPubData);
     UniValue notaryStruct = find_value(params[6].get_obj(), "e");
-    if(notaryStruct.isObject())
+    if(notaryStruct.isStr())
         publicData.pushKV("n", params[6]);
     UniValue feesStructArr = find_value(params[7].get_obj(), "fs");
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
