@@ -81,7 +81,7 @@ class AssetTest(SyscoinTestFramework):
         # largest decmal amount that we can use, without compression overflow of uint (~1 quintillion)
         # 10^18 - 1
         maxUint = 999999999999999999
-        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, maxUint-1, maxUint, 31, '', {}, {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 0, maxUint-1, maxUint, 31, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         assetInfo = self.nodes[0].assetinfo(asset)
         assert_equal(assetInfo['asset_guid'], asset)
