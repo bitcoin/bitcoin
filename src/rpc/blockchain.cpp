@@ -1347,10 +1347,10 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     std::set<const CBlockIndex*> setOrphans;
     std::set<const CBlockIndex*> setPrevs;
 
-    for (const std::pair<const uint256, CBlockIndex*>& item : chainman.BlockIndex()) {
-        if (!chainman.ActiveChain().Contains(item.second)) {
-            setOrphans.insert(item.second);
-            setPrevs.insert(item.second->pprev);
+    for (CBlockIndex* pindex : chainman.BlockIndex()) {
+        if (!chainman.ActiveChain().Contains(pindex)) {
+            setOrphans.insert(pindex);
+            setPrevs.insert(pindex->pprev);
         }
     }
 
@@ -1368,7 +1368,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     for (const CBlockIndex* block : setTips) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("height", block->nHeight);
-        obj.pushKV("hash", block->phashBlock->GetHex());
+        obj.pushKV("hash", block->m_hash_block.GetHex());
 
         const int branchLen = block->nHeight - chainman.ActiveChain().FindFork(block)->nHeight;
         obj.pushKV("branchlen", branchLen);
