@@ -377,8 +377,8 @@ void CMutableTransaction::LoadAssets()
 bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
-    CAmount nTotal = 0;
     for(const auto &it: voutAssets) {
+        CAmount nTotal = 0;
         if(it.values.empty()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
         }
