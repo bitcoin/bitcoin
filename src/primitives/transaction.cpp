@@ -421,7 +421,6 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
 
 uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut) const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << nAsset;
     for(const auto &vinObj: vin) {
         ss << vinObj.prevout;
     }
