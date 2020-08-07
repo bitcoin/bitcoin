@@ -4,10 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
+
 #include <hash.h>
+#include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/asmap.h>
-#include <tinyformat.h>
 
 #include <algorithm>
 #include <array>
@@ -341,9 +342,9 @@ enum Network CNetAddr::GetNetwork() const
 std::string CNetAddr::ToStringIP() const
 {
     if (IsTor())
-        return EncodeBase32(m_addr.data(), m_addr.size()) + ".onion";
+        return EncodeBase32(m_addr) + ".onion";
     if (IsInternal())
-        return EncodeBase32(m_addr.data(), m_addr.size()) + ".internal";
+        return EncodeBase32(m_addr) + ".internal";
     CService serv(*this, 0);
     struct sockaddr_storage sockaddr;
     socklen_t socklen = sizeof(sockaddr);
