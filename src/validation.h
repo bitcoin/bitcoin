@@ -131,13 +131,10 @@ enum class SynchronizationState {
 };
 
 extern RecursiveMutex cs_main;
-/* <<<<<<< HEAD
-typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
-======= */
+
 extern CBlockPolicyEstimator feeEstimator;
 extern CTxMemPool mempool;
 typedef std::unordered_set<CBlockIndex*, BlockHasher, BlockEqual> BlockMap;
-//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;

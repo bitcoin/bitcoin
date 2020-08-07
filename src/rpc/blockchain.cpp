@@ -1578,7 +1578,6 @@ static RPCHelpMan getchaintips()
     std::set<const CBlockIndex*> setOrphans;
     std::set<const CBlockIndex*> setPrevs;
 
-
     for (CBlockIndex* pindex : chainman.BlockIndex()) {
         if (!chainman.ActiveChain().Contains(pindex)) {
             setOrphans.insert(pindex);
