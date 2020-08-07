@@ -193,7 +193,7 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
              throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
         }
     }
-    uint156 sigHash;
+    uint256 sigHash;
     CTransaction tx(mtx);
     auto itVout = std::find_if( tx.voutAssets.begin(), tx.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
     if(itVout != tx.voutAssets.end()) {
