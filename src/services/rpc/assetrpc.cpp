@@ -88,12 +88,18 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	return true;
 }
 bool FillNotarySig(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, const std::vector<unsigned char> &vchSig) {
+    const uint256& sigHash = tx->GetNotarySigHash();
+    CPubKey pubkeyFromSig;
+    // get pubkey from signature and fill it in with the asset that matches the pubkey
+    if(!pubkeyFromSig.RecoverCompact(sigHash, vchSig)) {
+        return false;
+    }
     // fill notary signatures for assets that require them
     for(auto& vecOut: voutAssets) {
         // get asset
         CAsset theAsset;
         // if asset has notary signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
+        if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull() && pubkeyFromSig.GetID() == theAsset.notaryKeyID) {
             vecOut.vchNotarySig = vchSig;
         }
     }
