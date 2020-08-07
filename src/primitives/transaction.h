@@ -11,8 +11,10 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
+// SYSCOIN
 class TxValidationState;
 class CAsset;
+class CHashWriter;
 
 #include <tuple>
 
