@@ -323,9 +323,9 @@ enum Network CNetAddr::GetNetwork() const
 std::string CNetAddr::ToStringIP(bool fUseGetnameinfo) const
 {
     if (IsTor())
-        return EncodeBase32(m_addr.data(), m_addr.size()) + ".onion";
+        return EncodeBase32(m_addr) + ".onion";
     if (IsInternal())
-        return EncodeBase32(m_addr.data(), m_addr.size()) + ".internal";
+        return EncodeBase32(m_addr) + ".internal";
     if (fUseGetnameinfo)
     {
         CService serv(*this, 0);
@@ -525,7 +525,7 @@ std::vector<unsigned char> CNetAddr::GetAddrBytes() const
 
 uint64_t CNetAddr::GetHash() const
 {
-    uint256 hash = Hash(m_addr);
+    uint256 hash = Hash(m_addr.begin(), m_addr.end());
     uint64_t nRet;
     memcpy(&nRet, &hash, sizeof(nRet));
     return nRet;
