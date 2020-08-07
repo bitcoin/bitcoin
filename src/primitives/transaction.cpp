@@ -419,19 +419,18 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
     return true;
 }
 
-uint256 CTransaction::GetNotarySigHash() const {
+uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut) const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << nAsset;
     for(const auto &vinObj: vin) {
         ss << vinObj.prevout;
     }
     CTxDestination txDest;
-    for(const auto &it: voutAssets) {
-        ss << it.key;
-        for(const auto& voutAsset: it.values){
-            if (ExtractDestination(vout[voutAsset.n].scriptPubKey, txDest)) {
-                ss << EncodeDestination(txDest);
-                ss << voutAsset.nValue;
-            }
+    ss << vecOut.key;
+    for(const auto& voutAsset: vecOut.values){
+        if (ExtractDestination(vout[voutAsset.n].scriptPubKey, txDest)) {
+            ss << EncodeDestination(txDest);
+            ss << voutAsset.nValue;
         }
     }
     return ss.GetHash();
