@@ -186,19 +186,20 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
         }	
     }.Check(request);	
     const std::string &hexstring = request.params[0].get_str();
-    const uint32_t &nAsset = equest.params[1].get_uint();
+    const uint32_t &nAsset = request.params[1].get_uint();
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
              throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
         }
     }
+    uint156 sigHash;
     CTransaction tx(mtx);
     auto itVout = std::find_if( tx.voutAssets.begin(), tx.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-    if(itVout != voutAssets.end()) {
-        return tx.GetNotarySigHash(*itVout).GetHex();
+    if(itVout != tx.voutAssets.end()) {
+        sigHash = tx.GetNotarySigHash(*itVout);
     }
-    return uint256();	
+    return sigHash.GetHex();
 }
 UniValue convertaddress(const JSONRPCRequest& request)	 {	
 
