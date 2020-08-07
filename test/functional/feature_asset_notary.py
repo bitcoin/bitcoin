@@ -5,6 +5,7 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.messages import COIN
 
 class AssetNotaryTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -69,7 +70,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.nodes[0].assetsend(self.asset4, self.nodes[0].getnewaddress(), 5)
         self.nodes[0].assetsend(self.asset5, self.nodes[0].getnewaddress(), 6)
         self.nodes[0].generate(1)
-        sendobj = [{"asset_guid":self.asset0,"address":self.nodes[0].getnewaddress(),"amount":0.5},{"asset_guid":self.asset0,"address":self.nodes[0].getnewaddress(),"amount":0.5},{"asset_guid":self.asset1,"address":self.nodes[0].getnewaddress(),"amount":2},{"asset_guid":self.asset2,"address":self.nodes[0].getnewaddress(),"amount":2.5},{"asset_guid":self.asset3,"address":self.nodes[0].getnewaddress(),"amount":3},{"asset_guid":self.asset4,"address":self.nodes[0].getnewaddress(),"amount":3.5},{"asset_guid":self.asset5,"address":self.nodes[0].getnewaddress(),"amount":5}]
+        sendobj = [{"asset_guid":self.asset0,"address":self.nodes[1].getnewaddress(),"amount":0.5},{"asset_guid":self.asset0,"address":self.nodes[1].getnewaddress(),"amount":0.5},{"asset_guid":self.asset1,"address":self.nodes[1].getnewaddress(),"amount":2},{"asset_guid":self.asset2,"address":self.nodes[1].getnewaddress(),"amount":2.5},{"asset_guid":self.asset3,"address":self.nodes[1].getnewaddress(),"amount":3},{"asset_guid":self.asset4,"address":self.nodes[1].getnewaddress(),"amount":3.5},{"asset_guid":self.asset5,"address":self.nodes[1].getnewaddress(),"amount":5}]
         hextx = self.nodes[0].assetallocationsendmany(sendobj)['hex']
         notarysig0 = self.nodes[0].signhash(self.notary_address0, self.nodes[0].getnotarysighash(hextx, self.asset0))
         notarysig1 = self.nodes[1].signhash(self.notary_address1, self.nodes[0].getnotarysighash(hextx, self.asset1))
@@ -94,5 +95,52 @@ class AssetNotaryTest(SyscoinTestFramework):
 
         self.nodes[0].sendrawtransaction(tx_resigned)
         self.nodes[0].generate(1)
+        self.sync_blocks()
+        # check change on sender node
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset0})
+        assert_equal(len(out), 0)
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset1})
+        assert_equal(len(out), 0)
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset2})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset2)
+        assert_equal(out[0]['asset_amount'], int(0.5*COIN))
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset3})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset3)
+        assert_equal(out[0]['asset_amount'], int(1*COIN))
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset4})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset4)
+        assert_equal(out[0]['asset_amount'], int(1.5*COIN))
+        out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset5})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset5)
+        assert_equal(out[0]['asset_amount'], int(1*COIN))
+        # check receiver node
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset0})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset0)
+        assert_equal(out[0]['asset_amount'], int(1*COIN))
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset1})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset1)
+        assert_equal(out[0]['asset_amount'], int(2*COIN))
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset2})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset2)
+        assert_equal(out[0]['asset_amount'], int(2.5*COIN))
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset3})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset3)
+        assert_equal(out[0]['asset_amount'], int(3*COIN))
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset4})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset4)
+        assert_equal(out[0]['asset_amount'], int(3.5*COIN))
+        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset5})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['asset_guid'], self.asset5)
+        assert_equal(out[0]['asset_amount'], int(5*COIN))
 if __name__ == '__main__':
     AssetNotaryTest().main()
