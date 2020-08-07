@@ -1285,9 +1285,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, uint64_t> mapAssetTotals;
     std::vector<CAssetOutValue> vecOut;
-    std::vector<unsigned char> emptyNotarySig;
-    // fund tx expecting 65 byte signature to be filled in
-    emptyNotarySig.resize(65);
     bool &notaryRBF = m_signal_bip125_rbf;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
@@ -1324,10 +1321,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         if(itVout == theAssetAllocation.voutAssets.end()) {
             CAssetOut assetOut(nAsset, vecOut);
-            // only use first notary signature for asset that requires notary, subsequent ones are covered by notary signature through input sighash
-            if(!theAsset.notaryKeyID.IsNull() && !emptyNotarySig.empty()) {
-                assetOut.vchNotarySig = emptyNotarySig;   
-                emptyNotarySig.clear(); 
+            if(!theAsset.notaryKeyID.IsNull()) {
+                // fund tx expecting 65 byte signature to be filled in
+                assetOut.vchNotarySig.resize(65);
             }
             theAssetAllocation.voutAssets.emplace_back(assetOut);
             itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
@@ -1468,16 +1464,13 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
     CBurnSyscoin burnSyscoin;
     int nChangePosRet = 1; 
-    std::vector<unsigned char> emptyNotarySig;
-    // fund tx expecting 65 byte signature to be filled in
-    emptyNotarySig.resize(65);
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(1, nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
         CAssetOut assetOut(nAsset, vecOut);
         if(!theAsset.notaryKeyID.IsNull()) {
-            assetOut.vchNotarySig = emptyNotarySig;    
+            assetOut.vchNotarySig.resize(65);  
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
         nChangePosRet++;
@@ -1488,7 +1481,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)}; // burn has to be in index 0, any change in index 1
         CAssetOut assetOut(nAsset, vecOut);
         if(!theAsset.notaryKeyID.IsNull()) {
-            assetOut.vchNotarySig = emptyNotarySig;    
+            assetOut.vchNotarySig.resize(65);  
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
     }
@@ -1631,13 +1624,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::vector<CRecipient> vecSend;
     
     CMintSyscoin mintSyscoin;
-    std::vector<unsigned char> emptyNotarySig;
-    // fund tx expecting 65 byte signature to be filled in
-    emptyNotarySig.resize(65);
     std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)};
     CAssetOut assetOut(nAsset, vecOut);
     if(!theAsset.notaryKeyID.IsNull()) {
-        assetOut.vchNotarySig = emptyNotarySig;    
+        assetOut.vchNotarySig.resize(65);
     }
     mintSyscoin.voutAssets.emplace_back(assetOut);
     mintSyscoin.nBlockNumber = nBlockNumber;
