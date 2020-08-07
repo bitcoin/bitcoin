@@ -119,9 +119,11 @@ class AssetNotaryTest(SyscoinTestFramework):
         assert(out[0]['asset_amount'] == int(1*COIN) or out[1]['asset_amount'] == int(1*COIN))
         # check receiver node
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset0})
-        assert_equal(len(out), 1)
+        assert_equal(len(out), 2)
         assert_equal(out[0]['asset_guid'], self.asset0)
-        assert_equal(out[0]['asset_amount'], int(1*COIN))
+        assert_equal(out[0]['asset_amount'], int(0.5*COIN))
+        assert_equal(out[1]['asset_guid'], self.asset0)
+        assert_equal(out[1]['asset_amount'], int(0.5*COIN))
         out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset1})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], self.asset1)
