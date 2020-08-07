@@ -139,7 +139,7 @@ UniValue assettransactionnotarize(const JSONRPCRequest& request) {
         "\nUpdate notary signature on an asset transaction. Will require re-signing transaction before submitting to network.\n",	
         {	
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to notarize."},
-            {"asset_guid", RPCResult::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to notarize"},
+            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to notarize."},
             {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "Base64 encoded notary signature to add to transaction."}	
         },
         RPCResult{
@@ -173,7 +173,7 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
         "\nGet sighash for notary to sign off on, use assettransactionnotarize to update the transaction after re-singing once sighash is used to create a notarized signature.\n",	
         {	
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to get sighash for."},
-            {"asset_guid", RPCResult::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to sighash for"}
+            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to sighash for."}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
