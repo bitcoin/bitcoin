@@ -80,7 +80,11 @@ class AssetNotaryTest(SyscoinTestFramework):
         hextx_notarized = self.nodes[0].assettransactionnotarize(hextx_notarized, self.asset1, notarysig1)['hex']
         hextx_notarized = self.nodes[0].assettransactionnotarize(hextx_notarized, self.asset2, notarysig2)['hex']
         hextx_notarized = self.nodes[0].assettransactionnotarize(hextx_notarized, self.asset3, notarysig3)['hex']
+        # try without final signature
         tx_resigned = self.nodes[0].signrawtransactionwithwallet(hextx_notarized)['hex']
+        assert_raises_rpc_error(-26, 'assetallocation-notary-sig', self.nodes[0].sendrawtransaction, tx_resigned)
+        # try with wrong signature
+        hextx_notarized = self.nodes[0].assettransactionnotarize(hextx_notarized, self.asset4, notarysig3)['hex']
         assert_raises_rpc_error(-26, 'assetallocation-notary-sig', self.nodes[0].sendrawtransaction, tx_resigned)
         hextx_notarized = self.nodes[0].assettransactionnotarize(hextx_notarized, self.asset4, notarysig4)['hex']
         tx_resigned = self.nodes[0].signrawtransactionwithwallet(hextx_notarized)['hex']
