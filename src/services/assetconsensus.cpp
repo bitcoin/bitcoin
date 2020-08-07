@@ -345,21 +345,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
     // fill notary signatures for every asset that requires it
-    bool bFirstTime = false;
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     for(const auto& vecOut: tx.voutAssets) {
         // get asset
         CAsset theAsset;
         // if asset has notary signature requirement set
         if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
-            // optimize by hashing inputs only once
-            if(bFirstTime) {
-                for(const auto &vinObj: tx.vin) {
-                    ss << vinObj.prevout;
-                }
-                bFirstTime = false;
-            }
-            if (!CHashSigner::VerifyHash(tx.GetNotarySigHash(vecOut, ss), theAsset.notaryKeyID, vecOut.vchNotarySig)) {
+            if (!CHashSigner::VerifyHash(tx.GetNotarySigHash(vecOut), theAsset.notaryKeyID, vecOut.vchNotarySig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
         }

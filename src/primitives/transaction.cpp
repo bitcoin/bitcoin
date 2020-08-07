@@ -434,17 +434,7 @@ uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut) const {
     }
     return ss.GetHash();
 }
-uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut, CHashWriter &ss) const {
-    CTxDestination txDest;
-    ss << vecOut.key;
-    for(const auto& voutAsset: vecOut.values){
-        if (ExtractDestination(vout[voutAsset.n].scriptPubKey, txDest)) {
-            ss << EncodeDestination(txDest);
-            ss << voutAsset.nValue;
-        }
-    }
-    return ss.GetHash();
-}
+
 bool IsSyscoinMintTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;
 }
