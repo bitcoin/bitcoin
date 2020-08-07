@@ -48,7 +48,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         assetInfo = self.nodes[1].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
 
-   def complex_notary(self):
+    def complex_notary(self):
         notary = {'e': 'https://jsonplaceholder.typicode.com/posts/', 'it': True, 'rx': True}
         self.notary_address0 = self.nodes[0].getnewaddress()
         self.notary_address1 = self.nodes[1].getnewaddress()
