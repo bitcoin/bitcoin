@@ -400,7 +400,7 @@ bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp) const
     }
     if (filepath) {
         std::string settings = GetArg("-settings", BITCOIN_SETTINGS_FILENAME);
-        *filepath = fs::absolute(temp ? settings + ".tmp" : settings, GetDataDir(/* net_specific= */ true));
+        *filepath = fs::absolute(GetDataDir(/* net_specific= */ true) / (temp ? settings + ".tmp" : settings));
     }
     return true;
 }
