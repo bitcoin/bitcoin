@@ -25,7 +25,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         # will give back hex because notarization doesn't happen in assetallocationsend
         hextx = self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 0.4)['hex']
         notarysig = self.nodes[0].signhash(self.notary_address, self.nodes[0].getnotarysighash(hextx, self.asset))
-        hextx_notarized = self.nodes[0].assettransactionnotarize(hextx, self.asset, notarysig))['hex']
+        hextx_notarized = self.nodes[0].assettransactionnotarize(hextx, self.asset, notarysig)['hex']
         tx_resigned = self.nodes[0].signrawtransactionwithwallet(hextx_notarized)['hex']
         assert_equal(len(hextx), len(hextx_notarized))
         assert(hextx != hextx_notarized)
