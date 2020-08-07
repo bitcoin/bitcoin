@@ -29,6 +29,7 @@
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <node/context.h>
 #include <noui.h>
 #include <uint256.h>
 #include <util/system.h>
@@ -430,7 +431,8 @@ int GuiMain(int argc, char* argv[])
     SetupEnvironment();
     util::ThreadSetInternalName("main");
 
-    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
+    NodeContext node_context;
+    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode(&node_context);
 
     // Subscribe to global signals from core
     std::unique_ptr<interfaces::Handler> handler_message_box = node->handleMessageBox(noui_ThreadSafeMessageBox);
