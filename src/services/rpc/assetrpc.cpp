@@ -87,45 +87,35 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	}
 	return true;
 }
-bool FillNotarySig(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, const std::vector<unsigned char> &vchSig) {
-    const uint256& sigHash = tx->GetNotarySigHash();
-    CPubKey pubkeyFromSig;
-    // get pubkey from signature and fill it in with the asset that matches the pubkey
-    if(!pubkeyFromSig.RecoverCompact(sigHash, vchSig)) {
-        return false;
+bool FillNotarySig(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, const uint32_t& nAsset, const std::vector<unsigned char> &vchSig) {
+    auto itVout = std::find_if( voutAssets.begin(), voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+    if(itVout != voutAssets.end()) {
+        itVout->vchNotarySig = vchSig;
+        return true;
     }
-    // fill notary signatures for assets that require them
-    for(auto& vecOut: voutAssets) {
-        // get asset
-        CAsset theAsset;
-        // if asset has notary signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull() && pubkeyFromSig.GetID() == theAsset.notaryKeyID) {
-            vecOut.vchNotarySig = vchSig;
-        }
-    }
-    return true;
+    return false;
 }
 
-bool UpdateNotarySignature(CMutableTransaction& mtx, const std::vector<unsigned char> &vchSig) {
+bool UpdateNotarySignature(CMutableTransaction& mtx, const uint32_t& nAsset, const std::vector<unsigned char> &vchSig) {
     const CTransactionRef& tx = MakeTransactionRef(mtx);
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
     if(IsSyscoinMintTx(tx->nVersion)) {
         CMintSyscoin mintSyscoin(*tx);
-        if(FillNotarySig(tx, mintSyscoin.voutAssets, vchSig)) {
+        if(FillNotarySig(tx, mintSyscoin.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;
             mintSyscoin.SerializeData(data);
         }
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
         CBurnSyscoin burnSyscoin(*tx);
-        if(FillNotarySig(tx, burnSyscoin.voutAssets, vchSig)) {
+        if(FillNotarySig(tx, burnSyscoin.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);
-        if(FillNotarySig(tx, allocation.voutAssets, vchSig)) {
+        if(FillNotarySig(tx, allocation.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
@@ -149,6 +139,7 @@ UniValue assettransactionnotarize(const JSONRPCRequest& request) {
         "\nUpdate notary signature on an asset transaction. Will require re-signing transaction before submitting to network.\n",	
         {	
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to notarize."},
+            {"asset_guid", RPCResult::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to notarize"},
             {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "Base64 encoded notary signature to add to transaction."}	
         },
         RPCResult{
@@ -157,20 +148,21 @@ UniValue assettransactionnotarize(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "hex", "The notarized transaction hex, which you must sign prior to submitting."},
             }},	
         RPCExamples{	
-            HelpExampleCli("assettransactionnotarize", "\"hex\" \"signature\"")	
-            + HelpExampleRpc("assettransactionnotarize", "\"hex\",\"signature\"")	
+            HelpExampleCli("assettransactionnotarize", "\"hex\" 12121 \"signature\"")	
+            + HelpExampleRpc("assettransactionnotarize", "\"hex\",12121,\"signature\"")	
         }	
     }.Check(request);	
 
-    std::string hexstring = request.params[0].get_str();
-    std::vector<unsigned char> vchSig = DecodeBase64(request.params[1].get_str().c_str());
+    const std::string &hexstring = request.params[0].get_str();
+    const uint32_t &nAsset = equest.params[1].get_uint();
+    std::vector<unsigned char> vchSig = DecodeBase64(request.params[2].get_str().c_str());
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
              throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
         }
     }
-    UpdateNotarySignature(mtx, vchSig);
+    UpdateNotarySignature(mtx, nAsset, vchSig);
     UniValue ret(UniValue::VOBJ);	
     ret.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
     return ret;
@@ -180,7 +172,8 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
     RPCHelpMan{"getnotarysighash",	
         "\nGet sighash for notary to sign off on, use assettransactionnotarize to update the transaction after re-singing once sighash is used to create a notarized signature.\n",	
         {	
-            {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to get sighash for."}	
+            {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to get sighash for."},
+            {"asset_guid", RPCResult::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to sighash for"}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -188,11 +181,12 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "sighash", "Notary sighash (uint256)"},
             }},	
         RPCExamples{	
-            HelpExampleCli("getnotarysighash", "\"hex\"")
-            + HelpExampleRpc("getnotarysighash", "\"hex\"")	
+            HelpExampleCli("getnotarysighash", "\"hex\" 12121")
+            + HelpExampleRpc("getnotarysighash", "\"hex\",12121")	
         }	
     }.Check(request);	
-    std::string hexstring = request.params[0].get_str();
+    const std::string &hexstring = request.params[0].get_str();
+    const uint32_t &nAsset = equest.params[1].get_uint();
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
@@ -200,7 +194,11 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
         }
     }
     CTransaction tx(mtx);
-    return tx.GetNotarySigHash().GetHex();	
+    auto itVout = std::find_if( tx.voutAssets.begin(), tx.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+    if(itVout != voutAssets.end()) {
+        return tx.GetNotarySigHash(*itVout).GetHex();
+    }
+    return uint256();	
 }
 UniValue convertaddress(const JSONRPCRequest& request)	 {	
 
@@ -866,8 +864,8 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
     { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
     { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"ethtxid"} },
-    { "syscoin",            "assettransactionnotarize",         &assettransactionnotarize,      {"hex","signature"} },
-    { "syscoin",            "getnotarysighash",                 &getnotarysighash,              {"hex"} },
+    { "syscoin",            "assettransactionnotarize",         &assettransactionnotarize,      {"hex","asset_guid","signature"} },
+    { "syscoin",            "getnotarysighash",                 &getnotarysighash,              {"hex","asset_guid"} },
 };
 // clang-format on
 void RegisterAssetRPCCommands(CRPCTable &t)
