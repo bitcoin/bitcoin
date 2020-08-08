@@ -120,7 +120,9 @@ releases
 /*.info
 test_dash.coverage/
 total.coverage/
+fuzz.coverage/
 coverage_percent.txt
+/cov_tool_wrapper.sh
 
 #build tests
 linux-coverage-build

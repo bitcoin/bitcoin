@@ -98,6 +98,7 @@ AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
+AC_PATH_TOOL(LLVM_COV, llvm-cov)
 AC_PATH_PROG(LCOV, lcov)
 dnl Python 3.8 is specified in .python-version and should be used if available, see doc/dependencies.md
 AC_PATH_PROGS([PYTHON], [python3.8 python3.9 python3.10 python3.11 python3.12 python3 python])
@@ -810,16 +811,37 @@ if test x$use_lcov = xyes; then
   if test x$LCOV = x; then
     AC_MSG_ERROR("lcov testing requested but lcov not found")
   fi
-  if test x$GCOV = x; then
-    AC_MSG_ERROR("lcov testing requested but gcov not found")
-  fi
   if test x$PYTHON = x; then
     AC_MSG_ERROR("lcov testing requested but python not found")
   fi
   if test x$GENHTML = x; then
     AC_MSG_ERROR("lcov testing requested but genhtml not found")
   fi
-  LCOV="$LCOV --gcov-tool=$GCOV"
+
+  AC_MSG_CHECKING([whether compiler is Clang])
+  AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
+      #if defined(__clang__) && defined(__llvm__)
+      // Compiler is Clang
+      #else
+      #  error Compiler is not Clang
+      #endif
+    ]])],[
+      AC_MSG_RESULT([yes])
+      if test x$LLVM_COV = x; then
+        AC_MSG_ERROR([lcov testing requested but llvm-cov not found])
+      fi
+      COV_TOOL="$LLVM_COV gcov"
+    ],[
+      AC_MSG_RESULT([no])
+      if test x$GCOV = x; then
+        AC_MSG_ERROR([lcov testing requested but gcov not found])
+      fi
+      COV_TOOL="$GCOV"
+  ])
+  AC_SUBST(COV_TOOL)
+  AC_SUBST(COV_TOOL_WRAPPER, "cov_tool_wrapper.sh")
+  LCOV="$LCOV --gcov-tool $(pwd)/$COV_TOOL_WRAPPER"
+
   AX_CHECK_LINK_FLAG([[--coverage]], [LDFLAGS="$LDFLAGS --coverage"],
     [AC_MSG_ERROR("lcov testing requested but --coverage linker flag does not work")])
   AX_CHECK_COMPILE_FLAG([--coverage],[CXXFLAGS="$CXXFLAGS --coverage"],
