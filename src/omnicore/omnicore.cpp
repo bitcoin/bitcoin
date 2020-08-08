@@ -929,7 +929,11 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     int64_t inAll = 0;
 
     { // needed to ensure the cache isn't cleared in the meantime when doing parallel queries
-    LOCK2(cs_main, cs_tx_cache); // cs_main should be locked first to avoid deadlocks with cs_tx_cache at FillTxInputCache(...)->GetTransaction(...)->LOCK(cs_main)
+    // To avoid potential dead lock warning
+    // cs_main for FillTxInputCache() > GetTransaction()
+    // mempool.cs for FillTxInputCache() > GetTransaction() > mempool.get()
+    LOCK2(cs_main, ::mempool.cs);
+    LOCK(cs_tx_cache);
 
     // Add previous transaction inputs to the cache
     if (!FillTxInputCache(wtx, removedCoins)) {
@@ -1807,7 +1811,11 @@ int mastercore_init()
     }
 
     {
-        LOCK2(cs_main, cs_tally);
+        // To avoid potential dead lock warning
+        // Lock cs_main here for Load***() > GetTransaction()
+        // Lock mempool here for Load***() > GetTransaction() > mempool.Get()
+        LOCK2(cs_main, ::mempool.cs);
+        LOCK(cs_tally);
         // load feature activation messages from txlistdb and process them accordingly
         pDbTransactionList->LoadActivations(nWaterlineBlock);
 
