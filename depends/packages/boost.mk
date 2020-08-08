@@ -13,15 +13,12 @@ $(package)_config_opts+=threading=multi link=static -sNO_COMPRESSION=1
 $(package)_config_opts_linux=target-os=linux threadapi=pthread runtime-link=shared
 $(package)_config_opts_darwin=target-os=darwin runtime-link=shared
 $(package)_config_opts_mingw32=target-os=windows binary-format=pe threadapi=win32 runtime-link=static
-$(package)_config_opts_x86_64_mingw32=address-model=64
-$(package)_config_opts_i686_mingw32=address-model=32
-$(package)_config_opts_i686_linux=address-model=32 architecture=x86
-$(package)_config_opts_i686_android=address-model=32
-$(package)_config_opts_aarch64_android=address-model=64
-$(package)_config_opts_x86_64_android=address-model=64
-$(package)_config_opts_armv7a_android=address-model=32
 $(package)_toolset_$(host_os)=gcc
 $(package)_toolset_darwin=clang
+$(package)_config_opts_x86_64=architecture=x86 address-model=64
+$(package)_config_opts_i686=architecture=x86 address-model=32
+$(package)_config_opts_aarch64=address-model=64
+$(package)_config_opts_armv7a=address-model=32
 ifneq (,$(findstring clang,$($(package)_cxx)))
    $(package)_toolset_$(host_os)=clang
 endif
