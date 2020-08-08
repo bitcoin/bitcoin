@@ -746,6 +746,72 @@ the upper cycle, etc.
 Threads and synchronization
 ----------------------------
 
+- Prefer `Mutex` type to `RecursiveMutex` one
+
+- Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
+  get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
+  run-time asserts in function definitions:
+
+```C++
+// txmempool.h
+class CTxMemPool
+{
+public:
+    ...
+    mutable RecursiveMutex cs;
+    ...
+    void UpdateTransactionsFromBlock(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, cs);
+    ...
+}
+
+// txmempool.cpp
+void CTxMemPool::UpdateTransactionsFromBlock(...)
+{
+    AssertLockHeld(::cs_main);
+    AssertLockHeld(cs);
+    ...
+}
+```
+
+```C++
+// validation.h
+class ChainstateManager
+{
+public:
+    ...
+    bool ProcessNewBlock(...) EXCLUSIVE_LOCKS_REQUIRED(!::cs_main);
+    ...
+}
+
+// validation.cpp
+bool ChainstateManager::ProcessNewBlock(...)
+{
+    AssertLockNotHeld(::cs_main);
+    ...
+    LOCK(::cs_main);
+    ...
+}
+```
+
+- When Clang Thread Safety Analysis is unable to determine if a mutex is locked, use `LockAssertion` class instances:
+
+```C++
+// net_processing.h
+void RelayTransaction(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+// net_processing.cpp
+void RelayTransaction(...)
+{
+    AssertLockHeld(::cs_main);
+
+    connman.ForEachNode([&txid, &wtxid](CNode* pnode) {
+        LockAssertion lock(::cs_main);
+        ...
+    });
+}
+
+```
+
 - Build and run tests with `-DDEBUG_LOCKORDER` to verify that no potential
   deadlocks are introduced. As of 0.12, this is defined by default when
   configuring with `--enable-debug`.
