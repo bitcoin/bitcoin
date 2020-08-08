@@ -1434,21 +1434,23 @@ bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLU
         recentRejects->reset();
     }
 
+    const uint256& hash = gtxid.GetHash();
+
     {
         LOCK(g_cs_orphans);
-        if (!gtxid.IsWtxid() && mapOrphanTransactions.count(gtxid.GetHash())) {
+        if (!gtxid.IsWtxid() && mapOrphanTransactions.count(hash)) {
             return true;
-        } else if (gtxid.IsWtxid() && g_orphans_by_wtxid.count(gtxid.GetHash())) {
+        } else if (gtxid.IsWtxid() && g_orphans_by_wtxid.count(hash)) {
             return true;
         }
     }
 
     {
         LOCK(g_cs_recent_confirmed_transactions);
-        if (g_recent_confirmed_transactions->contains(gtxid.GetHash())) return true;
+        if (g_recent_confirmed_transactions->contains(hash)) return true;
     }
 
-    return recentRejects->contains(gtxid.GetHash()) || mempool.exists(gtxid);
+    return recentRejects->contains(hash) || mempool.exists(gtxid);
 }
 
 bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -2645,8 +2647,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         const auto current_time = GetTime<std::chrono::microseconds>();
         uint256* best_block{nullptr};
 
-        for (CInv &inv : vInv)
-        {
+        for (CInv& inv : vInv) {
             if (interruptMsgProc) return;
 
             // Ignore INVs that don't match wtxidrelay setting.
@@ -2659,7 +2660,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             }
 
             if (inv.IsMsgBlk()) {
-                bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
+                const bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
@@ -2672,8 +2673,8 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
                     best_block = &inv.hash;
                 }
             } else {
-                GenTxid gtxid = ToGenTxid(inv);
-                bool fAlreadyHave = AlreadyHaveTx(gtxid, mempool);
+                const GenTxid gtxid = ToGenTxid(inv);
+                const bool fAlreadyHave = AlreadyHaveTx(gtxid, mempool);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 pfrom.AddKnownTx(inv.hash);
@@ -3007,7 +3008,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
                     // wtxidrelay peers.
                     // Eventually we should replace this with an improved
                     // protocol for getting all unconfirmed parents.
-                    GenTxid gtxid{/* is_wtxid=*/false, parent_txid};
+                    const GenTxid gtxid{/* is_wtxid=*/false, parent_txid};
                     pfrom.AddKnownTx(parent_txid);
                     if (!AlreadyHaveTx(gtxid, m_mempool)) RequestTx(State(pfrom.GetId()), gtxid, current_time);
                 }
