@@ -25,6 +25,7 @@ from test_framework.messages import (
     MSG_BLOCK,
     MSG_TX,
     MSG_WITNESS_FLAG,
+    MSG_WITNESS_TX,
     MSG_WTX,
     NODE_NETWORK,
     NODE_WITNESS,
@@ -2158,7 +2159,7 @@ class SegWitTest(BitcoinTestFramework):
         self.wtx_node.wait_for_getdata([tx.sha256], 60)
         with mininode_lock:
             lgd = self.wtx_node.lastgetdata[:]
-        assert_equal(lgd, [CInv(MSG_TX|MSG_WITNESS_FLAG, tx.sha256)])
+        assert_equal(lgd, [CInv(MSG_WITNESS_TX, tx.sha256)])
 
         # Send tx through
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx, with_witness=False, accepted=True)
