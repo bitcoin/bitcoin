@@ -72,7 +72,7 @@ public:
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.notaryKeyID, obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.prevNotaryKeyID, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
+        READWRITE(obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.notaryKeyID, obj.prevNotaryKeyID, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
