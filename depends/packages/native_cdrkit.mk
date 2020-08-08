@@ -12,7 +12,7 @@ endef
 # Starting with 10.1, GCC defaults to -fno-common, resulting in linking errors.
 # Pass -fcommon to retain the legacy behaviour.
 define $(package)_config_cmds
-  cmake -DCMAKE_INSTALL_PREFIX=$(build_prefix) -DCMAKE_C_FLAGS="-fcommon"
+  $($(package)_cmake) -DCMAKE_C_FLAGS="$$($(1)_cflags) -fcommon"
 endef
 
 define $(package)_build_cmds
