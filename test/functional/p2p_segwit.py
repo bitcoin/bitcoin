@@ -174,6 +174,9 @@ class TestP2PConn(P2PInterface):
         self.last_wtxidrelay.append(message)
 
     def announce_tx_and_wait_for_getdata(self, tx, timeout=60, success=True, use_wtxid=False):
+        if success:
+            # sanity check
+            assert (self.wtxidrelay and use_wtxid) or (not self.wtxidrelay and not use_wtxid)
         with mininode_lock:
             self.last_message.pop("getdata", None)
         if use_wtxid:
@@ -259,6 +262,8 @@ class SegWitTest(BitcoinTestFramework):
         self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
         # self.std_node is for testing node1 (fRequireStandard=true)
         self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
+        # self.std_wtx_node is for testing node1 with wtxid relay
+        self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=NODE_NETWORK | NODE_WITNESS)
 
         assert self.test_node.nServices & NODE_WITNESS != 0
 
@@ -1319,9 +1324,14 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program2]
         tx3.rehash()
 
-        # Node will not be blinded to the transaction
+        # Node will not be blinded to the transaction, requesting it any number of times
+        # if it is being announced via txid relay.
+        # Node will be blinded to the transaction via wtxid, however.
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
+        self.std_wtx_node.announce_tx_and_wait_for_getdata(tx3, use_wtxid=True)
         test_transaction_acceptance(self.nodes[1], self.std_node, tx3, True, False, 'tx-size')
+        self.std_node.announce_tx_and_wait_for_getdata(tx3)
+        self.std_wtx_node.announce_tx_and_wait_for_getdata(tx3, use_wtxid=True, success=False)
 
         # Remove witness stuffing, instead add extra witness push on stack
         tx3.vout[0] = CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))
