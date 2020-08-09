@@ -562,8 +562,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     res.__pushKV("transaction",rawTx);
     res.__pushKV("blockhash", hashBlock.GetHex());
     // get first 80 bytes of header (non auxpow part)
-    const std::vector<unsigned char> vchHeader{ssBlock.begin(), ssBlock.begin()+80};
-    res.__pushKV("header", HexStr(vchHeader));
+    res.__pushKV("header", HexStr(std::vector<unsigned char>(ssBlock.begin(), ssBlock.begin()+80)));
     UniValue siblings(UniValue::VARR);
     // store the index of the transaction we are looking for within the block
     int nIndex = 0;
