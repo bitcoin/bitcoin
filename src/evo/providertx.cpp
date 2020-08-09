@@ -13,8 +13,6 @@
 #include <hash.h>
 #include <messagesigner.h>
 #include <script/standard.h>
-#include <streams.h>
-#include <univalue.h>
 #include <validation.h>
 
 template <typename ProTx>
