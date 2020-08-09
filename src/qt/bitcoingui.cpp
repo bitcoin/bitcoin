@@ -314,7 +314,7 @@ void BitcoinGUI::createActions()
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
     privateSendCoinsAction = new QToolButton(this);
-    privateSendCoinsAction->setText(tr("&PrivateSend"));
+    privateSendCoinsAction->setText("&PrivateSend");
     privateSendCoinsAction->setStatusTip(tr("PrivateSend coins to a Dash address"));
     privateSendCoinsAction->setToolTip(privateSendCoinsAction->statusTip());
     privateSendCoinsAction->setCheckable(true);

@@ -421,7 +421,7 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::PrivateSendCreateDenominations:
         return tr("PrivateSend Create Denominations");
     case TransactionRecord::PrivateSend:
-        return tr("PrivateSend");
+        return "PrivateSend";
 
     default:
         return QString();
