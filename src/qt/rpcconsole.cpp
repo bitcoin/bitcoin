@@ -28,6 +28,7 @@
 #include <wallet/wallet.h>
 #endif
 
+#include <QDateTime>
 #include <QFont>
 #include <QKeyEvent>
 #include <QMenu>
