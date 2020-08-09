@@ -165,7 +165,6 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     }
 
     // witness address information starting at position 132 till the end
-    const std::vector<unsigned char> vchWitness{vchInputData.begin()+132, vchInputData.begin()+132 + dataLength};
-    witnessAddress = DecodeDestination(hexToASCII(HexStr(vchWitness)));
+    witnessAddress = DecodeDestination(hexToASCII(HexStr(std::vector<unsigned char>(vchInputData.begin()+132, vchInputData.begin()+132 + dataLength))));
     return true;
 }
