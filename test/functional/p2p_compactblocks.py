@@ -294,12 +294,11 @@ class CompactBlocksTest(BitcoinTestFramework):
         block.rehash()
 
         # Wait until the block was announced (via compact blocks)
-        wait_until(test_node.received_block_announcement, timeout=30, lock=mininode_lock)
+        wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30, lock=mininode_lock)
 
         # Now fetch and check the compact block
         header_and_shortids = None
         with mininode_lock:
-            assert "cmpctblock" in test_node.last_message
             # Convert the on-the-wire representation to absolute indexes
             header_and_shortids = HeaderAndShortIDs(test_node.last_message["cmpctblock"].header_and_shortids)
         self.check_compactblock_construction_from_block(version, header_and_shortids, block_hash, block)
@@ -309,12 +308,11 @@ class CompactBlocksTest(BitcoinTestFramework):
         inv = CInv(MSG_CMPCT_BLOCK, block_hash)
         test_node.send_message(msg_getdata([inv]))
 
-        wait_until(test_node.received_block_announcement, timeout=30, lock=mininode_lock)
+        wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30, lock=mininode_lock)
 
         # Now fetch and check the compact block
         header_and_shortids = None
         with mininode_lock:
-            assert "cmpctblock" in test_node.last_message
             # Convert the on-the-wire representation to absolute indexes
             header_and_shortids = HeaderAndShortIDs(test_node.last_message["cmpctblock"].header_and_shortids)
         self.check_compactblock_construction_from_block(version, header_and_shortids, block_hash, block)
@@ -691,10 +689,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         node.submitblock(ToHex(block))
 
         for l in listeners:
-            wait_until(lambda: l.received_block_announcement(), timeout=30, lock=mininode_lock)
+            wait_until(lambda: "cmpctblock" in l.last_message, timeout=30, lock=mininode_lock)
         with mininode_lock:
             for l in listeners:
-                assert "cmpctblock" in l.last_message
                 l.last_message["cmpctblock"].header_and_shortids.header.calc_sha256()
                 assert_equal(l.last_message["cmpctblock"].header_and_shortids.header.sha256, block.sha256)
 
