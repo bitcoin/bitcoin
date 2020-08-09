@@ -474,7 +474,7 @@ class P2PInterface(P2PConnection):
         def test_function():
             return "verack" in self.last_message
 
-        self.wait_until(test_function, timeout=timeout, check_connected=False)
+        self.wait_until(test_function, timeout=timeout)
 
     # Message sending helper functions
 

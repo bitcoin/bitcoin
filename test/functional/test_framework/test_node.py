@@ -524,6 +524,7 @@ class TestNode():
 
         p2p_conn.peer_connect(**kwargs, net=self.chain, timeout_factor=self.timeout_factor)()
         self.p2ps.append(p2p_conn)
+        p2p_conn.wait_until(lambda: p2p_conn.is_connected, check_connected=False)
         if wait_for_verack:
             # Wait for the node to send us the version and verack
             p2p_conn.wait_for_verack()
