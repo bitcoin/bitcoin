@@ -45,23 +45,23 @@ public:
     CMasternodeSync() { Reset(); }
 
 
-    void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
+    static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
-    bool IsFailed() { return nCurrentAsset == MASTERNODE_SYNC_FAILED; }
-    bool IsBlockchainSynced() { return nCurrentAsset > MASTERNODE_SYNC_WAITING; }
-    bool IsSynced() { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
+    bool IsFailed() const { return nCurrentAsset == MASTERNODE_SYNC_FAILED; }
+    bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_WAITING; }
+    bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
 
-    int GetAssetID() { return nCurrentAsset; }
-    int GetAttempt() { return nTriedPeerCount; }
+    int GetAssetID() const { return nCurrentAsset; }
+    int GetAttempt() const { return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
-    int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
-    std::string GetAssetName();
-    std::string GetSyncStatus();
+    int64_t GetAssetStartTime() const { return nTimeAssetSyncStarted; }
+    std::string GetAssetName() const;
+    std::string GetSyncStatus() const;
 
     void Reset();
     void SwitchToNextAsset(CConnman& connman);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const;
     void ProcessTick(CConnman& connman);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
