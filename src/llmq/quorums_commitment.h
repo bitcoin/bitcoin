@@ -40,7 +40,7 @@ public:
     CBLSSignature membersSig; // aggregated member sig of blockHash+validMembers+pubKeyHash+vvecHash
 
 public:
-    CFinalCommitment() {}
+    CFinalCommitment() = default;
     CFinalCommitment(const Consensus::LLMQParams& params, const uint256& _quorumHash);
 
     int CountSigners() const
