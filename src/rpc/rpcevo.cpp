@@ -293,7 +293,7 @@ static std::string SignAndSendSpecialTx(const util::Ref& context, const CMutable
 
     JSONRPCRequest signRequest(context);
     signRequest.params.setArray();
-    signRequest.params.push_back(HexStr(ds.begin(), ds.end()));
+    signRequest.params.push_back(HexStr(ds));
     UniValue signResult = signrawtransactionwithwallet(signRequest);
 
     JSONRPCRequest sendRequest(context);
