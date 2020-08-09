@@ -3,12 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <masternode/activemasternode.h>
-#include <consensus/validation.h>
 #include <governance/governance-classes.h>
-#include <init.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
-#include <messagesigner.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <spork.h>
@@ -29,7 +26,7 @@ CMasternodePayments mnpayments;
 *
 *   Why is this needed?
 *   - In Syscoin some blocks are superblocks, which output much higher amounts of coins
-*   - Otherblocks are lower in outgoing value, so in total, no extra coins are created
+*   - Other blocks are lower in outgoing value, so in total, no extra coins are created
 *   - When non-superblocks are detected, the normal schedule should be maintained
 */
 
@@ -151,7 +148,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
     const CAmount &nHalfFee = fees / 2;
 
     // Check for correct masternode payment
-    if(mnpayments.IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
+    if(CMasternodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d", __func__, nBlockHeight);
         return true;
     }
@@ -171,7 +168,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
     }
 
     const CAmount &nHalfFee = fees / 2;
-    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee)) {
+    if (!CMasternodePayments::GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet, nHalfFee)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no masternode to pay (MN list probably empty)\n", __func__);
         return;
     }
@@ -234,7 +231,7 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
         auto projection = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(nEndHeight - nChainTipHeight);
         for (size_t i = 0; i < projection.size(); i++) {
             auto payee = projection[i];
-            int h = nChainTipHeight + 1 + i;
+            size_t h = nChainTipHeight + 1 + i;
             mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
         }
     }
@@ -299,7 +296,6 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
         LOCK(cs_main);
         pindex = ::ChainActive()[nBlockHeight - 1];
     }
-    uint256 proTxHash;
     auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
     if (!dmnPayee) {
         return false;
