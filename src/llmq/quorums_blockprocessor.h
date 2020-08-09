@@ -54,11 +54,11 @@ public:
     std::map<uint8_t, std::vector<const CBlockIndex*>> GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex);
 
 private:
-    bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<uint8_t, CFinalCommitment>& ret, BlockValidationState& state);
+    static bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<uint8_t, CFinalCommitment>& ret, BlockValidationState& state);
     bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state);
-    bool IsMiningPhase(uint8_t llmqType, int nHeight);
+    static bool IsMiningPhase(uint8_t llmqType, int nHeight);
     bool IsCommitmentRequired(uint8_t llmqType, int nHeight);
-    uint256 GetQuorumBlockHash(uint8_t llmqType, int nHeight);
+    static uint256 GetQuorumBlockHash(uint8_t llmqType, int nHeight);
 };
 
 extern CQuorumBlockProcessor* quorumBlockProcessor;

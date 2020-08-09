@@ -338,7 +338,7 @@ uint256 CQuorumBlockProcessor::GetQuorumBlockHash(uint8_t llmqType, int nHeight)
     int quorumStartHeight = nHeight - (nHeight % params.dkgInterval);
     uint256 quorumBlockHash;
     if (!GetBlockHash(quorumBlockHash, quorumStartHeight)) {
-        return uint256();
+        return {};
     }
     return quorumBlockHash;
 }

@@ -95,7 +95,7 @@ public:
     CBLSSignature sig;
 
 public:
-    CDKGComplaint() {}
+    CDKGComplaint() = default;
     explicit CDKGComplaint(const Consensus::LLMQParams& params);
 
     SERIALIZE_METHODS(CDKGComplaint, obj) {
@@ -151,7 +151,7 @@ public:
     CBLSSignature sig; // single member sig of quorumHash+validMembers+pubKeyHash+vvecHash
 
 public:
-    CDKGPrematureCommitment() {}
+    CDKGPrematureCommitment() = default;
     explicit CDKGPrematureCommitment(const Consensus::LLMQParams& params);
 
     int CountValidMembers() const

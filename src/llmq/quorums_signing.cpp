@@ -16,7 +16,6 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <limits>
 #include <unordered_set>
 
 namespace llmq
