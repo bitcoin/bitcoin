@@ -1348,7 +1348,7 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
 
     if (complete && extract) {
         ssTx << mtx;
-        result_str = HexStr(ssTx.str());
+        result_str = HexStr(ssTx);
         result.pushKV("hex", result_str);
     } else {
         ssTx << psbtx;

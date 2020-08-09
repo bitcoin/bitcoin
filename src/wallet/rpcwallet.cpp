@@ -3688,7 +3688,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             if (meta->has_key_origin) {
                 ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
                 ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
-                ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint, meta->key_origin.fingerprint + 4));
+                ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
             }
         }
     }
