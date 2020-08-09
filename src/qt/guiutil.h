@@ -312,6 +312,14 @@ namespace GUIUtil
      */
     QDateTime StartOfDay(const QDate& date);
 
+    /**
+     * Returns true if pixmap has been set.
+     *
+     * QPixmap* QLabel::pixmap() is deprecated since Qt 5.15.
+     */
+    bool HasPixmap(const QLabel* label);
+    QImage GetImage(const QLabel* label);
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

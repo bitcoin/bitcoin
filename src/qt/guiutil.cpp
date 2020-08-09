@@ -929,4 +929,26 @@ QDateTime StartOfDay(const QDate& date)
 #endif
 }
 
+bool HasPixmap(const QLabel* label)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+    return !label->pixmap(Qt::ReturnByValue).isNull();
+#else
+    return label->pixmap() != nullptr;
+#endif
+}
+
+QImage GetImage(const QLabel* label)
+{
+    if (!HasPixmap(label)) {
+        return QImage();
+    }
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+    return label->pixmap(Qt::ReturnByValue).toImage();
+#else
+    return label->pixmap()->toImage();
+#endif
+}
+
 } // namespace GUIUtil
