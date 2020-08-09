@@ -2,11 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <masternode/activemasternode.h>
 #include <governance/governance.h>
 #include <init.h>
 #include <validation.h>
-#include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
@@ -34,7 +32,7 @@ void CMasternodeSync::BumpAssetLastTime(const std::string& strFuncName)
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::BumpAssetLastTime -- %s\n", strFuncName);
 }
 
-std::string CMasternodeSync::GetAssetName()
+std::string CMasternodeSync::GetAssetName() const
 {
     switch(nCurrentAsset)
     {
@@ -82,7 +80,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 
 bilingual_str CMasternodeSync::GetSyncStatus()
 {
-    switch (masternodeSync.nCurrentAsset) {
+    switch (nCurrentAsset) {
         case MASTERNODE_SYNC_INITIAL:       return _("Synchronizing blockchain...");
         case MASTERNODE_SYNC_WAITING:       return _("Synchronization pending...");
         case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
@@ -92,7 +90,7 @@ bilingual_str CMasternodeSync::GetSyncStatus()
     }
 }
 
-void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const
 {
     if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
 
@@ -270,7 +268,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                         ) {
                             // We already asked for all objects, waited for MASTERNODE_SYNC_TIMEOUT_SECONDS
                             // after that and less then 0.01% or MASTERNODE_SYNC_TICK_SECONDS
-                            // (i.e. 1 per second) votes were recieved during the last tick.
+                            // (i.e. 1 per second) votes were received during the last tick.
                             // We can be pretty sure that we are done syncing.
                             LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- asked for all objects, nothing to do\n", nTick, nCurrentAsset);
                             // reset nTimeNoObjectsLeft to be able to use the same condition on resync
@@ -359,7 +357,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
     bool fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
 
     if (fReachedBestHeader && !fReachedBestHeaderNew) {
-        // Switching from true to false means that we previousely stuck syncing headers for some reason,
+        // Switching from true to false means that we previously stuck syncing headers for some reason,
         // probably initial timeout was not enough,
         // because there is no way we can update tip not having best header
         Reset();
