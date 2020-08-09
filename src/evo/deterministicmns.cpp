@@ -120,12 +120,12 @@ bool CDeterministicMNList::IsMNPoSeBanned(const uint256& proTxHash) const
     return IsMNPoSeBanned(*p);
 }
 
-bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn) const
+bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn)
 {
     return !IsMNPoSeBanned(dmn);
 }
 
-bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr& dmn) const
+bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr& dmn)
 {
     assert(dmn);
     return dmn->pdmnState->IsBanned();
@@ -678,7 +678,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         for(const auto& commitment: qc.commitments) {
             if (!commitment.IsNull()) {
                 const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
-                int quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
+                uint32_t quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
                 auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
                     // we should actually never get into this case as validation should have catched it...but lets be sure
@@ -694,159 +694,159 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         const CTransaction& tx = *block.vtx[i];
 
         switch(tx.nVersion) {
-        case(SYSCOIN_TX_VERSION_MN_REGISTER): {
-            CProRegTx proTx;
-            if (!GetTxPayload(tx, proTx)) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
-            }
-
-            auto dmn = std::make_shared<CDeterministicMN>(newList.GetTotalRegisteredCount());
-            dmn->proTxHash = tx.GetHash();
-
-            // collateralOutpoint is either pointing to an external collateral or to the ProRegTx itself
-            if (proTx.collateralOutpoint.hash.IsNull()) {
-                dmn->collateralOutpoint = COutPoint(tx.GetHash(), proTx.collateralOutpoint.n);
-            } else {
-                dmn->collateralOutpoint = proTx.collateralOutpoint;
-            }
-
-            Coin coin;
-            if (!proTx.collateralOutpoint.hash.IsNull() && (!GetUTXOCoin(dmn->collateralOutpoint, coin) || coin.out.nValue != nMNCollateralRequired)) {
-                // should actually never get to this point as CheckProRegTx should have handled this case.
-                // We do this additional check nevertheless to be 100% sure
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral");
-            }
-
-            auto replacedDmn = newList.GetMNByCollateral(dmn->collateralOutpoint);
-            if (replacedDmn != nullptr) {
-                // This might only happen with a ProRegTx that refers an external collateral
-                // In that case the new ProRegTx will replace the old one. This means the old one is removed
-                // and the new one is added like a completely fresh one, which is also at the bottom of the payment list
-                newList.RemoveMN(replacedDmn->proTxHash);
-                if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                              __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+            case(SYSCOIN_TX_VERSION_MN_REGISTER): {
+                CProRegTx proTx;
+                if (!GetTxPayload(tx, proTx)) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
                 }
-            }
 
-            if (newList.HasUniqueProperty(proTx.addr)) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-addr");
-            }
-            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator)) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-key");
-            }
+                auto dmn = std::make_shared<CDeterministicMN>(newList.GetTotalRegisteredCount());
+                dmn->proTxHash = tx.GetHash();
 
-            dmn->nOperatorReward = proTx.nOperatorReward;
-            dmn->pdmnState = std::make_shared<CDeterministicMNState>(proTx);
-            auto dmnState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-            dmnState->nRegisteredHeight = nHeight;
-            // if using external collateral,  height from when collateral was created
-            if(!proTx.collateralOutpoint.hash.IsNull())
-                dmnState->nCollateralHeight = coin.nHeight;
-            else
-                dmnState->nCollateralHeight = nHeight;
+                // collateralOutpoint is either pointing to an external collateral or to the ProRegTx itself
+                if (proTx.collateralOutpoint.hash.IsNull()) {
+                    dmn->collateralOutpoint = COutPoint(tx.GetHash(), proTx.collateralOutpoint.n);
+                } else {
+                    dmn->collateralOutpoint = proTx.collateralOutpoint;
+                }
 
-            if (proTx.addr == CService()) {
-                // start in banned pdmnState as we need to wait for a ProUpServTx
-                dmnState->BanIfNotBanned(nHeight);
-            }
-            dmn->pdmnState = dmnState;
+                Coin coin;
+                if (!proTx.collateralOutpoint.hash.IsNull() && (!GetUTXOCoin(dmn->collateralOutpoint, coin) || coin.out.nValue != nMNCollateralRequired)) {
+                    // should actually never get to this point as CheckProRegTx should have handled this case.
+                    // We do this additional check nevertheless to be 100% sure
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral");
+                }
 
-            newList.AddMN(dmn);
-
-            if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
-                    __func__, tx.GetHash().ToString(), nHeight, proTx.ToString());
-            }
-            break;
-        } 
-        case(SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE): {
-            CProUpServTx proTx;
-            if (!GetTxPayload(tx, proTx)) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
-            }
-
-            if (newList.HasUniqueProperty(proTx.addr) && newList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTx.proTxHash) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-addr");
-            }
-
-            CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
-            if (!dmn) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
-            }
-            auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-            newState->addr = proTx.addr;
-            newState->scriptOperatorPayout = proTx.scriptOperatorPayout;
-
-            if (newState->IsBanned()) {
-                // only revive when all keys are set
-                if (newState->pubKeyOperator.Get().IsValid() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
-                    newState->Revive(nHeight);
+                auto replacedDmn = newList.GetMNByCollateral(dmn->collateralOutpoint);
+                if (replacedDmn != nullptr) {
+                    // This might only happen with a ProRegTx that refers an external collateral
+                    // In that case the new ProRegTx will replace the old one. This means the old one is removed
+                    // and the new one is added like a completely fresh one, which is also at the bottom of the payment list
+                    newList.RemoveMN(replacedDmn->proTxHash);
                     if (debugLogs) {
-                        LogPrintf("CDeterministicMNManager::%s -- MN %s revived at height %d\n",
-                            __func__, proTx.proTxHash.ToString(), nHeight);
+                        LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                                __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
                     }
                 }
-            }
 
-            newList.UpdateMN(proTx.proTxHash, newState);
-            if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
-                    __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
-            }
-            break;
-        } 
-        case(SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR): {
-            CProUpRegTx proTx;
-            if (!GetTxPayload(tx, proTx)) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
-            }
+                if (newList.HasUniqueProperty(proTx.addr)) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-addr");
+                }
+                if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator)) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-key");
+                }
 
-            CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
-            if (!dmn) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
-            }
-            auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-            if (newState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
-                // reset all operator related fields and put MN into PoSe-banned state in case the operator key changes
+                dmn->nOperatorReward = proTx.nOperatorReward;
+                dmn->pdmnState = std::make_shared<CDeterministicMNState>(proTx);
+                auto dmnState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+                dmnState->nRegisteredHeight = nHeight;
+                // if using external collateral,  height from when collateral was created
+                if(!proTx.collateralOutpoint.hash.IsNull())
+                    dmnState->nCollateralHeight = coin.nHeight;
+                else
+                    dmnState->nCollateralHeight = nHeight;
+
+                if (proTx.addr == CService()) {
+                    // start in banned pdmnState as we need to wait for a ProUpServTx
+                    dmnState->BanIfNotBanned(nHeight);
+                }
+                dmn->pdmnState = dmnState;
+
+                newList.AddMN(dmn);
+
+                if (debugLogs) {
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
+                        __func__, tx.GetHash().ToString(), nHeight, proTx.ToString());
+                }
+                break;
+            } 
+            case(SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE): {
+                CProUpServTx proTx;
+                if (!GetTxPayload(tx, proTx)) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
+                }
+
+                if (newList.HasUniqueProperty(proTx.addr) && newList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTx.proTxHash) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-addr");
+                }
+
+                CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
+                if (!dmn) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
+                }
+                auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+                newState->addr = proTx.addr;
+                newState->scriptOperatorPayout = proTx.scriptOperatorPayout;
+
+                if (newState->IsBanned()) {
+                    // only revive when all keys are set
+                    if (newState->pubKeyOperator.Get().IsValid() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
+                        newState->Revive(nHeight);
+                        if (debugLogs) {
+                            LogPrintf("CDeterministicMNManager::%s -- MN %s revived at height %d\n",
+                                __func__, proTx.proTxHash.ToString(), nHeight);
+                        }
+                    }
+                }
+
+                newList.UpdateMN(proTx.proTxHash, newState);
+                if (debugLogs) {
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                        __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+                }
+                break;
+            } 
+            case(SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR): {
+                CProUpRegTx proTx;
+                if (!GetTxPayload(tx, proTx)) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
+                }
+
+                CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
+                if (!dmn) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
+                }
+                auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+                if (newState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
+                    // reset all operator related fields and put MN into PoSe-banned state in case the operator key changes
+                    newState->ResetOperatorFields();
+                    newState->BanIfNotBanned(nHeight);
+                }
+                newState->pubKeyOperator.Set(proTx.pubKeyOperator);
+                newState->keyIDVoting = proTx.keyIDVoting;
+                newState->scriptPayout = proTx.scriptPayout;
+
+                newList.UpdateMN(proTx.proTxHash, newState);
+
+                if (debugLogs) {
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                        __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+                }
+                break;
+            } 
+            case(SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE): {
+                CProUpRevTx proTx;
+                if (!GetTxPayload(tx, proTx)) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
+                }
+
+                CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
+                if (!dmn) {
+                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
+                }
+                auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
                 newState->ResetOperatorFields();
                 newState->BanIfNotBanned(nHeight);
-            }
-            newState->pubKeyOperator.Set(proTx.pubKeyOperator);
-            newState->keyIDVoting = proTx.keyIDVoting;
-            newState->scriptPayout = proTx.scriptPayout;
+                newState->nRevocationReason = proTx.nReason;
 
-            newList.UpdateMN(proTx.proTxHash, newState);
+                newList.UpdateMN(proTx.proTxHash, newState);
 
-            if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
-                    __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+                if (debugLogs) {
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
+                        __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+                }
+                break; 
             }
-            break;
-        } 
-        case(SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE): {
-            CProUpRevTx proTx;
-            if (!GetTxPayload(tx, proTx)) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
-            }
-
-            CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
-            if (!dmn) {
-                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
-            }
-            auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-            newState->ResetOperatorFields();
-            newState->BanIfNotBanned(nHeight);
-            newState->nRevocationReason = proTx.nReason;
-
-            newList.UpdateMN(proTx.proTxHash, newState);
-
-            if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
-                    __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
-            }
-            break;
-        } 
         }
     }
 
