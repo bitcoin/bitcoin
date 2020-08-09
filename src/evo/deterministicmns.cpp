@@ -119,12 +119,12 @@ bool CDeterministicMNList::IsMNPoSeBanned(const uint256& proTxHash) const
     return IsMNPoSeBanned(*p);
 }
 
-bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn) const
+bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn)
 {
     return !IsMNPoSeBanned(dmn);
 }
 
-bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr& dmn) const
+bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr& dmn)
 {
     assert(dmn);
     return dmn->pdmnState->IsBanned();
@@ -832,7 +832,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
             if (!qc.commitment.IsNull()) {
                 const auto& params = Params().GetConsensus().llmqs.at(qc.commitment.llmqType);
-                int quorumHeight = qc.nHeight - (qc.nHeight % params.dkgInterval);
+                uint32_t quorumHeight = qc.nHeight - (qc.nHeight % params.dkgInterval);
                 auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!quorumIndex || quorumIndex->GetBlockHash() != qc.commitment.quorumHash) {
                     // we should actually never get into this case as validation should have catched it...but lets be sure
@@ -1118,8 +1118,6 @@ void CDeterministicMNManager::UpgradeDiff(CDBBatch& batch, const CBlockIndex* pi
     }
 
     batch.Write(std::make_pair(DB_LIST_DIFF, pindexNext->GetBlockHash()), newDiff);
-
-    return;
 }
 
 // TODO this can be completely removed in a future version

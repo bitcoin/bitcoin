@@ -56,7 +56,7 @@ public:
     CScript scriptOperatorPayout;
 
 public:
-    CDeterministicMNState() {}
+    CDeterministicMNState() = default;
     explicit CDeterministicMNState(const CProRegTx& proTx)
     {
         keyIDOwner = proTx.keyIDOwner;
@@ -177,7 +177,7 @@ public:
     CDeterministicMNState state;
 
 public:
-    CDeterministicMNStateDiff() {}
+    CDeterministicMNStateDiff() = default;
     CDeterministicMNStateDiff(const CDeterministicMNState& a, const CDeterministicMNState& b)
     {
 #define DMN_STATE_DIFF_LINE(f) if (a.f != b.f) { state.f = b.f; fields |= Field_##f; }
@@ -211,7 +211,7 @@ private:
 
 public:
     CDeterministicMN() = delete; // no default constructor, must specify internalId
-    CDeterministicMN(uint64_t _internalId) : internalId(_internalId)
+    explicit CDeterministicMN(uint64_t _internalId) : internalId(_internalId)
     {
         // only non-initial values
         assert(_internalId != std::numeric_limits<uint64_t>::max());
@@ -322,7 +322,7 @@ private:
     MnUniquePropertyMap mnUniquePropertyMap;
 
 public:
-    CDeterministicMNList() {}
+    CDeterministicMNList() = default;
     explicit CDeterministicMNList(const uint256& _blockHash, int _height, uint32_t _totalRegisteredCount) :
         blockHash(_blockHash),
         nHeight(_height),
@@ -414,8 +414,8 @@ public:
 
     bool IsMNValid(const uint256& proTxHash) const;
     bool IsMNPoSeBanned(const uint256& proTxHash) const;
-    bool IsMNValid(const CDeterministicMNCPtr& dmn) const;
-    bool IsMNPoSeBanned(const CDeterministicMNCPtr& dmn) const;
+    static bool IsMNValid(const CDeterministicMNCPtr& dmn);
+    static bool IsMNPoSeBanned(const CDeterministicMNCPtr& dmn);
 
     bool HasMN(const uint256& proTxHash) const
     {
@@ -678,14 +678,14 @@ public:
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs);
-    void HandleQuorumCommitment(llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
-    void DecreasePoSePenalties(CDeterministicMNList& mnList);
+    static void HandleQuorumCommitment(llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
+    static void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
     CDeterministicMNList GetListForBlock(const CBlockIndex* pindex);
     CDeterministicMNList GetListAtChainTip();
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
-    bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
+    static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
     bool IsDIP3Enforced(int nHeight = -1);
 
