@@ -241,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
 
     unsigned char out_sha_bytes[CSHA256::OUTPUT_SIZE];
     out_sha.Finalize(out_sha_bytes);
-    std::string out_sha_hex = HexStr(std::begin(out_sha_bytes), std::end(out_sha_bytes));
+    std::string out_sha_hex = HexStr(out_sha_bytes);
 
     // If check below fails, should manually dump the results with:
     //
