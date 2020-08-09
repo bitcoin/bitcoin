@@ -57,11 +57,11 @@ public:
     std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex);
 
 private:
-    bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state);
+    static bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state);
     bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state);
-    bool IsMiningPhase(Consensus::LLMQType llmqType, int nHeight);
+    static bool IsMiningPhase(Consensus::LLMQType llmqType, int nHeight);
     bool IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight);
-    uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight);
+    static uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight);
 };
 
 extern CQuorumBlockProcessor* quorumBlockProcessor;

@@ -5,7 +5,6 @@
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
-#include <llmq/quorums_init.h>
 #include <llmq/quorums_utils.h>
 
 #include <chainparams.h>
@@ -31,9 +30,7 @@ CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWork
     }
 }
 
-CDKGSessionManager::~CDKGSessionManager()
-{
-}
+CDKGSessionManager::~CDKGSessionManager() = default;
 
 void CDKGSessionManager::StartThreads()
 {
@@ -85,7 +82,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         return;
     }
 
-    if (vRecv.size() < 1) {
+    if (vRecv.empty()) {
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100);
         return;

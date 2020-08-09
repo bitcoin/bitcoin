@@ -112,9 +112,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
     return ret;
 }
 
-CDKGDebugManager::CDKGDebugManager()
-{
-}
+CDKGDebugManager::CDKGDebugManager() = default;
 
 UniValue CDKGDebugStatus::ToJson(int detailLevel) const
 {

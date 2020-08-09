@@ -21,7 +21,6 @@
 #include <cxxtimer.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/thread.hpp>
 
 namespace llmq
 {
@@ -227,7 +226,7 @@ uint256 CInstantSendDb::GetInstantSendLockHashByTxid(const uint256& txid)
 
     bool found = txidCache.get(txid, islockHash);
     if (found && islockHash.IsNull()) {
-        return uint256();
+        return {};
     }
 
     if (!found) {
@@ -236,7 +235,7 @@ uint256 CInstantSendDb::GetInstantSendLockHashByTxid(const uint256& txid)
     }
 
     if (!found) {
-        return uint256();
+        return {};
     }
     return islockHash;
 }
@@ -344,9 +343,7 @@ CInstantSendManager::CInstantSendManager(CDBWrapper& _llmqDb) :
     workInterrupt.reset();
 }
 
-CInstantSendManager::~CInstantSendManager()
-{
-}
+CInstantSendManager::~CInstantSendManager() = default;
 
 void CInstantSendManager::Start()
 {
@@ -701,7 +698,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: received islock, peer=%d\n", __func__,
             islock.txid.ToString(), hash.ToString(), pfrom->GetId());
 
-    pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->GetId(), std::move(islock)));
+    pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->GetId(), islock));
 }
 
 bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CInstantSendLock& islock, bool& retBan)

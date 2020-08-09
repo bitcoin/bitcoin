@@ -13,13 +13,12 @@
 #include <masternode/activemasternode.h>
 #include <masternode/masternode-meta.h>
 #include <chainparams.h>
-#include <init.h>
 #include <netmessagemaker.h>
-#include <spork.h>
 #include <univalue.h>
 #include <validation.h>
 
 #include <cxxtimer.hpp>
+#include <memory>
 
 namespace llmq
 {
@@ -97,7 +96,7 @@ bool CDKGSession::Init(const CBlockIndex* _pindexQuorum, const std::vector<CDete
     receivedSkContributions.resize(members.size());
 
     for (size_t i = 0; i < mns.size(); i++) {
-        members[i] = std::unique_ptr<CDKGMember>(new CDKGMember(mns[i], i));
+        members[i] = std::make_unique<CDKGMember>(mns[i], i);
         membersMap.emplace(members[i]->dmn->proTxHash, i);
         memberIds[i] = members[i]->id;
     }
@@ -1242,9 +1241,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         aggSigs.reserve(cvec.size());
         aggPks.reserve(cvec.size());
 
-        for (size_t i = 0; i < cvec.size(); i++) {
-            auto& qc = cvec[i];
-
+        for (const auto& qc : cvec) {
             if (qc.quorumPublicKey != first.quorumPublicKey || qc.quorumVvecHash != first.quorumVvecHash) {
                 logger.Batch("quorumPublicKey or quorumVvecHash does not match, skipping");
                 continue;

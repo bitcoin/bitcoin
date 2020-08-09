@@ -24,7 +24,7 @@ class CDKGSessionManager;
 
 /**
  * An object of this class represents a quorum which was mined on-chain (through a quorum commitment)
- * It at least contains informations about the members and the quorum public key which is needed to verify recovered
+ * It at least contains information about the members and the quorum public key which is needed to verify recovered
  * signatures from this quorum.
  *
  * In case the local node is a member of the same quorum and successfully participated in the DKG, the quorum object
@@ -94,7 +94,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    bool HasQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    static bool HasQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash);
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash);

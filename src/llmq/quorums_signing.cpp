@@ -16,7 +16,6 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <limits>
 #include <unordered_set>
 
 namespace llmq
@@ -575,7 +574,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
         for (auto it = v.begin(); it != v.end();) {
             auto& recSig = *it;
 
-            Consensus::LLMQType llmqType = (Consensus::LLMQType) recSig.llmqType;
+            auto llmqType = (Consensus::LLMQType) recSig.llmqType;
             auto quorumKey = std::make_pair((Consensus::LLMQType)recSig.llmqType, recSig.quorumHash);
             if (!retQuorums.count(quorumKey)) {
                 CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, recSig.quorumHash);
