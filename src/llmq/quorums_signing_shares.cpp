@@ -1607,7 +1607,7 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
 // causes all known sigShares to be re-announced
 void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
 {
-    if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
+    if (CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
         return;
     }
 
