@@ -158,7 +158,7 @@ the pull request affects. Valid areas as:
 Examples:
 
     consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
-    net: Automatically create hidden service, listen on Tor
+    net: Automatically create onion service, listen on Tor
     qt: Add feed bump button
     log: Fix typo in log message
 
