@@ -211,7 +211,7 @@ public:
     {
         std::vector<unsigned char> buf;
         GetBuf(buf);
-        return HexStr(buf.begin(), buf.end());
+        return HexStr(buf);
     }
 };
 
