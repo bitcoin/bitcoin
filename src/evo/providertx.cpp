@@ -404,7 +404,7 @@ std::string CProRegTx::MakeSignString() const
     if (ExtractDestination(scriptPayout, destPayout)) {
         strPayout = EncodeDestination(destPayout);
     } else {
-        strPayout = HexStr(scriptPayout.begin(), scriptPayout.end());
+        strPayout = HexStr(scriptPayout);
     }
 
     s += strPayout + "|";
