@@ -20,7 +20,7 @@ static void FindByte(benchmark::Bench& bench)
 
     bench.run([&] {
         bf.SetPos(0);
-        bf.FindByte(1);
+        bf.FindByte(std::byte(1));
     });
 
     // Cleanup

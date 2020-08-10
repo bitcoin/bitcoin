@@ -4565,7 +4565,7 @@ void Chainstate::LoadExternalBlockFile(
             try {
                 // locate a header
                 unsigned char buf[CMessageHeader::MESSAGE_START_SIZE];
-                blkdat.FindByte(params.MessageStart()[0]);
+                blkdat.FindByte(std::byte(params.MessageStart()[0]));
                 nRewind = blkdat.GetPos() + 1;
                 blkdat >> buf;
                 if (memcmp(buf, params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE)) {
