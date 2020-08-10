@@ -225,7 +225,7 @@ public:
     void SetNetworkActive(bool active);
     // SYSCOIN
     void OpenMasternodeConnection(const CAddress& addrConnect, bool isProbe = false);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
