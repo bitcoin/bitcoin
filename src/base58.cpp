@@ -132,10 +132,10 @@ bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, in
     return DecodeBase58(str.c_str(), vchRet, max_ret_len);
 }
 
-std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
+std::string EncodeBase58Check(Span<const unsigned char> input)
 {
     // add 4-byte hash check to the end
-    std::vector<unsigned char> vch(vchIn);
+    std::vector<unsigned char> vch(input.begin(), input.end());
     uint256 hash = Hash(vch);
     vch.insert(vch.end(), (unsigned char*)&hash, (unsigned char*)&hash + 4);
     return EncodeBase58(vch);
