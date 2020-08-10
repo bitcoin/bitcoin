@@ -2194,14 +2194,26 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 push = true;
 
                 // As we're going to send tx, make sure its unconfirmed parents are made requestable.
-                for (const auto& txin : tx->vin) {
-                    auto txinfo = m_mempool.info(txin.prevout.hash);
-                    if (txinfo.tx && txinfo.m_time > now - UNCONDITIONAL_RELAY_DELAY) {
-                        // Relaying a transaction with a recent but unconfirmed parent.
-                        if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(txin.prevout.hash))) {
-                            LOCK(cs_main);
-                            State(pfrom.GetId())->m_recently_announced_invs.insert(txin.prevout.hash);
+                std::vector<uint256> parent_ids_to_add;
+                {
+                    LOCK(m_mempool.cs);
+                    auto txiter = m_mempool.GetIter(tx->GetHash());
+                    if (txiter) {
+                        const CTxMemPool::setEntries& parents = m_mempool.GetMemPoolParents(*txiter);
+                        parent_ids_to_add.reserve(parents.size());
+                        for (CTxMemPool::txiter parent_iter : parents) {
+                            if (parent_iter->GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
+                                parent_ids_to_add.push_back(parent_iter->GetTx().GetHash());
+                            }
                         }
+                    }
+                }
+
+                for (const uint256& parent_txid : parent_ids_to_add) {
+                    // Relaying a transaction with a recent but unconfirmed parent.
+                    if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
+                        LOCK(cs_main);
+                        State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
                     }
                 }
             }
@@ -3688,8 +3700,19 @@ void PeerManagerImpl::ProcessMessage(
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
+
+            // Deduplicate parent txids, so that we don't have to loop over
+            // the same parent txid more than once down below.
+            std::vector<uint256> unique_parents;
+            unique_parents.reserve(tx.vin.size());
             for (const CTxIn& txin : tx.vin) {
-                if (m_recent_rejects.contains(txin.prevout.hash)) {
+                // We start with all parents, and then remove duplicates below.
+                unique_parents.push_back(txin.prevout.hash);
+            }
+            std::sort(unique_parents.begin(), unique_parents.end());
+            unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
+            for (const uint256& parent_txid : unique_parents) {
+                if (m_recent_rejects.contains(parent_txid)) {
                     fRejectedParents = true;
                     break;
                 }
@@ -3697,12 +3720,12 @@ void PeerManagerImpl::ProcessMessage(
             if (!fRejectedParents) {
                 const auto current_time = GetTime<std::chrono::microseconds>();
 
-                for (const CTxIn& txin : tx.vin) {
-                    CInv _inv(MSG_TX, txin.prevout.hash);
+                for (const uint256& parent_txid : unique_parents) {
+                    CInv _inv(MSG_TX, parent_txid);
                     pfrom.AddKnownInventory(_inv.hash);
                     if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time);
                     // We don't know if the previous tx was a regular or a mixing one, try both
-                    CInv _inv2(MSG_DSTX, txin.prevout.hash);
+                    CInv _inv2(MSG_DSTX, parent_txid);
                     pfrom.AddKnownInventory(_inv2.hash);
                     if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time);
                 }
