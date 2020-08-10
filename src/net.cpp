@@ -2784,6 +2784,9 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     hashContinue = uint256();
     if (conn_type_in != ConnectionType::BLOCK_RELAY) {
         m_tx_relay = MakeUnique<TxRelay>();
+    }
+
+    if (RelayAddrsWithConn()) {
         m_addr_known = MakeUnique<CRollingBloomFilter>(5000, 0.001);
     }
 
