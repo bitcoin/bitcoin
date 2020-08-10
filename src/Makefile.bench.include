@@ -47,6 +47,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/rollingbloom.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
+  bench/streams_findbyte.cpp \
   bench/strencodings.cpp \
   bench/util_time.cpp \
   bench/verify_script.cpp
