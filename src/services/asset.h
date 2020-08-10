@@ -45,8 +45,8 @@ public:
     unsigned char nPrecision;
     unsigned char nUpdateFlags;
     unsigned char nPrevUpdateFlags;
-    CKeyID notaryKeyID;
-    CKeyID prevNotaryKeyID;
+    std::vector<unsigned char> vchNotaryKeyID;
+    std::vector<unsigned char> vchPrevNotaryKeyID;
     CAsset() {
         SetNull();
     }
@@ -66,13 +66,13 @@ public:
         nBalance = 0;
         nTotalSupply = 0;
         nMaxSupply = 0;
-        notaryKeyID.SetNull();
-        prevNotaryKeyID.SetNull();
+        vchNotaryKeyID.clear();
+        vchPrevNotaryKeyID.clear();
     }
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.notaryKeyID, obj.prevNotaryKeyID, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
+        READWRITE(obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchNotaryKeyID, obj.vchPrevNotaryKeyID, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 

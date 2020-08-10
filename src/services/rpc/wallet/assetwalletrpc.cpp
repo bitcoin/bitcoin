@@ -162,7 +162,7 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
         // get asset
         CAsset theAsset;
         // if asset has notary signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.notaryKeyID.IsNull()) {
+        if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             bFilled = false;
             // get endpoint from JSON
             UniValue publicObj;
@@ -281,8 +281,8 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         if (!asset.vchContract.empty())
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
 
-        if (!asset.notaryKeyID.IsNull())
-            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(asset.notaryKeyID)));
+        if (!asset.vchNotaryKeyID.IsNull())
+            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchNotaryKeyID)))));
 
         if (asset.nUpdateFlags > 0)
             entry.__pushKV("update_flags", asset.nUpdateFlags);
@@ -648,14 +648,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     uint32_t nUpdateFlags = params[7].get_uint();
     std::string strWitness = params[8].get_str();
-    CKeyID notaryKeyID;
+    std::vector<unsigned char> vchNotaryKeyID;
     if(!strWitness.empty()) {
         CTxDestination txDest = DecodeDestination(strWitness);
         if (!IsValidDestination(txDest)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
         }
         if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-            notaryKeyID = ToKeyID(*witness_id);
+            CKeyID keyID = ToKeyID(*witness_id);
+            vchNotaryKeyID = std::vector<unsigned char>(keyID.begin(), keyID.size());
         } else {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
         }
@@ -677,7 +678,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.strSymbol = EncodeBase64(strSymbol);
     newAsset.strPubData = EncodeBase64(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
-    newAsset.notaryKeyID = notaryKeyID;
+    newAsset.vchNotaryKeyID = vchNotaryKeyID;
     newAsset.nBalance = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
@@ -967,7 +968,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         
     const std::string& oldData = DecodeBase64(theAsset.strPubData);
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
-    CKeyID oldWitnessKeyID = theAsset.notaryKeyID;
+    const std::vector<unsigned char> vchOldNotaryKeyID(theAsset.vchNotaryKeyID);
 
     theAsset.ClearAsset();
     CAmount nBalance;
@@ -986,14 +987,15 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
         publicData.pushKV("af", params[7]);
     std::string strWitness = params[5].get_str();
-    CKeyID notaryKeyID;
+    std::vector<unsigned char> vchNotaryKeyID;
     if(!strWitness.empty()) {
         CTxDestination txDest = DecodeDestination(strWitness);
         if (!IsValidDestination(txDest)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address");
         }
         if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-            notaryKeyID = ToKeyID(*witness_id);
+            CKeyID keyID = ToKeyID(*witness_id);
+            vchNotaryKeyID = std::vector<unsigned char>(keyID.begin(), keyID.size());
         } else {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid witness address: Please use P2PWKH address.");
         }
@@ -1010,9 +1012,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract = vchContract;
     }
 
-    if(notaryKeyID != oldWitnessKeyID) {
-        theAsset.prevNotaryKeyID = oldWitnessKeyID;
-        theAsset.notaryKeyID = notaryKeyID;
+    if(vchNotaryKeyID != vchOldNotaryKeyID) {
+        theAsset.vchPrevNotaryKeyID = vchOldNotaryKeyID;
+        theAsset.vchNotaryKeyID = vchNotaryKeyID;
     }
 
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
@@ -1298,7 +1300,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         // if RBF is disabled we want to see if we override it if notarization with instant transfers is defined for all assets being sent
-       if(!notaryRBF && !theAsset.notaryKeyID.IsNull()) {
+       if(!notaryRBF && !theAsset.vchNotaryKeyID.empty()) {
             // get endpoint from JSON
             UniValue publicObj;
             if(publicObj.read(DecodeBase64(theAsset.strPubData))) {
@@ -1321,7 +1323,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         if(itVout == theAssetAllocation.voutAssets.end()) {
             CAssetOut assetOut(nAsset, vecOut);
-            if(!theAsset.notaryKeyID.IsNull()) {
+            if(!theAsset.vchNotaryKeyID.empty()) {
                 // fund tx expecting 65 byte signature to be filled in
                 assetOut.vchNotarySig.resize(65);
             }
@@ -1469,7 +1471,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(1, nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
         CAssetOut assetOut(nAsset, vecOut);
-        if(!theAsset.notaryKeyID.IsNull()) {
+        if(!theAsset.vchNotaryKeyID.empty()) {
             assetOut.vchNotarySig.resize(65);  
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
@@ -1480,7 +1482,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
         std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)}; // burn has to be in index 0, any change in index 1
         CAssetOut assetOut(nAsset, vecOut);
-        if(!theAsset.notaryKeyID.IsNull()) {
+        if(!theAsset.vchNotaryKeyID.empty()) {
             assetOut.vchNotarySig.resize(65);  
         }
         burnSyscoin.voutAssets.emplace_back(assetOut);
@@ -1626,7 +1628,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CMintSyscoin mintSyscoin;
     std::vector<CAssetOutValue> vecOut = {CAssetOutValue(0, nAmount)};
     CAssetOut assetOut(nAsset, vecOut);
-    if(!theAsset.notaryKeyID.IsNull()) {
+    if(!theAsset.vchNotaryKeyID.empty()) {
         assetOut.vchNotarySig.resize(65);
     }
     mintSyscoin.voutAssets.emplace_back(assetOut);
