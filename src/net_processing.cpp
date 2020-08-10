@@ -1741,14 +1741,25 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
             mempool.RemoveUnbroadcastTx(tx->GetHash());
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
-            for (const auto& txin : tx->vin) {
-                auto txinfo = mempool.info(txin.prevout.hash);
-                if (txinfo.tx && txinfo.m_time > now - UNCONDITIONAL_RELAY_DELAY) {
-                    // Relaying a transaction with a recent but unconfirmed parent.
-                    if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(txin.prevout.hash))) {
-                        LOCK(cs_main);
-                        State(pfrom.GetId())->m_recently_announced_invs.insert(txin.prevout.hash);
+            std::vector<uint256> parent_ids_to_add;
+            {
+                LOCK(mempool.cs);
+                auto txiter = mempool.GetIter(tx->GetHash());
+                if (txiter) {
+                    const CTxMemPool::setEntries& parents = mempool.GetMemPoolParents(*txiter);
+                    parent_ids_to_add.reserve(parents.size());
+                    for (CTxMemPool::txiter parent_iter : parents) {
+                        if (parent_iter->GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
+                            parent_ids_to_add.push_back(parent_iter->GetTx().GetHash());
+                        }
                     }
+                }
+            }
+            for (const uint256& parent_txid : parent_ids_to_add) {
+                // Relaying a transaction with a recent but unconfirmed parent.
+                if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
+                    LOCK(cs_main);
+                    State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
                 }
             }
         } else {
@@ -2999,8 +3010,19 @@ void ProcessMessage(
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
+
+            // Deduplicate parent txids, so that we don't have to loop over
+            // the same parent txid more than once down below.
+            std::vector<uint256> unique_parents;
+            unique_parents.reserve(tx.vin.size());
             for (const CTxIn& txin : tx.vin) {
-                if (recentRejects->contains(txin.prevout.hash)) {
+                // We start with all parents, and then remove duplicates below.
+                unique_parents.push_back(txin.prevout.hash);
+            }
+            std::sort(unique_parents.begin(), unique_parents.end());
+            unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
+            for (const uint256& parent_txid : unique_parents) {
+                if (recentRejects->contains(parent_txid)) {
                     fRejectedParents = true;
                     break;
                 }
@@ -3009,14 +3031,14 @@ void ProcessMessage(
                 uint32_t nFetchFlags = GetFetchFlags(pfrom);
                 const auto current_time = GetTime<std::chrono::microseconds>();
 
-                for (const CTxIn& txin : tx.vin) {
+                for (const uint256& parent_txid : unique_parents) {
                     // Here, we only have the txid (and not wtxid) of the
                     // inputs, so we only request in txid mode, even for
                     // wtxidrelay peers.
                     // Eventually we should replace this with an improved
                     // protocol for getting all unconfirmed parents.
-                    CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
-                    pfrom.AddKnownTx(txin.prevout.hash);
+                    CInv _inv(MSG_TX | nFetchFlags, parent_txid);
+                    pfrom.AddKnownTx(parent_txid);
                     if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom.GetId()), ToGenTxid(_inv), current_time);
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
