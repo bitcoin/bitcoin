@@ -15,20 +15,15 @@
 #define BITCOIN_BASE58_H
 
 #include <attributes.h>
+#include <span.h>
 
 #include <string>
 #include <vector>
 
 /**
- * Encode a byte sequence as a base58-encoded string.
- * pbegin and pend cannot be nullptr, unless both are.
+ * Encode a byte span as a base58-encoded string
  */
-std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend);
-
-/**
- * Encode a byte vector as a base58-encoded string
- */
-std::string EncodeBase58(const std::vector<unsigned char>& vch);
+std::string EncodeBase58(Span<const unsigned char> input);
 
 /**
  * Decode a base58-encoded string (psz) into a byte vector (vchRet).

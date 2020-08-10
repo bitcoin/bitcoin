@@ -84,21 +84,21 @@ bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_
     return true;
 }
 
-std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
+std::string EncodeBase58(Span<const unsigned char> input)
 {
     // Skip & count leading zeroes.
     int zeroes = 0;
     int length = 0;
-    while (pbegin != pend && *pbegin == 0) {
-        pbegin++;
+    while (input.size() > 0 && input[0] == 0) {
+        input = input.subspan(1);
         zeroes++;
     }
     // Allocate enough space in big-endian base58 representation.
-    int size = (pend - pbegin) * 138 / 100 + 1; // log(256) / log(58), rounded up.
+    int size = input.size() * 138 / 100 + 1; // log(256) / log(58), rounded up.
     std::vector<unsigned char> b58(size);
     // Process the bytes.
-    while (pbegin != pend) {
-        int carry = *pbegin;
+    while (input.size() > 0) {
+        int carry = input[0];
         int i = 0;
         // Apply "b58 = b58 * 256 + ch".
         for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++) {
@@ -109,7 +109,7 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 
         assert(carry == 0);
         length = i;
-        pbegin++;
+        input = input.subspan(1);
     }
     // Skip leading zeroes in base58 result.
     std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
@@ -122,11 +122,6 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
     while (it != b58.end())
         str += pszBase58[*(it++)];
     return str;
-}
-
-std::string EncodeBase58(const std::vector<unsigned char>& vch)
-{
-    return EncodeBase58(vch.data(), vch.data() + vch.size());
 }
 
 bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len)

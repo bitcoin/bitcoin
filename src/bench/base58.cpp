@@ -20,7 +20,7 @@ static void Base58Encode(benchmark::Bench& bench)
         }
     };
     bench.batch(buff.size()).unit("byte").run([&] {
-        EncodeBase58(buff.data(), buff.data() + buff.size());
+        EncodeBase58(buff);
     });
 }
 
