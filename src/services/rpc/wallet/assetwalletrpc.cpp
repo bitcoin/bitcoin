@@ -281,7 +281,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         if (!asset.vchContract.empty())
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
 
-        if (!asset.vchNotaryKeyID.IsNull())
+        if (!asset.vchNotaryKeyID.empty())
             entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchNotaryKeyID)))));
 
         if (asset.nUpdateFlags > 0)
