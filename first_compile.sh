@@ -16,6 +16,9 @@ sudo apt-get install libdb-dev libdb++-dev
 # Incoming connections
 sudo apt-get install libminiupnpc-dev
 
+# Used to check what windows are open
+sudo apt-get install wmctrl
+
 ./autogen.sh
 ./configure --with-miniupnpc --enable-upnp-default --with-incompatible-bdb # --disablewallet # --prefix=`pwd`/depends/x86_64-linux-gnu
 make -j8

@@ -84,6 +84,7 @@ const std::vector<std::string> CHECKLEVEL_DOC {
 
 // Cybersecurity Lab: The time difference from when the block was mined, to when it was received
 int64_t blockTimeOffset = INT_MIN;
+int64_t headerTimeOffset = INT_MIN;
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
     // First sort by most total work, ...
@@ -3732,7 +3733,11 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
                 *ppindex = pindex;
             }
         }
-    }
+
+
+    // Cybersecurity lab: Update the header time offset
+    headerTimeOffset = GetAdjustedTime() - ((*ppindex)->GetBlockTime());
+
     if (NotifyHeaderTip()) {
         if (::ChainstateActive().IsInitialBlockDownload() && ppindex && *ppindex) {
             LogPrintf("\nSynchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);

@@ -2379,6 +2379,25 @@ static UniValue blocktimeoffset(const JSONRPCRequest& request)
     return blockTimeOffset;
 }
 
+// Cybersecurity lab
+static UniValue headertimeoffset(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"headertimeoffset",
+                "\nReturns the time difference from the moment it was mined, to the moment it was received.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::NUM_TIME, "", "The time difference"},
+                RPCExamples{
+                    HelpExampleCli("headertimeoffset", "")
+            + HelpExampleRpc("headertimeoffset", "")
+                },
+            }.Check(request);
+
+    //LOCK(cs_main);
+    if(headerTimeOffset == INT_MIN) return NullUniValue;
+    return headerTimeOffset;
+}
+
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -2420,6 +2439,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "dumptxoutset",           &dumptxoutset,           {"path"} },
 
     { "z Researcher",       "blocktimeoffset",        &blocktimeoffset,        {} },
+    { "z Researcher",       "headertimeoffset",       &headertimeoffset,       {} },
 };
 // clang-format on
 
