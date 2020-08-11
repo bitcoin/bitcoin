@@ -2545,6 +2545,31 @@ std::vector<CAddress> CConnman::GetAddresses(Network requestor_network, size_t m
     if (m_addr_response_caches.find(requestor_network) == m_addr_response_caches.end() ||
         m_addr_response_caches[requestor_network].m_update_addr_response < current_time) {
         m_addr_response_caches[requestor_network].m_addrs_response_cache = GetAddresses(max_addresses, max_pct);
+
+        // Choosing a proper cache lifetime is a trade-off between the privacy leak minimization
+        // and the usefulness of ADDR responses to honest users.
+        //
+        // Longer cache lifetime makes it more difficult for an attacker to scrape
+        // enough AddrMan data to maliciously infer something useful.
+        // By the time an attacker scraped enough AddrMan records, most of
+        // the records should be old enough to not leak topology info by
+        // e.g. analyzing real-time changes in timestamps.
+        //
+        // It takes only several hundred requests to scrape everything from an AddrMan containing 100,000 nodes,
+        // so ~24 hours of cache lifetime indeed makes the data less inferable by the time
+        // most of it could be scraped (considering that timestamps are updated via
+        // ADDR self-announcements and when nodes communicate).
+        // We also should be robust to those attacks which may not require scraping *full* victim's AddrMan
+        // (because even several timestamps of the same handful of nodes may leak privacy).
+        //
+        // On the other hand, longer cache lifetime makes ADDR responses
+        // outdated and less useful for an honest requestor, e.g. if most nodes
+        // in the ADDR response are no longer active.
+        //
+        // However, the churn in the network is known to be rather low. Since we consider
+        // nodes to be "terrible" (see IsTerrible()) if the timestamps are older than 30 days,
+        // max. 24 hours of "penalty" due to cache shouldn't make any meaningful difference
+        // in terms of the freshness of the response.
         m_addr_response_caches[requestor_network].m_update_addr_response = current_time + std::chrono::hours(21) + GetRandMillis(std::chrono::hours(6));
     }
     return m_addr_response_caches[requestor_network].m_addrs_response_cache;
