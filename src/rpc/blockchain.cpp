@@ -2470,6 +2470,65 @@ static RPCHelpMan dumptxoutset()
     };
 }
 
+static RPCHelpMan getblocklocations()
+{
+    return RPCHelpMan{"getblocklocations",
+                "\nEXPERIMENTAL warning: this call may be removed or changed in future releases.\n"
+                "\nReturns a JSON for the file system location of 'blockhash' block and undo data.\n"
+                "\nIt is possible to return also the locations of previous blocks, by specifying 'nblocks' > 1.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum number locations to return (up to genesis block)"},
+                },
+                {
+                    RPCResult{
+                        RPCResult::Type::ARR, "", "",
+                        {
+                            {RPCResult::Type::NUM, "file", "blk*.dat/rev*.dat file index"},
+                            {RPCResult::Type::NUM, "data", "block data file offset"},
+                            {RPCResult::Type::NUM, "undo", "undo data file offset (if exists)"},
+                            {RPCResult::Type::STR_HEX, "prev", "previous block hash"},
+                        }
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("getblocklocation", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 10")
+                },
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+
+    if (fPruneMode) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block locations are not available in prune mode");
+    }
+
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    size_t nblocks = request.params[1].get_int();
+
+    const CBlockIndex* pblockindex = WITH_LOCK(cs_main, return LookupBlockIndex(hash));
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+
+    UniValue result(UniValue::VARR);
+    do {
+        UniValue location(UniValue::VOBJ);
+        location.pushKV("file", (uint64_t)pblockindex->nFile);
+        location.pushKV("data", (uint64_t)pblockindex->nDataPos);
+        if (pblockindex->nUndoPos) {
+            location.pushKV("undo", (uint64_t)pblockindex->nUndoPos);
+        }
+        if (pblockindex->pprev) {
+            location.pushKV("prev", pblockindex->pprev->GetBlockHash().GetHex());
+        } else {
+            location.pushKV("prev", uint256().GetHex());
+        }
+        result.push_back(location);
+        pblockindex = pblockindex->pprev;
+    } while (result.size() < nblocks && pblockindex);
+    return result;
+},
+    };
+}
+
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -2509,6 +2568,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitforblockheight",     &waitforblockheight,     {"height","timeout"} },
     { "hidden",             "syncwithvalidationinterfacequeue", &syncwithvalidationinterfacequeue, {} },
     { "hidden",             "dumptxoutset",           &dumptxoutset,           {"path"} },
+    { "hidden",             "getblocklocations",      &getblocklocations,      {"blockhash", "nblocks"} },
 };
 // clang-format on
     for (const auto& c : commands) {
