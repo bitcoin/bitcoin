@@ -162,7 +162,7 @@ class TxDownloadTest(BitcoinTestFramework):
         # Setup the p2p connections
         self.peers = []
         for node in self.nodes:
-            for i in range(NUM_INBOUND):
+            for _ in range(NUM_INBOUND):
                 self.peers.append(node.add_p2p_connection(TestP2PConn()))
 
         self.log.info("Nodes are setup with {} incoming connections each".format(NUM_INBOUND))

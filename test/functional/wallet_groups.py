@@ -27,8 +27,8 @@ class WalletGroupTest(BitcoinTestFramework):
         self.nodes[0].generate(110)
 
         # Get some addresses from the two nodes
-        addr1 = [self.nodes[1].getnewaddress() for i in range(3)]
-        addr2 = [self.nodes[2].getnewaddress() for i in range(3)]
+        addr1 = [self.nodes[1].getnewaddress() for _ in range(3)]
+        addr2 = [self.nodes[2].getnewaddress() for _ in range(3)]
         addrs = addr1 + addr2
 
         # Send 1 + 0.5 coin to each address
@@ -71,7 +71,7 @@ class WalletGroupTest(BitcoinTestFramework):
 
         # Fill node2's wallet with 10000 outputs corresponding to the same
         # scriptPubKey
-        for i in range(5):
+        for _ in range(5):
             raw_tx = self.nodes[0].createrawtransaction([{"txid":"0"*64, "vout":0}], [{addr2[0]: 0.05}])
             tx = FromHex(CTransaction(), raw_tx)
             tx.vin = []

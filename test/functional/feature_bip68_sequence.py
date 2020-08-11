@@ -141,7 +141,7 @@ class BIP68Test(BitcoinTestFramework):
         # some of those inputs to be sequence locked (and randomly choose
         # between height/time locking). Small random chance of making the locks
         # all pass.
-        for i in range(400):
+        for _ in range(400):
             # Randomly choose up to 10 inputs
             num_inputs = random.randint(1, 10)
             random.shuffle(utxos)
@@ -260,7 +260,7 @@ class BIP68Test(BitcoinTestFramework):
         # Use prioritisetransaction to lower the effective feerate to 0
         self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(-self.relayfee*COIN))
         cur_time = int(time.time())
-        for i in range(10):
+        for _ in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
             self.nodes[0].generate(1)
             cur_time += 600

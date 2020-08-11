@@ -111,7 +111,7 @@ def deser_uint256(f):
 
 def ser_uint256(u):
     rs = b""
-    for i in range(8):
+    for _ in range(8):
         rs += struct.pack("<I", u & 0xFFFFFFFF)
         u >>= 32
     return rs
@@ -134,7 +134,7 @@ def uint256_from_compact(c):
 def deser_vector(f, c):
     nit = deser_compact_size(f)
     r = []
-    for i in range(nit):
+    for _ in range(nit):
         t = c()
         t.deserialize(f)
         r.append(t)
@@ -157,7 +157,7 @@ def ser_vector(l, ser_function_name=None):
 def deser_uint256_vector(f):
     nit = deser_compact_size(f)
     r = []
-    for i in range(nit):
+    for _ in range(nit):
         t = deser_uint256(f)
         r.append(t)
     return r
@@ -173,7 +173,7 @@ def ser_uint256_vector(l):
 def deser_string_vector(f):
     nit = deser_compact_size(f)
     r = []
-    for i in range(nit):
+    for _ in range(nit):
         t = deser_string(f)
         r.append(t)
     return r
@@ -467,7 +467,7 @@ class CTransaction:
         else:
             self.vout = deser_vector(f, CTxOut)
         if flags != 0:
-            self.wit.vtxinwit = [CTxInWitness() for i in range(len(self.vin))]
+            self.wit.vtxinwit = [CTxInWitness() for _ in range(len(self.vin))]
             self.wit.deserialize(f)
         else:
             self.wit = CTxWitness()
@@ -500,7 +500,7 @@ class CTransaction:
             if (len(self.wit.vtxinwit) != len(self.vin)):
                 # vtxinwit must have the same length as vin
                 self.wit.vtxinwit = self.wit.vtxinwit[:len(self.vin)]
-                for i in range(len(self.wit.vtxinwit), len(self.vin)):
+                for _ in range(len(self.wit.vtxinwit), len(self.vin)):
                     self.wit.vtxinwit.append(CTxInWitness())
             r += self.wit.serialize()
         r += struct.pack("<I", self.nLockTime)
@@ -735,7 +735,7 @@ class P2PHeaderAndShortIDs:
         self.header.deserialize(f)
         self.nonce = struct.unpack("<Q", f.read(8))[0]
         self.shortids_length = deser_compact_size(f)
-        for i in range(self.shortids_length):
+        for _ in range(self.shortids_length):
             # shortids are defined to be 6 bytes in the spec, so append
             # two zero bytes and read it in as an 8-byte number
             self.shortids.append(struct.unpack("<Q", f.read(6) + b'\x00\x00')[0])
@@ -852,7 +852,7 @@ class BlockTransactionsRequest:
     def deserialize(self, f):
         self.blockhash = deser_uint256(f)
         indexes_length = deser_compact_size(f)
-        for i in range(indexes_length):
+        for _ in range(indexes_length):
             self.indexes.append(deser_compact_size(f))
 
     def serialize(self):

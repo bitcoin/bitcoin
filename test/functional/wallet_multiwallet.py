@@ -26,7 +26,7 @@ FEATURE_LATEST = 169900
 got_loading_error = False
 def test_load_unload(node, name):
     global got_loading_error
-    for i in range(10):
+    for _ in range(10):
         if got_loading_error:
             return
         try:
