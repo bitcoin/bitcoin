@@ -155,6 +155,7 @@ extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 // Cybersecurity lab
 extern int64_t blockTimeOffset;
+extern int64_t headerTimeOffset;
 
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly = false);
