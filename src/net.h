@@ -269,7 +269,7 @@ public:
      * A non-malicious call (from RPC or a peer with addr permission) should
      * call the function without a parameter to avoid using the cache.
      */
-    std::vector<CAddress> GetAddresses(Network requestor_network, size_t max_addresses, size_t max_pct);
+    std::vector<CAddress> GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct);
 
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
     // a peer that is better than all our current peers.
@@ -447,15 +447,19 @@ private:
 
     /**
      * Addr responses stored in different caches
-     * per network prevent cross-network node identification.
+     * per (network, local socket) prevent cross-network node identification.
      * If a node for example is multi-homed under Tor and IPv6,
      * a single cache (or no cache at all) would let an attacker
      * to easily detect that it is the same node by comparing responses.
+     * Indexing by local socket prevents leakage when a node has multiple
+     * listening addresses on the same network.
+     *
      * The used memory equals to 1000 CAddress records (or around 32 bytes) per
      * distinct Network (up to 5) we have/had an inbound peer from,
-     * resulting in at most ~160 KB.
+     * resulting in at most ~160 KB. Every separate local socket may
+     * add up to ~160 KB extra.
      */
-    std::map<Network, CachedAddrResponse> m_addr_response_caches;
+    std::map<uint64_t, CachedAddrResponse> m_addr_response_caches;
 
     /**
      * Services this instance offers.
