@@ -245,7 +245,7 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 *   Get masternode payment tx outputs
 */
 
-bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee) const
+bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee)
 {
     // make sure it's not filled yet
     voutMasternodePaymentsRet.clear();
@@ -286,7 +286,7 @@ CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, con
     }
     return nSubsidy;
 }
-bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, CAmount& nMNSeniorityRet, int& nCollateralHeightRet) const
+bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, CAmount& nMNSeniorityRet, int& nCollateralHeightRet)
 {
     voutMasternodePaymentsRet.clear();
 
@@ -321,7 +321,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
     return true;
 }
 
-bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount& nHalfFee, CAmount& nMNSeniorityRet) const
+bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount& nHalfFee, CAmount& nMNSeniorityRet)
 {
     if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here
