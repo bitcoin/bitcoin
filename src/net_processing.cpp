@@ -1028,8 +1028,9 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         LOCK(g_peer_mutex);
         g_peer_map.emplace_hint(g_peer_map.end(), nodeid, std::move(peer));
     }
-    if(!pnode->IsInboundConn())
+    if (!pnode->IsInboundConn()) {
         PushNodeVersion(*pnode, m_connman, GetTime());
+    }
 }
 
 void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
