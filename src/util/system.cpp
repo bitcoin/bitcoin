@@ -1184,9 +1184,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         std::string portStr = itostr(websocketport);
         std::string rpcportStr = itostr(ethrpcport);
         char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
-                (char*)"--wsorigins", (char*)"*",
+                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
+                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
+                (char*)"--ws.origins", (char*)"*",
                 (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
@@ -1194,9 +1194,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
         char * argvAttempt2[20] = {(char*)attempt2.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
-                (char*)"--wsorigins", (char*)"*",
+                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
+                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
+                (char*)"--ws.origins", (char*)"*",
                 (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
@@ -1204,9 +1204,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
         char * argvAttempt3[20] = {(char*)attempt3.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
-                (char*)"--wsorigins", (char*)"*",
+                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
+                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
+                (char*)"--ws.origins", (char*)"*",
                 (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
@@ -1214,9 +1214,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
         char * argvAttempt4[20] = {(char*)attempt4.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
-                (char*)"--wsorigins", (char*)"*",
+                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
+                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
+                (char*)"--ws.origins", (char*)"*",
                 (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
@@ -1224,9 +1224,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
         char * argvAttempt5[20] = {(char*)attempt5.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
-                (char*)"--wsorigins", (char*)"*",
+                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
+                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
+                (char*)"--ws.origins", (char*)"*",
                 (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
@@ -1234,9 +1234,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 NULL };   
         char * argvAttempt6[20] = {(char*)attempt6.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
-                (char*)"--wsorigins", (char*)"*",
+                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
+                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
+                (char*)"--ws.origins", (char*)"*",
                 (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
@@ -1274,7 +1274,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
     #else
         std::string portStr = itostr(websocketport);
         std::string rpcportStr = itostr(ethrpcport);
-        std::string args =  std::string("--rpc --rpcapi personal,eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
+        std::string args =  std::string("--http --http.api personal,eth --rpccorsdomain * --http.port ") + rpcportStr + std::string(" --ws --ws.port ") + portStr + std::string(" --ws.origins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
         }
