@@ -1843,7 +1843,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 // but inbound and manual peers do not use our outbound slots. Inbound peers
                 // also have the added issue that they could be attacker controlled and used
                 // to prevent us from connecting to particular hosts if we used them here.
-                switch(pnode->m_conn_type){
+                switch (pnode->m_conn_type) {
                     case ConnectionType::INBOUND:
                     case ConnectionType::MANUAL:
                         break;
