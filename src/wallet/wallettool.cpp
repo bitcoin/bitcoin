@@ -104,6 +104,26 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->m_address_book.size());
 }
 
+static bool ZapWalletTxes(CWallet* wallet)
+{
+    // Set the best block to genesis to trigger full rescan
+    if (!WalletBatch(wallet->GetDatabase()).WriteBestBlock(CBlockLocator())) {
+        tfm::format(std::cerr, "Error: Unable to write new bestblock record");
+        return false;
+    }
+
+    // Zap the txs
+    std::map<uint256, CWalletTx> map_wtx;
+    DBErrors ret = wallet->ZapWalletTx(map_wtx, gArgs.GetBoolArg("-keepmeta", true));
+    if (ret != DBErrors::LOAD_OK) {
+        tfm::format(std::cerr, "Error: Could not remove transactions, wallet corrupted");
+        return false;
+    }
+
+    wallet->Close();
+    return true;
+}
+
 bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
 {
     fs::path path = fs::absolute(name, GetWalletDir());
@@ -114,17 +134,21 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Close();
         }
-    } else if (command == "info" || command == "salvage") {
+    } else if (command == "info" || command == "salvage" || command == "zapwallettxes") {
         if (!fs::exists(path)) {
             tfm::format(std::cerr, "Error: no wallet file at %s\n", name);
             return false;
         }
 
-        if (command == "info") {
+        if (command == "info" || command == "zapwallettxes") {
             std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
             if (!wallet_instance) return false;
-            WalletShowInfo(wallet_instance.get());
-            wallet_instance->Close();
+            if (command == "info") {
+                WalletShowInfo(wallet_instance.get());
+                wallet_instance->Close();
+            } else if (command == "zapwallettxes") {
+                return ZapWalletTxes(wallet_instance.get());
+            }
         } else if (command == "salvage") {
             bilingual_str error;
             std::vector<bilingual_str> warnings;
