@@ -35,6 +35,10 @@ OMNICORE_TEST_CPP = \
   omnicore/test/utils_tx.cpp \
   omnicore/test/version_tests.cpp
 
+if ENABLE_WALLET
+OMNICORE_TEST_CPP += omnicore/test/funded_send_tests.cpp
+endif
+
 BITCOIN_TESTS += \
   $(OMNICORE_TEST_CPP) \
   $(OMNICORE_TEST_H)
