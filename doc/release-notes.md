@@ -52,8 +52,7 @@ frequently tested on them.  It is not recommended to use Bitcoin Core on
 unsupported systems.
 
 From Bitcoin Core 0.22.0 onwards, macOS versions earlier than 10.14 are no
-longer supported. Additionally, Bitcoin Core does not yet change appearance
-when macOS "dark mode" is activated.
+longer supported.
 
 Notable changes
 ===============
