@@ -1914,36 +1914,37 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 // Ignore GETDATA requests for transactions from blocks-only peers.
                 continue;
             }
-
-        CTransactionRef tx = FindTxForGetData(pfrom, ToGenTxid(inv), mempool_req, now);
-        if (tx) {
-            // WTX and WITNESS_TX imply we serialize with witness
-            int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-            connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
-            mempool.RemoveUnbroadcastTx(tx->GetHash());
-            // As we're going to send tx, make sure its unconfirmed parents are made requestable.
-            std::vector<uint256> parent_ids_to_add;
-            {
-                LOCK(mempool.cs);
-                auto txiter = mempool.GetIter(tx->GetHash());
-                if (txiter) {
-                    const CTxMemPool::setEntries& parents = mempool.GetMemPoolParents(*txiter);
-                    parent_ids_to_add.reserve(parents.size());
-                    for (CTxMemPool::txiter parent_iter : parents) {
-                        if (parent_iter->GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
-                            parent_ids_to_add.push_back(parent_iter->GetTx().GetHash());
+            CTransactionRef tx = FindTxForGetData(pfrom, ToGenTxid(inv), mempool_req, now);
+            if (tx) {
+                // WTX and WITNESS_TX imply we serialize with witness
+                int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
+                connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
+                mempool.RemoveUnbroadcastTx(tx->GetHash());
+                // As we're going to send tx, make sure its unconfirmed parents are made requestable.
+                std::vector<uint256> parent_ids_to_add;
+                {
+                    LOCK(mempool.cs);
+                    auto txiter = mempool.GetIter(tx->GetHash());
+                    if (txiter) {
+                        const CTxMemPool::setEntries& parents = mempool.GetMemPoolParents(*txiter);
+                        parent_ids_to_add.reserve(parents.size());
+                        for (CTxMemPool::txiter parent_iter : parents) {
+                            if (parent_iter->GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
+                                parent_ids_to_add.push_back(parent_iter->GetTx().GetHash());
+                            }
                         }
                     }
                 }
-            } else {
-                vNotFound.push_back(inv);
-            }
-            for (const uint256& parent_txid : parent_ids_to_add) {
-                // Relaying a transaction with a recent but unconfirmed parent.
-                if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
-                    LOCK(cs_main);
-                    State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
+                for (const uint256& parent_txid : parent_ids_to_add) {
+                    // Relaying a transaction with a recent but unconfirmed parent.
+                    if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
+                        LOCK(cs_main);
+                        State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
+                    }
                 }
+            }
+            else {
+                vNotFound.push_back(inv);
             }
         } else {
             // SYSCOIN
