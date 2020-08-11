@@ -43,13 +43,13 @@ def descsum_create(s):
     checksum = descsum_polymod(symbols) ^ 1
     return s + '#' + ''.join(CHECKSUM_CHARSET[(checksum >> (5 * (7 - i))) & 31] for i in range(8))
 
-def descsum_check(s, require=True):
-    """Verify that the checksum is correct in a descriptor"""
-    if not '#' in s:
-        return not require
-    if s[-9] != '#':
-        return False
-    if not all(x in CHECKSUM_CHARSET for x in s[-8:]):
-        return False
-    symbols = descsum_expand(s[:-9]) + [CHECKSUM_CHARSET.find(x) for x in s[-8:]]
-    return descsum_polymod(symbols) == 1
+#def descsum_check(s, require=True): # Not used in Omni
+#    """Verify that the checksum is correct in a descriptor"""
+#    if not '#' in s:
+#        return not require
+#    if s[-9] != '#':
+#        return False
+#    if not all(x in CHECKSUM_CHARSET for x in s[-8:]):
+#        return False
+#    symbols = descsum_expand(s[:-9]) + [CHECKSUM_CHARSET.find(x) for x in s[-8:]]
+#    return descsum_polymod(symbols) == 1

@@ -96,7 +96,7 @@ BASE_SCRIPTS = [
     'wallet_abandonconflict.py',
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
-    'wallet_address_types.py',
+    #'wallet_address_types.py', # Not compatible with Omni
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
     'feature_reindex.py',
@@ -186,12 +186,13 @@ BASE_SCRIPTS = [
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
     'feature_logging.py',
-    'p2p_node_network_limited.py',
+    #'p2p_node_network_limited.py', # Not compatible with Omni
     'feature_blocksdir.py',
     'feature_config_args.py',
     'rpc_help.py',
     'feature_help.py',
     'feature_shutdown.py',
+    'omni_reorg.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
@@ -554,7 +555,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|omni|p2p|rpc|wallet|tool)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:

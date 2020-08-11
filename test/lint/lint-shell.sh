@@ -40,7 +40,6 @@ disabled=(
     SC2181 # Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
     SC2206 # Quote to prevent word splitting, or split robustly with mapfile or read -a.
     SC2207 # Prefer mapfile or read -a to split command output (or quote to avoid splitting).
-    SC2230 # which is non-standard. Use builtin 'command -v' instead.
     SC2236 # Don't force -n instead of ! -z.
 )
 shellcheck -e "$(IFS=","; echo "${disabled[*]}")" \

@@ -20,7 +20,7 @@ happened previously.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_raises_rpc_error, connect_nodes, sync_blocks, assert_equal, set_node_times)
+from test_framework.util import (connect_nodes, sync_blocks, assert_equal, set_node_times)
 
 import collections
 import enum
@@ -35,10 +35,11 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
     """Helper for importing one key and verifying scanned transactions."""
 
     def try_rpc(self, func, *args, **kwargs):
-        if self.expect_disabled:
-            assert_raises_rpc_error(-4, "Rescan is disabled in pruned mode", func, *args, **kwargs)
-        else:
-            return func(*args, **kwargs)
+        #if self.expect_disabled: # No error in omni as prune mode not supported
+        #    assert_raises_rpc_error(-4, "Rescan is disabled in pruned mode", func, *args, **kwargs)
+        #else:
+        #    return func(*args, **kwargs)
+        return func(*args, **kwargs)
 
     def do_import(self, timestamp):
         """Call one key import RPC."""
@@ -127,12 +128,12 @@ class ImportRescanTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        extra_args = [["-addresstype=legacy"] for _ in range(self.num_nodes)]
-        for i, import_node in enumerate(IMPORT_NODES, 2):
-            if import_node.prune:
-                extra_args[i] += ["-prune=1"]
+        # extra_args = [["-addresstype=legacy"] for _ in range(self.num_nodes)] # Omni already default to legacy
+        # for i, import_node in enumerate(IMPORT_NODES, 2): # Omni does not support pruning
+        #    if import_node.prune:
+        #        extra_args[i] += ["-prune=1"]
 
-        self.add_nodes(self.num_nodes, extra_args=extra_args)
+        self.add_nodes(self.num_nodes)
 
         # Import keys with pruning disabled
         self.start_nodes(extra_args=[[]] * self.num_nodes)
@@ -166,7 +167,7 @@ class ImportRescanTest(BitcoinTestFramework):
         # For each variation of wallet key import, invoke the import RPC and
         # check the results from getbalance and listtransactions.
         for variant in IMPORT_VARIANTS:
-            variant.expect_disabled = variant.rescan == Rescan.yes and variant.prune and variant.call == Call.single
+            variant.expect_disabled = False # variant.rescan == Rescan.yes and variant.prune and variant.call == Call.single # expect_disabled not applicable on Omni
             expect_rescan = variant.rescan == Rescan.yes and not variant.expect_disabled
             variant.node = self.nodes[2 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan))]
             variant.do_import(timestamp)
