@@ -184,9 +184,19 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     std::string pszDest;
 
     std::unique_ptr<CNode> pnode1 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY);
+    BOOST_CHECK(pnode1->IsFullOutboundConn() == true);
+    BOOST_CHECK(pnode1->IsManualConn() == false);
+    BOOST_CHECK(pnode1->IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode1->IsFeelerConn() == false);
+    BOOST_CHECK(pnode1->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode1->IsInboundConn() == false);
 
     std::unique_ptr<CNode> pnode2 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, ConnectionType::INBOUND);
+    BOOST_CHECK(pnode2->IsFullOutboundConn() == false);
+    BOOST_CHECK(pnode2->IsManualConn() == false);
+    BOOST_CHECK(pnode2->IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode2->IsFeelerConn() == false);
+    BOOST_CHECK(pnode2->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode2->IsInboundConn() == true);
 }
 
