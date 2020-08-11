@@ -500,12 +500,13 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                             {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED_NAMED_ARG, "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
                             {"capabilities", RPCArg::Type::ARR, /* treat as named arg */ RPCArg::Optional::OMITTED_NAMED_ARG, "A list of strings",
                                 {
-                                    {"support", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported feature, 'longpoll', 'coinbasetxn', 'coinbasevalue', 'proposal', 'serverlist', 'workid'"},
+                                    {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported feature, 'longpoll', 'coinbasevalue', 'proposal', 'serverlist', 'workid'"},
                                 },
                                 },
                             {"rules", RPCArg::Type::ARR, RPCArg::Optional::NO, "A list of strings",
                                 {
-                                    {"support", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported softfork deployment"},
+                                    {"segwit", RPCArg::Type::STR, RPCArg::Optional::NO, "(literal) indicates client side segwit support"},
+                                    {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "other client side supported softfork deployment"},
                                 },
                                 },
                         },
@@ -517,7 +518,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "version", "The preferred block version"},
                         {RPCResult::Type::ARR, "rules", "specific block rules that are to be enforced",
                             {
-                                {RPCResult::Type::STR, "", "rulename"},
+                                {RPCResult::Type::STR, "", "name of a rule the client must understand to some extent; see BIP 9 for format"},
                             }},
                         {RPCResult::Type::OBJ_DYN, "vbavailable", "set of pending, supported versionbit (BIP 9) softfork deployments",
                             {
@@ -525,7 +526,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                             }},
                         {RPCResult::Type::NUM, "vbrequired", "bit mask of versionbits the server requires set in submissions"},
                         {RPCResult::Type::STR, "previousblockhash", "The hash of current highest block"},
-                        {RPCResult::Type::ARR, "", "contents of non-coinbase transactions that should be included in the next block",
+                        {RPCResult::Type::ARR, "transactions", "contents of non-coinbase transactions that should be included in the next block",
                             {
                                 {RPCResult::Type::OBJ, "", "",
                                     {
@@ -541,15 +542,12 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                                         {RPCResult::Type::NUM, "weight", "total transaction weight, as counted for purposes of block limits"},
                                     }},
                             }},
-                        {RPCResult::Type::OBJ, "coinbaseaux", "data that should be included in the coinbase's scriptSig content",
+                        {RPCResult::Type::OBJ_DYN, "coinbaseaux", "data that should be included in the coinbase's scriptSig content",
                         {
-                            {RPCResult::Type::ELISION, "", ""},
+                            {RPCResult::Type::STR_HEX, "key", "values must be in the coinbase (keys may be ignored)"},
                         }},
                         {RPCResult::Type::NUM, "coinbasevalue", "maximum allowable input to coinbase transaction, including the generation award and transaction fees (in satoshis)"},
-                        {RPCResult::Type::OBJ, "coinbasetxn", "information for coinbase transaction",
-                        {
-                            {RPCResult::Type::ELISION, "", ""},
-                        }},
+                        {RPCResult::Type::STR, "longpollid", "an id to include with a request to longpoll on an update to this template"},
                         {RPCResult::Type::STR, "target", "The hash target"},
                         {RPCResult::Type::NUM_TIME, "mintime", "The minimum timestamp appropriate for the next block time, expressed in " + UNIX_EPOCH_TIME},
                         {RPCResult::Type::ARR, "mutable", "list of ways the block template may be changed",
@@ -563,6 +561,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM_TIME, "curtime", "current timestamp in " + UNIX_EPOCH_TIME},
                         {RPCResult::Type::STR, "bits", "compressed target of next block"},
                         {RPCResult::Type::NUM, "height", "The height of the next block"},
+                        {RPCResult::Type::STR, "default_witness_commitment", /* optional */ true, "a valid witness commitment for the unmodified block template"}
                     }},
                 RPCExamples{
                     HelpExampleCli("getblocktemplate", "'{\"rules\": [\"segwit\"]}'")
