@@ -355,6 +355,7 @@ private:
     void ProcessOneShot();
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
+    int CountInboundConnections() const;
     void AcceptConnection(const ListenSocket& hListenSocket);
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
@@ -364,6 +365,16 @@ private:
     void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
+
+    // Reachable nodes should periodically make requests
+    // to DNS servers even if they don't need them.
+    // Then, when new nodes from the same subnets need to query DNS,
+    // they are likely to hit the cache instead.
+    // For non-reachable nodes this means more privacy,
+    // because fewer actors would know about their query.
+    // For reachable nodes there is no privacy loss due to this,
+    // because being reachable already makes them public.
+    void DNSCachesUpdate() const;
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
