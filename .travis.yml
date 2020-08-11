@@ -85,7 +85,7 @@ jobs:
         BITCOIN_CONFIG="--enable-debug --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=\"-g0 -O2\""
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [OmniJ tests]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [OmniJ and functional tests]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PPA="ppa:openjdk-r/ppa"
@@ -93,6 +93,7 @@ jobs:
         DEP_OPTS="NO_QT=1 NO_UPNP=1"
         RUN_UNIT_TESTS=false
         RUN_OMNIJ_TESTS=true
+        RUN_FUNCTIONAL_TESTS=true
         GOAL="install"
         BITCOIN_CONFIG="--with-gui=no --without-tests --without-bench"
 
