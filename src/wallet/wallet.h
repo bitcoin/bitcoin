@@ -1065,6 +1065,9 @@ public:
     DBErrors ZapWalletTx(std::map<uint256, CWalletTx>& vWtx, bool keep_meta);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    bool m_has_zapped = false;
+    void SetHasZapped();
+
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
     bool DelAddressBook(const CTxDestination& address);

@@ -660,6 +660,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
             wss.fIsEncrypted = true;
+        } else if (strType == DBKeys::ZAPTX) {
+            pwallet->SetHasZapped();
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {
@@ -848,9 +850,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors WalletBatch::FindWalletTx(std::map<uint256, CWalletTx>& vWtx)
+DBErrors WalletBatch::FindWalletTx(std::map<uint256, CWalletTx>& vWtx, bool find_zapped)
 {
     DBErrors result = DBErrors::LOAD_OK;
+
+    const std::string& rectype = find_zapped ? DBKeys::ZAPTX : DBKeys::TX;
 
     try {
         int nMinVersion = 0;
@@ -883,7 +887,7 @@ DBErrors WalletBatch::FindWalletTx(std::map<uint256, CWalletTx>& vWtx)
 
             std::string strType;
             ssKey >> strType;
-            if (strType == DBKeys::TX) {
+            if (strType == rectype) {
                 uint256 hash;
                 ssKey >> hash;
                 const auto& ins = vWtx.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(nullptr /* wallet */, nullptr /* tx */));

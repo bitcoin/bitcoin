@@ -3743,12 +3743,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     const std::string walletFile = WalletDataFilePath(location.GetPath()).string();
 
     // needed to restore wallet transaction meta data after -zapwallettxes
-    std::map<uint256, CWalletTx> vWtx;
 
     if (gArgs.GetBoolArg("-zapwallettxes", false)) {
         chain.initMessage(_("Zapping all transactions from wallet...").translated);
 
         bool keep_meta = gArgs.GetArg("-zapwallettxes", "1") != "2";
+        std::map<uint256, CWalletTx> vWtx;
         std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, CreateWalletDatabase(location.GetPath()));
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx, keep_meta);
         if (nZapWalletRet != DBErrors::LOAD_OK) {
@@ -4019,11 +4019,13 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         walletInstance->database->IncrementUpdateCounter();
 
         // Restore wallet transaction metadata after -zapwallettxes=1
-        if (gArgs.GetBoolArg("-zapwallettxes", false) && gArgs.GetArg("-zapwallettxes", "1") != "2")
+        if (walletInstance->m_has_zapped)
         {
             WalletBatch batch(*walletInstance->database);
+            std::map<uint256, CWalletTx> map_wtx;
+            batch.FindWalletTx(map_wtx, true /* find_zapped */);
 
-            for (const auto& wtx_pair : vWtx)
+            for (const auto& wtx_pair : map_wtx)
             {
                 const CWalletTx& wtxOld = wtx_pair.second;
                 uint256 hash = wtxOld.GetHash();
@@ -4537,4 +4539,9 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     ret->WriteDescriptor();
 
     return ret;
+}
+
+void CWallet::SetHasZapped()
+{
+    m_has_zapped = true;
 }

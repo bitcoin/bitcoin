@@ -260,7 +260,7 @@ public:
     bool WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal);
 
     DBErrors LoadWallet(CWallet* pwallet);
-    DBErrors FindWalletTx(std::map<uint256, CWalletTx>& vWtx);
+    DBErrors FindWalletTx(std::map<uint256, CWalletTx>& vWtx, bool find_zapped = false);
     DBErrors ZapWalletTx(std::map<uint256, CWalletTx>& vWtx, bool keep_meta);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
     /* Function to determine if a certain KV/key-type is a key (cryptographical key) type */
