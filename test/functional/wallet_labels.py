@@ -120,7 +120,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         # Check that addmultisigaddress can assign labels.
         for label in labels:
             addresses = []
-            for x in range(10):
+            for _ in range(10):
                 addresses.append(node.getnewaddress())
             multisig_address = node.addmultisigaddress(5, addresses, label.name)['address']
             label.add_address(multisig_address)

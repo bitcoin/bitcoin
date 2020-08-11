@@ -195,7 +195,7 @@ class LLMQChainLocksTest(DashTestFramework):
         force_finish_mnsync(self.nodes[0])
         self.isolate_node(0)
         txs = []
-        for i in range(3):
+        for _ in range(3):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
         txs += self.create_chained_txs(self.nodes[0], 1)
         self.log.info("Assert that after block generation these TXs are NOT included (as they are \"unsafe\")")

@@ -141,7 +141,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         # And for the remaining blocks, enforce new CL in CbTx
         skip_count = 23 - (self.nodes[0].getblockcount() % 24)
-        for i in range(skip_count):
+        for _ in range(skip_count):
             self.nodes[0].generate(1)
             self.sync_blocks(nodes)
             self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())

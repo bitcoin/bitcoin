@@ -70,7 +70,7 @@ class CNodeNoVersionBan(CLazyNode):
     # NOTE: implementation-specific check here. Remove if dashd ban behavior changes
     def on_open(self):
         super().on_open()
-        for i in range(banscore):
+        for _ in range(banscore):
             self.send_message(msg_verack())
 
 # Node that never sends a version. This one just sits idle and hopes to receive

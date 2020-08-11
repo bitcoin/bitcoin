@@ -317,7 +317,7 @@ class DashGovernanceTest (DashTestFramework):
         n = sb_cycle - block_count % sb_cycle
 
         # Move remaining n blocks until the next Superblock
-        for i in range(n):
+        for _ in range(n):
             self.nodes[0].generate(1)
             self.bump_mocktime(1)
             self.sync_blocks()

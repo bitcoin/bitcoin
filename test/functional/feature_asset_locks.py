@@ -246,7 +246,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.mine_quorum(llmq_type_name='llmq_test_instantsend', llmq_type=104)
 
-        for i in range(3):
+        for _ in range(3):
             self.dynamically_add_masternode(evo=True)
             node.generate(8)
             self.sync_blocks()

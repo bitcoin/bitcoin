@@ -106,7 +106,7 @@ class LLMQEvoNodesTest(DashTestFramework):
             self.dynamically_evo_update_service(evo_info)
 
         self.log.info("Test llmq_platform are formed only with EvoNodes")
-        for i in range(3):
+        for _ in range(3):
             quorum_i_hash = self.mine_quorum(llmq_type_name='llmq_test_platform', llmq_type=106, expected_connections=2, expected_members=3, expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=3 )
             self.test_quorum_members_are_evo_nodes(quorum_i_hash, llmq_type=106)
 
