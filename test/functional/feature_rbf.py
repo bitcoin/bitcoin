@@ -376,7 +376,7 @@ class ReplaceByFeeTest(SyscoinTestFramework):
         split_value = int((initial_nValue-fee)/(MAX_REPLACEMENT_LIMIT+1))
 
         outputs = []
-        for i in range(MAX_REPLACEMENT_LIMIT+1):
+        for _ in range(MAX_REPLACEMENT_LIMIT+1):
             outputs.append(CTxOut(split_value, CScript([1])))
 
         splitting_tx = CTransaction()
