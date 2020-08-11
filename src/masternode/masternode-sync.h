@@ -55,7 +55,7 @@ public:
     int GetAttempt() const { return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
     int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
-    std::string GetAssetName();
+    std::string GetAssetName() const;
     bilingual_str GetSyncStatus();
 
     void Reset();
