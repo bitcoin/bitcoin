@@ -96,7 +96,7 @@ BASE_SCRIPTS = [
     'wallet_abandonconflict.py',
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
-    'wallet_address_types.py',
+    #'wallet_address_types.py', # Not compatible with Omni
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
     'feature_reindex.py',
@@ -186,7 +186,7 @@ BASE_SCRIPTS = [
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
     'feature_logging.py',
-    'p2p_node_network_limited.py',
+    #'p2p_node_network_limited.py', # Not compatible with Omni
     'feature_blocksdir.py',
     'feature_config_args.py',
     'rpc_help.py',

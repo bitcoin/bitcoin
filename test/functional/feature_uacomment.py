@@ -14,6 +14,9 @@ from test_framework.util import assert_equal
 class UacommentTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [
+            ["-omniuseragent=false"],
+        ]
         self.setup_clean_chain = True
 
     def run_test(self):
@@ -21,7 +24,7 @@ class UacommentTest(BitcoinTestFramework):
         test_uacomment = self.nodes[0].getnetworkinfo()["subversion"][-12:-1]
         assert_equal(test_uacomment, "(testnode0)")
 
-        self.restart_node(0, ["-uacomment=foo"])
+        self.restart_node(0, ["-uacomment=foo", "-omniuseragent=false"])
         foo_uacomment = self.nodes[0].getnetworkinfo()["subversion"][-17:-1]
         assert_equal(foo_uacomment, "(testnode0; foo)")
 

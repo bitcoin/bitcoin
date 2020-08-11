@@ -39,7 +39,7 @@ class PSBTTest(BitcoinTestFramework):
         offline_addr = offline_node.getnewaddress(address_type="p2sh-segwit")
         online_addr = online_node.getnewaddress(address_type="p2sh-segwit")
         online_node.importaddress(offline_addr, "", False)
-        mining_node.sendtoaddress(address=offline_addr, amount=1.0)
+        mining_node.sendtoaddress(offline_addr, 1.0)
         mining_node.generate(nblocks=1)
         sync_blocks([mining_node, online_node])
 

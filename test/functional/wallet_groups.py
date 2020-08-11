@@ -69,7 +69,7 @@ class WalletGroupTest(BitcoinTestFramework):
         assert_approx(v[1], 1.3, 0.0001)
 
         # Empty out node2's wallet
-        self.nodes[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), subtractfeefromamount=True)
+        self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[2].getbalance(), "", "", True)
         self.sync_all()
         self.nodes[0].generate(1)
 
@@ -90,7 +90,7 @@ class WalletGroupTest(BitcoinTestFramework):
         # Check that we can create a transaction that only requires ~100 of our
         # utxos, without pulling in all outputs and creating a transaction that
         # is way too big.
-        assert self.nodes[2].sendtoaddress(address=addr2[0], amount=5)
+        assert self.nodes[2].sendtoaddress(addr2[0], 5)
 
 if __name__ == '__main__':
     WalletGroupTest().main ()
