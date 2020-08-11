@@ -442,7 +442,7 @@ private:
      */
     struct CachedAddrResponse {
         std::vector<CAddress> m_addrs_response_cache;
-        std::chrono::microseconds m_update_addr_response{0};
+        std::chrono::microseconds m_cache_entry_expiration{0};
     };
 
     /**
@@ -454,10 +454,10 @@ private:
      * Indexing by local socket prevents leakage when a node has multiple
      * listening addresses on the same network.
      *
-     * The used memory equals to 1000 CAddress records (or around 32 bytes) per
+     * The used memory equals to 1000 CAddress records (or around 40 bytes) per
      * distinct Network (up to 5) we have/had an inbound peer from,
-     * resulting in at most ~160 KB. Every separate local socket may
-     * add up to ~160 KB extra.
+     * resulting in at most ~196 KB. Every separate local socket may
+     * add up to ~196 KB extra.
      */
     std::map<uint64_t, CachedAddrResponse> m_addr_response_caches;
 
