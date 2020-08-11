@@ -691,7 +691,7 @@ crash_info GetCrashInfoFromException(const std::exception_ptr& e)
         if (type && (strlen(type->name()) > 0)) {
             return DemangleSymbol(type->name());
         }
-        return std::string("<unknown>");
+        return "<unknown>";
     };
 
     try {
