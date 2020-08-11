@@ -3733,6 +3733,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
                 *ppindex = pindex;
             }
         }
+    }
 
 
     // Cybersecurity lab: Update the header time offset

@@ -153,7 +153,7 @@ def getBandwidth():
 		r = (network_data['bytes_received'] - prev_bytes_received) / numSecondsPerSample
 		bandwidth_download = r
 		prev_bytes_received = network_data['bytes_received']
-	
+
 		if prev_bytes_sent == '': prev_bytes_sent = network_data['bytes_sent']
 		d = (network_data['bytes_sent'] - prev_bytes_sent) / numSecondsPerSample
 		bandwidth_upload = d
@@ -202,7 +202,7 @@ def fetchHeader():
 	line += 'Full System CPU %,'
 
 	line += 'BlockHeight,'
-	line += 'BlockDelay (Seconds),'
+	line += 'Block/HeaderDelay (Seconds),'
 	line += 'Num AcceptedBlocks PerSec,'
 	line += 'Avg AcceptedBlocks PerSec,'
 	line += 'MempoolSize,'
@@ -426,7 +426,7 @@ def fetchHeader():
 	#line += 'Contains the output from the "top" instruction for the bitcoind process,' # Resource usage
 	#line += 'A list of the current peer connections,' # GetPeerInfo
 	line += 'Block height of the node,' # BlockHeight
-	line += 'Amount of time it took for the block to reach you after being mined,' # BlockDelay
+	line += 'Amount of time it took for the block and header to reach you,' # BlockDelay
 	line += 'Number of unconfirmed transactions currently in the mempool,' # MempoolSize
 	line += 'Number of bytes that the mempool is currently taking up,' # MempoolBytes
 	line += 'Change in block height over the change in time for the most recent block update,' # AcceptedBlocksPerSec
@@ -755,6 +755,7 @@ def fetch(now):
 		messages = json.loads(bitcoin('getmsginfo'))
 		blockcount = int(bitcoin('getblockcount').strip())
 		blockdelay = bitcoin('blocktimeoffset').strip()
+		headerdelay = bitcoin('headertimeoffset').strip()
 		mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
 		peerinfo = json.loads(bitcoin('getpeerinfo'))
 		resourceUsage = getCPUData()
@@ -853,7 +854,7 @@ def fetch(now):
 	acceptedTxPerSecCount += 1
 
 	line += str(blockcount) + ','
-	line += blockdelay + ','
+	line += blockdelay + ' / ' + headerdelay + ','
 	line += str(numAcceptedBlocksPerSec) + ','
 	line += str(acceptedBlocksPerSecSum / acceptedBlocksPerSecCount) + ','
 	line += str(mempoolinfo['size']) + ','
