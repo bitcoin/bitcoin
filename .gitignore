@@ -121,7 +121,9 @@ releases
 /*.info
 test_syscoin.coverage/
 total.coverage/
+fuzz.coverage/
 coverage_percent.txt
+/cov_tool_wrapper.sh
 
 #build tests
 linux-coverage-build
