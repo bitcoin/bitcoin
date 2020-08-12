@@ -192,7 +192,7 @@ BOOST_FIXTURE_TEST_CASE(PopData_payloads_stateless_invalid, E2eFixture)
     {
         LOCK(cs_main);
         auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
-        BOOST_CHECK(!pop_service.addAllBlockPayloads(1, block, blockState));
+        BOOST_CHECK(!pop_service.addAllBlockPayloads(block, blockState));
     }
 }
 
@@ -221,7 +221,7 @@ BOOST_FIXTURE_TEST_CASE(PopData_oversized_test, E2eFixture)
     {
         LOCK(cs_main);
         auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
-        BOOST_CHECK(!pop_service.addAllBlockPayloads(1, block, blockState));
+        BOOST_CHECK(!pop_service.addAllBlockPayloads(block, blockState));
     }
 }
 

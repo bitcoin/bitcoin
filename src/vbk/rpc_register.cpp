@@ -24,7 +24,6 @@
 #include "pop_service_impl.hpp"
 #include "vbk/adaptors/univalue_json.hpp"
 #include "vbk/config.hpp"
-#include "veriblock/entities/test_case_entity.hpp"
 #include "veriblock/mempool_result.hpp"
 
 namespace VeriBlock {
@@ -56,49 +55,6 @@ CBlock GetBlockChecked(const CBlockIndex* pblockindex)
     }
 
     return block;
-}
-
-void SaveState(std::string file_name)
-{
-    LOCK2(cs_main, mempool.cs);
-
-    altintegration::TestCase vbtc_state;
-    vbtc_state.config = VeriBlock::getService<VeriBlock::Config>().popconfig;
-
-    auto& vbtc_tree = BlockIndex();
-
-    auto cmp = [](CBlockIndex* a, CBlockIndex* b) -> bool {
-        return a->nHeight < b->nHeight;
-    };
-    std::vector<CBlockIndex*> block_index;
-    block_index.reserve(vbtc_tree.size());
-    for (const auto& el : vbtc_tree) {
-        block_index.push_back(el.second);
-    }
-    std::sort(block_index.begin(), block_index.end(), cmp);
-
-    BlockValidationState state;
-
-    for (const auto& index : block_index) {
-        auto alt_block = blockToAltBlock(*index);
-        altintegration::PopData popData;
-        if (index->pprev) {
-            CBlock block;
-            if (ReadBlockFromDisk(block, index, Params().GetConsensus())) {
-                popData = block.popData;
-            }
-        }
-        vbtc_state.alt_tree.push_back(std::make_pair(alt_block, popData));
-    }
-
-    std::ofstream file(file_name, std::ios::binary);
-
-    altintegration::WriteStream stream;
-    vbtc_state.toRaw(stream);
-
-    file.write((const char*)stream.data().data(), stream.data().size());
-
-    file.close();
 }
 
 } // namespace
@@ -240,29 +196,6 @@ UniValue debugpop(const JSONRPCRequest& request)
     }
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
     LogPrint(BCLog::POP, "%s", pop.toPrettyString());
-    return UniValue();
-}
-
-UniValue savepopstate(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() > 1) {
-        throw std::runtime_error(
-            "savepopstate [file]\n"
-            "\nSave pop state into the file.\n"
-            "\nArguments:\n"
-            "1. file       (string, optional) the name of the file, by default 'vbtc_state'.\n");
-    }
-
-    std::string file_name = "vbtc_state";
-
-    if (!request.params.empty()) {
-        RPCTypeCheck(request.params, {UniValue::VSTR});
-        file_name = request.params[0].getValStr();
-    }
-
-    LogPrint(BCLog::POP, "Save vBTC state to the file %s \n", file_name);
-    SaveState(file_name);
-
     return UniValue();
 }
 
@@ -663,7 +596,6 @@ const CRPCCommand commands[] = {
     {"pop_mining", "submitpop", &submitpop, {"atv", "vtbs"}},
     {"pop_mining", "getpopdata", &getpopdata, {"blockheight"}},
     {"pop_mining", "debugpop", &debugpop, {}},
-    {"pop_mining", "savepopstate", &savepopstate, {"path"}},
     {"pop_mining", "getvbkblock", &getvbkblock, {"hash"}},
     {"pop_mining", "getbtcblock", &getbtcblock, {"hash"}},
     {"pop_mining", "getvbkbestblockhash", &getvbkbestblockhash, {}},
