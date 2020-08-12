@@ -837,7 +837,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWalletTx>& vWtx)
+DBErrors WalletBatch::FindWalletTx(std::map<uint256, CWalletTx>& vWtx)
 {
     DBErrors result = DBErrors::LOAD_OK;
 
@@ -875,9 +875,8 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
             if (strType == DBKeys::TX) {
                 uint256 hash;
                 ssKey >> hash;
-                vTxHash.push_back(hash);
-                vWtx.emplace_back(nullptr /* wallet */, nullptr /* tx */);
-                ssValue >> vWtx.back();
+                const auto& ins = vWtx.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(nullptr /* wallet */, nullptr /* tx */));
+                ssValue >> ins.first->second;
             }
         }
     } catch (...) {
@@ -891,33 +890,22 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
 DBErrors WalletBatch::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<uint256>& vTxHashOut)
 {
     // build list of wallet TXs and hashes
-    std::vector<uint256> vTxHash;
-    std::list<CWalletTx> vWtx;
-    DBErrors err = FindWalletTx(vTxHash, vWtx);
+    std::map<uint256, CWalletTx> vWtx;
+    DBErrors err = FindWalletTx(vWtx);
     if (err != DBErrors::LOAD_OK) {
         return err;
     }
 
-    std::sort(vTxHash.begin(), vTxHash.end());
-    std::sort(vTxHashIn.begin(), vTxHashIn.end());
-
     // erase each matching wallet TX
     bool delerror = false;
-    std::vector<uint256>::iterator it = vTxHashIn.begin();
-    for (const uint256& hash : vTxHash) {
-        while (it < vTxHashIn.end() && (*it) < hash) {
-            it++;
+    for (const uint256& hash : vTxHashIn) {
+        auto it = vWtx.find(hash);
+        if (it == vWtx.end()) continue;
+        if (!EraseTx(hash)) {
+            LogPrint(BCLog::WALLETDB, "Transaction was found for deletion but returned database error: %s\n", hash.GetHex());
+            delerror = true;
         }
-        if (it == vTxHashIn.end()) {
-            break;
-        }
-        else if ((*it) == hash) {
-            if(!EraseTx(hash)) {
-                LogPrint(BCLog::WALLETDB, "Transaction was found for deletion but returned database error: %s\n", hash.GetHex());
-                delerror = true;
-            }
-            vTxHashOut.push_back(hash);
-        }
+        vTxHashOut.push_back(hash);
     }
 
     if (delerror) {
@@ -926,16 +914,16 @@ DBErrors WalletBatch::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<u
     return DBErrors::LOAD_OK;
 }
 
-DBErrors WalletBatch::ZapWalletTx(std::list<CWalletTx>& vWtx)
+DBErrors WalletBatch::ZapWalletTx(std::map<uint256, CWalletTx>& vWtx)
 {
     // build list of wallet TXs
-    std::vector<uint256> vTxHash;
-    DBErrors err = FindWalletTx(vTxHash, vWtx);
+    DBErrors err = FindWalletTx(vWtx);
     if (err != DBErrors::LOAD_OK)
         return err;
 
     // erase each wallet TX
-    for (const uint256& hash : vTxHash) {
+    for (const auto& wtx_pair : vWtx) {
+        const uint256& hash = wtx_pair.first;
         if (!EraseTx(hash))
             return DBErrors::CORRUPT;
     }
