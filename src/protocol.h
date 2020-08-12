@@ -371,9 +371,10 @@ public:
         READWRITEAS(CService, obj);
     }
 
-    ServiceFlags nServices{NODE_NONE};
     // disk and network only
     uint32_t nTime{TIME_INIT};
+
+    ServiceFlags nServices{NODE_NONE};
 };
 
 /** getdata message type flags */
