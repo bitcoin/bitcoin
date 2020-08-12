@@ -5,6 +5,7 @@
 """Test deprecation of getpeerinfo RPC fields."""
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import connect_nodes
 
 
 class GetpeerinfoDeprecationTest(BitcoinTestFramework):
@@ -14,6 +15,7 @@ class GetpeerinfoDeprecationTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_banscore_deprecation()
+        self.test_addnode_deprecation()
 
     def test_banscore_deprecation(self):
         self.log.info("Test getpeerinfo by default no longer returns a banscore field")
@@ -21,6 +23,17 @@ class GetpeerinfoDeprecationTest(BitcoinTestFramework):
 
         self.log.info("Test getpeerinfo returns banscore with -deprecatedrpc=banscore")
         assert "banscore" in self.nodes[1].getpeerinfo()[0].keys()
+
+    def test_addnode_deprecation(self):
+        self.restart_node(1, ["-deprecatedrpc=getpeerinfo_addnode"])
+        connect_nodes(self.nodes[0], 1)
+
+        self.log.info("Test getpeerinfo by default no longer returns an addnode field")
+        assert "addnode" not in self.nodes[0].getpeerinfo()[0].keys()
+
+        self.log.info("Test getpeerinfo returns addnode with -deprecatedrpc=addnode")
+        assert "addnode" in self.nodes[1].getpeerinfo()[0].keys()
+
 
 if __name__ == "__main__":
     GetpeerinfoDeprecationTest().main()
