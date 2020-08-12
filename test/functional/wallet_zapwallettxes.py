@@ -31,19 +31,22 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         self.skip_if_no_wallet()
         self.skip_if_no_wallet_tool()
 
-    def bitcoin_wallet_process(self, *args):
+    def bitcoin_wallet_process(self, args):
         binary = self.config["environment"]["BUILDDIR"] + '/src/bitcoin-wallet' + self.config["environment"]["EXEEXT"]
-        args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain] + list(args)
+        args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain] + args
         return subprocess.Popen([binary] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
-    def assert_tool_output(self, output, *args):
-        p = self.bitcoin_wallet_process(*args)
+    def assert_tool_output(self, output, args):
+        p = self.bitcoin_wallet_process(args)
         stdout, stderr = p.communicate()
         assert_equal(stderr, '')
         assert_equal(stdout, output)
         assert_equal(p.poll(), 0)
 
-    def assert_zapped(self, wallet):
+    def assert_zapped(self, wallet, keep_meta=True):
+        args = ["-wallet={}".format(wallet)]
+        if not keep_meta:
+            args.append("-keepmeta=0")
         if not self.nodes[0].is_node_stopped():
             self.nodes[0].unloadwallet(wallet)
         out = textwrap.dedent('''\
@@ -52,11 +55,11 @@ class ZapWalletTXesTest (BitcoinTestFramework):
             Encrypted: no
             HD (hd seed available): yes
             Keypool Size: 2
-            Transactions: 2
+            Transactions: 3
             Address Book: 2
         ''')
-        self.assert_tool_output(out, "-wallet={}".format(wallet), "info")
-        self.assert_tool_output("", "-wallet={}".format(wallet), "zapwallettxes")
+        self.assert_tool_output(out, args + ["info"])
+        self.assert_tool_output("", args +["zapwallettxes"])
         out = textwrap.dedent('''\
             Wallet info
             ===========
@@ -66,7 +69,7 @@ class ZapWalletTXesTest (BitcoinTestFramework):
             Transactions: 0
             Address Book: 2
         ''')
-        self.assert_tool_output(out, '-wallet={}'.format(wallet), 'info')
+        self.assert_tool_output(out, args + ['info'])
         if not self.nodes[0].is_node_stopped():
             self.nodes[0].loadwallet(wallet)
 
@@ -80,8 +83,12 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         zaptx = self.nodes[0].get_wallet_rpc("zaptx")
         default = self.nodes[0].get_wallet_rpc("")
 
+        default.sendtoaddress(zaptx.getnewaddress(), 10)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
         # This transaction will be confirmed
-        txid1 = default.sendtoaddress(zaptx.getnewaddress(), 10)
+        txid1 = zaptx.sendtoaddress(address=default.getnewaddress(), amount=10, comment="A comment", subtractfeefromamount=True)
 
         self.nodes[0].generate(1)
         self.sync_all()
@@ -93,12 +100,21 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         # Confirmed and unconfirmed transactions are the only transactions in the wallet.
         assert_equal(zaptx.gettransaction(txid1)['txid'], txid1)
         assert_equal(zaptx.gettransaction(txid2)['txid'], txid2)
-        assert_equal(len(zaptx.listtransactions()), 2)
+        assert_equal(len(zaptx.listtransactions()), 3)
 
         # Zap normally. The wallet should be rescanned (both blockchain and mempool) on loading
         self.assert_zapped("zaptx")
         assert_equal(zaptx.gettransaction(txid1)['txid'], txid1)
         assert_equal(zaptx.gettransaction(txid2)['txid'], txid2)
+
+        # The comment should be persisted
+        assert_equal(zaptx.gettransaction(txid1)["comment"], "A comment")
+
+        # Zap without keepmeta
+        self.assert_zapped("zaptx", False)
+        assert_equal(zaptx.gettransaction(txid1)['txid'], txid1)
+        assert_equal(zaptx.gettransaction(txid2)['txid'], txid2)
+        assert_equal("comment" not in zaptx.gettransaction(txid1), True)
 
         # Zap normally. Restart the node with -persismempool=0
         self.stop_node(0)
