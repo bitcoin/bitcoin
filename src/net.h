@@ -119,7 +119,7 @@ struct CSerializedNetMsg
  * connection. Aside from INBOUND, all types are initiated by us. */
 enum class ConnectionType {
     INBOUND, /**< peer initiated connections */
-    OUTBOUND, /**< full relay connections (blocks, addrs, txns) made automatically. Addresses selected from AddrMan. */
+    OUTBOUND_FULL_RELAY, /**< full relay connections (blocks, addrs, txns) made automatically. Addresses selected from AddrMan. */
     MANUAL, /**< connections to addresses added via addnode or the connect command line argument */
     FEELER, /**< short lived connections used to test address validity */
     BLOCK_RELAY, /**< only relay blocks to these automatic outbound connections. Addresses selected from AddrMan. */
@@ -209,7 +209,7 @@ public:
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, ConnectionType conn_type = ConnectionType::OUTBOUND);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
@@ -824,7 +824,7 @@ public:
 
     bool IsOutboundOrBlockRelayConn() const {
         switch(m_conn_type) {
-            case ConnectionType::OUTBOUND:
+            case ConnectionType::OUTBOUND_FULL_RELAY:
             case ConnectionType::BLOCK_RELAY:
                 return true;
             case ConnectionType::INBOUND:
@@ -838,7 +838,7 @@ public:
     }
 
     bool IsFullOutboundConn() const {
-        return m_conn_type == ConnectionType::OUTBOUND;
+        return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY;
     }
 
     bool IsManualConn() const {
@@ -867,7 +867,7 @@ public:
             case ConnectionType::MANUAL:
             case ConnectionType::FEELER:
                 return false;
-            case ConnectionType::OUTBOUND:
+            case ConnectionType::OUTBOUND_FULL_RELAY:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
                 return true;
