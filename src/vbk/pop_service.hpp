@@ -53,7 +53,7 @@ struct PopService {
     virtual std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks) = 0;
 
     virtual bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) = 0;
-    virtual bool addAllBlockPayloads(int height, const CBlock& fullBlock, BlockValidationState& state) = 0;
+    virtual bool addAllBlockPayloads(const CBlock& fullBlock, BlockValidationState& state) = 0;
     virtual bool setState(const uint256& block, altintegration::ValidationState& state) = 0;
 
     virtual altintegration::PopData getPopData() = 0;

@@ -3840,7 +3840,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     {
         auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-        if (!pop.addAllBlockPayloads(pindex->nHeight, block, state)) {
+        if (!pop.addAllBlockPayloads(block, state)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
                                  strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
                                            pindex->nHeight, block.GetHash().ToString(),
@@ -3935,7 +3935,7 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
         shouldRemove = true;
         auto containing = VeriBlock::blockToAltBlock(indexDummy);
         altintegration::ValidationState _state;
-        bool ret = tree.acceptBlock(containing, _state);
+        bool ret = tree.acceptBlockHeader(containing, _state);
         assert(ret && "alt tree can not accept alt block");
     }
 

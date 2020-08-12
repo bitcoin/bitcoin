@@ -69,7 +69,7 @@ public:
     std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks) override;
 
     bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) override;
-    bool addAllBlockPayloads(int height, const CBlock& fullBlock, BlockValidationState& state) override;
+    bool addAllBlockPayloads(const CBlock& fullBlock, BlockValidationState& state) override;
     bool setState(const uint256& block, altintegration::ValidationState& state) override;
 
     altintegration::PopData getPopData() override;
@@ -85,6 +85,6 @@ bool checkPopDataSize(const altintegration::PopData& popData, altintegration::Va
 
 bool popdataStatelessValidation(const altintegration::PopData& popData, altintegration::ValidationState& state);
 
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, int height, const CBlock& block, BlockValidationState& state);
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlock& block, BlockValidationState& state);
 } // namespace VeriBlock
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP

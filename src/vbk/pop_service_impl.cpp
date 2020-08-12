@@ -21,8 +21,8 @@
 #include <boost/thread/interruption.hpp>
 #endif //WIN32
 
-#include <vbk/p2p_sync.hpp>
 #include <vbk/adaptors/batch_adapter.hpp>
+#include <vbk/p2p_sync.hpp>
 #include <vbk/service_locator.hpp>
 #include <vbk/util.hpp>
 
@@ -124,11 +124,7 @@ PoPRewards PopServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const Co
         return {};
     }
     auto blockHash = pindexPrev.GetBlockHash();
-    auto rewards = altTree->getPopPayout(blockHash.asVector(), state);
-    if (state.IsError()) {
-        throw std::logic_error(state.GetDebugMessage());
-    }
-
+    auto rewards = altTree->getPopPayout(blockHash.asVector());
     int halvings = (pindexPrev.nHeight + 1) / consensusParams.nSubsidyHalvingInterval;
     PoPRewards btcRewards{};
     //erase rewards, that pay 0 satoshis and halve rewards
@@ -149,7 +145,7 @@ bool PopServiceImpl::acceptBlock(const CBlockIndex& indexNew, BlockValidationSta
     AssertLockHeld(cs_main);
     auto containing = VeriBlock::blockToAltBlock(indexNew);
     altintegration::ValidationState instate;
-    if (!altTree->acceptBlock(containing, instate)) {
+    if (!altTree->acceptBlockHeader(containing, instate)) {
         LogPrintf("ERROR: alt tree cannot accept block %s\n", instate.toString());
         return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, instate.GetPath());
     }
@@ -157,17 +153,13 @@ bool PopServiceImpl::acceptBlock(const CBlockIndex& indexNew, BlockValidationSta
     return true;
 }
 
-bool PopServiceImpl::addAllBlockPayloads(int height, const CBlock& connecting, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool PopServiceImpl::addAllBlockPayloads(const CBlock& connecting, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    if(height == 0) {
-        // do not add anything to genesis block
-        return true;
-    }
 
     // add payloads only from blocks with POP data
     if (connecting.nVersion & POP_BLOCK_VERSION_BIT) {
-        return addAllPayloadsToBlockImpl(*altTree, height, connecting, state);
+        return addAllPayloadsToBlockImpl(*altTree, connecting, state);
     }
 
     return true;
@@ -380,7 +372,7 @@ bool popdataStatelessValidation(const altintegration::PopData& popData, altinteg
     return true;
 }
 
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, int height, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
@@ -391,9 +383,7 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, int height, const 
             instate.toString());
     }
 
-    auto containing = VeriBlock::blockToAltBlock(height, block.GetBlockHeader());
-
-    if (!tree.addPayloads(containing, block.popData, instate)) {
+    if (!tree.addPayloads(block.GetHash().asVector(), block.popData, instate)) {
         state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, instate.toString(), "");
         return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(),
             instate.toString());

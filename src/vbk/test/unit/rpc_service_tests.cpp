@@ -24,7 +24,6 @@
 #include <vbk/init.hpp>
 #include <vbk/merkle.hpp>
 
-#include "veriblock/entities/test_case_entity.hpp"
 #include <vbk/test/util/e2e_fixture.hpp>
 
 UniValue CallRPC(std::string args);
@@ -110,53 +109,6 @@ BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
     BOOST_CHECK_EQUAL(result["atvs"].size(), 0);
     BOOST_CHECK_EQUAL(result["vtbs"].size(), vtbs.size());
     BOOST_CHECK_EQUAL(result["vbkblocks"].size(), vbk_blocks.size());
-}
-
-BOOST_FIXTURE_TEST_CASE(savepopstate_test, E2eFixture)
-{
-    std::string file_name = "vbtc_state_test";
-
-    auto* oldTip = ChainActive().Tip();
-    InvalidateTestBlock(oldTip);
-    BOOST_CHECK(oldTip->GetBlockHash() != ChainActive().Tip()->GetBlockHash());
-
-    CBlock block;
-    block = this->CreateAndProcessBlock({}, cbKey);
-    BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
-    block = this->CreateAndProcessBlock({}, cbKey);
-    BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
-    block = this->CreateAndProcessBlock({}, cbKey);
-    BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
-
-    ReconsiderTestBlock(oldTip);
-
-    JSONRPCRequest request;
-    request.strMethod = "savepopstate";
-    request.fHelp = false;
-    request.params = UniValue(UniValue::VARR);
-    request.params.push_back(file_name);
-
-    if (RPCIsInWarmup(nullptr)) {
-        SetRPCWarmupFinished();
-    }
-
-    BOOST_CHECK_NO_THROW(tableRPC.execute(request));
-
-    std::ifstream file(file_name, std::ios::binary | std::ios::ate);
-    size_t fsize = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    std::vector<uint8_t> bytes(fsize);
-    file.read((char*)bytes.data(), bytes.size());
-
-    altintegration::TestCase vbtc_state = altintegration::TestCase::fromRaw(bytes);
-
-    BOOST_CHECK_EQUAL(vbtc_state.alt_tree.size(), 104);
-
-    altintegration::AltBlock tip = VeriBlock::blockToAltBlock(*ChainActive().Tip());
-    BOOST_CHECK(tip == vbtc_state.alt_tree.back().first);
-
-    file.close();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
