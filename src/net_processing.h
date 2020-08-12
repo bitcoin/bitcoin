@@ -11,6 +11,7 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
 
@@ -85,8 +86,14 @@ public:
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) const;
 
+    /** Process a single message from a peer. Public for fuzz testing */
+    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                        const std::chrono::microseconds time_received, const CChainParams& chainparams,
+                        const std::atomic<bool>& interruptMsgProc);
+
 private:
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
+
 };
 
 struct CNodeStateStats {
