@@ -3742,21 +3742,6 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 {
     const std::string walletFile = WalletDataFilePath(location.GetPath()).string();
 
-    // needed to restore wallet transaction meta data after -zapwallettxes
-
-    if (gArgs.GetBoolArg("-zapwallettxes", false)) {
-        chain.initMessage(_("Zapping all transactions from wallet...").translated);
-
-        bool keep_meta = gArgs.GetArg("-zapwallettxes", "1") != "2";
-        std::map<uint256, CWalletTx> vWtx;
-        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, CreateWalletDatabase(location.GetPath()));
-        DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx, keep_meta);
-        if (nZapWalletRet != DBErrors::LOAD_OK) {
-            error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
-            return nullptr;
-        }
-    }
-
     chain.initMessage(_("Loading wallet...").translated);
 
     int64_t nStart = GetTimeMillis();
@@ -4018,7 +4003,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         walletInstance->chainStateFlushed(chain.getTipLocator());
         walletInstance->database->IncrementUpdateCounter();
 
-        // Restore wallet transaction metadata after -zapwallettxes=1
+        // Restore wallet transaction metadata after 'bitcoin-wallet -keepmeta zapwallettxes'
         if (walletInstance->m_has_zapped)
         {
             WalletBatch batch(*walletInstance->database);

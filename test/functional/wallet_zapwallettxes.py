@@ -128,5 +128,8 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         # This will raise an exception because the unconfirmed transaction has been zapped
         assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', zaptx.gettransaction, txid2)
 
+        self.log.info("Make sure -zapwallettxes gives an error")
+        self.nodes[0].assert_start_raises_init_error(["-zapwallettxes"], "Error: -zapwallettxes has been replaced with the zapwallettxes command in the bitcoin-wallet tool. Please use that instead.")
+
 if __name__ == '__main__':
     ZapWalletTXesTest().main()
