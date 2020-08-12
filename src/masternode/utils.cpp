@@ -30,9 +30,9 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& m
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
     int nonMasternodeCount = 0;
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if ((!pnode->fInbound &&
-            !pnode->fFeeler &&
-            !pnode->m_manual_connection &&
+        if ((!pnode->IsInboundConn() &&
+            !pnode->IsFeelerConn() &&
+            !pnode->IsManualConn() &&
             !pnode->m_masternode_connection &&
             !pnode->m_masternode_probe_connection)
             ||
@@ -62,7 +62,7 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& m
                     return;
                 }
                 // keep _verified_ inbound connections
-                if (pnode->fInbound) {
+                if (pnode->IsInboundConn()) {
                     return;
                 }
             } else if (GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) {

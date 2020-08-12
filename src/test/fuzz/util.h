@@ -312,6 +312,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
     const bool inbound = fuzzed_data_provider.ConsumeBool();
     const bool block_relay_only = fuzzed_data_provider.ConsumeBool();
+
     if constexpr (ReturnUniquePtr) {
         return std::make_unique<CNode>(node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, inbound, block_relay_only);
     } else {
