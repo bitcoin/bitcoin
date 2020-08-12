@@ -28,7 +28,7 @@ static const int DISCOURAGEMENT_THRESHOLD{100};
 
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:
-    CConnman* const connman;
+    CConnman& m_connman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
@@ -37,7 +37,7 @@ private:
     bool MaybeDiscourageAndDisconnect(CNode& pnode);
 
 public:
-    PeerLogicValidation(CConnman* connman, BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
+    PeerLogicValidation(CConnman& connman, BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
 
     /**
      * Overridden from CValidationInterface.
