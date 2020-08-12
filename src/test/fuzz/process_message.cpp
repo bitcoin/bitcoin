@@ -68,7 +68,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         return;
     }
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
-    CNode& p2p_node = *MakeUnique<CNode>(0, ServiceFlags(NODE_NETWORK | NODE_WITNESS | NODE_BLOOM), 0, INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, ConnectionType::OUTBOUND).release();
+    CNode& p2p_node = *MakeUnique<CNode>(0, ServiceFlags(NODE_NETWORK | NODE_WITNESS | NODE_BLOOM), 0, INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, ConnectionType::OUTBOUND_FULL_RELAY).release();
     p2p_node.fSuccessfullyConnected = true;
     p2p_node.nVersion = PROTOCOL_VERSION;
     p2p_node.SetSendVersion(PROTOCOL_VERSION);

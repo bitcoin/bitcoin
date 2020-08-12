@@ -1906,7 +1906,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::INBOUND:
                     case ConnectionType::MANUAL:
                         break;
-                    case ConnectionType::OUTBOUND:
+                    case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
@@ -2031,12 +2031,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (fFeeler) {
                 conn_type = ConnectionType::FEELER;
             } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
-                conn_type = ConnectionType::OUTBOUND;
+                conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
             } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
                 conn_type = ConnectionType::BLOCK_RELAY;
             } else {
                 // GetTryNewOutboundPeer() is true
-                conn_type = ConnectionType::OUTBOUND;
+                conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
             }
 
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
@@ -2315,7 +2315,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 }
 // SYSCOIN
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect, bool probe) {
-    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND, true, probe);
+    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND_FULL_RELAY, true, probe);
 }
 
 void CConnman::ThreadMessageHandler()
