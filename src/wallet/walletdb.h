@@ -261,7 +261,7 @@ public:
 
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTx(std::map<uint256, CWalletTx>& vWtx);
-    DBErrors ZapWalletTx(std::map<uint256, CWalletTx>& vWtx);
+    DBErrors ZapWalletTx(std::map<uint256, CWalletTx>& vWtx, bool keep_meta);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
     /* Function to determine if a certain KV/key-type is a key (cryptographical key) type */
     static bool IsKeyType(const std::string& strType);

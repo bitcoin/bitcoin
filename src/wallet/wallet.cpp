@@ -3144,9 +3144,9 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
     return DBErrors::LOAD_OK;
 }
 
-DBErrors CWallet::ZapWalletTx(std::map<uint256, CWalletTx>& vWtx)
+DBErrors CWallet::ZapWalletTx(std::map<uint256, CWalletTx>& vWtx, bool keep_meta)
 {
-    DBErrors nZapWalletTxRet = WalletBatch(*database,"cr+").ZapWalletTx(vWtx);
+    DBErrors nZapWalletTxRet = WalletBatch(*database,"cr+").ZapWalletTx(vWtx, keep_meta);
     if (nZapWalletTxRet == DBErrors::NEED_REWRITE)
     {
         if (database->Rewrite("\x04pool"))
@@ -3748,8 +3748,9 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.GetBoolArg("-zapwallettxes", false)) {
         chain.initMessage(_("Zapping all transactions from wallet...").translated);
 
+        bool keep_meta = gArgs.GetArg("-zapwallettxes", "1") != "2";
         std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, CreateWalletDatabase(location.GetPath()));
-        DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
+        DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx, keep_meta);
         if (nZapWalletRet != DBErrors::LOAD_OK) {
             error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
             return nullptr;
@@ -4039,6 +4040,8 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
                     copyTo->nOrderPos = copyFrom->nOrderPos;
                     batch.WriteTx(*copyTo);
                 }
+
+                batch.EraseZapTx(hash);
             }
         }
     }

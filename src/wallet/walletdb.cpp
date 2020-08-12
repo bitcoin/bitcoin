@@ -925,7 +925,7 @@ DBErrors WalletBatch::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<u
     return DBErrors::LOAD_OK;
 }
 
-DBErrors WalletBatch::ZapWalletTx(std::map<uint256, CWalletTx>& vWtx)
+DBErrors WalletBatch::ZapWalletTx(std::map<uint256, CWalletTx>& vWtx, bool keep_meta)
 {
     // build list of wallet TXs
     DBErrors err = FindWalletTx(vWtx);
@@ -935,6 +935,7 @@ DBErrors WalletBatch::ZapWalletTx(std::map<uint256, CWalletTx>& vWtx)
     // erase each wallet TX
     for (const auto& wtx_pair : vWtx) {
         const uint256& hash = wtx_pair.first;
+        if (keep_meta && !WriteZapTx(wtx_pair.second)) return DBErrors::CORRUPT;
         if (!EraseTx(hash))
             return DBErrors::CORRUPT;
     }
