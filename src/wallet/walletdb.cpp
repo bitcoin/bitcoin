@@ -48,6 +48,7 @@ const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
+const std::string ZAPTX{"zaptx"};
 } // namespace DBKeys
 
 //
@@ -84,6 +85,16 @@ bool WalletBatch::WriteTx(const CWalletTx& wtx)
 bool WalletBatch::EraseTx(uint256 hash)
 {
     return EraseIC(std::make_pair(DBKeys::TX, hash));
+}
+
+bool WalletBatch::WriteZapTx(const CWalletTx& wtx)
+{
+    return WriteIC(std::make_pair(DBKeys::ZAPTX, wtx.GetHash()), wtx);
+}
+
+bool WalletBatch::EraseZapTx(uint256 hash)
+{
+    return EraseIC(std::make_pair(DBKeys::ZAPTX, hash));
 }
 
 bool WalletBatch::WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite)

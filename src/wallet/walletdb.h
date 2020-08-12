@@ -80,6 +80,7 @@ extern const std::string WALLETDESCRIPTORCKEY;
 extern const std::string WALLETDESCRIPTORKEY;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
+extern const std::string ZAPTX;
 } // namespace DBKeys
 
 /* simple HD chain data model */
@@ -220,6 +221,9 @@ public:
 
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(uint256 hash);
+
+    bool WriteZapTx(const CWalletTx& wtx);
+    bool EraseZapTx(uint256 hash);
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
