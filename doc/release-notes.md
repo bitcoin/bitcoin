@@ -105,6 +105,17 @@ will trigger BIP 125 (replace-by-fee) opt-in. (#11413)
 - The `testmempoolaccept` RPC returns `vsize` and a `fee` object with the `base` fee
   if the transaction passes validation. (#19940)
 
+- The `getpeerinfo` RPC now returns a `connection_type` field. This indicates
+  the type of connection established with the peer. It will return one of six
+  options. For more information, see the `getpeerinfo` help documentation.
+  (#19725)
+
+- The `getpeerinfo` RPC no longer returns the `addnode` field by default. This
+  field will be fully removed in the next major release.  It can be accessed
+  with the configuration option `-deprecatedrpc=getpeerinfo_addnode`. However,
+  it is recommended to instead use the `connection_type` field (it will return
+  `manual` when addnode is true). (#19725)
+
 - The `walletcreatefundedpsbt` RPC call will now fail with
   `Insufficient funds` when inputs are manually selected but are not enough to cover
   the outputs and fee. Additional inputs can automatically be added through the
