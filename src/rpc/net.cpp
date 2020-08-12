@@ -276,7 +276,7 @@ static UniValue addnode(const JSONRPCRequest& request)
     else if(strCommand == "remove")
     {
         if(!node.connman->RemoveAddedNode(strNode))
-            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
+            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node could not be removed. It has not been added previously.");
     }
 
     return NullUniValue;
