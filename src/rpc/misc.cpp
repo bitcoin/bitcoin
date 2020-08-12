@@ -191,7 +191,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
             {
                 {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
-                {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
+                {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
             },
             RPCResult{
                 RPCResult::Type::ARR, "", "",
@@ -524,11 +524,11 @@ UniValue logging(const JSONRPCRequest& request)
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
             ,
                 {
-                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to add to debug logging",
+                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to add to debug logging",
                         {
                             {"include_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
-                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to remove from debug logging",
+                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to remove from debug logging",
                         {
                             {"exclude_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},

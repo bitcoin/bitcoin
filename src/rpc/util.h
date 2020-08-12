@@ -132,14 +132,10 @@ struct RPCArg {
         /** Required arg */
         NO,
         /**
-         * Optional arg that is a named argument and has a default value of
-         * `null`. When possible, the default value should be specified.
-         */
-        OMITTED_NAMED_ARG,
-        /**
          * Optional argument with default value omitted because they are
          * implicitly clear. That is, elements in an array or object may not
-         * exist by default.
+         * exist by default. Alternatively, a named argument that has a default
+         * value of `null`.
          * When possible, the default value should be specified.
          */
         OMITTED,
@@ -215,7 +211,7 @@ struct RPCArg {
      * Return the description string, including the argument type and whether
      * the argument is required.
      */
-    std::string ToDescriptionString() const;
+    std::string ToDescriptionString(bool is_top_level_arg = false) const;
 };
 
 struct RPCResult {

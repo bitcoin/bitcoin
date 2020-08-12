@@ -1286,7 +1286,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                             },
                         },
                         "\"requests\""},
-                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                         {
                             {"rescan", RPCArg::Type::BOOL, /* default */ "true", "Stating if should rescan the blockchain after all imports"},
                         },
