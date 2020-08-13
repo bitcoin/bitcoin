@@ -344,8 +344,8 @@ public:
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
 
         // Count peer connection totals.
-        int ipv4_i{0}, ipv6_i{0}, onion_i{0}, block_relay_i{0}; // inbound conn counters
-        int ipv4_o{0}, ipv6_o{0}, onion_o{0}, block_relay_o{0}; // outbound conn counters
+        int ipv4_i{0}, ipv6_i{0}, onion_i{0}, block_relay_i{0}, total_i{0}; // inbound conn counters
+        int ipv4_o{0}, ipv6_o{0}, onion_o{0}, block_relay_o{0}, total_o{0}; // outbound conn counters
         const UniValue& getpeerinfo{batch[ID_PEERINFO]["result"]};
 
         for (const UniValue& peer : getpeerinfo.getValues()) {
@@ -378,6 +378,14 @@ public:
         // Generate report header.
         const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
         std::string result{strprintf("%s %s%s - %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
+
+        // Report peer connection totals by type.
+        total_i = ipv4_i + ipv6_i + onion_i;
+        total_o = ipv4_o + ipv6_o + onion_o;
+        result += "        ipv4    ipv6   onion   total  block-relay\n";
+        result += strprintf("in     %5i   %5i   %5i   %5i   %5i\n", ipv4_i, ipv6_i, onion_i, total_i, block_relay_i);
+        result += strprintf("out    %5i   %5i   %5i   %5i   %5i\n", ipv4_o, ipv6_o, onion_o, total_o, block_relay_o);
+        result += strprintf("total  %5i   %5i   %5i   %5i   %5i\n", ipv4_i + ipv4_o, ipv6_i + ipv6_o, onion_i + onion_o, total_i + total_o, block_relay_i + block_relay_o);
 
         return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
