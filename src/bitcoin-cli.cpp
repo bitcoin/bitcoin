@@ -39,6 +39,8 @@ static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
+static const std::string ONION{".onion"};
+static const size_t ONION_LEN{ONION.size()};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -297,6 +299,21 @@ public:
 class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
+    bool IsAddrIPv6(const std::string& addr) const
+    {
+        return !addr.empty() && addr.front() == '[';
+    }
+    bool IsInboundOnion(const std::string& addr_local, int mapped_as) const
+    {
+        return mapped_as == 0 && addr_local.find(ONION) != std::string::npos;
+    }
+    bool IsOutboundOnion(const std::string& addr, int mapped_as) const
+    {
+        const size_t addr_len{addr.size()};
+        const size_t onion_pos{addr.rfind(ONION)};
+        return mapped_as == 0 && onion_pos != std::string::npos && addr_len > ONION_LEN &&
+               (onion_pos == addr_len - ONION_LEN || onion_pos == addr.find_last_of(":") - ONION_LEN);
+    }
     bool m_verbose{false}; //!< Whether user requested verbose -netinfo report
 public:
     const int ID_PEERINFO = 0;
