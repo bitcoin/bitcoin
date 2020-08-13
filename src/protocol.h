@@ -272,6 +272,9 @@ enum ServiceFlags : uint64_t {
     // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
     // witness data.
     NODE_WITNESS = (1 << 3),
+    // NODE_COMPACT_FILTERS means the node will service basic block filter requests.
+    // See BIP157 and BIP158 for details on how this is implemented.
+    NODE_COMPACT_FILTERS = (1 << 6),
     // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
     // serving the last 288 (2 day) blocks
     // See BIP159 for details on how this is implemented.
