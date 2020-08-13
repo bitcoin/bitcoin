@@ -315,6 +315,20 @@ private:
                (onion_pos == addr_len - ONION_LEN || onion_pos == addr.find_last_of(":") - ONION_LEN);
     }
     bool m_verbose{false}; //!< Whether user requested verbose -netinfo report
+    enum struct NetType {
+        ipv4,
+        ipv6,
+        onion,
+    };
+    std::string NetTypeEnumToString(NetType t)
+    {
+        switch (t) {
+        case NetType::ipv4: return "ipv4";
+        case NetType::ipv6: return "ipv6";
+        case NetType::onion: return "onion";
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    }
     std::string ChainToString() const
     {
         if (gArgs.GetChainName() == CBaseChainParams::TESTNET) return " testnet";
@@ -354,10 +368,13 @@ public:
             const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
             const bool is_inbound{peer["inbound"].get_bool()};
+            NetType net_type{NetType::ipv4};
             if (is_inbound) {
                 if (IsAddrIPv6(addr)) {
+                    net_type = NetType::ipv6;
                     ++ipv6_i;
                 } else if (IsInboundOnion(addr_local, mapped_as)) {
+                    net_type = NetType::onion;
                     ++onion_i;
                 } else {
                     ++ipv4_i;
@@ -365,8 +382,10 @@ public:
                 if (is_block_relay) ++block_relay_i;
             } else {
                 if (IsAddrIPv6(addr)) {
+                    net_type = NetType::ipv6;
                     ++ipv6_o;
                 } else if (IsOutboundOnion(addr, mapped_as)) {
+                    net_type = NetType::onion;
                     ++onion_o;
                 } else {
                     ++ipv4_o;
