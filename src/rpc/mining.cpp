@@ -1080,7 +1080,7 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::NUM, "feerate", /* optional */ true, "estimate fee rate in " + CURRENCY_UNIT + "/kB (only present if no errors were encountered)"},
-                        {RPCResult::Type::ARR, "errors", "Errors encountered during processing",
+                        {RPCResult::Type::ARR, "errors", /* optional */ true, "Errors encountered during processing (if there are any)",
                             {
                                 {RPCResult::Type::STR, "", "error"},
                             }},
@@ -1159,7 +1159,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
                                 {
                                     {RPCResult::Type::ELISION, "", ""},
                                 }},
-                                {RPCResult::Type::ARR, "errors", /* optional */ true, "Errors encountered during processing",
+                                {RPCResult::Type::ARR, "errors", /* optional */ true, "Errors encountered during processing (if there are any)",
                                 {
                                     {RPCResult::Type::STR, "error", ""},
                                 }},
