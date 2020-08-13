@@ -14,8 +14,8 @@
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
-#include <netaddress.h>
 #include <net_permissions.h>
+#include <netaddress.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -25,12 +25,12 @@
 #include <uint256.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <deque>
 #include <map>
-#include <thread>
 #include <memory>
-#include <condition_variable>
+#include <thread>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -130,7 +130,6 @@ class NetEventsInterface;
 class CConnman
 {
 public:
-
     enum NumConnections {
         CONNECTIONS_NONE = 0,
         CONNECTIONS_IN = (1U << 0),
@@ -209,7 +208,7 @@ public:
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, ConnectionType conn_type = ConnectionType::OUTBOUND);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
@@ -351,6 +350,7 @@ private:
         SOCKET socket;
         inline void AddSocketPermissionFlags(NetPermissionFlags& flags) const { NetPermissions::AddFlag(flags, m_permissions); }
         ListenSocket(SOCKET socket_, NetPermissionFlags permissions_) : socket(socket_), m_permissions(permissions_) {}
+
     private:
         NetPermissionFlags m_permissions;
     };
@@ -647,7 +647,6 @@ public:
 };
 
 
-
 /** Transport protocol agnostic message container.
  * Ideally it should only contain receive time, payload,
  * command and size.
@@ -716,7 +715,6 @@ private:
     }
 
 public:
-
     V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
         Reset();
     }
@@ -986,8 +984,8 @@ private:
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
     mutable RecursiveMutex cs_addrLocal;
-public:
 
+public:
     NodeId GetId() const {
         return id;
     }
