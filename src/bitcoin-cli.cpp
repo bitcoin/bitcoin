@@ -315,6 +315,12 @@ private:
                (onion_pos == addr_len - ONION_LEN || onion_pos == addr.find_last_of(":") - ONION_LEN);
     }
     bool m_verbose{false}; //!< Whether user requested verbose -netinfo report
+    std::string ChainToString() const
+    {
+        if (gArgs.GetChainName() == CBaseChainParams::TESTNET) return " testnet";
+        if (gArgs.GetChainName() == CBaseChainParams::REGTEST) return " regtest";
+        return "";
+    }
 public:
     const int ID_PEERINFO = 0;
     const int ID_NETWORKINFO = 1;
@@ -369,7 +375,10 @@ public:
             }
         }
 
-        std::string result;
+        // Generate report header.
+        const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
+        std::string result{strprintf("%s %s%s - %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
+
         return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
 };
