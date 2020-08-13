@@ -163,7 +163,7 @@ NODISCARD inline CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_
     }
     case 5: {
         WitnessUnknown witness_unknown{};
-        witness_unknown.version = fuzzed_data_provider.ConsumeIntegral<int>();
+        witness_unknown.version = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
         const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
         witness_unknown.length = witness_unknown_program_1.size();
         std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
