@@ -2903,6 +2903,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         CAmount nAmount = nValueIn - nValueToSelect;
                         CAmount nDust = GetDustThreshold(CTxOut(nAmount, scriptChange), discard_rate);
                         while (nAmount < nDust) {
+                            coin_selection_params.use_bnb = false;
                             nValueToSelect = nValueIn + (nDust - nAmount);
                             nValueIn = 0;
                             if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
