@@ -320,6 +320,22 @@ private:
         ipv6,
         onion,
     };
+    struct Peer {
+        int id;
+        int mapped_as;
+        int version;
+        int64_t conn_time;
+        int64_t last_recv;
+        int64_t last_send;
+        double min_ping;
+        double ping;
+        std::string addr;
+        std::string sub_version;
+        NetType net_type;
+        bool is_block_relay;
+        bool is_outbound;
+        bool operator<(const Peer& rhs) const { return std::tie(is_outbound, min_ping) < std::tie(rhs.is_outbound, rhs.min_ping); }
+    };
     std::string NetTypeEnumToString(NetType t)
     {
         switch (t) {
@@ -357,9 +373,10 @@ public:
         if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
 
-        // Count peer connection totals.
+        // Count peer connection totals, and if m_verbose is true, store peer data in a vector of structs.
         int ipv4_i{0}, ipv6_i{0}, onion_i{0}, block_relay_i{0}, total_i{0}; // inbound conn counters
         int ipv4_o{0}, ipv6_o{0}, onion_o{0}, block_relay_o{0}, total_o{0}; // outbound conn counters
+        std::vector<Peer> peers;
         const UniValue& getpeerinfo{batch[ID_PEERINFO]["result"]};
 
         for (const UniValue& peer : getpeerinfo.getValues()) {
@@ -391,6 +408,18 @@ public:
                     ++ipv4_o;
                 }
                 if (is_block_relay) ++block_relay_o;
+            }
+            if (m_verbose) {
+                // Push data for this peer to the peers vector.
+                const int peer_id{peer["id"].get_int()};
+                const int version{peer["version"].get_int()};
+                const std::string sub_version{peer["subver"].get_str()};
+                const int64_t conn_time{peer["conntime"].get_int64()};
+                const int64_t last_recv{peer["lastrecv"].get_int64()};
+                const int64_t last_send{peer["lastsend"].get_int64()};
+                const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
+                const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
+                peers.push_back({peer_id, mapped_as, version, conn_time, last_recv, last_send, min_ping, ping, addr, sub_version, net_type, is_block_relay, !is_inbound});
             }
         }
 
