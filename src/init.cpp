@@ -1176,12 +1176,14 @@ bool AppInitParameterInteraction()
             g_enabled_filter_types.insert(filter_type);
         }
     }
+    // SYSCOIN rename BASIC_FILTER
+    // Signal NODE_COMPACT_FILTERS if peerblockfilters and basic filters index are both enabled.
+    if (gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS)) {
+        if (g_enabled_filter_types.count(BlockFilterType::BASIC_FILTER) != 1) {
+            return InitError(_("Cannot set -peerblockfilters without -blockfilterindex."));
+        }
 
-    // Basic filters are the only supported filters. The basic filters index must be enabled
-    // to serve compact filters
-    if (gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS) &&
-        g_enabled_filter_types.count(BlockFilterType::BASIC_FILTER) != 1) {
-        return InitError(_("Cannot set -peerblockfilters without -blockfilterindex."));
+        nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
     }
 
     // if using block pruning, then disallow txindex
