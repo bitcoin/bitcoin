@@ -875,7 +875,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     pdsNotificationInterface->InitializeCurrentBlockTip();
     {
         // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
-        // and reduce further locking overhead for cs_main in other parts of code inclluding GUI
+        // and reduce further locking overhead for cs_main in other parts of code including GUI
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
         int64_t nStart = GetTimeMillis();
         auto mnList = deterministicMNManager->GetListAtChainTip();
