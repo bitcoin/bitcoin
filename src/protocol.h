@@ -397,7 +397,9 @@ enum GetDataMsg : uint32_t {
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
-    MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    // MSG_FILTERED_WITNESS_BLOCK is defined in BIP144 as reserved for future
+    // use and remains unused.
+    // MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
 };
 
 /** inv message data */
