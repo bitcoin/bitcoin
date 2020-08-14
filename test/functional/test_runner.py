@@ -225,6 +225,12 @@ BASE_SCRIPTS = [
     'feature_shutdown.py',
     'framework_test_script.py',
     'omni_reorg.py',
+    'omni_clientexpiry.py',
+    'omni_metadexprices.py',
+    'omni_metadexphase3.py',
+    'omni_stov1.py',
+    'omni_deactivation.py',
+    'omni_freeze.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
