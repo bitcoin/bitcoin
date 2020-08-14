@@ -256,13 +256,8 @@ static const CRPCCommand vRPCCommands[] =
 
 CRPCTable::CRPCTable()
 {
-    unsigned int vcidx;
-    for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
-    {
-        const CRPCCommand *pcmd;
-
-        pcmd = &vRPCCommands[vcidx];
-        mapCommands[pcmd->name].push_back(pcmd);
+    for (const auto& c : vRPCCommands) {
+        appendCommand(c.name, &c);
     }
 }
 
