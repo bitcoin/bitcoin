@@ -8,7 +8,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | Berkeley DB | [4.8.30](https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) | 4.8.x | No |  |  |
 | Boost | [1.71.0](https://www.boost.org/users/download/) | [1.58.0](https://github.com/bitcoin/bitcoin/pull/19667) | No |  |  |
 | Clang |  | [5.0+](https://releases.llvm.org/download.html) (C++17 support) |  |  |  |
-| Expat | [2.2.7](https://libexpat.github.io/) |  | No | Yes |  |
+| Expat | [2.2.10](https://libexpat.github.io/) |  | No | Yes |  |
 | fontconfig | [2.12.1](https://www.freedesktop.org/software/fontconfig/release/) |  | No | Yes |  |
 | FreeType | [2.7.1](https://download.savannah.gnu.org/releases/freetype) |  | No |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) (Android only) |
 | GCC |  | [7+](https://gcc.gnu.org/) (C++17 support) |  |  |  |
