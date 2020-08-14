@@ -7,6 +7,7 @@
 #include <services/assetconsensus.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
+#include <rpc/util.h>
 #include <univalue.h>
 
 std::string stringFromSyscoinTx(const int &nVersion) {
@@ -170,7 +171,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
             return;
         }
         const UniValue& auxFeeArr = auxFeeObj.get_array();
-        if(auxFeeArr.size() != 2 || (!auxFeeArr[0].isNum() && !auxFeeArr[0].isStr())) || !auxFeeArr[1].isStr()) {
+        if(auxFeeArr.size() != 2 || (!auxFeeArr[0].isNum() && !auxFeeArr[0].isStr()) || !auxFeeArr[1].isStr()) {
             SetNull();
             return;
         }
@@ -184,7 +185,7 @@ UniValue CAuxFeeDetails::ToJson() const {
     for(const auto& auxfee: vecAuxFees) {
         UniValue auxfeeArr(UniValue::VARR);
         auxfeeArr.push_back(auxfee.nBound);
-        auxfeeArr.push_back(auxfee.strPercentage);
+        auxfeeArr.push_back(auxfee.strPercent);
         feeStruct.push_back(auxfeeArr);
     }
     value.pushKV("fee_struct", feeStruct);
