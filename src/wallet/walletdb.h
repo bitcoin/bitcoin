@@ -261,10 +261,6 @@ public:
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
     /* Function to determine if a certain KV/key-type is a key (cryptographical key) type */
     static bool IsKeyType(const std::string& strType);
-    /* verifies the database environment */
-    static bool VerifyEnvironment(const fs::path& wallet_path, bilingual_str& errorStr);
-    /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& wallet_path, bilingual_str& errorStr);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);

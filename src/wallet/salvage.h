@@ -9,6 +9,8 @@
 #include <fs.h>
 #include <streams.h>
 
-bool RecoverDatabaseFile(const fs::path& file_path);
+struct bilingual_str;
+
+bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
 #endif // BITCOIN_WALLET_SALVAGE_H
