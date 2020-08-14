@@ -37,7 +37,7 @@ CAmount getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount) {
         const CAuxFee &feeNext = auxFees[i < auxFees.size()-1? i+1:i];  
         nBoundAmount = fee.nBound;
         nNextBoundAmount = feeNext.nBound;
-        if(!ParseDouble(fee.strPercentage, &nRate))
+        if(!ParseDouble(fee.strPercent, &nRate))
             return 0;
         // case where amount is in between the bounds
         if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
