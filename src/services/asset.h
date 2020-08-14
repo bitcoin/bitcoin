@@ -50,7 +50,7 @@ public:
         );
     }
 
-    inline friend bool operator!=(const CAsset &a, const CAsset &b) {
+    inline friend bool operator!=(const CAuxFee &a, const CAuxFee &b) {
         return !(a == b);
     }
     inline CAuxFee& operator=( const CAuxFee& rhs) {
@@ -77,7 +77,7 @@ public:
         );
     }
 
-    inline friend bool operator!=(const CAsset &a, const CAsset &b) {
+    inline friend bool operator!=(const CAuxFeeDetails &a, const CAuxFeeDetails &b) {
         return !(a == b);
     }
     inline void SetNull() { vecAuxFees.clear();}
