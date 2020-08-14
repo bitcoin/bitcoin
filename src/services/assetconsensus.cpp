@@ -497,8 +497,8 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     if(!theAsset.vchAuxFeeKeyID.empty()) {
         storedAssetRef.vchAuxFeeKeyID = theAsset.vchPrevAuxFeeKeyID;
     }
-    if(!theAsset.auxFeesDetails.IsNull()) {
-        storedAssetRef.auxFeesDetails = theAsset.prevAuxFeesDetails;
+    if(!theAsset.auxFeeDetails.IsNull()) {
+        storedAssetRef.auxFeeDetails = theAsset.prevAuxFeeDetails;
     }
     // enforced to be equal or represent prev value on actual change of field
     storedAssetRef.nUpdateFlags = theAsset.nPrevUpdateFlags;    

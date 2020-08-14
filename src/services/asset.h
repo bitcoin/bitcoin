@@ -68,7 +68,7 @@ public:
     CAuxFeeDetails() {
         SetNull();
     }
-    CAuxFeeDetails(const UniValue& value);
+    CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision);
     SERIALIZE_METHODS(CAuxFeeDetails, obj) {
         READWRITE(obj.vecAuxFees);
     }
@@ -169,7 +169,7 @@ public:
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchNotaryKeyID, obj.notaryDetails, obj.vchAuxFeeKeyID, obj.auxFees, obj.vchPrevAuxFeeKeyID, obj.prevAuxFees, obj.vchPrevNotaryKeyID, obj.prevNotaryDetails, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
+        READWRITE(obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchNotaryKeyID, obj.notaryDetails, obj.vchAuxFeeKeyID, obj.auxFeeDetails, obj.vchPrevAuxFeeKeyID, obj.prevAuxFeeDetails, obj.vchPrevNotaryKeyID, obj.prevNotaryDetails, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
