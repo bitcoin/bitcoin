@@ -421,6 +421,18 @@ static UniValue generateblock(const JSONRPCRequest& request)
 }
 #endif // ENABLE_MINER
 
+static UniValue generate(const JSONRPCRequest& request)
+{
+    return RPCHelpMan{"generate", "has been replaced by the -generate cli option. Refer to -help for more information.", {}, {}, RPCExamples{""}, [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+
+    if (request.fHelp) {
+        throw std::runtime_error(self.ToString());
+    } else {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, self.ToString());
+    }
+    }};
+}
+
 static UniValue getmininginfo(const JSONRPCRequest& request)
 {
             RPCHelpMan{"getmininginfo",
@@ -1279,6 +1291,7 @@ static const CRPCCommand commands[] =
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
+    { "hidden",             "generate",               &generate,               {} },
 };
 // clang-format on
     for (const auto& c : commands) {
