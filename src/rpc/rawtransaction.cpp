@@ -2059,8 +2059,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
 };
 // clang-format on
-
-    for (const auto& command : commands) {
-        t.appendCommand(command.name, &command);
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
     }
 }

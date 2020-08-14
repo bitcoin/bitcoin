@@ -2986,8 +2986,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "dumptxoutset",           &dumptxoutset,           {"path"} },
 };
 // clang-format on
-
-    for (const auto& command : commands) {
-        t.appendCommand(command.name, &command);
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
     }
 }

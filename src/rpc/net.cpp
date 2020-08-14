@@ -923,8 +923,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "addpeeraddress",         &addpeeraddress,         {"address", "port"} },
 };
 // clang-format on
-
-    for (const auto& command : commands) {
-        t.appendCommand(command.name, &command);
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
     }
 }

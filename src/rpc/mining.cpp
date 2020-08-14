@@ -1281,8 +1281,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };
 // clang-format on
-
-    for (const auto& command : commands) {
-        t.appendCommand(command.name, &command);
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
     }
 }
