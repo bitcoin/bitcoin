@@ -7,6 +7,7 @@
 #include <services/assetconsensus.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
+#include <univalue.h>
 
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
