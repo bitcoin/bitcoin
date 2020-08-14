@@ -1371,7 +1371,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                  throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
             }
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
-            const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(WitnessV0KeyHash(uint160(theAsset.vchAuxFeeKeyID))));
+            const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(theAsset.vchAuxFeeKeyID)))));
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
