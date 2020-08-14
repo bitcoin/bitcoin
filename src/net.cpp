@@ -1856,28 +1856,32 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
         }
 
-        // Feeler Connections
-        //
-        // Design goals:
-        //  * Increase the number of connectable addresses in the tried table.
-        //
-        // Method:
-        //  * Choose a random address from new and attempt to connect to it if we can connect
-        //    successfully it is added to tried.
-        //  * Start attempting feeler connections only after node finishes making outbound
-        //    connections.
-        //  * Only make a feeler connection once every few minutes.
-        //
+        ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
+        int64_t nTime = GetTimeMicros();
         bool fFeeler = false;
 
-        if (nOutboundFullRelay >= m_max_outbound_full_relay && nOutboundBlockRelay >= m_max_outbound_block_relay && !GetTryNewOutboundPeer()) {
-            int64_t nTime = GetTimeMicros(); // The current time right now (in microseconds).
-            if (nTime > nNextFeeler) {
-                nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
-                fFeeler = true;
-            } else {
-                continue;
-            }
+        // Determine what type of connection to open. Opening
+        // OUTBOUND_FULL_RELAY connections gets the highest priority until we
+        // meet our full-relay capacity. Then we open BLOCK_RELAY connection
+        // until we hit our block-relay-only peer limit.
+        // GetTryNewOutboundPeer() gets set when a stale tip is detected, so we
+        // try opening an additional OUTBOUND_FULL_RELAY connection. If none of
+        // these conditions are met, check the nNextFeeler timer to decide if
+        // we should open a FEELER.
+
+        if (nOutboundFullRelay < m_max_outbound_full_relay) {
+            // OUTBOUND_FULL_RELAY
+        } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
+            conn_type = ConnectionType::BLOCK_RELAY;
+        } else if (GetTryNewOutboundPeer()) {
+            // OUTBOUND_FULL_RELAY
+        } else if (nTime > nNextFeeler) {
+            nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
+            conn_type = ConnectionType::FEELER;
+            fFeeler = true;
+        } else {
+            // skip to next iteration of while loop
+            continue;
         }
 
         addrman.ResolveCollisions();
@@ -1942,23 +1946,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(randsleep)))
                     return;
                 LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
-            }
-
-            ConnectionType conn_type;
-            // Determine what type of connection to open. If fFeeler is not
-            // set, open OUTBOUND connections until we meet our full-relay
-            // capacity. Then open BLOCK_RELAY connections until we hit our
-            // block-relay peer limit. Otherwise, default to opening an
-            // OUTBOUND connection.
-            if (fFeeler) {
-                conn_type = ConnectionType::FEELER;
-            } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
-                conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
-            } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
-                conn_type = ConnectionType::BLOCK_RELAY;
-            } else {
-                // GetTryNewOutboundPeer() is true
-                conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
             }
 
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
