@@ -225,7 +225,7 @@ bool error(const char* fmt, const Args&... args)
     return false;
 }
 
-void PrintExceptionContinue(const std::exception_ptr pex, const char* pszThread);
+void PrintExceptionContinue(const std::exception_ptr pex, const char* pszExceptionOrigin);
 void FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
