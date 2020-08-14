@@ -576,14 +576,9 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            std::string("\n\n");
 }
 
-static std::string FormatException(const std::exception_ptr pex, const char* pszThread)
+void PrintExceptionContinue(const std::exception_ptr pex, const char* pszExceptionOrigin)
 {
-    return GetPrettyExceptionStr(pex);
-}
-
-void PrintExceptionContinue(const std::exception_ptr pex, const char* pszThread)
-{
-    std::string message = FormatException(pex, pszThread);
+    std::string message = strprintf("\"%s\" raised an exception\n%s", pszExceptionOrigin, GetPrettyExceptionStr(pex));
     LogPrintf("\n\n************************\n%s\n", message);
     fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
 }
