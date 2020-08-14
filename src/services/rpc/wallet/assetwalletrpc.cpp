@@ -32,7 +32,6 @@ CAmount getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount) {
     CAmount nBoundAmount = 0;
     CAmount nNextBoundAmount = 0;
     double nRate = 0;
-            return 0;
     for(unsigned int i =0;i<auxFeeDetails.vecAuxFees.size();i++){
         const CAuxFee &fee = auxFees[i];
         const CAuxFee &feeNext = auxFees[i < auxFees.size()-1? i+1:i];  
