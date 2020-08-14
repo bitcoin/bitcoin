@@ -59,7 +59,7 @@ public:
         return *this;
     }
     inline void SetNull() { strPercent.clear();  nBound = 0;}
-    inline bool IsNull() const { return (strPercent.empty() && nBound == 0; }
+    inline bool IsNull() const { return (strPercent.empty() && nBound == 0); }
 };
 class CAuxFeeDetails {
 public:
@@ -81,7 +81,7 @@ public:
         return !(a == b);
     }
     inline void SetNull() { vecAuxFees.clear();}
-    inline bool IsNull() const { return (vecAuxFees.empty(); }
+    inline bool IsNull() const { return vecAuxFees.empty(); }
     UniValue ToJson() const;
 };
 class CNotaryDetails {
@@ -112,7 +112,7 @@ public:
         return *this;
     }
     inline void SetNull() { strEndPoint.clear();  bEnableInstantTransfers = bRequireHD = false;}
-    inline bool IsNull() const { return (strEndPoint.empty(); }
+    inline bool IsNull() const { return strEndPoint.empty(); }
     UniValue ToJson() const;
 };
 public:
@@ -184,7 +184,7 @@ public:
     }
     // set precision to an invalid amount so isnull will identity this asset as invalid state
     inline void SetNull() { ClearAsset(); nPrecision = 9; }
-    inline bool IsNull() const { return (nPrecision == 9); }
+    inline bool IsNull() const { return nPrecision == 9; }
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
