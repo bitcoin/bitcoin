@@ -276,7 +276,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
     CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
         if (!asset.strPubData.empty())
-            entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
+            entry.__pushKV("public_value", asset.strPubData);
 
         if (!asset.vchContract.empty())
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));

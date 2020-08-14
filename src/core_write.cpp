@@ -137,10 +137,10 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
     if (!asset.strSymbol.empty())
-		entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
+		entry.__pushKV("symbol", asset.strSymbol);
 
 	if (!asset.strPubData.empty())
-		entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
+		entry.__pushKV("public_value", asset.strPubData);
 
 	if (!asset.vchContract.empty())
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
