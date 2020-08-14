@@ -175,7 +175,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
             SetNull();
             return;
         }
-        vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), auxFeeArr[1].get_str());
+        vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), auxFeeArr[1].get_str()));
     }
 }
 
