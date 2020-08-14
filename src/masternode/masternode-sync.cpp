@@ -163,7 +163,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // they are temporary and should be considered unreliable for a sync process.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if(pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
+        if(pnode->fMasternode || (fMasternodeMode && pnode->IsInboundConn())) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if(fRegTest)
@@ -208,7 +208,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             // INITIAL TIMEOUT
 
             if(nCurrentAsset == MASTERNODE_SYNC_WAITING) {
-                if(!pnode->fInbound && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
+                if(!pnode->IsInboundConn() && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
                     netfulfilledman.AddFulfilledRequest(pnode->addr, "mempool-sync");
                     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MEMPOOL));
                     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());

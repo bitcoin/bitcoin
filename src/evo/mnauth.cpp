@@ -38,7 +38,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
         if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
             nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
         }
-        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound, nOurNodeVersion));
+        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->IsInboundConn(), nOurNodeVersion));
         
     }
 
@@ -108,7 +108,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         {
             LOCK(pnode->cs_mnauth);
             // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
-            signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->fInbound, pnode->nVersion.load()));
+            signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->IsInboundConn(), pnode->nVersion.load()));
             
             LogPrint(BCLog::NET, "CMNAuth::%s -- constructed signHash for nVersion %d, peer=%d\n", __func__, pnode->nVersion, pnode->GetId());
         }
@@ -121,7 +121,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             return;
         }
 
-        if (!pnode->fInbound) {
+        if (!pnode->IsInboundConn()) {
             mmetaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetAdjustedTime());
             if (pnode->fMasternodeProbe) {
                 LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
@@ -143,18 +143,18 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
                     LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
                              mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), pnode->GetId());
                     if (deterministicOutbound == activeMasternodeInfo.proTxHash) {
-                        if (pnode2->fInbound) {
+                        if (pnode2->IsInboundConn()) {
                             LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping old inbound, peer=%d\n", pnode2->GetId());
                             pnode2->fDisconnect = true;
-                        } else if (pnode->fInbound) {
+                        } else if (pnode->IsInboundConn()) {
                             LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping new inbound, peer=%d\n", pnode->GetId());
                             pnode->fDisconnect = true;
                         }
                     } else {
-                        if (!pnode2->fInbound) {
+                        if (!pnode2->IsInboundConn()) {
                             LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping old outbound, peer=%d\n", pnode2->GetId());
                             pnode2->fDisconnect = true;
-                        } else if (!pnode->fInbound) {
+                        } else if (!pnode->IsInboundConn()) {
                             LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping new outbound, peer=%d\n", pnode->GetId());
                             pnode->fDisconnect = true;
                         }

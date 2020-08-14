@@ -998,7 +998,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // they stay connected for a short period of time and it's possible that we won't get everything we should.
             // Only use outbound connections - inbound connection could be a "masternode" connection
             // initiated from another node, so skip it too.
-            if (pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
+            if (pnode->fMasternode || (fMasternodeMode && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
             {
                 LOCK(cs_main);
