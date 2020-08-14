@@ -40,7 +40,7 @@ class AssetNotaryTest(SyscoinTestFramework):
     def basic_asset(self):
         self.notary_address = self.nodes[0].getnewaddress()
         notary = {'e': 'https://jsonplaceholder.typicode.com/posts/', 'it': True, 'rx': True}
-        self.asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000, 10000, 31, self.notary_address, notary, {})['asset_guid']
+        self.asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 1000, 10000, 127, self.notary_address, notary, {})['asset_guid']
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
@@ -56,12 +56,12 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.notary_address2 = self.nodes[2].getnewaddress()
         self.notary_address3 = self.nodes[3].getnewaddress()
         self.notary_address4 = self.nodes[4].getnewaddress()
-        self.asset0 = self.nodes[0].assetnew('1', 'TST0', 'asset description', '0x', 8, 1000, 10000, 31, self.notary_address0, notary, {})['asset_guid']
-        self.asset1 = self.nodes[0].assetnew('1', 'TST1', 'asset description', '0x', 8, 1000, 10000, 31, self.notary_address1, notary, {})['asset_guid']
-        self.asset2 = self.nodes[0].assetnew('1', 'TST2', 'asset description', '0x', 8, 1000, 10000, 31, self.notary_address2, notary, {})['asset_guid']
-        self.asset3 = self.nodes[0].assetnew('1', 'TST3', 'asset description', '0x', 8, 1000, 10000, 31, self.notary_address3, notary, {})['asset_guid']
-        self.asset4 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 1000, 10000, 31, self.notary_address4, notary, {})['asset_guid']
-        self.asset5 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 1000, 10000, 31, '', {}, {})['asset_guid']
+        self.asset0 = self.nodes[0].assetnew('1', 'TST0', 'asset description', '0x', 8, 1000, 10000, 127, self.notary_address0, notary, {})['asset_guid']
+        self.asset1 = self.nodes[0].assetnew('1', 'TST1', 'asset description', '0x', 8, 1000, 10000, 127, self.notary_address1, notary, {})['asset_guid']
+        self.asset2 = self.nodes[0].assetnew('1', 'TST2', 'asset description', '0x', 8, 1000, 10000, 127, self.notary_address2, notary, {})['asset_guid']
+        self.asset3 = self.nodes[0].assetnew('1', 'TST3', 'asset description', '0x', 8, 1000, 10000, 127, self.notary_address3, notary, {})['asset_guid']
+        self.asset4 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 1000, 10000, 127, self.notary_address4, notary, {})['asset_guid']
+        self.asset5 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 1000, 10000, 127, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset0, self.nodes[0].getnewaddress(), 1)
         self.nodes[0].assetsend(self.asset1, self.nodes[0].getnewaddress(), 2)

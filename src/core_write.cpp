@@ -137,10 +137,10 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
     if (!asset.strSymbol.empty())
-		entry.__pushKV("symbol", asset.strSymbol);
+		entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
 
 	if (!asset.strPubData.empty())
-		entry.__pushKV("public_value", asset.strPubData);
+		entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
 
 	if (!asset.vchContract.empty())
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
@@ -148,6 +148,14 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     if (!asset.vchNotaryKeyID.empty())
 		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchNotaryKeyID)))));
 
+    if (!asset.vchAuxFeeKeyID.empty())
+		entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchAuxFeeKeyID)))));
+
+    if (!asset.auxFeeDetails.IsNull())
+		entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
+
+    if (!asset.notaryDetails.IsNull())
+		entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
 
 	if (asset.nUpdateFlags > 0)
 		entry.__pushKV("update_flags", asset.nUpdateFlags);

@@ -76,9 +76,9 @@ class AssetBurnTest(SyscoinTestFramework):
 
     def basic_asset(self, guid):
         if guid is None:
-            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 31, '', {}, {})['asset_guid']
+            self.asset = self.nodes[0].assetnew('1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 127, '', {}, {})['asset_guid']
         else:
-            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 31, '', {}, {})['asset_guid']
+            self.asset = self.nodes[0].assetnewtest(guid, '1', "TST", "asset description", "0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46", 8, 1000, 10000, 127, '', {}, {})['asset_guid']
 
 
 if __name__ == '__main__':
