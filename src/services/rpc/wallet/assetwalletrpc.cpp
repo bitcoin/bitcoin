@@ -252,13 +252,13 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
 
         if (!asset.vchNotaryKeyID.empty())
-            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchNotaryKeyID)))));
+            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160(asset.vchNotaryKeyID}))));
 
         if (!asset.notaryDetails.IsNull())
             entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
 
         if (!asset.vchAuxFeeKeyID.empty())
-            entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchAuxFeeKeyID)))));
+            entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160(asset.vchAuxFeeKeyID}))));
 
         if (!asset.auxFeeDetails.IsNull())
             entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
@@ -1371,7 +1371,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                  throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
             }
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
-            const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(theAsset.vchAuxFeeKeyID)))));
+            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.vchAuxFeeKeyID}));
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
