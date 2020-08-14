@@ -123,7 +123,11 @@ struct CSerializedNetMsg
     std::vector<unsigned char> data;
     std::string m_type;
 };
-
+// SYSCOIN
+struct CAllNodes {
+    bool operator() (const CNode*) const {return true;}
+};
+static constexpr CAllNodes AllNodes{};
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
  * connection. Aside from INBOUND, all types are initiated by us. */
