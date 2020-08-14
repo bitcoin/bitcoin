@@ -102,7 +102,7 @@ public:
         );
     }
 
-    inline friend bool operator!=(const CAsset &a, const CAsset &b) {
+    inline friend bool operator!=(const CNotaryDetails &a, const CNotaryDetails &b) {
         return !(a == b);
     }
     inline CNotaryDetails& operator=( const CNotaryDetails& rhs) {
