@@ -33,8 +33,8 @@ CAmount getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount) {
     CAmount nNextBoundAmount = 0;
     double nRate = 0;
     for(unsigned int i =0;i<auxFeeDetails.vecAuxFees.size();i++){
-        const CAuxFee &fee = auxFees[i];
-        const CAuxFee &feeNext = auxFees[i < auxFees.size()-1? i+1:i];  
+        const CAuxFee &fee = auxFeeDetails.vecAuxFees[i];
+        const CAuxFee &feeNext = auxFeeDetails.vecAuxFees[i < auxFeeDetails.vecAuxFees.size()-1? i+1:i];  
         nBoundAmount = fee.nBound;
         nNextBoundAmount = feeNext.nBound;
         if(!ParseDouble(fee.strPercent, &nRate))
@@ -963,7 +963,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     const std::vector<unsigned char> vchOldNotaryKeyID(theAsset.vchNotaryKeyID);
     const std::vector<unsigned char> vchOldAuxFeeKeyID(theAsset.vchAuxFeeKeyID);
     const CNotaryDetails oldNotaryDetails = theAsset.notaryDetails;
-    const CAuxFeeDetails oldAuxFeeDetails = theAsset.auxfeeDetails;
+    const CAuxFeeDetails oldAuxFeeDetails = theAsset.auxFeeDetails;
     theAsset.ClearAsset();
     CAmount nBalance;
     try{
@@ -1371,7 +1371,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                  throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
             }
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
-            const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(WitnessV0KeyHash(theAsset.vchAuxFeeKeyID)));
+            const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(WitnessV0KeyHash(uint160(theAsset.vchAuxFeeKeyID))));
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
