@@ -261,13 +261,11 @@ CRPCTable::CRPCTable()
     }
 }
 
-bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
+void CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
 {
-    if (IsRPCRunning())
-        return false;
+    CHECK_NONFATAL(!IsRPCRunning()); // Only add commands before rpc is running
 
     mapCommands[name].push_back(pcmd);
-    return true;
 }
 
 bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)

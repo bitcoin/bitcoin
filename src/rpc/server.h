@@ -160,7 +160,7 @@ public:
     /**
      * Appends a CRPCCommand to the dispatch table.
      *
-     * Returns false if RPC server is already running (dump concurrency protection).
+     * Precondition: RPC server is not running
      *
      * Commands with different method names but the same unique_id will
      * be considered aliases, and only the first registered method name will
@@ -169,7 +169,7 @@ public:
      * between calls based on method name, and aliased commands can also
      * register different names, types, and numbers of parameters.
      */
-    bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
+    void appendCommand(const std::string& name, const CRPCCommand* pcmd);
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
 };
 
