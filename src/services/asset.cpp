@@ -152,7 +152,7 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
     return true;
 }
 
-CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint_8 &nPrecision){
+CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision){
     if(!value.isObject()) {
         SetNull();
         return;
@@ -184,7 +184,7 @@ UniValue CAuxFeeDetails::ToJson() const {
     for(const auto& auxfee: vecAuxFees) {
         UniValue auxfeeArr(UniValue::VARR);
         auxfeeArr.push_back(auxfee.nBound);
-        auxfeeArr.push_back(auxfee.strPrecision);
+        auxfeeArr.push_back(auxfee.strPercentage);
         feeStruct.push_back(auxfeeArr);
     }
     value.pushKV("fee_struct", feeStruct);
