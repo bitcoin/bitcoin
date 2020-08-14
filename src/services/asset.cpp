@@ -150,3 +150,75 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
     }
     return true;
 }
+
+CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint_8 &nPrecision){
+    if(!value.isObject()) {
+        SetNull();
+        return;
+    }
+    const UniValue& arrObj = find_value(value.get_obj(), "fee_struct");
+    if(!arrObj.isArray()) {
+        SetNull();
+        return;
+    }
+    const UniValue& arr = arrObj.get_array();
+    for (size_t i = 0; i < arr.size(); ++i) {
+        const UniValue& auxFeeObj = arr[i];
+        if(!auxFeeObj.isArray()) {
+            SetNull();
+            return;
+        }
+        const UniValue& auxFeeArr = auxFeeObj.get_array();
+        if(auxFeeArr.size() != 2 || (!auxFeeArr[0].isNum() && !auxFeeArr[0].isStr())) || !auxFeeArr[1].isStr()) {
+            SetNull();
+            return;
+        }
+        vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), auxFeeArr[1].get_str());
+    }
+}
+
+UniValue CAuxFeeDetails::ToJson() const {
+    UniValue value(UniValue::VOBJ);
+    UniValue feeStruct(UniValue::VARR);
+    for(const auto& auxfee: vecAuxFees) {
+        UniValue auxfeeArr(UniValue::VARR);
+        auxfeeArr.push_back(auxfee.nBound);
+        auxfeeArr.push_back(auxfee.strPrecision);
+        feeStruct.push_back(auxfeeArr);
+    }
+    value.pushKV("fee_struct", feeStruct);
+    return value;
+}
+
+CNotaryDetails::CNotaryDetails(const UniValue& value){
+    if(!value.isObject()) {
+        SetNull();
+        return;
+    }
+    const UniValue& endpointObj = find_value(value.get_obj(), "endpoint");
+    if(!endpointObj.isStr()) {
+        SetNull();
+        return;
+    }
+    strEndPoint = EncodeBase64(endpointObj.get_str());
+    const UniValue& isObj = find_value(value.get_obj(), "instant_transfers");
+    if(!isObj.isBool()) {
+        SetNull();
+        return;
+    }  
+    bEnableInstantTransfers = isObj.get_bool();
+    const UniValue& hdObj = find_value(value.get_obj(), "hd_required");
+    if(!hdObj.isBool()) {
+        SetNull();
+        return;
+    }   
+    bRequireHD = hdObj.get_bool(); 
+}
+
+UniValue CNotaryDetails::ToJson() const {
+    UniValue value(UniValue::VOBJ);
+    value.pushKV("endpoint", DecodeBase64(strEndPoint));
+    value.pushKV("instant_transfers", bEnableInstantTransfers);
+    value.pushKV("hd_required", bRequireHD);
+    return value;
+}

@@ -68,7 +68,7 @@ class AssetMintTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'mint-too-old', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
     
     def basic_asset(self):
-        self.nodes[0].assetnewtest(self.asset, '1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, 1000, 10000, 31, '', {}, {})
+        self.nodes[0].assetnewtest(self.asset, '1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, 1000, 10000, 127, '', {}, {})
 
 if __name__ == '__main__':
     AssetMintTest().main()
