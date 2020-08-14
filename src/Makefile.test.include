@@ -1221,7 +1221,7 @@ nodist_test_test_syscoin_SOURCES = $(GENERATED_TEST_FILES)
 
 $(SYSCOIN_TESTS): $(GENERATED_TEST_FILES)
 
-CLEAN_SYSCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno $(GENERATED_TEST_FILES) $(SYSCOIN_TESTS:=.log)
+CLEAN_SYSCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(SYSCOIN_TESTS:=.log)
 
 CLEANFILES += $(CLEAN_SYSCOIN_TEST)
 
