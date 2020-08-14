@@ -2685,7 +2685,7 @@ void ProcessMessage(
         if (!vRecv.empty()) {
             bool fOtherMasternode = false;
             vRecv >> fOtherMasternode;
-            if (pfrom.fInbound) {
+            if (pfrom.IsInboundConn()) {
                 pfrom.fMasternode = fOtherMasternode;
                 if (fOtherMasternode) {
                     LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom.GetId());
