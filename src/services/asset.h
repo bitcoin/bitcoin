@@ -115,7 +115,7 @@ public:
     inline bool IsNull() const { return strEndPoint.empty(); }
     UniValue ToJson() const;
 };
-public:
+
 class CAsset: public CAssetAllocation {
 public:
     std::vector<unsigned char> vchContract;
