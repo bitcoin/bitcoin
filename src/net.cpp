@@ -2069,7 +2069,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         ForEachNode([&](const CNode* pnode) {
             connectedNodes.emplace(pnode->addr);
             if (!pnode->verifiedProRegTxHash.IsNull()) {
-                connectedProRegTxHashes.emplace(pnode->verifiedProRegTxHash, pnode->fInbound);
+                connectedProRegTxHashes.emplace(pnode->verifiedProRegTxHash, pnode->IsInboundConn());
             }
         });
 
@@ -2899,7 +2899,7 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
     // Let's see if this is an outgoing connection to an address that is known to be a masternode
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
-    if (pnode->verifiedProRegTxHash.IsNull() && !pnode->fInbound) {
+    if (pnode->verifiedProRegTxHash.IsNull() && !pnode->IsInboundConn()) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
