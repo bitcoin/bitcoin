@@ -146,10 +146,10 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
     
     if (!asset.vchNotaryKeyID.empty())
-		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchNotaryKeyID)))));
+		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
 
     if (!asset.vchAuxFeeKeyID.empty())
-		entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(CKeyID(uint160(asset.vchAuxFeeKeyID)))));
+		entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID}))));
 
     if (!asset.auxFeeDetails.IsNull())
 		entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
