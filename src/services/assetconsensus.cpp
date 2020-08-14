@@ -600,7 +600,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!storedAssetRef.vchPrevAuxFeeKeyID.empty() || storedAssetRef.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
             }  
-            if (!storedAssetRef.prevAuxFeeDetails.IsNull() || storedAssetRef.auxFeeDetails.size() > MAX_AUXFEES) {
+            if (!storedAssetRef.prevAuxFeeDetails.IsNull() || storedAssetRef.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
                 return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
             }          
             if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
@@ -637,7 +637,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.vchNotaryKeyID.empty() && theAsset.vchNotaryKeyID.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
             } 
-            if (!theAsset.vchAuxFeeyKeyID.empty() && theAsset.vchAuxFeeyKeyID.size() != MAX_GUID_LENGTH) {
+            if (!theAsset.vchAuxFeeKeyID.empty() && theAsset.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
             } 
             if (storedAssetRef.strPubData.size() > MAX_VALUE_LENGTH) {
@@ -661,7 +661,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH) {
                  return FormatSyscoinErrorMessage(state, "asset-invalid-notaryendpoint", bSanityCheck);
             }
-            if (theAsset.auxFeeDetails.size() > MAX_AUXFEES) {
+            if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
                  return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
             }
             // increase total supply
