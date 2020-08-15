@@ -163,7 +163,7 @@ public:
         READWRITE(obj.nPrecision, obj.strSymbol, obj.nUpdateMask);
         if(obj.nUpdateMask & ASSET_UPDATE_CONTRACT) {
             READWRITE(obj.vchContract);
-            READWRITE(obj.obj.vchPrevContract);
+            READWRITE(obj.vchPrevContract);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_DATA) {
             READWRITE(obj.strPubData);
