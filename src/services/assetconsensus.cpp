@@ -597,10 +597,10 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.prevNotaryDetails.IsNull() || (!theAsset.notaryDetails.IsNull() && theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH)) {
                  return FormatSyscoinErrorMessage(state, "asset-invalid-max-notaryendpoint", bSanityCheck);
             }
-            if (!storedAssetRef.vchPrevAuxFeeKeyID.empty() || storedAssetRef.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
+            if (!storedAssetRef.vchPrevAuxFeeKeyID.empty() || (!storedAssetRef.vchAuxFeeKeyID.empty() && storedAssetRef.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
             }  
-            if (!storedAssetRef.prevAuxFeeDetails.IsNull() || storedAssetRef.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
+            if (!storedAssetRef.prevAuxFeeDetails.IsNull() || (!storedAssetRef.auxFeeDetails.IsNull() && storedAssetRef.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES)) {
                 return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
             }          
             if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
