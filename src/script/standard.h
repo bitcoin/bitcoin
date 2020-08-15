@@ -263,14 +263,4 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 
-/**
- * Generate a pay-to-witness script for the given redeem script. If the redeem
- * script is P2PK or P2PKH, this returns a P2WPKH script, otherwise it returns a
- * P2WSH script.
- *
- * TODO: replace calls to GetScriptForWitness with GetScriptForDestination using
- * the various witness-specific CTxDestination subtypes.
- */
-CScript GetScriptForWitness(const CScript& redeemscript);
-
 #endif // BITCOIN_SCRIPT_STANDARD_H
