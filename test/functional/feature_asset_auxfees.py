@@ -26,7 +26,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         assert_equal(out[0]['asset_guid'], self.asset)
         assert_equal(out[0]['asset_amount'], 106000000)
         # remove aux fees
-        self.nodes[0].assetupdate(self.asset, '', '', 0, 127, '', {}, {})
+        self.nodes[0].assetupdate(self.asset, '', '', 0, 127, '', '', {}, {})
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 250)
