@@ -136,37 +136,38 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     }
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
-    if (!asset.strSymbol.empty())
+    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
 		entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
-
-	if (!asset.strPubData.empty())
-		entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
-
-	if (!asset.vchContract.empty())
-		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
-    
-    if (!asset.vchNotaryKeyID.empty())
-		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
-
-    if (!asset.vchAuxFeeKeyID.empty())
-		entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID})));
-
-    if (!asset.auxFeeDetails.IsNull())
-		entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
-
-    if (!asset.notaryDetails.IsNull())
-		entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
-
-	if (asset.nUpdateFlags > 0)
-		entry.__pushKV("update_flags", asset.nUpdateFlags);
-
-	if (asset.nBalance > 0)
-		entry.__pushKV("balance", asset.nBalance);
-
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
         entry.__pushKV("max_supply", asset.nMaxSupply);
 		entry.__pushKV("precision", asset.nPrecision);
-	}
+    }
+
+	if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
+		entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
+
+	if(theAsset.nUpdateMask & ASSET_UPDATE_CONTRACT) {
+		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
+    
+    if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
+
+    if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
+		entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID})));
+
+    if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+		entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
+
+    if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+		entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
+
+	if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+		entry.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
+
+	if(theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY) {
+		entry.__pushKV("balance", asset.nBalance);
+
+    entry.__pushKV("update_flags", asset.nUpdateMask);
+
     return true;
 }
 bool SysTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue& output) {
