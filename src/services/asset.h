@@ -101,12 +101,6 @@ public:
     inline friend bool operator!=(const CNotaryDetails &a, const CNotaryDetails &b) {
         return !(a == b);
     }
-    inline CNotaryDetails& operator=( const CNotaryDetails& rhs) {
-        strEndPoint = rhs.strEndPoint;
-        bEnableInstantTransfers = rhs.bEnableInstantTransfers;
-        bRequireHD = rhs.bRequireHD;
-        return *this;
-    }
     inline void SetNull() { strEndPoint.clear();  bEnableInstantTransfers = bRequireHD = false;}
     inline bool IsNull() const { return strEndPoint.empty(); }
     UniValue ToJson() const;
