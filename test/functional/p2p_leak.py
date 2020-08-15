@@ -64,13 +64,6 @@ class CLazyNode(P2PInterface):
     def on_blocktxn(self, message): self.bad_message(message)
 
 
-# Node that never sends a version. This one just sits idle and hopes to receive
-# any message (it shouldn't!)
-class CNodeNoVersionIdle(CLazyNode):
-    def __init__(self):
-        super().__init__()
-
-
 # Node that sends a version but not a verack.
 class CNodeNoVerackIdle(CLazyNode):
     def __init__(self):
@@ -105,7 +98,12 @@ class P2PLeakTest(BitcoinTestFramework):
         # from this node anyway and verify eventual disconnection.
         no_version_disconnect_node = self.nodes[0].add_p2p_connection(
             CLazyNode(), send_version=False, wait_for_verack=False)
-        no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False, wait_for_verack=False)
+
+        # Another peer that never sends a version. Just sits idle and hopes to receive
+        # any message (it shouldn't!)
+        no_version_idlenode = self.nodes[0].add_p2p_connection(CLazyNode(), send_version=False, wait_for_verack=False)
+
+        # Peer that sends a version but not a verack.
         no_verack_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVerackIdle(), wait_for_verack=False)
 
         # Send enough ping messages (any non-version message will do) prior to sending
@@ -113,7 +111,7 @@ class P2PLeakTest(BitcoinTestFramework):
         for _ in range(DISCOURAGEMENT_THRESHOLD):
             no_version_disconnect_node.send_message(msg_ping())
 
-        # Wait until we got the verack in response to the version. Though, don't wait for the other node to receive the
+        # Wait until we got the verack in response to the version. Though, don't wait for self.nodes[0] to receive the
         # verack, since we never sent one
         no_verack_idlenode.wait_for_verack()
 
