@@ -1304,7 +1304,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, uint64_t> mapAssetTotals;
     std::vector<CAssetOutValue> vecOut;
-    bool bInstantTransferState = false;
+    bool bOverideRBF = false;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
@@ -1316,9 +1316,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-        // if RBF is disabled we want to see if we override it if notarization with instant transfers is defined for all assets being sent
-       if(!bInstantTransferState && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
-            bInstantTransferState = bInstantTransferState && theAsset.notaryDetails.bEnableInstantTransfers ;
+       // override RBF if one notarized asset has it enabled
+       if(!bOverideRBF && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
+            bOverideRBF = theAsset.notaryDetails.bEnableInstantTransfers
         }
 
         const std::string &toStr = find_value(receiverObj, "address").get_str();
@@ -1347,7 +1347,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	        
     }
     // if all instant transfers using notary, we use RBF
-    if(bInstantTransferState) {
+    if(bOverideRBF) {
         // only override if parameter was not provided by user
         if(request.params[1].isNull())
             m_signal_bip125_rbf = true;
