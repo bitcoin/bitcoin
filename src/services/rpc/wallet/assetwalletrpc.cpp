@@ -285,7 +285,7 @@ bool AssetAllocationWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetI
     if(!AllocationWtxToJson(wtx, assetInfo, strCategory, entry))
         return false;
     if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-         CBurnSyscoin burnSyscoin(*wtx.tx);
+         CBurnSyscoin burnSyscoin (*wtx.tx);
          if (!burnSyscoin.IsNull()) {
             CAsset dbAsset;
             GetAsset(assetInfo.nAsset, dbAsset);
