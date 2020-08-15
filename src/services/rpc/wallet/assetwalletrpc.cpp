@@ -1316,9 +1316,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-       // override RBF if one notarized asset has it enabled
-       if(!bOverideRBF && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
-            bOverideRBF = theAsset.notaryDetails.bEnableInstantTransfers
+        // override RBF if one notarized asset has it enabled
+        if(!bOverideRBF && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
+            bOverideRBF = theAsset.notaryDetails.bEnableInstantTransfers;
         }
 
         const std::string &toStr = find_value(receiverObj, "address").get_str();
