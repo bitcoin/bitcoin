@@ -32,9 +32,9 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], asset)
 
     def asset_description_too_big(self):
-        # 760 + 8 byte overhead for pub data descriptor and json = 768 bytes long (512 bytes base64 encoded)
-        gooddata = "SfsddfsdffsdfdfsdsfDsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsdsffsdfdfsdsdfdfsdfdfsdfdfsd"
-        # 768 bytes long + 1 (base64 encoded should be more than 1024 bytes)
+        # 373 + 11 byte overhead for pub data descriptor and json = 384 bytes long (512 bytes limit base64 encoded)
+        gooddata = "SfsddfsdffsdfdfsdsfdsddsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsdsffsdfdfsdsdfdfsdfdfsdfdfsd"
+        # 384 bytes long + 1 (base64 encoded should be more than 1024 bytes)
         baddata = gooddata + "a"
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000, 10000, 127, '', '', {}, {})['asset_guid']
         asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1000, 10000, 127, '', '', {}, {})['asset_guid']
@@ -60,12 +60,12 @@ class AssetTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
 
     def asset_maxsupply(self):
-        # 494 bytes long (512 with overhead)
-        gooddata = "SfsddfdfsdsdffsdfdfsdsfDsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdssfsddSfdddssfsddSfdddSfddas"
+        # 373 bytes long (512 with overhead)
+        gooddata = "SfsddfsdffsdfdfsdsfdsddsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsdsffsdfdfsdsdfdfsdfdfsdfdfsd"
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1, 1, 127, '', '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         # cannot increase supply
-        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', 0.1, 127, '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetupdate, asset, '', '', 0.1, 127, '', '', {}, {})
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 1, 2, 127, '', '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.nodes[0].assetupdate(asset, '', '', 0.1, 127, '', '', {}, {})
