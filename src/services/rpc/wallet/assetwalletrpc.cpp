@@ -661,7 +661,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     CAsset newAsset;
 
     UniValue publicData(UniValue::VOBJ);
-    publicData.pushKV("description", strPubData);
+    publicData.pushKV("desc", strPubData);
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
     newAsset.strSymbol = EncodeBase64(strSymbol);
@@ -973,7 +973,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         nBalance = params[3].get_int64();
     }
     UniValue publicData(UniValue::VOBJ);
-    publicData.pushKV("description", strPubData);
+    publicData.pushKV("desc", strPubData);
     std::string strNotary = params[5].get_str();
     std::vector<unsigned char> vchNotaryKeyID;
     if(!strNotary.empty()) {
