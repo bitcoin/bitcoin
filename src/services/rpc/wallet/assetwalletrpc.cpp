@@ -1027,7 +1027,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 
     if(vchAuxFeeKeyID != vchOldAuxFeeKeyID) {
         theAsset.vchPrevAuxFeeKeyID = vchOldAuxFeeKeyID;
-        theAsset.vchNotaryKeyID = vchAuxFeeKeyID;
+        theAsset.vchAuxFeeKeyID = vchAuxFeeKeyID;
     }
 
     if(auxFeeDetails != oldAuxFeeDetails) {
