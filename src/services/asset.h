@@ -54,11 +54,6 @@ public:
     inline friend bool operator!=(const CAuxFee &a, const CAuxFee &b) {
         return !(a == b);
     }
-    inline CAuxFee& operator=( const CAuxFee& rhs) {
-        nBound = rhs.nBound;
-        strPercent = rhs.strPercent;
-        return *this;
-    }
     inline void SetNull() { strPercent.clear();  nBound = 0;}
     inline bool IsNull() const { return (strPercent.empty() && nBound == 0); }
 };
