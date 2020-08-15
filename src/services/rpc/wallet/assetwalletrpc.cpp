@@ -245,7 +245,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         return false;
     CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
-        if (wtx->tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+        if (wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
             entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
             entry.__pushKV("max_supply", asset.nMaxSupply);
             entry.__pushKV("precision", asset.nPrecision);
