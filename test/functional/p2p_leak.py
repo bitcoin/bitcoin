@@ -15,7 +15,6 @@ import time
 from test_framework.messages import (
     msg_getaddr,
     msg_ping,
-    msg_verack,
     msg_version,
 )
 from test_framework.mininode import mininode_lock, P2PInterface
@@ -42,6 +41,7 @@ class CLazyNode(P2PInterface):
     def on_open(self):
         self.ever_connected = True
 
+    # Does not respond to "version" with "verack"
     def on_version(self, message): self.bad_message(message)
     def on_verack(self, message): self.bad_message(message)
     def on_inv(self, message): self.bad_message(message)
@@ -62,12 +62,6 @@ class CLazyNode(P2PInterface):
     def on_cmpctblock(self, message): self.bad_message(message)
     def on_getblocktxn(self, message): self.bad_message(message)
     def on_blocktxn(self, message): self.bad_message(message)
-
-
-# Node that never sends a version. We'll use this to send a bunch of messages
-# anyway, and eventually get disconnected.
-class CNodeNoVersionMisbehavior(CLazyNode):
-    pass
 
 
 # Node that never sends a version. This one just sits idle and hopes to receive
@@ -97,6 +91,7 @@ class P2PVersionStore(P2PInterface):
     version_received = None
 
     def on_version(self, msg):
+        # Responds with an appropriate verack
         super().on_version(msg)
         self.version_received = msg
 
@@ -106,15 +101,17 @@ class P2PLeakTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
+        # Peer that never sends a version. We will send a bunch of messages
+        # from this node anyway and verify eventual disconnection.
         no_version_disconnect_node = self.nodes[0].add_p2p_connection(
-            CNodeNoVersionMisbehavior(), send_version=False, wait_for_verack=False)
+            CLazyNode(), send_version=False, wait_for_verack=False)
         no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False, wait_for_verack=False)
         no_verack_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVerackIdle(), wait_for_verack=False)
 
-        # Send enough veracks without a message to reach the peer discouragement
-        # threshold. This should get us disconnected.
+        # Send enough ping messages (any non-version message will do) prior to sending
+        # version to reach the peer discouragement threshold. This should get us disconnected.
         for _ in range(DISCOURAGEMENT_THRESHOLD):
-            no_version_disconnect_node.send_message(msg_verack())
+            no_version_disconnect_node.send_message(msg_ping())
 
         # Wait until we got the verack in response to the version. Though, don't wait for the other node to receive the
         # verack, since we never sent one
@@ -125,7 +122,7 @@ class P2PLeakTest(BitcoinTestFramework):
         wait_until(lambda: no_verack_idlenode.version_received, timeout=10, lock=mininode_lock)
 
         # Mine a block and make sure that it's not sent to the connected nodes
-        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
+        self.nodes[0].generate(nblocks=1)
 
         #Give the node enough time to possibly leak out a message
         time.sleep(5)
