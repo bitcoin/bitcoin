@@ -799,7 +799,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
     }.Check(request);
     UniValue paramsFund(UniValue::VARR);
     nCustomAssetGuid = params[0].get_uint();
-    for(int i = 1;i<=11;i++)
+    for(int i = 1;i<=12;i++)
         paramsFund.push_back(params[i]);
     JSONRPCRequest assetNewRequest(request.context);
     assetNewRequest.params = paramsFund;
