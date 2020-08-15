@@ -349,21 +349,16 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
     result = GetScriptForMultisig(2, std::vector<CPubKey>(pubkeys, pubkeys + 3));
     BOOST_CHECK(result == expected);
 
-    // GetScriptForWitness
-    CScript witnessScript;
-
-    witnessScript << ToByteVector(pubkeys[0]) << OP_CHECKSIG;
+    // WitnessV0KeyHash
     expected.clear();
     expected << OP_0 << ToByteVector(pubkeys[0].GetID());
-    result = GetScriptForWitness(witnessScript);
+    result = GetScriptForDestination(WitnessV0KeyHash(Hash160(ToByteVector(pubkeys[0]))));
+    BOOST_CHECK(result == expected);
+    result = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0].GetID()));
     BOOST_CHECK(result == expected);
 
-    witnessScript.clear();
-    witnessScript << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-    result = GetScriptForWitness(witnessScript);
-    BOOST_CHECK(result == expected);
-
-    witnessScript.clear();
+    // WitnessV0ScriptHash (multisig)
+    CScript witnessScript;
     witnessScript << OP_1 << ToByteVector(pubkeys[0]) << OP_1 << OP_CHECKMULTISIG;
 
     uint256 scriptHash;
@@ -372,7 +367,7 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
 
     expected.clear();
     expected << OP_0 << ToByteVector(scriptHash);
-    result = GetScriptForWitness(witnessScript);
+    result = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
     BOOST_CHECK(result == expected);
 }
 

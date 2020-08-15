@@ -313,18 +313,6 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
-CScript GetScriptForWitness(const CScript& redeemscript)
-{
-    std::vector<std::vector<unsigned char> > vSolutions;
-    TxoutType typ = Solver(redeemscript, vSolutions);
-    if (typ == TxoutType::PUBKEY) {
-        return GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0])));
-    } else if (typ == TxoutType::PUBKEYHASH) {
-        return GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
-    }
-    return GetScriptForDestination(WitnessV0ScriptHash(redeemscript));
-}
-
 bool IsValidDestination(const CTxDestination& dest) {
     return dest.which() != 0;
 }
