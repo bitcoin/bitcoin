@@ -245,34 +245,37 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         return false;
     CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
-        if (!asset.strPubData.empty())
-            entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
-
-        if (!asset.vchContract.empty())
-            entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
-
-        if (!asset.vchNotaryKeyID.empty())
-            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
-
-        if (!asset.notaryDetails.IsNull())
-            entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
-
-        if (!asset.vchAuxFeeKeyID.empty())
-            entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID})));
-
-        if (!asset.auxFeeDetails.IsNull())
-            entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
-
-        if (asset.nUpdateFlags > 0)
-            entry.__pushKV("update_flags", asset.nUpdateFlags);
-
-        if (asset.nBalance > 0)
-            entry.__pushKV("balance", asset.nBalance);
-
-        if (wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+        if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+            entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
             entry.__pushKV("max_supply", asset.nMaxSupply);
             entry.__pushKV("precision", asset.nPrecision);
-        } 
+        }
+
+        if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
+            entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
+
+        if(theAsset.nUpdateMask & ASSET_UPDATE_CONTRACT) {
+            entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
+        
+        if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
+
+        if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
+            entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID})));
+
+        if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+            entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
+
+        if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+            entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
+
+        if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+            entry.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
+
+        if(theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY) {
+            entry.__pushKV("balance", asset.nBalance);
+
+        entry.__pushKV("update_flags", asset.nUpdateMask);
     }
     return true;
 }
@@ -549,7 +552,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -625,7 +628,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     catch(...) {
         nMaxSupply = params[6].get_int64();
     }
-    uint32_t nUpdateFlags = params[7].get_uint();
+    uint32_t nUpdateCapabilityFlags = params[7].get_uint();
     std::string strNotary = params[8].get_str();
     std::vector<unsigned char> vchNotaryKeyID;
     if(!strNotary.empty()) {
@@ -662,21 +665,42 @@ UniValue assetnew(const JSONRPCRequest& request) {
 
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("desc", strPubData);
+    uint8_t nUpdateMask = ASSET_UPDATE_SUPPLY | ASSET_UPDATE_CAPABILITYFLAGS;
+    const std::string &strPubDataField  = publicData.write();
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
     newAsset.strSymbol = EncodeBase64(strSymbol);
-    newAsset.strPubData = EncodeBase64(publicData.write());
-    newAsset.vchContract = ParseHex(strContract);
-    newAsset.vchNotaryKeyID = vchNotaryKeyID;
-    newAsset.vchAuxFeeKeyID = vchAuxFeeKeyID;
-    newAsset.notaryDetails = notaryDetails;
-    newAsset.auxFeeDetails = auxFeeDetails;
+    if(!strPubDataField.empty()) {
+        nUpdateMask |= ASSET_UPDATE_DATA;
+        newAsset.strPubData = EncodeBase64(publicData.write());
+    }
+    if(!strContract.empty()) {
+        nUpdateMask |= ASSET_UPDATE_CONTRACT;
+        newAsset.vchContract = ParseHex(strContract);
+    }
+    if(!vchNotaryKeyID.empty()) {
+        nUpdateMask |= ASSET_UPDATE_NOTARY_KEY;
+        newAsset.vchNotaryKeyID = vchNotaryKeyID;
+    }
+    if(!vchAuxFeeKeyID.empty()) {
+        nUpdateMask |= ASSET_UPDATE_AUXFEE_KEY;
+        newAsset.vchAuxFeeKeyID = vchAuxFeeKeyID;
+    }
+    if(!notaryDetails.IsNull()) {
+        nUpdateMask |= ASSET_UPDATE_NOTARY_DETAILS;
+        newAsset.notaryDetails = notaryDetails;
+    }
+    if(!auxFeeDetails.IsNull()) {
+        nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
+        newAsset.auxFeeDetails = auxFeeDetails;
+    }
+    newAsset.nUpdateMask = nUpdateMask;
     newAsset.nBalance = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
-    newAsset.nUpdateFlags = nUpdateFlags;
+    newAsset.nUpdateCapabilityFlags = nUpdateCapabilityFlags;
     newAsset.nTotalSupply = 0;
-    newAsset.nPrevUpdateFlags = nUpdateFlags;
+    newAsset.nPrevUpdateCapabilityFlags = nUpdateCapabilityFlags;
     std::vector<unsigned char> data;
     newAsset.SerializeData(data);
     // use the script pub key to create the vecsend which sendmoney takes and puts it into vout
@@ -765,7 +789,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -899,7 +923,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
             {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
-            {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+            {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
             {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
             {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
             {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -951,7 +975,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if(!strContract.empty())
         boost::erase_all(strContract, "0x");  // strip 0x if exist
     std::vector<unsigned char> vchContract = ParseHex(strContract);
-    uint32_t nUpdateFlags = params[4].get_uint();
+    uint8_t nUpdateCapabilityFlags = (uint8_t)params[4].get_uint();
     
     CAsset theAsset;
 
@@ -964,6 +988,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     const std::vector<unsigned char> vchOldAuxFeeKeyID(theAsset.vchAuxFeeKeyID);
     const CNotaryDetails oldNotaryDetails = theAsset.notaryDetails;
     const CAuxFeeDetails oldAuxFeeDetails = theAsset.auxFeeDetails;
+    const uint8_t nOldUpdateCapabilityFlags = theAsset.nUpdateCapabilityFlags;
     theAsset.ClearAsset();
     CAmount nBalance;
     try{
@@ -1002,45 +1027,56 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address: Please use P2PWKH address.");
         }
     }
+    uint8_t nUpdateMask = 0;
     CNotaryDetails notaryDetails(params[7]);
     CAuxFeeDetails auxFeeDetails(params[8], theAsset.nPrecision);
     strPubData = publicData.write();
     if(strPubData != oldData) {
+        nUpdateMask |= ASSET_UPDATE_DATA;
         theAsset.strPrevPubData = EncodeBase64(oldData);
         theAsset.strPubData = EncodeBase64(strPubData);
     }
 
     if(vchContract != oldContract) {
+        nUpdateMask |= ASSET_UPDATE_CONTRACT;
         theAsset.vchPrevContract = oldContract;
         theAsset.vchContract = vchContract;
     }
 
     if(vchNotaryKeyID != vchOldNotaryKeyID) {
+        nUpdateMask |= ASSET_UPDATE_NOTARY_KEY;
         theAsset.vchPrevNotaryKeyID = vchOldNotaryKeyID;
         theAsset.vchNotaryKeyID = vchNotaryKeyID;
     }
 
     if(notaryDetails != oldNotaryDetails) {
+        nUpdateMask |= ASSET_UPDATE_NOTARY_DETAILS;
         theAsset.prevNotaryDetails = oldNotaryDetails;
         theAsset.notaryDetails = notaryDetails;
     }
 
     if(vchAuxFeeKeyID != vchOldAuxFeeKeyID) {
+        nUpdateMask |= ASSET_UPDATE_AUXFEE_KEY;
         theAsset.vchPrevAuxFeeKeyID = vchOldAuxFeeKeyID;
         theAsset.vchAuxFeeKeyID = vchAuxFeeKeyID;
     }
 
     if(auxFeeDetails != oldAuxFeeDetails) {
+        nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
         theAsset.prevAuxFeeDetails = oldAuxFeeDetails;
         theAsset.auxFeeDetails = auxFeeDetails;
     }
+    if(nBalance > 0) {
+        nUpdateMask |= ASSET_UPDATE_SUPPLY;
+        theAsset.nBalance = nBalance;
+    }
+    if(nUpdateCapabilityFlags != nOldUpdateCapabilityFlags) {
+        nUpdateMask |= ASSET_UPDATE_CAPABILITYFLAGS;
+        theAsset.nPrevUpdateCapabilityFlags = nOldUpdateCapabilityFlags;
+        theAsset.nUpdateCapabilityFlags = nUpdateCapabilityFlags;
+    }
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     theAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
-
-    theAsset.nBalance = nBalance;
-    theAsset.nPrevUpdateFlags = theAsset.nUpdateFlags;
-    theAsset.nUpdateFlags = nUpdateFlags;
-
     std::vector<unsigned char> data;
     theAsset.SerializeData(data);
     CScript scriptData;
@@ -1090,7 +1126,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
-    theAsset.nPrevUpdateFlags = theAsset.nUpdateFlags;
+    theAsset.nPrevUpdateCapabilityFlags = theAsset.nUpdateCapabilityFlags;
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     theAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
@@ -2072,9 +2108,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
-    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
+    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
+    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
+    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},

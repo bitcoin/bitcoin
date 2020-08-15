@@ -453,6 +453,10 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
         return false;
     }
+    // nothing was updated
+    if(theAsset.nUpdateMask == 0) {
+        return true;
+    }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
     #if __cplusplus > 201402 
@@ -471,7 +475,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         mapAsset->second = std::move(dbAsset);                    
     }
     CAsset& storedAssetRef = mapAsset->second;    
-    if(theAsset.nBalance > 0) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY) {
         if(theAsset.nBalance > storedAssetRef.nBalance || theAsset.nBalance > storedAssetRef.nTotalSupply) {
             LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld payload %lld\n",storedAssetRef.nBalance, storedAssetRef.nTotalSupply, theAsset.nBalance);
             return false;
@@ -482,26 +486,27 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     }
     // undo data fields from last update
     // if fields changed then undo them using prev fields
-    if(!theAsset.strPubData.empty()) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
         storedAssetRef.strPubData = theAsset.strPrevPubData;
     }
-    if(!theAsset.vchContract.empty()) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_CONTRACT) {
         storedAssetRef.vchContract = theAsset.vchPrevContract;
     }
-    if(!theAsset.vchNotaryKeyID.empty()) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
         storedAssetRef.vchNotaryKeyID = theAsset.vchPrevNotaryKeyID;
     }
-    if(!theAsset.notaryDetails.IsNull()) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
         storedAssetRef.notaryDetails = theAsset.prevNotaryDetails;
     }
-    if(!theAsset.vchAuxFeeKeyID.empty()) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
         storedAssetRef.vchAuxFeeKeyID = theAsset.vchPrevAuxFeeKeyID;
     }
-    if(!theAsset.auxFeeDetails.IsNull()) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
         storedAssetRef.auxFeeDetails = theAsset.prevAuxFeeDetails;
     }
-    // enforced to be equal or represent prev value on actual change of field
-    storedAssetRef.nUpdateFlags = theAsset.nPrevUpdateFlags;    
+    if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+        storedAssetRef.nUpdateCapabilityFlags = theAsset.nPrevUpdateCapabilityFlags;
+    }
     return true;  
 }
 
@@ -579,39 +584,76 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-too-low", bSanityCheck);
             }
-            if (!storedAssetRef.vchPrevContract.empty() || (!storedAssetRef.vchContract.empty() && storedAssetRef.vchContract.size() != MAX_GUID_LENGTH)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
-            }  
-            if (!storedAssetRef.vchPrevNotaryKeyID.empty() || (!storedAssetRef.vchNotaryKeyID.empty() && storedAssetRef.vchNotaryKeyID.size() != MAX_GUID_LENGTH)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-notary", bSanityCheck);
-            }  
             if (storedAssetRef.nPrecision > 8) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
-            if (!storedAssetRef.strPrevPubData.empty() || storedAssetRef.strPubData.size() > MAX_VALUE_LENGTH) {
-                return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
-            } 
             if (storedAssetRef.strSymbol.size() > MAX_SYMBOL_SIZE || storedAssetRef.strSymbol.size() < MIN_SYMBOL_SIZE) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
-            if (!theAsset.prevNotaryDetails.IsNull() || (!theAsset.notaryDetails.IsNull() && theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH)) {
-                 return FormatSyscoinErrorMessage(state, "asset-invalid-max-notaryendpoint", bSanityCheck);
+       
+            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_CONTRACT) {
+                if (storedAssetRef.vchContract.size() != MAX_GUID_LENGTH || !storedAssetRef.vchPrevContract.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
+                }
+            } else {
+                if (!storedAssetRef.vchContract.empty() || !storedAssetRef.vchPrevContract.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-empty-contract", bSanityCheck);
+                }   
             }
-            if (!storedAssetRef.vchPrevAuxFeeKeyID.empty() || (!storedAssetRef.vchAuxFeeKeyID.empty() && storedAssetRef.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
-            }  
-            if (!storedAssetRef.prevAuxFeeDetails.IsNull() || (!storedAssetRef.auxFeeDetails.IsNull() && storedAssetRef.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES)) {
-                return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
-            }          
-            if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
+            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_DATA) {
+                if (storedAssetRef.strPubData.size() > MAX_VALUE_LENGTH || !storedAssetRef.strPrevPubData.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
+                }
+            } else {
+                if (!storedAssetRef.strPubData.empty() || !storedAssetRef.strPrevPubData.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
+                }
+            }
+            if(!(storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY) || !(storedAssetRef.nUpdateMask & ASSET_UPDATE_FLAG)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-updatemask", bSanityCheck);
+            }
+            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+                if (storedAssetRef.vchNotaryKeyID.size() != MAX_GUID_LENGTH || !storedAssetRef.vchPrevNotaryKeyID.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-notary-key", bSanityCheck);
+                }  
+            } else {
+                if (!storedAssetRef.vchNotaryKeyID.empty() || !storedAssetRef.vchPrevNotaryKeyID.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-notary-key", bSanityCheck);
+                } 
+            }
+            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+                if (storedAssetRef.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH || !storedAssetRef.prevNotaryDetails.IsNull()) {
+                    return FormatSyscoinErrorMessage(state, "asset-notary-too-big", bSanityCheck);
+                }
+            } else {
+                if (!storedAssetRef.notaryDetails.IsNull() || !storedAssetRef.prevNotaryDetails.IsNull()) {
+                    return FormatSyscoinErrorMessage(state, "asset-notary-too-big", bSanityCheck);
+                }
+            }
+            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
+                if (storedAssetRef.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH || !storedAssetRef.vchPrevAuxFeeKeyID.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
+                }  
+            } else {
+                if (!storedAssetRef.vchAuxFeeKeyID.empty() || !storedAssetRef.vchPrevAuxFeeKeyID.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
+                } 
+            }
+            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+                if (storedAssetRef.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES || !storedAssetRef.prevAuxFeeDetails.IsNull()) {
+                    return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
+                }
+            } else {
+                if (!storedAssetRef.auxFeeDetails.IsNull() || !storedAssetRef.prevAuxFeeDetails.IsNull()) {
+                    return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
+                }
+            }
+            if (storedAssetRef.storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
             }
             if (!MoneyRangeAsset(storedAssetRef.nMaxSupply)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
-            if (storedAssetRef.nUpdateFlags > ASSET_UPDATE_ALL) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
-            } 
             if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning && nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
             }
@@ -631,27 +673,34 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
-            if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
-            }  
-            if (!theAsset.vchNotaryKeyID.empty() && theAsset.vchNotaryKeyID.size() != MAX_GUID_LENGTH) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-witness", bSanityCheck);
-            } 
-            if (!theAsset.vchAuxFeeKeyID.empty() && theAsset.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
-            } 
-            if (storedAssetRef.strPubData.size() > MAX_VALUE_LENGTH) {
-                return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
-            } 
-            if (theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
-            }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
-            }      
-            if (theAsset.nBalance > 0 && !(storedAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY)) {
-                return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
-            }          
+            } 
+
+            if(theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
+                }  
+                if(theAsset.nBalance <= 0) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-supply", bSanityCheck);
+                }   
+                // increase total supply
+                storedAssetRef.nTotalSupply += theAsset.nBalance;
+                storedAssetRef.nBalance += theAsset.nBalance;
+                if (!MoneyRangeAsset(storedAssetRef.nBalance) || !MoneyRangeAsset(theAsset.nBalance)) {
+                    return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
+                }
+                if (!MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
+                    return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
+                }
+                if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
+                }   
+            } else {
+                if(theAsset.nBalance != 0) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-supply", bSanityCheck);
+                }   
+            }
             if (theAsset.nTotalSupply != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
@@ -664,90 +713,107 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
                  return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
             }
-            // increase total supply
-            storedAssetRef.nTotalSupply += theAsset.nBalance;
-            storedAssetRef.nBalance += theAsset.nBalance;
-            if (!MoneyRangeAsset(storedAssetRef.nBalance) || !MoneyRangeAsset(theAsset.nBalance)) {
-                return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
-            }
-            if (!MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
-                return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
-            }
-            if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
-            }
-   
-            if (!theAsset.strPubData.empty()) {
-                if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_DATA)) {
+
+            if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_DATA)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-pubdata-privileges", bSanityCheck);
                 }
+                if (theAsset.strPubData.size() > MAX_VALUE_LENGTH) {
+                    return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
+                } 
                 // ensure prevdata is set to what db is now to be able to undo in disconnectblock
                 if(theAsset.strPrevPubData != storedAssetRef.strPubData) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
                 }
                 // replace db data with new data
                 storedAssetRef.strPubData = std::move(theAsset.strPubData);
+            } else {
+                if(!theAsset.strPrevPubData.empty() || !storedAssetRef.strPubData.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-data", bSanityCheck);
+                }
             }
                                         
-            if (!theAsset.vchContract.empty()) {
-                if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT)) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_CONTRACT) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CONTRACT)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-contract-privileges", bSanityCheck);
+                }
+                if (theAsset.vchContract.size() != MAX_GUID_LENGTH) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
                 }
                 if(theAsset.vchPrevContract != storedAssetRef.vchContract) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
                 }
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
+            } else {
+                if(!theAsset.vchContract.empty() || !storedAssetRef.vchPrevContract.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
+                }
             }
 
-            if (!theAsset.vchNotaryKeyID.empty()) {
-                if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_NOTARY)) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-notary-privileges", bSanityCheck);
+            if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_KEY)) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-notary-key-privileges", bSanityCheck);
                 }
                 if(theAsset.vchPrevNotaryKeyID != storedAssetRef.vchNotaryKeyID) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotary", bSanityCheck);
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotary-key", bSanityCheck);
                 }
                 storedAssetRef.vchNotaryKeyID = std::move(theAsset.vchNotaryKeyID);
+            } else {
+                if(!theAsset.vchNotaryKeyID.empty() || !storedAssetRef.vchPrevNotaryKeyID.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-notary-key", bSanityCheck);
+                }   
             }
 
-            if (!theAsset.notaryDetails.IsNull()) {
-                if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_NOTARY)) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-notarydetails-privileges", bSanityCheck);
+            if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_DETAILS)) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-notary-privileges", bSanityCheck);
                 }
-                if(theAsset.notaryDetails != storedAssetRef.prevNotaryDetails) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotarydetails", bSanityCheck);
+                if(theAsset.prevNotaryDetails != storedAssetRef.notaryDetails) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotary", bSanityCheck);
                 }
                 storedAssetRef.notaryDetails = std::move(theAsset.notaryDetails);
+            } else {
+                if(!theAsset.notaryDetails.IsNull() || !storedAssetRef.prevNotaryDetails.IsNull()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-notary", bSanityCheck);
+                }   
             }
 
-            if (!theAsset.vchAuxFeeKeyID.empty()) {
-                if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_NOTARY)) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE_KEY)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-auxfee-key-privileges", bSanityCheck);
                 }
                 if(theAsset.vchPrevAuxFeeKeyID != storedAssetRef.vchAuxFeeKeyID) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevauxfee-key", bSanityCheck);
                 }
                 storedAssetRef.vchAuxFeeKeyID = std::move(theAsset.vchAuxFeeKeyID);
+            } else {
+                if(!theAsset.vchAuxFeeKeyID.empty() || !storedAssetRef.vchPrevAuxFeeKeyID.empty()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
+                }   
             }
 
-            if (!theAsset.auxFeeDetails.IsNull()) {
-                if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_AUXFEES)) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE_DETAILS)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-auxfees-privileges", bSanityCheck);
                 }
                 if(theAsset.prevAuxFeeDetails != storedAssetRef.auxFeeDetails) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevauxfees", bSanityCheck);
                 }
                 storedAssetRef.auxFeeDetails = std::move(theAsset.auxFeeDetails);
+            } else {
+                if(!theAsset.auxFeeDetails.IsNull() || !storedAssetRef.prevAuxFeeDetails.IsNull()) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
+                }   
             }
-
-            if(theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
-            }
-            if (theAsset.nUpdateFlags != storedAssetRef.nUpdateFlags) {
-                if (theAsset.nUpdateFlags > 0 && !(storedAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CAPABILITYFLAGS)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-flags-privileges", bSanityCheck);
                 }
-                storedAssetRef.nUpdateFlags = std::move(theAsset.nUpdateFlags);
-            }  
+                if(theAsset.nPrevUpdateCapabilityFlags != storedAssetRef.nUpdateCapabilityFlags) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
+                }
+                storedAssetRef.nUpdateCapabilityFlags = std::move(theAsset.nUpdateCapabilityFlags);
+            }
         }         
         break;
             

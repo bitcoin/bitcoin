@@ -25,14 +25,14 @@ uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 std::string stringFromSyscoinTx(const int &nVersion);
 std::string assetFromTx(const int &nVersion);
 enum {
-    ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below
-    ASSET_UPDATE_DATA=2, // can you update public data field?
-    ASSET_UPDATE_CONTRACT=4, // can you update smart contract?
-    ASSET_UPDATE_SUPPLY=8, // can you update supply?
-    ASSET_UPDATE_NOTARY=16, // can you update notary?
-    ASSET_UPDATE_AUXFEES=32, // can you update aux fees?
-    ASSET_UPDATE_FLAGS=64, // can you update flags? if you would set permanently disable this one and admin flag as well
-    ASSET_UPDATE_ALL=127
+    ASSET_UPDATE_DATA=1, // can you update public data field?
+    ASSET_UPDATE_CONTRACT=2, // can you update smart contract?
+    ASSET_UPDATE_SUPPLY=4, // can you update supply?
+    ASSET_UPDATE_NOTARY_KEY=8, // can you update notary?
+    ASSET_UPDATE_NOTARY_DETAILS=16, // can you update notary details?
+    ASSET_UPDATE_AUXFEE_KEY=32, // can you update aux fees?
+    ASSET_UPDATE_AUXFEE_DETAILS=64, // can you update aux fees details?
+    ASSET_UPDATE_CAPABILITYFLAGS=128 // can you update capability flags?
 };
 class CAuxFee {
 public:
@@ -116,9 +116,9 @@ public:
     CAmount nBalance;
     CAmount nTotalSupply;
     CAmount nMaxSupply;
-    unsigned char nPrecision;
-    unsigned char nUpdateFlags;
-    unsigned char nPrevUpdateFlags;
+    uint8_t nPrecision;
+    uint8_t nUpdateCapabilityFlags;
+    uint8_t nPrevUpdateCapabilityFlags;
     std::vector<unsigned char> vchNotaryKeyID;
     std::vector<unsigned char> vchPrevNotaryKeyID;
     CNotaryDetails notaryDetails;
@@ -127,6 +127,7 @@ public:
     std::vector<unsigned char> vchPrevAuxFeeKeyID;
     CAuxFeeDetails auxFeeDetails;
     CAuxFeeDetails prevAuxFeeDetails;
+    uint8_t nUpdateMask;
     CAsset() {
         SetNull();
     }
@@ -142,7 +143,7 @@ public:
         vchPrevContract.clear();
         voutAssets.clear();
         strSymbol.clear();
-        nPrevUpdateFlags = 0;
+        nPrevUpdateCapabilityFlags = 0;
         nBalance = 0;
         nTotalSupply = 0;
         nMaxSupply = 0;
@@ -154,12 +155,47 @@ public:
         vchPrevAuxFeeKeyID.clear();
         auxFeeDetails.SetNull();
         prevAuxFeeDetails.SetNull();
+        nUpdateMask = 0;
     }
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nPrecision, obj.vchContract, obj.strPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchNotaryKeyID, obj.notaryDetails, obj.vchAuxFeeKeyID, obj.auxFeeDetails, obj.vchPrevAuxFeeKeyID, obj.prevAuxFeeDetails, obj.vchPrevNotaryKeyID, obj.prevNotaryDetails, obj.vchPrevContract, obj.strPrevPubData, obj.nPrevUpdateFlags,
-        Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
+        READWRITE(obj.nPrecision, obj.strSymbol, obj.nUpdateMask);
+        if(obj.nUpdateMask & ASSET_UPDATE_CONTRACT) {
+            READWRITE(obj.vchContract);
+            READWRITE(obj.obj.vchPrevContract);
+        }
+        if(obj.nUpdateMask & ASSET_UPDATE_DATA) {
+            READWRITE(obj.strPubData);
+            READWRITE(obj.strPrevPubData);
+        }
+        if(obj.nUpdateMask & ASSET_UPDATE_SUPPLY) {
+            READWRITE(Using<AmountCompression>(obj.nBalance));
+            READWRITE(Using<AmountCompression>(obj.nTotalSupply));
+            READWRITE(Using<AmountCompression>(obj.nMaxSupply));
+        }
+        if(obj.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+            READWRITE(obj.vchNotaryKeyID);
+            READWRITE(obj.vchPrevNotaryKeyID);
+        }
+        if(obj.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+            READWRITE(obj.notaryDetails);
+            READWRITE(obj.prevNotaryDetails);
+        }
+        if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
+            READWRITE(obj.vchAuxFeeKeyID);
+            READWRITE(obj.vchPrevAuxFeeKeyID);
+            READWRITE(obj.auxFeeDetails);
+            READWRITE(obj.prevAuxFeeDetails);
+        }
+        if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+            READWRITE(obj.auxFeeDetails);
+            READWRITE(obj.prevAuxFeeDetails);
+        }
+        if(obj.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+            READWRITE(obj.nUpdateCapabilityFlags);
+            READWRITE(obj.nPrevUpdateCapabilityFlags);
+        }
     }
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
