@@ -1304,7 +1304,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, uint64_t> mapAssetTotals;
     std::vector<CAssetOutValue> vecOut;
-    bool &notaryRBF = m_signal_bip125_rbf;
+    bool bInstantTransferState = false;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
@@ -1317,20 +1317,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         // if RBF is disabled we want to see if we override it if notarization with instant transfers is defined for all assets being sent
-       if(!notaryRBF && !theAsset.vchNotaryKeyID.empty()) {
-            // get endpoint from JSON
-            UniValue publicObj;
-            if(publicObj.read(DecodeBase64(theAsset.strPubData))) {
-                const UniValue &notaryObj = find_value(publicObj, "n");
-                if(notaryObj.isObject()) {
-                    notaryRBF = true;
-                    const UniValue &itObj = find_value(notaryObj.get_obj(), "it");
-                    if(itObj.isBool()) {
-                        // may toggle to false if any asset being sent does not enable instant transfers
-                        notaryRBF = notaryRBF && itObj.get_bool();
-                    }
-                }
-            }
+       if(!bInstantTransferState && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
+            bInstantTransferState = bInstantTransferState && theAsset.notaryDetails.bEnableInstantTransfers ;
         }
 
         const std::string &toStr = find_value(receiverObj, "address").get_str();
@@ -1357,6 +1345,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         }
         nTotalSending += nAmount;
 	        
+    }
+    // if all instant transfers using notary, we use RBF
+    if(bInstantTransferState) {
+        // only override if parameter was not provided by user
+        if(request.params[1].isNull())
+            m_signal_bip125_rbf = true;
     }
     // aux fees if applicable
     for(const auto &it: mapAssetTotals) {
