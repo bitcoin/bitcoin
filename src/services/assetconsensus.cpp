@@ -609,7 +609,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
                 }
             }
-            if(!(storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY) || !(storedAssetRef.nUpdateMask & ASSET_UPDATE_FLAG)) {
+            if(!(storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY) || !(storedAssetRef.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-updatemask", bSanityCheck);
             }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
@@ -648,7 +648,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
                 }
             }
-            if (storedAssetRef.storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
+            if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
             }
             if (!MoneyRangeAsset(storedAssetRef.nMaxSupply)) {
