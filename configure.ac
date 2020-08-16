@@ -141,14 +141,12 @@ AC_ARG_ENABLE(external_default_callbacks,
     [use_external_default_callbacks=$enableval],
     [use_external_default_callbacks=no])
 
-AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
-[finite field implementation to use [default=auto]])],[req_field=$withval], [req_field=auto])
+dnl Test-only override of the (autodetected by the C code) "widemul" setting.
+dnl Legal values are int64 (for [u]int64_t), int128 (for [unsigned] __int128), and auto (the default).
+AC_ARG_WITH([test-override-wide-multiply], [] ,[set_widemul=$withval], [set_widemul=auto])
 
 AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|no|auto],
 [bignum implementation to use [default=auto]])],[req_bignum=$withval], [req_bignum=auto])
-
-AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
-[scalar implementation to use [default=auto]])],[req_scalar=$withval], [req_scalar=auto])
 
 AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto],
 [assembly optimizations to use (experimental: arm) [default=auto]])],[req_asm=$withval], [req_asm=auto])
@@ -169,8 +167,6 @@ AC_ARG_WITH([ecmult-gen-precision], [AS_HELP_STRING([--with-ecmult-gen-precision
 ["auto" is a reasonable setting for desktop machines (currently 4). [default=auto]]
 )],
 [req_ecmult_gen_precision=$withval], [req_ecmult_gen_precision=auto])
-
-AC_CHECK_TYPES([__int128])
 
 AC_CHECK_HEADER([valgrind/memcheck.h], [enable_valgrind=yes], [enable_valgrind=no], [])
 AM_CONDITIONAL([VALGRIND_ENABLED],[test "$enable_valgrind" = "yes"])
@@ -265,63 +261,6 @@ else
   esac
 fi
 
-if test x"$req_field" = x"auto"; then
-  if test x"set_asm" = x"x86_64"; then
-    set_field=64bit
-  fi
-  if test x"$set_field" = x; then
-    SECP_INT128_CHECK
-    if test x"$has_int128" = x"yes"; then
-      set_field=64bit
-    fi
-  fi
-  if test x"$set_field" = x; then
-    set_field=32bit
-  fi
-else
-  set_field=$req_field
-  case $set_field in
-  64bit)
-    if test x"$set_asm" != x"x86_64"; then
-      SECP_INT128_CHECK
-      if test x"$has_int128" != x"yes"; then
-        AC_MSG_ERROR([64bit field explicitly requested but neither __int128 support or x86_64 assembly available])
-      fi
-    fi
-    ;;
-  32bit)
-    ;;
-  *)
-    AC_MSG_ERROR([invalid field implementation selection])
-    ;;
-  esac
-fi
-
-if test x"$req_scalar" = x"auto"; then
-  SECP_INT128_CHECK
-  if test x"$has_int128" = x"yes"; then
-    set_scalar=64bit
-  fi
-  if test x"$set_scalar" = x; then
-    set_scalar=32bit
-  fi
-else
-  set_scalar=$req_scalar
-  case $set_scalar in
-  64bit)
-    SECP_INT128_CHECK
-    if test x"$has_int128" != x"yes"; then
-      AC_MSG_ERROR([64bit scalar explicitly requested but __int128 support not available])
-    fi
-    ;;
-  32bit)
-    ;;
-  *)
-    AC_MSG_ERROR([invalid scalar implementation selected])
-    ;;
-  esac
-fi
-
 if test x"$req_bignum" = x"auto"; then
   SECP_GMP_CHECK
   if test x"$has_gmp" = x"yes"; then
@@ -365,16 +304,18 @@ no)
   ;;
 esac
 
-# select field implementation
-case $set_field in
-64bit)
-  AC_DEFINE(USE_FIELD_5X52, 1, [Define this symbol to use the FIELD_5X52 implementation])
+# select wide multiplication implementation
+case $set_widemul in
+int128)
+  AC_DEFINE(USE_FORCE_WIDEMUL_INT128, 1, [Define this symbol to force the use of the (unsigned) __int128 based wide multiplication implementation])
   ;;
-32bit)
-  AC_DEFINE(USE_FIELD_10X26, 1, [Define this symbol to use the FIELD_10X26 implementation])
+int64)
+  AC_DEFINE(USE_FORCE_WIDEMUL_INT64, 1, [Define this symbol to force the use of the (u)int64_t based wide multiplication implementation])
+  ;;
+auto)
   ;;
 *)
-  AC_MSG_ERROR([invalid field implementation])
+  AC_MSG_ERROR([invalid wide multiplication implementation])
   ;;
 esac
 
@@ -393,19 +334,6 @@ no)
   ;;
 *)
   AC_MSG_ERROR([invalid bignum implementation])
-  ;;
-esac
-
-#select scalar implementation
-case $set_scalar in
-64bit)
-  AC_DEFINE(USE_SCALAR_4X64, 1, [Define this symbol to use the 4x64 scalar implementation])
-  ;;
-32bit)
-  AC_DEFINE(USE_SCALAR_8X32, 1, [Define this symbol to use the 8x32 scalar implementation])
-  ;;
-*)
-  AC_MSG_ERROR([invalid scalar implementation])
   ;;
 esac
 
@@ -493,8 +421,6 @@ if test x"$enable_module_recovery" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_RECOVERY, 1, [Define this symbol to enable the ECDSA pubkey recovery module])
 fi
 
-AC_C_BIGENDIAN()
-
 if test x"$use_external_asm" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_ASM, 1, [Define this symbol if an external (non-inline) assembly implementation is used])
 fi
@@ -553,10 +479,12 @@ echo "  module recovery         = $enable_module_recovery"
 echo
 echo "  asm                     = $set_asm"
 echo "  bignum                  = $set_bignum"
-echo "  field                   = $set_field"
-echo "  scalar                  = $set_scalar"
 echo "  ecmult window size      = $set_ecmult_window"
 echo "  ecmult gen prec. bits   = $set_ecmult_gen_precision"
+dnl Hide test-only options unless they're used.
+if test x"$set_widemul" != xauto; then
+echo "  wide multiplication     = $set_widemul"
+fi
 echo
 echo "  valgrind                = $enable_valgrind"
 echo "  CC                      = $CC"

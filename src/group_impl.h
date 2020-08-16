@@ -303,7 +303,7 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge *a) {
     return secp256k1_fe_equal_var(&y2, &x3);
 }
 
-static SECP256K1_INLINE void secp256k1_gej_double_nonzero(secp256k1_gej *r, const secp256k1_gej *a) {
+static SECP256K1_INLINE void secp256k1_gej_double(secp256k1_gej *r, const secp256k1_gej *a) {
     /* Operations: 3 mul, 4 sqr, 0 normalize, 12 mul_int/add/negate.
      *
      * Note that there is an implementation described at
@@ -313,8 +313,7 @@ static SECP256K1_INLINE void secp256k1_gej_double_nonzero(secp256k1_gej *r, cons
      */
     secp256k1_fe t1,t2,t3,t4;
 
-    VERIFY_CHECK(!secp256k1_gej_is_infinity(a));
-    r->infinity = 0;
+    r->infinity = a->infinity;
 
     secp256k1_fe_mul(&r->z, &a->z, &a->y);
     secp256k1_fe_mul_int(&r->z, 2);       /* Z' = 2*Y*Z (2) */
@@ -363,7 +362,7 @@ static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, s
         secp256k1_fe_mul_int(rzr, 2);
     }
 
-    secp256k1_gej_double_nonzero(r, a);
+    secp256k1_gej_double(r, a);
 }
 
 static void secp256k1_gej_add_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_gej *b, secp256k1_fe *rzr) {

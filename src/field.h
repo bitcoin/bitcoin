@@ -22,15 +22,15 @@
 #include "libsecp256k1-config.h"
 #endif
 
-#if defined(USE_FIELD_10X26)
-#include "field_10x26.h"
-#elif defined(USE_FIELD_5X52)
-#include "field_5x52.h"
-#else
-#error "Please select field implementation"
-#endif
-
 #include "util.h"
+
+#if defined(SECP256K1_WIDEMUL_INT128)
+#include "field_5x52.h"
+#elif defined(SECP256K1_WIDEMUL_INT64)
+#include "field_10x26.h"
+#else
+#error "Please select wide multiplication implementation"
+#endif
 
 /** Normalize a field element. This brings the field element to a canonical representation, reduces
  *  its magnitude to 1, and reduces it modulo field size `p`.

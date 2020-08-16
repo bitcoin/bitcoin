@@ -182,8 +182,10 @@ void run_context_tests(int use_prealloc) {
     ecount2 = 10;
     secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_illegal_callback(sign, counting_illegal_callback_fn, &ecount2);
-    secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, NULL);
-    CHECK(vrfy->error_callback.fn != sign->error_callback.fn);
+    /* set error callback (to a function that still aborts in case malloc() fails in secp256k1_context_clone() below) */
+    secp256k1_context_set_error_callback(sign, secp256k1_default_illegal_callback_fn, NULL);
+    CHECK(sign->error_callback.fn != vrfy->error_callback.fn);
+    CHECK(sign->error_callback.fn == secp256k1_default_illegal_callback_fn);
 
     /* check if sizes for cloning are consistent */
     CHECK(secp256k1_context_preallocated_clone_size(none) == secp256k1_context_preallocated_size(SECP256K1_CONTEXT_NONE));
@@ -239,7 +241,8 @@ void run_context_tests(int use_prealloc) {
     }
 
     /* Verify that the error callback makes it across the clone. */
-    CHECK(vrfy->error_callback.fn != sign->error_callback.fn);
+    CHECK(sign->error_callback.fn != vrfy->error_callback.fn);
+    CHECK(sign->error_callback.fn == secp256k1_default_illegal_callback_fn);
     /* And that it resets back to default. */
     secp256k1_context_set_error_callback(sign, NULL, NULL);
     CHECK(vrfy->error_callback.fn == sign->error_callback.fn);
@@ -2215,6 +2218,9 @@ void test_ge(void) {
                 /* Normal doubling. */
                 secp256k1_gej_double_var(&resj, &gej[i2], NULL);
                 ge_equals_gej(&ref, &resj);
+                /* Constant-time doubling. */
+                secp256k1_gej_double(&resj, &gej[i2]);
+                ge_equals_gej(&ref, &resj);
             }
 
             /* Test adding opposites. */
@@ -2967,14 +2973,16 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
 
 void test_ecmult_multi_batch_single(secp256k1_ecmult_multi_func ecmult_multi) {
     secp256k1_scalar szero;
-    secp256k1_scalar sc[32];
-    secp256k1_ge pt[32];
+    secp256k1_scalar sc;
+    secp256k1_ge pt;
     secp256k1_gej r;
     ecmult_multi_data data;
     secp256k1_scratch *scratch_empty;
 
-    data.sc = sc;
-    data.pt = pt;
+    random_group_element_test(&pt);
+    random_scalar_order(&sc);
+    data.sc = &sc;
+    data.pt = &pt;
     secp256k1_scalar_set_int(&szero, 0);
 
     /* Try to multiply 1 point, but scratch space is empty.*/
@@ -3232,6 +3240,7 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
     int skew;
     int bits = 256;
     secp256k1_scalar num = *number;
+    secp256k1_scalar scalar_skew;
 
     secp256k1_scalar_set_int(&x, 0);
     secp256k1_scalar_set_int(&shift, 1 << w);
@@ -3262,7 +3271,8 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
         secp256k1_scalar_add(&x, &x, &t);
     }
     /* Skew num because when encoding numbers as odd we use an offset */
-    secp256k1_scalar_cadd_bit(&num, skew == 2, 1);
+    secp256k1_scalar_set_int(&scalar_skew, 1 << (skew == 2));
+    secp256k1_scalar_add(&num, &num, &scalar_skew);
     CHECK(secp256k1_scalar_eq(&x, &num));
 }
 
@@ -3374,13 +3384,32 @@ void run_wnaf(void) {
     int i;
     secp256k1_scalar n = {{0}};
 
+    test_constant_wnaf(&n, 4);
     /* Sanity check: 1 and 2 are the smallest odd and even numbers and should
      *               have easier-to-diagnose failure modes  */
     n.d[0] = 1;
     test_constant_wnaf(&n, 4);
     n.d[0] = 2;
     test_constant_wnaf(&n, 4);
-    /* Test 0 */
+    /* Test -1, because it's a special case in wnaf_const */
+    n = secp256k1_scalar_one;
+    secp256k1_scalar_negate(&n, &n);
+    test_constant_wnaf(&n, 4);
+
+    /* Test -2, which may not lead to overflows in wnaf_const */
+    secp256k1_scalar_add(&n, &secp256k1_scalar_one, &secp256k1_scalar_one);
+    secp256k1_scalar_negate(&n, &n);
+    test_constant_wnaf(&n, 4);
+
+    /* Test (1/2) - 1 = 1/-2 and 1/2 = (1/-2) + 1
+       as corner cases of negation handling in wnaf_const */
+    secp256k1_scalar_inverse(&n, &n);
+    test_constant_wnaf(&n, 4);
+
+    secp256k1_scalar_add(&n, &n, &secp256k1_scalar_one);
+    test_constant_wnaf(&n, 4);
+
+    /* Test 0 for fixed wnaf */
     test_fixed_wnaf_small();
     /* Random tests */
     for (i = 0; i < count; i++) {
