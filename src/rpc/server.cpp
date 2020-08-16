@@ -164,6 +164,8 @@ static RPCHelpMan help()
         strSubCommand = jsonRequest.params[1].get_str();
 
     return tableRPC.help(strCommand, strSubCommand, jsonRequest);
+},
+    };
 }
 
 static RPCHelpMan stop()
