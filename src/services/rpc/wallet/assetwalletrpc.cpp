@@ -1075,6 +1075,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.nPrevUpdateCapabilityFlags = nOldUpdateCapabilityFlags;
         theAsset.nUpdateCapabilityFlags = nUpdateCapabilityFlags;
     }
+    theAsset.nUpdateMask = nUpdateMask;
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     theAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
     std::vector<unsigned char> data;
