@@ -561,7 +561,7 @@ static const CRPCCommand commands[] =
     { "evo",                "quorum",                 &quorum,                 {}  },
 };
 
-void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)
+void RegisterQuorumsRPCCommands(CRPCTable &t)
 {
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
