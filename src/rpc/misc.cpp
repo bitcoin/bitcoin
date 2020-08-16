@@ -777,7 +777,7 @@ static const CRPCCommand commands[] =
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
     /* Syscoin features */
-    { "syscoin",            "mnsync",                 &mnsync,                 {} },
+    { "syscoin",            "mnsync",                 &mnsync,                 {"command"} },
     { "syscoin",            "spork",                  &spork,                  {"command","value"} },
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
