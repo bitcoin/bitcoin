@@ -116,6 +116,7 @@ static RPCHelpMan spork()
 {
     std::string strCommand = request.params[0].get_str();
     if(strCommand != "show" || strCommand != "active") {
+        NodeContext& node = EnsureNodeContext(request.context);
         // advanced mode, update spork values
         int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
         if(nSporkID == SPORK_INVALID)
