@@ -728,7 +728,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 // replace db data with new data
                 storedAssetRef.strPubData = std::move(theAsset.strPubData);
             } else {
-                if(!theAsset.strPrevPubData.empty() || !storedAssetRef.strPubData.empty()) {
+                if(!theAsset.strPrevPubData.empty() || !theAsset.strPubData.empty()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-data", bSanityCheck);
                 }
             }
@@ -745,7 +745,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
             } else {
-                if(!theAsset.vchContract.empty() || !storedAssetRef.vchPrevContract.empty()) {
+                if(!theAsset.vchContract.empty() || !theAsset.vchPrevContract.empty()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
                 }
             }
@@ -759,7 +759,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }
                 storedAssetRef.vchNotaryKeyID = std::move(theAsset.vchNotaryKeyID);
             } else {
-                if(!theAsset.vchNotaryKeyID.empty() || !storedAssetRef.vchPrevNotaryKeyID.empty()) {
+                if(!theAsset.vchNotaryKeyID.empty() || !theAsset.vchPrevNotaryKeyID.empty()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-notary-key", bSanityCheck);
                 }   
             }
@@ -773,7 +773,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }
                 storedAssetRef.notaryDetails = std::move(theAsset.notaryDetails);
             } else {
-                if(!theAsset.notaryDetails.IsNull() || !storedAssetRef.prevNotaryDetails.IsNull()) {
+                if(!theAsset.notaryDetails.IsNull() || !theAsset.prevNotaryDetails.IsNull()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-notary", bSanityCheck);
                 }   
             }
@@ -787,7 +787,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }
                 storedAssetRef.vchAuxFeeKeyID = std::move(theAsset.vchAuxFeeKeyID);
             } else {
-                if(!theAsset.vchAuxFeeKeyID.empty() || !storedAssetRef.vchPrevAuxFeeKeyID.empty()) {
+                if(!theAsset.vchAuxFeeKeyID.empty() || !theAsset.vchPrevAuxFeeKeyID.empty()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
                 }   
             }
@@ -801,7 +801,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }
                 storedAssetRef.auxFeeDetails = std::move(theAsset.auxFeeDetails);
             } else {
-                if(!theAsset.auxFeeDetails.IsNull() || !storedAssetRef.prevAuxFeeDetails.IsNull()) {
+                if(!theAsset.auxFeeDetails.IsNull() || !theAsset.prevAuxFeeDetails.IsNull()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
                 }   
             }
