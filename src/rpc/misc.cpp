@@ -115,7 +115,7 @@ static RPCHelpMan spork()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::string strCommand = request.params[0].get_str();
-    if(strCommand != "show" || strCommand != "active") {
+    if(strCommand != "show" && strCommand != "active") {
         NodeContext& node = EnsureNodeContext(request.context);
         // advanced mode, update spork values
         int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
