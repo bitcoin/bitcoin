@@ -77,7 +77,7 @@ public:
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
-        m_notifications->updatedBlockTip();
+        m_notifications->updatedBlockTip(is_ibd);
     }
     void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->chainStateFlushed(locator); }
     std::shared_ptr<Chain::Notifications> m_notifications;
@@ -339,8 +339,7 @@ public:
         LOCK(cs_main);
         return ::fHavePruned;
     }
-    bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
-    bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
+    bool isReadyToBroadcast() override { return !::fImporting && !::fReindex; }
     bool shutdownRequested() override { return ShutdownRequested(); }
     int64_t getAdjustedTime() override { return GetAdjustedTime(); }
     void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }
