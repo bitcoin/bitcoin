@@ -554,15 +554,16 @@ UniValue masternodelist(const JSONRPCRequest& request)
     return obj;
 }
 
+void RegisterMasternodeRPCCommands(CRPCTable &t)
+{
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
+//  --------------------- ------------------------  -----------------------  ----------
     { "masternode",               "masternode",             &masternode,             {} },
     { "masternode",               "masternodelist",         &masternodelist,         {} },
 };
-
-void RegisterMasternodeRPCCommands(CRPCTable &t)
-{
+// clang-format on
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

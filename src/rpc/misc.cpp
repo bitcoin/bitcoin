@@ -29,24 +29,25 @@
 // SYSCOIN
 #include <masternode/masternode-sync.h>
 #include <spork.h>
-UniValue mnsync(const JSONRPCRequest& request);
-UniValue spork(const JSONRPCRequest& request);
-UniValue mnsync(const JSONRPCRequest& request)
+static RPCHelpMan mnsync()
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            RPCHelpMan{"mnsync",
-                "\nReturns the sync status, updates to the next step or resets it entirely.\n",
+        return RPCHelpMan{"mnsync",
+            {"\nReturns the sync status, updates to the next step or resets it entirely.\n"},
+            {
+                {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to issue (status|next|reset)"},
+            },
+            RPCResult{
+                RPCResult::Type::OBJ, "", "",
                 {
-                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to issue (status|next|reset)"}
-                },
-                RPCResult{
                     RPCResult::Type::STR, "result", "Result"},
-                RPCExamples{
-                    HelpExampleCli("mnsync", "status")
-                    + HelpExampleRpc("mnsync", "status")
                 }
-            }.ToString());
+            },
+            RPCExamples{
+                HelpExampleCli("mnsync", "status")
+                + HelpExampleRpc("mnsync", "status")
+            },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     NodeContext& node = EnsureNodeContext(request.context);
     std::string strMode = request.params[0].get_str();
@@ -82,51 +83,39 @@ UniValue mnsync(const JSONRPCRequest& request)
         return "success";
     }
     return "failure";
+},
+    };
 }
 
 /*
     Used for updating/reading spork settings on the network
 */
-UniValue spork(const JSONRPCRequest& request)
+static RPCHelpMan spork()
 {
-    if (request.params.size() == 1) {
-        // basic mode, show info
-        std:: string strCommand = request.params[0].get_str();
-        if (strCommand == "show") {
-            UniValue ret(UniValue::VOBJ);
-            for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(sporkDef.name, sporkManager.GetSporkValue(sporkDef.sporkId));
-            }
-            return ret;
-        } else if(strCommand == "active"){
-            UniValue ret(UniValue::VOBJ);
-            for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(sporkDef.name, sporkManager.IsSporkActive(sporkDef.sporkId));
-            }
-            return ret;
-        }
-    }
-    NodeContext& node = EnsureNodeContext(request.context);
-    if (request.fHelp || request.params.size() != 2) {
-        // default help, for basic mode
-        throw std::runtime_error(
-            RPCHelpMan{"spork",
-                "\nShows information about current state of sporks\n",
-                {
-                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "\"show\" to show all current spork values, \"active\" to show which sporks are active"}
-                },
-                {
-                    RPCResult{"for command = \"show\"",
-                        RPCResult::Type::NUM, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
-                    RPCResult{"for command = \"active\"",
-                        RPCResult::Type::BOOL, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
-                },
-                RPCExamples{
-                    HelpExampleCli("spork", "show")
-                    + HelpExampleRpc("spork", "\"show\"")
-                }
-            }.ToString());
-    } else {
+    return RPCHelpMan{"spork",
+            {"\nShows or updates the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message for updating.\n"},
+            {
+                {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "\"show\" to show all current spork values, \"active\" to show which sporks are active or the name of the spork to update"},
+                {"value", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The new desired value of the spork if updating"},
+            },
+            {
+                RPCResult{"for command = \"show\"",
+                    RPCResult::Type::NUM, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
+                RPCResult{"for command = \"active\"",
+                    RPCResult::Type::BOOL, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
+                RPCResult{"for updating",
+                    RPCResult::Type::STR, "result", "\"success\" if spork value was updated or this help otherwise"},
+            },
+            RPCExamples{
+                HelpExampleCli("spork", "SPORK_6_NEW_SIGS 4070908800") 
+                + HelpExampleCli("spork", "show")
+                + HelpExampleRpc("spork", "\"SPORK_6_NEW_SIGS\", 4070908800")
+                + HelpExampleRpc("spork", "\"show\"")
+            },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::string strCommand = request.params[0].get_str();
+    if(strCommand != "show" || strCommand != "active") {
         // advanced mode, update spork values
         int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
         if(nSporkID == SPORK_INVALID)
@@ -141,25 +130,27 @@ UniValue spork(const JSONRPCRequest& request)
         //broadcast new spork
         if(sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)){
             return "success";
-        } else {
-            throw std::runtime_error(
-                RPCHelpMan{"spork",
-                    "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n",
-                    {
-                        {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the spork to update"},
-                        {"value", RPCArg::Type::NUM, RPCArg::Optional::NO, "The new desired value of the spork"}
-                    },
-                    RPCResult{
-                        RPCResult::Type::STR, "result", "\"success\" if spork value was updated or this help otherwise"},
-                    RPCExamples{
-                        HelpExampleCli("spork", "SPORK_6_NEW_SIGS 4070908800")
-                        + HelpExampleRpc("spork", "\"SPORK_6_NEW_SIGS\", 4070908800")
-                    }
-                }.ToString());
+        }
+    } else {
+        // basic mode, show info
+        if (strCommand == "show") {
+            UniValue ret(UniValue::VOBJ);
+            for (const auto& sporkDef : sporkDefs) {
+                ret.pushKV(sporkDef.name, sporkManager.GetSporkValue(sporkDef.sporkId));
+            }
+            return ret;
+        } else if(strCommand == "active"){
+            UniValue ret(UniValue::VOBJ);
+            for (const auto& sporkDef : sporkDefs) {
+                ret.pushKV(sporkDef.name, sporkManager.IsSporkActive(sporkDef.sporkId));
+            }
+            return ret;
         }
     }
-
+},
+    };
 }
+
 static RPCHelpMan validateaddress()
 {
             RPCHelpMan{"validateaddress",

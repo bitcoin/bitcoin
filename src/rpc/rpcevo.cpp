@@ -1289,15 +1289,16 @@ UniValue _bls(const JSONRPCRequest& request)
     }
 }
 
+void RegisterEvoRPCCommands(CRPCTable &t)
+{
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
     { "evo",                "bls",                    &_bls,                   {}  },
     { "evo",                "protx",                  &protx,                  {}  },
 };
-
-void RegisterEvoRPCCommands(CRPCTable &t)
-{
+// clang-format on
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }
