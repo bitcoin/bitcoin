@@ -1298,7 +1298,7 @@ static const CRPCCommand commands[] =
 
 void RegisterEvoRPCCommands(CRPCTable &tableRPC)
 {
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++) {
-        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
     }
 }
