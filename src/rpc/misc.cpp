@@ -39,7 +39,7 @@ static RPCHelpMan mnsync()
             RPCResult{
                 RPCResult::Type::OBJ, "", "",
                 {
-                    RPCResult::Type::STR, "result", "Result"},
+                    {RPCResult::Type::STR, "result", "Result"},
                 }
             },
             RPCExamples{
