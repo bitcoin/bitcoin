@@ -1296,7 +1296,7 @@ static const CRPCCommand commands[] =
     { "evo",                "protx",                  &protx,                  {}  },
 };
 
-void RegisterEvoRPCCommands(CRPCTable &tableRPC)
+void RegisterEvoRPCCommands(CRPCTable &t)
 {
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
