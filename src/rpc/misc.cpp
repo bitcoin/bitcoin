@@ -152,9 +152,10 @@ static RPCHelpMan spork()
     };
 }
 
+
 static RPCHelpMan validateaddress()
 {
-            RPCHelpMan{"validateaddress",
+    return RPCHelpMan{"validateaddress",
                 "\nReturn information about the given syscoin address.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to validate"},
