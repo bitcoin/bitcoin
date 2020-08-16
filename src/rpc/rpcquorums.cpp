@@ -555,14 +555,15 @@ UniValue quorum(const JSONRPCRequest& request)
     }
 }
 
+void RegisterQuorumsRPCCommands(CRPCTable &t)
+{
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
     { "evo",                "quorum",                 &quorum,                 {}  },
 };
-
-void RegisterQuorumsRPCCommands(CRPCTable &t)
-{
+// clang-format on
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

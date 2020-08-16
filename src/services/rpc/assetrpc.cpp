@@ -853,6 +853,9 @@ UniValue syscoincheckmint(const JSONRPCRequest& request) {
     return output;
 } 
 
+// clang-format on
+void RegisterAssetRPCCommands(CRPCTable &t)
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -874,8 +877,6 @@ static const CRPCCommand commands[] =
     { "syscoin",            "getnotarysighash",                 &getnotarysighash,              {"hex","asset_guid"} },
 };
 // clang-format on
-void RegisterAssetRPCCommands(CRPCTable &t)
-{
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }
