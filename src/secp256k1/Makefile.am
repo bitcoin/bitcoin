@@ -99,7 +99,7 @@ if VALGRIND_ENABLED
 tests_CPPFLAGS += -DVALGRIND
 noinst_PROGRAMS += valgrind_ctime_test
 valgrind_ctime_test_SOURCES = src/valgrind_ctime_test.c
-valgrind_ctime_test_LDADD = libsecp256k1.la $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
+valgrind_ctime_test_LDADD = libsecp256k1.la $(SECP_LIBS) $(SECP_LIBS) $(COMMON_LIB)
 endif
 if !ENABLE_COVERAGE
 tests_CPPFLAGS += -DVERIFY
