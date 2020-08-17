@@ -134,7 +134,7 @@ class TestNode():
         self.hdkeypathnonce =0
 
     AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
-    PRIV_KEYS = [
+    PRIV_KEYS = [ #seed and xpub, regtest node, call sethdseed, make upseed using random strings => 
             # address , privkey
             AddressKeyPair('mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z', 'cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW'),
             AddressKeyPair('msX6jQXvxiNhx3Q62PKeLPrhrqZQdSimTg', 'cUxsWyKyZ9MAQTaAhUQWJmBbSvHMwSmuv59KgxQV7oZQU3PXN3KE'),
@@ -149,9 +149,21 @@ class TestNode():
             AddressKeyPair('mpFAHDjX7KregM3rVotdXzQmkbwtbQEnZ6', 'cT7qK7g1wkYEMvKowd2ZrX1E5f6JQ7TM246UfqbCiyF7kZhorpX3'),
             AddressKeyPair('mzRe8QZMfGi58KyWCse2exxEFry2sfF2Y7', 'cPiRWE8KMjTRxH1MWkPerhfoHFn5iHPWVK5aPqjW8NxmdwenFinJ'),
     ]
-
+    SeedXpubPair = collections.namedtuple('SeedXPubPair', ['seed', 'xpub'])
+    XPUBS = [
+        # how to go from hdseed to xpub, by calling getnewaddress?
+        # run cli?
+        # can you make up your ownhd seed
+        # if not, how to pregenerate key
+        # maybe checkout DeriveNewSeed
+    ]
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
+        assert len(self.PRIV_KEYS) == MAX_NODES
+        return self.PRIV_KEYS[self.index]
+
+    def get_deterministic_hd_seed(self):
+        """Return a deterministic hd seed, that only depends on the node's index"""
         assert len(self.PRIV_KEYS) == MAX_NODES
         return self.PRIV_KEYS[self.index]
 
@@ -296,17 +308,26 @@ class TestNode():
         self._raise_assertion_error("Unable to retrieve cookie credentials after {}s".format(self.rpc_timeout))
 
     def generate(self, nblocks, maxtries=1000000):
-        # if wallet is not compiled, blocks are generated to an address or descriptor using an HD seed
-        if '-disablewallet' in self.extra_args:
-            xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
-            finger_print = "d34db33f"
-            keypath = "/44'/0'/0'/0/" + str(self.hdkeypathnonce)
-            desc = "pkh([" + finger_print + keypath + "]" + xpub+ "/1)" 
-            self.hdkeypathnonce += 1
-            return self.generatetodescriptor(nblocks, desc, maxtries)
-        else:
-            hd_address = self.getnewaddress()
-            return self.generatetoaddress(nblocks, hd_address, maxtries)
+        # # if wallet is not compiled, blocks are generated to an address or descriptor using an HD seed
+        # # the seeds and corresponding xpubs have been pregenerated
+        # if '-disablewallet' in self.extra_args:
+        #     print('############')
+        #     xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
+        #     finger_print = "d34db33f"
+        #     keypath = "/44'/0'/0'/0/" + str(self.hdkeypathnonce)
+        #     desc = "pkh([" + finger_print + keypath + "]" + xpub+ "/1)" 
+        #     self.hdkeypathnonce += 1
+        #     return self.generatetodescriptor(nblocks, desc, maxtries)
+        # # if wallet has been compiled, the hd seed has been preset in the test_framework
+        # else:
+        #     print('*************')
+        #     finger_print = self.hdinfo
+        #     hd_address = self.getnewaddress()
+        #     return self.generatetoaddress(nblocks, hd_address, maxtries)
+        #     #wallet, hd seed = descriptor'
+        self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
+        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
+            
           
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
