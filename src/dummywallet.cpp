@@ -36,6 +36,7 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-disablewallet",
         "-instantsendnotify=<cmd>",
         "-keypool=<n>",
+        "-maxapsfee=<n>",
         "-maxtxfee=<amt>",
         "-rescan=<mode>",
         "-salvagewallet",
