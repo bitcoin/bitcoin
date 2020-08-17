@@ -379,6 +379,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 wallet_name = w.split('=', 1)[1]
                 n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
         self.import_deterministic_coinbase_privkeys()
+        self.import_hd_seed()
         if not self.setup_clean_chain:
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
@@ -402,6 +403,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 continue
 
             n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+
+    # Preset an HD seed for nodes, if the nodes have wallet compiled
+    def import_hd_seed(self):
+        for n in self.nodes:
+            try:
+                n.getwalletinfo()
+            except JSONRPCException as e:
+                assert str(e).startswith('Method not found')
+                continue
+            n.sethdseed()
 
     def run_test(self):
         """Tests must override this method to define test logic"""
