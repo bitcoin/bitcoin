@@ -39,7 +39,7 @@ class TestP2PConn(P2PInterface):
 
     def wait_for_invs_to_match(self, invs_expected):
         invs_expected.sort()
-        self.wait_until(lambda: invs_expected == sorted(self.txinvs), timeout=60)
+        self.wait_until(lambda: invs_expected == sorted(self.txinvs))
 
     def clear_invs(self):
         with p2p_lock:

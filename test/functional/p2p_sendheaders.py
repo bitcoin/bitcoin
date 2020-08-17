@@ -104,7 +104,6 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 
 DIRECT_FETCH_RESPONSE_TIME = 0.05
@@ -147,7 +146,7 @@ class BaseNode(P2PInterface):
 
     def wait_for_block_announcement(self, block_hash, timeout=60):
         test_function = lambda: self.last_blockhash_announced == block_hash
-        wait_until(test_function, timeout=timeout, lock=p2p_lock)
+        self.wait_until(test_function, timeout=timeout)
 
     def on_inv(self, message):
         self.block_announced = True
@@ -174,7 +173,7 @@ class BaseNode(P2PInterface):
         """Test whether the last headers announcements received are right.
            Headers may be announced across more than one message."""
         test_function = lambda: (len(self.recent_headers_announced) >= len(headers))
-        wait_until(test_function, timeout=60, lock=p2p_lock)
+        self.wait_until(test_function)
         with p2p_lock:
             assert_equal(self.recent_headers_announced, headers)
             self.block_announced = False
@@ -186,7 +185,7 @@ class BaseNode(P2PInterface):
         inv should be a list of block hashes."""
 
         test_function = lambda: self.block_announced
-        wait_until(test_function, timeout=60, lock=p2p_lock)
+        self.wait_until(test_function)
 
         with p2p_lock:
             compare_inv = []
@@ -298,7 +297,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 test_node.send_header_for_blocks([new_block])
                 test_node.wait_for_getdata([new_block.sha256])
                 test_node.send_and_ping(msg_block(new_block))  # make sure this block is processed
-                wait_until(lambda: inv_node.block_announced, timeout=60, lock=p2p_lock)
+                inv_node.wait_until(lambda: inv_node.block_announced)
                 inv_node.clear_block_announcements()
                 test_node.clear_block_announcements()
 
