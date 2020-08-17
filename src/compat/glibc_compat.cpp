@@ -16,7 +16,7 @@ extern "C" void* memcpy(void* a, const void* b, size_t c)
     return memmove(a, b, c);
 }
 
-#if defined(__i386__) || defined(__arm__)
+#if defined(__arm__)
 
 extern "C" int64_t __udivmoddi4(uint64_t u, uint64_t v, uint64_t* rp);
 
@@ -46,9 +46,7 @@ extern "C" int64_t __wrap___divmoddi4(int64_t u, int64_t v, int64_t* rp)
 #endif
 
 extern "C" float log2f_old(float x);
-#ifdef __i386__
-__asm(".symver log2f_old,log2f@GLIBC_2.1");
-#elif defined(__amd64__)
+#if defined(__amd64__)
 __asm(".symver log2f_old,log2f@GLIBC_2.2.5");
 #elif defined(__arm__)
 __asm(".symver log2f_old,log2f@GLIBC_2.4");
