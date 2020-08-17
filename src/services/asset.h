@@ -83,8 +83,8 @@ public:
 class CNotaryDetails {
 public:
     std::string strEndPoint;
-    bool bEnableInstantTransfers;
-    bool bRequireHD;
+    uint8_t bEnableInstantTransfers;
+    uint8_t bRequireHD;
     CNotaryDetails() {
         SetNull();
     }
@@ -101,7 +101,7 @@ public:
     inline friend bool operator!=(const CNotaryDetails &a, const CNotaryDetails &b) {
         return !(a == b);
     }
-    inline void SetNull() { strEndPoint.clear();  bEnableInstantTransfers = bRequireHD = false;}
+    inline void SetNull() { strEndPoint.clear();  bEnableInstantTransfers = bRequireHD = 0;}
     inline bool IsNull() const { return strEndPoint.empty(); }
     UniValue ToJson() const;
 };

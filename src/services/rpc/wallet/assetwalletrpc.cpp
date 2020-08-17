@@ -1341,7 +1341,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, uint64_t> mapAssetTotals;
     std::vector<CAssetOutValue> vecOut;
-    bool bOverideRBF = false;
+    uint8_t bOverideRBF = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];

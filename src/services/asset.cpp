@@ -208,13 +208,13 @@ CNotaryDetails::CNotaryDetails(const UniValue& value){
         SetNull();
         return;
     }  
-    bEnableInstantTransfers = isObj.get_bool();
+    bEnableInstantTransfers = isObj.get_bool()? 1: 0;
     const UniValue& hdObj = find_value(value.get_obj(), "hd_required");
     if(!hdObj.isBool()) {
         SetNull();
         return;
     }   
-    bRequireHD = hdObj.get_bool(); 
+    bRequireHD = hdObj.get_bool()? 1: 0; 
 }
 
 UniValue CNotaryDetails::ToJson() const {
