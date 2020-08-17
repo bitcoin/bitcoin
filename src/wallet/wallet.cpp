@@ -33,6 +33,8 @@
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 
+#include <univalue.h>
+
 #include <algorithm>
 #include <assert.h>
 
@@ -54,6 +56,42 @@ static RecursiveMutex cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
 static std::list<LoadWalletFn> g_load_wallet_fns GUARDED_BY(cs_wallets);
 
+bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
+{
+    util::SettingsValue setting_value = chain.getRwSetting("wallet");
+    if (!setting_value.isArray()) setting_value.setArray();
+    for (const util::SettingsValue& value : setting_value.getValues()) {
+        if (value.isStr() && value.get_str() == wallet_name) return true;
+    }
+    setting_value.push_back(wallet_name);
+    return chain.updateRwSetting("wallet", setting_value);
+}
+
+bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
+{
+    util::SettingsValue setting_value = chain.getRwSetting("wallet");
+    if (!setting_value.isArray()) return true;
+    util::SettingsValue new_value(util::SettingsValue::VARR);
+    for (const util::SettingsValue& value : setting_value.getValues()) {
+        if (!value.isStr() || value.get_str() != wallet_name) new_value.push_back(value);
+    }
+    if (new_value.size() == setting_value.size()) return true;
+    return chain.updateRwSetting("wallet", new_value);
+}
+
+static void UpdateWalletSetting(interfaces::Chain& chain,
+                                const std::string& wallet_name,
+                                Optional<bool> load_on_startup,
+                                std::vector<bilingual_str>& warnings)
+{
+    if (load_on_startup == nullopt) return;
+    if (load_on_startup.get() && !AddWalletSetting(chain, wallet_name)) {
+        warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may not be loaded next node startup."));
+    } else if (!load_on_startup.get() && !RemoveWalletSetting(chain, wallet_name)) {
+        warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may still be loaded next node startup."));
+    }
+}
+
 bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
     LOCK(cs_wallets);
@@ -65,16 +103,30 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     return true;
 }
 
-bool RemoveWallet(const std::shared_ptr<CWallet>& wallet)
+bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, Optional<bool> load_on_start, std::vector<bilingual_str>& warnings)
 {
     assert(wallet);
+
+    interfaces::Chain& chain = wallet->chain();
+    std::string name = wallet->GetName();
+
     // Unregister with the validation interface which also drops shared ponters.
     wallet->m_chain_notifications_handler.reset();
     LOCK(cs_wallets);
     std::vector<std::shared_ptr<CWallet>>::iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
     if (i == vpwallets.end()) return false;
     vpwallets.erase(i);
+
+    // Write the wallet setting
+    UpdateWalletSetting(chain, name, load_on_start, warnings);
+
     return true;
+}
+
+bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, Optional<bool> load_on_start)
+{
+    std::vector<bilingual_str> warnings;
+    return RemoveWallet(wallet, load_on_start, warnings);
 }
 
 std::vector<std::shared_ptr<CWallet>> GetWallets()
@@ -148,7 +200,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 }
 
 namespace {
-std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const WalletLocation& location, Optional<bool> load_on_start, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     try {
         if (!CWallet::Verify(chain, location, error, warnings)) {
@@ -163,6 +215,10 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const Wall
         }
         AddWallet(wallet);
         wallet->postInitProcess();
+
+        // Write the wallet setting
+        UpdateWalletSetting(chain, location.GetName(), load_on_start, warnings);
+
         return wallet;
     } catch (const std::runtime_error& e) {
         error = Untranslated(e.what());
@@ -171,19 +227,19 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const Wall
 }
 } // namespace
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, Optional<bool> load_on_start, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(location.GetName()));
     if (!result.second) {
         error = Untranslated("Wallet already being loading.");
         return nullptr;
     }
-    auto wallet = LoadWalletInternal(chain, location, error, warnings);
+    auto wallet = LoadWalletInternal(chain, location, load_on_start, error, warnings);
     WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
     return wallet;
 }
 
-WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::shared_ptr<CWallet>& result)
+WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, Optional<bool> load_on_start, bilingual_str& error, std::vector<bilingual_str>& warnings, std::shared_ptr<CWallet>& result)
 {
     // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
     bool create_blank = (wallet_creation_flags & WALLET_FLAG_BLANK_WALLET);
@@ -254,6 +310,10 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
     AddWallet(wallet);
     wallet->postInitProcess();
     result = wallet;
+
+    // Write the wallet settings
+    UpdateWalletSetting(chain, name, load_on_start, warnings);
+
     return WalletCreationStatus::SUCCESS;
 }
 

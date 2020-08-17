@@ -230,18 +230,6 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
     }
 }
 
-static void UpdateWalletSetting(interfaces::Chain& chain,
-                                const std::string& wallet_name,
-                                const UniValue& load_on_startup,
-                                std::vector<bilingual_str>& warnings)
-{
-    if (load_on_startup.isTrue() && !AddWalletSetting(chain, wallet_name)) {
-        warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may not be loaded next node startup."));
-    } else if (load_on_startup.isFalse() && !RemoveWalletSetting(chain, wallet_name)) {
-        warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may still be loaded next node startup."));
-    }
-}
-
 static UniValue getnewaddress(const JSONRPCRequest& request)
 {
             RPCHelpMan{"getnewaddress",
@@ -2528,10 +2516,9 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, location, error, warnings);
+    Optional<bool> load_on_start = request.params[1].isNull() ? nullopt : Optional<bool>(request.params[1].get_bool());
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, location, load_on_start, error, warnings);
     if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-
-    UpdateWalletSetting(*context.chain, location.GetName(), request.params[1], warnings);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
@@ -2662,7 +2649,8 @@ static UniValue createwallet(const JSONRPCRequest& request)
 
     bilingual_str error;
     std::shared_ptr<CWallet> wallet;
-    WalletCreationStatus status = CreateWallet(*context.chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
+    Optional<bool> load_on_start = request.params[6].isNull() ? nullopt : Optional<bool>(request.params[6].get_bool());
+    WalletCreationStatus status = CreateWallet(*context.chain, passphrase, flags, request.params[0].get_str(), load_on_start, error, warnings, wallet);
     switch (status) {
         case WalletCreationStatus::CREATION_FAILED:
             throw JSONRPCError(RPC_WALLET_ERROR, error.original);
@@ -2672,8 +2660,6 @@ static UniValue createwallet(const JSONRPCRequest& request)
             break;
         // no default case, so the compiler can warn about missing cases
     }
-
-    UpdateWalletSetting(*context.chain, request.params[0].get_str(), request.params[6], warnings);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
@@ -2717,15 +2703,13 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
     // Release the "main" shared pointer and prevent further notifications.
     // Note that any attempt to load the same wallet would fail until the wallet
     // is destroyed (see CheckUniqueFileid).
-    if (!RemoveWallet(wallet)) {
+    std::vector<bilingual_str> warnings;
+    Optional<bool> load_on_start = request.params[1].isNull() ? nullopt : Optional<bool>(request.params[1].get_bool());
+    if (!RemoveWallet(wallet, load_on_start, warnings)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Requested wallet already unloaded");
     }
 
-    interfaces::Chain& chain = wallet->chain();
-    std::vector<bilingual_str> warnings;
-
     UnloadWallet(std::move(wallet));
-    UpdateWalletSetting(chain, wallet_name, request.params[1], warnings);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("warning", Join(warnings, Untranslated("\n")).original);
