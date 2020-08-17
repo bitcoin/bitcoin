@@ -18,9 +18,9 @@ from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.messages import CInv, MSG_BLOCK
 from test_framework.p2p import (
     P2PInterface,
-    p2p_lock,
     msg_block,
     msg_getdata,
+    p2p_lock,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (

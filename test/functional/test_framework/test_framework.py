@@ -20,8 +20,8 @@ import time
 
 from .authproxy import JSONRPCException
 from . import coverage
-from .test_node import TestNode
 from .p2p import NetworkThread
+from .test_node import TestNode
 from .util import (
     MAX_NODES,
     PortSeed,
