@@ -1509,8 +1509,9 @@ void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman&
     {
         LockAssertion lock(::cs_main);
 
-        CNodeState &state = *State(pnode->GetId());
-        if (state.m_wtxid_relay) {
+        CNodeState* state = State(pnode->GetId());
+        if (state == nullptr) return;
+        if (state->m_wtxid_relay) {
             pnode->PushTxInventory(wtxid);
         } else {
             pnode->PushTxInventory(txid);
