@@ -4,10 +4,14 @@
 # Copyright (c) 2010-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Bitcoin P2P network half-a-node.
+"""Test objects for interacting with a bitcoind node over the p2p protocol.
 
-This python code was modified from ArtForz' public domain half-a-node, as
-found in the mini-node branch of http://github.com/jgarzik/pynode.
+The P2PInterface objects interact with the bitcoind nodes under test using the
+node's p2p interface. They can be used to send messages to the node, and
+callbacks can be registered that execute when messages are received from the
+node. Messages are sent to/received from the node on an asyncio event loop.
+State held inside the objects must be guarded by the p2p_lock to avoid data
+races between the main testing thread and the event loop.
 
 P2PConnection: A low-level connection object to a node's P2P interface
 P2PInterface: A high-level interface object for communicating to a node over P2P

@@ -109,7 +109,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.sync_all()
 
         self.log.debug("Create a connection from a forcerelay peer that rebroadcasts raw txs")
-        # A python mininode is needed to send the raw transaction directly. If a full node was used, it could only
+        # A test framework p2p connection is needed to send the raw transaction directly. If a full node was used, it could only
         # rebroadcast via the inv-getdata mechanism. However, even for forcerelay connections, a full node would
         # currently not request a txid that is already in the mempool.
         self.restart_node(1, extra_args=["-whitelist=forcerelay@127.0.0.1"])

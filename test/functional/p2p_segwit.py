@@ -153,8 +153,8 @@ class TestP2PConn(P2PInterface):
         self.lastgetdata = []
         self.wtxidrelay = wtxidrelay
 
-    # Avoid sending out msg_getdata in the mininode thread as a reply to invs.
-    # They are not needed and would only lead to races because we send msg_getdata out in the test thread
+    # Don't send getdata message replies to invs automatically.
+    # We'll send the getdata messages explicitly in the test logic.
     def on_inv(self, message):
         pass
 
