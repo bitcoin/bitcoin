@@ -177,6 +177,7 @@ SYSCOIN_CORE_H = \
   httpserver.h \
   index/base.h \
   index/blockfilterindex.h \
+  index/disktxpos.h \
   index/txindex.h \
   indirectmap.h \
   init.h \
