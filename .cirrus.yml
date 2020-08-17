@@ -5,7 +5,7 @@ container:
   # https://cirrus-ci.org/faq/#are-there-any-limits
   # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
   cpu: 2
-  memory: 6G  # https://cirrus-ci.org/guide/linux/#linux-containers
+  memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
 env:
   PACKAGE_MANAGER_INSTALL : "apt-get update && apt-get install -y"
   MAKEJOBS: "-j4"
