@@ -156,7 +156,7 @@ public:
         vchPrevAuxFeeKeyID.clear();
         auxFeeDetails.SetNull();
         prevAuxFeeDetails.SetNull();
-        nUpdateMask = ASSET_UPDATE_ALL;
+        nUpdateMask = 0;
     }
 
     SERIALIZE_METHODS(CAsset, obj) {
