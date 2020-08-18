@@ -672,7 +672,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.strSymbol = EncodeBase64(strSymbol);
     if(!strPubDataField.empty()) {
         nUpdateMask |= ASSET_UPDATE_DATA;
-        newAsset.strPubData = publicData.write();
+        newAsset.strPubData = strPubDataField;
     }
     if(!strContract.empty()) {
         nUpdateMask |= ASSET_UPDATE_CONTRACT;
