@@ -982,7 +982,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if (!GetAsset( nAsset, theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
-    const std::string& oldData = theAsset.strPubData;
+    const std::string oldData = theAsset.strPubData;
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
     const std::vector<unsigned char> vchOldNotaryKeyID(theAsset.vchNotaryKeyID);
     const std::vector<unsigned char> vchOldAuxFeeKeyID(theAsset.vchAuxFeeKeyID);
