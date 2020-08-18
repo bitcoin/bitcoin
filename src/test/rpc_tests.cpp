@@ -17,11 +17,48 @@
 
 #include <boost/test/unit_test.hpp>
 
+static UniValue JSON(std::string_view json)
+{
+    UniValue value;
+    BOOST_CHECK(value.read(json.data(), json.size()));
+    return value;
+}
+
+class HasJSON
+{
+public:
+    explicit HasJSON(std::string json) : m_json(std::move(json)) {}
+    bool operator()(const UniValue& value) const
+    {
+        std::string json{value.write()};
+        BOOST_CHECK_EQUAL(json, m_json);
+        return json == m_json;
+    };
+
+private:
+    const std::string m_json;
+};
+
 class RPCTestingSetup : public TestingSetup
 {
 public:
+    UniValue TransformParams(const UniValue& params, std::vector<std::string> arg_names) const;
     UniValue CallRPC(std::string args);
 };
+
+UniValue RPCTestingSetup::TransformParams(const UniValue& params, std::vector<std::string> arg_names) const
+{
+    UniValue transformed_params;
+    CRPCTable table;
+    CRPCCommand command{"category", "method", [&](const JSONRPCRequest& request, UniValue&, bool) -> bool { transformed_params = request.params; return true; }, arg_names, /*unique_id=*/0};
+    table.appendCommand("method", &command);
+    JSONRPCRequest request;
+    request.strMethod = "method";
+    request.params = params;
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+    table.execute(request);
+    return transformed_params;
+}
 
 UniValue RPCTestingSetup::CallRPC(std::string args)
 {
@@ -44,6 +81,29 @@ UniValue RPCTestingSetup::CallRPC(std::string args)
 
 
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, RPCTestingSetup)
+
+BOOST_AUTO_TEST_CASE(rpc_namedparams)
+{
+    const std::vector<std::string> arg_names{{"arg1", "arg2", "arg3", "arg4", "arg5"}};
+
+    // Make sure named arguments are transformed into positional arguments in correct places separated by nulls
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg2": 2, "arg4": 4})"), arg_names).write(), "[null,2,null,4]");
+
+    // Make sure named and positional arguments can be combined.
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg5": 5, "args": [1, 2], "arg4": 4})"), arg_names).write(), "[1,2,null,4,5]");
+
+    // Make sure a unknown named argument raises an exception
+    BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"arg2": 2, "unknown": 6})"), arg_names), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Unknown named parameter unknown"})"));
+
+    // Make sure an overlap between a named argument and positional argument raises an exception
+    BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1,2,3], "arg4": 4, "arg2": 2})"), arg_names), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Parameter arg2 specified twice both as positional and named argument"})"));
+
+    // Make sure extra positional arguments can be passed through to the method implemenation, as long as they don't overlap with named arguments.
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"args": [1,2,3,4,5,6,7,8,9,10]})"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"([1,2,3,4,5,6,7,8,9,10])"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
+}
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
