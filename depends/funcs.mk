@@ -161,6 +161,7 @@ $(1)_cmake=env CC="$$($(1)_cc)" \
                CFLAGS="$$($(1)_cppflags) $$($(1)_cflags)" \
                CXX="$$($(1)_cxx)" \
                CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
+               LDFLAGS="$$($(1)_ldflags)" \
              cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)"
 ifneq ($($(1)_type),build)
 ifneq ($(host),$(build))
