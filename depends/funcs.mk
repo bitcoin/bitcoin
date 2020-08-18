@@ -157,7 +157,11 @@ ifneq ($($(1)_ldflags),)
 $(1)_autoconf += LDFLAGS="$$($(1)_ldflags)"
 endif
 
-$(1)_cmake=env CC="$$($(1)_cc)" CXX="$$($(1)_cxx)" CFLAGS="$$($(1)_cflags)" CXXFLAGS="$$($(1)_cxxflags)" cmake -DCMAKE_INSTALL_PREFIX:PATH=$($($(1)_type)_prefix)
+$(1)_cmake=env CC="$$($(1)_cc)" \
+               CFLAGS="$$($(1)_cflags)" \
+               CXX="$$($(1)_cxx)" \
+               CXXFLAGS="$$($(1)_cxxflags)" \
+             cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)"
 ifneq ($($(1)_type),build)
 ifneq ($(host),$(build))
 $(1)_cmake += -DCMAKE_SYSTEM_NAME=$($(host_os)_cmake_system)
