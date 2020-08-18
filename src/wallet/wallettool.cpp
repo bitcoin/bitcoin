@@ -130,7 +130,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             std::vector<bilingual_str> warnings;
             bool ret = RecoverDatabaseFile(path, error, warnings);
             if (!ret) {
-                for (const auto warning : warnings) {
+                for (const auto& warning : warnings) {
                     tfm::format(std::cerr, "%s\n", warning.original);
                 }
                 if (!error.empty()) {
