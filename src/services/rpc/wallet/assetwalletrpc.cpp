@@ -664,7 +664,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     CAsset newAsset;
 
     UniValue publicData(UniValue::VOBJ);
-    publicData.pushKV("desc", strPubData);
+    publicData.pushKV("desc", EncodeBase64(strPubData));
     uint8_t nUpdateMask = ASSET_UPDATE_SUPPLY | ASSET_UPDATE_CAPABILITYFLAGS;
     const std::string &strPubDataField  = publicData.write();
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
@@ -672,7 +672,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.strSymbol = EncodeBase64(strSymbol);
     if(!strPubDataField.empty()) {
         nUpdateMask |= ASSET_UPDATE_DATA;
-        newAsset.strPubData = EncodeBase64(publicData.write());
+        newAsset.strPubData = publicData.write();
     }
     if(!strContract.empty()) {
         nUpdateMask |= ASSET_UPDATE_CONTRACT;
@@ -982,7 +982,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if (!GetAsset( nAsset, theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
-    const std::string& oldData = DecodeBase64(theAsset.strPubData);
+    const std::string& oldData = theAsset.strPubData;
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
     const std::vector<unsigned char> vchOldNotaryKeyID(theAsset.vchNotaryKeyID);
     const std::vector<unsigned char> vchOldAuxFeeKeyID(theAsset.vchAuxFeeKeyID);
@@ -998,7 +998,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         nBalance = params[3].get_int64();
     }
     UniValue publicData(UniValue::VOBJ);
-    publicData.pushKV("desc", strPubData);
+    publicData.pushKV("desc", EncodeBase64(strPubData));
     std::string strNotary = params[5].get_str();
     std::vector<unsigned char> vchNotaryKeyID;
     if(!strNotary.empty()) {
@@ -1033,8 +1033,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     strPubData = publicData.write();
     if(strPubData != oldData) {
         nUpdateMask |= ASSET_UPDATE_DATA;
-        theAsset.strPrevPubData = EncodeBase64(oldData);
-        theAsset.strPubData = EncodeBase64(strPubData);
+        theAsset.strPrevPubData = oldData;
+        theAsset.strPubData = strPubData;
     }
 
     if(vchContract != oldContract) {

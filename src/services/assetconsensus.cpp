@@ -676,7 +676,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             } 
-
+            if (!theAsset.strSymbol.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
+            }
             if(theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY) {
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
