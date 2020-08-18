@@ -43,7 +43,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                 current_block.nHeight = current_height;
             }
             if (fuzzed_data_provider.ConsumeBool()) {
-                current_block.nTime = fixed_time + current_height * consensus_params.nPowTargetSpacing;
+                if (!MultiplicationOverflow(current_height, static_cast<int>(consensus_params.nPowTargetSpacing)) && current_height >= 0) {
+                    const uint32_t current_height_time = current_height * consensus_params.nPowTargetSpacing;
+                    if (!AdditionOverflow(fixed_time, current_height_time)) {
+                        current_block.nTime = fixed_time + current_height_time;
+                    }
+                }
             }
             if (fuzzed_data_provider.ConsumeBool()) {
                 current_block.nBits = fixed_bits;
