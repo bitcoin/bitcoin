@@ -566,6 +566,8 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
                 return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
             }
+            // set flags to all during update so CAsset will serialize into DB with all fields, empty or not
+            dbAsset.nUpdateFlags = ASSET_UPDATE_ALL;
             mapAsset->second = std::move(dbAsset);      
         }
     } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {

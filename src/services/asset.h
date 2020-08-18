@@ -32,7 +32,8 @@ enum {
     ASSET_UPDATE_NOTARY_DETAILS=16, // can you update notary details?
     ASSET_UPDATE_AUXFEE_KEY=32, // can you update aux fees?
     ASSET_UPDATE_AUXFEE_DETAILS=64, // can you update aux fees details?
-    ASSET_UPDATE_CAPABILITYFLAGS=128 // can you update capability flags?
+    ASSET_UPDATE_CAPABILITYFLAGS=128, // can you update capability flags?
+    ASSET_UPDATE_ALL=255
 };
 class CAuxFee {
 public:
