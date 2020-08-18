@@ -3890,16 +3890,17 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     }
 
     if (gArgs.IsArgSet("-maxapsfee")) {
+        const std::string max_aps_fee{gArgs.GetArg("-maxapsfee", "")};
         CAmount n = 0;
-        if (gArgs.GetArg("-maxapsfee", "") == "-1") {
+        if (max_aps_fee == "-1") {
             n = -1;
-        } else if (!ParseMoney(gArgs.GetArg("-maxapsfee", ""), n)) {
-            error = AmountErrMsg("maxapsfee", gArgs.GetArg("-maxapsfee", ""));
+        } else if (!ParseMoney(max_aps_fee, n)) {
+            error = AmountErrMsg("maxapsfee", max_aps_fee);
             return nullptr;
         }
         if (n > HIGH_APS_FEE) {
             warnings.push_back(AmountHighWarn("-maxapsfee") + Untranslated(" ") +
-                              _("This is the maximum transaction fee you pay to prioritize partial spend avoidance over regular coin selection."));
+                              _("This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection."));
         }
         walletInstance->m_max_aps_fee = n;
     }
