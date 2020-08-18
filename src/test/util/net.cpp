@@ -16,14 +16,17 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
     if (complete) {
         size_t nSizeAdded = 0;
         auto it(node.vRecvMsg.begin());
-        for (; it != node.vRecvMsg.end(); ++it) {
+        auto it2 = it;
+        for (; it != node.vRecvMsg.end(); it2 = it++) {
             // vRecvMsg contains only completed CNetMessage
             // the single possible partially deserialized message are held by TransportDeserializer
             nSizeAdded += it->m_raw_message_size;
         }
         {
             LOCK(node.cs_vProcessMsg);
-            node.vProcessMsg.splice(node.vProcessMsg.end(), node.vRecvMsg, node.vRecvMsg.begin(), it);
+            node.vProcessMsg.splice_after(node.m_process_msg_most_recent, node.vRecvMsg, node.vRecvMsg.before_begin(), it);
+            node.m_process_msg_most_recent = it2;
+            node.m_recv_msg_most_recent = node.vRecvMsg.before_begin();
             node.nProcessQueueSize += nSizeAdded;
             node.fPauseRecv = node.nProcessQueueSize > nReceiveFloodSize;
         }

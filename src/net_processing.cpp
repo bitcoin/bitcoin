@@ -4035,12 +4035,14 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     // Don't bother if send buffer is too full to respond anyway
     if (pfrom->fPauseSend) return false;
 
-    std::list<CNetMessage> msgs;
+    std::forward_list<CNetMessage> msgs;
     {
         LOCK(pfrom->cs_vProcessMsg);
         if (pfrom->vProcessMsg.empty()) return false;
         // Just take one message
-        msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
+        msgs.splice_after(msgs.before_begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.before_begin());
+        if (pfrom->vProcessMsg.empty())
+            pfrom->m_process_msg_most_recent = pfrom->vProcessMsg.before_begin();
         pfrom->nProcessQueueSize -= msgs.front().m_raw_message_size;
         pfrom->fPauseRecv = pfrom->nProcessQueueSize > m_connman.GetReceiveFloodSize();
         fMoreWork = !pfrom->vProcessMsg.empty();

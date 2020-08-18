@@ -659,7 +659,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
             i->second += result->m_raw_message_size;
 
             // push the message to the process queue,
-            vRecvMsg.push_back(std::move(*result));
+            m_recv_msg_most_recent = vRecvMsg.insert_after(m_recv_msg_most_recent, std::move(*result));
 
             complete = true;
         }
@@ -1577,14 +1577,18 @@ void CConnman::SocketHandler()
                 if (notify) {
                     size_t nSizeAdded = 0;
                     auto it(pnode->vRecvMsg.begin());
-                    for (; it != pnode->vRecvMsg.end(); ++it) {
+                    // it2 will hold the before end iterator.
+                    auto it2 = it;
+                    for (; it != pnode->vRecvMsg.end(); it2 = it++) {
                         // vRecvMsg contains only completed CNetMessage
                         // the single possible partially deserialized message are held by TransportDeserializer
                         nSizeAdded += it->m_raw_message_size;
                     }
                     {
                         LOCK(pnode->cs_vProcessMsg);
-                        pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
+                        pnode->vProcessMsg.splice_after(pnode->m_process_msg_most_recent, pnode->vRecvMsg, pnode->vRecvMsg.before_begin(), it);
+                        pnode->m_process_msg_most_recent = it2;
+                        pnode->m_recv_msg_most_recent = pnode->vRecvMsg.before_begin();
                         pnode->nProcessQueueSize += nSizeAdded;
                         pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
                     }
@@ -2984,6 +2988,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
       m_conn_type(conn_type_in),
       nLocalServices(nLocalServicesIn)
 {
+    m_recv_msg_most_recent = vRecvMsg.before_begin();
+    m_process_msg_most_recent = vProcessMsg.before_begin();
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
