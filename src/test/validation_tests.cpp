@@ -8,9 +8,6 @@
 #include <net.h>
 #include <validation.h>
 
-#include <vbk/config.hpp>
-#include <vbk/service_locator.hpp>
-
 #include <test/util/setup_common.h>
 
 #include <boost/signals2/signal.hpp>
@@ -18,17 +15,10 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
 
-static void setConfig()
-{
-    VeriBlock::Config* config = new VeriBlock::Config();
-    config->POP_REWARD_PERCENTAGE = 0;
-    VeriBlock::setService<VeriBlock::Config>(config);
-}
-
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
     int maxHalvings = 64;
-    CAmount nInitialSubsidy = 50 * COIN;
+    CAmount nInitialSubsidy = VeriBlock::getCoinbaseSubsidy(50 * COIN);
 
     CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
     BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
@@ -51,7 +41,6 @@ static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
-    setConfig();
     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
     TestBlockSubsidyHalvings(chainParams->GetConsensus()); // As in main
     TestBlockSubsidyHalvings(150); // As in regtest
@@ -60,7 +49,6 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-    setConfig();
     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
     CAmount nSum = 0;
     for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
@@ -69,7 +57,10 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
         nSum += nSubsidy * 1000;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
+    // with 50 vBTC payout:
+//    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
+    // with 50*60% vBTC payout:
+    BOOST_CHECK_EQUAL(nSum, CAmount{1259999997480000});
 }
 
 static bool ReturnFalse() { return false; }

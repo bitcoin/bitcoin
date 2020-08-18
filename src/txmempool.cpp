@@ -22,7 +22,6 @@
 #include <util/time.h>
 #include <validationinterface.h>
 
-#include <vbk/pop_service_impl.hpp>
 #include <vbk/util.hpp>
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,

@@ -50,23 +50,32 @@
     <ConfigIniIn>..\..\test\config.ini.in</ConfigIniIn>
     <ConfigIniOut>..\..\test\config.ini</ConfigIniOut>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <AdditionalDependencies>F:\programming\berkeleydb\db-4.8.30.NC\build_windows\x64\Debug_static\libdb48sd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\programming\berkeleydb\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Target Name="AfterBuild">
-    <Copy SourceFiles="$(ConfigIniIn)" DestinationFiles="$(ConfigIniOut)" ></Copy>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                   Replace="@PACKAGE_NAME@" By="Bitcoin Core"></ReplaceInFile>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                   Replace="@abs_top_srcdir@" By="..\.." ToFullPath="true"></ReplaceInFile>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                   Replace="@abs_top_builddir@" By="..\.." ToFullPath="true"></ReplaceInFile>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                   Replace="@EXEEXT@" By=".exe"></ReplaceInFile>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@ENABLE_WALLET_TRUE@" By=""></ReplaceInFile>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@BUILD_BITCOIN_CLI_TRUE@" By=""></ReplaceInFile>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@BUILD_BITCOIND_TRUE@" By=""></ReplaceInFile>
-    <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@ENABLE_ZMQ_TRUE@" By=""></ReplaceInFile>
+    <Copy SourceFiles="$(ConfigIniIn)" DestinationFiles="$(ConfigIniOut)">
+    </Copy>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@PACKAGE_NAME@" By="Bitcoin Core">
+    </ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@abs_top_srcdir@" By="..\.." ToFullPath="true">
+    </ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@abs_top_builddir@" By="..\.." ToFullPath="true">
+    </ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@EXEEXT@" By=".exe">
+    </ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@ENABLE_WALLET_TRUE@" By="">
+    </ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@BUILD_BITCOIN_CLI_TRUE@" By="">
+    </ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@BUILD_BITCOIND_TRUE@" By="">
+    </ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)" Replace="@ENABLE_ZMQ_TRUE@" By="">
+    </ReplaceInFile>
   </Target>
 </Project>

@@ -6,10 +6,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <script/interpreter.h>
-
-#include "vbk/pop_service.hpp"
-#include "vbk/service_locator.hpp"
-
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>

@@ -16,9 +16,6 @@
 #include <validation.h>
 #include <util/system.h>
 
-#include <vbk/config.hpp>
-#include <vbk/service_locator.hpp>
-
 #include <unordered_map>
 
 CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID) :

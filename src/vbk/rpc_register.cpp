@@ -3,17 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc_register.hpp"
-
-#include "merkle.hpp"
-#include "pop_service.hpp"
-#include "vbk/service_locator.hpp"
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/validation.h>
 #include <validation.h>
+#include <vbk/entity/context_info_container.hpp>
 #include <vbk/p2p_sync.hpp>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h> // for CWallet
@@ -21,10 +17,11 @@
 #include <fstream>
 #include <set>
 
-#include "pop_service_impl.hpp"
-#include "vbk/adaptors/univalue_json.hpp"
-#include "vbk/config.hpp"
-#include "veriblock/mempool_result.hpp"
+#include <vbk/adaptors/univalue_json.hpp>
+#include <vbk/merkle.hpp>
+#include <vbk/pop_service.hpp>
+#include <veriblock/mempool_result.hpp>
+#include "rpc_register.hpp"
 
 namespace VeriBlock {
 
@@ -111,7 +108,6 @@ UniValue getpopdata(const JSONRPCRequest& request)
 
     auto block = GetBlockChecked(pBlockIndex);
 
-    auto& pop = getService<PopService>();
     //context info
     uint256 txRoot = BlockMerkleRoot(block);
     auto keystones = VeriBlock::getKeystoneHashesForTheNextBlock(pBlockIndex->pprev);
@@ -119,7 +115,7 @@ UniValue getpopdata(const JSONRPCRequest& request)
     auto authedContext = contextInfo.getAuthenticated();
     result.pushKV("raw_contextinfocontainer", HexStr(authedContext.begin(), authedContext.end()));
 
-    auto lastVBKBlocks = pop.getLastKnownVBKBlocks(16);
+    auto lastVBKBlocks = VeriBlock::getLastKnownVBKBlocks(16);
 
     UniValue univalueLastVBKBlocks(UniValue::VARR);
     for (const auto& b : lastVBKBlocks) {
@@ -127,7 +123,7 @@ UniValue getpopdata(const JSONRPCRequest& request)
     }
     result.pushKV("last_known_veriblock_blocks", univalueLastVBKBlocks);
 
-    auto lastBTCBlocks = pop.getLastKnownBTCBlocks(16);
+    auto lastBTCBlocks = VeriBlock::getLastKnownBTCBlocks(16);
     UniValue univalueLastBTCBlocks(UniValue::VARR);
     for (const auto& b : lastBTCBlocks) {
         univalueLastBTCBlocks.push_back(HexStr(b));
@@ -178,8 +174,7 @@ UniValue submitpop(const JSONRPCRequest& request)
 
     {
         LOCK(cs_main);
-        auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
-        auto& pop_mempool = pop_service.getMemPool();
+        auto& pop_mempool = *VeriBlock::GetPop().mempool;
 
         altintegration::MempoolResult result = pop_mempool.submitAll(popData);
 
@@ -194,8 +189,8 @@ UniValue debugpop(const JSONRPCRequest& request)
             "debugpop\n"
             "\nPrints alt-cpp-lib state into log.\n");
     }
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    LogPrint(BCLog::POP, "%s", pop.toPrettyString());
+    auto& pop = VeriBlock::GetPop();
+    LogPrint(BCLog::POP, "%s", VeriBlock::toPrettyString(pop));
     return UniValue();
 }
 
@@ -204,14 +199,12 @@ using BtcTree = altintegration::VbkBlockTree::BtcTree;
 
 static VbkTree& vbk()
 {
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    return pop.getAltTree().vbk();
+    return VeriBlock::GetPop().altTree->vbk();
 }
 
 static BtcTree& btc()
 {
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    return pop.getAltTree().btc();
+    return VeriBlock::GetPop().altTree->btc();
 }
 
 // getblock
@@ -387,8 +380,7 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
     }
         .Check(request);
 
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    auto& mp = pop.getMemPool();
+    auto& mp = *VeriBlock::GetPop().mempool;
     return altintegration::ToJSON<UniValue>(mp);
 }
 
@@ -422,9 +414,9 @@ bool GetPayload(
         return true;
     }
 
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    auto& pop = VeriBlock::GetPop();
 
-    auto& mp = pop.getMemPool();
+    auto& mp = *pop.mempool;
     auto* pl = mp.get<T>(pid);
     if (pl) {
         out = *pl;
@@ -432,7 +424,7 @@ bool GetPayload(
     }
 
     // search in the alttree storage
-    const auto& containing = pop.getAltTree().getStorage().getContainingAltBlocks(pid.asVector());
+    const auto& containing = pop.altTree->getStorage().getContainingAltBlocks(pid.asVector());
     if (containing.size() == 0) return false;
 
     // fill containing blocks

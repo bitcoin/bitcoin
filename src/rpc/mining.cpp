@@ -36,7 +36,7 @@
 #include <versionbitsinfo.h>
 #include <warnings.h>
 
-#include <vbk/service_locator.hpp>
+#include <vbk/pop_service.hpp>
 #include <vbk/merkle.hpp>
 
 #include <memory>
@@ -726,7 +726,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("pop_witness_commitment", HexStr(popCoinbaseCommitment.scriptPubKey.begin(), popCoinbaseCommitment.scriptPubKey.end()));
 
     UniValue popRewardsArray(UniValue::VARR);
-    VeriBlock::PoPRewards popRewards = VeriBlock::getService<VeriBlock::PopService>().getPopRewards(*pindexPrev, Params().GetConsensus());
+    VeriBlock::PoPRewards popRewards = VeriBlock::getPopRewards(*pindexPrev, Params().GetConsensus());
     for (const auto& itr : popRewards) {
         UniValue popRewardValue(UniValue::VOBJ);
         popRewardValue.pushKV("payout_info", HexStr(itr.first.begin(), itr.first.end()));

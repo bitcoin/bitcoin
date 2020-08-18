@@ -3,12 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bootstraps.h"
 #include <boost/algorithm/string.hpp>
+#include <chainparams.h>
 #include <util/strencodings.h>
-#include <vbk/config.hpp>
-#include <vbk/service_locator.hpp>
-#include <veriblock/config.hpp>
+#include <vbk/pop_service.hpp>
+#include <vbk/util.hpp>
+#include <bootstraps.h>
+
+std::vector<uint8_t> AltChainParamsVBTC::getHash(const std::vector<uint8_t>& bytes) const noexcept
+{
+    return VeriBlock::headerFromBytes(bytes).GetHash().asVector();
+}
 
 static std::vector<std::string> parseBlocks(const std::string& s)
 {
@@ -106,11 +111,10 @@ void selectPopConfig(
         throw std::invalid_argument("vbknet currently only supports test/regtest");
     }
 
-    popconfig.alt = std::make_shared<AltChainParamsVBTC>(Params().GenesisBlock());
-
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
-    config.popconfig = std::move(popconfig);
-    printConfig(config.popconfig);
+    auto altparams = std::make_shared<AltChainParamsVBTC>(Params().GenesisBlock());
+    popconfig.alt = altparams;
+    VeriBlock::SetPopConfig(popconfig);
+    printConfig(popconfig);
 }
 
 void selectPopConfig(const ArgsManager& args)

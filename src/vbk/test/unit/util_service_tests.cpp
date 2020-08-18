@@ -11,12 +11,9 @@
 #include <string>
 #include <test/util/setup_common.h>
 #include <validation.h>
-#include <vbk/config.hpp>
-#include <vbk/init.hpp>
+#include <vbk/entity/context_info_container.hpp>
 #include <vbk/merkle.hpp>
 #include <vbk/pop_service.hpp>
-#include <vbk/service_locator.hpp>
-#include <vbk/test/util/mock.hpp>
 #include <vbk/util.hpp>
 #include <bootstraps.h>
 
@@ -26,7 +23,6 @@ BOOST_AUTO_TEST_SUITE(util_service_tests)
 
 BOOST_AUTO_TEST_CASE(is_keystone)
 {
-    VeriBlock::InitConfig();
     SelectParams("regtest");
     selectPopConfig("regtest", "regtest", true);
 
@@ -39,7 +35,6 @@ BOOST_AUTO_TEST_CASE(is_keystone)
 
 BOOST_AUTO_TEST_CASE(get_previous_keystone)
 {
-    VeriBlock::InitConfig();
     SelectParams("regtest");
     selectPopConfig("regtest", "regtest", true);
 

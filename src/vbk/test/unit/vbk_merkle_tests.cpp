@@ -12,10 +12,7 @@
 #include <wallet/wallet.h>
 
 #include "vbk/genesis.hpp"
-#include "vbk/init.hpp"
 #include "vbk/merkle.hpp"
-#include "vbk/service_locator.hpp"
-#include "vbk/test/util/mock.hpp"
 
 BOOST_AUTO_TEST_SUITE(vbk_merkle_tests)
 

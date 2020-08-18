@@ -44,8 +44,8 @@
 #include <memory>
 #include <mutex>
 
-#include <vbk/pop_service_impl.hpp>
 #include <vbk/adaptors/univalue_json.hpp>
+#include <vbk/pop_service.hpp>
 
 struct CUpdatedBlock
 {
@@ -923,9 +923,9 @@ static UniValue getblock(const JSONRPCRequest& request)
     UniValue json = blockToJSON(block, tip, pblockindex, verbosity >= 2);
 
     {
-        auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+        auto& pop = VeriBlock::GetPop();
         LOCK(cs_main);
-        auto index = pop.getAltTree().getBlockIndex(block.GetHash().asVector());
+        auto index = pop.altTree->getBlockIndex(block.GetHash().asVector());
         VBK_ASSERT(index);
         UniValue obj(UniValue::VOBJ);
 

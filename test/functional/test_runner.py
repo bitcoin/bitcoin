@@ -96,6 +96,7 @@ BASE_SCRIPTS = [
     'wallet_dump.py',
     'wallet_listtransactions.py',
     # vv Tests less than 60s vv
+    'feature_pop_popdata_max_size.py',
     # 'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
@@ -123,7 +124,6 @@ BASE_SCRIPTS = [
     'feature_pop_p2p_ddos.py',
     'feature_pop_mempool_reorg.py',
     'feature_pop_mempool_getpop.py',
-    'feature_pop_popdata_max_size.py',
     'feature_pop_e2e.py',
     ## end VeriBlock tests
     'wallet_keypool_topup.py',

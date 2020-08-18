@@ -23,8 +23,6 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 
-#include <vbk/init.hpp>
-
 #include "bootstraps.h"
 #include <functional>
 
@@ -45,7 +43,6 @@ static void WaitForShutdown(NodeContext& node)
 //
 static bool AppInit(int argc, char* argv[])
 {
-    VeriBlock::InitConfig();
     NodeContext node;
     node.chain = interfaces::MakeChain(node);
 

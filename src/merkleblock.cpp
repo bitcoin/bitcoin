@@ -10,9 +10,6 @@
 #include <hash.h>
 #include <consensus/consensus.h>
 
-#include "vbk/service_locator.hpp"
-#include "vbk/config.hpp"
-
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids)
 {
     header = block.GetBlockHeader();

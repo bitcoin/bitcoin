@@ -12,9 +12,6 @@
 #include <streams.h>
 #include <version.h>
 
-#include <vbk/config.hpp>
-#include <vbk/service_locator.hpp>
-
 #include <veriblock/entities/popdata.hpp>
 
 #include <algorithm>
@@ -22,8 +19,8 @@
 #include <chain.h>
 #include <functional>
 
-
 namespace VeriBlock {
+
 /**
  * Create new Container with elements filtered elements of original container. All elements for which pred returns false will be removed.
  * @tparam Container any container, such as std::vector
@@ -40,11 +37,6 @@ Container filter_if(const Container& inp, std::function<bool(const typename Cont
                 }),
         v.end());
     return v;
-}
-
-inline CAmount getCoinbaseSubsidy(const CAmount& subsidy)
-{
-    return subsidy * (100 - VeriBlock::getService<VeriBlock::Config>().POP_REWARD_PERCENTAGE) / 100;
 }
 
 inline CBlockHeader headerFromBytes(const std::vector<uint8_t>& v)

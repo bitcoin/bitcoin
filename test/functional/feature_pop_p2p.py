@@ -13,7 +13,7 @@ from test_framework.mininode import (
 from test_framework.pop import endorse_block
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    connect_nodes,
+    connect_nodes, assert_equal,
 )
 
 
@@ -129,10 +129,11 @@ class PopP2P(BitcoinTestFramework):
         msg = msg_get_atv([atv_id])
         self.nodes[0].p2p.send_message(msg)
 
-        time.sleep(2)
+        time.sleep(5)
 
-        assert bn.executed_msg_atv == 1
-        assert bn.executed_msg_offer_vbk == 2
+        assert_equal(bn.executed_msg_atv, 1)
+        assert_equal(bn.executed_msg_offer_vbk, 2)
+
 
         self.log.info("_run_sync_after_generating successful")
 

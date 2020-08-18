@@ -5,10 +5,9 @@
 #ifndef BITCOIN_SRC_VBK_ENTITY_CONTEXT_INFO_CONTAINER_HPP
 #define BITCOIN_SRC_VBK_ENTITY_CONTEXT_INFO_CONTAINER_HPP
 
-#include "vbk/config.hpp"
-#include "vbk/service_locator.hpp"
 #include <hash.h>
 #include <uint256.h>
+#include <vbk/vbk.hpp>
 
 namespace VeriBlock {
 

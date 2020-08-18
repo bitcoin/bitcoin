@@ -58,8 +58,6 @@
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
-#include <vbk/init.hpp>
-
 #include <stdint.h>
 #include <stdio.h>
 #include <set>
@@ -83,6 +81,7 @@
 #endif
 
 #include <vbk/log.hpp>
+#include <vbk/pop_service.hpp>
 
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
@@ -1498,8 +1497,7 @@ bool AppInitMain(NodeContext& node)
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
-
-                VeriBlock::InitPopService(*pblocktree);
+                VeriBlock::SetPop(*pblocktree);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -1770,7 +1768,6 @@ bool AppInitMain(NodeContext& node)
         LogPrintf("block tree size = %u\n", ::BlockIndex().size());
         chain_active_height = ::ChainActive().Height();
     }
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
     LogPrintf("nBestHeight = %d\n", chain_active_height);
 
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
@@ -1852,17 +1849,18 @@ bool AppInitMain(NodeContext& node)
     }, DUMP_BANS_INTERVAL * 1000);
 
     {
+        auto& pop = VeriBlock::GetPop();
         auto* tip = ChainActive().Tip();
         altintegration::ValidationState state;
         LOCK(cs_main);
-        bool ret = pop.setState(tip->GetBlockHash(), state);
-        auto* alttip = pop.getAltTree().getBestChain().tip();
+        bool ret = VeriBlock::setState(tip->GetBlockHash(), state);
+        auto* alttip = pop.altTree->getBestChain().tip();
         assert(ret && "bad state");
         assert(tip->nHeight == alttip->getHeight());
 
-        LogPrintf("ALT tree best height = %d\n", pop.getAltTree().getBestChain().tip()->getHeight());
-        LogPrintf("VBK tree best height = %d\n", pop.getAltTree().vbk().getBestChain().tip()->getHeight());
-        LogPrintf("BTC tree best height = %d\n", pop.getAltTree().btc().getBestChain().tip()->getHeight());
+        LogPrintf("ALT tree best height = %d\n", pop.altTree->getBestChain().tip()->getHeight());
+        LogPrintf("VBK tree best height = %d\n", pop.altTree->vbk().getBestChain().tip()->getHeight());
+        LogPrintf("BTC tree best height = %d\n", pop.altTree->btc().getBestChain().tip()->getHeight());
     }
 
     return true;

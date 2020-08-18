@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <vector>
 
+#include <chainparams.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <policy/policy.h>
@@ -18,9 +19,6 @@
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>
-
-#include <vbk/config.hpp>
-#include <vbk/service_locator.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
@@ -41,9 +39,9 @@ static void AddKey(CWallet& wallet, const CKey& key)
 
 static void setConfig()
 {
-    VeriBlock::Config* config = new VeriBlock::Config();
-    config->POP_REWARD_PERCENTAGE = 0;
-    VeriBlock::setService<VeriBlock::Config>(config);
+    auto config = VeriBlock::Config();
+    config.POP_REWARD_PERCENTAGE = 0;
+    SelectPopConfig(config);
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)

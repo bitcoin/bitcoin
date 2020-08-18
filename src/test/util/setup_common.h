@@ -17,8 +17,6 @@
 #include <txmempool.h>
 
 #include <vbk/pop_service.hpp>
-#include <vbk/config.hpp>
-#include <vbk/test/util/mock.hpp>
 
 #include <type_traits>
 

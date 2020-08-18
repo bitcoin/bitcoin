@@ -107,7 +107,7 @@ template <typename PopDataType>
 void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    auto& pop_mempool = VeriBlock::getService<VeriBlock::PopService>().getMemPool();
+    auto& pop_mempool = *VeriBlock::GetPop().mempool;
     const auto& data = pop_mempool.getMap<PopDataType>();
 
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<PopDataType>();

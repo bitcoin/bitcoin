@@ -9,7 +9,7 @@
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
-#include <vbk/config.hpp>
+#include <vbk/vbk.hpp>
 
 #include "veriblock/entities/popdata.hpp"
 

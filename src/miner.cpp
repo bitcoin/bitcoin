@@ -26,8 +26,6 @@
 
 #include <vbk/merkle.hpp>
 #include <vbk/pop_service.hpp>
-#include <vbk/pop_service_impl.hpp>
-#include <vbk/service_locator.hpp>
 #include <vbk/util.hpp>
 
 #include <algorithm>
@@ -145,7 +143,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     addPackageTxs<ancestor_score>(nPackagesSelected, nDescendantsUpdated);
 
     // VeriBlock: add PopData into the block
-    pblock->popData = VeriBlock::getService<VeriBlock::PopService>().getPopData();
+    pblock->popData = VeriBlock::getPopData();
     if (!pblock->popData.atvs.empty() || !pblock->popData.context.empty() || !pblock->popData.vtbs.empty()) {
         pblock->nVersion |= VeriBlock::POP_BLOCK_VERSION_BIT;
     }
@@ -164,7 +162,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
-    VeriBlock::getService<VeriBlock::PopService>().addPopPayoutsIntoCoinbaseTx(coinbaseTx, *pindexPrev, chainparams.GetConsensus());
+    VeriBlock::addPopPayoutsIntoCoinbaseTx(coinbaseTx, *pindexPrev, chainparams.GetConsensus());
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
