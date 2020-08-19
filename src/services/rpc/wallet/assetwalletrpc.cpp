@@ -1611,6 +1611,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             {"merklerootpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle hash for both transaction and receipt root."},
             {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
             {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
+            {"auxfee_test", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Used for internal testing only."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1701,6 +1702,24 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
+    if(params.size() >= 11 && params[10].isBool() && params[10].get_bool()) {
+        // aux fees test
+        CAsset theAsset;
+        if (!GetAsset(nAsset, theAsset))
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
+        const CAmount &nAuxFee = getAuxFee(theAsset.auxFeeDetails, it.second);
+        if(nAuxFee > 0 && !theAsset.vchAuxFeeKeyID.empty()){
+            auto itVout = std::find_if( mintSyscoin.voutAssets.begin(), mintSyscoin.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+            if(itVout == mintSyscoin.voutAssets.end()) {
+                throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
+            }
+            itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
+            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.vchAuxFeeKeyID}));
+            CTxOut change_prototype_txout(0, scriptPubKey);
+            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
+            mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+        }
+    }
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
@@ -2107,7 +2126,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"asset_guid","amount"} }, 
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
-    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof"} },     
+    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof","auxfee_test"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},

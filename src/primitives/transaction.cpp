@@ -374,7 +374,7 @@ void CMutableTransaction::LoadAssets()
         }       
     }
 }
-bool CTransaction::GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const
+CAmount CTransaction::GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const
 {
     CAmount nTotal = 0;
     for(const auto& voutAsset: vecVout) {
