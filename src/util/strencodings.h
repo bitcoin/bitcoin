@@ -57,7 +57,6 @@ std::string EncodeBase32(const std::string& str);
 
 std::string itostr(int n);
 void SplitHostPort(std::string in, int& portOut, std::string& hostOut);
-int64_t atoi64(const char* psz);
 int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
 
