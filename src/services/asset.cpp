@@ -176,7 +176,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
             return;
         }
         double fPct;
-        if(ParseDouble(auxFeeArr[1].get_str(), fPct) && fPct <= 65.535){
+        if(ParseDouble(auxFeeArr[1].get_str(), &fPct) && fPct <= 65.535){
             const uint16_t& nPercent = (uint16_t)(fPct*10000);
             vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), nPercent));
         } else {
