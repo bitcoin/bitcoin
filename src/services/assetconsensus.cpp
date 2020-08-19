@@ -438,11 +438,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         mapAsset->second = std::move(dbAsset);                        
     }
     CAsset& storedAssetRef = mapAsset->second;
-    uint64_t nTotal = 0;
-    for(const auto& voutAsset: vecVout){
-        nTotal += voutAsset.nValue;
-    }
-    storedAssetRef.nBalance += nTotal;        
+    storedAssetRef.nBalance += tx.GetAssetValueOut(vecVout);        
     return true;  
 }
 
@@ -577,6 +573,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
         {
+            if(vecVout.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
+            }
             if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
@@ -835,10 +834,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
-            uint64_t nTotal = 0;
-            for(const auto& voutAsset: vecVout){
-                nTotal += voutAsset.nValue;
-            }
+            const CAmount &nTotal = tx.GetAssetValueOut(vecVout);
             if (storedAssetRef.nBalance < nTotal) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
             }
