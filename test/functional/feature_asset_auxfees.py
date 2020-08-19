@@ -40,7 +40,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
 
     def basic_asset(self):
         newaddressfee = self.nodes[1].getnewaddress()
-        auxfees = {'fee_struct': [[0,'0.01'],[10,'0.004'],[250,'0.002'],[2500,'0.0007'],[25000,'0.00007'],[250000,'0']]}
+        auxfees = {'fee_struct': [[0,'1.0'],[10,'0.4'],[250,'0.2'],[2500,'0.07'],[25000,'0.007'],[250000,'0']]}
         self.asset = self.nodes[0].assetnew('1', 'AGX', 'AGX silver backed token, licensed and operated by Interfix corporation', '0x', 8, 1000, 10000, 255, '', newaddressfee, {}, auxfees)['asset_guid']
         self.sync_mempools()
         self.nodes[0].generate(1)
