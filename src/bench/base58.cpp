@@ -20,7 +20,7 @@ static void Base58Encode(benchmark::Bench& bench)
         }
     };
     bench.batch(buff.size()).unit("byte").run([&] {
-        EncodeBase58(buff.data(), buff.data() + buff.size());
+        EncodeBase58(buff);
     });
 }
 
@@ -34,10 +34,8 @@ static void Base58CheckEncode(benchmark::Bench& bench)
             200, 24
         }
     };
-    std::vector<unsigned char> vch;
-    vch.assign(buff.begin(), buff.end());
     bench.batch(buff.size()).unit("byte").run([&] {
-        EncodeBase58Check(vch);
+        EncodeBase58Check(buff);
     });
 }
 
