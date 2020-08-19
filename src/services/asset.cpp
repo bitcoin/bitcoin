@@ -175,7 +175,14 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
             SetNull();
             return;
         }
-        vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), auxFeeArr[1].get_str()));
+        double fPct;
+        if(ParseDouble(auxFeeArr[1].get_str(), fPct) && fPct <= 65.535){
+            const uint16_t& nPercent = (uint16_t)(fPct*10000);
+            vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), nPercent));
+        } else {
+            SetNull();
+            return;
+        }
     }
 }
 
@@ -185,7 +192,7 @@ UniValue CAuxFeeDetails::ToJson() const {
     for(const auto& auxfee: vecAuxFees) {
         UniValue auxfeeArr(UniValue::VARR);
         auxfeeArr.push_back(auxfee.nBound);
-        auxfeeArr.push_back(auxfee.strPercent);
+        auxfeeArr.push_back(auxfee.nPercent);
         feeStruct.push_back(auxfeeArr);
     }
     value.pushKV("fee_struct", feeStruct);

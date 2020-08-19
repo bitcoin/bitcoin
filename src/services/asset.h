@@ -38,25 +38,25 @@ enum {
 class CAuxFee {
 public:
     CAmount nBound;
-    std::string strPercent;
+    uint16_t nPercent;
     CAuxFee() {
         SetNull();
     }
-    CAuxFee(const CAmount &nBoundIn, const std::string &strPercentIn):nBound(nBoundIn),strPercent(strPercentIn) {}
+    CAuxFee(const CAmount &nBoundIn, const uint16_t &nPercentIn):nBound(nBoundIn),nPercent(nPercentIn) {}
     SERIALIZE_METHODS(CAuxFee, obj) {
-        READWRITE(Using<AmountCompression>(obj.nBound), obj.strPercent);
+        READWRITE(Using<AmountCompression>(obj.nBound), obj.nPercent);
     }
     inline friend bool operator==(const CAuxFee &a, const CAuxFee &b) {
         return (
-        a.nBound == b.nBound && a.strPercent == b.strPercent
+        a.nBound == b.nBound && a.nPercent == b.nPercent
         );
     }
 
     inline friend bool operator!=(const CAuxFee &a, const CAuxFee &b) {
         return !(a == b);
     }
-    inline void SetNull() { strPercent.clear();  nBound = 0;}
-    inline bool IsNull() const { return (strPercent.empty() && nBound == 0); }
+    inline void SetNull() { nPercent = 0; nBound = 0;}
+    inline bool IsNull() const { return (nPercent == 0 && nBound == 0); }
 };
 class CAuxFeeDetails {
 public:
