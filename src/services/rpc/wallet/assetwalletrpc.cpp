@@ -1694,7 +1694,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CMutableTransaction mtx;
     mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-    mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     if(params.size() >= 11 && params[10].isBool() && params[10].get_bool()) {
         // aux fees test
         CAsset theAsset;
@@ -1719,7 +1718,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient fee;
     CreateFeeRecipient(scriptData, fee);
-
+    mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
