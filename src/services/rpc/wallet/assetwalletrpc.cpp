@@ -1707,7 +1707,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-        const CAmount &nAuxFee = getAuxFee(theAsset.auxFeeDetails, it.second);
+        const CAmount &nAuxFee = getAuxFee(theAsset.auxFeeDetails, nAmount);
         if(nAuxFee > 0 && !theAsset.vchAuxFeeKeyID.empty()){
             auto itVout = std::find_if( mintSyscoin.voutAssets.begin(), mintSyscoin.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == mintSyscoin.voutAssets.end()) {
