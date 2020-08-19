@@ -250,7 +250,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
-    const CAmount &nTotal = vecVout[0].nValue;
+    const CAmount &nTotal = tx.GetAssetValueOut(vecVout);
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
@@ -367,8 +367,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
             }
-            const CAmount &nAmountAsset = vecVout[0].nValue;
-            // the burn amount in opreturn (SYS) should match the first asset output (SYSX)
+            const CAmount &nAmountAsset = tx.GetAssetValueOut(vecVout);
+            // the burn amount in opreturn (SYS) should match total output for SYSX
             if(nAmountAsset != nBurnAmount) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-mismatch-amount", bSanityCheck);
             }
