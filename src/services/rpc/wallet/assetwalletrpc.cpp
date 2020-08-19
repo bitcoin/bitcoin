@@ -1689,14 +1689,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
-    std::vector<unsigned char> data;
-    mintSyscoin.SerializeData(data);
-    
-    CScript scriptData;
-    scriptData << OP_RETURN << data;
-    CRecipient fee;
-    CreateFeeRecipient(scriptData, fee);
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };    
     
     CMutableTransaction mtx;
     mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
@@ -1720,6 +1713,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
         }
     }
+    std::vector<unsigned char> data;
+    mintSyscoin.SerializeData(data);
+    CScript scriptData;
+    scriptData << OP_RETURN << data;
+    CRecipient fee;
+    CreateFeeRecipient(scriptData, fee);
+
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
