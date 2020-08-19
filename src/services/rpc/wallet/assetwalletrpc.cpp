@@ -1342,7 +1342,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     std::vector<CAssetOutValue> vecOut;
     uint8_t bOverideRBF = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
-        uint64_t nTotalSending = 0;
+        CAmount nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address\" or \"amount\"}");
