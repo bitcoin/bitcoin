@@ -22,8 +22,8 @@
 namespace sha256_power8
 {
 
-typedef vector uint32_t uint32x4_p8;
-typedef vector uint8_t uint8x16_p8;
+typedef __vector uint32_t uint32x4_p8;
+typedef __vector uint8_t uint8x16_p8;
 
 //! Gets the first uin32_t from a, b, c, d, converts from BE to host endian, and returns them concatenated
 template<uint8_t OFFS> static inline uint32x4_p8 pack_bytes
