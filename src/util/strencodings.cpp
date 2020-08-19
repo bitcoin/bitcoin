@@ -407,7 +407,10 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
     }
     return out.str();
 }
-
+std::string itostr(int n)
+{
+    return strprintf("%d", n);
+}
 int64_t atoi64(const std::string& str)
 {
 #ifdef _MSC_VER
