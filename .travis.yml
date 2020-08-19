@@ -216,11 +216,6 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, fuzzers under valgrind]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
-
-    - stage: test
       name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
