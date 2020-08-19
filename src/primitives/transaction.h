@@ -549,6 +549,7 @@ public:
     // Return sum of txouts.
     CAmount GetValueOut() const;
     // SYSCOIN
+    bool GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const;
     bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const;
     uint256 GetNotarySigHash(const CAssetOut &vecOut) const;
     /**

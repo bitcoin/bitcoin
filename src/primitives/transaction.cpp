@@ -374,6 +374,14 @@ void CMutableTransaction::LoadAssets()
         }       
     }
 }
+bool CTransaction::GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const
+{
+    CAmount nTotal = 0;
+    for(const auto& voutAsset: vecVout) {
+        nTotal += voutAsset.nValue;
+    }
+    return nTotal;
+}
 bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
