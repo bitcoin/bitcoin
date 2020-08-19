@@ -227,7 +227,7 @@ static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
         nOrderPos = -1; // TODO: calculate elsewhere
         return;
     }
-    nOrderPos = atoi64(mapValue["n"].c_str());
+    nOrderPos = atoi64(mapValue["n"]);
 }
 
 

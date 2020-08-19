@@ -407,15 +407,6 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
     return out.str();
 }
 
-int64_t atoi64(const char* psz)
-{
-#ifdef _MSC_VER
-    return _atoi64(psz);
-#else
-    return strtoll(psz, nullptr, 10);
-#endif
-}
-
 int64_t atoi64(const std::string& str)
 {
 #ifdef _MSC_VER
