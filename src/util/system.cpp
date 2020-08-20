@@ -1025,7 +1025,7 @@ bool FileCommit(FILE *file)
         return false;
     }
 #else
-    #if defined(HAVE_FDATASYNC)
+    #if HAVE_FDATASYNC
     if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
         LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
         return false;
