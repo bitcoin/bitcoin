@@ -319,3 +319,12 @@ void BaseIndex::Stop()
         m_thread_sync.join();
     }
 }
+
+IndexSummary BaseIndex::GetSummary() const
+{
+    IndexSummary summary{};
+    summary.name = GetName();
+    summary.synced = m_synced;
+    summary.best_block_height = m_best_block_index.load()->nHeight;
+    return summary;
+}
