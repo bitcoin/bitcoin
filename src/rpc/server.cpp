@@ -433,10 +433,44 @@ static inline UniValue transformNamedArguments(const UniValue& in, const std::ve
     return out;
 }
 
-static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames)
+/**
+ * Process positional arguments into an Object of named arguments, based on the
+ * passed-in specification for the RPC call's arguments.
+ */
+static inline UniValue transformPositionalArguments(const UniValue& in, const std::vector<std::string>& argNames)
 {
-    JSONRPCRequest out = in;
-    out.params = transformNamedArguments(in.params, argNames);
+    assert(in.size() <= argNames.size());
+    UniValue out(UniValue::VOBJ);
+    for (size_t i = 0; i < in.size(); ++i) {
+        const UniValue &val = in[i];
+        const std::string &argNamePattern = argNames[i];
+        std::vector<std::string> vargNames;
+        boost::algorithm::split(vargNames, argNamePattern, boost::algorithm::is_any_of("|"));
+        for (const std::string & argName : vargNames) {
+            out.pushKV(argName, val);
+        }
+    }
+    // Return request with positional arguments transformed to named arguments
+    return out;
+}
+
+static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames)
+{
+    auto out = in;
+    if (in.params.isObject()) {
+        out.m_used_positional_args = false;
+        out.m_params = in.params;
+        out.params = transformNamedArguments(in.params, argNames);
+    } else {
+        out.m_used_positional_args = true;
+        if (in.params.size() > argNames.size()) {
+            // Too many params, so just trigger help
+            out.fHelp = true;
+            return out;
+        }
+        out.m_params = transformPositionalArguments(in.params, argNames);
+    }
+
     return out;
 }
 
@@ -468,11 +502,7 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
     {
         RPCCommandExecution execution(request.strMethod);
         // Execute, convert arguments to array if necessary
-        if (request.params.isObject()) {
-            return command.actor(transformNamedArguments(request, command.argNames), result, last_handler);
-        } else {
-            return command.actor(request, result, last_handler);
-        }
+        return command.actor(transformArguments(request, command.argNames), result, last_handler);
     }
     catch (const std::exception& e)
     {

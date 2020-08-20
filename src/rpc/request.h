@@ -34,19 +34,21 @@ public:
     UniValue id;
     std::string strMethod;
     UniValue params;
+    UniValue m_params;
+    bool m_used_positional_args;
     bool fHelp;
     std::string URI;
     std::string authUser;
     std::string peerAddr;
     const util::Ref& context;
 
-    JSONRPCRequest(const util::Ref& context) : id(NullUniValue), params(NullUniValue), fHelp(false), context(context) {}
+    JSONRPCRequest(const util::Ref& context) : id(NullUniValue), params(NullUniValue), m_params(NullUniValue), m_used_positional_args(false), fHelp(false), context(context) {}
 
     //! Initializes request information from another request object and the
     //! given context. The implementation should be updated if any members are
     //! added or removed above.
     JSONRPCRequest(const JSONRPCRequest& other, const util::Ref& context)
-        : id(other.id), strMethod(other.strMethod), params(other.params), fHelp(other.fHelp), URI(other.URI),
+        : id(other.id), strMethod(other.strMethod), params(other.params), m_params(other.m_params), m_used_positional_args(other.m_used_positional_args), fHelp(other.fHelp), URI(other.URI),
           authUser(other.authUser), peerAddr(other.peerAddr), context(context)
     {
     }
