@@ -59,7 +59,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
         self.log.info('Check that txs from peers with relay-permission are not rejected and relayed to others')
         self.log.info("Restarting node 0 with relay permission and blocksonly")
-        self.restart_node(0, ["-persistmempool=0", "-whitelist=relay@127.0.0.1", "-blocksonly"])
+        self.restart_node(0, ["-persistmempool=0", "-whitelist=relay@127.0.0.1", "-blocksonly", '-deprecatedrpc=whitelisted'])
         assert_equal(self.nodes[0].getrawmempool(), [])
         first_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         second_peer = self.nodes[0].add_p2p_connection(P2PInterface())
