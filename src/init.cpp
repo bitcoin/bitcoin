@@ -107,14 +107,14 @@ static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
  */
 static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
 
-static fs::path GetPidFile()
+static fs::path GetPidFile(const ArgsManager& args)
 {
     return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
 }
 
-NODISCARD static bool CreatePidFile()
+NODISCARD static bool CreatePidFile(const ArgsManager& args)
 {
-    fsbridge::ofstream file{GetPidFile()};
+    fsbridge::ofstream file{GetPidFile(args)};
     if (file) {
 #ifdef WIN32
         tfm::format(file, "%d\n", GetCurrentProcessId());
@@ -123,7 +123,7 @@ NODISCARD static bool CreatePidFile()
 #endif
         return true;
     } else {
-        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));
+        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile(args).string(), std::strerror(errno)));
     }
 }
 
@@ -180,6 +180,7 @@ void Shutdown(NodeContext& node)
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
     if (!lock_shutdown) return;
     LogPrintf("%s: In progress...\n", __func__);
+    Assert(node.args);
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,
     /// for example if the data directory was found to be locked.
@@ -230,7 +231,7 @@ void Shutdown(NodeContext& node)
     node.connman.reset();
     node.banman.reset();
 
-    if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+    if (::mempool.IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(::mempool);
     }
 
@@ -301,19 +302,19 @@ void Shutdown(NodeContext& node)
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     globalVerifyHandle.reset();
     ECC_Stop();
-    node.args = nullptr;
     node.mempool = nullptr;
     node.chainman = nullptr;
     node.scheduler.reset();
 
     try {
-        if (!fs::remove(GetPidFile())) {
+        if (!fs::remove(GetPidFile(*node.args))) {
             LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
         }
     } catch (const fs::filesystem_error& e) {
         LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
     }
 
+    node.args = nullptr;
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -372,7 +373,7 @@ void SetupServerArgs(NodeContext& node)
     node.args = &gArgs;
     ArgsManager& argsman = *node.args;
 
-    SetupHelpOptions(gArgs);
+    SetupHelpOptions(argsman);
     argsman.AddArg("-help-debug", "Print help message with debugging options and exit", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // server-only for now
 
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
@@ -684,7 +685,7 @@ static void CleanupBlockRevFiles()
     }
 }
 
-static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
+static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args)
 {
     const CChainParams& chainparams = Params();
     ScheduleBatchPriority();
@@ -780,6 +781,7 @@ static bool InitSanityCheck()
 
 static bool AppInitServers(const util::Ref& context, NodeContext& node)
 {
+    const ArgsManager& args = *Assert(node.args);
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
@@ -794,7 +796,7 @@ static bool AppInitServers(const util::Ref& context, NodeContext& node)
 }
 
 // Parameter interaction based on rules
-void InitParameterInteraction()
+void InitParameterInteraction(ArgsManager& args)
 {
     // when specifying an explicit binding address, you want to listen on it
     // even when -connect or -proxy is specified
@@ -863,7 +865,7 @@ void InitParameterInteraction()
  * Note that this is called very early in the process lifetime, so you should be
  * careful about what global state you rely on here.
  */
-void InitLogging()
+void InitLogging(const ArgsManager& args)
 {
     LogInstance().m_print_to_file = !gArgs.IsArgNegated("-debuglogfile");
     LogInstance().m_file_path = AbsPathForConfigVal(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
@@ -909,7 +911,7 @@ std::set<BlockFilterType> g_enabled_filter_types;
     std::terminate();
 };
 
-bool AppInitBasicSetup()
+bool AppInitBasicSetup(ArgsManager& args)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -951,7 +953,7 @@ bool AppInitBasicSetup()
     return true;
 }
 
-bool AppInitParameterInteraction()
+bool AppInitParameterInteraction(const ArgsManager& args)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
@@ -1247,9 +1249,10 @@ bool AppInitLockDataDirectory()
 
 bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
+    const ArgsManager& args = *Assert(node.args);
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
-    if (!CreatePidFile()) {
+    if (!CreatePidFile(args)) {
         // Detailed error printed inside CreatePidFile().
         return false;
     }
@@ -1853,7 +1856,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         vImportFiles.push_back(strFile);
     }
 
-    g_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=, &chainman]{ ThreadImport(chainman, vImportFiles); });
+    g_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=, &chainman, &args] {
+        ThreadImport(chainman, vImportFiles, args);
+    });
 
     // Wait for genesis block to be processed
     {

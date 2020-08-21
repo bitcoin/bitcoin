@@ -97,8 +97,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SelectParams(chainName);
     SeedInsecureRand();
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
-    InitLogging();
-    AppInitParameterInteraction();
+    InitLogging(*m_node.args);
+    AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     SHA256AutoDetect();
     ECC_Start();
