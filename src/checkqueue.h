@@ -159,12 +159,6 @@ public:
         }
     }
 
-    //! Worker thread
-    void Thread()
-    {
-        Loop(false /* worker thread */);
-    }
-
     //! Wait until execution finishes, and return whether all evaluations were successful.
     bool Wait()
     {
