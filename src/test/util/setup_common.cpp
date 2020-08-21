@@ -144,8 +144,11 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.mempool = MakeUnique<CTxMemPool>(&::feeEstimator);
     m_node.mempool->setSanityCheck(1.0);
 
+    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
+    constexpr int script_check_threads = 2;
+    g_parallel_script_checks = true;
     m_node.chainman = &::g_chainman;
-    m_node.chainman->InitializeChainstate(*m_node.mempool);
+    m_node.chainman->InitializeChainstate(*m_node.mempool, uint256(), script_check_threads);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -159,11 +162,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     if (!ActivateBestChain(state, chainparams)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
-
-    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
-    constexpr int script_check_threads = 2;
-    StartScriptCheckWorkerThreads(script_check_threads);
-    g_parallel_script_checks = true;
 
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
@@ -180,7 +178,6 @@ TestingSetup::~TestingSetup()
     if (m_node.scheduler) m_node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
-    StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.connman.reset();

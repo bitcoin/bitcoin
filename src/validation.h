@@ -11,6 +11,7 @@
 #endif
 
 #include <amount.h>
+#include <checkqueue.h>
 #include <coins.h>
 #include <crypto/common.h> // for ReadLE64
 #include <fs.h>
@@ -18,11 +19,11 @@
 #include <policy/feerate.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
-#include <sync.h>
-#include <txmempool.h> // For CTxMemPool::cs
-#include <txdb.h>
-#include <versionbits.h>
 #include <serialize.h>
+#include <sync.h>
+#include <txdb.h>
+#include <txmempool.h> // For CTxMemPool::cs
+#include <versionbits.h>
 
 #include <atomic>
 #include <map>
@@ -158,10 +159,6 @@ void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
 bool LoadGenesisBlock(const CChainParams& chainparams);
 /** Unload database information */
 void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman);
-/** Run instances of script checking worker threads */
-void StartScriptCheckWorkerThreads(int threads_num);
-/** Stop all of the script checking worker threads */
-void StopScriptCheckWorkerThreads();
 /**
  * Return transaction from the block at block_index.
  * If block_index is not provided, fall back to mempool.
@@ -545,8 +542,10 @@ private:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    const std::unique_ptr<CCheckQueue<CScriptCheck>> m_script_check_queue;
+
 public:
-    explicit CChainState(CTxMemPool& mempool, BlockManager& blockman, uint256 from_snapshot_blockhash = uint256());
+    explicit CChainState(CTxMemPool& mempool, BlockManager& blockman, uint256 from_snapshot_blockhash = uint256(), int script_check_worker_threads = 0);
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
@@ -852,11 +851,13 @@ public:
     //! Instantiate a new chainstate and assign it based upon whether it is
     //! from a snapshot.
     //!
-    //! @param[in] mempool              The mempool to pass to the chainstate
-    //                                  constructor
-    //! @param[in] snapshot_blockhash   If given, signify that this chainstate
-    //!                                 is based on a snapshot.
-    CChainState& InitializeChainstate(CTxMemPool& mempool, const uint256& snapshot_blockhash = uint256())
+    //! @param[in] mempool                      The mempool to pass to the chainstate
+    //                                          constructor
+    //! @param[in] snapshot_blockhash           If given, signify that this chainstate
+    //!                                         is based on a snapshot.
+    //! @param[in] script_check_worker_threads  Number of additional script checking
+    //!                                         worker threads.
+    CChainState& InitializeChainstate(CTxMemPool& mempool, const uint256& snapshot_blockhash = uint256(), int script_check_worker_threads = 0)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get all chainstates currently being used.
