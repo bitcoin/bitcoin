@@ -1549,6 +1549,10 @@ static UniValue ProcessDescriptorImport(CWallet * const pwallet, const UniValue&
             } else {
                 pwallet->AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
+        } else {
+            if (w_desc.descriptor->GetOutputType()) {
+                pwallet->DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
+            }
         }
 
         result.pushKV("success", UniValue(true));

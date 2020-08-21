@@ -4485,6 +4485,21 @@ void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool intern
     NotifyCanGetAddressesChanged();
 }
 
+void CWallet::DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool internal)
+{
+    WalletLogPrintf("Deactivate spkMan: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(type), static_cast<int>(internal));
+    WalletBatch batch(*database);
+    if (!batch.EraseActiveScriptPubKeyMan(static_cast<uint8_t>(type), internal)) {
+        throw std::runtime_error(std::string(__func__) + ": erasing active ScriptPubKeyMan id failed");
+    }
+    auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
+    if (spk_mans[type] && spk_mans[type]->GetID() == id) {
+        spk_mans[type] = nullptr;
+    }
+
+    NotifyCanGetAddressesChanged();
+}
+
 bool CWallet::IsLegacy() const
 {
     if (m_internal_spk_managers.count(OutputType::LEGACY) == 0) {
