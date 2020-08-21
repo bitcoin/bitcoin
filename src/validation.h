@@ -118,10 +118,6 @@ extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
-/** Whether there are dedicated script-checking threads running.
- * False indicates all script checking is done on the main threadMessageHandler thread.
- */
-extern bool g_parallel_script_checks;
 extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
@@ -542,6 +538,9 @@ private:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    //! Whether there are dedicated script-checking worker threads running.
+    //! False indicates all script checking is done on the main threadMessageHandler thread.
+    const bool m_parallel_script_checks;
     const std::unique_ptr<CCheckQueue<CScriptCheck>> m_script_check_queue;
 
 public:

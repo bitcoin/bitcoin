@@ -144,9 +144,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.mempool = MakeUnique<CTxMemPool>(&::feeEstimator);
     m_node.mempool->setSanityCheck(1.0);
 
-    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
+    // Start script-checking threads.
     constexpr int script_check_threads = 2;
-    g_parallel_script_checks = true;
     m_node.chainman = &::g_chainman;
     m_node.chainman->InitializeChainstate(*m_node.mempool, uint256(), script_check_threads);
     ::ChainstateActive().InitCoinsDB(
