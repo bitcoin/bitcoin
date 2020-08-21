@@ -44,23 +44,23 @@ private:
     std::vector<T> queue;
 
     //! The number of workers (including the master) that are idle.
-    int nIdle;
+    int nIdle{0};
 
     //! The total number of workers (including the master).
-    int nTotal;
+    int nTotal{0};
 
     //! The temporary evaluation result.
-    bool fAllOk;
+    bool fAllOk{true};
 
     /**
      * Number of verifications that haven't completed yet.
      * This includes elements that are no longer queued, but still in the
      * worker's own batches.
      */
-    unsigned int nTodo;
+    unsigned int nTodo{0};
 
     //! The maximum number of elements to be processed in one batch
-    unsigned int nBatchSize;
+    const unsigned int nBatchSize;
 
     /** Internal function that does bulk of the verification work. */
     bool Loop(bool fMaster = false)
@@ -127,7 +127,10 @@ public:
     boost::mutex ControlMutex;
 
     //! Create a new check queue
-    explicit CCheckQueue(unsigned int nBatchSizeIn) : nIdle(0), nTotal(0), fAllOk(true), nTodo(0), nBatchSize(nBatchSizeIn) {}
+    explicit CCheckQueue(unsigned int nBatchSizeIn)
+        : nBatchSize(nBatchSizeIn)
+    {
+    }
 
     //! Worker thread
     void Thread()
