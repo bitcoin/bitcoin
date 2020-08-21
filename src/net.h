@@ -681,6 +681,8 @@ public:
     std::string cleanSubVer;
     bool fInbound;
     bool m_manual_connection;
+    bool m_bip152_highbandwidth_to;
+    bool m_bip152_highbandwidth_from;
     int nStartingHeight;
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -942,6 +944,10 @@ protected:
 public:
     uint256 hashContinue;
     std::atomic<int> nStartingHeight{-1};
+    // We selected peer as (compact blocks) high-bandwidth peer (BIP152)
+    std::atomic<bool> m_bip152_highbandwidth_to{false};
+    // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
+    std::atomic<bool> m_bip152_highbandwidth_from{false};
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
