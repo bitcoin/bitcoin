@@ -1717,7 +1717,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             "      \"90th_percentile_feerate\",      (numeric) The 90th percentile feerate\n"
             "  ],\n"
             "  \"height\": xxxxx,          (numeric) The height of the block\n"
-            "  \"ins\": xxxxx,             (numeric) The number of inputs (excluding coinbase)\n"
+            "  \"ins\": xxxxx,             (numeric) The number of inputs (including coinbase)\n"
             "  \"maxfee\": xxxxx,          (numeric) Maximum fee in the block\n"
             "  \"maxfeerate\": xxxxx,      (numeric) Maximum feerate (in satoshis per virtual byte)\n"
             "  \"maxtxsize\": xxxxx,       (numeric) Maximum transaction size\n"
