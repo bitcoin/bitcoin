@@ -1970,37 +1970,38 @@ bool CWalletTx::InMempool() const
 
 bool CWalletTx::IsTrusted() const
 {
-    std::set<uint256> s;
-    return IsTrusted(s);
+    std::set<uint256> trusted_parents;
+    LOCK(pwallet->cs_wallet);
+    return pwallet->IsTrusted(*this, trusted_parents);
 }
 
-bool CWalletTx::IsTrusted(std::set<uint256>& trusted_parents) const
+bool CWallet::IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const
 {
+    AssertLockHeld(cs_wallet);
     // Quick answer in most cases
-    if (!pwallet->chain().checkFinalTx(*tx)) return false;
-    int nDepth = GetDepthInMainChain();
+    if (!chain().checkFinalTx(*wtx.tx)) return false;
+    int nDepth = wtx.GetDepthInMainChain();
     if (nDepth >= 1) return true;
     if (nDepth < 0) return false;
     // using wtx's cached debit
-    if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) return false;
+    if (!m_spend_zero_conf_change || !wtx.IsFromMe(ISMINE_ALL)) return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!InMempool()) return false;
+    if (!wtx.InMempool()) return false;
 
     // Trusted if all inputs are from us and are in the mempool:
-    LOCK(pwallet->cs_wallet);
-    for (const CTxIn& txin : tx->vin)
+    for (const CTxIn& txin : wtx.tx->vin)
     {
         // Transactions not sent by us: not trusted
-        const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+        const CWalletTx* parent = GetWalletTx(txin.prevout.hash);
         if (parent == nullptr) return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
         // Check that this specific input being spent is trusted
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE) return false;
+        if (IsMine(parentOut) != ISMINE_SPENDABLE) return false;
         // If we've already trusted this parent, continue
         if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
-        if (!parent->IsTrusted(trusted_parents)) return false;
+        if (!IsTrusted(*parent, trusted_parents)) return false;
         trusted_parents.insert(parent->GetHash());
     }
     return true;
@@ -2086,7 +2087,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
         for (const auto& entry : mapWallet)
         {
             const CWalletTx& wtx = entry.second;
-            const bool is_trusted{wtx.IsTrusted(trusted_parents)};
+            const bool is_trusted{IsTrusted(wtx, trusted_parents)};
             const int tx_depth{wtx.GetDepthInMainChain()};
             const CAmount tx_credit_mine{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
             const CAmount tx_credit_watchonly{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
@@ -2154,7 +2155,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
         if (nDepth == 0 && !wtx.InMempool())
             continue;
 
-        bool safeTx = wtx.IsTrusted(trusted_parents);
+        bool safeTx = IsTrusted(wtx, trusted_parents);
 
         // We should not consider coins from transactions that are replacing
         // other transactions.
@@ -3353,7 +3354,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
         {
             const CWalletTx& wtx = walletEntry.second;
 
-            if (!wtx.IsTrusted(trusted_parents))
+            if (!IsTrusted(wtx, trusted_parents))
                 continue;
 
             if (wtx.IsImmatureCoinBase())
