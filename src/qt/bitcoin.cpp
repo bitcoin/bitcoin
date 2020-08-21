@@ -49,7 +49,7 @@
 #include <QTimer>
 #include <QTranslator>
 
-#if defined(QT_STATICPLUGIN)
+#ifdef QT_STATICPLUGIN
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_XCB)
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
@@ -58,7 +58,9 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
-#endif
+Q_IMPORT_PLUGIN(QSvgIconPlugin);
+Q_IMPORT_PLUGIN(QSvgPlugin);
+#endif // QT_STATICPLUGIN
 
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)

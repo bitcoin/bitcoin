@@ -110,7 +110,7 @@ To build without GUI pass `--without-gui`.
 
 To build with Qt 5 you need the following:
 
-    sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+    sudo apt-get install qtbase5-dev qttools5-dev-tools libqt5svg5-dev
 
 libqrencode (optional) can be installed with:
 
@@ -138,7 +138,7 @@ ZMQ dependencies (provides ZMQ API):
 
 To build with Qt 5 you need the following:
 
-    sudo dnf install qt5-qttools-devel qt5-qtbase-devel
+    sudo dnf install qt5-qttools-devel qt5-qtbase-devel qt5-qtsvg-devel
 
 libqrencode (optional) can be installed with:
 
