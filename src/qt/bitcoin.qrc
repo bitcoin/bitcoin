@@ -83,4 +83,9 @@
         <file alias="spinner-034">res/animation/spinner-034.png</file>
         <file alias="spinner-035">res/animation/spinner-035.png</file>
     </qresource>
+    <qresource prefix="/svg">
+        <file alias="bitcoin">res/src/bitcoin.svg</file>
+        <file alias="bitcoin-test">res/src/bitcoin-test.svg</file>
+        <file alias="bitcoin-regtest">res/src/bitcoin-regtest.svg</file>
+    </qresource>
 </RCC>

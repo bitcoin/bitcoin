@@ -6,7 +6,6 @@
 #define BITCOIN_QT_NETWORKSTYLE_H
 
 #include <QIcon>
-#include <QPixmap>
 #include <QString>
 
 /* Coin network-specific GUI style information */
@@ -22,7 +21,7 @@ public:
     const QString &getTitleAddText() const { return titleAddText; }
 
 private:
-    NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
+    NetworkStyle(const QString& appName, const QString& icon_file, const char* titleAddText);
 
     QString appName;
     QIcon appIcon;
