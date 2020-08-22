@@ -90,8 +90,8 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
 #endif // ENABLE_WALLET
-    QApplication::setWindowIcon(m_network_style->getTrayAndWindowIcon());
-    setWindowIcon(m_network_style->getTrayAndWindowIcon());
+    QApplication::setWindowIcon(m_network_style->icon());
+    setWindowIcon(m_network_style->icon());
     updateWindowTitle();
 
     rpcConsole = new RPCConsole(node, _platformStyle, nullptr);
@@ -749,7 +749,7 @@ void BitcoinGUI::createTrayIcon()
 
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
-        trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
+        trayIcon = new QSystemTrayIcon(m_network_style->icon(), this);
         QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->getTitleAddText();
         trayIcon->setToolTip(toolTip);
     }

@@ -16,16 +16,14 @@ public:
     static const NetworkStyle* instantiate(const std::string& networkId);
 
     const QString &getAppName() const { return appName; }
-    const QIcon &getAppIcon() const { return appIcon; }
-    const QIcon &getTrayAndWindowIcon() const { return trayAndWindowIcon; }
+    const QIcon& icon() const { return m_icon; }
     const QString &getTitleAddText() const { return titleAddText; }
 
 private:
     NetworkStyle(const QString& appName, const QString& icon_file, const char* titleAddText);
 
     QString appName;
-    QIcon appIcon;
-    QIcon trayAndWindowIcon;
+    const QIcon m_icon;
     QString titleAddText;
 };
 

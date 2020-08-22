@@ -23,12 +23,9 @@ static const struct {
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
 // titleAddText needs to be const char* for tr()
-NetworkStyle::NetworkStyle(const QString& _appName, const QString& icon_file, const char* _titleAddText):
-    appName(_appName),
-    titleAddText(qApp->translate("SplashScreen", _titleAddText))
+NetworkStyle::NetworkStyle(const QString& _appName, const QString& icon_file, const char* _titleAddText)
+    : appName(_appName), m_icon(icon_file), titleAddText(qApp->translate("SplashScreen", _titleAddText))
 {
-    appIcon             = QIcon(icon_file);
-    trayAndWindowIcon   = QIcon(icon_file);
 }
 
 const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
