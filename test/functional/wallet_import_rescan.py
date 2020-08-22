@@ -128,12 +128,12 @@ class ImportRescanTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        # extra_args = [["-addresstype=legacy"] for _ in range(self.num_nodes)] # Omni already default to legacy
+        extra_args = [["-addresstype=legacy"] for _ in range(self.num_nodes)]
         # for i, import_node in enumerate(IMPORT_NODES, 2): # Omni does not support pruning
         #    if import_node.prune:
         #        extra_args[i] += ["-prune=1"]
 
-        self.add_nodes(self.num_nodes)
+        self.add_nodes(self.num_nodes, extra_args=extra_args)
 
         # Import keys with pruning disabled
         self.start_nodes(extra_args=[[]] * self.num_nodes)
