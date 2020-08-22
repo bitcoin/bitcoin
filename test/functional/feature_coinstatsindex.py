@@ -56,6 +56,8 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
         for hash_option in index_hash_options:
             res1 = index_node.gettxoutsetinfo(hash_option)
+            # The fields 'block_info' and 'total_unspendable_amount' only exist on the index
+            del res1['block_info'], res1['total_unspendable_amount']
             res1.pop('muhash', None)
 
             # Everything left should be the same
@@ -70,11 +72,13 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         for hash_option in index_hash_options:
             # Fetch old stats by height
             res2 = index_node.gettxoutsetinfo(hash_option, 102)
+            del res2['block_info'], res2['total_unspendable_amount']
             res2.pop('muhash', None)
             assert_equal(res0, res2)
 
             # Fetch old stats by hash
             res3 = index_node.gettxoutsetinfo(hash_option, res0['bestblock'])
+            del res3['block_info'], res3['total_unspendable_amount']
             res3.pop('muhash', None)
             assert_equal(res0, res3)
 
