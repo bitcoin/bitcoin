@@ -655,8 +655,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!MoneyRangeAsset(storedAssetRef.nMaxSupply)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
-            if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning && nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
-                return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
+            if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning) {
+                if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
+                    return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
+                }
+                const std::string& decodedSymbol = DecodeBase64(storedAssetRef.strSymbol);
+                if (decodedSymbol.toUpperCase() == "SYSX") {
+                    return FormatSyscoinErrorMessage(state, "asset-reserved-symbol-sysx", bSanityCheck);
+                }
             }
             // activate not allowed to use RBF because GUID is deterministic of first input which cannot be reused       
             if (SignalsOptInRBF(tx)) { 
