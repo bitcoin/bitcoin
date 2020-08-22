@@ -87,5 +87,6 @@
         <file alias="bitcoin">res/src/bitcoin.svg</file>
         <file alias="bitcoin-test">res/src/bitcoin-test.svg</file>
         <file alias="bitcoin-regtest">res/src/bitcoin-regtest.svg</file>
+        <file alias="bitcoin-core">res/src/bitcoin-core.svg</file>
     </qresource>
 </RCC>

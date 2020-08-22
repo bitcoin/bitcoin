@@ -210,6 +210,7 @@ RES_ICONS = \
   qt/res/icons/tx_mined.png \
   qt/res/icons/warning.png \
   qt/res/src/bitcoin.svg \
+  qt/res/src/bitcoin-core.svg \
   qt/res/src/bitcoin-regtest.svg \
   qt/res/src/bitcoin-test.svg
 
