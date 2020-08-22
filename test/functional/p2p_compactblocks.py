@@ -768,6 +768,34 @@ class CompactBlocksTest(BitcoinTestFramework):
         stalling_peer.send_and_ping(msg)
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
+    def test_highbandwidth_mode_states_via_getpeerinfo(self):
+        # create new p2p connection for a fresh state w/o any prior sendcmpct messages sent
+        hb_test_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
+
+        # assert the RPC getpeerinfo boolean fields `bip152_hb_{to, from}`
+        # match the given parameters for the last peer of a given node
+        def assert_highbandwidth_states(node, hb_to, hb_from):
+            peerinfo = node.getpeerinfo()[-1]
+            assert_equal(peerinfo['bip152_hb_to'], hb_to)
+            assert_equal(peerinfo['bip152_hb_from'], hb_from)
+
+        # initially, neither node has selected the other peer as high-bandwidth yet
+        assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=False)
+
+        # peer requests high-bandwidth mode by sending sendcmpct(1)
+        hb_test_node.send_and_ping(msg_sendcmpct(announce=True, version=2))
+        assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=True)
+
+        # peer generates a block and sends it to node, which should
+        # select the peer as high-bandwidth (up to 3 peers according to BIP 152)
+        block = self.build_block_on_tip(self.nodes[0])
+        hb_test_node.send_and_ping(msg_block(block))
+        assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=True)
+
+        # peer requests low-bandwidth mode by sending sendcmpct(0)
+        hb_test_node.send_and_ping(msg_sendcmpct(announce=False, version=2))
+        assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=False)
+
     def run_test(self):
         # Setup the p2p connections
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
@@ -822,6 +850,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing invalid index in cmpctblock message...")
         self.test_invalid_cmpctblock_message()
+
+        self.log.info("Testing high-bandwidth mode states via getpeerinfo...")
+        self.test_highbandwidth_mode_states_via_getpeerinfo()
 
 
 if __name__ == '__main__':
