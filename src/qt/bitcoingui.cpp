@@ -750,7 +750,7 @@ void BitcoinGUI::createTrayIcon()
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
         trayIcon = new QSystemTrayIcon(m_network_style->icon(), this);
-        QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->getTitleAddText();
+        QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->titleAddText();
         trayIcon->setToolTip(toolTip);
     }
 #endif
@@ -1328,8 +1328,8 @@ void BitcoinGUI::updateWindowTitle()
         }
     }
 #endif
-    if (!m_network_style->getTitleAddText().isEmpty()) {
-        window_title += " - " + m_network_style->getTitleAddText();
+    if (!m_network_style->titleAddText().isEmpty()) {
+        window_title += " - " + m_network_style->titleAddText();
     }
     setWindowTitle(window_title);
 }

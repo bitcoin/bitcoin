@@ -8,6 +8,8 @@
 #include <QIcon>
 #include <QString>
 
+#include <string>
+
 /* Coin network-specific GUI style information */
 class NetworkStyle
 {
@@ -15,16 +17,16 @@ public:
     /** Get style associated with provided network id, or 0 if not known */
     static const NetworkStyle* instantiate(const std::string& networkId);
 
-    const QString &getAppName() const { return appName; }
+    const QString& appName() const { return m_app_name; }
     const QIcon& icon() const { return m_icon; }
-    const QString &getTitleAddText() const { return titleAddText; }
+    const QString& titleAddText() const { return m_title_add_text; }
 
 private:
-    NetworkStyle(const QString& appName, const QString& icon_file, const char* titleAddText);
+    NetworkStyle(const QString& app_name, const QString& icon_file, const char* title_add_text);
 
-    QString appName;
+    const QString m_app_name;
     const QIcon m_icon;
-    QString titleAddText;
+    const QString m_title_add_text;
 };
 
 #endif // BITCOIN_QT_NETWORKSTYLE_H

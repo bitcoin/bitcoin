@@ -12,33 +12,31 @@
 #include <QApplication>
 
 static const struct {
-    const char *networkId;
-    const char *appName;
+    const char* network_id;
+    const char* app_name;
     const char* icon_file;
 } network_styles[] = {
     {"main", QAPP_APP_NAME_DEFAULT, ":/svg/bitcoin"},
     {"test", QAPP_APP_NAME_TESTNET, ":/svg/bitcoin-test"},
     {"regtest", QAPP_APP_NAME_REGTEST, ":/svg/bitcoin-regtest"}
 };
-static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
+static const unsigned network_styles_count = sizeof(network_styles) / sizeof(*network_styles);
 
-// titleAddText needs to be const char* for tr()
-NetworkStyle::NetworkStyle(const QString& _appName, const QString& icon_file, const char* _titleAddText)
-    : appName(_appName), m_icon(icon_file), titleAddText(qApp->translate("SplashScreen", _titleAddText))
+// title_add_text needs to be const char* for tr()
+NetworkStyle::NetworkStyle(const QString& app_name, const QString& icon_file, const char* title_add_text)
+    : m_app_name(app_name), m_icon(icon_file), m_title_add_text(qApp->translate("SplashScreen", title_add_text))
 {
 }
 
-const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
+const NetworkStyle* NetworkStyle::instantiate(const std::string& network_id)
 {
-    std::string titleAddText = networkId == CBaseChainParams::MAIN ? "" : strprintf("[%s]", networkId);
-    for (unsigned x=0; x<network_styles_count; ++x)
-    {
-        if (networkId == network_styles[x].networkId)
-        {
+    std::string title_add_text = network_id == CBaseChainParams::MAIN ? "" : strprintf("[%s]", network_id);
+    for (unsigned x = 0; x < network_styles_count; ++x) {
+        if (network_id == network_styles[x].network_id) {
             return new NetworkStyle(
-                    network_styles[x].appName,
-                    network_styles[x].icon_file,
-                    titleAddText.c_str());
+                network_styles[x].app_name,
+                network_styles[x].icon_file,
+                title_add_text.c_str());
         }
     }
     return nullptr;

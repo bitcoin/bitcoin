@@ -543,7 +543,7 @@ int GuiMain(int argc, char* argv[])
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
-    QApplication::setApplicationName(networkStyle->getAppName());
+    QApplication::setApplicationName(networkStyle->appName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
