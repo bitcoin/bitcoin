@@ -20,6 +20,7 @@ packages:
 - "patch"
 - "pkg-config"
 - "python3"
+- "libz-dev"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
