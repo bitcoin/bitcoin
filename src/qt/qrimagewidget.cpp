@@ -66,24 +66,25 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
 
     QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 20), QImage::Format_RGB32);
     qrAddrImage.fill(0xffffff);
-    QPainter painter(&qrAddrImage);
-    painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
+    {
+        QPainter painter(&qrAddrImage);
+        painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
 
-    if (!text.isEmpty()) {
-        QFont font = GUIUtil::fixedPitchFont();
-        font.setStyleStrategy(QFont::NoAntialias);
-        QRect paddedRect = qrAddrImage.rect();
+        if (!text.isEmpty()) {
+            QFont font = GUIUtil::fixedPitchFont();
+            font.setStyleStrategy(QFont::NoAntialias);
+            QRect paddedRect = qrAddrImage.rect();
 
-        // calculate ideal font size
-        qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 20, text, font);
-        font.setPointSizeF(font_size);
+            // calculate ideal font size
+            qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 20, text, font);
+            font.setPointSizeF(font_size);
 
-        painter.setFont(font);
-        paddedRect.setHeight(QR_IMAGE_SIZE+12);
-        painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
+            painter.setFont(font);
+            paddedRect.setHeight(QR_IMAGE_SIZE+12);
+            painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
+        }
     }
 
-    painter.end();
     setPixmap(QPixmap::fromImage(qrAddrImage));
 
     return true;
