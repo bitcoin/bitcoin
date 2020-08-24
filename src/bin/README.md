@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Dextro Heat Sink (v1.9.15)
+The current version is Red Janey (v1.9.19)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`c71a17a8c3601ed663f135c588b555ab`
+`1ae18dcfdf930d2849e23eb23e5f68e8`
 
 MacOS
-`df7cb4ab6637bed0d5e8e618989285b2`
+`e315b762aa311503c9d9061e96b9ee43`
 
 Windows (64-bit)
-`102d199b6c1bee15ba4c4837e2bd39ab`
+`5bc45b9055d4704ea1f7181f4cfb2a33`
 
 
 Relayer
