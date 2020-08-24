@@ -11,6 +11,7 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+class BlockTransactionsRequest;
 class BlockValidationState;
 class CBlockHeader;
 class CChainParams;
@@ -117,6 +118,8 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
     /** Process a single headers message from a peer. */
     void ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHeader>& headers, bool via_compact_block);
+
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
