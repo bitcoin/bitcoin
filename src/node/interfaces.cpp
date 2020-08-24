@@ -121,11 +121,13 @@ public:
             }
 
             // Try to retrieve the CNodeStateStats for each node.
-            TRY_LOCK(::cs_main, lockMain);
-            if (lockMain) {
-                for (auto& node_stats : stats) {
-                    std::get<1>(node_stats) =
-                        GetNodeStateStats(std::get<0>(node_stats).nodeid, std::get<2>(node_stats));
+            if (m_context->peerman) {
+                TRY_LOCK(::cs_main, lockMain);
+                if (lockMain) {
+                    for (auto& node_stats : stats) {
+                        std::get<1>(node_stats) =
+                            m_context->peerman->GetNodeStateStats(std::get<0>(node_stats).nodeid, std::get<2>(node_stats));
+                    }
                 }
             }
             return true;

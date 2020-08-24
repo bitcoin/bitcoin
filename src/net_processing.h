@@ -32,6 +32,13 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
+struct CNodeStateStats {
+    int m_misbehavior_score = 0;
+    int nSyncHeight = -1;
+    int nCommonHeight = -1;
+    std::vector<int> vHeightInFlight;
+};
+
 class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
     PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
@@ -94,6 +101,9 @@ public:
      */
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
 
+    /** Get statistics from node state */
+    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats);
+
 private:
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
@@ -144,16 +154,6 @@ private:
 
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
 };
-
-struct CNodeStateStats {
-    int m_misbehavior_score = 0;
-    int nSyncHeight = -1;
-    int nCommonHeight = -1;
-    std::vector<int> vHeightInFlight;
-};
-
-/** Get statistics from node state */
-bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 
 /** Relay transaction to every node */
 void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

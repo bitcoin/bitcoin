@@ -887,7 +887,7 @@ void PeerManager::FinalizeNode(const CNode& node, bool& fUpdateConnectionTime) {
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
 
-bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
+bool PeerManager::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     {
         LOCK(cs_main);
         CNodeState* state = State(nodeid);
