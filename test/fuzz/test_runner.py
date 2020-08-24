@@ -56,6 +56,14 @@ def main():
         '--m_dir',
         help='Merge inputs from this directory into the seed_dir. Needs /target subdirectory.',
     )
+    parser.add_argument(
+        '-g',
+        '--generate',
+        action='store_true',
+        help='Create new corpus seeds (or extend the existing ones) by running'
+             ' the given targets for a finite number of times. Outputs them to'
+             ' the passed seed_dir.'
+    )
 
     args = parser.parse_args()
 
@@ -100,19 +108,20 @@ def main():
 
     logging.info("{} of {} detected fuzz target(s) selected: {}".format(len(test_list_selection), len(test_list_all), " ".join(test_list_selection)))
 
-    test_list_seedless = []
-    for t in test_list_selection:
-        corpus_path = os.path.join(args.seed_dir, t)
-        if not os.path.exists(corpus_path) or len(os.listdir(corpus_path)) == 0:
-            test_list_seedless.append(t)
-    test_list_seedless.sort()
-    if test_list_seedless:
-        logging.info(
-            "Fuzzing harnesses lacking a seed corpus: {}".format(
-                " ".join(test_list_seedless)
+    if not args.generate:
+        test_list_seedless = []
+        for t in test_list_selection:
+            corpus_path = os.path.join(args.seed_dir, t)
+            if not os.path.exists(corpus_path) or len(os.listdir(corpus_path)) == 0:
+                test_list_seedless.append(t)
+        test_list_seedless.sort()
+        if test_list_seedless:
+            logging.info(
+                "Fuzzing harnesses lacking a seed corpus: {}".format(
+                    " ".join(test_list_seedless)
+                )
             )
-        )
-        logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
+            logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
 
     try:
         help_output = subprocess.run(
@@ -133,6 +142,14 @@ def main():
         sys.exit(1)
 
     with ThreadPoolExecutor(max_workers=args.par) as fuzz_pool:
+        if args.generate:
+            return generate_corpus_seeds(
+                fuzz_pool=fuzz_pool,
+                build_dir=config["environment"]["BUILDDIR"],
+                seed_dir=args.seed_dir,
+                targets=test_list_selection,
+            )
+
         if args.m_dir:
             merge_inputs(
                 fuzz_pool=fuzz_pool,
@@ -150,6 +167,37 @@ def main():
             build_dir=config["environment"]["BUILDDIR"],
             use_valgrind=args.valgrind,
         )
+
+
+def generate_corpus_seeds(*, fuzz_pool, build_dir, seed_dir, targets):
+    """Generates new corpus seeds.
+
+    Run {targets} without input, and outputs the generated corpus seeds to
+    {seed_dir}.
+    """
+    logging.info("Generating corpus seeds to {}".format(seed_dir))
+
+    def job(command):
+        logging.debug("Running '{}'\n".format(" ".join(command)))
+        logging.debug("Command '{}' output:\n'{}'\n".format(
+            ' '.join(command),
+            subprocess.run(command, check=True, stderr=subprocess.PIPE,
+                           universal_newlines=True).stderr
+        ))
+
+    futures = []
+    for target in targets:
+        target_seed_dir = os.path.join(seed_dir, target)
+        os.makedirs(target_seed_dir, exist_ok=True)
+        command = [
+            os.path.join(build_dir, "src", "test", "fuzz", target),
+            "-runs=100000",
+            target_seed_dir,
+        ]
+        futures.append(fuzz_pool.submit(job, command))
+
+    for future in as_completed(futures):
+        future.result()
 
 
 def merge_inputs(*, fuzz_pool, corpus, test_list, build_dir, merge_dir):
