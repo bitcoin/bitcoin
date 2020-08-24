@@ -522,7 +522,7 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-gethwebsocketport=<port>", strprintf("Listen for GETH Web Socket connections on <port> for the relayer (default: %u)", 8646), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> for the relayer (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast or full (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast, full or disabled (to run your own geth node) (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
