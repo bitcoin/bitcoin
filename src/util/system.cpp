@@ -78,6 +78,7 @@
 #include <util/time.h>
 #include <ctpl.h>
 #include <random.h>
+#include <validation.h>
 bool fMasternodeMode = false;
 bool bGethTestnet = false;
 bool fDisableGovernance = false;
