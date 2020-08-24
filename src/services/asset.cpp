@@ -10,6 +10,8 @@
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/system.h>
+#include <chainparamsbase.h>
+int64_t nRandomResetSec = 0;
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
     case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
