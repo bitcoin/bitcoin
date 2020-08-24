@@ -1157,11 +1157,11 @@ void DoGethMaintenance() {
         StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
         int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
         StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
-        nRandomResetSec = GetRandInt(600) - 300;
+        nRandomResetSec = GetRandInt(600);
         nLastGethHeaderTime = GetSystemTimeInSeconds();
     } else {
         const uint64_t nTimeSeconds = GetSystemTimeInSeconds();
-        // it's been >= 10 minutes (+ - some minutes for randomization) since an Ethereum block so clean data dir and resync
+        // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
         if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
             LogPrintf("GETH: Last header time not received in sufficient time, trying to resync...\n");
             // reset timer so it will only do this check atleast once every interval (around 10 mins average) if geth seems stuck
@@ -1210,7 +1210,7 @@ void DoGethMaintenance() {
             int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
             StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
             // reset randomized reset number
-            nRandomResetSec = GetRandInt(600) - 300;
+            nRandomResetSec = GetRandInt(600);
             // set flag that geth is resyncing
             fGethSynced = false;
             LogPrintf("GETH: Done, waiting for resync...\n");
@@ -1219,6 +1219,11 @@ void DoGethMaintenance() {
 }
 bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
 {
+    if(mode == "disabled") {
+        LogPrintf("%s: Geth is disabled, user chose to deploy their own Geth instance!\n", __func__);
+        pid = -1;
+        return true;
+    }
     LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
     std::string gethFilename = GetGethFilename();
     
