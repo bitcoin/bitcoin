@@ -4242,25 +4242,25 @@ void CChainState::LoadExternalBlockFile(const CChainParams& chainparams, FILE* f
                         continue;
                     }
 
-                    // This block can be processed immediately; rewind to its start then read it.
-                    blkdat.SetPos(nBlockPos);
-                    std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-                    CBlock& block = *pblock;
-                    blkdat >> block;
-                    nRewind = blkdat.GetPos();
-
                     // process in case the block isn't known yet
                     CBlockIndex* pindex = m_blockman.LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
-                      BlockValidationState state;
-                      if (AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr)) {
-                          nLoaded++;
-                      }
-                      if (state.IsError()) {
-                          break;
-                      }
+                        // This block can be processed immediately; rewind to its start then read it.
+                        blkdat.SetPos(nBlockPos);
+                        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+                        CBlock& block = *pblock;
+                        blkdat >> block;
+                        nRewind = blkdat.GetPos();
+
+                        BlockValidationState state;
+                        if (AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr)) {
+                            nLoaded++;
+                        }
+                        if (state.IsError()) {
+                            break;
+                        }
                     } else if (hash != chainparams.GetConsensus().hashGenesisBlock && pindex->nHeight % 1000 == 0) {
-                      LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), pindex->nHeight);
+                        LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), pindex->nHeight);
                     }
                 }
 
