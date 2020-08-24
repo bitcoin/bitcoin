@@ -1160,9 +1160,11 @@ void DoGethMaintenance() {
         const uint64_t nTimeSeconds = GetSystemTimeInSeconds();
         // it's been >= 10 minutes (+ - some minutes for randomization) since an Ethereum block so clean data dir and resync
         if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
+            LogPrintf("GETH: Last header time not received in sufficient time, trying to resync...\n");
             // reset timer so it will only do this check atleast once every interval (around 10 mins average) if geth seems stuck
             nLastGethHeaderTime = nTimeSeconds;
             // stop geth and relayer
+            LogPrintf("GETH: Stopping Geth and Relayer\n"); 
             StopGethNode(gethPID);
             StopRelayerNode(relayerPID);
             // copy wallet dir if exists
@@ -1172,6 +1174,7 @@ void DoGethMaintenance() {
             fs::path keyStoreTmpDir = dataDir / "keystoretmp";
             bool existedKeystore = fs::exists(gethKeyStoreDir);
             if(existedKeystore){
+                LogPrintf("GETH: Copying keystore for Geth to a temp directory\n"); 
                 try{
                     recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
                 } catch(const  std::runtime_error& e) {
@@ -1179,10 +1182,12 @@ void DoGethMaintenance() {
                     return;
                 }
             }
+            LogPrintf("GETH: Removing Geth data directory\n");
             // clean geth data dir
             fs::remove_all(gethDir);
             // replace keystore dir
             if(existedKeystore){
+                LogPrintf("GETH: Replacing keystore with temp keystore directory\n");
                 try{
                     fs::create_directory(gethDir);
                     recursive_copy(keyStoreTmpDir, gethKeyStoreDir);
@@ -1192,6 +1197,7 @@ void DoGethMaintenance() {
                 }
                 fs::remove_all(keyStoreTmpDir);
             }
+            LogPrintf("GETH: Restarting Geth and Relayer\n");
             // start node and relayer again
             int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
             int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
@@ -1204,6 +1210,7 @@ void DoGethMaintenance() {
             nRandomResetSec = GetRandInt(600) - 300;
             // set flag that geth is resyncing
             fGethSynced = false;
+            LogPrintf("GETH: Done, waiting for resync...\n");
         }
     }
 }
