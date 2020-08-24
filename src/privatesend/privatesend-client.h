@@ -289,8 +289,8 @@ public:
     static void SetRounds(int nRounds);
     static void SetAmount(CAmount amount);
 
-    static int IsEnabled() { return CPrivateSendClientOptions::Get().fEnablePrivateSend; }
-    static int IsMultiSessionEnabled() { return CPrivateSendClientOptions::Get().fPrivateSendMultiSession; }
+    static bool IsEnabled() { return CPrivateSendClientOptions::Get().fEnablePrivateSend; }
+    static bool IsMultiSessionEnabled() { return CPrivateSendClientOptions::Get().fPrivateSendMultiSession; }
 
     static void GetJsonInfo(UniValue& obj);
 
