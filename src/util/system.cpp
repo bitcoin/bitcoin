@@ -1148,6 +1148,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
 void DoGethMaintenance() {
     // hasn't started yet so start
     if(gethPID == 0 || relayerPID == 0) {
+        LogPrintf("GETH: Starting Geth and Relayer because PID's were uninitialized\n");
         int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
         int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
         bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
