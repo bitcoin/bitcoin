@@ -94,7 +94,6 @@ std::string exePath = "";
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
-bool bb = true;
 int32_t DEFAULT_MN_COLLATERAL_REQUIRED = 100000;
 CAmount nMNCollateralRequired = DEFAULT_MN_COLLATERAL_REQUIRED*COIN;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
@@ -1123,27 +1122,7 @@ bool CheckSpecs(std::string &errMsg, bool bMiner){
     LogPrintf("Total number of physical cores found %d\n", GetNumCores());
     if(GetNumCores() < (bMiner? 4: 2))
         errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.").translated;
-   bb = !errMsg.empty();
    return errMsg.empty();         
-}
-void recursive_copy(const fs::path &src, const fs::path &dst)
-{
-  if (fs::exists(dst)){
-    throw std::runtime_error(dst.generic_string() + " exists");
-  }
-
-  if (fs::is_directory(src)) {
-    fs::create_directories(dst);
-    for (fs::directory_entry& item : fs::directory_iterator(src)) {
-      recursive_copy(item.path(), dst/item.path().filename());
-    }
-  } 
-  else if (fs::is_regular_file(src)) {
-    fs::copy(src, dst);
-  } 
-  else {
-    throw std::runtime_error(dst.generic_string() + " not dir or file");
-  }
 }
 
 bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
