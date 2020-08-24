@@ -121,7 +121,7 @@ bool CPrivateSendBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) con
     return true;
 }
 
-bool CPrivateSendBroadcastTx::IsExpired(const CBlockIndex* pindex)
+bool CPrivateSendBroadcastTx::IsExpired(const CBlockIndex* pindex) const
 {
     // expire confirmed DSTXes after ~1h since confirmation or chainlocked confirmation
     if (nConfirmedHeight == -1 || pindex->nHeight < nConfirmedHeight) return false; // not mined yet

@@ -87,7 +87,7 @@ public:
 
     CService GetAddr() { return addr; }
     CPrivateSendAccept GetDSA() { return dsa; }
-    bool IsExpired() { return GetTime() - nTimeCreated > TIMEOUT; }
+    bool IsExpired() const { return GetTime() - nTimeCreated > TIMEOUT; }
 
     friend bool operator==(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
     {
@@ -218,7 +218,7 @@ private:
     // Keep track of current block height
     int nCachedBlockHeight;
 
-    bool WaitForAnotherBlock();
+    bool WaitForAnotherBlock() const;
 
     // Make sure we have enough keys since last backup
     bool CheckAutomaticBackup();
