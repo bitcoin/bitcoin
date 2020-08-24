@@ -47,6 +47,7 @@ extern bool fDisableGovernance;
 extern bool fRegTest;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;
+extern std::string exePath;
 extern std::string fGethSyncStatus;
 extern bool fGethSynced;
 extern bool fLoaded;
