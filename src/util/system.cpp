@@ -1146,6 +1146,11 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
   }
 }
 void DoGethMaintenance() {
+    bool idb = false;
+    {
+        LOCK(cs_main);
+        ibd = ::ChainstateActive().IsInitialBlockDownload();
+    }
     // hasn't started yet so start
     if(gethPID == 0 || relayerPID == 0) {
         gethPID = relayerPID = -1;
@@ -1159,7 +1164,8 @@ void DoGethMaintenance() {
         StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
         nRandomResetSec = GetRandInt(600);
         nLastGethHeaderTime = GetSystemTimeInSeconds();
-    } else {
+    // if not syncing chain restart geth/relayer if its been long enough since last blocks from relayer
+    } else if(!ibd){
         const uint64_t nTimeSeconds = GetSystemTimeInSeconds();
         // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
         if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
