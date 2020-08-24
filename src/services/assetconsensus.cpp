@@ -660,7 +660,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
                 }
                 const std::string& decodedSymbol = DecodeBase64(storedAssetRef.strSymbol);
-                if (decodedSymbol.toUpperCase() == "SYSX") {
+                if (ToUpper(decodedSymbol) == "SYSX") {
                     return FormatSyscoinErrorMessage(state, "asset-reserved-symbol-sysx", bSanityCheck);
                 }
             }
