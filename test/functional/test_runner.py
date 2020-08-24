@@ -102,7 +102,7 @@ BASE_SCRIPTS = [
     'wallet_abandonconflict.py',
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
-    #'wallet_address_types.py', # Will fail due to change being set to legacy in Omni
+    'wallet_address_types.py',
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
     'feature_reindex.py',
