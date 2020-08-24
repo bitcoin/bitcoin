@@ -86,6 +86,13 @@ public:
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc);
 
+    /**
+     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
+     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
+     * Public for unit testing.
+     */
+    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
+
 private:
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object

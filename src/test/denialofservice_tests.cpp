@@ -47,7 +47,6 @@ struct CConnmanTest : public CConnman {
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
 
 struct COrphanTx {
     CTransactionRef tx;
@@ -235,7 +234,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     peerLogic->InitializeNode(&dummyNode1);
     dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
-    Misbehaving(dummyNode1.GetId(), DISCOURAGEMENT_THRESHOLD); // Should be discouraged
+    peerLogic->Misbehaving(dummyNode1.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
     {
         LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
@@ -249,14 +248,14 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     peerLogic->InitializeNode(&dummyNode2);
     dummyNode2.nVersion = 1;
     dummyNode2.fSuccessfullyConnected = true;
-    Misbehaving(dummyNode2.GetId(), DISCOURAGEMENT_THRESHOLD - 1);
+    peerLogic->Misbehaving(dummyNode2.GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
     {
         LOCK(dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
     }
     BOOST_CHECK(!banman->IsDiscouraged(addr2)); // 2 not discouraged yet...
     BOOST_CHECK(banman->IsDiscouraged(addr1));  // ... but 1 still should be
-    Misbehaving(dummyNode2.GetId(), 1);         // 2 reaches discouragement threshold
+    peerLogic->Misbehaving(dummyNode2.GetId(), 1, /* message */ "");         // 2 reaches discouragement threshold
     {
         LOCK(dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
@@ -287,7 +286,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     dummyNode.nVersion = 1;
     dummyNode.fSuccessfullyConnected = true;
 
-    Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD);
+    peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
     {
         LOCK(dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));

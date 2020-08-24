@@ -1110,11 +1110,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     return nEvicted;
 }
 
-/**
- * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
- * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
- */
-void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
+void PeerManager::Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
 {
     assert(howmuch > 0);
 
