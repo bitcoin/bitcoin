@@ -88,7 +88,6 @@ uint32_t fGethSyncHeight = 0;
 uint32_t fGethCurrentHeight = 0;
 pid_t gethPID = 0;
 pid_t relayerPID = 0;
-int64_t nRandomResetSec = 0;
 int64_t nLastGethHeaderTime = 0;
 std::string exePath = "";
 std::string fGethSyncStatus = "waiting to sync...";
