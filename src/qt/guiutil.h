@@ -11,12 +11,14 @@
 #include <QEvent>
 #include <QHeaderView>
 #include <QItemDelegate>
+#include <QLabel>
 #include <QMessageBox>
 #include <QObject>
 #include <QProgressBar>
 #include <QString>
 #include <QTableView>
-#include <QLabel>
+
+#include <chrono>
 
 class QValidatedLineEdit;
 class SendCoinsRecipient;
@@ -225,7 +227,7 @@ namespace GUIUtil
     QString boostPathToQString(const fs::path &path);
 
     /* Convert seconds into a QString with days, hours, mins, secs */
-    QString formatDurationStr(int secs);
+    QString formatDurationStr(std::chrono::seconds dur);
 
     /* Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);

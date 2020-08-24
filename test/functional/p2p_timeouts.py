@@ -17,15 +17,15 @@
 - Wait 1 second
 - Assert that we're still connected
 - Send a ping to no_verack_node and no_version_node
-- Wait 2 seconds
-- Assert that we're no longer connected (timeout to receive version/verack is 3 seconds)
+- Increase mocktime by DEFAULT_PEER_CONNECT_TIMEOUT
+- Assert that we're no longer connected
 """
-
-from time import sleep
 
 from test_framework.messages import msg_ping
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
+
+import time
 
 
 class TestP2PConn(P2PInterface):
@@ -34,12 +34,13 @@ class TestP2PConn(P2PInterface):
         pass
 
 
+DEFAULT_PEER_CONNECT_TIMEOUT = 60
+
+
 class TimeoutsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        # set timeout to receive version/verack to 3 seconds
-        self.extra_args = [["-peertimeout=3"]]
 
     def run_test(self):
         # Setup the p2p connections
@@ -51,7 +52,7 @@ class TimeoutsTest(BitcoinTestFramework):
         # verack, since we never sent one
         no_verack_node.wait_for_verack()
 
-        sleep(1)
+        time.sleep(1)
 
         assert no_verack_node.is_connected
         assert no_version_node.is_connected
@@ -60,7 +61,7 @@ class TimeoutsTest(BitcoinTestFramework):
         no_verack_node.send_message(msg_ping())
         no_version_node.send_message(msg_ping())
 
-        sleep(1)
+        time.sleep(1)
 
         assert "version" in no_verack_node.last_message
 
@@ -73,19 +74,15 @@ class TimeoutsTest(BitcoinTestFramework):
 
         expected_timeout_logs = [
             "version handshake timeout from 0",
-            "socket no message in first 3 seconds, 1 0 from 1",
-            "socket no message in first 3 seconds, 0 0 from 2",
+            "socket no message in first {} seconds, 1 0 from 1".format(DEFAULT_PEER_CONNECT_TIMEOUT),
+            "socket no message in first {} seconds, 0 0 from 2".format(DEFAULT_PEER_CONNECT_TIMEOUT),
         ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
-            sleep(3)
-            # By now, we waited a total of 5 seconds. Off-by-two for two
-            # reasons:
-            #  * The internal precision is one second
-            #  * Account for network delay
-            assert not no_verack_node.is_connected
-            assert not no_version_node.is_connected
-            assert not no_send_node.is_connected
+            self.nodes[0].setmocktime(int(time.time()) + DEFAULT_PEER_CONNECT_TIMEOUT)
+            no_verack_node.wait_for_disconnect(timeout=1)
+            no_version_node.wait_for_disconnect(timeout=1)
+            no_send_node.wait_for_disconnect(timeout=1)
 
 
 if __name__ == '__main__':

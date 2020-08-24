@@ -19,6 +19,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #ifdef WIN32
 #ifdef _WIN32_IE
@@ -753,8 +754,9 @@ QString boostPathToQString(const fs::path &path)
     return QString::fromStdString(path.string());
 }
 
-QString formatDurationStr(int secs)
+QString formatDurationStr(std::chrono::seconds dur)
 {
+    const auto secs = count_seconds(dur);
     QStringList strList;
     int days = secs / 86400;
     int hours = (secs % 86400) / 3600;

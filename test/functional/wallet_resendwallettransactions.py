@@ -11,9 +11,14 @@ from test_framework.mininode import P2PTxInvStore, mininode_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
 
+
 class ResendWalletTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [[
+            # Must be larger than the largest mocktime to avoid disconnect
+            '-peertimeout=9999999',
+        ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

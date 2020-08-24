@@ -58,6 +58,10 @@ class TxDownloadTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 2
+        self.extra_args = [[
+            # Must be larger than the largest mocktime to avoid disconnect
+            '-peertimeout={}'.format(99999999),
+        ]] * self.num_nodes
 
     def test_tx_requests(self):
         self.log.info("Test that we request transactions from all our peers, eventually")

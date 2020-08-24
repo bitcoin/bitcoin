@@ -30,11 +30,15 @@ class NodeNoPong(P2PInterface):
         pass
 
 
+TIMEOUT_INTERVAL = 20 * 60
+
+
 class PingPongTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [['-peertimeout=3']]
+        # Can be any value large enough to not hit accidentally in the test, so just set to TIMEOUT_INTERVAL
+        self.extra_args = [['-peertimeout={}'.format(TIMEOUT_INTERVAL)]]
 
     def check_peer_info(self, *, pingtime, minping, pingwait):
         stats = self.nodes[0].getpeerinfo()[0]
@@ -110,8 +114,10 @@ class PingPongTest(BitcoinTestFramework):
         self.nodes[0].ping()
         no_pong_node.wait_until(lambda: 'ping' in no_pong_node.last_message)
         with self.nodes[0].assert_debug_log(['ping timeout: 1201.000000s']):
-            self.mock_forward(20 * 60 + 1)
-            time.sleep(4)  # peertimeout + 1
+            self.mock_forward(TIMEOUT_INTERVAL // 2)
+            no_pong_node.sync_with_ping()  # keep socket alive to avoid hitting socket TIMEOUT_INTERVAL
+            self.mock_forward(TIMEOUT_INTERVAL // 2 + 1)
+            no_pong_node.wait_for_disconnect()  # Check that ping TIMEOUT_INTERVAL is hit
 
 
 if __name__ == '__main__':

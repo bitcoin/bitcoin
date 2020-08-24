@@ -39,10 +39,17 @@ class AddrReceiver(P2PInterface):
             assert (8333 <= addr.port < 8343)
 
 
+AVG_ADDRESS_BROADCAST_INTERVAL = 30
+MOCK_DURATION = AVG_ADDRESS_BROADCAST_INTERVAL * 60  # Wait long enough to have high probability of broadcast
+
+
 class AddrTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
+        self.extra_args = [
+            ['-peertimeout={}'.format(MOCK_DURATION + 1)],  # increase timeout to avoid disconnect when using mocktime
+        ]
 
     def run_test(self):
         self.log.info('Create connection that sends addr messages')
@@ -63,7 +70,7 @@ class AddrTest(BitcoinTestFramework):
                 'sending addr (301 bytes) peer=1',
         ]):
             addr_source.send_and_ping(msg)
-            self.nodes[0].setmocktime(int(time.time()) + 30 * 60)
+            self.nodes[0].setmocktime(int(time.time()) + MOCK_DURATION)
             addr_receiver.sync_with_ping()
 
 
