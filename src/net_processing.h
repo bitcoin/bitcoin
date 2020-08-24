@@ -11,6 +11,7 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+class CBlockHeader;
 class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
@@ -89,6 +90,9 @@ private:
      * @return                True if the peer was marked for disconnection in this function
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode);
+
+    /** Process a single headers message from a peer. */
+    void ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHeader>& headers, bool via_compact_block);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
