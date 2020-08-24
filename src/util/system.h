@@ -129,6 +129,7 @@ std::string GetGethFilename();
 bool CheckSpecs(std::string &errMsg, bool bMiner = false);
 bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport=8646, int ethrpcport=8645, const std::string & mode="light");
 bool StopGethNode(pid_t &pid);
+void DoGethMaintenance();
 fs::path GetRelayerPidFile();
 std::string GeteRelayerFilename();
 bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int websocketport=8646, int ethrpcport=8645);
