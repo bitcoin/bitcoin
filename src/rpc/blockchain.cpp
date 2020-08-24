@@ -32,6 +32,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <undo.h>
+#include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -1075,6 +1076,108 @@ static RPCHelpMan pruneblockchain()
         block = block->pprev;
     }
     return uint64_t(block->nHeight);
+},
+    };
+}
+
+static RPCHelpMan dumpcoinstats()
+{
+    return RPCHelpMan{"dumpcoinstats",
+                "\nDumps content of coinstats index to a CSV file.\n",
+                {
+                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The filename with path (absolute path recommended)"},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "filename", "The filename with full absolute path"},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("dumpcoinstats", "\"test\"") +
+                    HelpExampleRpc("dumpcoinstats", "\"test\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    if (request.params[0].isNull())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "File name and path for dump file are required");
+
+    fs::path filepath = request.params[0].get_str();
+    filepath = fs::absolute(filepath);
+
+    if (fs::exists(filepath)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
+    }
+
+    fsbridge::ofstream file;
+    file.open(filepath);
+    if (!file.is_open())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open dump file");
+
+    if (!g_coin_stats_index) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Coinstats index is not enabled");
+    }
+
+    file << strprintf("height,"
+                      "bestblock,"
+                      "txouts,"
+                      "bogosize,"
+                      "muhash,"
+                      "total_amount,"
+                      "total_unspendable_amount,"
+                      "total_prevout_spent_amount,"
+                      "total_new_outputs_ex_coinbase_amount,"
+                      "total_coinbase_amount,"
+                      "total_subsidy,"
+                      "total_genesis_block,"
+                      "total_bip30,"
+                      "total_unspendable_scripts,"
+                      "total_unclaimed_rewards\n");
+
+    CCoinsStats stats{CoinStatsHashType::MUHASH};
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+    active_chainstate.ForceFlushStateToDisk();
+    CBlockIndex *pindex = active_chainstate.m_chain.Genesis();
+
+    CCoinsView* coins_view;
+    BlockManager* blockman;
+    {
+        LOCK(::cs_main);
+        coins_view = &active_chainstate.CoinsDB();
+        blockman = &active_chainstate.m_blockman;
+    }
+
+    for (; pindex; pindex = active_chainstate.m_chain.Next(pindex)) {
+        if (!GetUTXOStats(coins_view, *blockman, stats, node.rpc_interruption_point, pindex))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
+
+        file << strprintf("%d,", static_cast<int64_t>(stats.nHeight));
+        file << strprintf("%s,", stats.hashBlock.GetHex());
+        file << strprintf("%d,", static_cast<int64_t>(stats.nTransactionOutputs));
+        file << strprintf("%d,", static_cast<int64_t>(stats.nBogoSize));
+        file << strprintf("%d,", stats.hashSerialized.GetHex());
+        file << strprintf("%s,", FormatMoney(stats.nTotalAmount));
+        file << strprintf("%s,", FormatMoney(stats.block_unspendable_amount));
+        file << strprintf("%s,", FormatMoney(stats.block_prevout_spent_amount));
+        file << strprintf("%s,", FormatMoney(stats.block_new_outputs_ex_coinbase_amount));
+        file << strprintf("%s,", FormatMoney(stats.block_coinbase_amount));
+        file << strprintf("%s,", FormatMoney(stats.total_subsidy));
+        file << strprintf("%s,", FormatMoney(stats.unspendables_genesis_block));
+        file << strprintf("%s,", FormatMoney(stats.unspendables_bip30));
+        file << strprintf("%s,", FormatMoney(stats.unspendables_scripts));
+        file << strprintf("%s\n", FormatMoney(stats.unspendables_unclaimed_rewards));
+
+        if (pindex->nHeight >= active_chainstate.m_chain.Tip()->nHeight) break;
+    }
+
+    file.close();
+
+    UniValue response(UniValue::VOBJ);
+    response.pushKV("filename", filepath.string());
+
+    return response;
 },
     };
 }
@@ -2648,6 +2751,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         &getrawmempool,                      },
     { "blockchain",         &gettxout,                           },
     { "blockchain",         &gettxoutsetinfo,                    },
+    { "blockchain",         &dumpcoinstats,                      },
     { "blockchain",         &pruneblockchain,                    },
     { "blockchain",         &savemempool,                        },
     { "blockchain",         &verifychain,                        },
