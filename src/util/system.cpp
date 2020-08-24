@@ -78,7 +78,6 @@
 #include <util/time.h>
 #include <ctpl.h>
 #include <random.h>
-#include <validation.h>
 bool fMasternodeMode = false;
 bool bGethTestnet = false;
 bool fDisableGovernance = false;
@@ -1146,84 +1145,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     throw std::runtime_error(dst.generic_string() + " not dir or file");
   }
 }
-void DoGethMaintenance() {
-    bool ibd = false;
-    {
-        LOCK(cs_main);
-        ibd = ::ChainstateActive().IsInitialBlockDownload();
-    }
-    // hasn't started yet so start
-    if(gethPID == 0 || relayerPID == 0) {
-        gethPID = relayerPID = -1;
-        LogPrintf("GETH: Starting Geth and Relayer because PID's were uninitialized\n");
-        int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-        int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-        bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-        const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-        StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
-        int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-        StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
-        nRandomResetSec = GetRandInt(600);
-        nLastGethHeaderTime = GetSystemTimeInSeconds();
-    // if not syncing chain restart geth/relayer if its been long enough since last blocks from relayer
-    } else if(!ibd){
-        const uint64_t nTimeSeconds = GetSystemTimeInSeconds();
-        // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
-        if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
-            LogPrintf("GETH: Last header time not received in sufficient time, trying to resync...\n");
-            // reset timer so it will only do this check atleast once every interval (around 10 mins average) if geth seems stuck
-            nLastGethHeaderTime = nTimeSeconds;
-            // stop geth and relayer
-            LogPrintf("GETH: Stopping Geth and Relayer\n"); 
-            StopGethNode(gethPID);
-            StopRelayerNode(relayerPID);
-            // copy wallet dir if exists
-            fs::path dataDir = GetDataDir(true);
-            fs::path gethDir = dataDir / "geth";
-            fs::path gethKeyStoreDir = gethDir / "keystore";
-            fs::path keyStoreTmpDir = dataDir / "keystoretmp";
-            bool existedKeystore = fs::exists(gethKeyStoreDir);
-            if(existedKeystore){
-                LogPrintf("GETH: Copying keystore for Geth to a temp directory\n"); 
-                try{
-                    recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
-                } catch(const  std::runtime_error& e) {
-                    LogPrintf("Failed copying keystore geth directory to keystoretmp %s\n", e.what());
-                    return;
-                }
-            }
-            LogPrintf("GETH: Removing Geth data directory\n");
-            // clean geth data dir
-            fs::remove_all(gethDir);
-            // replace keystore dir
-            if(existedKeystore){
-                LogPrintf("GETH: Replacing keystore with temp keystore directory\n");
-                try{
-                    fs::create_directory(gethDir);
-                    recursive_copy(keyStoreTmpDir, gethKeyStoreDir);
-                } catch(const  std::runtime_error& e) {
-                    LogPrintf("Failed copying keystore geth keystoretmp directory to keystore %s\n", e.what());
-                    return;
-                }
-                fs::remove_all(keyStoreTmpDir);
-            }
-            LogPrintf("GETH: Restarting Geth and Relayer\n");
-            // start node and relayer again
-            int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-            int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-            bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-            const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-            StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
-            int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-            StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
-            // reset randomized reset number
-            nRandomResetSec = GetRandInt(600);
-            // set flag that geth is resyncing
-            fGethSynced = false;
-            LogPrintf("GETH: Done, waiting for resync...\n");
-        }
-    }
-}
+
 bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
 {
     if(mode == "disabled") {
