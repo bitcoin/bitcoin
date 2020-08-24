@@ -53,6 +53,7 @@ extern bool fLoaded;
 extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
+extern int64_t nLastGethHeaderTime;
 extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
 extern CAmount nMNCollateralRequired;

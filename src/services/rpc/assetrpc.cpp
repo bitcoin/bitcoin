@@ -738,7 +738,9 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     LOCK(cs_setethstatus);
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
-    
+    if(headerArray.size() > 0) {
+        nLastGethHeaderTime = GetSystemTimeInSeconds();
+    }
     for(size_t i =0;i<headerArray.size();i++){
         EthereumTxRoot txRoot;
         const UniValue &tupleArray = headerArray[i].get_array();
