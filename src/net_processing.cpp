@@ -4185,14 +4185,14 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
    if (found)
     {
         //probably one the extensions
-        sporkManager.ProcessSpork(&pfrom, msg_type, vRecv, connman);
+        sporkManager.ProcessSpork(&pfrom, msg_type, vRecv, m_connman);
         masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);
-        governance.ProcessMessage(&pfrom, msg_type, vRecv, connman);
-        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, connman);
-        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, connman);
-        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, connman);
-        llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv, connman);
-        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, connman);
+        governance.ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
         return;
     }
         
