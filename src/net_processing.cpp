@@ -1132,17 +1132,9 @@ void Misbehaving(const NodeId pnode, const int howmuch, const std::string& messa
     }
 }
 
-/**
- * Potentially mark a node discouraged based on the contents of a BlockValidationState object
- *
- * @param[in] via_compact_block this bool is passed in because net_processing should
- * punish peers differently depending on whether the data was provided in a compact
- * block message or not. If the compact block had a valid header, but contained invalid
- * txs, the peer should not be punished. See BIP 152.
- *
- * @return Returns true if the peer was punished (probably disconnected)
- */
-static bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state, bool via_compact_block, const std::string& message = "") {
+bool PeerManager::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
+                                          bool via_compact_block, const std::string& message)
+{
     switch (state.GetResult()) {
     case BlockValidationResult::BLOCK_RESULT_UNSET:
         break;
