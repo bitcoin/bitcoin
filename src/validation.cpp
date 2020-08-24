@@ -2210,8 +2210,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     if (!WriteUndoDataForBlock(blockundo, state, pindex, chainparams))
         return false;
 
-    if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-        pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
+    if (pindex->RaiseValidity(BLOCK_VALID_SCRIPTS) || (fScriptChecks && !(pindex->nStatus | BLOCK_OPT_SCRIPTSCHECKED))) {
+        if (fScriptChecks) pindex->nStatus |= BLOCK_OPT_SCRIPTSCHECKED;
         setDirtyBlockIndex.insert(pindex);
     }
 
