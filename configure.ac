@@ -1159,7 +1159,7 @@ else
   SYSCOIN_QT_INIT
 
   dnl sets $syscoin_enable_qt, $syscoin_enable_qt_test, $syscoin_enable_qt_dbus
-  SYSCOIN_QT_CONFIGURE
+  SYSCOIN_QT_CONFIGURE([5.5.1])
 fi
 
 if test x$enable_wallet != xno; then
