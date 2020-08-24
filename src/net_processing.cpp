@@ -2822,7 +2822,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         }
         // SYSCOIN
         if (!pfrom.fMasternodeProbe) {
-            CMNAuth::PushMNAUTH(&pfrom, connman);
+            CMNAuth::PushMNAUTH(&pfrom, m_connman);
         }
 
         if (pfrom.nVersion >= SENDHEADERS_VERSION) {
@@ -2851,11 +2851,11 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // SPV nodes should not send this message
             // as they are usually only interested in the higher level messages
-            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
         }
 
         if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.fMasternode) {
-            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
         pfrom.fSuccessfullyConnected = true;
         return;
@@ -4120,7 +4120,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         CSimplifiedMNListDiff mnListDiff;
         std::string strError;
         if (BuildSimplifiedMNListDiff(cmd.baseBlockHash, cmd.blockHash, mnListDiff, strError)) {
-            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
         } else {
            
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
