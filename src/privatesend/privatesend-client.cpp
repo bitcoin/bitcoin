@@ -1802,8 +1802,8 @@ void CPrivateSendClientManager::DoMaintenance(CConnman& connman)
 
     if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
-    static unsigned int nTick = 0;
-    static unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
+    static int nTick = 0;
+    static int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
 
     nTick++;
     CheckTimeout();
