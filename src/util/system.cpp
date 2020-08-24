@@ -1158,6 +1158,7 @@ void DoGethMaintenance() {
         int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
         StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
         nRandomResetSec = GetRandInt(600) - 300;
+        nLastGethHeaderTime = GetSystemTimeInSeconds();
     } else {
         const uint64_t nTimeSeconds = GetSystemTimeInSeconds();
         // it's been >= 10 minutes (+ - some minutes for randomization) since an Ethereum block so clean data dir and resync
