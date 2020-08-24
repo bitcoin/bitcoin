@@ -102,10 +102,10 @@ enum class FeeEstimateMode;
 class ReserveDestination;
 
 //! Default for -addresstype
-constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::LEGACY};
+constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
 
 //! Default for -changetype
-constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::LEGACY};
+constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};
 
 static constexpr uint64_t KNOWN_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE
