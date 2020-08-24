@@ -51,7 +51,6 @@ extern std::string exePath;
 extern std::string fGethSyncStatus;
 extern bool fGethSynced;
 extern bool fLoaded;
-extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
 extern int64_t nLastGethHeaderTime;

@@ -10,7 +10,6 @@
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/system.h>
-
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
     case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
@@ -231,6 +230,26 @@ UniValue CNotaryDetails::ToJson() const {
     value.pushKV("instant_transfers", bEnableInstantTransfers);
     value.pushKV("hd_required", bRequireHD);
     return value;
+}
+
+void recursive_copy(const fs::path &src, const fs::path &dst)
+{
+  if (fs::exists(dst)){
+    throw std::runtime_error(dst.generic_string() + " exists");
+  }
+
+  if (fs::is_directory(src)) {
+    fs::create_directories(dst);
+    for (fs::directory_entry& item : fs::directory_iterator(src)) {
+      recursive_copy(item.path(), dst/item.path().filename());
+    }
+  } 
+  else if (fs::is_regular_file(src)) {
+    fs::copy(src, dst);
+  } 
+  else {
+    throw std::runtime_error(dst.generic_string() + " not dir or file");
+  }
 }
 
 void DoGethMaintenance() {
