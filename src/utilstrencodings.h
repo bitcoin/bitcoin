@@ -89,6 +89,13 @@ NODISCARD bool ParseInt32(const std::string& str, int32_t *out);
 NODISCARD bool ParseInt64(const std::string& str, int64_t *out);
 
 /**
+ * Convert decimal string to unsigned 8-bit integer with strict parse error feedback.
+ * @returns true if the entire string could be parsed as valid integer,
+ *   false if not the entire string could be parsed or when overflow or underflow occurred.
+ */
+NODISCARD bool ParseUInt8(const std::string& str, uint8_t *out);
+
+/**
  * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.

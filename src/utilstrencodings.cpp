@@ -303,6 +303,18 @@ bool ParseInt64(const std::string& str, int64_t *out)
         n <= std::numeric_limits<int64_t>::max();
 }
 
+bool ParseUInt8(const std::string& str, uint8_t *out)
+{
+    uint32_t u32;
+    if (!ParseUInt32(str, &u32) || u32 > std::numeric_limits<uint8_t>::max()) {
+        return false;
+    }
+    if (out != nullptr) {
+        *out = static_cast<uint8_t>(u32);
+    }
+    return true;
+}
+
 bool ParseUInt32(const std::string& str, uint32_t *out)
 {
     if (!ParsePrechecks(str))
