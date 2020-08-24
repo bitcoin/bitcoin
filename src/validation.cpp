@@ -2382,7 +2382,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     std::string strError = "";
     // add seniority to reward when checking for limit
-    if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet, strError)) {
+    if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet, strError) && pindex->nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
