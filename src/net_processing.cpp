@@ -4906,7 +4906,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 		for (const auto& inv : pto->vInventoryOtherToSend) {
 			vInv.emplace_back(inv);
 			if (vInv.size() == MAX_INV_SZ) {
-				connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+				m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 				vInv.clear();
 			}
 		}
@@ -5102,7 +5102,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
                     vGetData.push_back(inv);
                     if (vGetData.size() >= MAX_GETDATA_SZ) {
-                        connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
+                        m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
                         vGetData.clear();
                     }
                     UpdateOtherRequestTime(inv.hash, current_time);
