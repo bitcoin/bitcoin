@@ -2367,16 +2367,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
 
-    // SYSCOIN
-    int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-    int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-    bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
     if(!fRegTest) {
-        UninterruptibleSleep(std::chrono::milliseconds{1000});
-        StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
-        int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-        StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
+        // SYSCOIN
+        node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
     } else {
         SetSYSXAssetForUnitTests(gArgs.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
     }
