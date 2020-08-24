@@ -77,6 +77,7 @@
 #include <rpc/server.h>
 #include <util/time.h>
 #include <ctpl.h>
+#include <random.h>
 bool fMasternodeMode = false;
 bool bGethTestnet = false;
 bool fDisableGovernance = false;
@@ -89,6 +90,7 @@ pid_t gethPID = 0;
 pid_t relayerPID = 0;
 int64_t nRandomResetSec = 0;
 int64_t nLastGethHeaderTime = 0;
+std::string exePath = "";
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;

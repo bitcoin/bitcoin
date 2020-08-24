@@ -105,7 +105,6 @@
 #include <flat-database.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
-std::string exePath = "";
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 static bool fFeeEstimatesInitialized = false;
