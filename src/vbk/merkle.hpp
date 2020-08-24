@@ -6,6 +6,8 @@
 #ifndef BITCOIN_SRC_VBK_MERKLE_HPP
 #define BITCOIN_SRC_VBK_MERKLE_HPP
 
+#include <iostream>
+
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/validation.h>

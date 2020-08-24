@@ -81,13 +81,13 @@ bool popdataStatelessValidation(const altintegration::PopData& popData, altinteg
     }
 
     for (const auto& vtb : popData.vtbs) {
-        if (!altintegration::checkVTB(vtb, state, *config.vbk.params, *config.btc.params)) {
+        if (!altintegration::checkVTB(vtb, state, *config.btc.params)) {
             return state.Invalid("pop-vtb-statelessly-invalid");
         }
     }
 
     for (const auto& atv : popData.atvs) {
-        if (!altintegration::checkATV(atv, state, *config.alt, *config.vbk.params)) {
+        if (!altintegration::checkATV(atv, state, *config.alt)) {
             return state.Invalid("pop-atv-statelessly-invalid");
         }
     }

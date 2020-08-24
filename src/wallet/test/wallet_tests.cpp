@@ -37,13 +37,6 @@ static void AddKey(CWallet& wallet, const CKey& key)
     spk_man->AddKeyPubKey(key, key.GetPubKey());
 }
 
-static void setConfig()
-{
-    auto config = VeriBlock::Config();
-    config.POP_REWARD_PERCENTAGE = 0;
-    SelectPopConfig(config);
-}
-
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 {
     // Cap last block file size, and mine new block in a new block file.
@@ -273,8 +266,6 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 // debit functions.
 BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
-    setConfig();
-
     NodeContext node;
     auto chain = interfaces::MakeChain(node);
 

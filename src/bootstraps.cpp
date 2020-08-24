@@ -51,7 +51,7 @@ void printConfig(const altintegration::Config& config)
   network     : %s
   block height: %d
   block hash  : %s
-  chain id    : %d
+  chain id    : %lld
 )",
         config.btc.params->networkName(), config.btc.startHeight, config.btc.blocks.size(), btcfirst, btclast,
 

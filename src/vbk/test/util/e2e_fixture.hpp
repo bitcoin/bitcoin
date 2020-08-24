@@ -94,7 +94,7 @@ struct E2eFixture : public TestChain100Setup {
 
         auto publicationdata = createPublicationData(endorsed, payoutInfo);
         auto vbktx = popminer.createVbkTxEndorsingAltBlock(publicationdata);
-        auto atv = popminer.generateATV(vbktx, getLastKnownVBKblock(), state);
+        auto atv = popminer.applyATV(vbktx, state);
         BOOST_CHECK(state.IsValid());
         return atv;
     }
@@ -180,18 +180,7 @@ struct E2eFixture : public TestChain100Setup {
 
         auto vtbs = popminer.vbkPayloads[vbkcontaining->getHash()];
         BOOST_CHECK(vtbs.size() == 1);
-        VTB& vtb = vtbs[0];
-
-        // fill VTB context: from last known VBK block to containing
-        auto* current = vbkcontaining;
-        auto lastKnownVbk = getLastKnownVBKblock();
-        while (current != nullptr && current->getHash() != lastKnownVbk) {
-            vtb.context.push_back(current->getHeader());
-            current = current->pprev;
-        }
-        std::reverse(vtb.context.begin(), vtb.context.end());
-
-        return vtb;
+        return vtbs[0];
     }
 
     PublicationData createPublicationData(CBlockIndex* endorsed, const std::vector<uint8_t>& payoutInfo)

@@ -35,7 +35,7 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
         return bootstrap;
     }
 
-    uint32_t getIdentifier() const noexcept override
+    int64_t getIdentifier() const noexcept override
     {
         return 0x3ae6ca;
     }

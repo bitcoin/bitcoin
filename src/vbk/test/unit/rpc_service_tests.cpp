@@ -65,9 +65,6 @@ BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
 
     std::vector<altintegration::VbkBlock> vbk_blocks;
     for (const auto& vtb : vtbs) {
-        for (const auto& b : vtb.context) {
-            vbk_blocks.push_back(b);
-        }
         vbk_blocks.push_back(vtb.containingBlock);
     }
 

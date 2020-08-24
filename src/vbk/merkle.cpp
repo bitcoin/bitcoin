@@ -11,6 +11,17 @@
 
 namespace VeriBlock {
 
+template <typename pop_t>
+void popDataToHash(const std::vector<pop_t>& data, std::vector<uint256>& leaves)
+{
+    for (const auto& el : data) {
+        auto id = el.getId();
+        uint256 leaf;
+        std::copy(id.begin(), id.end(), leaf.begin());
+        leaves.push_back(leaf);
+    }
+}
+
 int GetPopMerkleRootCommitmentIndex(const CBlock& block)
 {
     int commitpos = -1;
@@ -28,8 +39,10 @@ int GetPopMerkleRootCommitmentIndex(const CBlock& block)
 uint256 BlockPopDataMerkleRoot(const CBlock& block)
 {
     std::vector<uint256> leaves;
-    auto bytes = block.popData.toVbkEncoding();
-    leaves.push_back(Hash(bytes.begin(), bytes.end()));
+
+    popDataToHash(block.popData.context, leaves);
+    popDataToHash(block.popData.vtbs, leaves);
+    popDataToHash(block.popData.atvs, leaves);
 
     return ComputeMerkleRoot(std::move(leaves), nullptr);
 }
@@ -37,8 +50,7 @@ uint256 BlockPopDataMerkleRoot(const CBlock& block)
 uint256 makeTopLevelRoot(int height, const KeystoneArray& keystones, const uint256& txRoot)
 {
     ContextInfoContainer context(height, keystones, txRoot);
-    auto contextHash = context.getUnauthenticatedHash();
-    return Hash(txRoot.begin(), txRoot.end(), contextHash.begin(), contextHash.end());
+    return context.getTopLevelMerkleRoot();
 }
 
 const CBlockIndex* getPreviousKeystone(const CBlockIndex& block)
