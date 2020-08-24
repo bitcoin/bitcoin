@@ -211,14 +211,15 @@ def test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address):
     # here, the rbftx has a peer_node coin and then adds a rbf_node input
     # Note that this test depends upon the RPC code checking input ownership prior to change outputs
     # (since it can't use fundrawtransaction, it lacks a proper change output)
-    utxos = [node.listunspent()[-1] for node in (rbf_node, peer_node)]
+    fee = Decimal("0.001")
+    utxos = [node.listunspent(query_options={'minimumAmount': fee})[-1] for node in (rbf_node, peer_node)]
     inputs = [{
         "txid": utxo["txid"],
         "vout": utxo["vout"],
         "address": utxo["address"],
         "sequence": BIP125_SEQUENCE_NUMBER
     } for utxo in utxos]
-    output_val = sum(utxo["amount"] for utxo in utxos) - Decimal("0.001")
+    output_val = sum(utxo["amount"] for utxo in utxos) - fee
     rawtx = rbf_node.createrawtransaction(inputs, {dest_address: output_val})
     signedtx = rbf_node.signrawtransactionwithwallet(rawtx)
     signedtx = peer_node.signrawtransactionwithwallet(signedtx["hex"])
