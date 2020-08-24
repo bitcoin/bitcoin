@@ -1147,7 +1147,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
   }
 }
 void DoGethMaintenance() {
-    bool idb = false;
+    bool ibd = false;
     {
         LOCK(cs_main);
         ibd = ::ChainstateActive().IsInitialBlockDownload();
