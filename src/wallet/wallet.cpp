@@ -2344,7 +2344,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool fUseCache) const
 
 CAmount CWalletTx::GetAnonymizedCredit(bool fUseCache) const
 {
-    if (pwallet == 0)
+    if (!pwallet)
         return 0;
 
     // Exclude coinbase and conflicted txes
