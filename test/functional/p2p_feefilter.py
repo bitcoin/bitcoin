@@ -12,10 +12,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
 
-def hashToHex(hash):
-    return format(hash, '064x')
-
-
 class FeefilterConn(P2PInterface):
     feefilter_received = False
 
@@ -35,7 +31,7 @@ class TestP2PConn(P2PInterface):
     def on_inv(self, message):
         for i in message.inv:
             if (i.type == MSG_TX) or (i.type == MSG_WTX):
-                self.txinvs.append(hashToHex(i.hash))
+                self.txinvs.append('{:064x}'.format(i.hash))
 
     def wait_for_invs_to_match(self, invs_expected):
         invs_expected.sort()
