@@ -45,7 +45,7 @@ void RegenerateCommitments(CBlock& block)
     tx.vout.erase(tx.vout.begin() + GetWitnessCommitmentIndex(block));
     block.vtx.at(0) = MakeTransactionRef(tx);
 
-    GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus());
+    GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus());
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
