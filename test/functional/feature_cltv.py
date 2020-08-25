@@ -118,18 +118,22 @@ class BIP65Test(BitcoinTestFramework):
         self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(CLTV_HEIGHT - 2)]
         self.nodeaddress = self.nodes[0].getnewaddress()
 
-        self.log.info("Test that an invalid-according-to-CLTV transaction can still appear in a block")
+        self.log.info("Test that invalid-according-to-CLTV transactions can still appear in a block")
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
-                                     self.nodeaddress, amount=1.0)
-        spendtx = cltv_invalidate(self.nodes[0], spendtx, 1)
-        spendtx.rehash()
+        # create one invalid tx per CLTV failure reason (5 in total) and collect them
+        invalid_ctlv_txs = []
+        for i in range(5):
+            spendtx = create_transaction(self.nodes[0], self.coinbase_txids[i],
+                                         self.nodeaddress, amount=1.0)
+            spendtx = cltv_invalidate(self.nodes[0], spendtx, i)
+            spendtx.rehash()
+            invalid_ctlv_txs.append(spendtx)
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
         block.nVersion = 3
-        block.vtx.append(spendtx)
+        block.vtx.extend(invalid_ctlv_txs)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
@@ -153,7 +157,7 @@ class BIP65Test(BitcoinTestFramework):
         self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
         block.nVersion = 4
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[1],
+        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[10],
                                      self.nodeaddress, amount=1.0)
         spendtx = cltv_invalidate(self.nodes[0], spendtx, 1)
         spendtx.rehash()
