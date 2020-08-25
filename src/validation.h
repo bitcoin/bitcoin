@@ -12,6 +12,7 @@
 
 #include <amount.h>
 #include <coins.h>
+#include <chainparams.h>
 #include <crypto/common.h> // for ReadLE64
 #include <fs.h>
 #include <optional.h>
@@ -51,6 +52,7 @@ struct ChainTxData;
 struct DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
+struct CCheckpointData;
 
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
@@ -439,6 +441,8 @@ public:
 
     /** Find the last common block between the parameter chain and a locator. */
     CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
      * Return the spend height, which is one more than the inputs.GetBestBlock().

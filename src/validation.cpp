@@ -7,7 +7,6 @@
 
 #include <arith_uint256.h>
 #include <chain.h>
-#include <chainparams.h>
 #include <checkqueue.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -3470,14 +3469,15 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 }
 
 //! Returns last CBlockIndex* that is a checkpoint
-static CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
 {
     const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
     for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints))
     {
         const uint256& hash = i.second;
-        CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        assert(std::addressof(g_chainman.m_blockman) == std::addressof(*this));
+        CBlockIndex* pindex = LookupBlockIndex(hash);
         if (pindex) {
             return pindex;
         }
@@ -3509,7 +3509,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         // Don't accept any forks from the main chain prior to last checkpoint.
         // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
         // BlockIndex().
-        CBlockIndex* pcheckpoint = GetLastCheckpoint(params.Checkpoints());
+        CBlockIndex* pcheckpoint = g_chainman.m_blockman.GetLastCheckpoint(params.Checkpoints());
         if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
             LogPrintf("ERROR: %s: forked chain older than last checkpoint (height %d)\n", __func__, nHeight);
             return state.Invalid(BlockValidationResult::BLOCK_CHECKPOINT, "bad-fork-prior-to-checkpoint");
