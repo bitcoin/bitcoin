@@ -6,7 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <chainparams.h>
 #include <util/strencodings.h>
-#include <vbk/pop_service.hpp>
+#include <vbk/pop_common.hpp>
 #include <vbk/util.hpp>
 #include <bootstraps.h>
 

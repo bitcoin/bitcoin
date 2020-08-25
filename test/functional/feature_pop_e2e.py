@@ -8,6 +8,7 @@
 """
 Test with multiple nodes, and multiple PoP endorsements, checking to make sure nodes stay in sync.
 """
+import time
 
 from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools
 from test_framework.test_framework import BitcoinTestFramework
@@ -101,6 +102,7 @@ class PopE2E(BitcoinTestFramework):
 
         containingblock = self.nodes[0].generate(nblocks=1)
         containingblock = self.nodes[0].getblock(containingblock[0])
+        time.sleep(5)
 
         self.log.info("sync all nodes")
         self.sync_all(self.nodes)

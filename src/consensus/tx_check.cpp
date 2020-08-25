@@ -9,7 +9,7 @@
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <vbk/util.hpp>
-#include <vbk/pop_service.hpp>
+#include <vbk/pop_common.hpp>
 
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {

@@ -12,7 +12,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
-#include <vbk/pop_service.hpp>
+#include <vbk/pop_common.hpp>
 
 typedef std::vector<unsigned char> valtype;
 

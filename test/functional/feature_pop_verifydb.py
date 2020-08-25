@@ -5,6 +5,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+import time
 
 from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools, create_endorsed_chain, \
     assert_pop_state_equal
@@ -67,6 +68,7 @@ class PoPVerifyDB(BitcoinTestFramework):
                 "-checkblocks={}".format(checkblocks),
                 "-checklevel={}".format(checklevel)
             ])
+            time.sleep(10)
             self.sync_all(self.nodes, timeout=60)
             assert_pop_state_equal(self.nodes)
             self.log.info("success")

@@ -6,7 +6,7 @@
 #include <consensus/merkle.h>
 #include <hash.h>
 #include <vbk/entity/context_info_container.hpp>
-#include <vbk/pop_service.hpp>
+#include <vbk/pop_common.hpp>
 #include "merkle.hpp"
 
 namespace VeriBlock {

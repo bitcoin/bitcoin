@@ -3,16 +3,50 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <veriblock/entities/atv.hpp>
+#include <veriblock/entities/vbkblock.hpp>
+#include <veriblock/entities/vtb.hpp>
 #include "vbk/p2p_sync.hpp"
-
-#include "veriblock/entities/atv.hpp"
-#include "veriblock/entities/vbkblock.hpp"
-#include "veriblock/entities/vtb.hpp"
 
 namespace VeriBlock {
 namespace p2p {
 
-std::map<NodeId, std::shared_ptr<PopDataNodeState>> mapPopDataNodeState;
+static std::map<NodeId, std::shared_ptr<PopDataNodeState>> mapPopDataNodeState;
+
+template <>
+std::map<altintegration::ATV::id_t, PopP2PState>& PopDataNodeState::getMap<altintegration::ATV>()
+{
+    return atv_state;
+}
+
+template <>
+std::map<altintegration::VTB::id_t, PopP2PState>& PopDataNodeState::getMap<altintegration::VTB>()
+{
+    return vtb_state;
+}
+
+template <>
+std::map<altintegration::VbkBlock::id_t, PopP2PState>& PopDataNodeState::getMap<altintegration::VbkBlock>()
+{
+    return vbk_blocks_state;
+}
+
+PopDataNodeState& getPopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+    std::shared_ptr<PopDataNodeState>& val = mapPopDataNodeState[id];
+    if (val == nullptr) {
+        mapPopDataNodeState[id] = std::make_shared<PopDataNodeState>();
+        val = mapPopDataNodeState[id];
+    }
+    return *val;
+}
+
+void erasePopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+    mapPopDataNodeState.erase(id);
+}
 
 template <typename pop_t>
 bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altintegration::MemPool& pop_mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)

@@ -45,7 +45,7 @@
 #include <mutex>
 
 #include <vbk/adaptors/univalue_json.hpp>
-#include <vbk/pop_service.hpp>
+#include <vbk/pop_common.hpp>
 
 struct CUpdatedBlock
 {

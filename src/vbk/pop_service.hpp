@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SRC_VBK_POP_SERVICE_HPP
 #define BITCOIN_SRC_VBK_POP_SERVICE_HPP
 
-#include <veriblock/altintegration.hpp>
+#include "pop_common.hpp"
 #include <veriblock/storage/batch_adaptor.hpp>
 
 class BlockValidationState;
@@ -25,10 +25,7 @@ namespace VeriBlock {
 using BlockBytes = std::vector<uint8_t>;
 using PoPRewards = std::map<CScript, CAmount>;
 
-altintegration::Altintegration& GetPop();
-void SetPopConfig(const altintegration::Config& config);
 void SetPop(CDBWrapper& db);
-std::string toPrettyString(const altintegration::Altintegration& pop);
 
 bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state);
 bool checkPopDataSize(const altintegration::PopData& popData, altintegration::ValidationState& state);

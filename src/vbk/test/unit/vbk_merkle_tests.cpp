@@ -11,7 +11,7 @@
 #include <validation.h>
 #include <wallet/wallet.h>
 
-#include "vbk/genesis.hpp"
+#include "vbk/genesis_common.hpp"
 #include "vbk/merkle.hpp"
 
 BOOST_AUTO_TEST_SUITE(vbk_merkle_tests)

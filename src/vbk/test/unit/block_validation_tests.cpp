@@ -9,7 +9,7 @@
 #include <test/util/setup_common.h>
 #include <validation.h>
 #include <vbk/pop_service.hpp>
-#include <vbk/test/util/util.hpp>
+#include <vbk/test/util/consts.hpp>
 #include <vbk/test/util/e2e_fixture.hpp>
 
 #include <string>

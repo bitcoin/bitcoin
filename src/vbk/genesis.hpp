@@ -7,29 +7,9 @@
 #define BITCOIN_SRC_VBK_GENESIS_HPP
 
 #include <primitives/block.h>
-#include <script/script.h>
+#include <vbk/genesis_common.hpp>
 
 namespace VeriBlock {
-
-CScript ScriptWithPrefix(uint32_t nBits);
-
-CBlock CreateGenesisBlock(
-    std::string pszTimestamp,
-    const CScript& genesisOutputScript,
-    uint32_t nTime,
-    uint32_t nNonce,
-    uint32_t nBits,
-    int32_t nVersion,
-    const CAmount& genesisReward);
-
-CBlock CreateGenesisBlock(
-    uint32_t nTime,
-    uint32_t nNonce,
-    uint32_t nBits,
-    int32_t nVersion,
-    const CAmount& genesisReward,
-    const std::string& initialPubkeyHex,
-    const std::string& pszTimestamp);
 
 CBlock MineGenesisBlock(
     uint32_t nTime,

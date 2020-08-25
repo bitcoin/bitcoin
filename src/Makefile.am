@@ -105,10 +105,12 @@ endif
 ### VeriBlock section start
 VBK_H = \
   vbk/entity/context_info_container.hpp \
+  vbk/pop_common.hpp \
   vbk/pop_service.hpp \
   vbk/vbk.hpp \
   vbk/merkle.hpp \
   vbk/genesis.hpp \
+  vbk/genesis_common.hpp \
   vbk/altchainparam.hpp \
   vbk/p2p_sync.hpp \
   vbk/util.hpp \
@@ -303,8 +305,6 @@ libbitcoin_server_a_SOURCES = \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
-  bootstraps.cpp \
-  chainparams.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
   flatfile.cpp \
@@ -331,8 +331,6 @@ libbitcoin_server_a_SOURCES = \
   policy/settings.cpp \
   pow.cpp \
   rest.cpp \
-  vbk/merkle.hpp \
-  vbk/merkle.cpp \
   vbk/genesis.hpp \
   vbk/genesis.cpp \
   vbk/rpc_register.hpp \
@@ -496,9 +494,13 @@ libbitcoin_consensus_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
+  vbk/pop_common.hpp \
+  vbk/pop_common.cpp \
   base58.cpp \
   bech32.cpp \
   bloom.cpp \
+  bootstraps.cpp \
+  chainparams.cpp \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \
@@ -521,6 +523,10 @@ libbitcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
+  vbk/genesis_common.hpp \
+  vbk/genesis_common.cpp \
+  vbk/merkle.hpp \
+  vbk/merkle.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
@@ -640,20 +646,15 @@ vbitcoin_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
 vbitcoin_tx_LDADD = \
-  $(LIBUNIVALUE) \
-  $(MINIUPNPC_LIBS) \
   $(VERIBLOCK_POP_CPP_LIBS) \
-  $(LIBBITCOIN_SERVER) \
+  $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
-  $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
-  $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-vbitcoin_tx_LDADD += $(BOOST_LIBS) $(VERIBLOCK_POP_CPP_LIBS) $(MINIUPNPC_LIBS)
+vbitcoin_tx_LDADD += $(BOOST_LIBS) $(VERIBLOCK_POP_CPP_LIBS)
 
 # vbitcoin-wallet binary #
 vbitcoin_wallet_SOURCES = bitcoin-wallet.cpp
@@ -666,8 +667,6 @@ vbitcoin_wallet_SOURCES += bitcoin-wallet-res.rc
 endif
 
 vbitcoin_wallet_LDADD = \
-  $(VERIBLOCK_POP_CPP_LIBS) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET_TOOL) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -682,7 +681,7 @@ vbitcoin_wallet_LDADD = \
   $(LIBUNIVALUE) \
   $(VERIBLOCK_POP_CPP_LIBS)
 
-vbitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(VERIBLOCK_POP_CPP_LIBS) $(MINIUPNPC_LIBS)
+vbitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #
 
 # bitcoinconsensus library #

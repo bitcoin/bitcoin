@@ -17,34 +17,21 @@
 #include <boost/thread/interruption.hpp>
 #endif //WIN32
 
-#include "p2p_sync.hpp"
+#include <vbk/p2p_sync.hpp>
+#include <vbk/pop_common.hpp>
 #include <vbk/pop_service.hpp>
 
 namespace VeriBlock {
 
-static std::shared_ptr<altintegration::Altintegration> app = nullptr;
-static std::shared_ptr<altintegration::Config> config = nullptr;
-
-altintegration::Altintegration& GetPop()
-{
-    assert(app && "Altintegration is not initialized. Invoke SetPop.");
-    return *app;
-}
-
-void SetPopConfig(const altintegration::Config& newConfig)
-{
-    config = std::make_shared<altintegration::Config>(newConfig);
-}
-
 void SetPop(CDBWrapper& db)
 {
-    assert(config && "Config is not initialized. Invoke SetPopConfig.");
     std::shared_ptr<altintegration::Repository> dbrepo = std::make_shared<Repository>(db);
-    app = altintegration::Altintegration::create(config, dbrepo);
+    SetPop(dbrepo);
 
-    app->mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
-    app->mempool->onAccepted<altintegration::VTB>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VTB>);
-    app->mempool->onAccepted<altintegration::VbkBlock>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VbkBlock>);
+    auto& app = GetPop();
+    app.mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
+    app.mempool->onAccepted<altintegration::VTB>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VTB>);
+    app.mempool->onAccepted<altintegration::VbkBlock>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VbkBlock>);
 }
 
 bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state)
@@ -246,11 +233,6 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks)
 {
     LOCK(cs_main);
     return altintegration::getLastKnownBlocks(GetPop().altTree->btc(), blocks);
-}
-
-std::string toPrettyString(const altintegration::Altintegration& pop)
-{
-    return pop.altTree->toPrettyString();
 }
 
 bool hasPopData(CBlockTreeDB& db)
