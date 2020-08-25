@@ -97,6 +97,14 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
+void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin) {
+    cachedCoinsUsage += coin.DynamicMemoryUsage();
+    cacheCoins.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(std::move(outpoint)),
+        std::forward_as_tuple(std::move(coin), CCoinsCacheEntry::DIRTY));
+}
+
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();

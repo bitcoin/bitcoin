@@ -11,10 +11,12 @@
 #endif
 
 #include <amount.h>
+#include <attributes.h>
 #include <coins.h>
 #include <consensus/validation.h>
 #include <crypto/common.h> // for ReadLE64
 #include <fs.h>
+#include <node/utxo_snapshot.h>
 #include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
@@ -870,6 +872,12 @@ private:
     //! by the background validation chainstate.
     bool m_snapshot_validated{false};
 
+    //! Internal helper for ActivateSnapshot().
+    [[nodiscard]] bool PopulateAndValidateSnapshot(
+        CChainState& snapshot_chainstate,
+        CAutoFile& coins_file,
+        const SnapshotMetadata& metadata);
+
     // For access to m_active_chainstate.
     friend CChainState& ChainstateActive();
     friend CChain& ChainActive();
@@ -899,6 +907,22 @@ public:
 
     //! Get all chainstates currently being used.
     std::vector<CChainState*> GetAll();
+
+    //! Construct and activate a Chainstate on the basis of UTXO snapshot data.
+    //!
+    //! Steps:
+    //!
+    //! - Initialize an unused CChainState.
+    //! - Load its `CoinsViews` contents from `coins_file`.
+    //! - Verify that the hash of the resulting coinsdb matches the expected hash
+    //!   per assumeutxo chain parameters.
+    //! - Wait for our headers chain to include the base block of the snapshot.
+    //! - "Fast forward" the tip of the new chainstate to the base of the snapshot,
+    //!   faking nTx* block index data along the way.
+    //! - Move the new chainstate to `m_snapshot_chainstate` and make it our
+    //!   ChainstateActive().
+    [[nodiscard]] bool ActivateSnapshot(
+        CAutoFile& coins_file, const SnapshotMetadata& metadata, bool in_memory);
 
     //! The most-work chain.
     CChainState& ActiveChainstate() const;
