@@ -257,7 +257,7 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
 
 CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int32_t>()};
+    return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
 }
 
 void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)

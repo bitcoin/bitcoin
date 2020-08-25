@@ -17,9 +17,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CNetAddr net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    for (int i = 0; i < 15; ++i) {
-        (void)net_addr.GetByte(i);
-    }
     (void)net_addr.GetHash();
     (void)net_addr.GetNetClass();
     if (net_addr.GetNetwork() == Network::NET_IPV4) {
@@ -78,7 +75,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)net_addr.ToString();
     (void)net_addr.ToStringIP();
 
-    const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<int32_t>()};
+    const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
     (void)sub_net.IsValid();
     (void)sub_net.ToString();
 
