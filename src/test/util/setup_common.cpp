@@ -187,7 +187,7 @@ TestingSetup::~TestingSetup()
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.args = nullptr;
-    UnloadBlockIndex(m_node.mempool.get());
+    UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
     m_node.mempool.reset();
     m_node.scheduler.reset();
     m_node.chainman->Reset();
