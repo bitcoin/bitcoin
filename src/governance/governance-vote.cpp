@@ -140,7 +140,7 @@ void CGovernanceVote::UpdateHash() const
     ss << nVoteSignal;
     ss << nVoteOutcome;
     ss << nTime;
-    *const_cast<uint256*>(&hash) = ss.GetSHA256();
+    *const_cast<uint256*>(&hash) = ss.GetHash();
 }
 
 uint256 CGovernanceVote::GetHash() const
