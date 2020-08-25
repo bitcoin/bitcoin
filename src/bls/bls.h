@@ -59,7 +59,7 @@ public:
                 memset(buf, 0, _SerSize);
                 CHashWriter ss(SER_GETHASH, 0);
                 ss.write(buf, _SerSize);
-                hash = ss.GetHash();
+                hash = ss.GetSHA256();
             }
         };
         static NullHash nullHash;
@@ -453,7 +453,7 @@ private:
     {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss.write(buf, sizeof(buf));
-        hash = ss.GetHash();
+        hash = ss.GetSHA256();
     }
 };
 typedef CBLSLazyWrapper<CBLSSignature> CBLSLazySignature;
