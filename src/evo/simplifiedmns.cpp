@@ -30,7 +30,7 @@ uint256 CSimplifiedMNListEntry::CalcHash() const
 {
     CHashWriter hw(SER_GETHASH, CLIENT_VERSION);
     hw << *this;
-    return hw.GetHash();
+    return hw.GetSHA256();
 }
 
 std::string CSimplifiedMNListEntry::ToString() const

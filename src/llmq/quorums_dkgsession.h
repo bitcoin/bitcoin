@@ -80,7 +80,7 @@ public:
         CHashWriter hw(SER_GETHASH, 0);
         SerializeWithoutSig(hw);
         hw << CBLSSignature();
-        return hw.GetHash();
+        return hw.GetSHA256();
     }
 };
 

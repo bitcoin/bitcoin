@@ -38,7 +38,7 @@ static uint256 MakeQuorumKey(const CQuorum& q)
     for (const auto& dmn : q.members) {
         hw << dmn->proTxHash;
     }
-    return hw.GetHash();
+    return hw.GetSHA256();
 }
 
 CQuorum::~CQuorum()

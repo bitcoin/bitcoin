@@ -440,7 +440,7 @@ uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut) const {
             ss << voutAsset.nValue;
         }
     }
-    return ss.GetHash();
+    return ss.GetSHA256();
 }
 
 bool IsSyscoinMintTx(const int &nVersion) {

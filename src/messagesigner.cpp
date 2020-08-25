@@ -22,7 +22,7 @@ bool CMessageSigner::SignMessage(const std::string& strMessage, std::vector<unsi
     ss << MESSAGE_MAGIC;
     ss << strMessage;
 
-    return CHashSigner::SignHash(ss.GetHash(), key, vchSigRet);
+    return CHashSigner::SignHash(ss.GetSHA256(), key, vchSigRet);
 }
 
 bool CMessageSigner::VerifyMessage(const CPubKey& pubkey, const std::vector<unsigned char>& vchSig, const std::string& strMessage)
@@ -36,7 +36,7 @@ bool CMessageSigner::VerifyMessage(const CKeyID& keyID, const std::vector<unsign
     ss << MESSAGE_MAGIC;
     ss << strMessage;
 
-    return CHashSigner::VerifyHash(ss.GetHash(), keyID, vchSig);
+    return CHashSigner::VerifyHash(ss.GetSHA256(), keyID, vchSig);
 }
 bool CHashSigner::SignHash(const uint256& hash, const CKey& key, std::vector<unsigned char>& vchSigRet)
 {

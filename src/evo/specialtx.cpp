@@ -136,5 +136,5 @@ uint256 CalcTxInputsHash(const CTransaction& tx)
     for (const auto& in : tx.vin) {
         hw << in.prevout;
     }
-    return hw.GetHash();
+    return hw.GetSHA256();
 }

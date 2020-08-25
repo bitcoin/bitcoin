@@ -921,7 +921,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, int signHe
         h << llmqType;
         h << quorums[i]->qc.quorumHash;
         h << selectionHash;
-        scores.emplace_back(h.GetHash(), i);
+        scores.emplace_back(h.GetSHA256(), i);
     }
     std::sort(scores.begin(), scores.end());
     return quorums[scores.front().second];

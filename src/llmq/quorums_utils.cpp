@@ -31,7 +31,7 @@ uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHa
     hw << DYNBITSET(validMembers);
     hw << pubKey;
     hw << vvecHash;
-    return hw.GetHash();
+    return hw.GetSHA256();
 }
 
 uint256 CLLMQUtils::BuildSignHash(uint8_t llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
@@ -41,7 +41,7 @@ uint256 CLLMQUtils::BuildSignHash(uint8_t llmqType, const uint256& quorumHash, c
     h << quorumHash;
     h << id;
     h << msgHash;
-    return h.GetHash();
+    return h.GetSHA256();
 }
 
 bool CLLMQUtils::IsAllMembersConnectedEnabled(uint8_t llmqType)
