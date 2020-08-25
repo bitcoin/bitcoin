@@ -154,35 +154,46 @@ class BIP65Test(BitcoinTestFramework):
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
 
-        self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
+        self.log.info("Test that invalid-according-to-CLTV transactions cannot appear in a block")
         block.nVersion = 4
+        block.vtx.append(CTransaction()) # dummy tx after coinbase that will be replaced later
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[10],
-                                     self.nodeaddress, amount=1.0)
-        spendtx = cltv_invalidate(self.nodes[0], spendtx, 1)
-        spendtx.rehash()
+        # create and test one invalid tx per CLTV failure reason (5 in total)
+        for i in range(5):
+            spendtx = create_transaction(self.nodes[0], self.coinbase_txids[10+i],
+                                         self.nodeaddress, amount=1.0)
+            spendtx = cltv_invalidate(self.nodes[0], spendtx, i)
+            spendtx.rehash()
 
-        # First we show that this tx is valid except for CLTV by getting it
-        # rejected from the mempool for exactly that reason.
-        assert_equal(
-            [{
-                'txid': spendtx.hash,
-                'wtxid': spendtx.getwtxid(),
-                'allowed': False,
-                'reject-reason': 'non-mandatory-script-verify-flag (Negative locktime)',
-            }],
-            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
-        )
+            expected_cltv_reject_reason = [
+                "non-mandatory-script-verify-flag (Operation not valid with the current stack size)",
+                "non-mandatory-script-verify-flag (Negative locktime)",
+                "non-mandatory-script-verify-flag (Locktime requirement not satisfied)",
+                "non-mandatory-script-verify-flag (Locktime requirement not satisfied)",
+                "non-mandatory-script-verify-flag (Locktime requirement not satisfied)",
+            ][i]
+            # First we show that this tx is valid except for CLTV by getting it
+            # rejected from the mempool for exactly that reason.
+            assert_equal(
+                [{
+                    'txid': spendtx.hash,
+                    'wtxid': spendtx.getwtxid(),
+                    'allowed': False,
+                    'reject-reason': expected_cltv_reject_reason,
+                }],
+                self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
+            )
 
-        # Now we verify that a block with this transaction is also invalid.
-        block.vtx.append(spendtx)
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.solve()
+            # Now we verify that a block with this transaction is also invalid.
+            block.vtx[1] = spendtx
+            block.hashMerkleRoot = block.calc_merkle_root()
+            block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputScripts on {} failed with non-mandatory-script-verify-flag (Negative locktime)'.format(block.vtx[-1].hash)]):
-            peer.send_and_ping(msg_block(block))
-            assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
-            peer.sync_with_ping()
+            with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputScripts on {} failed with {}'.format(
+                                                block.vtx[-1].hash, expected_cltv_reject_reason)]):
+                peer.send_and_ping(msg_block(block))
+                assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
+                peer.sync_with_ping()
 
         self.log.info("Test that a version 4 block with a valid-according-to-CLTV transaction is accepted")
         spendtx = cltv_validate(self.nodes[0], spendtx, CLTV_HEIGHT - 1)
