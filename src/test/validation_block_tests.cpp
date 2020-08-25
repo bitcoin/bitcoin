@@ -95,8 +95,8 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 
 std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock> pblock)
 {
-    LOCK(cs_main); // For LookupBlockIndex
-    GenerateCoinbaseCommitment(*pblock, LookupBlockIndex(pblock->hashPrevBlock), Params().GetConsensus());
+    LOCK(cs_main); // For g_chainman.m_blockman.LookupBlockIndex
+    GenerateCoinbaseCommitment(*pblock, g_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock), Params().GetConsensus());
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
