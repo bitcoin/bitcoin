@@ -447,7 +447,7 @@ public:
     {
         LOCK(cs_main);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        if (CBlockIndex* fork = FindForkInGlobalIndex(active, locator)) {
+        if (CBlockIndex* fork = g_chainman.m_blockman.FindForkInGlobalIndex(active, locator)) {
             return fork->nHeight;
         }
         return nullopt;
