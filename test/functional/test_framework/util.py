@@ -226,6 +226,14 @@ def satoshi_round(amount):
 
 
 def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0):
+    """Sleep until the predicate resolves to be True.
+
+    Warning: Note that this method is not recommended to be used in tests as it is
+    not aware of the context of the test framework. Using `wait_until()` counterpart
+    from `BitcoinTestFramework` or `P2PInterface` class ensures an understandable
+    amount of timeout and a common shared timeout_factor. Furthermore, `wait_until()`
+    from `P2PInterface` class in `mininode.py` has a preset lock.
+    """
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
     timeout = timeout * timeout_factor
