@@ -169,9 +169,15 @@ namespace {
 
 CBlockIndex* LookupBlockIndex(const uint256& hash)
 {
+    return g_chainman.m_blockman.LookupBlockIndex(hash);
+}
+
+CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash)
+{
     AssertLockHeld(cs_main);
-    BlockMap::const_iterator it = g_chainman.BlockIndex().find(hash);
-    return it == g_chainman.BlockIndex().end() ? nullptr : it->second;
+    assert(std::addressof(g_chainman.BlockIndex()) == std::addressof(m_block_index));
+    BlockMap::const_iterator it = m_block_index.find(hash);
+    return it == m_block_index.end() ? nullptr : it->second;
 }
 
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
@@ -181,7 +187,7 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
     // Find the latest block common to locator and chain - we expect that
     // locator.vHave is sorted descending by height.
     for (const uint256& hash : locator.vHave) {
-        CBlockIndex* pindex = LookupBlockIndex(hash);
+        CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (pindex) {
             if (chain.Contains(pindex))
                 return pindex;
@@ -1413,7 +1419,7 @@ bool CScriptCheck::operator()() {
 int GetSpendHeight(const CCoinsViewCache& inputs)
 {
     LOCK(cs_main);
-    CBlockIndex* pindexPrev = LookupBlockIndex(inputs.GetBestBlock());
+    CBlockIndex* pindexPrev = g_chainman.m_blockman.LookupBlockIndex(inputs.GetBestBlock());
     return pindexPrev->nHeight + 1;
 }
 
@@ -3406,7 +3412,7 @@ static CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOC
     for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints))
     {
         const uint256& hash = i.second;
-        CBlockIndex* pindex = LookupBlockIndex(hash);
+        CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (pindex) {
             return pindex;
         }
@@ -4169,7 +4175,7 @@ bool CChainState::LoadChainTip(const CChainParams& chainparams)
     }
 
     // Load pointer to end of best chain
-    CBlockIndex* pindex = LookupBlockIndex(coins_cache.GetBestBlock());
+    CBlockIndex* pindex = m_blockman.LookupBlockIndex(coins_cache.GetBestBlock());
     if (!pindex) {
         return false;
     }
@@ -4648,7 +4654,7 @@ void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
                 {
                     LOCK(cs_main);
                     // detect out of order blocks, and store them for later
-                    if (hash != chainparams.GetConsensus().hashGenesisBlock && !LookupBlockIndex(block.hashPrevBlock)) {
+                    if (hash != chainparams.GetConsensus().hashGenesisBlock && !g_chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock)) {
                         LogPrint(BCLog::REINDEX, "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
                                 block.hashPrevBlock.ToString());
                         if (dbp)
@@ -4657,7 +4663,7 @@ void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
                     }
 
                     // process in case the block isn't known yet
-                    CBlockIndex* pindex = LookupBlockIndex(hash);
+                    CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
                       BlockValidationState state;
                       if (::ChainstateActive().AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr)) {
