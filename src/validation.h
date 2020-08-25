@@ -433,6 +433,13 @@ public:
     /** Find the last common block between the parameter chain and a locator. */
     CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    /**
+     * Return the spend height, which is one more than the inputs.GetBestBlock().
+     * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
+     * This is also true for mempool checks.
+     */
+    int GetSpendHeight(const CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     ~BlockManager() {
         Unload();
     }
@@ -944,13 +951,6 @@ CChain& ChainActive();
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
-
-/**
- * Return the spend height, which is one more than the inputs.GetBestBlock().
- * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
- * This is also true for mempool checks.
- */
-int GetSpendHeight(const CCoinsViewCache& inputs);
 
 extern VersionBitsCache versionbitscache;
 
