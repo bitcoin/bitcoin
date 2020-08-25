@@ -10,12 +10,11 @@ Test with multiple nodes, and multiple PoP endorsements, checking to make sure n
 """
 import time
 
-from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
-    sync_mempools,
 )
+from test_framework.pop_const import NETWORK_ID
 
 import time
 
@@ -62,7 +61,7 @@ class PopE2E(BitcoinTestFramework):
 
         self.log.info("endorse 5 alt block")    
         p = PublicationData()
-        p.identifier = 0x3ae6ca
+        p.identifier = NETWORK_ID
         p.header = self.nodes[0].getpopdata(5)['block_header']
         p.payoutInfo = "0014aaddff"
 
@@ -85,7 +84,7 @@ class PopE2E(BitcoinTestFramework):
 
         self.log.info("endorse 6 alt block")
         p = PublicationData()
-        p.identifier = 0x3ae6ca
+        p.identifier = NETWORK_ID
         p.header = self.nodes[0].getpopdata(6)['block_header']
         p.payoutInfo = "0014aaddff"
 
