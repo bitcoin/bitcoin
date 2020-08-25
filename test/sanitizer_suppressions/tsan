@@ -28,6 +28,7 @@ race:BerkeleyBatch
 race:BerkeleyDatabase
 race:DatabaseBatch
 race:leveldb::DBImpl::DeleteObsoleteFiles
+race:validation_chainstatemanager_tests
 race:zmq::*
 race:bitcoin-qt
 
