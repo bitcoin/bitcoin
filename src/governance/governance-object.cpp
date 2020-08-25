@@ -290,7 +290,7 @@ uint256 CGovernanceObject::GetHash() const
     ss << vchSig;
     // fee_tx is left out on purpose
 
-    return ss.GetSHA256();
+    return ss.GetHash();
 }
 
 uint256 CGovernanceObject::GetSignatureHash() const

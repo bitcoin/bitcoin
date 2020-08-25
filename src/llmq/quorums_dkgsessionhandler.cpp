@@ -42,7 +42,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
 
     CHashWriter hw(SER_GETHASH, 0);
     hw.write(pm->data(), pm->size());
-    const uint256 &hash = hw.GetSHA256();
+    const uint256 &hash = hw.GetHash();
 
     LOCK2(cs_main, cs);
 
