@@ -56,23 +56,35 @@ def cltv_modify_tx(node, tx, prepend_scriptsig, nsequence=None, nlocktime=None):
     return new_tx
 
 
-def cltv_invalidate(tx):
-    '''Modify the signature in vin 0 of the tx to fail CLTV
+def cltv_invalidate(node, tx, failure_reason):
+    # Modify the signature in vin 0 and nSequence/nLockTime of the tx to fail CLTV
+    #
+    # According to BIP65, OP_CHECKLOCKTIMEVERIFY can fail due the following reasons:
+    # 1) the stack is empty
+    # 2) the top item on the stack is less than 0
+    # 3) the lock-time type (height vs. timestamp) of the top stack item and the
+    #    nLockTime field are not the same
+    # 4) the top stack item is greater than the transaction's nLockTime field
+    # 5) the nSequence field of the txin is 0xffffffff
+    assert failure_reason in range(5)
+    scheme = [
+        # | Script to prepend to scriptSig                  | nSequence  | nLockTime    |
+        # +-------------------------------------------------+------------+--------------+
+        [[OP_CHECKLOCKTIMEVERIFY],                            None,       None],
+        [[OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP],       None,       None],
+        [[CScriptNum(1000), OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0,          1296688602],  # timestamp of genesis block
+        [[CScriptNum(1000), OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0,          500],
+        [[CScriptNum(500),  OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0xffffffff, 500],
+    ][failure_reason]
 
-    Prepends -1 CLTV DROP in the scriptSig itself.
-
-    TODO: test more ways that transactions using CLTV could be invalid (eg
-    locktime requirements fail, sequence time requirements fail, etc).
-    '''
-    cltv_modify_tx(None, tx, [OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
+    return cltv_modify_tx(node, tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
 
 
 def cltv_validate(node, tx, height):
-    '''Modify the signature in vin 0 of the tx to pass CLTV
-    Prepends <height> CLTV DROP in the scriptSig, and sets
-    the locktime to height'''
-    return cltv_modify_tx(node, tx, [CScriptNum(height), OP_CHECKLOCKTIMEVERIFY, OP_DROP],
-                          nsequence=0, nlocktime=height)
+    # Modify the signature in vin 0 and nSequence/nLockTime of the tx to pass CLTV
+    scheme = [[CScriptNum(height), OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0, height]
+
+    return cltv_modify_tx(node, tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
 
 
 class BIP65Test(BitcoinTestFramework):
@@ -110,7 +122,7 @@ class BIP65Test(BitcoinTestFramework):
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
                                      self.nodeaddress, amount=1.0)
-        cltv_invalidate(spendtx)
+        spendtx = cltv_invalidate(self.nodes[0], spendtx, 1)
         spendtx.rehash()
 
         tip = self.nodes[0].getbestblockhash()
@@ -143,7 +155,7 @@ class BIP65Test(BitcoinTestFramework):
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_txids[1],
                                      self.nodeaddress, amount=1.0)
-        cltv_invalidate(spendtx)
+        spendtx = cltv_invalidate(self.nodes[0], spendtx, 1)
         spendtx.rehash()
 
         # First we show that this tx is valid except for CLTV by getting it
