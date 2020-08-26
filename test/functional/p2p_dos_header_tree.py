@@ -8,7 +8,7 @@ from test_framework.messages import (
     CBlockHeader,
     FromHex,
 )
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PInterface,
     msg_headers,
 )
