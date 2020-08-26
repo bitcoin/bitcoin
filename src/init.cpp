@@ -1384,8 +1384,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
+                assert(std::addressof(g_chainman.m_blockman) == std::addressof(chainman.m_blockman));
                 if (!chainman.BlockIndex().empty() &&
-                        !g_chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
+                        !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
 
@@ -1400,7 +1401,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // If we're not mid-reindex (based on disk + args), add a genesis block on disk
                 // (otherwise we use the one already on disk).
                 // This is called again in ThreadImport after the reindex completes.
-                if (!fReindex && !::ChainstateActive().LoadGenesisBlock(chainparams)) {
+                if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock(chainparams)) {
                     strLoadError = _("Error initializing block database");
                     break;
                 }
@@ -1549,21 +1550,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
-        if (!g_txindex->Start(::ChainstateActive())) {
+        if (!g_txindex->Start(chainman.ActiveChainstate())) {
             return false;
         }
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
-        if (!GetBlockFilterIndex(filter_type)->Start(::ChainstateActive())) {
+        if (!GetBlockFilterIndex(filter_type)->Start(chainman.ActiveChainstate())) {
             return false;
         }
     }
 
     if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {
         g_coin_stats_index = std::make_unique<CoinStatsIndex>(/* cache size */ 0, false, fReindex);
-        if (!g_coin_stats_index->Start(::ChainstateActive())) {
+        if (!g_coin_stats_index->Start(chainman.ActiveChainstate())) {
             return false;
         }
     }
@@ -1611,7 +1612,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;
-    if (::ChainActive().Tip() == nullptr) {
+    assert(std::addressof(::ChainActive()) == std::addressof(chainman.ActiveChain()));
+    if (chainman.ActiveChain().Tip() == nullptr) {
         block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(std::bind(BlockNotifyGenesisWait, std::placeholders::_2));
     } else {
         fHaveGenesis = true;
