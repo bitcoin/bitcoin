@@ -277,7 +277,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         ds << qc;
     }
     // SYSCOIN
-    std::vector<unsigned char> vchCoinbaseCommitmentExtra = std::vector<unsigned char>(ds.begin(), ds.end());
+    std::vector<unsigned char> vchCoinbaseCommitmentExtra(ds.begin(), ds.end());
     RegenerateCommitments(block, vchCoinbaseCommitmentExtra);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
