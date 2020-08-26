@@ -221,6 +221,8 @@ TestChain100Setup::TestChain100Setup(int count)
     // SYSCOIN
     gArgs.ForceSetArg("-mncollateral", "100");
     gArgs.ForceSetArg("-dip3params", "150:150");
+    // Need to recreate chainparams
+    SelectParams(CBaseChainParams::REGTEST);
 
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
