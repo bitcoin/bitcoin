@@ -55,41 +55,6 @@ class Node
 public:
     virtual ~Node() {}
 
-    //! Send init error.
-    virtual void initError(const bilingual_str& message) = 0;
-
-    //! Set command line arguments.
-    virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
-
-    //! Set a command line argument
-    virtual void forceSetArg(const std::string& arg, const std::string& value) = 0;
-
-    //! Set a command line argument if it doesn't already have a value
-    virtual bool softSetArg(const std::string& arg, const std::string& value) = 0;
-
-    //! Set a command line boolean argument if it doesn't already have a value
-    virtual bool softSetBoolArg(const std::string& arg, bool value) = 0;
-
-    //! Load settings from configuration file.
-    virtual bool readConfigFiles(std::string& error) = 0;
-
-    //! Choose network parameters.
-    virtual void selectParams(const std::string& network) = 0;
-
-    //! Read and update <datadir>/settings.json file with saved settings. This
-    //! needs to be called after selectParams() because the settings file
-    //! location is network-specific.
-    virtual bool initSettings(std::string& error) = 0;
-
-    //! Get the (assumed) blockchain size.
-    virtual uint64_t getAssumedBlockchainSize() = 0;
-
-    //! Get the (assumed) chain state size.
-    virtual uint64_t getAssumedChainStateSize() = 0;
-
-    //! Get network name.
-    virtual std::string getNetwork() = 0;
-
     //! Init logging.
     virtual void initLogging() = 0;
 
@@ -116,9 +81,6 @@ public:
 
     //! Return whether shutdown was requested.
     virtual bool shutdownRequested() = 0;
-
-    //! Setup arguments
-    virtual void setupServerArgs() = 0;
 
     //! Map port.
     virtual void mapPort(bool use_upnp) = 0;
