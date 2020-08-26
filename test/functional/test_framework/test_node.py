@@ -551,7 +551,7 @@ class TestNode():
         assert self.p2ps, self._node_msg("No p2p connection")
         return self.p2ps[0]
 
-    def num_connected_mininodes(self):
+    def num_test_p2p_connections(self):
         """Return number of test framework p2p connections to the node."""
         return len([peer for peer in self.getpeerinfo() if peer['subver'] == MY_SUBVERSION])
 
@@ -560,7 +560,7 @@ class TestNode():
         for p in self.p2ps:
             p.peer_disconnect()
         del self.p2ps[:]
-        wait_until(lambda: self.num_connected_mininodes() == 0)
+        wait_until(lambda: self.num_test_p2p_connections() == 0)
 
 
 class TestNodeCLIAttr:

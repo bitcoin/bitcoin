@@ -20,7 +20,7 @@ from test_framework.messages import (
     CBlockHeader,
     BLOCK_HEADER_SIZE,
 )
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
