@@ -702,7 +702,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
             if (!file)
                 break; // This error is logged in OpenBlockFile
             LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-            ::ChainstateActive().LoadExternalBlockFile(chainparams, file, &pos);
+            chainman.ActiveChainstate().LoadExternalBlockFile(chainparams, file, &pos);
             if (ShutdownRequested()) {
                 LogPrintf("Shutdown requested. Exit %s\n", __func__);
                 return;
@@ -713,7 +713,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
         fReindex = false;
         LogPrintf("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        ::ChainstateActive().LoadGenesisBlock(chainparams);
+        chainman.ActiveChainstate().LoadGenesisBlock(chainparams);
     }
 
     // -loadblock=
@@ -721,7 +721,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
         FILE *file = fsbridge::fopen(path, "rb");
         if (file) {
             LogPrintf("Importing blocks file %s...\n", path.string());
-            ::ChainstateActive().LoadExternalBlockFile(chainparams, file);
+            chainman.ActiveChainstate().LoadExternalBlockFile(chainparams, file);
             if (ShutdownRequested()) {
                 LogPrintf("Shutdown requested. Exit %s\n", __func__);
                 return;
@@ -1607,8 +1607,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
+                assert(std::addressof(g_chainman.m_blockman) == std::addressof(chainman.m_blockman));
                 if (!chainman.BlockIndex().empty() &&
-                        !g_chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
+                        !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
 
@@ -1623,7 +1624,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 // If we're not mid-reindex (based on disk + args), add a genesis block on disk
                 // (otherwise we use the one already on disk).
                 // This is called again in ThreadImport after the reindex completes.
-                if (!fReindex && !::ChainstateActive().LoadGenesisBlock(chainparams)) {
+                if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock(chainparams)) {
                     strLoadError = _("Error initializing block database");
                     break;
                 }
@@ -1732,7 +1733,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                         // Only verify the DB of the active chainstate. This is fixed in later
                         // work when we allow VerifyDB to be parameterized by chainstate.
-                        if (&::ChainstateActive() == chainstate &&
+                        assert(std::addressof(::ChainstateActive()) == std::addressof(chainman.ActiveChainstate()));
+                        if (&chainman.ActiveChainstate() == chainstate &&
                             !CVerifyDB().VerifyDB(
                                 chainparams, *chainstate, &chainstate->CoinsDB(),
                                 args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
@@ -1787,12 +1789,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
-        g_txindex->Start(::ChainstateActive());
+        g_txindex->Start(chainman.ActiveChainstate());
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
-        GetBlockFilterIndex(filter_type)->Start(::ChainstateActive());
+        GetBlockFilterIndex(filter_type)->Start(chainman.ActiveChainstate());
     }
 
     // ********************************************************* Step 9: load wallet
@@ -1838,7 +1840,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;
-    if (::ChainActive().Tip() == nullptr) {
+    assert(std::addressof(::ChainActive()) == std::addressof(chainman.ActiveChain()));
+    if (chainman.ActiveChain().Tip() == nullptr) {
         block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(std::bind(BlockNotifyGenesisWait, std::placeholders::_2));
     } else {
         fHaveGenesis = true;
