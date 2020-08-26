@@ -4136,11 +4136,12 @@ void BlockManager::Unload() {
     m_block_index.clear();
 }
 
-bool static LoadBlockIndexDB(ChainstateManager& chainman, const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool CChainState::LoadBlockIndexDB(const CChainParams& chainparams)
 {
-    if (!chainman.m_blockman.LoadBlockIndex(
+    assert(std::addressof(::ChainstateActive()) == std::addressof(*this));
+    if (!m_blockman.LoadBlockIndex(
             chainparams.GetConsensus(), *pblocktree,
-            ::ChainstateActive().setBlockIndexCandidates)) {
+            setBlockIndexCandidates)) {
         return false;
     }
 
@@ -4164,7 +4165,7 @@ bool static LoadBlockIndexDB(ChainstateManager& chainman, const CChainParams& ch
     // Check presence of blk files
     LogPrintf("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
-    for (const std::pair<const uint256, CBlockIndex*>& item : chainman.BlockIndex()) {
+    for (const std::pair<const uint256, CBlockIndex*>& item : m_blockman.m_block_index) {
         CBlockIndex* pindex = item.second;
         if (pindex->nStatus & BLOCK_HAVE_DATA) {
             setBlkDataFiles.insert(pindex->nFile);
@@ -4596,7 +4597,7 @@ bool ChainstateManager::LoadBlockIndex(const CChainParams& chainparams)
     // Load block index from databases
     bool needs_init = fReindex;
     if (!fReindex) {
-        bool ret = LoadBlockIndexDB(*this, chainparams);
+        bool ret = ActiveChainstate().LoadBlockIndexDB(chainparams);
         if (!ret) return false;
         needs_init = m_blockman.m_block_index.empty();
     }
