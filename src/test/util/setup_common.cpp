@@ -260,10 +260,10 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
+        ds << cbTx;
         CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
         SetTxPayload(tmpTx, cbTx);
         block.vtx[0] = MakeTransactionRef(tmpTx);
-        ds << cbTx;
     } else if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         LOCK(cs_main);
         llmq::CFinalCommitmentTxPayload qc;
@@ -277,10 +277,10 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), qc.cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
+        ds << qc;
         CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
         SetTxPayload(tmpTx, qc);
         block.vtx[0] = MakeTransactionRef(tmpTx);
-        ds << qc;
     }
     // SYSCOIN
     std::vector<unsigned char> vchCoinbaseCommitmentExtra(ds.begin(), ds.end());
