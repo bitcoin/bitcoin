@@ -249,6 +249,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     CCbTx cbTx;
     llmq::CFinalCommitmentTxPayload qc;
+    CMutableTransaction tmpTx;
     if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
         LOCK(cs_main);
         
@@ -263,7 +264,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
             BOOST_ASSERT(false);
         }
         ds << cbTx;
-        CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
+        tmpTx = CMutableTransaction(*block.vtx[0]);
         SetTxPayload(tmpTx, cbTx);
         block.vtx[0] = MakeTransactionRef(tmpTx);
     } else if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
@@ -280,7 +281,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
             BOOST_ASSERT(false);
         }
         ds << qc;
-        CMutableTransaction tmpTx = CMutableTransaction(*block.vtx[0]);
+        tmpTx = CMutableTransaction(*block.vtx[0]);
         SetTxPayload(tmpTx, qc);
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }
