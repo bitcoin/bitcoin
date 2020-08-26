@@ -51,28 +51,23 @@ static bool AppInit(int argc, char* argv[])
 
     util::ThreadSetInternalName("init");
 
-    //
-    // Parameters
-    //
     // If Qt is used, parameters/syscoin.conf are parsed in qt/syscoin.cpp's main()
     SetupServerArgs(node);
+    ArgsManager& args = *Assert(node.args);
     std::string error;
-    if (!gArgs.ParseParameters(argc, argv, error)) {
+    if (!args.ParseParameters(argc, argv, error)) {
         return InitError(Untranslated(strprintf("Error parsing command line arguments: %s\n", error)));
     }
 
     // Process help and version before taking care about datadir
-    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+    if (HelpRequested(args) || args.IsArgSet("-version")) {
         std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
 
-        if (gArgs.IsArgSet("-version"))
-        {
+        if (args.IsArgSet("-version")) {
             strUsage += FormatParagraph(LicenseInfo()) + "\n";
-        }
-        else
-        {
+        } else {
             strUsage += "\nUsage:  syscoind [options]                     Start " PACKAGE_NAME "\n";
-            strUsage += "\n" + gArgs.GetHelpMessage();
+            strUsage += "\n" + args.GetHelpMessage();
         }
 
         tfm::format(std::cout, "%s", strUsage);
@@ -83,14 +78,14 @@ static bool AppInit(int argc, char* argv[])
     try
     {
         if (!CheckDataDirOption()) {
-            return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""))));
+            return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""))));
         }
-        if (!gArgs.ReadConfigFiles(error, true)) {
+        if (!args.ReadConfigFiles(error, true)) {
             return InitError(Untranslated(strprintf("Error reading configuration file: %s\n", error)));
         }
         // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
-            SelectParams(gArgs.GetChainName());
+            SelectParams(args.GetChainName());
         } catch (const std::exception& e) {
             return InitError(Untranslated(strprintf("%s\n", e.what())));
         }
@@ -102,24 +97,22 @@ static bool AppInit(int argc, char* argv[])
             }
         }
 
-        if (!gArgs.InitSettings(error)) {
+        if (!args.InitSettings(error)) {
             InitError(Untranslated(error));
             return false;
         }
 
         // -server defaults to true for syscoind but not for the GUI so do this here
-        gArgs.SoftSetBoolArg("-server", true);
+        args.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
-        InitLogging();
-        InitParameterInteraction();
+        InitLogging(args);
+        InitParameterInteraction(args);
         // SYSCOIN
-        if (!AppInitBasicSetup(argv))
-        {
+        if (!AppInitBasicSetup(args, argv)) {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
-        if (!AppInitParameterInteraction())
-        {
+        if (!AppInitParameterInteraction(args)) {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
@@ -128,8 +121,7 @@ static bool AppInit(int argc, char* argv[])
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
-        if (gArgs.GetBoolArg("-daemon", false))
-        {
+        if (args.GetBoolArg("-daemon", false)) {
 #if HAVE_DECL_DAEMON
 #if defined(MAC_OSX)
 #pragma GCC diagnostic push
