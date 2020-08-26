@@ -218,14 +218,9 @@ TestingSetup::~TestingSetup()
 // SYSCOIN
 TestChain100Setup::TestChain100Setup(int count)
 {
-    // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
-    // TODO: fix the code to support SegWit blocks.
-    gArgs.ForceSetArg("-segwitheight", "432");
     // SYSCOIN
     gArgs.ForceSetArg("-mncollateral", "100");
     gArgs.ForceSetArg("-dip3params", "150:150");
-    // Need to recreate chainparams
-    SelectParams(CBaseChainParams::REGTEST);
 
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
@@ -238,19 +233,16 @@ TestChain100Setup::TestChain100Setup(int count)
     }
 }
 
-// Create a new block with just given transactions, coinbase paying to
-// scriptPubKey, and try to add it to the current chain.
 CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
-    CBlock& block = pblocktemplate->block;
+    CTxMemPool empty_pool;
+    CBlock block = BlockAssembler(empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
 
-    // Replace mempool-selected txns with just coinbase plus passed-in txns:
-    block.vtx.resize(1);
-    for (const CMutableTransaction& tx : txns)
+    Assert(block.vtx.size() == 1);
+    for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
-
+    }
     // Manually update CbTx as we modified the block here
     if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
         LOCK(cs_main);
@@ -285,20 +277,15 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         SetTxPayload(tmpTx, qc);
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
-    {
-        LOCK(cs_main);
-        unsigned int extraNonce = 0;
-        IncrementExtraNonce(&block, ::ChainActive().Tip(), extraNonce);
-    }
+    
+    RegenerateCommitments(block);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
-    CBlock result = block;
-    return result;
+    return block;
 }
 
 TestChain100Setup::~TestChain100Setup()
@@ -306,8 +293,8 @@ TestChain100Setup::~TestChain100Setup()
     gArgs.ForceSetArg("-segwitheight", "0");
 }
 
-
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx) {
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx)
+{
     return FromTx(MakeTransactionRef(tx));
 }
 
