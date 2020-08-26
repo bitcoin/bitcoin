@@ -226,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
-    auto addr = GenerateRandomAddress()
+    auto addr = GenerateRandomAddress();
     auto tx = CreateProRegTx(utxos, 1, addr, coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = std::vector<CMutableTransaction>{tx};
 
