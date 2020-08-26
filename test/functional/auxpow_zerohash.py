@@ -21,7 +21,7 @@ from test_framework.messages import (
   msg_getdata,
   uint256_from_compact,
 )
-from test_framework.mininode import (
+from test_framework.p2p import (
   P2PDataStore,
   P2PInterface,
 )

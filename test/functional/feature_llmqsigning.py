@@ -5,7 +5,7 @@
 
 import time
 
-from test_framework.mininode import *
+from test_framework.p2p import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import *
 

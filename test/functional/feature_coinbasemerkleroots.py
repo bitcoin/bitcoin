@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.mininode import *
+from test_framework.p2p import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, wait_until, force_finish_mnsync
 from test_framework.messages import FromHex, CMerkleBlock, ser_uint256, hash256, CBlock, QuorumId
