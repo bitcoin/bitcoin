@@ -17,7 +17,7 @@ from test_framework.messages import (
   CAuxPow,
   uint256_from_compact,
 )
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.util import (
   assert_equal,
   hex_str_to_bytes,
