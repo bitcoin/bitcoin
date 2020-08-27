@@ -244,8 +244,8 @@ class CInv:
         MSG_TX | MSG_WITNESS_FLAG: "WitnessTx",
         MSG_BLOCK | MSG_WITNESS_FLAG: "WitnessBlock",
         MSG_FILTERED_BLOCK: "filtered Block",
-        4: "CompactBlock",
-        5: "WTX",
+        MSG_CMPCT_BLOCK: "CompactBlock",
+        MSG_WTX: "WTX",
     }
 
     def __init__(self, t=0, h=0):
@@ -253,12 +253,12 @@ class CInv:
         self.hash = h
 
     def deserialize(self, f):
-        self.type = struct.unpack("<i", f.read(4))[0]
+        self.type = struct.unpack("<I", f.read(4))[0]
         self.hash = deser_uint256(f)
 
     def serialize(self):
         r = b""
-        r += struct.pack("<i", self.type)
+        r += struct.pack("<I", self.type)
         r += ser_uint256(self.hash)
         return r
 
