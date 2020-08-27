@@ -29,6 +29,28 @@ for commit in $(git rev-list --reverse $1); do
             echo "Failed"
             RET=1
         else
+            for option in $(echo $SCRIPT | grep -w 'sed'); do
+                case $option in
+                    "''")
+                        BSD_SED=1
+                        continue
+                        ;;
+                    -*a*)
+                        BSD_SED=1
+                        continue
+                        ;;
+                    -*I*)
+                        BSD_SED=1
+                        continue
+                        ;;
+                esac
+            done
+            if test $BSD_SED -eq 1; then
+                echo "Error: scripted diff contain sed syntax in BSD extensions"
+                echo "Failed"
+                RET=1
+                continue
+            fi
             echo "Running script for: $commit"
             echo "$SCRIPT"
             (eval "$SCRIPT")
