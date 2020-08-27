@@ -7,6 +7,7 @@
 #define BITCOIN_QT_CLIENTMODEL_H
 
 #include <evo/deterministicmns.h>
+#include <interface/node.h>
 #include <sync.h>
 
 #include <QObject>
@@ -20,11 +21,6 @@ class OptionsModel;
 class PeerTableModel;
 
 class CBlockIndex;
-
-namespace interface {
-class Handler;
-class Node;
-}
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -54,6 +50,7 @@ public:
     ~ClientModel();
 
     interface::Node& node() const { return m_node; }
+    interface::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();

@@ -13,6 +13,7 @@
 #include <interface/handler.h>
 #include <interface/wallet.h>
 #include <llmq/quorums_instantsend.h>
+#include <masternode/masternode-sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -69,10 +70,28 @@ public:
     }
 };
 
+class MasternodeSyncImpl : public Masternode::Sync
+{
+public:
+    bool isSynced()
+    {
+        return masternodeSync.IsSynced();
+    }
+    bool isBlockchainSynced()
+    {
+        return masternodeSync.IsBlockchainSynced();
+    }
+    std::string getSyncStatus()
+    {
+        return masternodeSync.GetSyncStatus();
+    }
+};
+
 class NodeImpl : public Node
 {
     EVOImpl m_evo;
     LLMQImpl m_llmq;
+    MasternodeSyncImpl m_masternodeSync;
 
     void parseParameters(int argc, const char* const argv[]) override
     {
@@ -283,6 +302,7 @@ class NodeImpl : public Node
     }
     EVO& evo() override { return m_evo; }
     LLMQ& llmq() override { return m_llmq; }
+    Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
 
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {

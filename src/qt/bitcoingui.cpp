@@ -35,7 +35,6 @@
 #include <interface/node.h>
 #include <ui_interface.h>
 #include <util.h>
-#include <masternode/masternode-sync.h>
 #include <qt/masternodelist.h>
 
 #include <iostream>
@@ -1100,9 +1099,9 @@ void BitcoinGUI::updateNetworkState()
 
     if (fNetworkBecameActive) {
         // If the sync process still signals synced after five seconds represent it in the UI.
-        if (masternodeSync.IsSynced()) {
+        if (m_node.masternodeSync().isSynced()) {
             QTimer::singleShot(5000, this, [&]() {
-                if (clientModel->getNumConnections() > 0 && masternodeSync.IsSynced()) {
+                if (clientModel->getNumConnections() > 0 && m_node.masternodeSync().isSynced()) {
                     setAdditionalDataSyncProgress(1);
                 }
             });
@@ -1162,11 +1161,11 @@ void BitcoinGUI::updateProgressBarVisibility()
         return;
     }
     // Show the progress bar label if the network is active + we are out of sync or we have no connections.
-    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!masternodeSync.IsSynced() || clientModel->getNumConnections() == 0);
+    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!m_node.masternodeSync().isSynced() || clientModel->getNumConnections() == 0);
     // Show the progress bar only if the the network active + we are not synced + we have any connection. Unlike with the label
     // which gives an info text about the connecting phase there is no reason to show the progress bar if we don't have connections
     // since it will not get any updates in this case.
-    bool fShowProgressBar = m_node.getNetworkActive() && !masternodeSync.IsSynced() && clientModel->getNumConnections() > 0;
+    bool fShowProgressBar = m_node.getNetworkActive() && !m_node.masternodeSync().isSynced() && clientModel->getNumConnections() > 0;
     progressBarLabel->setVisible(fShowProgressBarLabel);
     progressBar->setVisible(fShowProgressBar);
 }
@@ -1227,7 +1226,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
 {
 #ifdef Q_OS_MAC
     // Disabling macOS App Nap on initial sync, disk, reindex operations and mixing.
-    bool disableAppNap = !masternodeSync.IsSynced();
+    bool disableAppNap = !m_node.masternodeSync().isSynced();
 #ifdef ENABLE_WALLET
     for (const auto& pair : privateSendClientManagers) {
         disableAppNap |= pair.second->IsMixing();
@@ -1308,7 +1307,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     }
 #endif // ENABLE_WALLET
 
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!m_node.masternodeSync().isBlockchainSynced())
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
@@ -1357,7 +1356,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     }
 
     // No additional data sync should be happening while blockchain is not synced, nothing to update
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!m_node.masternodeSync().isBlockchainSynced())
         return;
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
@@ -1376,7 +1375,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
     updateProgressBarVisibility();
 
-    if(masternodeSync.IsSynced()) {
+    if(m_node.masternodeSync().isSynced()) {
         stopSpinner();
         labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
     } else {
@@ -1385,7 +1384,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
     }
 
-    strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
+    strSyncStatus = QString(m_node.masternodeSync().getSyncStatus().c_str());
     progressBarLabel->setText(strSyncStatus);
     tooltip = strSyncStatus + QString("<br>") + tooltip;
 
@@ -1484,7 +1483,7 @@ void BitcoinGUI::changeEvent(QEvent *e)
 #ifdef ENABLE_WALLET
         updateWalletStatus();
 #endif
-        if (masternodeSync.IsSynced()) {
+        if (m_node.masternodeSync().isSynced()) {
             labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         }
     }

@@ -23,7 +23,6 @@
 #include <util.h>
 #include <warnings.h>
 
-#include <masternode/masternode-sync.h>
 #include <privatesend/privatesend.h>
 
 #include <stdint.h>
