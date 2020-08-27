@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.p2p import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, wait_until, force_finish_mnsync
+from test_framework.util import assert_equal, force_finish_mnsync
 from test_framework.messages import FromHex, CMerkleBlock, ser_uint256, hash256, CBlock, QuorumId
 
 '''
@@ -25,7 +25,7 @@ class TestP2PConn(P2PInterface):
     def wait_for_mnlistdiff(self, timeout=30):
         def received_mnlistdiff():
             return self.last_mnlistdiff is not None
-        return wait_until(received_mnlistdiff, timeout=timeout)
+        return self.wait_until(received_mnlistdiff, timeout=timeout)
 
     def getmnlistdiff(self, baseBlockHash, blockHash):
         msg = msg_getmnlistd(baseBlockHash, blockHash)

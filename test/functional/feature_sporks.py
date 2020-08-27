@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import connect_nodes, wait_until, force_finish_mnsync
+from test_framework.util import connect_nodes, force_finish_mnsync
 
 '''
 '''
@@ -40,8 +40,8 @@ class SporkTest(DashTestFramework):
         # check spork propagation for connected nodes
         self.set_test_spork_state(self.nodes[0], True)
         time.sleep(0.1)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[0]), timeout=10)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[0]), timeout=10)
 
         # restart nodes to check spork persistence
         self.stop_node(0)
@@ -58,7 +58,7 @@ class SporkTest(DashTestFramework):
         # connect new node and check spork propagation after restoring from cache
         connect_nodes(self.nodes[1], 2)
         time.sleep(0.1)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
         # turn off and check
         self.bump_mocktime(1)
@@ -66,9 +66,9 @@ class SporkTest(DashTestFramework):
         force_finish_mnsync(self.nodes[1])
         self.set_test_spork_state(self.nodes[0], False)
         time.sleep(0.1)
-        wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)
-        wait_until(lambda: not self.get_test_spork_state(self.nodes[2]), timeout=10)
-        wait_until(lambda: not self.get_test_spork_state(self.nodes[0]), timeout=10)
+        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)
+        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[2]), timeout=10)
+        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[0]), timeout=10)
 
 if __name__ == '__main__':
     SporkTest().main()
