@@ -17,7 +17,6 @@ from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 from data import invalid_txs
 
@@ -146,7 +145,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # tx_orphan_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
         # tx_orphan_invaid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
 
-        wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
+        self.wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
 
         self.log.info('Test orphan pool overflow')

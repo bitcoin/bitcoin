@@ -18,8 +18,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    wait_until,
 )
+
 
 class ZapWalletTXesTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -59,7 +59,7 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         # transaction is zapped from the wallet, but is re-added when the mempool is reloaded.
         self.restart_node(0, ["-persistmempool=1", "-zapwallettxes=2"])
 
-        wait_until(lambda: self.nodes[0].getmempoolinfo()['size'] == 1, timeout=3)
+        self.wait_until(lambda: self.nodes[0].getmempoolinfo()['size'] == 1, timeout=3)
         self.nodes[0].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
 
         assert_equal(self.nodes[0].gettransaction(txid1)['txid'], txid1)

@@ -20,7 +20,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
     connect_nodes,
     disconnect_nodes,
-    wait_until,
 )
 
 # Rescans start at the earliest block up to 2 hours before a key timestamp, so
@@ -136,7 +135,7 @@ class PruneTest(BitcoinTestFramework):
         mine_large_blocks(self.nodes[0], 25)
 
         # Wait for blk00000.dat to be pruned
-        wait_until(lambda: not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), timeout=30)
+        self.wait_until(lambda: not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), timeout=30)
 
         self.log.info("Success")
         usage = calc_usage(self.prunedir)
@@ -250,7 +249,7 @@ class PruneTest(BitcoinTestFramework):
 
         self.log.info("Verify node 2 reorged back to the main chain, some blocks of which it had to redownload")
         # Wait for Node 2 to reorg to proper height
-        wait_until(lambda: self.nodes[2].getblockcount() >= goalbestheight, timeout=900)
+        self.wait_until(lambda: self.nodes[2].getblockcount() >= goalbestheight, timeout=900)
         assert_equal(self.nodes[2].getbestblockhash(), goalbesthash)
         # Verify we can now have the data for a block previously pruned
         assert_equal(self.nodes[2].getblock(self.forkhash)["height"], self.forkheight)
