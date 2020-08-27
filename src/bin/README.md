@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Red Janey (v1.9.19)
+The current version is Paragade (v1.9.20)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`1ae18dcfdf930d2849e23eb23e5f68e8`
+`e276d96d1c41686998a6cb3de7982e96`
 
 MacOS
-`e315b762aa311503c9d9061e96b9ee43`
+`e5188e3f4c287e4c57b5138580b018c2`
 
 Windows (64-bit)
-`5bc45b9055d4704ea1f7181f4cfb2a33`
+`1a9025ba23e3537e5ce3f242be192c4d`
 
 
 Relayer
