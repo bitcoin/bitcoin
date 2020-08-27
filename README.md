@@ -41,7 +41,7 @@ A new category of commands exist under the label "Z Researcher". A few of them a
 * send "msg" ( "args" )
 * setcmpct
 
-A new optional parameter has also been added to the configuration, names `numconnections`. This can be used by adding `numconnections=X` to ~/.bitcoin/bitcoin.conf, where X is the number of peer connections you would like to add. This overrides the previous "maxconnections" parameter with a more powerful function that forces the peer to connect to many more connections than they default 10 peers (even when incoming connections are disabled). 
+A new optional parameter has also been added to the configuration, named `numconnections`. This can be used by adding `numconnections=X` to ~/.bitcoin/bitcoin.conf, where X is the number of peer connections you would like to add. This overrides the previous "maxconnections" parameter with a more powerful function that forces the peer to connect to many more connections than they default 10 peers (even when incoming connections are disabled). 
 
 For additional information about how to use each command, as well as a brief description of what each one does, enter `help` followed by the command in question.
 
