@@ -32,7 +32,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Now lets isolate MNs one by one and verify that punishment/banning happens
         def isolate_mn(mn):
             mn.node.setnetworkactive(False)
-            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
         self.test_banning(isolate_mn, True)
 
         self.repair_masternodes(False)
@@ -112,7 +112,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
             mn.node.setnetworkactive(False)
-            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             connect_nodes(mn.node, 0)
 
