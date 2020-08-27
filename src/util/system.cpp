@@ -1192,7 +1192,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--http.corsdomain",(char*)"*",
                 NULL };
         char * argvAttempt2[20] = {(char*)attempt2.string().c_str(), 
                 (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
@@ -1202,7 +1202,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--http.corsdomain",(char*)"*",
                 NULL };
         char * argvAttempt3[20] = {(char*)attempt3.string().c_str(), 
                 (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
@@ -1212,7 +1212,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--http.corsdomain",(char*)"*",
                 NULL };
         char * argvAttempt4[20] = {(char*)attempt4.string().c_str(), 
                 (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
@@ -1222,7 +1222,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--http.corsdomain",(char*)"*",
                 NULL };
         char * argvAttempt5[20] = {(char*)attempt5.string().c_str(), 
                 (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
@@ -1232,7 +1232,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--http.corsdomain",(char*)"*",
                 NULL };   
         char * argvAttempt6[20] = {(char*)attempt6.string().c_str(), 
                 (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
@@ -1242,7 +1242,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--http.corsdomain",(char*)"*",
                 NULL };                                                                   
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
@@ -1275,7 +1275,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
     #else
         std::string portStr = itostr(websocketport);
         std::string rpcportStr = itostr(ethrpcport);
-        std::string args =  std::string("--http --http.api personal,eth --rpccorsdomain * --http.port ") + rpcportStr + std::string(" --ws --ws.port ") + portStr + std::string(" --ws.origins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
+        std::string args =  std::string("--http --http.api personal,eth --http.corsdomain * --http.port ") + rpcportStr + std::string(" --ws --ws.port ") + portStr + std::string(" --ws.origins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
         }
