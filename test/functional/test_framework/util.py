@@ -225,14 +225,14 @@ def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
 
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0):
+def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0):
     """Sleep until the predicate resolves to be True.
 
     Warning: Note that this method is not recommended to be used in tests as it is
-    not aware of the context of the test framework. Using `wait_until()` counterpart
-    from `BitcoinTestFramework` or `P2PInterface` class ensures an understandable
-    amount of timeout and a common shared timeout_factor. Furthermore, `wait_until()`
-    from `P2PInterface` class in `mininode.py` has a preset lock.
+    not aware of the context of the test framework. Using the `wait_until()` members
+    from `BitcoinTestFramework` or `P2PInterface` class ensures the timeout is
+    properly scaled. Furthermore, `wait_until()` from `P2PInterface` class in
+    `p2p.py` has a preset lock.
     """
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
@@ -437,7 +437,7 @@ def disconnect_nodes(from_connection, node_num):
                 raise
 
     # wait to disconnect
-    wait_until(lambda: not get_peer_ids(), timeout=5)
+    wait_until_helper(lambda: not get_peer_ids(), timeout=5)
 
 
 def connect_nodes(from_connection, node_num):
@@ -448,8 +448,8 @@ def connect_nodes(from_connection, node_num):
     # See comments in net_processing:
     # * Must have a version message before anything else
     # * Must have a verack message before anything else
-    wait_until(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
-    wait_until(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
+    wait_until_helper(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
+    wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
 
 
 # Transaction/Block functions

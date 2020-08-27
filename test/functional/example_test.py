@@ -207,10 +207,11 @@ class ExampleTest(BitcoinTestFramework):
         self.log.info("Check that each block was received only once")
         # The network thread uses a global lock on data access to the P2PConnection objects when sending and receiving
         # messages. The test thread should acquire the global lock before accessing any P2PConnection data to avoid locking
-        # and synchronization issues. Note wait_until() acquires this global lock when testing the predicate.
+        # and synchronization issues. Note p2p.wait_until() acquires this global lock internally when testing the predicate.
         with p2p_lock:
             for block in self.nodes[2].p2p.block_receive_map.values():
                 assert_equal(block, 1)
+
 
 if __name__ == '__main__':
     ExampleTest().main()
