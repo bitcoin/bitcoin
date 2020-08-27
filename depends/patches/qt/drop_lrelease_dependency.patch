@@ -1,0 +1,20 @@
+commit 67b3ed7406e1d0762188dbad2c44a06824ba0778
+Author: fanquake <fanquake@gmail.com>
+Date:   Tue Aug 18 15:24:01 2020 +0800
+
+    Drop dependency on lrelease
+
+    Qts buildsystem insists on using the installed lrelease, but gets
+    confused about how to find it. Since we manually control the build
+    order, just drop the dependency.
+
+    See #9469
+
+diff --git a/qttranslations/translations/translations.pro b/qttranslations/translations/translations.pro
+index 694544c..eff339d 100644
+--- a/qttranslations/translations/translations.pro
++++ b/qttranslations/translations/translations.pro
+@@ -109,3 +109,2 @@ updateqm.commands = $$LRELEASE ${QMAKE_FILE_IN} -qm ${QMAKE_FILE_OUT}
+ silent:updateqm.commands = @echo lrelease ${QMAKE_FILE_IN} && $$updateqm.commands
+-updateqm.depends = $$LRELEASE_EXE
+ updateqm.name = LRELEASE ${QMAKE_FILE_IN}
