@@ -8,7 +8,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    wait_until
 )
 
 
@@ -19,7 +18,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
 
     def sync_index(self, height):
         expected = {'basic block filter index': {'synced': True, 'best_block_height': height}}
-        wait_until(lambda: self.nodes[0].getindexinfo() == expected)
+        self.wait_until(lambda: self.nodes[0].getindexinfo() == expected)
 
     def run_test(self):
         self.log.info("check if we can access a blockfilter when pruning is enabled but no blocks are actually pruned")

@@ -22,7 +22,6 @@ from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 
 class CFiltersClient(P2PInterface):
@@ -63,11 +62,11 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.disconnect_nodes(0, 1)
 
         self.nodes[0].generate(1)
-        wait_until(lambda: self.nodes[0].getblockcount() == 1000)
+        self.wait_until(lambda: self.nodes[0].getblockcount() == 1000)
         stale_block_hash = self.nodes[0].getblockhash(1000)
 
         self.nodes[1].generate(1001)
-        wait_until(lambda: self.nodes[1].getblockcount() == 2000)
+        self.wait_until(lambda: self.nodes[1].getblockcount() == 2000)
 
         # Check that nodes have signalled NODE_COMPACT_FILTERS correctly.
         assert node0.nServices & NODE_COMPACT_FILTERS != 0

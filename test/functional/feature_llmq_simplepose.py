@@ -13,7 +13,7 @@ Checks simple PoSe system based on LLMQ commitments
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, force_finish_mnsync, p2p_port, wait_until
+from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
 
 
 class LLMQSimplePoSeTest(DashTestFramework):
@@ -65,7 +65,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def isolate_mn(self, mn):
         mn.node.setnetworkactive(False)
-        wait_until(lambda: mn.node.getconnectioncount() == 0)
+        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
         return True, True
 
     def close_mn_port(self, mn):
@@ -205,7 +205,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
             mn.node.setnetworkactive(False)
-            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
             self.connect_nodes(mn.node.index, 0)

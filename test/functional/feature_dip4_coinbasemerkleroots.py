@@ -15,9 +15,10 @@ from io import BytesIO
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, QuorumId, ser_uint256
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, wait_until
+from test_framework.util import assert_equal
 
 
+# TODO: this helper used in many tests, find a new home for it
 class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
@@ -29,7 +30,7 @@ class TestP2PConn(P2PInterface):
     def wait_for_mnlistdiff(self, timeout=30):
         def received_mnlistdiff():
             return self.last_mnlistdiff is not None
-        return wait_until(received_mnlistdiff, timeout=timeout)
+        self.wait_until(received_mnlistdiff, timeout=timeout)
 
     def getmnlistdiff(self, baseBlockHash, blockHash):
         msg = msg_getmnlistd(baseBlockHash, blockHash)

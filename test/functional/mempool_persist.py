@@ -173,7 +173,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         # check that txn gets broadcast due to unbroadcast logic
         # conn = node0.add_p2p_connection(P2PTxInvStore())
         # node0.mockscheduler(16*60) # 15 min + 1 for buffer
-        # wait_until(lambda: len(conn.get_invs()) == 1)
+        # self.wait_until(lambda: len(conn.get_invs()) == 1)
 
 if __name__ == '__main__':
     MempoolPersistTest().main()

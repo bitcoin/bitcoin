@@ -338,7 +338,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             # mn1 should still have a score of 75
             wait_for_banscore(mn3.node, id_p2p_mn3_1, 75)
             # mn2 should be "banned" now
-            wait_until(lambda: not p2p_mn3_2.is_connected, timeout=10)
+            self.wait_until(lambda: not p2p_mn3_2.is_connected, timeout=10)
             mn3.node.disconnect_p2ps()
 
         # Test that QWATCH connections are also allowed to query data but all

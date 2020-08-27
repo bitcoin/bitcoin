@@ -48,7 +48,7 @@ from test_framework.messages import (
 from test_framework.p2p import P2PInterface
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal, set_node_times, wait_until)
+from test_framework.util import (assert_equal, set_node_times)
 
 
 class BaseNode(P2PInterface):
@@ -172,7 +172,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
-        wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
+        self.wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
         assert_equal(self.nodes[0].getblockcount(), COINBASE_MATURITY + 1)
 
         # Send 200 blocks to node1. All blocks, including block 102, will be accepted.
@@ -184,7 +184,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
-        wait_until(lambda: self.nodes[2].getblockcount() >= COINBASE_MATURITY + 1)
+        self.wait_until(lambda: self.nodes[2].getblockcount() >= COINBASE_MATURITY + 1)
         assert_equal(self.nodes[2].getblockcount(), COINBASE_MATURITY + 1)
 
 

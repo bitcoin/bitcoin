@@ -22,7 +22,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
-    wait_until,
 )
 
 
@@ -139,7 +138,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         with self.nodes[1].assert_debug_log(["Force relaying tx {} from peer=0".format(txid)]):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
-            wait_until(in_mempool)
+            self.wait_until(in_mempool)
 
         self.log.debug("Check that node[1] will not send an invalid tx to node[0]")
         tx.vout[0].nValue += 1

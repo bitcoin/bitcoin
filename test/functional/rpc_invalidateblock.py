@@ -8,7 +8,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 
 
@@ -56,9 +55,9 @@ class InvalidateTest(BitcoinTestFramework):
         self.log.info("..and then mine a block")
         self.nodes[2].generatetoaddress(1, self.nodes[2].get_deterministic_priv_key().address)
         self.log.info("Verify all nodes are at the right height")
-        wait_until(lambda: self.nodes[2].getblockcount() == 3, timeout=5)
-        wait_until(lambda: self.nodes[0].getblockcount() == 4, timeout=5)
-        wait_until(lambda: self.nodes[1].getblockcount() == 4, timeout=5)
+        self.wait_until(lambda: self.nodes[2].getblockcount() == 3, timeout=5)
+        self.wait_until(lambda: self.nodes[0].getblockcount() == 4, timeout=5)
+        self.wait_until(lambda: self.nodes[1].getblockcount() == 4, timeout=5)
 
         self.log.info("Make sure ResetBlockFailureFlags does the job correctly")
         self.restart_node(0, extra_args=["-checkblocks=5"])
@@ -83,7 +82,7 @@ class InvalidateTest(BitcoinTestFramework):
 
         assert_equal(self.nodes[1].getblockcount(), newheight)
         self.restart_node(1, extra_args=["-checkblocks=5"])
-        wait_until(lambda: self.nodes[1].getblockcount() == newheight + 20)
+        self.wait_until(lambda: self.nodes[1].getblockcount() == newheight + 20)
         assert_equal(tip, self.nodes[1].getbestblockhash())
 
         self.log.info("Verify that we reconsider all ancestors as well")
