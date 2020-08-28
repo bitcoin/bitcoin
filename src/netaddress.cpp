@@ -419,17 +419,6 @@ bool CNetAddr::IsLocal() const
 
 bool CNetAddr::IsValid() const
 {
-    // Cleanup 3-byte shifted addresses caused by garbage in size field
-    // of addr messages from versions before 0.2.9 checksum.
-    // Two consecutive addr messages look like this:
-    // header20 vectorlen3 addr26 addr26 addr26 header20 vectorlen3 addr26 addr26 addr26...
-    // so if the first length field is garbled, it reads the second batch
-    // of addr misaligned by 3 bytes.
-    if (IsIPv6() && memcmp(m_addr.data(), IPV4_IN_IPV6_PREFIX.data() + 3,
-                           sizeof(IPV4_IN_IPV6_PREFIX) - 3) == 0) {
-        return false;
-    }
-
     // unspecified IPv6 address (::/128)
     unsigned char ipNone6[16] = {};
     if (IsIPv6() && memcmp(m_addr.data(), ipNone6, sizeof(ipNone6)) == 0) {
