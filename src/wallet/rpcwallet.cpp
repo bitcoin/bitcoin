@@ -2874,6 +2874,11 @@ UniValue listunspent(const JSONRPCRequest& request)
                 {"maximumAmount", UniValueType()},
                 {"minimumSumAmount", UniValueType()},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
+                // SYSCOIN
+                {"assetGuid", UniValueType(UniValue::VNUM)},
+                {"minimumAmountAsset", UniValueType()},
+                {"maximumAmountAsset", UniValueType()},
+                {"minimumSumAmountAsset", UniValueType()},
             },
             true, true);
 
