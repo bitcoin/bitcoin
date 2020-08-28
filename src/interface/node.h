@@ -43,6 +43,14 @@ public:
     virtual CDeterministicMNList getListAtChainTip() = 0;
 };
 
+//! Interface for the src/llmq part of a dash node (dashd process).
+class LLMQ
+{
+public:
+    virtual ~LLMQ() {}
+    virtual size_t getInstantSentLockCount() = 0;
+};
+
 //! Top-level interface for a dash node (dashd process).
 class Node
 {
@@ -214,6 +222,9 @@ public:
 
     //! Return interface for accessing evo related handler.
     virtual EVO& evo() = 0;
+
+    //! Return interface for accessing llmq related handler.
+    virtual LLMQ& llmq() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

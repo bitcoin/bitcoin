@@ -22,7 +22,6 @@
 
 #include <spork.h>
 #include <privatesend/privatesend-client.h>
-#include <llmq/quorums_instantsend.h>
 
 #include <stdint.h>
 

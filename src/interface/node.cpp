@@ -12,6 +12,7 @@
 #include <init.h>
 #include <interface/handler.h>
 #include <interface/wallet.h>
+#include <llmq/quorums_instantsend.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -56,9 +57,22 @@ public:
     }
 };
 
+class LLMQImpl : public LLMQ
+{
+public:
+    size_t getInstantSentLockCount() override
+    {
+        if (!llmq::quorumInstantSendManager) {
+            return 0;
+        }
+        return llmq::quorumInstantSendManager->GetInstantSendLockCount();
+    }
+};
+
 class NodeImpl : public Node
 {
     EVOImpl m_evo;
+    LLMQImpl m_llmq;
 
     void parseParameters(int argc, const char* const argv[]) override
     {
@@ -268,6 +282,7 @@ class NodeImpl : public Node
 #endif
     }
     EVO& evo() override { return m_evo; }
+    LLMQ& llmq() override { return m_llmq; }
 
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {

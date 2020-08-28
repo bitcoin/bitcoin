@@ -63,9 +63,6 @@ public:
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
 
-    //! Return number of ISLOCKs
-    size_t getInstantSentLockCount() const;
-
     void setMasternodeList(const CDeterministicMNList& mnList);
     CDeterministicMNList getMasternodeList() const;
     void refreshMasternodeList();
