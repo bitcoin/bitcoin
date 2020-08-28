@@ -56,7 +56,7 @@ static const int PRIVATESEND_KEYS_THRESHOLD_STOP = 50;
 static const int PRIVATESEND_RANDOM_ROUNDS = 3;
 
 // The main object for accessing mixing
-extern std::map<const std::string, CPrivateSendClientManager*> privateSendClientManagers;
+extern std::map<const std::string, std::shared_ptr<CPrivateSendClientManager>> privateSendClientManagers;
 
 // The object to track mixing queues
 extern CPrivateSendClientQueueManager privateSendClientQueueManager;
@@ -117,7 +117,7 @@ private:
 
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
-    CWallet* mixingWallet;
+    CWallet& mixingWallet;
 
     /// Create denominations
     bool CreateDenominated(CAmount nBalanceToDenominate);
@@ -152,7 +152,7 @@ private:
     void SetNull();
 
 public:
-    CPrivateSendClientSession(CWallet* pwallet) :
+    CPrivateSendClientSession(CWallet& pwallet) :
         vecOutPointLocked(),
         strLastMessage(),
         strAutoDenomResult(),
@@ -202,6 +202,10 @@ public:
 class CPrivateSendClientManager
 {
 private:
+    CPrivateSendClientManager() = delete;
+    CPrivateSendClientManager(CPrivateSendClientManager const&) = delete;
+    CPrivateSendClientManager& operator=(CPrivateSendClientManager const&) = delete;
+
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
 
@@ -209,11 +213,13 @@ private:
     std::deque<CPrivateSendClientSession> deqSessions;
     mutable CCriticalSection cs_deqsessions;
 
+    bool fMixing{false};
+
     int nCachedLastSuccessBlock;
     int nMinBlocksToWait; // how many blocks to wait after one successful mixing tx in non-multisession mode
     std::string strAutoDenomResult;
 
-    CWallet* mixingWallet;
+    CWallet& mixingWallet;
 
     // Keep track of current block height
     int nCachedBlockHeight;
@@ -227,7 +233,7 @@ public:
     int nCachedNumBlocks;    // used for the overview screen
     bool fCreateAutoBackups; // builtin support for automatic backups
 
-    CPrivateSendClientManager() :
+    CPrivateSendClientManager(CWallet& wallet) :
         vecMasternodesUsed(),
         deqSessions(),
         nCachedLastSuccessBlock(0),
@@ -236,13 +242,13 @@ public:
         nCachedBlockHeight(0),
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true),
-        mixingWallet(nullptr)
+        mixingWallet(wallet)
     {
     }
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
-    bool StartMixing(CWallet* pwallet);
+    bool StartMixing();
     void StopMixing();
     bool IsMixing() const;
     void ResetPool();

@@ -7,10 +7,9 @@
 
 #include <consensus/consensus.h>
 #include <interface/wallet.h>
+#include <interface/node.h>
 #include <timedata.h>
 #include <validation.h>
-
-#include <privatesend/privatesend.h>
 
 #include <stdint.h>
 
@@ -36,6 +35,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
+    auto node = interface::MakeNode();
+    auto& privateSendOptions = node->privateSendOptions();
 
     if (nNet > 0 || wtx.is_coinbase)
     {
@@ -130,9 +131,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             {
                 sub.idx = parts.size();
                 if(wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
-                    && CPrivateSend::IsCollateralAmount(nDebit)
-                    && CPrivateSend::IsCollateralAmount(nCredit)
-                    && CPrivateSend::IsCollateralAmount(-nNet))
+                    && privateSendOptions.isCollateralAmount(nDebit)
+                    && privateSendOptions.isCollateralAmount(nCredit)
+                    && privateSendOptions.isCollateralAmount(-nNet))
                 {
                     sub.type = TransactionRecord::PrivateSendCollateralPayment;
                 } else {
@@ -141,19 +142,19 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                         CAmount nAmount0 = wtx.tx->vout[0].nValue;
                         CAmount nAmount1 = wtx.tx->vout[1].nValue;
                         // <case1>, see CPrivateSendClientSession::MakeCollateralAmounts
-                        fMakeCollateral = (nAmount0 == CPrivateSend::GetMaxCollateralAmount() && !CPrivateSend::IsDenominatedAmount(nAmount1) && nAmount1 >= CPrivateSend::GetCollateralAmount()) ||
-                                          (nAmount1 == CPrivateSend::GetMaxCollateralAmount() && !CPrivateSend::IsDenominatedAmount(nAmount0) && nAmount0 >= CPrivateSend::GetCollateralAmount()) ||
+                        fMakeCollateral = (nAmount0 == privateSendOptions.getMaxCollateralAmount() && !privateSendOptions.isDenominated(nAmount1) && nAmount1 >= privateSendOptions.getMinCollateralAmount()) ||
+                                          (nAmount1 == privateSendOptions.getMaxCollateralAmount() && !privateSendOptions.isDenominated(nAmount0) && nAmount0 >= privateSendOptions.getMinCollateralAmount()) ||
                         // <case2>, see CPrivateSendClientSession::MakeCollateralAmounts
-                                          (nAmount0 == nAmount1 && CPrivateSend::IsCollateralAmount(nAmount0));
+                                          (nAmount0 == nAmount1 && privateSendOptions.isCollateralAmount(nAmount0));
                     } else if (wtx.tx->vout.size() == 1) {
                         // <case3>, see CPrivateSendClientSession::MakeCollateralAmounts
-                        fMakeCollateral = CPrivateSend::IsCollateralAmount(wtx.tx->vout[0].nValue);
+                        fMakeCollateral = privateSendOptions.isCollateralAmount(wtx.tx->vout[0].nValue);
                     }
                     if (fMakeCollateral) {
                         sub.type = TransactionRecord::PrivateSendMakeCollaterals;
                     } else {
                         for (const auto& txout : wtx.tx->vout) {
-                            if (CPrivateSend::IsDenominatedAmount(txout.nValue)) {
+                            if (privateSendOptions.isDenominated(txout.nValue)) {
                                 sub.type = TransactionRecord::PrivateSendCreateDenominations;
                                 break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
                             }
@@ -178,9 +179,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
 
             bool fDone = false;
             if(wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
-                && CPrivateSend::IsCollateralAmount(nDebit)
+                && privateSendOptions.isCollateralAmount(nDebit)
                 && nCredit == 0 // OP_RETURN
-                && CPrivateSend::IsCollateralAmount(-nNet))
+                && privateSendOptions.isCollateralAmount(-nNet))
             {
                 TransactionRecord sub(hash, nTime);
                 sub.idx = 0;

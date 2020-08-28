@@ -23,8 +23,6 @@
 #include <util.h>
 #include <warnings.h>
 
-#include <privatesend/privatesend.h>
-
 #include <stdint.h>
 
 #include <QDebug>

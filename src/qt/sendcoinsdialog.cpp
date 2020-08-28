@@ -21,9 +21,7 @@
 #include <txmempool.h>
 #include <policy/fees.h>
 #include <wallet/fees.h>
-
-#include <privatesend/privatesend.h>
-#include <privatesend/privatesend-client.h>
+#include <wallet/wallet.h>
 
 #include <QFontMetrics>
 #include <QScrollBar>

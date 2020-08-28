@@ -64,6 +64,31 @@ public:
 };
 }
 
+namespace PrivateSend {
+//! Interface for the global privatesend options in src/privatesend
+class Options
+{
+public:
+    virtual int getRounds() = 0;
+    virtual int getAmount() = 0;
+
+    virtual void setEnabled(bool fEnabled) = 0;
+    virtual void setMultiSessionEnabled(bool fEnabled) = 0;
+    virtual void setRounds(int nRounds) = 0;
+    virtual void setAmount(CAmount amount) = 0;
+
+    virtual bool isMultiSessionEnabled() = 0;
+    virtual bool isEnabled() = 0;
+    // Static helpers
+    virtual bool isCollateralAmount(CAmount nAmount) = 0;
+    virtual CAmount getMinCollateralAmount() = 0;
+    virtual CAmount getMaxCollateralAmount() = 0;
+    virtual CAmount getSmallestDenomination() = 0;
+    virtual bool isDenominated(CAmount nAmount) = 0;
+    virtual std::vector<CAmount> getStandardDenominations() = 0;
+};
+}
+
 //! Top-level interface for a dash node (dashd process).
 class Node
 {
@@ -241,6 +266,11 @@ public:
 
     //! Return interface for accessing masternode related handler.
     virtual Masternode::Sync& masternodeSync() = 0;
+
+    //! Return interface for accessing masternode related handler.
+#ifdef ENABLE_WALLET
+    virtual PrivateSend::Options& privateSendOptions() = 0;
+#endif
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

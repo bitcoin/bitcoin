@@ -40,6 +40,24 @@ struct WalletTxStatus;
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
 
+namespace PrivateSend {
+//! Interface for the wallet constrained src/privatesend part of a dash node (dashd process).
+class Client
+{
+public:
+    virtual ~Client() {}
+    virtual void resetCachedBlocks() = 0;
+    virtual void resetPool() = 0;
+    virtual int getCachedBlocks() = 0;
+    virtual std::string getSessionDenoms() = 0;
+    virtual void setCachedBlocks(int nCachedBlocks) = 0;
+    virtual void disableAutobackups() = 0;
+    virtual bool isMixing() = 0;
+    virtual bool startMixing() = 0;
+    virtual void stopMixing() = 0;
+};
+}
+
 //! Interface for accessing a wallet.
 class Wallet
 {
@@ -225,6 +243,8 @@ public:
 
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
+
+    virtual PrivateSend::Client& privateSend() = 0;
 
     //! Register handler for show progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress)>;

@@ -201,6 +201,7 @@ public:
 
     interface::Node& node() const { return m_node; }
     interface::Wallet& wallet() const { return *m_wallet; }
+    interface::PrivateSend::Client& privateSend() const { return m_wallet->privateSend(); }
 
     QString getWalletName() const;
 

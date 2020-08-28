@@ -16,7 +16,7 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
-#include <privatesend/privatesend-client.h>
+#include <interface/node.h>
 #include <ui_interface.h>
 
 #include <QCalendarWidget>
@@ -195,8 +195,6 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
     connect(showAddressQRCodeAction, SIGNAL(triggered()), this, SLOT(showAddressQRCode()));
-
-    updatePrivateSendVisibility();
 }
 
 void TransactionView::setModel(WalletModel *_model)
@@ -263,6 +261,8 @@ void TransactionView::setModel(WalletModel *_model)
         // Update transaction list with persisted settings
         chooseType(settings.value("transactionType").toInt());
         chooseDate(settings.value("transactionDate").toInt());
+
+        updatePrivateSendVisibility();
     }
 }
 
@@ -732,7 +732,10 @@ void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly)
 
 void TransactionView::updatePrivateSendVisibility()
 {
-    bool fEnabled = CPrivateSendClientOptions::IsEnabled();
+    if (model == nullptr) {
+        return;
+    }
+    bool fEnabled = model->node().privateSendOptions().isEnabled();
     // If PrivateSend gets enabled use "All" else "Most common"
     typeWidget->setCurrentIndex(fEnabled ? 0 : 1);
     // Hide all PrivateSend related filters

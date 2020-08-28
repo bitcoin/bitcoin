@@ -51,6 +51,9 @@ public:
 
     interface::Node& node() const { return m_node; }
     interface::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
+#ifdef ENABLE_WALLET
+    interface::PrivateSend::Options& privateSendOptions() const { return m_node.privateSendOptions(); }
+#endif
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();

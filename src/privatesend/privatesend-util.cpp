@@ -9,6 +9,7 @@
 #include <script/sign.h>
 #include <validation.h>
 #include <wallet/fees.h>
+#include <wallet/wallet.h>
 
 inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
 {

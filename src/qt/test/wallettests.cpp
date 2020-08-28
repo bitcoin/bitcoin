@@ -4,6 +4,7 @@
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
 #include <qt/optionsmodel.h>
+#include <privatesend/privatesend-client.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/sendcoinsentry.h>
@@ -117,6 +118,7 @@ void TestGUI()
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
     CWallet wallet("mock", WalletDatabase::CreateMock());
+    AddWallet(&wallet);
     bool firstRun;
     wallet.LoadWallet(firstRun);
     {
@@ -137,9 +139,7 @@ void TestGUI()
     TransactionView transactionView;
     auto node = interface::MakeNode();
     OptionsModel optionsModel(*node);
-    vpwallets.insert(vpwallets.begin(), &wallet);
-    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &optionsModel);
-    vpwallets.erase(vpwallets.begin());
+    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &optionsModel);;
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -213,6 +213,7 @@ void TestGUI()
     QPushButton* removeRequestButton = receiveCoinsDialog.findChild<QPushButton*>("removeRequestButton");
     removeRequestButton->click();
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
+    RemoveWallet(&wallet);
 }
 
 }
