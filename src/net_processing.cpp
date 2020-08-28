@@ -2159,7 +2159,6 @@ static void ProcessHeadersMessage(CNode& pfrom, CConnman& connman, ChainstateMan
         nSize += GetSerializeSize(header, PROTOCOL_VERSION);
         if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
               && nSize > MAX_HEADERS_SIZE) {
-            LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20, "nSize > MAX_HEADERS_SIZE");
             return;
         }
@@ -4166,7 +4165,6 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
 
     if (msg_type == NetMsgType::MNLISTDIFF) {
         // we have never requested this
-        LOCK(cs_main);
         Misbehaving(pfrom.GetId(), 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom.GetId()));
         return;
     }

@@ -1475,10 +1475,7 @@ void CSigSharesManager::BanNode(NodeId nodeId)
         return;
     }
 
-    {
-        LOCK(cs_main);
-        Misbehaving(nodeId, 100, "banning node from sigshares manager");
-    }
+    Misbehaving(nodeId, 100, "banning node from sigshares manager");
 
     LOCK(cs);
     auto it = nodeStates.find(nodeId);

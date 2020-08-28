@@ -132,7 +132,6 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         }
 
         if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
-            LOCK(cs_main);
             LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
             Misbehaving(pfrom->GetId(), 100, "spork too far into the future");
             return;
@@ -145,7 +144,6 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             // inactive because SPORK_6_NEW_SIGS default is OFF and it is not the first spork to sync
             // (and even if it would, spork order can't be guaranteed anyway).
             if (!spork.GetSignerKeyID(keyIDSigner, !fSpork6IsActive) || !setSporkPubKeyIDs.count(keyIDSigner)) {
-                LOCK(cs_main);
                 LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
                 Misbehaving(pfrom->GetId(), 100, "spork invalid signature");
                 return;
