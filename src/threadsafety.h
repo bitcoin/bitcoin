@@ -18,9 +18,7 @@
 #define LOCKABLE __attribute__((lockable))
 #define SCOPED_LOCKABLE __attribute__((scoped_lockable))
 #define GUARDED_BY(x) __attribute__((guarded_by(x)))
-#define GUARDED_VAR __attribute__((guarded_var))
 #define PT_GUARDED_BY(x) __attribute__((pt_guarded_by(x)))
-#define PT_GUARDED_VAR __attribute__((pt_guarded_var))
 #define ACQUIRED_AFTER(...) __attribute__((acquired_after(__VA_ARGS__)))
 #define ACQUIRED_BEFORE(...) __attribute__((acquired_before(__VA_ARGS__)))
 #define EXCLUSIVE_LOCK_FUNCTION(...) __attribute__((exclusive_lock_function(__VA_ARGS__)))
@@ -33,14 +31,12 @@
 #define EXCLUSIVE_LOCKS_REQUIRED(...) __attribute__((exclusive_locks_required(__VA_ARGS__)))
 #define SHARED_LOCKS_REQUIRED(...) __attribute__((shared_locks_required(__VA_ARGS__)))
 #define NO_THREAD_SAFETY_ANALYSIS __attribute__((no_thread_safety_analysis))
-#define ASSERT_EXCLUSIVE_LOCK(...) __attribute((assert_exclusive_lock(__VA_ARGS__)))
+#define ASSERT_EXCLUSIVE_LOCK(...) __attribute__((assert_exclusive_lock(__VA_ARGS__)))
 #else
 #define LOCKABLE
 #define SCOPED_LOCKABLE
 #define GUARDED_BY(x)
-#define GUARDED_VAR
 #define PT_GUARDED_BY(x)
-#define PT_GUARDED_VAR
 #define ACQUIRED_AFTER(...)
 #define ACQUIRED_BEFORE(...)
 #define EXCLUSIVE_LOCK_FUNCTION(...)
