@@ -325,8 +325,10 @@ private:
         int mapped_as;
         int version;
         int64_t conn_time;
+        int64_t last_blck;
         int64_t last_recv;
         int64_t last_send;
+        int64_t last_trxn;
         double min_ping;
         double ping;
         std::string addr;
@@ -423,11 +425,13 @@ public:
                 const int version{peer["version"].get_int()};
                 const std::string sub_version{peer["subver"].get_str()};
                 const int64_t conn_time{peer["conntime"].get_int64()};
+                const int64_t last_blck{peer["last_block"].get_int64()};
                 const int64_t last_recv{peer["lastrecv"].get_int64()};
                 const int64_t last_send{peer["lastsend"].get_int64()};
+                const int64_t last_trxn{peer["last_transaction"].get_int64()};
                 const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
-                peers.push_back({peer_id, mapped_as, version, conn_time, last_recv, last_send, min_ping, ping, addr, sub_version, net_type, is_block_relay, !is_inbound});
+                peers.push_back({peer_id, mapped_as, version, conn_time, last_blck, last_recv, last_send, last_trxn, min_ping, ping, addr, sub_version, net_type, is_block_relay, !is_inbound});
                 max_peer_id_length = std::max(ToString(peer_id).length(), max_peer_id_length);
                 max_version_length = std::max((ToString(version) + sub_version).length(), max_version_length);
                 is_asmap_on |= (mapped_as != 0);
@@ -440,13 +444,13 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (m_verbose && !peers.empty()) {
             std::sort(peers.begin(), peers.end());
-            result += "Peer connections sorted by direction and min ping\n<-> relay   net minping   ping lastsend lastrecv uptime ";
+            result += "Peer connections sorted by direction and min ping\n<-> relay   net mping   ping send recv  txn  blk uptime ";
             if (is_asmap_on) result += " asmap ";
             result += strprintf("%*s %-*s address\n", max_peer_id_length, "id", max_version_length, "version");
             for (const Peer& peer : peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %5s %5s%8s%7s %8s %8s%7s%*i %*s %-*s %s\n",
+                    "%3s %5s %5s%6s%7s%5s%5s%5s%5s%7s%*i %*s %-*s %s\n",
                     peer.is_outbound ? "out" : "in",
                     peer.is_block_relay ? "block" : "full",
                     NetTypeEnumToString(peer.net_type),
@@ -454,6 +458,8 @@ public:
                     peer.ping == -1 ? "" : ToString(round(1000 * peer.ping)),
                     peer.last_send == 0 ? "" : ToString(time_now - peer.last_send),
                     peer.last_recv == 0 ? "" : ToString(time_now - peer.last_recv),
+                    peer.last_trxn == 0 ? "" : ToString((time_now - peer.last_trxn) / 60),
+                    peer.last_blck == 0 ? "" : ToString((time_now - peer.last_blck) / 60),
                     peer.conn_time == 0 ? "" : ToString((time_now - peer.conn_time) / 60),
                     is_asmap_on ? 7 : 0, // variable spacing
                     is_asmap_on && peer.mapped_as != 0 ? ToString(peer.mapped_as) : "",
@@ -463,7 +469,7 @@ public:
                     version == "0" ? "" : version,
                     peer.addr);
             }
-            result += "                     ms     ms      sec      sec    min\n\n";
+            result += "                   ms     ms  sec  sec  min  min    min\n\n";
         }
 
         // Report peer connection totals by type.
