@@ -85,7 +85,6 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 
     if (vRecv.empty()) {
-        LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100, "invalid recv size for DKG session");
         return;
     }
@@ -93,7 +92,6 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     // peek into the message and see which uint8_t it is. First byte of all messages is always the uint8_t
     uint8_t llmqType = *vRecv.begin();
     if (!dkgSessionHandlers.count(llmqType)) {
-        LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100, "DKG session invalid LLMQ typ");
         return;
     }

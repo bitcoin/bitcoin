@@ -69,26 +69,22 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             fAlreadyHaveMNAUTH = !pnode->verifiedProRegTxHash.IsNull();
         }
         if (fAlreadyHaveMNAUTH) {
-            LOCK(cs_main);
             Misbehaving(pnode->GetId(), 100, "duplicate mnauth");
             return;
         }
 
         if ((~pnode->nServices) & NODE_NETWORK) {
             // NODE_NETWORK bit is missing in node's services
-            LOCK(cs_main);
             Misbehaving(pnode->GetId(), 100, "mnauth from a node with invalid services");
             return;
         }
 
         if (mnauth.proRegTxHash.IsNull()) {
-            LOCK(cs_main);
             Misbehaving(pnode->GetId(), 100, "empty mnauth proRegTxHash");
             return;
         }
 
         if (!mnauth.sig.IsValid()) {
-            LOCK(cs_main);
             Misbehaving(pnode->GetId(), 100, "invalid mnauth signature");
             return;
         }
@@ -96,7 +92,6 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMN(mnauth.proRegTxHash);
         if (!dmn) {
-            LOCK(cs_main);
             // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it
             // a chance to get up-to-date and thus realize that it's not a MN anymore. We still give it a
             // low DoS score.
@@ -114,7 +109,6 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         }
 
         if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
-            LOCK(cs_main);
             // Same as above, MN seems to not know its fate yet, so give it a chance to update. If this is a
             // malicious node (DoSing us), it'll get banned soon.
             Misbehaving(pnode->GetId(), 10, "mnauth signature verification failed");
