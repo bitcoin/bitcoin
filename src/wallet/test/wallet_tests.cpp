@@ -83,8 +83,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = ::ChainActive().Tip();
 
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
+    auto chain = interfaces::MakeChain(m_node);
 
     // Verify ScanForWalletTransactions fails to read an unknown start block.
     {
@@ -183,8 +182,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = ::ChainActive().Tip();
 
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
+    auto chain = interfaces::MakeChain(m_node);
 
     // Prune the older block file.
     {
@@ -255,8 +253,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     SetMockTime(KEY_TIME);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
 
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
+    auto chain = interfaces::MakeChain(m_node);
 
     std::string backup_file = (GetDataDir() / "wallet.backup").string();
 
@@ -317,8 +314,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 // debit functions.
 BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
+    auto chain = interfaces::MakeChain(m_node);
 
     CWallet wallet(chain.get(), "", CreateDummyWalletDatabase());
     auto spk_man = wallet.GetOrCreateLegacyScriptPubKeyMan();
@@ -612,8 +608,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
 {
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
+    auto chain = interfaces::MakeChain(m_node);
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), "", CreateDummyWalletDatabase());
     wallet->SetupLegacyScriptPubKeyMan();
     wallet->SetMinVersion(FEATURE_LATEST);
