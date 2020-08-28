@@ -129,6 +129,10 @@ class WalletImpl : public Wallet
 public:
     WalletImpl(CWallet& wallet) : m_wallet(wallet) {}
 
+    void markDirty() override
+    {
+        m_wallet.MarkDirty();
+    }
     bool encryptWallet(const SecureString& wallet_passphrase) override
     {
         return m_wallet.EncryptWallet(wallet_passphrase);

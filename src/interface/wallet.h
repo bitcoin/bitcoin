@@ -46,6 +46,9 @@ class Wallet
 public:
     virtual ~Wallet() {}
 
+    //! Mark wallet as dirty
+    virtual void markDirty() = 0;
+
     //! Encrypt wallet.
     virtual bool encryptWallet(const SecureString& wallet_passphrase) = 0;
 

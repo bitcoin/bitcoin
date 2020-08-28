@@ -15,6 +15,7 @@
 #include <qt/optionsmodel.h>
 
 #include <interface/node.h>
+#include <interface/wallet.h>
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
@@ -342,9 +343,9 @@ void OptionsDialog::on_okButton_clicked()
     mapper->submit();
     appearance->accept();
 #ifdef ENABLE_WALLET
-    for (auto& pwallet : GetWallets()) {
-        privateSendClientManagers.at(pwallet->GetName())->nCachedNumBlocks = std::numeric_limits<int>::max();
-        pwallet->MarkDirty();
+    for (auto& wallet : model->node().getWallets()) {
+        privateSendClientManagers.at(wallet->getWalletName())->nCachedNumBlocks = std::numeric_limits<int>::max();
+        wallet->markDirty();
     }
 #endif // ENABLE_WALLET
     accept();
