@@ -95,7 +95,7 @@ CDeterministicMNList ClientModel::getMasternodeList() const
 void ClientModel::refreshMasternodeList()
 {
     LOCK(cs_mnlinst);
-    setMasternodeList(deterministicMNManager->GetListAtChainTip());
+    setMasternodeList(m_node.evo().getListAtChainTip());
 }
 
 int ClientModel::getHeaderTipHeight() const

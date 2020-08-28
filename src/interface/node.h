@@ -35,7 +35,15 @@ namespace interface {
 class Handler;
 class Wallet;
 
-//! Top-level interface for a bitcoin node (bitcoind process).
+//! Interface for the src/evo part of a dash node (dashd process).
+class EVO
+{
+public:
+    virtual ~EVO() {}
+    virtual CDeterministicMNList getListAtChainTip() = 0;
+};
+
+//! Top-level interface for a dash node (dashd process).
 class Node
 {
 public:
@@ -203,6 +211,9 @@ public:
 
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
+
+    //! Return interface for accessing evo related handler.
+    virtual EVO& evo() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

@@ -16,7 +16,6 @@
 #include <univalue.h>
 #include <util.h>
 
-#include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
 
 #include <QDir>

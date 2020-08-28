@@ -8,6 +8,7 @@
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <evo/deterministicmns.h>
 #include <init.h>
 #include <interface/handler.h>
 #include <interface/wallet.h>
@@ -46,8 +47,19 @@
 namespace interface {
 namespace {
 
+class EVOImpl : public EVO
+{
+public:
+    CDeterministicMNList getListAtChainTip() override
+    {
+        return deterministicMNManager->GetListAtChainTip();
+    }
+};
+
 class NodeImpl : public Node
 {
+    EVOImpl m_evo;
+
     void parseParameters(int argc, const char* const argv[]) override
     {
         gArgs.ParseParameters(argc, argv);
@@ -255,6 +267,8 @@ class NodeImpl : public Node
         throw std::logic_error("Node::getWallets() called in non-wallet build.");
 #endif
     }
+    EVO& evo() override { return m_evo; }
+
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage.connect(fn));
