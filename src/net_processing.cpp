@@ -791,6 +791,11 @@ void PeerManager::FinalizeNode(const CNode& node, bool& fUpdateConnectionTime) {
     LOCK(cs_main);
     int misbehavior{0};
     {
+        // We remove the PeerRef from g_peer_map here, but we don't always
+        // destruct the Peer. Sometimes another thread is still holding a
+        // PeerRef, so the refcount is >= 1. Be careful not to do any
+        // processing here that assumes Peer won't be changed before it's
+        // destructed.
         PeerRef peer = RemovePeer(nodeid);
         assert(peer != nullptr);
         misbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);

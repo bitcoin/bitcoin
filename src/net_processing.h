@@ -46,6 +46,8 @@ struct CNodeStateStats {
  * Memory is owned by shared pointers and this object is destructed when
  * the refcount drops to zero.
  *
+ * Mutexes inside this struct must not be held when locking m_peer_mutex.
+ *
  * TODO: move most members from CNodeState to this structure.
  * TODO: move remaining application-layer data members from CNode to this structure.
  */
@@ -210,7 +212,8 @@ private:
       * on extra block-relay-only peers. */
     bool m_initial_sync_finished{false};
 
-    /** Protects m_peer_map */
+    /** Protects m_peer_map. This mutex must not be locked while holding a lock
+     *  on any of the mutexes inside a Peer object. */
     mutable Mutex m_peer_mutex;
     /**
      * Map of all Peer objects, keyed by peer id. This map is protected
