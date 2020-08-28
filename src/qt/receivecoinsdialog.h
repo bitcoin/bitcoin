@@ -48,9 +48,6 @@ public Q_SLOTS:
     void reject() override;
     void accept() override;
 
-protected:
-    virtual void keyPressEvent(QKeyEvent *event) override;
-
 private:
     Ui::ReceiveCoinsDialog *ui;
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
