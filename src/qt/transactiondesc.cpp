@@ -17,8 +17,6 @@
 #include <script/script.h>
 #include <timedata.h>
 #include <util.h>
-#include <wallet/db.h>
-#include <wallet/wallet.h>
 
 #include <stdint.h>
 #include <string>

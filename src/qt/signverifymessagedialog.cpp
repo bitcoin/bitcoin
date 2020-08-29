@@ -12,8 +12,8 @@
 
 #include <base58.h>
 #include <init.h>
+#include <utilstrencodings.h>
 #include <validation.h> // For strMessageMagic
-#include <wallet/wallet.h>
 
 #include <string>
 #include <vector>

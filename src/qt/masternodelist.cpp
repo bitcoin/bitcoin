@@ -10,7 +10,6 @@
 #include <masternode/masternode-sync.h>
 #include <netbase.h>
 #include <validation.h>
-#include <wallet/wallet.h>
 #include <qt/walletmodel.h>
 
 #include <univalue.h>
