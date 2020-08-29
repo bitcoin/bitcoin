@@ -1242,7 +1242,7 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
 }
 
 PeerManager::PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                         CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool)
+                         CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool)
     : m_chainparams(chainparams),
       m_connman(connman),
       m_banman(banman),
