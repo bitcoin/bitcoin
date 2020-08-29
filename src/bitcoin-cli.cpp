@@ -58,7 +58,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional boolean argument can be passed for a detailed peers listing (default: false).", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument can be passed for a detailed peers listing (default: 0).", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
 
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -314,7 +314,8 @@ private:
         return mapped_as == 0 && onion_pos != std::string::npos && addr_len > ONION_LEN &&
                (onion_pos == addr_len - ONION_LEN || onion_pos == addr.find_last_of(":") - ONION_LEN);
     }
-    bool m_verbose{false}; //!< Whether user requested verbose -netinfo report
+    uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
+    bool DetailsRequested() const { return m_details_level != 0; }
     enum struct NetType {
         ipv4,
         ipv6,
@@ -360,8 +361,10 @@ public:
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
         if (!args.empty()) {
-            const std::string arg{ToLower(args.at(0))};
-            m_verbose = (arg == "true" || arg == "t");
+            uint8_t n{0};
+            if (ParseUInt8(args.at(0), &n)) {
+                m_details_level = n;
+            }
         }
         UniValue result(UniValue::VARR);
         result.push_back(JSONRPCRequestObj("getpeerinfo", NullUniValue, ID_PEERINFO));
@@ -380,7 +383,7 @@ public:
             throw std::runtime_error("-netinfo requires bitcoind server to be running v0.21.0 and up");
         }
 
-        // Count peer connection totals, and if m_verbose is true, store peer data in a vector of structs.
+        // Count peer connection totals, and if DetailsRequested(), store peer data in a vector of structs.
         const int64_t time_now{GetSystemTimeInSeconds()};
         int ipv4_i{0}, ipv6_i{0}, onion_i{0}, block_relay_i{0}, total_i{0}; // inbound conn counters
         int ipv4_o{0}, ipv6_o{0}, onion_o{0}, block_relay_o{0}, total_o{0}; // outbound conn counters
@@ -419,7 +422,7 @@ public:
                 }
                 if (is_block_relay) ++block_relay_o;
             }
-            if (m_verbose) {
+            if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
                 const int peer_id{peer["id"].get_int()};
                 const int version{peer["version"].get_int()};
@@ -442,7 +445,7 @@ public:
         std::string result{strprintf("%s %s%s - %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
 
         // Report detailed peer connections list sorted by direction and minimum ping time.
-        if (m_verbose && !peers.empty()) {
+        if (DetailsRequested() && !peers.empty()) {
             std::sort(peers.begin(), peers.end());
             result += "Peer connections sorted by direction and min ping\n<-> relay   net mping   ping send recv  txn  blk uptime ";
             if (is_asmap_on) result += " asmap ";
