@@ -11,7 +11,7 @@ mutex:CConnman::ThreadOpenConnections
 mutex:CConnman::ThreadOpenAddedConnections
 mutex:CConnman::SocketHandler
 mutex:UpdateTip
-mutex:PeerLogicValidation::UpdatedBlockTip
+mutex:PeerManager::UpdatedBlockTip
 mutex:g_best_block_mutex
 # race (TODO fix)
 race:CConnman::WakeMessageHandler
