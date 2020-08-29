@@ -30,7 +30,7 @@ static const int DISCOURAGEMENT_THRESHOLD{100};
 class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
     PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                        CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
+                CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
 
     /**
      * Overridden from CValidationInterface.
