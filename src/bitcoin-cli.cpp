@@ -58,7 +58,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument can be passed for a detailed peers listing (default: 0).", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0).", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
 
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -315,7 +315,9 @@ private:
                (onion_pos == addr_len - ONION_LEN || onion_pos == addr.find_last_of(":") - ONION_LEN);
     }
     uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
-    bool DetailsRequested() const { return m_details_level != 0; }
+    bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
+    bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
+    bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
     enum struct NetType {
         ipv4,
         ipv6,
@@ -387,7 +389,7 @@ public:
         const int64_t time_now{GetSystemTimeInSeconds()};
         int ipv4_i{0}, ipv6_i{0}, onion_i{0}, block_relay_i{0}, total_i{0}; // inbound conn counters
         int ipv4_o{0}, ipv6_o{0}, onion_o{0}, block_relay_o{0}, total_o{0}; // outbound conn counters
-        size_t max_peer_id_length{2}, max_version_length{1};
+        size_t max_peer_id_length{2}, max_addr_length{0};
         bool is_asmap_on{false};
         std::vector<Peer> peers;
         const UniValue& getpeerinfo{batch[ID_PEERINFO]["result"]};
@@ -436,7 +438,7 @@ public:
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
                 peers.push_back({peer_id, mapped_as, version, conn_time, last_blck, last_recv, last_send, last_trxn, min_ping, ping, addr, sub_version, net_type, is_block_relay, !is_inbound});
                 max_peer_id_length = std::max(ToString(peer_id).length(), max_peer_id_length);
-                max_version_length = std::max((ToString(version) + sub_version).length(), max_version_length);
+                max_addr_length = std::max(addr.length() + 1, max_addr_length);
                 is_asmap_on |= (mapped_as != 0);
             }
         }
@@ -449,11 +451,11 @@ public:
             std::sort(peers.begin(), peers.end());
             result += "Peer connections sorted by direction and min ping\n<-> relay   net mping   ping send recv  txn  blk uptime ";
             if (is_asmap_on) result += " asmap ";
-            result += strprintf("%*s %-*s address\n", max_peer_id_length, "id", max_version_length, "version");
+            result += strprintf("%*s %-*s%s\n", max_peer_id_length, "id", IsAddressSelected() ? max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %5s %5s%6s%7s%5s%5s%5s%5s%7s%*i %*s %-*s %s\n",
+                    "%3s %5s %5s%6s%7s%5s%5s%5s%5s%7s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
                     peer.is_block_relay ? "block" : "full",
                     NetTypeEnumToString(peer.net_type),
@@ -468,9 +470,9 @@ public:
                     is_asmap_on && peer.mapped_as != 0 ? ToString(peer.mapped_as) : "",
                     max_peer_id_length, // variable spacing
                     peer.id,
-                    max_version_length, // variable spacing
-                    version == "0" ? "" : version,
-                    peer.addr);
+                    IsAddressSelected() ? max_addr_length : 0, // variable spacing
+                    IsAddressSelected() ? peer.addr : "",
+                    IsVersionSelected() && version != "0" ? version : "");
             }
             result += "                   ms     ms  sec  sec  min  min    min\n\n";
         }
