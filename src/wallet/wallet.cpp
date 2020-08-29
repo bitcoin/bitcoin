@@ -2191,7 +2191,7 @@ void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations
 
 std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) const
 {
-    LOCK(cs_wallet);
+    AssertLockHeld(cs_wallet);
     std::set<CTxDestination> result;
     for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book)
     {
