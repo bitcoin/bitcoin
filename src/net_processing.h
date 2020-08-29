@@ -27,9 +27,9 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
-class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
+class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
-    PeerLogicValidation(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
+    PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
                         CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
 
     /**
