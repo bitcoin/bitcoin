@@ -442,7 +442,7 @@ UniValue signhash(const JSONRPCRequest& request)
     }
    
     if (!CHashSigner::VerifyHash(hash, vchSecret.GetPubKey(), vchSig)) {
-        LogPrintf("CSporkMessage::Sign -- VerifyHash() failed\n");
+        LogPrintf("Sign -- VerifyHash() failed\n");
         return false;
     }
     return EncodeBase64(vchSig);
