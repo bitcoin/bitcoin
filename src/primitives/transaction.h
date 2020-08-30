@@ -551,7 +551,7 @@ public:
     // SYSCOIN
     CAmount GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const;
     bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const;
-    uint256 GetNotarySigHash(const CAssetOut &vecOut) const;
+    uint256 GetNotarySigHash(const CAssetOut &vecOut, const std::vector<unsigned char> &keyId) const;
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
