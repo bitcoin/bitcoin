@@ -187,36 +187,12 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 
 bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 {
-    std::string strError;
-
-    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
-        uint256 hash = GetSignatureHash();
-
-        if (!CHashSigner::VerifyHash(hash, keyID, vchSig)) {
-            // could be a signature in old format
-            std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                     std::to_string(nVoteSignal) + "|" +
-                                     std::to_string(nVoteOutcome) + "|" +
-                                     std::to_string(nTime);
-
-            if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage)) {
-                // nope, not in old format either
-                LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed\n");
-                return false;
-            }
-        }
-    } else {
-        std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                 std::to_string(nVoteSignal) + "|" +
-                                 std::to_string(nVoteOutcome) + "|" +
-                                 std::to_string(nTime);
-
-        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage)) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n");
-            return false;
-        }
+    uint256 hash = GetSignatureHash();
+    if (!CHashSigner::VerifyHash(hash, keyID, vchSig)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed\n");
+        return false;
     }
-
+    
     return true;
 }
 
