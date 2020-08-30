@@ -33,6 +33,9 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const uint32_t &nAsset = it.key;
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+        if(!it.vchNotarySig.empty()) {
+            oAssetAllocationReceiversObj.__pushKV("notary_sig", HexStr(it.vchNotarySig));
+        }
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
         for(const auto& voutAsset: it.values){
             nTotal += voutAsset.nValue;
