@@ -1254,7 +1254,7 @@ bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
 
     std::vector<std::pair<int, size_t> > vecInputsByRounds;
 
-    for (int i = 0; i < CPrivateSendClientOptions::GetRounds(); i++) {
+    for (int i = 0; i < CPrivateSendClientOptions::GetRounds() + CPrivateSendClientOptions::GetRandomRounds(); i++) {
         if (PrepareDenominate(i, i, strError, vecPSInOutPairs, vecPSInOutPairsTmp, true)) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
             vecInputsByRounds.emplace_back(i, vecPSInOutPairsTmp.size());

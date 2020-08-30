@@ -229,6 +229,11 @@ int WalletModel::getRealOutpointPrivateSendRounds(const COutPoint& outpoint) con
     return wallet->GetRealOutpointPrivateSendRounds(outpoint);
 }
 
+bool WalletModel::isFullyMixed(const COutPoint& outpoint) const
+{
+    return wallet->IsFullyMixed(outpoint);
+}
+
 void WalletModel::updateAddressBook(const QString &address, const QString &label,
         bool isMine, const QString &purpose, int status)
 {
