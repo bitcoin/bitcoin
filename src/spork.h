@@ -22,7 +22,6 @@ class CSporkManager;
 */
 enum {
     SPORK_TEST                                             = 10000,
-    SPORK_6_NEW_SIGS                                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
@@ -97,13 +96,13 @@ public:
     /**
      * Sign will sign the spork message with the given key.
      */
-    bool Sign(const CKey& key, bool fSporkSixActive);
+    bool Sign(const CKey& key);
 
     /**
      * CheckSignature will ensure the spork signature matches the provided public
      * key hash.
      */
-    bool CheckSignature(const CKeyID& pubKeyId, bool fSporkSixActive) const;
+    bool CheckSignature(const CKeyID& pubKeyId) const;
 
     /**
      * GetSignerKeyID is used to recover the spork address of the key used to
@@ -112,7 +111,7 @@ public:
      * This method was introduced along with the multi-signer sporks feature,
      * in order to identify which spork key signed this message.
      */
-    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner, bool fSporkSixActive);
+    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner);
 
     /**
      * Relay is used to send this spork message to other peers.
