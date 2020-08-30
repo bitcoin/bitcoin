@@ -14,6 +14,7 @@
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
+#include <crypto/sha3.h>
 #include <crypto/sha512.h>
 
 /* Number of bytes to hash per iteration */
@@ -41,6 +42,14 @@ static void HASH_SHA256(benchmark::State& state)
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     while (state.KeepRunning())
         CSHA256().Write(in.data(), in.size()).Finalize(hash);
+}
+
+static void HASH_SHA3_256_1M(benchmark::State& state)
+{
+    uint8_t hash[SHA3_256::OUTPUT_SIZE];
+    std::vector<uint8_t> in(BUFFER_SIZE,0);
+    while (state.KeepRunning())
+        SHA3_256().Write(in).Finalize(hash);
 }
 
 static void HASH_SHA256_0032b(benchmark::State& state)
@@ -216,6 +225,7 @@ BENCHMARK(HASH_SHA256, 340);
 BENCHMARK(HASH_DSHA256, 340);
 BENCHMARK(HASH_SHA512, 330);
 BENCHMARK(HASH_X11, 500);
+BENCHMARK(HASH_SHA3_256_1M, 250);
 
 BENCHMARK(HASH_SHA256_0032b, 4 * 1000 * 1000);
 BENCHMARK(HASH_DSHA256_0032b, 2 * 1000 * 1000);
