@@ -230,6 +230,7 @@ public:
     int getNumISLocks() const;
 
     int getRealOutpointPrivateSendRounds(const COutPoint& outpoint) const;
+    bool isFullyMixed(const COutPoint& outpoint) const;
 
 private:
     CWallet *wallet;

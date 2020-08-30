@@ -724,9 +724,8 @@ void CoinControlDialog::updateView()
         int nChildren = 0;
         for (const COutput& out : coins.second) {
             COutPoint outpoint = COutPoint(out.tx->tx->GetHash(), out.i);
-            int nRounds = model->getRealOutpointPrivateSendRounds(outpoint);
 
-            if ((coinControl()->IsUsingPrivateSend() && nRounds >= privateSendClient.nPrivateSendRounds) || !(coinControl()->IsUsingPrivateSend())) {
+            if ((coinControl()->IsUsingPrivateSend() && model->isFullyMixed(outpoint)) || !(coinControl()->IsUsingPrivateSend())) {
                 nSum += out.tx->tx->vout[out.i].nValue;
                 nChildren++;
 
@@ -777,6 +776,7 @@ void CoinControlDialog::updateView()
                 itemOutput->setData(COLUMN_DATE, Qt::UserRole, QVariant((qlonglong)out.tx->GetTxTime()));
 
                 // PrivateSend rounds
+                int nRounds = model->getRealOutpointPrivateSendRounds(outpoint);
                 if (nRounds >= 0 || LogAcceptCategory(BCLog::PRIVATESEND)) {
                     itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, QString::number(nRounds));
                 } else {
