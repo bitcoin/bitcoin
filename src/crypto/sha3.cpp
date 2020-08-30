@@ -30,48 +30,81 @@ void KeccakF(uint64_t (&st)[25])
         0x8000000000008002, 0x8000000000000080, 0x000000000000800a, 0x800000008000000a,
         0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008
     };
-    static constexpr int ROTC[24] = {
-        1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
-        27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44
-    };
-    static constexpr int PILN[24] = {
-        10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4,
-        15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1
-    };
     static constexpr int ROUNDS = 24;
 
     for (int round = 0; round < ROUNDS; ++round) {
-        uint64_t bc[5], t;
+        uint64_t bc0, bc1, bc2, bc3, bc4, t;
 
         // Theta
-        for (int i = 0; i < 5; i++) {
-            bc[i] = st[i] ^ st[i + 5] ^ st[i + 10] ^ st[i + 15] ^ st[i + 20];
-        }
-
-        for (int i = 0; i < 5; i++) {
-            t = bc[(i + 4) % 5] ^ Rotl(bc[(i + 1) % 5], 1);
-            for (int j = 0; j < 25; j += 5) st[j + i] ^= t;
-        }
+        bc0 = st[0] ^ st[5] ^ st[10] ^ st[15] ^ st[20];
+        bc1 = st[1] ^ st[6] ^ st[11] ^ st[16] ^ st[21];
+        bc2 = st[2] ^ st[7] ^ st[12] ^ st[17] ^ st[22];
+        bc3 = st[3] ^ st[8] ^ st[13] ^ st[18] ^ st[23];
+        bc4 = st[4] ^ st[9] ^ st[14] ^ st[19] ^ st[24];
+        t = bc4 ^ Rotl(bc1, 1); st[0] ^= t; st[5] ^= t; st[10] ^= t; st[15] ^= t; st[20] ^= t;
+        t = bc0 ^ Rotl(bc2, 1); st[1] ^= t; st[6] ^= t; st[11] ^= t; st[16] ^= t; st[21] ^= t;
+        t = bc1 ^ Rotl(bc3, 1); st[2] ^= t; st[7] ^= t; st[12] ^= t; st[17] ^= t; st[22] ^= t;
+        t = bc2 ^ Rotl(bc4, 1); st[3] ^= t; st[8] ^= t; st[13] ^= t; st[18] ^= t; st[23] ^= t;
+        t = bc3 ^ Rotl(bc0, 1); st[4] ^= t; st[9] ^= t; st[14] ^= t; st[19] ^= t; st[24] ^= t;
 
         // Rho Pi
         t = st[1];
-        for (int i = 0; i < 24; i++) {
-            int j = PILN[i];
-            bc[0] = st[j];
-            st[j] = Rotl(t, ROTC[i]);
-            t = bc[0];
-        }
+        bc0 = st[10]; st[10] = Rotl(t, 1); t = bc0;
+        bc0 = st[7]; st[7] = Rotl(t, 3); t = bc0;
+        bc0 = st[11]; st[11] = Rotl(t, 6); t = bc0;
+        bc0 = st[17]; st[17] = Rotl(t, 10); t = bc0;
+        bc0 = st[18]; st[18] = Rotl(t, 15); t = bc0;
+        bc0 = st[3]; st[3] = Rotl(t, 21); t = bc0;
+        bc0 = st[5]; st[5] = Rotl(t, 28); t = bc0;
+        bc0 = st[16]; st[16] = Rotl(t, 36); t = bc0;
+        bc0 = st[8]; st[8] = Rotl(t, 45); t = bc0;
+        bc0 = st[21]; st[21] = Rotl(t, 55); t = bc0;
+        bc0 = st[24]; st[24] = Rotl(t, 2); t = bc0;
+        bc0 = st[4]; st[4] = Rotl(t, 14); t = bc0;
+        bc0 = st[15]; st[15] = Rotl(t, 27); t = bc0;
+        bc0 = st[23]; st[23] = Rotl(t, 41); t = bc0;
+        bc0 = st[19]; st[19] = Rotl(t, 56); t = bc0;
+        bc0 = st[13]; st[13] = Rotl(t, 8); t = bc0;
+        bc0 = st[12]; st[12] = Rotl(t, 25); t = bc0;
+        bc0 = st[2]; st[2] = Rotl(t, 43); t = bc0;
+        bc0 = st[20]; st[20] = Rotl(t, 62); t = bc0;
+        bc0 = st[14]; st[14] = Rotl(t, 18); t = bc0;
+        bc0 = st[22]; st[22] = Rotl(t, 39); t = bc0;
+        bc0 = st[9]; st[9] = Rotl(t, 61); t = bc0;
+        bc0 = st[6]; st[6] = Rotl(t, 20); t = bc0;
+        st[1] = Rotl(t, 44);
 
-        // Chi
-        for (int j = 0; j < 25; j += 5) {
-            for (int i = 0; i < 5; i++) bc[i] = st[j + i];
-            for (int i = 0; i < 5; i++) {
-                st[j + i] ^= (~bc[(i + 1) % 5]) & bc[(i + 2) % 5];
-            }
-        }
-
-        //  Iota
-        st[0] ^= RNDC[round];
+        // Chi Iota
+        bc0 = st[0]; bc1 = st[1]; bc2 = st[2]; bc3 = st[3]; bc4 = st[4];
+        st[0] = bc0 ^ (~bc1 & bc2) ^ RNDC[round];
+        st[1] = bc1 ^ (~bc2 & bc3);
+        st[2] = bc2 ^ (~bc3 & bc4);
+        st[3] = bc3 ^ (~bc4 & bc0);
+        st[4] = bc4 ^ (~bc0 & bc1);
+        bc0 = st[5]; bc1 = st[6]; bc2 = st[7]; bc3 = st[8]; bc4 = st[9];
+        st[5] = bc0 ^ (~bc1 & bc2);
+        st[6] = bc1 ^ (~bc2 & bc3);
+        st[7] = bc2 ^ (~bc3 & bc4);
+        st[8] = bc3 ^ (~bc4 & bc0);
+        st[9] = bc4 ^ (~bc0 & bc1);
+        bc0 = st[10]; bc1 = st[11]; bc2 = st[12]; bc3 = st[13]; bc4 = st[14];
+        st[10] = bc0 ^ (~bc1 & bc2);
+        st[11] = bc1 ^ (~bc2 & bc3);
+        st[12] = bc2 ^ (~bc3 & bc4);
+        st[13] = bc3 ^ (~bc4 & bc0);
+        st[14] = bc4 ^ (~bc0 & bc1);
+        bc0 = st[15]; bc1 = st[16]; bc2 = st[17]; bc3 = st[18]; bc4 = st[19];
+        st[15] = bc0 ^ (~bc1 & bc2);
+        st[16] = bc1 ^ (~bc2 & bc3);
+        st[17] = bc2 ^ (~bc3 & bc4);
+        st[18] = bc3 ^ (~bc4 & bc0);
+        st[19] = bc4 ^ (~bc0 & bc1);
+        bc0 = st[20]; bc1 = st[21]; bc2 = st[22]; bc3 = st[23]; bc4 = st[24];
+        st[20] = bc0 ^ (~bc1 & bc2);
+        st[21] = bc1 ^ (~bc2 & bc3);
+        st[22] = bc2 ^ (~bc3 & bc4);
+        st[23] = bc3 ^ (~bc4 & bc0);
+        st[24] = bc4 ^ (~bc0 & bc1);
     }
 }
 
