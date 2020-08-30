@@ -4,6 +4,10 @@ variables:
   DOCKER_DRIVER: overlay2
   FAST_MODE: "false" # when "true", only run linter on arm and unit/functional tests on linux64, skip everything else
 
+workflow:
+  rules:
+    - when: always
+
 stages:
   - builder-image
   - build-depends
