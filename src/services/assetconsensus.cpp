@@ -350,7 +350,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         CAsset theAsset;
         // if asset has notary signature requirement set
         if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
-            if (!CHashSigner::VerifyHash(tx.GetNotarySigHash(vecOut), CKeyID(uint160(theAsset.vchNotaryKeyID)), vecOut.vchNotarySig)) {
+            if (!CHashSigner::VerifyHash(tx.GetNotarySigHash(vecOut, theAsset.vchNotaryKeyID), CKeyID(uint160(theAsset.vchNotaryKeyID)), vecOut.vchNotarySig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
         }
