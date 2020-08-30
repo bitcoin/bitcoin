@@ -373,6 +373,11 @@ public:
         if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
 
+        const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
+        if (networkinfo["version"].get_int() < 209900) {
+            throw std::runtime_error("-netinfo requires bitcoind server to be running v0.21.0 and up");
+        }
+
         // Count peer connection totals, and if m_verbose is true, store peer data in a vector of structs.
         const int64_t time_now{GetSystemTimeInSeconds()};
         int ipv4_i{0}, ipv6_i{0}, onion_i{0}, block_relay_i{0}, total_i{0}; // inbound conn counters
@@ -430,7 +435,6 @@ public:
         }
 
         // Generate report header.
-        const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
         std::string result{strprintf("%s %s%s - %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
 
         // Report detailed peer connections list sorted by direction and minimum ping time.
