@@ -24,9 +24,9 @@
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
 
-extern UniValue importmulti(const JSONRPCRequest& request);
-extern UniValue dumpwallet(const JSONRPCRequest& request);
-extern UniValue importwallet(const JSONRPCRequest& request);
+RPCHelpMan importmulti();
+RPCHelpMan dumpwallet();
+RPCHelpMan importwallet();
 
 // Ensure that fee levels defined in the wallet are at least as high
 // as the default levels for node policy.
@@ -219,7 +219,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         request.params.setArray();
         request.params.push_back(keys);
 
-        UniValue response = importmulti(request);
+        UniValue response = importmulti().HandleRequest(request);
         BOOST_CHECK_EQUAL(response.write(),
             strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Rescan failed for key with creation "
                       "timestamp %d. There was an error reading a block from time %d, which is after or within %d "
@@ -274,7 +274,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         request.params.setArray();
         request.params.push_back(backup_file);
 
-        ::dumpwallet(request);
+        ::dumpwallet().HandleRequest(request);
         RemoveWallet(wallet);
     }
 
@@ -291,7 +291,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         request.params.push_back(backup_file);
         AddWallet(wallet);
         wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
-        ::importwallet(request);
+        ::importwallet().HandleRequest(request);
         RemoveWallet(wallet);
 
         BOOST_CHECK_EQUAL(wallet->mapWallet.size(), 3U);
