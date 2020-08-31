@@ -1047,13 +1047,13 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
  [ AC_MSG_RESULT(no)]
 )
 
-dnl LevelDB platform checks
 AC_MSG_CHECKING(for fdatasync)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
  [[ fdatasync(0); ]])],
  [ AC_MSG_RESULT(yes); HAVE_FDATASYNC=1 ],
  [ AC_MSG_RESULT(no); HAVE_FDATASYNC=0 ]
 )
+AC_DEFINE_UNQUOTED([HAVE_FDATASYNC], [$HAVE_FDATASYNC], [Define to 1 if fdatasync is available.])
 
 AC_MSG_CHECKING(for F_FULLFSYNC)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
