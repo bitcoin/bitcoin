@@ -6,10 +6,9 @@
 #define BITCOIN_WALLET_COINSELECTION_H
 
 #include <amount.h>
+#include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
-
-class CFeeRate;
 
 //! target minimum change amount
 static constexpr CAmount MIN_CHANGE{COIN / 100};
@@ -78,15 +77,20 @@ struct OutputGroup
     size_t m_descendants{0};
     CAmount effective_value{0};
     CAmount fee{0};
+    CFeeRate m_effective_feerate{0};
     CAmount long_term_fee{0};
+    CFeeRate m_long_term_feerate{0};
 
     OutputGroup() {}
+    OutputGroup(const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate) :
+        m_effective_feerate(effective_feerate),
+        m_long_term_feerate(long_term_feerate)
+    {}
+
     void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants);
     std::vector<CInputCoin>::iterator Discard(const CInputCoin& output);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
 
-    //! Update the OutputGroup's fee, long_term_fee, and effective_value based on the given feerates
-    void SetFees(const CFeeRate effective_feerate, const CFeeRate long_term_feerate);
     OutputGroup GetPositiveOnlyGroup();
 };
 
