@@ -395,7 +395,7 @@ void OptionsDialog::on_okButton_clicked()
     mapper->submit();
     appearance->accept();
 #ifdef ENABLE_WALLET
-    for (auto& wallet : model->node().getWallets()) {
+    for (auto& wallet : model->node().walletClient().getWallets()) {
         wallet->coinJoin().resetCachedBlocks();
         wallet->markDirty();
     }

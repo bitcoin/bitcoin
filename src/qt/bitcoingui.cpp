@@ -1339,7 +1339,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     // Disabling macOS App Nap on initial sync, disk, reindex operations and mixing.
     bool disableAppNap = !m_node.masternodeSync().isSynced();
 #ifdef ENABLE_WALLET
-    for (const auto& wallet : m_node.getWallets()) {
+    for (const auto& wallet : m_node.walletClient().getWallets()) {
         disableAppNap |= wallet->coinJoin().isMixing();
     }
 #endif // ENABLE_WALLET
@@ -1706,7 +1706,7 @@ void BitcoinGUI::showIncomingTransactions()
             // On new transaction, make an info balloon
             QString msg = tr("Date: %1\n").arg(itx.date) +
                           tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(itx.unit, itx.amount, true));
-            if (m_node.getWallets().size() > 1 && !itx.walletName.isEmpty()) {
+            if (m_node.walletClient().getWallets().size() > 1 && !itx.walletName.isEmpty()) {
                 msg += tr("Wallet: %1\n").arg(itx.walletName);
             }
             msg += tr("Type: %1\n").arg(itx.type);
