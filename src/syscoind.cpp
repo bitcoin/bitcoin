@@ -45,7 +45,6 @@ static void WaitForShutdown(NodeContext& node)
 static bool AppInit(int argc, char* argv[])
 {
     NodeContext node;
-    node.chain = interfaces::MakeChain(node);
 
     bool fRet = false;
 
@@ -146,7 +145,7 @@ static bool AppInit(int argc, char* argv[])
             // If locking the data directory failed, exit immediately
             return false;
         }
-        fRet = AppInitMain(context, node);
+        fRet = AppInitInterfaces(node) && AppInitMain(context, node);
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
