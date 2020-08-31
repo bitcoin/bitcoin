@@ -37,6 +37,6 @@ if [ -z "$NO_DEPENDS" ]; then
 fi
 if [ -n "$PREVIOUS_RELEASES_TO_DOWNLOAD" ]; then
   BEGIN_FOLD previous-versions
-  DOCKER_EXEC contrib/devtools/previous_release.py -b -t "$PREVIOUS_RELEASES_DIR" "${PREVIOUS_RELEASES_TO_DOWNLOAD}"
+  DOCKER_EXEC test/get_previous_releases.py -b -t "$PREVIOUS_RELEASES_DIR" "${PREVIOUS_RELEASES_TO_DOWNLOAD}"
   END_FOLD
 fi

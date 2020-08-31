@@ -6,7 +6,7 @@
 
 Test upgradewallet RPC. Download v0.15.2 v0.16.3 node binaries:
 
-contrib/devtools/previous_release.py -b v0.15.2 v0.16.3
+test/get_previous_releases.py -b v0.15.2 v0.16.3
 """
 
 import os
