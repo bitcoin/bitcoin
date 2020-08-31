@@ -185,21 +185,21 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
                                 : _("press q to shutdown").translated) +
             strprintf("\n%d", nProgress) + "%");
 }
-#ifdef ENABLE_WALLET
-void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
-{
-    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
-    m_connected_wallets.emplace_back(std::move(wallet));
-}
-#endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
     m_handler_init_message = m_node->handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
     m_handler_show_progress = m_node->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+}
+
+void SplashScreen::handleLoadWallet()
+{
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet = m_node->handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
+    m_handler_load_wallet = m_node->walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
+        m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
+        m_connected_wallets.emplace_back(std::move(wallet));
+    });
 #endif
 }
 
