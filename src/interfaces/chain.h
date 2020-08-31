@@ -314,23 +314,10 @@ public:
 
     //! Set mock time.
     virtual void setMockTime(int64_t time) = 0;
-
-    //! Return interfaces for accessing wallets (if any).
-    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 };
 
 //! Return implementation of Chain interface.
 std::unique_ptr<Chain> MakeChain(NodeContext& node);
-
-//! Return implementation of ChainClient interface for a wallet client. This
-//! function will be undefined in builds where ENABLE_WALLET is false.
-//!
-//! Currently, wallets are the only chain clients. But in the future, other
-//! types of chain clients could be added, such as tools for monitoring,
-//! analysis, or fee estimation. These clients need to expose their own
-//! MakeXXXClient functions returning their implementations of the ChainClient
-//! interface.
-std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, ArgsManager& args, std::vector<std::string> wallet_filenames);
 
 } // namespace interfaces
 
