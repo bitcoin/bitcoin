@@ -169,10 +169,11 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
-    m_node.chainman = &::g_chainman;
-
     m_node.mempool = &::mempool;
     m_node.mempool->setSanityCheck(1.0);
+
+    m_node.chainman = &::g_chainman;
+
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
 
     ::sporkManager = std::make_unique<CSporkManager>();
@@ -228,7 +229,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb);
+    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor, m_node.evodb, *m_node.mempool);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
