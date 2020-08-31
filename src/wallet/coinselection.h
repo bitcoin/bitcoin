@@ -81,17 +81,6 @@ struct OutputGroup
     CAmount long_term_fee{0};
 
     OutputGroup() {}
-    OutputGroup(std::vector<CInputCoin>&& outputs, bool from_me, CAmount value, int depth, size_t ancestors, size_t descendants)
-    : m_outputs(std::move(outputs))
-    , m_from_me(from_me)
-    , m_value(value)
-    , m_depth(depth)
-    , m_ancestors(ancestors)
-    , m_descendants(descendants)
-    {}
-    OutputGroup(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) : OutputGroup() {
-        Insert(output, depth, from_me, ancestors, descendants);
-    }
     void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants);
     std::vector<CInputCoin>::iterator Discard(const CInputCoin& output);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
