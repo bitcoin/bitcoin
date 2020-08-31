@@ -3845,8 +3845,6 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
 
                 CAmount n = IsSpent(walletEntry.first, i) ? 0 : pcoin->tx->vout[i].nValue;
 
-                if (!balances.count(addr))
-                    balances[addr] = 0;
                 balances[addr] += n;
             }
         }
