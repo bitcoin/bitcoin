@@ -427,13 +427,11 @@ bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool,
     return true;
 }
 
-uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut, const std::vector<unsigned char> &keyId) const {
+uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut) const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     for (const auto& txin : vin) {
         ss << txin.prevout;
     }
-    // ser keyId to avoid dup signatures across same tx + different notarizations
-    ss << keyId;
     CTxDestination txDest;
     ss << vecOut.key;
     for (const auto& voutAsset: vecOut.values) {
