@@ -63,6 +63,7 @@ Currently, the following notifications are supported:
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubsequence=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
@@ -74,6 +75,7 @@ The option to set the PUB socket's outbound message high water mark
     -zmqpubhashblockhwm=n
     -zmqpubrawblockhwm=n
     -zmqpubrawtxhwm=n
+    -zmqpubsequencehwm=address
 
 The high water mark value must be an integer greater than or equal to 0.
 
@@ -87,7 +89,15 @@ Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
 terminator) and the body is the transaction hash (32
-bytes).
+bytes) for all but `sequence` topic. For `sequence`, the body
+is structured as the following based on the type of message:
+
+    <32-byte hash>C :                 Blockhash connected
+    <32-byte hash>D :                 Blockhash disconnected
+    <32-byte hash>R<8-byte LE uint> : Transactionhash removed from mempool for non-block inclusion reason
+    <32-byte hash>A<8-byte LE uint> : Transactionhash added mempool
+
+Where the 8-byte uints correspond to the mempool sequence number.
 
 These options can also be provided in bitcoin.conf.
 
@@ -124,13 +134,20 @@ No authentication or authorization is done on connecting clients; it
 is assumed that the ZeroMQ port is exposed only to trusted entities,
 using other means such as firewalling.
 
-Note that when the block chain tip changes, a reorganisation may occur
-and just the tip will be notified. It is up to the subscriber to
-retrieve the chain from the last known block to the new tip. Also note
-that no notification occurs if the tip was in the active chain - this
-is the case after calling invalidateblock RPC.
+Note that for `*block` topics, when the block chain tip changes,
+a reorganisation may occur and just the tip will be notified.
+It is up to the subscriber to retrieve the chain from the last known
+block to the new tip. Also note that no notification will occur if the tip
+was in the active chain--as would be the case after calling invalidateblock RPC.
+In contrast, the `sequence` topic publishes all block connections and
+disconnections.
 
 There are several possibilities that ZMQ notification can get lost
 during transmission depending on the communication type you are
 using. Bitcoind appends an up-counting sequence number to each
 notification which allows listeners to detect lost notifications.
+
+The `sequence` topic refers specifically to the mempool sequence
+number, which is also published along with all mempool events. This
+is a different sequence value than in ZMQ itself in order to allow a total
+ordering of mempool events to be constructed.
