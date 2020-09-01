@@ -568,7 +568,7 @@ private:
     typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
     txlinksMap mapLinks;
 
-    void UpdateParent(txiter entry, txiter parent, bool add);
+    void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void UpdateChild(txiter entry, txiter child, bool add);
 
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs);

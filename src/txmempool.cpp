@@ -978,6 +978,7 @@ void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)
 
 void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add)
 {
+    AssertLockHeld(cs);
     setEntries s;
     if (add && mapLinks[entry].parents.insert(parent).second) {
         cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
