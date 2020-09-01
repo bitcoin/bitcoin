@@ -932,8 +932,17 @@ public:
     // Used for headers announcements - unfiltered blocks to relay
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
 
-    // Block and TXN accept times
+    /** UNIX epoch time of the last block received from this peer that we had
+     * not yet seen (e.g. not already received from another peer), that passed
+     * preliminary validity checks and was saved to disk, even if we don't
+     * connect the block or it eventually fails connection. Used as an inbound
+     * peer eviction criterium in CConnman::AttemptToEvictConnection. */
     std::atomic<int64_t> nLastBlockTime{0};
+
+    /** UNIX epoch time of the last transaction received from this peer that we
+     * had not yet seen (e.g. not already received from another peer) and that
+     * was accepted into our mempool. Used as an inbound peer eviction criterium
+     * in CConnman::AttemptToEvictConnection. */
     std::atomic<int64_t> nLastTXTime{0};
 
     // Ping time measurement:

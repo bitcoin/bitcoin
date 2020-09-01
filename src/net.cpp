@@ -904,10 +904,10 @@ bool CConnman::AttemptToEvictConnection()
     // Protect the 8 nodes with the lowest minimum ping time.
     // An attacker cannot manipulate this metric without physically moving nodes closer to the target.
     EraseLastKElements(vEvictionCandidates, ReverseCompareNodeMinPingTime, 8);
-    // Protect 4 nodes that most recently sent us transactions.
+    // Protect 4 nodes that most recently sent us novel transactions accepted into our mempool.
     // An attacker cannot manipulate this metric without performing useful work.
     EraseLastKElements(vEvictionCandidates, CompareNodeTXTime, 4);
-    // Protect 4 nodes that most recently sent us blocks.
+    // Protect 4 nodes that most recently sent us novel blocks.
     // An attacker cannot manipulate this metric without performing useful work.
     EraseLastKElements(vEvictionCandidates, CompareNodeBlockTime, 4);
     // Protect the half of the remaining nodes which have been connected the longest.
