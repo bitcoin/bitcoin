@@ -336,7 +336,7 @@ public:
     // return a value less than (num_outbound_connections - num_outbound_slots)
     // in cases where some outbound connections are not yet fully connected, or
     // not yet fully disconnected.
-    int GetExtraOutboundCount();
+    int GetExtraFullOutboundCount();
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);

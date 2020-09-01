@@ -3910,7 +3910,7 @@ void PeerManager::ConsiderEviction(CNode& pto, int64_t time_in_seconds)
 void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
 {
     // Check whether we have too many outbound peers
-    int extra_peers = m_connman.GetExtraOutboundCount();
+    int extra_peers = m_connman.GetExtraFullOutboundCount();
     if (extra_peers > 0) {
         // If we have more outbound peers than we target, disconnect one.
         // Pick the outbound peer that least recently announced

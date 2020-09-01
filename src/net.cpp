@@ -1827,18 +1827,18 @@ void CConnman::SetTryNewOutboundPeer(bool flag)
 // Also exclude peers that haven't finished initial connection handshake yet
 // (so that we don't decide we're over our desired connection limit, and then
 // evict some peer that has finished the handshake)
-int CConnman::GetExtraOutboundCount()
+int CConnman::GetExtraFullOutboundCount()
 {
-    int nOutbound = 0;
+    int full_outbound_peers = 0;
     {
         LOCK(cs_vNodes);
         for (const CNode* pnode : vNodes) {
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsOutboundOrBlockRelayConn()) {
-                ++nOutbound;
+            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsFullOutboundConn()) {
+                ++full_outbound_peers;
             }
         }
     }
-    return std::max(nOutbound - m_max_outbound_full_relay - m_max_outbound_block_relay, 0);
+    return std::max(full_outbound_peers - m_max_outbound_full_relay, 0);
 }
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
