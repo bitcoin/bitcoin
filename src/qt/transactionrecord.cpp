@@ -151,13 +151,16 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 } else {
                     bool fMakeCollateral{false};
                     if (wtx.tx->vout.size() == 2) {
-                        CAmount nMaxCollateralAmount = CPrivateSend::GetMaxCollateralAmount();
-                        CAmount nPreMaxCollateralAmount = nMaxCollateralAmount  - CPrivateSend::GetCollateralAmount();
-                        fMakeCollateral =
-                            wtx.tx->vout[0].nValue == nMaxCollateralAmount ||
-                            wtx.tx->vout[1].nValue == nMaxCollateralAmount ||
-                            (wtx.tx->vout[0].nValue == nPreMaxCollateralAmount && CPrivateSend::IsCollateralAmount(wtx.tx->vout[1].nValue)) ||
-                            (wtx.tx->vout[1].nValue == nPreMaxCollateralAmount && CPrivateSend::IsCollateralAmount(wtx.tx->vout[0].nValue));
+                        CAmount nAmount0 = wtx.tx->vout[0].nValue;
+                        CAmount nAmount1 = wtx.tx->vout[1].nValue;
+                        // <case1>, see CPrivateSendClientSession::MakeCollateralAmounts
+                        fMakeCollateral = (nAmount0 == CPrivateSend::GetMaxCollateralAmount() && !CPrivateSend::IsDenominatedAmount(nAmount1) && nAmount1 >= CPrivateSend::GetCollateralAmount()) ||
+                                          (nAmount1 == CPrivateSend::GetMaxCollateralAmount() && !CPrivateSend::IsDenominatedAmount(nAmount0) && nAmount0 >= CPrivateSend::GetCollateralAmount()) ||
+                        // <case2>, see CPrivateSendClientSession::MakeCollateralAmounts
+                                          (nAmount0 == nAmount1 && CPrivateSend::IsCollateralAmount(nAmount0));
+                    } else if (wtx.tx->vout.size() == 1) {
+                        // <case3>, see CPrivateSendClientSession::MakeCollateralAmounts
+                        fMakeCollateral = CPrivateSend::IsCollateralAmount(wtx.tx->vout[0].nValue);
                     }
                     if (fMakeCollateral) {
                         sub.type = TransactionRecord::PrivateSendMakeCollaterals;
