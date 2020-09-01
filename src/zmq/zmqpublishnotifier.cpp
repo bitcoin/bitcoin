@@ -10,6 +10,14 @@
 #include <util/system.h>
 #include <rpc/server.h>
 
+#include <zmq.h>
+
+#include <cstdarg>
+#include <cstddef>
+#include <map>
+#include <string>
+#include <utility>
+
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
 static const char *MSG_HASHBLOCK = "hashblock";

@@ -7,6 +7,7 @@
 
 #include <validationinterface.h>
 #include <list>
+#include <memory>
 
 class CBlockIndex;
 class CZMQAbstractNotifier;
@@ -34,7 +35,7 @@ private:
     CZMQNotificationInterface();
 
     void *pcontext;
-    std::list<CZMQAbstractNotifier*> notifiers;
+    std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
 
 extern CZMQNotificationInterface* g_zmq_notification_interface;
