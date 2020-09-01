@@ -2466,7 +2466,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom.nVersion.load(), pfrom.nStartingHeight,
                       pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToString()) : ""),
-                      pfrom.m_tx_relay == nullptr ? "block-relay" : "full-relay");
+                      pfrom.IsBlockOnlyConn() ? "block-relay" : "full-relay");
         }
 
         if (pfrom.GetCommonVersion() >= SENDHEADERS_VERSION) {
@@ -3923,13 +3923,11 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
             AssertLockHeld(::cs_main);
 
             // Ignore non-outbound peers, or nodes marked for disconnect already
-            if (!pnode->IsOutboundOrBlockRelayConn() || pnode->fDisconnect) return;
+            if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
             CNodeState *state = State(pnode->GetId());
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
-            // Don't evict our block-relay-only peers.
-            if (pnode->m_tx_relay == nullptr) return;
             if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
                 worst_peer = pnode->GetId();
                 oldest_block_announcement = state->m_last_block_announcement;
