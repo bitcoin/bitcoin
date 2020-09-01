@@ -52,8 +52,6 @@ void OptionsModel::Init(bool resetSettings)
 
     checkAndMigrate();
 
-    this->resetSettings = resetSettings;
-
     QSettings settings;
 
     // Ensure restart flag is unset on client startup
@@ -226,7 +224,6 @@ void OptionsModel::Reset()
 
     // Remove all entries from our QSettings object
     settings.clear();
-    resetSettings = true; // Needed in dash.cpp during shotdown to also remove the window positions
 
     // default setting for OptionsModel::StartAtStartup - disabled
     if (GUIUtil::GetStartOnSystemStartup())

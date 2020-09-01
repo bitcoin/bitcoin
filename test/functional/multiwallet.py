@@ -184,5 +184,9 @@ class MultiWalletTest(BitcoinTestFramework):
         # Fail to load if wallet file is a symlink
         assert_raises_rpc_error(-4, "Wallet file verification failed: Invalid -wallet path 'w8_symlink'", self.nodes[0].loadwallet, 'w8_symlink')
 
+        # Fail to load if a directory is specified that doesn't contain a wallet
+        os.mkdir(wallet_dir('empty_wallet_dir'))
+        assert_raises_rpc_error(-18, "Directory empty_wallet_dir does not contain a wallet.dat file", self.nodes[0].loadwallet, 'empty_wallet_dir')
+
 if __name__ == '__main__':
     MultiWalletTest().main()

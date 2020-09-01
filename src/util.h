@@ -50,7 +50,7 @@
 //Dash only features
 
 extern bool fMasternodeMode;
-extern bool fLiteMode;
+extern bool fDisableGovernance;
 extern int nWalletBackups;
 
 // Application startup time (used for uptime calculation)
@@ -225,7 +225,7 @@ bool error(const char* fmt, const Args&... args)
     return false;
 }
 
-void PrintExceptionContinue(const std::exception_ptr pex, const char* pszThread);
+void PrintExceptionContinue(const std::exception_ptr pex, const char* pszExceptionOrigin);
 void FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
@@ -433,9 +433,9 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
 /**
  * .. and a wrapper that just calls func once
  */
-template <typename Callable> void TraceThread(const char* name,  Callable func)
+template <typename Callable> void TraceThread(const std::string name,  Callable func)
 {
-    std::string s = strprintf("dash-%s", name);
+    std::string s = "dash-" + name;
     RenameThread(s.c_str());
     try
     {
@@ -449,7 +449,7 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
     catch (...) {
-        PrintExceptionContinue(std::current_exception(), name);
+        PrintExceptionContinue(std::current_exception(), name.c_str());
         throw;
     }
 }

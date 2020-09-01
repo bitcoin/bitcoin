@@ -17,6 +17,7 @@
 #include <utilmoneystr.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
+#include <wallet/fees.h>
 
 #include <memory>
 #include <univalue.h>
@@ -1504,8 +1505,15 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
     std::vector<CRecipient> vecSend;
     CKeyHolderStorage keyHolderStorageDenom;
 
+    CCoinControl coinControl;
+    // Every input will require at least this much fees in duffs
+    const CAmount nInputFee = GetMinimumFee(148, coinControl, ::mempool, ::feeEstimator, nullptr /* feeCalc */);
+    // Every output will require at least this much fees in duffs
+    const CAmount nOutputFee = GetMinimumFee(34, coinControl, ::mempool, ::feeEstimator, nullptr /* feeCalc */);
+
     CAmount nValueLeft = tallyItem.nAmount;
-    nValueLeft -= CPrivateSend::GetCollateralAmount(); // leave some room for fees
+    // Leave some room for fees, assuming we are going to spend all the outpoints
+    nValueLeft -= tallyItem.vecOutPoints.size() * nInputFee;
 
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CreateDenominated -- 0 - %s nValueLeft: %f\n", EncodeDestination(tallyItem.txdest), (float)nValueLeft / COIN);
 
@@ -1514,7 +1522,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
     if (fCreateMixingCollaterals) {
         CScript scriptCollateral = keyHolderStorageDenom.AddKey(GetWallets()[0]);
         vecSend.push_back((CRecipient){scriptCollateral, CPrivateSend::GetMaxCollateralAmount(), false});
-        nValueLeft -= CPrivateSend::GetMaxCollateralAmount();
+        nValueLeft -= CPrivateSend::GetMaxCollateralAmount() + nOutputFee;
     }
 
     // ****** Add outputs for denoms ************ /
@@ -1546,9 +1554,9 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
             int nOutputs = 0;
 
             auto needMoreOutputs = [&]() {
-                bool fRegular = (nValueLeft >= nDenomValue && nBalanceToDenominate >= nDenomValue);
+                bool fRegular = ((nValueLeft >= nDenomValue + nOutputFee) && nBalanceToDenominate >= nDenomValue);
                 bool fFinal = (fAddFinal
-                               && nValueLeft >= nDenomValue
+                               && nValueLeft >= nDenomValue + nOutputFee
                                && nBalanceToDenominate > 0
                                && nBalanceToDenominate < nDenomValue);
                 if (fFinal) {
@@ -1570,7 +1578,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
                 // increment outputs and subtract denomination amount
                 nOutputs++;
                 currentDenomIt->second++;
-                nValueLeft -= nDenomValue;
+                nValueLeft -= nDenomValue + nOutputFee;
                 nBalanceToDenominate -= nDenomValue;
                 LogPrint(BCLog::PRIVATESEND,
                          "CPrivateSendClientSession::CreateDenominated -- 1 - nDenomValue: %f, totalOutputs: %d, nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f, nBalanceToDenominate: %f\n",
@@ -1585,7 +1593,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
         for (const auto it : mapDenomCount) {
             // Check if this specific denom could use another loop, check that there aren't nPrivateSendDenomsGoal of this
             // denom and that our nValueLeft/nBalanceToDenominate is enough to create one of these denoms, if so, loop again.
-            if (it.second < privateSendClient.nPrivateSendDenomsGoal && nValueLeft >= it.first && nBalanceToDenominate > 0) {
+            if (it.second < privateSendClient.nPrivateSendDenomsGoal && (nValueLeft >= it.first + nOutputFee) && nBalanceToDenominate > 0) {
                 finished = false;
                 LogPrint(BCLog::PRIVATESEND,
                         "CPrivateSendClientSession::CreateDenominated -- 1 - NOT finished - nDenomValue: %f, count: %d, nValueLeft: %f, nBalanceToDenominate: %f\n",
@@ -1601,7 +1609,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
     }
 
     // Now that nPrivateSendDenomsGoal worth of each denom have been created or the max number of denoms given the value of the input, do something with the remainder.
-    if (nValueLeft >= CPrivateSend::GetSmallestDenomination() && nBalanceToDenominate >= CPrivateSend::GetSmallestDenomination()
+    if ((nValueLeft >= CPrivateSend::GetSmallestDenomination() + nOutputFee) && nBalanceToDenominate >= CPrivateSend::GetSmallestDenomination()
            && nOutputsTotal < PRIVATESEND_DENOM_OUTPUTS_THRESHOLD) {
 
         CAmount nLargestDenomValue = vecStandardDenoms.front();
@@ -1611,8 +1619,15 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
             int nOutputs = 0;
 
             // Number of denoms we can create given our denom and the amount of funds we have left
-            int denomsToCreateValue = nValueLeft / nDenomValue;
-            int denomsToCreateBal = nBalanceToDenominate / nDenomValue;
+            int denomsToCreateValue = nValueLeft / (nDenomValue + nOutputFee);
+            // Prefer overshooting the targed balance by larger denoms (hence `+1`) instead of a more
+            // accurate approximation by many smaller denoms. This is ok because when we get here we
+            // should have nPrivateSendDenomsGoal of each smaller denom already. Also, without `+1`
+            // we can end up in a situation when there is already nPrivateSendDenomsHardCap of smaller
+            // denoms yet we can't mix the remaining nBalanceToDenominate because it's smaller than
+            // nDenomValue (and thus denomsToCreateBal == 0), so the target would never get reached
+            // even when there is enough funds for that.
+            int denomsToCreateBal = (nBalanceToDenominate / nDenomValue) + 1;
             // Use the smaller value
             int denomsToCreate = denomsToCreateValue > denomsToCreateBal ? denomsToCreateBal : denomsToCreateValue;
             auto it = mapDenomCount.find(nDenomValue);
@@ -1626,7 +1641,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
                 // increment outputs and subtract denomination amount
                 nOutputs++;
                 it->second++;
-                nValueLeft -= nDenomValue;
+                nValueLeft -= nDenomValue + nOutputFee;
                 nBalanceToDenominate -= nDenomValue;
                 LogPrint(BCLog::PRIVATESEND,
                          "CPrivateSendClientSession::CreateDenominated -- 2 - nDenomValue: %f, totalOutputs: %d, nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f, nBalanceToDenominate: %f\n",
@@ -1652,7 +1667,6 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
 
     // if we have anything left over, it will be automatically send back as change - there is no need to send it manually
 
-    CCoinControl coinControl;
     coinControl.fAllowOtherInputs = false;
     coinControl.fAllowWatchOnly = false;
     coinControl.nCoinType = CoinType::ONLY_NONDENOMINATED;

@@ -226,7 +226,6 @@ UniValue getbestchainlock(const JSONRPCRequest& request)
         throw std::runtime_error(
             "getbestchainlock\n"
             "\nReturns the block hash of the best chainlock. Throws an error if there is no known chainlock yet. "
-            "Will throw an error if running in litemode.\n"
             "\nResult:\n"
             "{\n"
             "  \"blockhash\" : \"hash\",      (string) The block hash hex encoded\n"
@@ -238,10 +237,6 @@ UniValue getbestchainlock(const JSONRPCRequest& request)
             + HelpExampleRpc("getbestchainlock", "")
         );
     UniValue result(UniValue::VOBJ);
-
-    if (fLiteMode) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Chainlock information not available in litemode.");
-    }
 
     llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetBestChainLock();
     if (clsig.IsNull()) {
@@ -419,7 +414,7 @@ std::string EntryDescriptionString()
            "    \"depends\" : [               (array) unconfirmed transactions used as inputs for this transaction\n"
            "        \"transactionid\",        (string) parent transaction id\n"
            "       ... ],\n"
-           "    \"instantlock\" : true|false  (boolean) True if this transaction was locked via InstantSend. Always false if litemode is enabled\n";
+           "    \"instantlock\" : true|false  (boolean) True if this transaction was locked via InstantSend\n";
 }
 
 void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
@@ -1681,7 +1676,7 @@ UniValue getmempoolinfo(const JSONRPCRequest& request)
             "  \"maxmempool\": xxxxx,         (numeric) Maximum memory usage for the mempool\n"
             "  \"mempoolminfee\": xxxxx       (numeric) Minimum fee rate in " + CURRENCY_UNIT + "/kB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee\n"
             "  \"minrelaytxfee\": xxxxx       (numeric) Current minimum relay fee for transactions\n"
-            "  \"instantsendlocks\": xxxxx,   (numeric) Number of unconfirmed instant send locks. Always 0 if litemode is enabled\n"
+            "  \"instantsendlocks\": xxxxx,   (numeric) Number of unconfirmed instant send locks\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmempoolinfo", "")

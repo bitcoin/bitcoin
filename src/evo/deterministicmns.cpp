@@ -670,9 +670,9 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         // has been reached, but the block hash will then point to the block at nMasternodeMinimumConfirmations
         int nConfirmations = pindexPrev->nHeight - dmn->pdmnState->nRegisteredHeight;
         if (nConfirmations >= Params().GetConsensus().nMasternodeMinimumConfirmations) {
-            CDeterministicMNState newState = *dmn->pdmnState;
-            newState.UpdateConfirmedHash(dmn->proTxHash, pindexPrev->GetBlockHash());
-            newList.UpdateMN(dmn->proTxHash, std::make_shared<CDeterministicMNState>(newState));
+            auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+            newState->UpdateConfirmedHash(dmn->proTxHash, pindexPrev->GetBlockHash());
+            newList.UpdateMN(dmn->proTxHash, newState);
         }
     });
 
@@ -730,17 +730,14 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
 
             dmn->nOperatorReward = proTx.nOperatorReward;
-            dmn->pdmnState = std::make_shared<CDeterministicMNState>(proTx);
 
-            CDeterministicMNState dmnState = *dmn->pdmnState;
-            dmnState.nRegisteredHeight = nHeight;
-
+            auto dmnState = std::make_shared<CDeterministicMNState>(proTx);
+            dmnState->nRegisteredHeight = nHeight;
             if (proTx.addr == CService()) {
                 // start in banned pdmnState as we need to wait for a ProUpServTx
-                dmnState.nPoSeBanHeight = nHeight;
+                dmnState->nPoSeBanHeight = nHeight;
             }
-
-            dmn->pdmnState = std::make_shared<CDeterministicMNState>(dmnState);
+            dmn->pdmnState = dmnState;
 
             newList.AddMN(dmn);
 

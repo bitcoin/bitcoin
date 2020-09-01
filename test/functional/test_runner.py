@@ -156,7 +156,7 @@ BASE_SCRIPTS= [
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work in litemode though.
+    'pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work governance validation disabled though.
     # vv Tests less than 20m vv
     'smartfees.py',
     # vv Tests less than 5m vv
