@@ -534,8 +534,6 @@ class WalletTest(SyscoinTestFramework):
         maintenance = [
             '-rescan',
             '-reindex',
-            '-zapwallettxes=1',
-            '-zapwallettxes=2',
         ]
         chainlimit = 6
         for m in maintenance:
