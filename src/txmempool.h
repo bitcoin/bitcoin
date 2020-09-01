@@ -757,9 +757,10 @@ public:
     }
 
     /** Returns whether a txid is in the unbroadcast set */
-    bool IsUnbroadcastTx(const uint256& txid) const {
-        LOCK(cs);
-        return (m_unbroadcast_txids.count(txid) != 0);
+    bool IsUnbroadcastTx(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        return m_unbroadcast_txids.count(txid) != 0;
     }
 
 private:
