@@ -83,7 +83,7 @@ static void ApplyStats(CCoinsStats& stats, T& hash_obj, const uint256& hash, con
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point)
+static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point)
 {
     stats = CCoinsStats();
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
@@ -92,7 +92,8 @@ static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const
     stats.hashBlock = pcursor->GetBestBlock();
     {
         LOCK(cs_main);
-        stats.nHeight = g_chainman.m_blockman.LookupBlockIndex(stats.hashBlock)->nHeight;
+        assert(std::addressof(g_chainman.m_blockman) == std::addressof(blockman));
+        stats.nHeight = blockman.LookupBlockIndex(stats.hashBlock)->nHeight;
     }
 
     PrepareHash(hash_obj, stats);
@@ -126,19 +127,19 @@ static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const
     return true;
 }
 
-bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, CoinStatsHashType hash_type, const std::function<void()>& interruption_point)
+bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, CoinStatsHashType hash_type, const std::function<void()>& interruption_point)
 {
     switch (hash_type) {
     case(CoinStatsHashType::HASH_SERIALIZED): {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        return GetUTXOStats(view, stats, ss, interruption_point);
+        return GetUTXOStats(view, blockman, stats, ss, interruption_point);
     }
     case(CoinStatsHashType::MUHASH): {
         MuHash3072 muhash;
-        return GetUTXOStats(view, stats, muhash, interruption_point);
+        return GetUTXOStats(view, blockman, stats, muhash, interruption_point);
     }
     case(CoinStatsHashType::NONE): {
-        return GetUTXOStats(view, stats, nullptr, interruption_point);
+        return GetUTXOStats(view, blockman, stats, nullptr, interruption_point);
     }
     } // no default case, so the compiler can warn about missing cases
     assert(false);

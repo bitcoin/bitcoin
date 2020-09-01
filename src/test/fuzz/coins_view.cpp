@@ -264,7 +264,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 CCoinsStats stats;
                 bool expected_code_path = false;
                 try {
-                    (void)GetUTXOStats(&coins_view_cache, stats, CoinStatsHashType::HASH_SERIALIZED);
+                    (void)GetUTXOStats(&coins_view_cache, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), stats, CoinStatsHashType::HASH_SERIALIZED);
                 } catch (const std::logic_error&) {
                     expected_code_path = true;
                 }
