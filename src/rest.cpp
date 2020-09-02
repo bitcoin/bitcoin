@@ -228,7 +228,8 @@ static bool rest_headers(const util::Ref& context,
     }
 }
 
-static bool rest_block(HTTPRequest* req,
+static bool rest_block(const util::Ref& context,
+                       HTTPRequest* req,
                        const std::string& strURIPart,
                        bool showTxDetails)
 {
@@ -294,12 +295,12 @@ static bool rest_block(HTTPRequest* req,
 
 static bool rest_block_extended(const util::Ref& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    return rest_block(req, strURIPart, true);
+    return rest_block(context, req, strURIPart, true);
 }
 
 static bool rest_block_notxdetails(const util::Ref& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    return rest_block(req, strURIPart, false);
+    return rest_block(context, req, strURIPart, false);
 }
 
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
