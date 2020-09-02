@@ -14,7 +14,7 @@ altintegration::Altintegration& GetPop();
 
 void SetPopConfig(const altintegration::Config& config);
 
-void SetPop(std::shared_ptr<altintegration::Repository>& db);
+void SetPop(std::shared_ptr<altintegration::PayloadsProvider>& db);
 
 std::string toPrettyString(const altintegration::Altintegration& pop);
 

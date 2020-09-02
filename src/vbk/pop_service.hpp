@@ -6,8 +6,9 @@
 #ifndef BITCOIN_SRC_VBK_POP_SERVICE_HPP
 #define BITCOIN_SRC_VBK_POP_SERVICE_HPP
 
+#include <veriblock/storage/block_batch_adaptor.hpp>
+#include <vbk/adaptors/payloads_provider.hpp>
 #include "pop_common.hpp"
-#include <veriblock/storage/batch_adaptor.hpp>
 
 class BlockValidationState;
 class CBlock;
@@ -27,6 +28,8 @@ using PoPRewards = std::map<CScript, CAmount>;
 
 void SetPop(CDBWrapper& db);
 
+PayloadsProvider& GetPayloadsProvider();
+
 bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state);
 bool checkPopDataSize(const altintegration::PopData& popData, altintegration::ValidationState& state);
 bool popdataStatelessValidation(const altintegration::PopData& popData, altintegration::ValidationState& state);
@@ -43,18 +46,18 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks);
 //! returns true if all tips are stored in database, false otherwise
 bool hasPopData(CBlockTreeDB& db);
 altintegration::PopData getPopData();
-void saveTrees(altintegration::BatchAdaptor& batch);
+void saveTrees(altintegration::BlockBatchAdaptor& batch);
 bool loadTrees(CDBIterator& iter);
-
-void updatePopMempoolForReorg();
-
-void addDisconnectedPopdata(const altintegration::PopData& popData);
 
 void removePayloadsFromMempool(const altintegration::PopData& popData);
 
 int compareForks(const CBlockIndex& left, const CBlockIndex& right);
 
 CAmount getCoinbaseSubsidy(const CAmount& subsidy);
+
+void updatePopMempoolForReorg();
+
+void addDisconnectedPopdata(const altintegration::PopData& popData);
 
 } // namespace VeriBlock
 

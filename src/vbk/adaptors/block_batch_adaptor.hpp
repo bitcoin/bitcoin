@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef INTEGRATION_REFERENCE_BTC_BATCH_ADAPTER_HPP
-#define INTEGRATION_REFERENCE_BTC_BATCH_ADAPTER_HPP
+#ifndef INTEGRATION_REFERENCE_BTC_BLOCK_BATCH_ADAPTOR_HPP
+#define INTEGRATION_REFERENCE_BTC_BLOCK_BATCH_ADAPTOR_HPP
 
 #include <dbwrapper.h>
-#include <veriblock/storage/batch_adaptor.hpp>
+#include <veriblock/storage/block_batch_adaptor.hpp>
 
 namespace VeriBlock {
 
@@ -18,8 +18,8 @@ constexpr const char DB_VBK_TIP = 'w';
 constexpr const char DB_ALT_BLOCK = 'E';
 constexpr const char DB_ALT_TIP = 'e';
 
-struct BatchAdapter : public altintegration::BatchAdaptor {
-    ~BatchAdapter() override = default;
+struct BlockBatchAdaptor : public altintegration::BlockBatchAdaptor {
+    ~BlockBatchAdaptor() override = default;
 
     static std::pair<char, std::string> vbktip()
     {
@@ -34,7 +34,7 @@ struct BatchAdapter : public altintegration::BatchAdaptor {
         return std::make_pair(DB_ALT_TIP, "alttip");
     }
 
-    explicit BatchAdapter(CDBBatch& batch) : batch_(batch)
+    explicit BlockBatchAdaptor(CDBBatch& batch) : batch_(batch)
     {
     }
 
@@ -83,4 +83,4 @@ private:
 
 } // namespace VeriBlock
 
-#endif //INTEGRATION_REFERENCE_BTC_BATCH_ADAPTER_HPP
+#endif //INTEGRATION_REFERENCE_BTC_BLOCK_BATCH_ADAPTOR_HPP

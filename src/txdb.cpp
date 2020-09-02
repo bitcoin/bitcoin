@@ -17,7 +17,7 @@
 #include <stdint.h>
 
 #include <boost/thread.hpp>
-#include <vbk/adaptors/batch_adapter.hpp>
+#include <vbk/adaptors/block_batch_adaptor.hpp>
 #include <vbk/pop_service.hpp>
 
 static const char DB_COIN = 'C';
@@ -235,7 +235,7 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     }
 
     // write BTC/VBK/ALT blocks
-    auto adaptor = VeriBlock::BatchAdapter(batch);
+    auto adaptor = VeriBlock::BlockBatchAdaptor(batch);
     VeriBlock::saveTrees(adaptor);
 
     return WriteBatch(batch, true);

@@ -17,7 +17,6 @@
 #include <fstream>
 #include <set>
 
-#include <vbk/adaptors/univalue_json.hpp>
 #include <vbk/merkle.hpp>
 #include <vbk/pop_service.hpp>
 #include <veriblock/mempool_result.hpp>
@@ -434,7 +433,7 @@ bool GetPayload(
     }
 
     // search in the alttree storage
-    const auto& containing = pop.altTree->getStorage().getContainingAltBlocks(pid.asVector());
+    const auto& containing = pop.altTree->getPayloadsIndex().getContainingAltBlocks(pid.asVector());
     if (containing.size() == 0) return false;
 
     // fill containing blocks

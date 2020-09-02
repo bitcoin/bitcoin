@@ -115,10 +115,8 @@ VBK_H = \
   vbk/p2p_sync.hpp \
   vbk/util.hpp \
   vbk/adaptors/univalue_json.hpp \
-  vbk/adaptors/batch_adapter.hpp \
-  vbk/adaptors/batch.hpp \
-  vbk/adaptors/repository.hpp \
-  vbk/adaptors/cursor.hpp
+  vbk/adaptors/block_batch_adaptor.hpp \
+  vbk/adaptors/payloads_provider.hpp
 
 ### VeriBlock section end
 
@@ -694,8 +692,8 @@ if GLIBC_BACK_COMPAT
 endif
 
 libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1) $(LIBUNIVALUE)
+libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -I$(srcdir)/univalue/include -DBUILD_BITCOIN_INTERNAL
 libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif

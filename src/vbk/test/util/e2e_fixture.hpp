@@ -46,7 +46,7 @@ struct E2eFixture : public TestChain100Setup {
     E2eFixture()
     {
         altintegration::SetLogger<TestLogger>();
-        altintegration::GetLogger().level = altintegration::LogLevel::off;
+        altintegration::GetLogger().level = altintegration::LogLevel::warn;
         pop = &VeriBlock::GetPop();
     }
 
