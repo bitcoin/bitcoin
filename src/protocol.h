@@ -546,10 +546,20 @@ public:
 
     // Single-message helper methods
     bool IsMsgTx()        const { return type == MSG_TX; }
+    bool IsMsgBlk() const { return type == MSG_BLOCK; }
     bool IsMsgDstx()       const { return type == MSG_DSTX; }
+    bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
+    bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
 
     // Combined-message helper methods
-    bool IsGenTxMsg()     const { return type == MSG_TX || type == MSG_DSTX; }
+    bool IsGenTxMsg() const
+    {
+        return type == MSG_TX || type == MSG_DSTX;
+    }
+    bool IsGenBlkMsg() const
+    {
+        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK;
+    }
 
 private:
     const char* GetCommandInternal() const;

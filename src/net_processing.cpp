@@ -353,6 +353,7 @@ private:
      * we fully-validated them at some point.
      */
     bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, const CInv& inv, CConnman& connman, llmq::CInstantSendManager& isman);
 
     /**
@@ -1845,9 +1846,6 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
                    (g_txindex != nullptr && g_txindex->HasTx(inv.hash));
         }
 
-    case MSG_BLOCK:
-        return m_chainman.m_blockman.LookupBlockIndex(inv.hash) != nullptr;
-
     /*
         Dash Related Inventory Messages
 
@@ -1884,6 +1882,11 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
 
     // Don't know what it is, just say we already got one
     return true;
+}
+
+bool PeerManagerImpl::AlreadyHaveBlock(const uint256& block_hash)
+{
+    return m_chainman.m_blockman.LookupBlockIndex(block_hash) != nullptr;
 }
 
 void PeerManagerImpl::RelayTransaction(const uint256& txid)
@@ -1981,7 +1984,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, const CChainParams& chai
     // disconnect node in case we have reached the outbound limit for serving historical blocks
     if (send &&
         connman.OutboundTargetReached(true) &&
-        (((pindexBestHeader != nullptr) && (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.type == MSG_FILTERED_BLOCK) &&
+        (((pindexBestHeader != nullptr) && (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.IsMsgFilteredBlk()) &&
         !pfrom.HasPermission(PF_DOWNLOAD) // nodes with the download permission may exceed target
     ) {
         LogPrint(BCLog::NET, "historical block serving limit reached, disconnect peer=%d\n", pfrom.GetId());
@@ -2015,9 +2018,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, const CChainParams& chai
             pblock = pblockRead;
         }
         if (pblock) {
-            if (inv.type == MSG_BLOCK)
+            if (inv.IsMsgBlk()) {
                 connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
-            else if (inv.type == MSG_FILTERED_BLOCK) {
+            } else if (inv.IsMsgFilteredBlk()) {
                 bool sendMerkleBlock = false;
                 CMerkleBlock merkleBlock;
                 if (pfrom.RelayAddrsWithConn()) {
@@ -2047,8 +2050,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, const CChainParams& chai
                     }
                 }
                 // else
-                // no response
-            } else if (inv.type == MSG_CMPCT_BLOCK) {
+                    // no response
+            } else if (inv.IsMsgCmpctBlk()) {
                 // If a peer is asking for old blocks, we're almost guaranteed
                 // they won't have a useful mempool to match against a compact block,
                 // and we don't feel like constructing the object for them, so
@@ -2280,7 +2283,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     // expensive to process.
     if (it != peer.m_getdata_requests.end() && !pfrom.fPauseSend) {
         const CInv &inv = *it++;
-        if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK) {
+        if (inv.IsGenBlkMsg()) {
             ProcessGetBlockData(pfrom, m_chainparams, inv, m_connman, *m_llmq_ctx->isman);
         }
         // else: If the first item on the queue is an unknown type, we erase it
@@ -3247,21 +3250,19 @@ void PeerManagerImpl::ProcessMessage(
         const auto current_time = GetTime<std::chrono::microseconds>();
         uint256* best_block{nullptr};
 
-        for (CInv &inv : vInv)
-        {
+        for (CInv& inv : vInv) {
             if(!inv.IsKnownType()) {
                 LogPrint(BCLog::NET, "got inv of unknown type %d: %s peer=%d\n", inv.type, inv.hash.ToString(), pfrom.GetId());
                 continue;
             }
 
-            if (interruptMsgProc)
-                return;
+            if (interruptMsgProc) return;
 
-            bool fAlreadyHave = AlreadyHave(inv);
-            LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
-            statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
+            if (inv.IsMsgBlk()) {
+                const bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
+                LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
+                statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
 
-            if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
 
                 if (fAlreadyHave || fImporting || fReindex || mapBlocksInFlight.count(inv.hash)) {
@@ -3289,6 +3290,10 @@ void PeerManagerImpl::ProcessMessage(
                     best_block = &inv.hash;
                 }
             } else {
+                const bool fAlreadyHave = AlreadyHave(inv);
+                LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
+                statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
+
                 static std::set<int> allowWhileInIBDObjs = {
                         MSG_SPORK
                 };
