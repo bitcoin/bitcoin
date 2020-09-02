@@ -3,14 +3,14 @@ name: Docker CD
 on:
   push:
     branches:
-    - master
-    - develop
-    - releases/*
+      - master
+      - develop
+      - release/*
 
   pull_request:
     branches:
-    - master
-    - releases/*
+      - master
+      - release/*
 
 
 jobs:
@@ -39,12 +39,12 @@ jobs:
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           dockerfile: ubuntu.Dockerfile
-          tags: "ubuntu-${{ env.LAST_TAG }}-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-${{ matrix.build }}"
+          tags: "ubuntu-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-${{ matrix.build }}"
       - name: Show Tags
         run: |
           echo "Successfully pushed the following tags:"
           echo "----"
-          echo "ubuntu-${{ env.LAST_TAG }}-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-"${{ matrix.build }}
+          echo "ubuntu-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-"${{ matrix.build }}
           echo "----"
 
   alpine:
@@ -66,13 +66,13 @@ jobs:
           name: veriblock/vbitcoin
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
-          tags: "${{ env.TAGS }},${{ env.LAST_TAG }}-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }},${{ github.sha }}"
+          tags: "${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }},${{ github.sha }}"
       - name: Show Tags
         run: |
           echo "Successfully pushed the following tags:"
           echo "----"
           echo "$(IFS=',' read -ra TAGS <<< "$(if [ "${{ github.event_name }}" == "push" ] && [ "${{ env.BRANCH }}" == "master" ]; then echo "latest,${{ env.BRANCH }}"; elif [ "${{ github.event_name }}" == "pull_request" ]; then echo ""; else echo "${{ env.BRANCH }}"; fi)"; for i in "${TAGS[@]}"; do echo $i; done)"
-          echo "${{ env.LAST_TAG }}-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}"
+          echo "${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}"
           echo "${{ github.sha }}"
           echo "----"
 
@@ -95,10 +95,10 @@ jobs:
           name: veriblock/vbitcoin
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
-          tags: "${{ env.LAST_TAG }}-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-debug"
+          tags: "${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-debug"
       - name: Show Tags
         run: |
           echo "Successfully pushed the following tags:"
           echo "----"
-          echo "${{ env.LAST_TAG }}-${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-debug"
+          echo "${{ env.BRANCH }}.${{ env.COMMITS_AHEAD }}-${{ env.GIT_HASH }}-debug"
           echo "----"
