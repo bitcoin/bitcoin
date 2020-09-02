@@ -113,6 +113,7 @@ FUZZ_TARGET_MSG(cfcheckpt);
 FUZZ_TARGET_MSG(cfheaders);
 FUZZ_TARGET_MSG(cfilter);
 FUZZ_TARGET_MSG(cmpctblock);
+FUZZ_TARGET_MSG(disabletx);
 FUZZ_TARGET_MSG(feefilter);
 FUZZ_TARGET_MSG(filteradd);
 FUZZ_TARGET_MSG(filterclear);

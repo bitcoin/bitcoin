@@ -260,6 +260,13 @@ extern const char* CFCHECKPT;
  * @since protocol version 70016 as described by BIP 339.
  */
 extern const char* WTXIDRELAY;
+/**
+ * Indicates that a node will not relay transactions, and (for now) also
+ * not relay addresses. This can be used by nodes implementing
+ * block-relay-only connections.
+ * @since protocol version 70017.
+ */
+extern const char* DISABLETX;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
