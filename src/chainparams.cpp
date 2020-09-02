@@ -24,9 +24,8 @@
 #include "bootstraps.h"
 #include <veriblock/blockchain/alt_chain_params.hpp>
 
-#define VBK_ALPHA 0x50
-#define VBK_BETA  0xa0
-#define VBK_VERSION (VBK_BETA + 0x1)
+#define VBK_GAMMA  0xb0
+#define VBK_VERSION (VBK_GAMMA + 0x1)
 
 /**
  * Main network
