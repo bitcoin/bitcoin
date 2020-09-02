@@ -247,7 +247,7 @@ extern const char* CFCHECKPT;
  * txid.
  * @since protocol version 70016 as described by BIP 339.
  */
-extern const char *WTXIDRELAY;
+extern const char* WTXIDRELAY;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -418,12 +418,22 @@ public:
     std::string ToString() const;
 
     // Single-message helper methods
-    bool IsMsgTx()        const { return type == MSG_TX; }
-    bool IsMsgWtx()       const { return type == MSG_WTX; }
-    bool IsMsgWitnessTx() const { return type == MSG_WITNESS_TX; }
+    bool IsMsgTx() const { return type == MSG_TX; }
+    bool IsMsgBlk() const { return type == MSG_BLOCK; }
+    bool IsMsgWtx() const { return type == MSG_WTX; }
+    bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
+    bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
+    bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
 
     // Combined-message helper methods
-    bool IsGenTxMsg()     const { return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX; }
+    bool IsGenTxMsg() const
+    {
+        return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+    }
+    bool IsGenBlkMsg() const
+    {
+        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
+    }
 
     int type;
     uint256 hash;
