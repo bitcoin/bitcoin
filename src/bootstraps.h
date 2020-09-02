@@ -13,11 +13,11 @@
 #include <util/system.h> // for gArgs
 #include <veriblock/config.hpp>
 
-extern int testnetVBKstartHeight;
-extern std::vector<std::string> testnetVBKblocks;
+extern const int testnetVBKstartHeight;
+extern const std::vector<std::string> testnetVBKblocks;
 
-extern int testnetBTCstartHeight;
-extern std::vector<std::string> testnetBTCblocks;
+extern const int testnetBTCstartHeight;
+extern const std::vector<std::string> testnetBTCblocks;
 
 struct AltChainParamsVBTC : public altintegration::AltChainParams {
     ~AltChainParamsVBTC() override = default;
