@@ -56,7 +56,7 @@ public:
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    bool AlreadyHave(const CInv& inv) const;
+    bool AlreadyHave(const uint256& hash) const;
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
     bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const;
     bool GetJustification(const uint256& hash, CDKGJustification& ret) const;

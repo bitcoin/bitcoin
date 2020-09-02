@@ -446,18 +446,31 @@ public:
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
     friend bool operator<(const CInv& a, const CInv& b);
-    // SYSCOIN
-    bool IsMnType() const;
     std::string GetCommand() const;
     std::string ToString() const;
 
     // Single-message helper methods
-    bool IsMsgTx()        const { return type == MSG_TX; }
-    bool IsMsgWtx()       const { return type == MSG_WTX; }
-    bool IsMsgWitnessTx() const { return type == MSG_WITNESS_TX; }
+    bool IsMsgTx() const { return type == MSG_TX; }
+    bool IsMsgBlk() const { return type == MSG_BLOCK; }
+    bool IsMsgWtx() const { return type == MSG_WTX; }
+    bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
+    bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
+    bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
 
     // Combined-message helper methods
-    bool IsGenTxMsg()     const { return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX; }
+    bool IsGenTxMsg() const
+    {
+        return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+    }
+    bool IsGenBlkMsg() const
+    {
+        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
+    }
+    // SYSCOIN
+    bool IsMsgOtherTx() const
+    {
+        return type >= MSG_SPORK && type <= MSG_QUORUM_RECOVERED_SIG;
+    }
 
     int type;
     uint256 hash;

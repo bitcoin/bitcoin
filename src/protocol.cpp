@@ -248,11 +248,6 @@ std::string CInv::GetCommand() const
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }
 }
-// SYSCOIN
-bool CInv::IsMnType() const
-{
-    return type >= MSG_SPORK && type <= MSG_QUORUM_RECOVERED_SIG;
-}
 
 std::string CInv::ToString() const
 {

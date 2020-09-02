@@ -143,7 +143,7 @@ private:
 public:
     CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman);
 
-    bool AlreadyHave(const CInv& inv);
+    bool AlreadyHave(const uint256& hash);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
 
     void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
