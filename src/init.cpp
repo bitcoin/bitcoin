@@ -1833,20 +1833,15 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
 
 #if HAVE_SYSTEM
-    if (args.IsArgSet("-blocknotify")) {
-        const std::string block_notify = args.GetArg("-blocknotify", "");
-        const auto BlockNotifyCallback = [block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
-            if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex)
-                return;
-
-            std::string strCmd = block_notify;
-            if (!strCmd.empty()) {
-                boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
-                std::thread t(runCommand, strCmd);
-                t.detach(); // thread runs free
-            }
-        };
-        uiInterface.NotifyBlockTip_connect(BlockNotifyCallback);
+    const std::string block_notify = args.GetArg("-blocknotify", "");
+    if (!block_notify.empty()) {
+        uiInterface.NotifyBlockTip_connect([block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
+            if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex) return;
+            std::string command = block_notify;
+            boost::replace_all(command, "%s", pBlockIndex->GetBlockHash().GetHex());
+            std::thread t(runCommand, command);
+            t.detach(); // thread runs free
+        });
     }
 #endif
 
