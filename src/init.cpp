@@ -2360,32 +2360,24 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 
 #if HAVE_SYSTEM
-    if (args.IsArgSet("-blocknotify")) {
-        const std::string block_notify = args.GetArg("-blocknotify", "");
-        const auto BlockNotifyCallback = [block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
-            if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex)
-                return;
-
-            std::string strCmd = block_notify;
-            if (!strCmd.empty()) {
-                ReplaceAll(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
-                std::thread t(runCommand, strCmd);
-                t.detach(); // thread runs free
-            }
-        };
-        uiInterface.NotifyBlockTip_connect(BlockNotifyCallback);
+    const std::string block_notify = args.GetArg("-blocknotify", "");
+    if (!block_notify.empty()) {
+        uiInterface.NotifyBlockTip_connect([block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
+            if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex) return;
+            std::string command = block_notify;
+            ReplaceAll(command, "%s", pBlockIndex->GetBlockHash().GetHex());
+            std::thread t(runCommand, command);
+            t.detach(); // thread runs free
+        });
     }
-    if (args.IsArgSet("-chainlocknotify")) {
-        const std::string chainlock_notify = args.GetArg("-chainlocknotify", "");
-        const auto ChainlockNotifyCallback = [chainlock_notify](const std::string& bestChainLockHash, int bestChainLockHeight) {
-            std::string strCmd = chainlock_notify;
-            if (!strCmd.empty()) {
-                ReplaceAll(strCmd, "%s", bestChainLockHash);
-                std::thread t(runCommand, strCmd);
-                t.detach(); // thread runs free
-            }
-        };
-        uiInterface.NotifyChainLock_connect(ChainlockNotifyCallback);
+    const std::string chainlock_notify = args.GetArg("-chainlocknotify", "");
+    if (!chainlock_notify.empty()) {
+        uiInterface.NotifyChainLock_connect([chainlock_notify](const std::string& bestChainLockHash, int bestChainLockHeight) {
+            std::string command = chainlock_notify;
+            ReplaceAll(command, "%s", bestChainLockHash);
+            std::thread t(runCommand, command);
+            t.detach(); // thread runs free
+        });
     }
 #endif
 
