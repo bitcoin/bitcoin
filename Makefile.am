@@ -186,6 +186,7 @@ $(SYSCOIN_WALLET_BIN): FORCE
 
 if USE_LCOV
 LCOV_FILTER_PATTERN = \
+	-p "/usr/local/" \
 	-p "/usr/include/" \
 	-p "/usr/lib/" \
 	-p "/usr/lib64/" \
