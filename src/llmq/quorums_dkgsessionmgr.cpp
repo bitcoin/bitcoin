@@ -99,17 +99,17 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     dkgSessionHandlers.at(llmqType).ProcessMessage(pfrom, strCommand, vRecv, connman);
 }
 
-bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
+bool CDKGSessionManager::AlreadyHave(const uint256& hash) const
 {
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return false;
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
-        if (dkgType.pendingContributions.HasSeen(inv.hash)
-            || dkgType.pendingComplaints.HasSeen(inv.hash)
-            || dkgType.pendingJustifications.HasSeen(inv.hash)
-            || dkgType.pendingPrematureCommitments.HasSeen(inv.hash)) {
+        if (dkgType.pendingContributions.HasSeen(hash)
+            || dkgType.pendingComplaints.HasSeen(hash)
+            || dkgType.pendingJustifications.HasSeen(hash)
+            || dkgType.pendingPrematureCommitments.HasSeen(hash)) {
             return true;
         }
     }

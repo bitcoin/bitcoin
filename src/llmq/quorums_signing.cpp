@@ -434,19 +434,16 @@ CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _co
 {
 }
 
-bool CSigningManager::AlreadyHave(const CInv& inv)
+bool CSigningManager::AlreadyHave(const uint256& hash)
 {
-    if (inv.type != MSG_QUORUM_RECOVERED_SIG) {
-        return false;
-    }
     {
         LOCK(cs);
-        if (pendingReconstructedRecoveredSigs.count(inv.hash)) {
+        if (pendingReconstructedRecoveredSigs.count(hash)) {
             return true;
         }
     }
 
-    return db.HasRecoveredSigForHash(inv.hash);
+    return db.HasRecoveredSigForHash(hash);
 }
 
 bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret)
