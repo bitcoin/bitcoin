@@ -2698,6 +2698,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
         }
 
+        if (nVersion >= DISABLE_TX_VERSION && pfrom.IsBlockOnlyConn()) {
+            // If this peer supports DISABLETX feature negotiation, and we
+            // picked this to be a block-relay-only peer, let the peer know.
+            m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::DISABLETX));
+        }
+
         m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::VERACK));
 
         pfrom.nServices = nServices;
@@ -2928,6 +2934,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
         peer->m_wants_addrv2 = true;
+        return;
+    }
+
+    if (msg_type == NetMsgType::DISABLETX) {
+        if (pfrom.fSuccessfullyConnected) {
+            // Disconnect peers that send a disabletx after VERACK.
+            LogPrint(BCLog::NET, "disabletx received after verack from peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        // ignore this for now - later we can downgrade the resources allocated
+        // to this peer.
         return;
     }
 
