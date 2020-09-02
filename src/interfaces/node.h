@@ -87,6 +87,9 @@ public:
     //! Get proxy.
     virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
 
+    //! Check if Tor only connections are allowed by settings.
+    virtual bool hasTorOnlyConnections() = 0;
+
     //! Get number of connections.
     virtual size_t getNodeCount(CConnman::NumConnections flags) = 0;
 

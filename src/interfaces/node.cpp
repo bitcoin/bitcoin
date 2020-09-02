@@ -87,6 +87,12 @@ public:
         }
     }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
+
+    bool hasTorOnlyConnections() override
+    {
+        return !fListen && !IsReachable(NET_IPV4) && !IsReachable(NET_IPV6) && IsReachable(NET_ONION);
+    }
+
     size_t getNodeCount(CConnman::NumConnections flags) override
     {
         return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;

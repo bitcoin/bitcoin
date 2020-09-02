@@ -77,6 +77,7 @@ const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
     m_node(node),
+    m_tor_icon{new GUIUtil::ClickableLabel()},
     trayIconMenu{new QMenu()},
     platformStyle(_platformStyle),
     m_network_style(networkStyle)
@@ -160,6 +161,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         frameBlocksLayout->addWidget(labelWalletEncryptionIcon);
         frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
     }
+    frameBlocksLayout->addWidget(m_tor_icon);
     frameBlocksLayout->addWidget(labelProxyIcon);
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(connectionsControl);
@@ -200,6 +202,9 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         m_node.setNetworkActive(!m_node.getNetworkActive());
     });
     connect(labelProxyIcon, &GUIUtil::ClickableLabel::clicked, [this] {
+        openOptionsDialogWithTab(OptionsDialog::TAB_NETWORK);
+    });
+    connect(m_tor_icon, &GUIUtil::ClickableLabel::clicked, [this] {
         openOptionsDialogWithTab(OptionsDialog::TAB_NETWORK);
     });
 
@@ -602,6 +607,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 
         rpcConsole->setClientModel(_clientModel, tip_info->block_height, tip_info->block_time, tip_info->verification_progress);
 
+        updateTorIcon();
         updateProxyIcon();
 
 #ifdef ENABLE_WALLET
@@ -1314,6 +1320,15 @@ void BitcoinGUI::updateProxyIcon()
         }
     } else {
         labelProxyIcon->hide();
+    }
+}
+
+void BitcoinGUI::updateTorIcon()
+{
+    if (clientModel->hasTorOnlyConnections()) {
+        m_tor_icon->setPixmap(platformStyle->SingleColorIcon(":/icons/tor_connected").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+        m_tor_icon->setToolTip(tr("All connections are <b>via Tor</b> only"));
+        m_tor_icon->show();
     }
 }
 

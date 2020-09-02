@@ -77,6 +77,8 @@ public:
 
     bool getProxyInfo(std::string& ip_port) const;
 
+    bool hasTorOnlyConnections() const;
+
     // caches for the best header: hash, number of blocks and block time
     mutable std::atomic<int> cachedBestHeaderHeight;
     mutable std::atomic<int64_t> cachedBestHeaderTime;

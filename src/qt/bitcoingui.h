@@ -121,6 +121,7 @@ private:
     UnitDisplayStatusBarControl* unitDisplayControl = nullptr;
     QLabel* labelWalletEncryptionIcon = nullptr;
     QLabel* labelWalletHDStatusIcon = nullptr;
+    GUIUtil::ClickableLabel* m_tor_icon{nullptr};
     GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* connectionsControl = nullptr;
     GUIUtil::ClickableLabel* labelBlocksIcon = nullptr;
@@ -263,6 +264,7 @@ public Q_SLOTS:
 private:
     /** Set the proxy-enabled icon as shown in the UI. */
     void updateProxyIcon();
+    void updateTorIcon();
     void updateWindowTitle();
 
 public Q_SLOTS:

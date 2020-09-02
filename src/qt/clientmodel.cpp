@@ -320,3 +320,8 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
     }
     return false;
 }
+
+bool ClientModel::hasTorOnlyConnections() const
+{
+    return m_node.hasTorOnlyConnections();
+}
