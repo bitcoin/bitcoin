@@ -1264,8 +1264,8 @@ void CoinsViews::InitCache()
 }
 
 CChainState::CChainState(CTxMemPool& mempool, BlockManager& blockman, uint256 from_snapshot_blockhash)
-    : m_blockman(blockman),
-      m_mempool(mempool),
+    : m_mempool(mempool),
+      m_blockman(blockman),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
 void CChainState::InitCoinsDB(
