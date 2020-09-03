@@ -1037,7 +1037,7 @@ class DashTestFramework(SyscoinTestFramework):
             except:
                 return False
         time.sleep(0.5)
-        if wait_until(check_tx, timeout=timeout, do_assert=expected) and not expected:
+        if wait_until_helper(check_tx, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_sporks_same(self, timeout=30):
@@ -1045,7 +1045,7 @@ class DashTestFramework(SyscoinTestFramework):
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
         time.sleep(0.5)
-        wait_until(check_sporks_same, timeout=timeout)
+        wait_until_helper(check_sporks_same, timeout=timeout)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None):
         def check_quorum_connections():
@@ -1072,7 +1072,7 @@ class DashTestFramework(SyscoinTestFramework):
                 wait_proc()
             return all_ok
         time.sleep(1)
-        wait_until(check_quorum_connections, timeout=timeout)
+        wait_until_helper(check_quorum_connections, timeout=timeout)
 
     def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
         def check_probes():
@@ -1109,7 +1109,7 @@ class DashTestFramework(SyscoinTestFramework):
 
             return True
         time.sleep(1)
-        wait_until(check_probes, timeout=timeout)
+        wait_until_helper(check_probes, timeout=timeout)
 
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
         def check_dkg_session():
@@ -1138,7 +1138,7 @@ class DashTestFramework(SyscoinTestFramework):
                 return False
             return all_ok
         time.sleep(sleep)
-        wait_until(check_dkg_session, timeout=timeout)
+        wait_until_helper(check_dkg_session, timeout=timeout)
 
     def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15):
         def check_dkg_comitments():
@@ -1157,7 +1157,7 @@ class DashTestFramework(SyscoinTestFramework):
                     all_ok = False
                     break
             return all_ok
-        wait_until(check_dkg_comitments, timeout=timeout)
+        wait_until_helper(check_dkg_comitments, timeout=timeout)
 
     def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None):
         if expected_members is None:
