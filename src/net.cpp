@@ -577,7 +577,7 @@ bool CNode::IsBlockRelayOnly() const {
     // Stop processing non-block data early if
     // 1) We are in blocks only mode and peer has no relay permission
     // 2) This peer is a block-relay-only peer
-    return (ignores_incoming_txs && !HasPermission(PF_RELAY)) || !IsAddrRelayPeer();
+    return (ignores_incoming_txs && !HasPermission(PF_RELAY)) || !RelayAddrsWithConn();
 }
 
 std::string CNode::ConnectionTypeAsString() const
@@ -646,7 +646,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     X(addrBind);
     stats.m_network = ConnectedThroughNetwork();
     stats.m_mapped_as = addr.GetMappedAS(m_asmap);
-    if (IsAddrRelayPeer()) {
+    if (RelayAddrsWithConn()) {
         LOCK(m_tx_relay->cs_filter);
         stats.fRelayTxes = m_tx_relay->fRelayTxes;
     } else {
@@ -1047,7 +1047,7 @@ bool CConnman::AttemptToEvictConnection()
 
             bool peer_relay_txes = false;
             bool peer_filter_not_null = false;
-            if (node->IsAddrRelayPeer()) {
+            if (node->RelayAddrsWithConn()) {
                 LOCK(node->m_tx_relay->cs_filter);
                 peer_relay_txes = node->m_tx_relay->fRelayTxes;
                 peer_filter_not_null = node->m_tx_relay->pfilter != nullptr;
@@ -2307,16 +2307,16 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 // but inbound and manual peers do not use our outbound slots. Inbound peers
                 // also have the added issue that they could be attacker controlled and used
                 // to prevent us from connecting to particular hosts if we used them here.
-                switch(pnode->m_conn_type){
+                switch (pnode->m_conn_type) {
                     case ConnectionType::INBOUND:
                     case ConnectionType::MANUAL:
                         break;
-                    case ConnectionType::OUTBOUND:
+                    case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
                         setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
-                }
+                } // no default case, so the compiler can warn about missing cases
             }
         }
 
@@ -2331,28 +2331,32 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
         }
 
-        // Feeler Connections
-        //
-        // Design goals:
-        //  * Increase the number of connectable addresses in the tried table.
-        //
-        // Method:
-        //  * Choose a random address from new and attempt to connect to it if we can connect
-        //    successfully it is added to tried.
-        //  * Start attempting feeler connections only after node finishes making outbound
-        //    connections.
-        //  * Only make a feeler connection once every few minutes.
-        //
+        ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
+        int64_t nTime = GetTimeMicros();
         bool fFeeler = false;
 
-        if (nOutboundFullRelay >= m_max_outbound_full_relay && nOutboundBlockRelay >= m_max_outbound_block_relay && !GetTryNewOutboundPeer()) {
-            int64_t nTime = GetTimeMicros(); // The current time right now (in microseconds).
-            if (nTime > nNextFeeler) {
-                nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
-                fFeeler = true;
-            } else {
-                continue;
-            }
+        // Determine what type of connection to open. Opening
+        // OUTBOUND_FULL_RELAY connections gets the highest priority until we
+        // meet our full-relay capacity. Then we open BLOCK_RELAY connection
+        // until we hit our block-relay-only peer limit.
+        // GetTryNewOutboundPeer() gets set when a stale tip is detected, so we
+        // try opening an additional OUTBOUND_FULL_RELAY connection. If none of
+        // these conditions are met, check the nNextFeeler timer to decide if
+        // we should open a FEELER.
+
+        if (nOutboundFullRelay < m_max_outbound_full_relay) {
+            // OUTBOUND_FULL_RELAY
+        } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
+            conn_type = ConnectionType::BLOCK_RELAY;
+        } else if (GetTryNewOutboundPeer()) {
+            // OUTBOUND_FULL_RELAY
+        } else if (nTime > nNextFeeler) {
+            nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
+            conn_type = ConnectionType::FEELER;
+            fFeeler = true;
+        } else {
+            // skip to next iteration of while loop
+            continue;
         }
 
         addrman.ResolveCollisions();
@@ -2439,23 +2443,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 } else {
                     LogPrint(BCLog::NET, "Making feeler connection\n");
                 }
-            }
-
-            ConnectionType conn_type;
-            // Determine what type of connection to open. If fFeeler is not
-            // set, open OUTBOUND connections until we meet our full-relay
-            // capacity. Then open BLOCK_RELAY connections until we hit our
-            // block-relay peer limit. Otherwise, default to opening an
-            // OUTBOUND connection.
-            if (fFeeler) {
-                conn_type = ConnectionType::FEELER;
-            } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
-                conn_type = ConnectionType::OUTBOUND;
-            } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
-                conn_type = ConnectionType::BLOCK_RELAY;
-            } else {
-                // GetTryNewOutboundPeer() is true
-                conn_type = ConnectionType::OUTBOUND;
             }
 
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
@@ -2816,7 +2803,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect, MasternodeProbeConn probe) {
 
-    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND, MasternodeConn::IsConnection, probe);
+    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND_FULL_RELAY, MasternodeConn::IsConnection, probe);
 }
 
 void CConnman::ThreadMessageHandler()
@@ -3791,7 +3778,7 @@ void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const 
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !pnode->IsAddrRelayPeer()) {
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !pnode->RelayAddrsWithConn()) {
             continue;
         }
         {
@@ -3811,7 +3798,7 @@ void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const i
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !pnode->IsAddrRelayPeer()) {
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !pnode->RelayAddrsWithConn()) {
             continue;
         }
         {
