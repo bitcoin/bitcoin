@@ -18,7 +18,7 @@ from test_framework.p2p import P2PInterface
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
-    wait_until, assert_greater_than, get_bip9_details,
+    assert_greater_than, get_bip9_details,
 )
 
 
@@ -244,7 +244,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
         self.nodes[0].reconsiderblock(fallback_blockhash)
-        wait_until(lambda: self.nodes[0].getbestblockhash() == new_quorum_blockhash, sleep=1)
+        self.wait_until(lambda: self.nodes[0].getbestblockhash() == new_quorum_blockhash)
         assert_equal(self.nodes[0].quorum("list", llmq_type), new_quorum_list)
 
     def test_getmnlistdiff_quorums(self, baseBlockHash, blockHash, baseQuorumList, expectedDeleted, expectedNew, testQuorumsCLSigs = True):

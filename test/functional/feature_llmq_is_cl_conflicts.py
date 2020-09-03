@@ -16,7 +16,7 @@ from test_framework.blocktools import create_block_with_mnpayments
 from test_framework.messages import CInv, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, wait_until
+from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes
 
 
 class TestP2PConn(P2PInterface):
@@ -243,7 +243,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # even though the nodes don't know the locked transaction yet
         self.test_node.send_isdlock(isdlock)
         for node in self.nodes:
-            wait_until(lambda: node.getbestblockhash() == good_tip, timeout=10, sleep=0.5)
+            self.wait_until(lambda: node.getbestblockhash() == good_tip, timeout=10)
             # islock for tx2 is incomplete, tx1 should return in mempool now that blocks are disconnected
             assert rawtx1_txid in set(node.getrawmempool())
 

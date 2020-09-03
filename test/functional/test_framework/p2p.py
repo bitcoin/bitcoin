@@ -82,7 +82,7 @@ from test_framework.messages import (
     NODE_NETWORK,
     sha256,
 )
-from test_framework.util import wait_until
+from test_framework.util import wait_until_helper
 
 logger = logging.getLogger("TestFramework.p2p")
 
@@ -343,7 +343,7 @@ class P2PInterface(P2PConnection):
 
         # Track the most recent message of each type.
         # To wait for a message to be received, pop that message from
-        # this and use wait_until.
+        # this and use self.wait_until.
         self.last_message = {}
 
         # A count of the number of ping messages we've sent to the node
@@ -463,7 +463,7 @@ class P2PInterface(P2PConnection):
                 assert self.is_connected
             return test_function_in()
 
-        wait_until(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
+        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected
@@ -501,7 +501,7 @@ class P2PInterface(P2PConnection):
                 return False
             return last_filtered_block.merkleblock.header.rehash() == int(blockhash, 16)
 
-        wait_until(test_function, timeout=timeout, lock=p2p_lock)
+        self.wait_until(test_function, timeout=timeout)
 
 
     def wait_for_getdata(self, hash_list, timeout=60):
@@ -589,7 +589,7 @@ class NetworkThread(threading.Thread):
     def close(self, timeout=10):
         """Close the connections and network event loop."""
         self.network_event_loop.call_soon_threadsafe(self.network_event_loop.stop)
-        wait_until(lambda: not self.network_event_loop.is_running(), timeout=timeout)
+        wait_until_helper(lambda: not self.network_event_loop.is_running(), timeout=timeout)
         self.network_event_loop.close()
         self.join(timeout)
         # Safe to remove event loop.
