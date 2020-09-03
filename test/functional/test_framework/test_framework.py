@@ -1266,4 +1266,4 @@ class DashTestFramework(SyscoinTestFramework):
                 if "verified_proregtx_hash" in p and p["verified_proregtx_hash"] != "":
                     c += 1
             return c >= count
-        wait_until(test, timeout=timeout)
+        wait_until_helper(test, timeout=timeout)
