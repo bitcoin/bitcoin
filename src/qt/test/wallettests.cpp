@@ -209,7 +209,7 @@ void TestGUI(interfaces::Node& node)
     QPushButton* removeRequestButton = receiveCoinsDialog.findChild<QPushButton*>("removeRequestButton");
     removeRequestButton->click();
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
-    RemoveWallet(wallet);
+    RemoveWallet(wallet, nullopt);
 }
 
 } // namespace
