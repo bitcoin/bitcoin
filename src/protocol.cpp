@@ -163,7 +163,7 @@ CInv::CInv()
     hash.SetNull();
 }
 
-CInv::CInv(int typeIn, const uint256& hashIn) : type(typeIn), hash(hashIn) {}
+CInv::CInv(uint32_t typeIn, const uint256& hashIn) : type(typeIn), hash(hashIn) {}
 
 bool operator<(const CInv& a, const CInv& b)
 {
