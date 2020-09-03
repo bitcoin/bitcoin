@@ -534,7 +534,7 @@ class CInv
 {
 public:
     CInv();
-    CInv(int typeIn, const uint256& hashIn);
+    CInv(uint32_t typeIn, const uint256& hashIn);
 
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
@@ -555,7 +555,7 @@ private:
     const char* GetCommandInternal() const;
 
 public:
-    int type;
+    uint32_t type;
     uint256 hash;
 };
 
