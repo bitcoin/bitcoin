@@ -748,10 +748,8 @@ Threads and synchronization
 
 - Prefer `Mutex` type to `RecursiveMutex` one
 
-- Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
-  get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
-  run-time asserts in function definitions:
-
+- Use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations
+  to enable compile-time checks for race conditions and deadlocks:
 ```C++
 // txmempool.h
 class CTxMemPool
@@ -763,35 +761,9 @@ public:
     void UpdateTransactionsFromBlock(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, cs);
     ...
 }
-
-// txmempool.cpp
-void CTxMemPool::UpdateTransactionsFromBlock(...)
-{
-    ...
-}
 ```
 
-```C++
-// validation.h
-class ChainstateManager
-{
-public:
-    ...
-    bool ProcessNewBlock(...) EXCLUSIVE_LOCKS_REQUIRED(!::cs_main);
-    ...
-}
-
-// validation.cpp
-bool ChainstateManager::ProcessNewBlock(...)
-{
-    AssertLockNotHeld(::cs_main);
-    ...
-    LOCK(::cs_main);
-    ...
-}
-```
-
-- When Clang Thread Safety Analysis is unable to determine if a mutex is locked, use `LockAssertion` class instances:
+- When Clang Thread Safety Analysis is unable to determine if a mutex is locked, use `AssertLockHeld`:
 
 ```C++
 // net_processing.h
