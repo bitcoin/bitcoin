@@ -6,7 +6,7 @@
 
 Test various backwards compatibility scenarios. Download the previous node binaries:
 
-test/get_previous_releases.py -b v0.19.1 v0.18.1 v0.17.1 v0.16.3 v0.15.2
+test/get_previous_releases.py -b v0.19.1 v0.18.1 v0.17.2 v0.16.3 v0.15.2
 
 v0.15.2 is not required by this test, but it is used in wallet_upgradewallet.py.
 Due to a hardfork in regtest, it can't be used to sync nodes.
@@ -40,7 +40,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # Pre-release: use to receive coins, swap wallets, etc
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.19.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.18.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.17.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.17.2
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.16.3
         ]
 
@@ -54,7 +54,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             None,
             190100,
             180100,
-            170100,
+            170200,
             160300,
         ])
 
