@@ -46,7 +46,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                *address_bind,
                fuzzed_data_provider.ConsumeRandomLengthString(32),
-               fuzzed_data_provider.PickValueInArray({ConnectionType::INBOUND, ConnectionType::OUTBOUND, ConnectionType::MANUAL, ConnectionType::FEELER, ConnectionType::BLOCK_RELAY, ConnectionType::ADDR_FETCH})};
+               fuzzed_data_provider.PickValueInArray({ConnectionType::INBOUND, ConnectionType::OUTBOUND_FULL_RELAY, ConnectionType::MANUAL, ConnectionType::FEELER, ConnectionType::BLOCK_RELAY, ConnectionType::ADDR_FETCH})};
     while (fuzzed_data_provider.ConsumeBool()) {
         switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 12)) {
         case 0: {
@@ -147,7 +147,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);
     (void)node.GetSendVersion();
-    (void)node.IsAddrRelayPeer();
+    (void)node.RelayAddrsWithConn();
 
     const NetPermissionFlags net_permission_flags = fuzzed_data_provider.ConsumeBool() ?
                                                         fuzzed_data_provider.PickValueInArray<NetPermissionFlags>({NetPermissionFlags::PF_NONE, NetPermissionFlags::PF_BLOOMFILTER, NetPermissionFlags::PF_RELAY, NetPermissionFlags::PF_FORCERELAY, NetPermissionFlags::PF_NOBAN, NetPermissionFlags::PF_MEMPOOL, NetPermissionFlags::PF_ISIMPLICIT, NetPermissionFlags::PF_ALL}) :

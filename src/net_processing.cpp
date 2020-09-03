@@ -882,8 +882,9 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         LOCK(g_peer_mutex);
         g_peer_map.emplace_hint(g_peer_map.end(), nodeid, std::move(peer));
     }
-    if(!pnode->IsInboundConn())
+    if (!pnode->IsInboundConn()) {
         PushNodeVersion(*pnode, m_connman, GetTime());
+    }
 }
 
 void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
@@ -1531,7 +1532,7 @@ static void RelayAddress(const CAddress& addr, bool fReachable, const CConnman& 
     assert(nRelayNodes <= best.size());
 
     auto sortfunc = [&best, &hasher, nRelayNodes](CNode* pnode) {
-        if (pnode->IsAddrRelayPeer()) {
+        if (pnode->RelayAddrsWithConn()) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                  if (hashKey > best[i].first) {
@@ -2017,7 +2018,7 @@ static void ProcessHeadersMessage(CNode& pfrom, CConnman& connman, ChainstateMan
             }
         }
 
-        if (!pfrom.fDisconnect && pfrom.IsOutboundOrBlockRelayConn() && nodestate->pindexBestKnownBlock != nullptr && pfrom.m_tx_relay != nullptr) {
+        if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
             // If this is an outbound full-relay peer, check to see if we should protect
             // it from the bad/lagging chain logic.
             // Note that block-relay-only peers are already implicitly protected, so we
@@ -2458,9 +2459,23 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         UpdatePreferredDownload(pfrom, State(pfrom.GetId()));
         }
 
-        if (!pfrom.IsInboundConn() && pfrom.IsAddrRelayPeer())
-        {
-            // Advertise our address
+        if (!pfrom.IsInboundConn() && !pfrom.IsBlockOnlyConn()) {
+            // For outbound peers, we try to relay our address (so that other
+            // nodes can try to find us more quickly, as we have no guarantee
+            // that an outbound peer is even aware of how to reach us) and do a
+            // one-time address fetch (to help populate/update our addrman). If
+            // we're starting up for the first time, our addrman may be pretty
+            // empty and no one will know who we are, so these mechanisms are
+            // important to help us connect to the network.
+            //
+            // We also update the addrman to record connection success for
+            // these peers (which include OUTBOUND_FULL_RELAY and FEELER
+            // connections) so that addrman will have an up-to-date notion of
+            // which peers are online and available.
+            //
+            // We skip these operations for BLOCK_RELAY peers to avoid
+            // potentially leaking information about our BLOCK_RELAY
+            // connections via the addrman or address relay.
             if (fListen && !::ChainstateActive().IsInitialBlockDownload())
             {
                 CAddress addr = GetLocalAddress(&pfrom.addr, pfrom.GetLocalServices());
@@ -2479,6 +2494,9 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             // Get recent addresses
             m_connman.PushMessage(&pfrom, CNetMsgMaker(nSendVersion).Make(NetMsgType::GETADDR));
             pfrom.fGetAddr = true;
+
+            // Moves address from New to Tried table in Addrman, resolves
+            // tried-table collisions, etc.
             m_connman.MarkAddressGood(pfrom.addr);
         }
 
@@ -2584,7 +2602,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         std::vector<CAddress> vAddr;
         vRecv >> vAddr;
 
-        if (!pfrom.IsAddrRelayPeer()) {
+        if (!pfrom.RelayAddrsWithConn()) {
             return;
         }
         if (vAddr.size() > MAX_ADDR_TO_SEND)
@@ -3522,7 +3540,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             LogPrint(BCLog::NET, "Ignoring \"getaddr\" from outbound connection. peer=%d\n", pfrom.GetId());
             return;
         }
-        if (!pfrom.IsAddrRelayPeer()) {
+        if (!pfrom.RelayAddrsWithConn()) {
             LogPrint(BCLog::NET, "Ignoring \"getaddr\" from block-relay-only connection. peer=%d\n", pfrom.GetId());
             return;
         }
@@ -4122,7 +4140,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         int64_t nNow = GetTimeMicros();
         auto current_time = GetTime<std::chrono::microseconds>();
 
-        if (pto->IsAddrRelayPeer() && !::ChainstateActive().IsInitialBlockDownload() && pto->m_next_local_addr_send < current_time) {
+        if (pto->RelayAddrsWithConn() && !::ChainstateActive().IsInitialBlockDownload() && pto->m_next_local_addr_send < current_time) {
             AdvertiseLocal(pto);
             pto->m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
         }
@@ -4130,7 +4148,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         //
         // Message: addr
         //
-        if (pto->IsAddrRelayPeer() && pto->m_next_addr_send < current_time) {
+        if (pto->RelayAddrsWithConn() && pto->m_next_addr_send < current_time) {
             pto->m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
             std::vector<CAddress> vAddr;
             vAddr.reserve(pto->vAddrToSend.size());
