@@ -36,12 +36,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.num_nodes = 6
         # Add new version after each release:
         self.extra_args = [
-            ["-addresstype=bech32"], # Pre-release: use to mine blocks
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # Pre-release: use to receive coins, swap wallets, etc
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.19.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.18.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.17.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.16.3
+            ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"],  # Pre-release: use to mine blocks. noban for immediate tx relay
+            ["-addresstype=bech32", "-nowallet", "-walletrbf=1", "-whitelist=noban@127.0.0.1"],  # Pre-release: use to receive coins, swap wallets, etc
+            ["-addresstype=bech32", "-nowallet", "-walletrbf=1", "-whitelist=noban@127.0.0.1"],  # v0.19.1
+            ["-addresstype=bech32", "-nowallet", "-walletrbf=1", "-whitelist=127.0.0.1"],  # v0.18.1
+            ["-addresstype=bech32", "-nowallet", "-walletrbf=1", "-whitelist=127.0.0.1"],  # v0.17.1
+            ["-addresstype=bech32", "-nowallet", "-walletrbf=1", "-whitelist=127.0.0.1"],  # v0.16.3
         ]
 
     def skip_test_if_missing_module(self):
