@@ -767,8 +767,6 @@ public:
 // txmempool.cpp
 void CTxMemPool::UpdateTransactionsFromBlock(...)
 {
-    AssertLockHeld(::cs_main);
-    AssertLockHeld(cs);
     ...
 }
 ```
@@ -802,10 +800,9 @@ void RelayTransaction(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 // net_processing.cpp
 void RelayTransaction(...)
 {
-    AssertLockHeld(::cs_main);
 
     connman.ForEachNode([&txid, &wtxid](CNode* pnode) {
-        LockAssertion lock(::cs_main);
+        AssertLockHeld(::cs_main);
         ...
     });
 }

@@ -71,7 +71,6 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
 
 void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
 {
-    AssertLockHeld(cs_KeyStore);
     CKeyID key_id = pubkey.GetID();
     // This adds the redeemscripts necessary to detect P2WPKH and P2SH-P2WPKH
     // outputs. Technically P2WPKH outputs don't have a redeemscript to be

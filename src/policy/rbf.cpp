@@ -7,7 +7,6 @@
 
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 {
-    AssertLockHeld(pool.cs);
 
     CTxMemPool::setEntries setAncestors;
 

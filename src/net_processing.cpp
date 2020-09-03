@@ -648,7 +648,6 @@ static void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIV
  */
 static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     CNodeState* nodestate = State(nodeid);
     if (!nodestate || !nodestate->fSupportsDesiredCmpctVersion) {
         // Never ask from peers who can't provide witnesses.
@@ -663,7 +662,7 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connma
             }
         }
         connman.ForNode(nodeid, [&connman](CNode* pfrom){
-            LockAssertion lock(::cs_main);
+            AssertLockHeld(::cs_main);
             uint64_t nCMPCTBLOCKVersion = (pfrom->GetLocalServices() & NODE_WITNESS) ? 2 : 1;
             if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
                 // As per BIP152, we only get 3 of our peers to announce
@@ -683,7 +682,6 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connma
 
 static bool TipMayBeStale(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     if (g_last_tip_update == 0) {
         g_last_tip_update = GetTime();
     }
@@ -1217,7 +1215,6 @@ bool PeerManager::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& s
 // we fully-validated them at some point.
 static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     if (::ChainActive().Contains(pindex)) return true;
     return pindex->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != nullptr) &&
         (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() < STALE_RELAY_AGE_LIMIT) &&
@@ -1355,7 +1352,7 @@ void PeerManager::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_
     }
 
     m_connman.ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) {
-        LockAssertion lock(::cs_main);
+        AssertLockHeld(::cs_main);
 
         // TODO: Avoid the repeated-serialization here
         if (pnode->nVersion < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
@@ -1490,7 +1487,7 @@ void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman&
 {
     connman.ForEachNode([&txid, &wtxid](CNode* pnode)
     {
-        LockAssertion lock(::cs_main);
+        AssertLockHeld(::cs_main);
 
         CNodeState &state = *State(pnode->GetId());
         if (state.m_wtxid_relay) {
@@ -2022,8 +2019,6 @@ void PeerManager::ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHe
 
 void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn)
 {
-    AssertLockHeld(cs_main);
-    AssertLockHeld(g_cs_orphans);
     std::set<NodeId> setMisbehaving;
     bool done = false;
     while (!done && !orphan_work_set.empty()) {
@@ -3916,7 +3911,6 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
 
 void PeerManager::ConsiderEviction(CNode& pto, int64_t time_in_seconds)
 {
-    AssertLockHeld(cs_main);
 
     CNodeState &state = *State(pto.GetId());
     const CNetMsgMaker msgMaker(pto.GetSendVersion());
@@ -3980,7 +3974,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
         int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
 
         m_connman.ForEachNode([&](CNode* pnode) {
-            LockAssertion lock(::cs_main);
+            AssertLockHeld(::cs_main);
 
             // Ignore non-outbound peers, or nodes marked for disconnect already
             if (!pnode->IsOutboundOrBlockRelayConn() || pnode->fDisconnect) return;
@@ -3997,7 +3991,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
         });
         if (worst_peer != -1) {
             bool disconnected = m_connman.ForNode(worst_peer, [&](CNode *pnode) {
-                LockAssertion lock(::cs_main);
+                AssertLockHeld(::cs_main);
 
                 // Only disconnect a peer that has been connected to us for
                 // some reasonable fraction of our check-frequency, to give

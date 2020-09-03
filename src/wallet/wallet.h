@@ -1237,20 +1237,17 @@ public:
     /** Get last block processed height */
     int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
-        AssertLockHeld(cs_wallet);
         assert(m_last_block_processed_height >= 0);
         return m_last_block_processed_height;
     };
     uint256 GetLastBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
-        AssertLockHeld(cs_wallet);
         assert(m_last_block_processed_height >= 0);
         return m_last_block_processed;
     }
     /** Set last block processed height, currently only use in unit test */
     void SetLastBlockProcessed(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
-        AssertLockHeld(cs_wallet);
         m_last_block_processed_height = block_height;
         m_last_block_processed = block_hash;
     };
