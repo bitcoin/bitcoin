@@ -1844,13 +1844,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                         // Not an outbound slot.
                         // Additionally, they could be attacker controlled and used to prevent
                         // us from connecting to particular hosts if we used them here.
-                    case ConnectionType::MANUAL:
-                        // Manually selected, so should not affect our peer selection.
                     case ConnectionType::ADDR_FETCH:
                         // Short-lived outbound connection should not affect our peer selection.
                     case ConnectionType::FEELER:
                         // Short-lived outbound connection should not affect our peer selection.
                         break;
+                    case ConnectionType::MANUAL:
+                        // Consider them same as full-relay connections when enforcing diversity
+                        // of new outbound connections.
                     case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
                         setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
