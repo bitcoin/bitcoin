@@ -441,7 +441,7 @@ class CInv
 {
 public:
     CInv();
-    CInv(int typeIn, const uint256& hashIn);
+    CInv(uint32_t typeIn, const uint256& hashIn);
 
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
@@ -472,7 +472,7 @@ public:
         return type >= MSG_SPORK && type <= MSG_QUORUM_RECOVERED_SIG;
     }
 
-    int type;
+    uint32_t type;
     uint256 hash;
 };
 
