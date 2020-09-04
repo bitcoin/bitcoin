@@ -2018,11 +2018,12 @@ static void ProcessHeadersMessage(CNode& pfrom, CConnman& connman, ChainstateMan
             }
         }
 
+        // If this is an outbound full-relay peer, check to see if we should protect
+        // it from the bad/lagging chain logic.
+        // Note that outbound block-relay peers are excluded from this protection, and
+        // thus always subject to eviction under the bad/lagging chain logic.
+        // See ChainSyncTimeoutState.
         if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
-            // If this is an outbound full-relay peer, check to see if we should protect
-            // it from the bad/lagging chain logic.
-            // Note that block-relay-only peers are already implicitly protected, so we
-            // only consider setting m_protect for the full-relay peers.
             if (g_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
                 LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
                 nodestate->m_chain_sync.m_protect = true;
