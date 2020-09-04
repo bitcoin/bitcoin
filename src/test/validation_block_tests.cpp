@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             TxValidationState state;
             std::list<CTransactionRef> plTxnReplaced;
             for (const auto& tx : txs) {
-                BOOST_REQUIRE(::AcceptToMemoryPool(
+                BOOST_REQUIRE(::AcceptToMemoryPoolWithUnlockedMempool(
                     *m_node.mempool,
                     state,
                     tx,

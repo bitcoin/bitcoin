@@ -929,7 +929,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     {
         LOCK(cs_main);
         AssertLockNotHeld(mempool.cs);
-        test_accept_res = ::AcceptToMemoryPool(mempool, state, std::move(tx),
+        test_accept_res = ::AcceptToMemoryPoolWithUnlockedMempool(mempool, state, std::move(tx),
             nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
     }
     result_0.pushKV("allowed", test_accept_res);

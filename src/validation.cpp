@@ -386,7 +386,7 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
         // ignore validation errors in resurrected transactions
         TxValidationState stateDummy;
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            !::AcceptToMemoryPool(mempool, stateDummy, *it,
+            !::AcceptToMemoryPoolWithLockedMempool(mempool, stateDummy, *it,
                                 nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
@@ -1031,7 +1031,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
 bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args)
 {
     AssertLockHeld(cs_main);
-    LOCK(m_pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
+    LockAssertion lock(m_pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
 
     Workspace workspace(ptx);
 
@@ -1059,11 +1059,14 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
 
 } // anon namespace
 
+namespace {
 /** (try to) add transaction to memory pool with a specified acceptance time **/
-static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
+bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
                         int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
+    AssertLockHeld(pool.cs);
+
     std::vector<COutPoint> coins_to_uncache;
     MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept };
     bool res = MemPoolAccept(pool).AcceptSingleTransaction(tx, args);
@@ -1082,12 +1085,35 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     return res;
 }
 
-bool AcceptToMemoryPool(CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
-                        std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+bool AcceptToMemoryPoolHelper(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
+    AssertLockHeld(pool.cs);
     const CChainParams& chainparams = Params();
     return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
+}
+} // namespace
+
+bool AcceptToMemoryPoolWithLockedMempool(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+{
+    AssertLockHeld(pool.cs);
+    return AcceptToMemoryPoolHelper(pool, state, tx, plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
+}
+
+bool AcceptToMemoryPoolWithUnlockedMempool(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+{
+    AssertLockNotHeld(pool.cs);
+    LOCK(pool.cs);
+    return AcceptToMemoryPoolHelper(pool, state, tx, plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
@@ -5087,9 +5113,12 @@ bool LoadMempool(CTxMemPool& pool)
             if (nTime + nExpiryTimeout > nNow) {
                 LOCK(cs_main);
                 AssertLockNotHeld(pool.cs);
-                AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
-                                           nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
-                                           false /* test_accept */);
+                {
+                    LOCK(pool.cs);
+                    AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
+                                               nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
+                                               false /* test_accept */);
+                }
                 if (state.IsValid()) {
                     ++count;
                 } else {

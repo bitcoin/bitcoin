@@ -2065,7 +2065,7 @@ void static ProcessOrphanTx(
         TxValidationState orphan_state;
 
         if (setMisbehaving.count(fromPeer)) continue;
-        if (::AcceptToMemoryPool(mempool, orphan_state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        if (::AcceptToMemoryPoolWithUnlockedMempool(mempool, orphan_state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), connman);
             for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
@@ -3025,7 +3025,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         // (older than our recency filter) if trying to DoS us, without any need
         // for witness malleation.
         if (!AlreadyHaveTx(GenTxid(/* is_wtxid=*/true, wtxid), m_mempool) &&
-            ::AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+            ::AcceptToMemoryPoolWithUnlockedMempool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             m_mempool.check(&::ChainstateActive().CoinsTip());
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
