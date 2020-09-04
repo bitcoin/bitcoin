@@ -713,7 +713,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** @returns true if the mempool is fully loaded */
-    bool IsLoaded() const;
+    bool IsLoaded() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Sets the current loaded state */
     void SetIsLoaded(bool loaded);

@@ -1964,7 +1964,7 @@ static UniValue savemempool(const JSONRPCRequest& request)
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
 
-    if (!mempool.IsLoaded()) {
+    if (!WITH_LOCK(mempool.cs, return mempool.IsLoaded())) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 
