@@ -302,6 +302,7 @@ public:
     {
         ancestors = descendants = 0;
         if (!m_node.mempool) return;
+        LOCK(m_node.mempool->cs);
         m_node.mempool->GetTransactionAncestry(txid, ancestors, descendants);
     }
     void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) override
