@@ -2103,6 +2103,7 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
             EraseOrphanTx(orphanHash);
             done = true;
         }
+        LOCK(m_mempool.cs);
         m_mempool.check(&::ChainstateActive().CoinsTip());
     }
 }
@@ -3002,7 +3003,10 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         // for witness malleation.
         if (!AlreadyHaveTx(GenTxid(/* is_wtxid=*/true, wtxid), m_mempool) &&
             AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
-            m_mempool.check(&::ChainstateActive().CoinsTip());
+            {
+                LOCK(m_mempool.cs);
+                m_mempool.check(&::ChainstateActive().CoinsTip());
+            }
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));

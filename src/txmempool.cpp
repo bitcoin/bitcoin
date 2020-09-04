@@ -615,7 +615,7 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 
 void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     if (nCheckFrequency == 0)
         return;
 
