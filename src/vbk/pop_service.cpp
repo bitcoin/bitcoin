@@ -43,6 +43,44 @@ PayloadsProvider& GetPayloadsProvider()
     return *payloads;
 }
 
+static std::string FormatBlock(const CBlockIndex* index){
+    return fmt::format("{}:{}", index->nHeight, index->GetBlockHash().GetHex());
+}
+
+CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
+{
+    AssertLockHeld(cs_main);
+    assert(candidate != nullptr && "block has no according header in block tree");
+
+    auto blockHash = candidate->GetBlockHash();
+    auto* tip = ChainActive().Tip();
+    if (!tip) {
+        // if tip is not set, candidate wins
+        return nullptr;
+    }
+
+    auto tipHash = tip->GetBlockHash();
+    if (tipHash == blockHash) {
+        // we compare tip with itself
+        return tip;
+    }
+
+    int result = compareForks(*tip, *candidate);
+    if(result < 0) {
+        // candidate has higher POP score
+        return candidate;
+    }
+
+    if(result == 0 && tip->nChainWork < candidate->nChainWork) {
+        // candidate is POP equal to current tip;
+        // candidate has higher chainwork
+        return candidate;
+    }
+
+    // otherwise, current chain wins
+    return tip;
+}
+
 bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state)
 {
     AssertLockHeld(cs_main);

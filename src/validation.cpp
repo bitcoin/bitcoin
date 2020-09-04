@@ -2899,9 +2899,26 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, const CChainPar
                 // (with the exception of shutdown due to hardware issues, low disk space, etc).
                 ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
 
+                if (pblock && pindexBestChain == nullptr) {
+                    auto* blockindex = LookupBlockIndex(pblock->GetHash());
+                    assert(blockindex);
+
+                    auto tmp_set = setBlockIndexCandidates;
+                    for (auto* candidate : tmp_set) {
+                        // if candidate has txs downloaded & currently arrived block is ancestor of `candidate`
+                        if (candidate->HaveTxsDownloaded() && TestBlockIndex(candidate) && candidate->GetAncestor(blockindex->nHeight) == blockindex) {
+                            // then do pop fr with candidate, instead of blockindex
+                            pindexBestChain = VeriBlock::compareTipToBlock(candidate);
+                        }
+                    }
+                }
+
                 if (pindexBestChain == nullptr) {
                     pindexBestChain = FindBestChain();
                 }
+
+                // update best known header
+                pindexBestHeader = pindexBestChain;
 
                 // Whether we have anything to do at all.
                 if (pindexBestChain == nullptr || pindexBestChain == m_chain.Tip()) {
