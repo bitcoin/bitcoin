@@ -466,10 +466,15 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(pool.exists(tx2.GetHash()));
     BOOST_CHECK(pool.exists(tx3.GetHash()));
 
-    pool.TrimToSize(GetVirtualTransactionSize(CTransaction(tx1))); // mempool is limited to tx1's size in memory usage, so nothing fits
+    std::vector<COutPoint> vNoSpendsRemaining;
+    pool.TrimToSize(GetVirtualTransactionSize(CTransaction(tx1)), &vNoSpendsRemaining); // mempool is limited to tx1's size in memory usage, so nothing fits
     BOOST_CHECK(!pool.exists(tx1.GetHash()));
     BOOST_CHECK(!pool.exists(tx2.GetHash()));
     BOOST_CHECK(!pool.exists(tx3.GetHash()));
+    // This vector should only contain 'root' (not unconfirmed) outpoints
+    // Though both tx2 and tx3 were removed, tx3's input came from tx2.
+    BOOST_CHECK_EQUAL(vNoSpendsRemaining.size(), 1U);
+    BOOST_CHECK(vNoSpendsRemaining == std::vector<COutPoint>{COutPoint()});
 
     CFeeRate maxFeeRateRemoved(25000, GetVirtualTransactionSize(CTransaction(tx3)) + GetVirtualTransactionSize(CTransaction(tx2)));
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
