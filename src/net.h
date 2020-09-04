@@ -51,8 +51,16 @@ static const bool DEFAULT_WHITELISTFORCERELAY = false;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
-/** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
-static const int FEELER_INTERVAL = 120;
+/** Delay of the next feeler consideration if a current candidate was attempted to connect to. **/
+static const int FEELER_ATTEMPT_INTERVAL = 120;
+/**
+ * Delay of the next feeler consideration if a current candidate was not attempted to connect to.
+ * For example, if a selected feeler didn't pass pre-validation (e.g., last time it was tried was too recent),
+ * we won't even try to connect.
+ */
+static const int FEELER_SKIP_INTERVAL = 20;
+static_assert(FEELER_ATTEMPT_INTERVAL >= FEELER_SKIP_INTERVAL,
+"FEELER_SKIP_INTERVAL should not exceed FEELER_ATTEMPT_INTERVAL to enforce effective feeler selection");
 /** The maximum number of addresses from our addrman to return in response to a getaddr message. */
 static constexpr size_t MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
@@ -163,7 +171,7 @@ enum class ConnectionType {
      * Note that in the literature ("Eclipse Attacks on Bitcoin’s Peer-to-Peer Network")
      * only the latter feature is referred to as "feeler connections",
      * although in our codebase feeler connections encompass test-before-evict as well.
-     * We make these connections approximately every FEELER_INTERVAL:
+     * We periodically make these connections:
      * first we resolve previously found collisions if they exist (test-before-evict),
      * otherwise connect to a node from the new table.
      */

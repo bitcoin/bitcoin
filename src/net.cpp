@@ -1861,7 +1861,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     int64_t nStart = GetTime();
 
     // Minimum time before next feeler connection (in microseconds).
-    int64_t nNextFeeler = PoissonNextSend(nStart*1000*1000, FEELER_INTERVAL);
+    int64_t nNextFeeler = PoissonNextSend(nStart * 1000 * 1000, FEELER_ATTEMPT_INTERVAL);
     while (!interruptNet)
     {
         ProcessAddrFetch();
@@ -1942,7 +1942,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         } else if (GetTryNewOutboundPeer()) {
             // OUTBOUND_FULL_RELAY
         } else if (nTime > nNextFeeler) {
-            nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
+            // We don't know whether feeler connection will be attempted in this iteration,
+            // or we will skip this candidate due to one of the pre-validation rules.
+            // Thus, we schedule the next feeler connection with a shorter interval now,
+            // but we will reschedule if for later if current candidate will be actually
+            // attempted to connect to.
+            nNextFeeler = PoissonNextSend(nTime, FEELER_SKIP_INTERVAL);
             conn_type = ConnectionType::FEELER;
             fFeeler = true;
         } else {
@@ -2007,6 +2012,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         if (addrConnect.IsValid()) {
 
             if (fFeeler) {
+                nNextFeeler = PoissonNextSend(nTime, FEELER_ATTEMPT_INTERVAL);
+
                 // Add small amount of random noise before connection to avoid synchronization.
                 int randsleep = GetRandInt(FEELER_SLEEP_WINDOW * 1000);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(randsleep)))
