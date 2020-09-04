@@ -4366,7 +4366,7 @@ bool PeerManager::SendMessages(CNode* pto)
 
                 // Respond to BIP35 mempool requests
                 if (fSendTrickle && pto->m_tx_relay->fSendMempool) {
-                    auto vtxinfo = m_mempool.infoAll();
+                    const auto vtxinfo = WITH_LOCK(m_mempool.cs, return m_mempool.infoAll());
                     pto->m_tx_relay->fSendMempool = false;
                     CFeeRate filterrate;
                     {

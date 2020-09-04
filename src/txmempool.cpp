@@ -795,7 +795,7 @@ static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator
 
 std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     auto iters = GetSortedDepthAndScore();
 
     std::vector<TxMempoolInfo> ret;
