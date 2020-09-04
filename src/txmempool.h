@@ -766,7 +766,8 @@ public:
     }
 
     /** Removes a transaction from the unbroadcast set */
-    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
+    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false)
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Returns transactions in unbroadcast set */
     std::map<uint256, uint256> GetUnbroadcastTxs() const {

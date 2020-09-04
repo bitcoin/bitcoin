@@ -897,7 +897,7 @@ void PeerManager::ReattemptInitialBroadcast(CScheduler& scheduler) const
             LOCK(cs_main);
             RelayTransaction(elem.first, elem.second, m_connman);
         } else {
-            m_mempool.RemoveUnbroadcastTx(elem.first, true);
+            WITH_LOCK(m_mempool.cs, m_mempool.RemoveUnbroadcastTx(elem.first, true));
         }
     }
 
@@ -1756,11 +1756,11 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             // WTX and WITNESS_TX imply we serialize with witness
             int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
             connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
-            mempool.RemoveUnbroadcastTx(tx->GetHash());
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
             std::vector<uint256> parent_ids_to_add;
             {
                 LOCK(mempool.cs);
+                mempool.RemoveUnbroadcastTx(tx->GetHash());
                 auto txiter = mempool.GetIter(tx->GetHash());
                 if (txiter) {
                     const CTxMemPoolEntry::Parents& parents = (*txiter)->GetMemPoolParentsConst();

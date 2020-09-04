@@ -928,11 +928,10 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
-void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {
-    LOCK(cs);
-
-    if (m_unbroadcast_txids.erase(txid))
-    {
+void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked)
+{
+    AssertLockHeld(cs);
+    if (m_unbroadcast_txids.erase(txid)) {
         LogPrint(BCLog::MEMPOOL, "Removed %i from set of unbroadcast txns%s\n", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
     }
 }
