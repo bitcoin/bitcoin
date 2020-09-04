@@ -51,9 +51,12 @@ class NetTest(BitcoinTestFramework):
     def run_test(self):
         # Get out of IBD for the minfeefilter and getpeerinfo tests.
         self.nodes[0].generate(101)
-        # Connect nodes both ways.
+
+        # By default, the test framework sets up an addnode connection from
+        # node 1 --> node0. By connecting node0 --> node 1, we're left with
+        # the two nodes being connected both ways.
+        # Topology will look like: node0 <--> node1
         self.connect_nodes(0, 1)
-        self.connect_nodes(1, 0)
         self.sync_all()
 
         self.test_connection_count()
