@@ -152,6 +152,8 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
  * script can be anything; an attacker could use a very
  * expensive-to-check-upon-redemption script like:
  *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+ *
+ * Note that only the non-witness portion of the transaction is checked here.
  */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
@@ -164,7 +166,11 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         std::vector<std::vector<unsigned char> > vSolutions;
         txnouttype whichType = Solver(prev.scriptPubKey, vSolutions);
-        if (whichType == TX_NONSTANDARD) {
+        if (whichType == TX_NONSTANDARD || whichType == TX_WITNESS_UNKNOWN) {
+            // WITNESS_UNKNOWN failures are typically also caught with a policy
+            // flag in the script interpreter, but it can be helpful to catch
+            // this type of NONSTANDARD transaction earlier in transaction
+            // validation.
             return false;
         } else if (whichType == TX_SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;
