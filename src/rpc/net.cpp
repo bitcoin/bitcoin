@@ -425,7 +425,7 @@ static UniValue getnettotals(const JSONRPCRequest& request)
                    {
                        {RPCResult::Type::NUM, "totalbytesrecv", "Total bytes received"},
                        {RPCResult::Type::NUM, "totalbytessent", "Total bytes sent"},
-                       {RPCResult::Type::NUM_TIME, "timemillis", "Current UNIX time in milliseconds"},
+                       {RPCResult::Type::NUM_TIME, "timemillis", "Current " + UNIX_EPOCH_TIME + " in milliseconds"},
                        {RPCResult::Type::OBJ, "uploadtarget", "",
                        {
                            {RPCResult::Type::NUM, "timeframe", "Length of the measuring timeframe in seconds"},
@@ -501,7 +501,9 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
                         }},
                         {RPCResult::Type::BOOL, "localrelay", "true if transaction relay is requested from peers"},
                         {RPCResult::Type::NUM, "timeoffset", "the time offset"},
-                        {RPCResult::Type::NUM, "connections", "the number of connections"},
+                        {RPCResult::Type::NUM, "connections", "the total number of connections"},
+                        {RPCResult::Type::NUM, "connections_in", "the number of inbound connections"},
+                        {RPCResult::Type::NUM, "connections_out", "the number of outbound connections"},
                         {RPCResult::Type::NUM, "geth_sync_status", "Sync status of Geth (Ethereum network). Valid values are: synced, syncing or waiting to sync.."},
                         {RPCResult::Type::NUM, "geth_total_blocks", "The highest height seen on the Ethereum network by Geth"},            
                         {RPCResult::Type::NUM, "geth_current_block", "The highest height of the block header of Ethereum that is stored in our database"},
@@ -552,7 +554,9 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
+        obj.pushKV("connections", (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
+        obj.pushKV("connections_in", (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_IN));
+        obj.pushKV("connections_out", (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_OUT));
     }
     // SYSCOIN
     obj.pushKV("geth_sync_status",  fGethSyncStatus);
