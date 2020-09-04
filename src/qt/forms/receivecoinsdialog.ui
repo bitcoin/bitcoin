@@ -97,19 +97,6 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="2">
-         <widget class="BitcoinAmountField" name="reqAmount">
-          <property name="minimumSize">
-           <size>
-            <width>80</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
-          </property>
-         </widget>
-        </item>
         <item row="7" column="2">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
@@ -166,6 +153,36 @@
           </property>
          </widget>
         </item>
+        <item row="5" column="2">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="BitcoinAmountField" name="reqAmount">
+            <property name="toolTip">
+             <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
        </layout>
       </item>
      </layout>
@@ -201,12 +218,6 @@
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QLabel" name="label_6">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
         <property name="text">
          <string>Requested payments history</string>
         </property>
@@ -297,8 +308,6 @@
   <tabstop>showRequestButton</tabstop>
   <tabstop>removeRequestButton</tabstop>
  </tabstops>
- <resources>
-  <include location="../dash.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>576</width>
-    <height>402</height>
+    <width>583</width>
+    <height>537</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Options</string>
@@ -18,14 +24,87 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
+    <layout class="QHBoxLayout" name="horizontalLayout_Buttons_2">
+     <property name="spacing">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tabMain">
-      <attribute name="title">
-       <string>&amp;Main</string>
-      </attribute>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="btnMain">
+       <property name="text">
+        <string>&amp;Main</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnWallet">
+       <property name="text">
+        <string>W&amp;allet</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnNetwork">
+       <property name="text">
+        <string>&amp;Network</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnWindow">
+       <property name="text">
+        <string>&amp;Window</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnDisplay">
+       <property name="text">
+        <string>&amp;Display</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnAppearance">
+       <property name="text">
+        <string>&amp;Appearance</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidgetOptions">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="currentIndex">
+      <number>5</number>
+     </property>
+     <widget class="QWidget" name="pageMain">
       <layout class="QVBoxLayout" name="verticalLayout_Main">
        <item>
         <widget class="QCheckBox" name="bitcoinAtStartup">
@@ -132,10 +211,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabWallet">
-      <attribute name="title">
-       <string>W&amp;allet</string>
-      </attribute>
+     <widget class="QWidget" name="pageWallet">
       <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
         <widget class="QGroupBox" name="groupBox">
@@ -300,10 +376,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabNetwork">
-      <attribute name="title">
-       <string>&amp;Network</string>
-      </attribute>
+     <widget class="QWidget" name="pageNetwork">
       <layout class="QVBoxLayout" name="verticalLayout_Network">
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
@@ -618,10 +691,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabWindow">
-      <attribute name="title">
-       <string>&amp;Window</string>
-      </attribute>
+     <widget class="QWidget" name="pageWindow">
       <layout class="QVBoxLayout" name="verticalLayout_Window">
        <item>
         <widget class="QCheckBox" name="hideTrayIcon">
@@ -668,10 +738,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabDisplay">
-      <attribute name="title">
-       <string>&amp;Display</string>
-      </attribute>
+     <widget class="QWidget" name="pageDisplay">
       <layout class="QVBoxLayout" name="verticalLayout_Display">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_1_Display">
@@ -725,20 +792,6 @@ https://www.transifex.com/projects/p/dash/</string>
           <set>Qt::TextBrowserInteraction</set>
          </property>
         </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Display" stretch="0,0">
-         <item>
-          <widget class="QLabel" name="themeLabel">
-           <property name="text">
-            <string>User Interface Theme:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QValueComboBox" name="theme"/>
-         </item>
-        </layout>
        </item>
        <item>
         <widget class="Line" name="line">
@@ -811,6 +864,26 @@ https://www.transifex.com/projects/p/dash/</string>
        </item>
        <item>
         <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageAppearance">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QWidget" name="widgetAppearance" native="true"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -907,12 +980,6 @@ https://www.transifex.com/projects/p/dash/</string>
          <width>200</width>
          <height>0</height>
         </size>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
        </property>
        <property name="text">
         <string/>

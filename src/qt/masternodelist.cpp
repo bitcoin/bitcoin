@@ -31,7 +31,7 @@ int GetOffsetFromUtc()
 #endif
 }
 
-MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* parent) :
+MasternodeList::MasternodeList(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::MasternodeList),
     clientModel(0),
@@ -42,6 +42,11 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     mnListChanged(true)
 {
     ui->setupUi(this);
+
+    GUIUtil::setFont({ui->label_count_2,
+                      ui->countLabelDIP3
+                     }, GUIUtil::FontWeight::Bold, 14);
+    GUIUtil::setFont({ui->label_filter_2}, GUIUtil::FontWeight::Normal, 15);
 
     int columnAddressWidth = 200;
     int columnStatusWidth = 80;
@@ -74,9 +79,13 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
 
     ui->tableWidgetMasternodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
 
+#if QT_VERSION >= 0x040700
+    ui->filterLineEditDIP3->setPlaceholderText(tr("Filter by any property (e.g. address or protx hash)"));
+#endif
+
     QAction* copyProTxHashAction = new QAction(tr("Copy ProTx Hash"), this);
     QAction* copyCollateralOutpointAction = new QAction(tr("Copy Collateral Outpoint"), this);
-    contextMenuDIP3 = new QMenu();
+    contextMenuDIP3 = new QMenu(this);
     contextMenuDIP3->addAction(copyProTxHashAction);
     contextMenuDIP3->addAction(copyCollateralOutpointAction);
     connect(ui->tableWidgetMasternodesDIP3, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenuDIP3(const QPoint&)));

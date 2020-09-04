@@ -18,14 +18,47 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
+    <layout class="QHBoxLayout" name="horizontalLayout_Buttons_2">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="btnSignMessage">
+       <property name="text">
+        <string>&amp;Sign Message</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnVerifyMessage">
+       <property name="text">
+        <string>&amp;Verify Message</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidgetSig">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tabSignMessage">
-      <attribute name="title">
-       <string>&amp;Sign Message</string>
-      </attribute>
+     <widget class="QWidget" name="pageSignMessage">
       <layout class="QVBoxLayout" name="verticalLayout_SM">
        <item>
         <widget class="QLabel" name="infoLabel_SM">
@@ -110,11 +143,6 @@
          </property>
          <item>
           <widget class="QLineEdit" name="signatureOut_SM">
-           <property name="font">
-            <font>
-             <italic>true</italic>
-            </font>
-           </property>
            <property name="readOnly">
             <bool>true</bool>
            </property>
@@ -178,12 +206,6 @@
          </item>
          <item>
           <widget class="QLabel" name="statusLabel_SM">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -209,10 +231,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabVerifyMessage">
-      <attribute name="title">
-       <string>&amp;Verify Message</string>
-      </attribute>
+     <widget class="QWidget" name="pageVerifyMessage">
       <layout class="QVBoxLayout" name="verticalLayout_VM">
        <item>
         <widget class="QLabel" name="infoLabel_VM">
@@ -309,12 +328,6 @@
          </item>
          <item>
           <widget class="QLabel" name="statusLabel_VM">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>

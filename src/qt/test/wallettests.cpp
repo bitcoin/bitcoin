@@ -3,7 +3,6 @@
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/sendcoinsentry.h>
@@ -110,6 +109,7 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     src/qt/test/test_dash-qt -platform cocoa    # macOS
 void TestGUI()
 {
+    GUIUtil::loadFonts();
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
     for (int i = 0; i < 5; ++i) {
@@ -132,11 +132,10 @@ void TestGUI()
     wallet.SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.
-    std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
-    SendCoinsDialog sendCoinsDialog(platformStyle.get());
-    TransactionView transactionView(platformStyle.get());
+    SendCoinsDialog sendCoinsDialog;
+    TransactionView transactionView;
     OptionsModel optionsModel;
-    WalletModel walletModel(platformStyle.get(), &wallet, &optionsModel);
+    WalletModel walletModel(&wallet, &optionsModel);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -150,7 +149,7 @@ void TestGUI()
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
 
     // Check current balance on OverviewPage
-    OverviewPage overviewPage(platformStyle.get());
+    OverviewPage overviewPage;
     overviewPage.setWalletModel(&walletModel);
     QLabel* balanceLabel = overviewPage.findChild<QLabel*>("labelBalance");
     QString balanceText = balanceLabel->text();
@@ -160,7 +159,7 @@ void TestGUI()
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button
-    ReceiveCoinsDialog receiveCoinsDialog(platformStyle.get());
+    ReceiveCoinsDialog receiveCoinsDialog;
     receiveCoinsDialog.setModel(&walletModel);
     RecentRequestsTableModel* requestTableModel = walletModel.getRecentRequestsTableModel();
 
@@ -185,11 +184,11 @@ void TestGUI()
             QString paymentText = rlist->toPlainText();
             QStringList paymentTextList = paymentText.split('\n');
             QCOMPARE(paymentTextList.at(0), QString("Payment information"));
-            QVERIFY(paymentTextList.at(1).indexOf(QString("URI: dash:")) != -1);
-            QVERIFY(paymentTextList.at(2).indexOf(QString("Address:")) != -1);
-            QCOMPARE(paymentTextList.at(3), QString("Amount: 0.00000001 ") + BitcoinUnits::name(unit));
-            QCOMPARE(paymentTextList.at(4), QString("Label: TEST_LABEL_1"));
-            QCOMPARE(paymentTextList.at(5), QString("Message: TEST_MESSAGE_1"));
+            QVERIFY(paymentTextList.at(2).indexOf(QString("URI: dash:")) != -1);
+            QVERIFY(paymentTextList.at(3).indexOf(QString("Address:")) != -1);
+            QCOMPARE(paymentTextList.at(4), QString("Amount: 0.00000001 ") + BitcoinUnits::name(unit));
+            QCOMPARE(paymentTextList.at(5), QString("Label: TEST_LABEL_1"));
+            QCOMPARE(paymentTextList.at(6), QString("Message: TEST_MESSAGE_1"));
         }
     }
 

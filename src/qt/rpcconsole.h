@@ -11,12 +11,12 @@
 
 #include <net.h>
 
+#include <QButtonGroup>
 #include <QWidget>
 #include <QCompleter>
 #include <QThread>
 
 class ClientModel;
-class PlatformStyle;
 class RPCTimerInterface;
 
 namespace Ui {
@@ -34,7 +34,7 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
+    explicit RPCConsole(QWidget* parent);
     ~RPCConsole();
 
     static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr);
@@ -65,8 +65,10 @@ protected:
     void keyPressEvent(QKeyEvent *);
 
 private Q_SLOTS:
+    /** custom tab buttons clicked */
+    void showPage(int index);
     void on_lineEdit_returnPressed();
-    void on_tabWidget_currentChanged(int index);
+    void on_stackedWidgetRPC_currentChanged(int index);
     /** open the debug.log from the current datadir */
     void on_openDebugLogfileButton_clicked();
     /** change the time range of the network traffic graph */
@@ -76,6 +78,7 @@ private Q_SLOTS:
     void resizeEvent(QResizeEvent *event);
     void showEvent(QShowEvent *event);
     void hideEvent(QHideEvent *event);
+    void changeEvent(QEvent* e);
     /** Show custom context menu on Peers tab */
     void showPeersTableContextMenu(const QPoint& point);
     /** Show custom context menu on Bans tab */
@@ -158,12 +161,12 @@ private:
     };
 
     Ui::RPCConsole *ui;
+    QButtonGroup pageButtons;
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
     QString cmdBeforeBrowsing;
     QList<NodeId> cachedNodeids;
-    const PlatformStyle *platformStyle;
     RPCTimerInterface *rpcTimerInterface;
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;

@@ -4,6 +4,7 @@
 
 #include <qt/trafficgraphwidget.h>
 #include <qt/clientmodel.h>
+#include <qt/guiutil.h>
 
 #include <boost/bind.hpp>
 
@@ -77,11 +78,15 @@ namespace
 void TrafficGraphWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
-    painter.fillRect(rect(), Qt::black);
+    QRect drawRect = rect();
+    // First draw the border
+    painter.fillRect(drawRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
+    drawRect.adjust(1, 1, -1, -1);
+    painter.fillRect(drawRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
 
     if(fMax <= 0.0f) return;
 
-    QColor axisCol(Qt::gray);
+    QColor axisCol(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
     QColor axisCol2;
     int h = height() - YMARGIN * 2;
     painter.setPen(axisCol);
@@ -120,28 +125,36 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
 
     if(!queue.empty()) {
         QPainterPath pIn;
+        QColor green = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::GREEN);
+        QColor lucentGreen = green;
+        lucentGreen.setAlpha(128);
+
         paintPath(pIn, queue, boost::bind(chooseIn,_1));
-        painter.fillPath(pIn, QColor(0, 255, 0, 128));
-        painter.setPen(Qt::green);
+        painter.fillPath(pIn, lucentGreen);
+        painter.setPen(green);
         painter.drawPath(pIn);
 
         QPainterPath pOut;
+        QColor red = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::RED);
+        QColor lucentRed = red;
+        lucentRed.setAlpha(128);
+
         paintPath(pOut, queue, boost::bind(chooseOut,_1));
-        painter.fillPath(pOut, QColor(255, 0, 0, 128));
-        painter.setPen(Qt::red);
+        painter.fillPath(pOut, lucentRed);
+        painter.setPen(red);
         painter.drawPath(pOut);
     }
 
     // draw text on top of everything else
     QRect textRect = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
     textRect.translate(0, -textRect.height());
-    painter.fillRect(textRect, Qt::black);
+    painter.fillRect(textRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
     painter.setPen(axisCol);
     painter.drawText(textRect, Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
     if(fMax / val <= 3.0f) {
         QRect textRect2 = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val2 / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
         textRect2.translate(0, -textRect2.height());
-        painter.fillRect(textRect2, Qt::black);
+        painter.fillRect(textRect2, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
         painter.setPen(axisCol2);
         painter.drawText(textRect2, Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
     }

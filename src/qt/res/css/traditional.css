@@ -1,0 +1,248 @@
+/**
+Copyright (c) 2020 The Dash Core developers
+Distributed under the MIT/X11 software license, see the accompanying
+file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+---------------------------------------------------------------------
+
+This file contains all changes for the dash theme "Traditional".
+
+NOTE: This file gets not appended to the general.css. The Traditional
+theme is a standalone theme which just fixes some bugs in the OS default
+depiction of the Qt elements.
+
+Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
+**/
+
+/* do not modify! section updated by update-css-files.py
+<colors>
+
+# Used colors in traditional.css for commit 44de8a93f2
+
+#00000000
+#333
+#fff
+#008de4
+#047ac2
+#a84832
+#ccfafafa
+
+</colors>
+*/
+
+/******************************************************
+QToolBar / QToolButton
+******************************************************/
+
+QToolBar QLabel#lblToolbarLogo {
+    padding: 12px;
+    image: url(':/images/dash_logo_toolbar_blue');
+    height: 2.5em;
+}
+
+/******************************************************
+QPushButton - Special case, tabbar replacement buttons
+******************************************************/
+
+/* Debug window buttons */
+#btnInfo,
+#btnConsole,
+#btnNetTraffic,
+#btnPeers,
+#btnRepair,
+/* Options dialog buttons */
+#btnMain,
+#btnWallet,
+#btnNetwork,
+#btnWindow,
+#btnDisplay,
+#btnAppearance,
+/* Sign/Verify dialog buttons */
+#btnSignMessage,
+#btnVerifyMessage {
+    background: none;
+    border-radius: 0px;
+    border-bottom: 3px solid red;
+    padding-bottom: 5px;
+    background-color: #00000000;
+    border-color: #008de4;
+}
+
+/* Debug window buttons */
+#btnInfo:hover:checked,
+#btnConsole:hover:checked,
+#btnNetTraffic:hover:checked,
+#btnPeers:hover:checked,
+#btnRepair:hover:checked,
+/* Options dialog buttons */
+#btnMain:hover:checked,
+#btnWallet:hover:checked,
+#btnNetwork:hover:checked,
+#btnWindow:hover:checked,
+#btnDisplay:hover:checked,
+#btnAppearance:hover:checked,
+/* Sign/Verify dialog buttons */
+#btnSignMessage:hover:checked,
+#btnVerifyMessage:hover:checked {
+    border: none;
+    border-radius: 0px;
+    border-bottom: 3px solid red;
+    background-color: #00000000;
+    border-color: #333;
+}
+
+/* Debug window buttons */
+#btnInfo:hover:!checked,
+#btnConsole:hover:!checked,
+#btnNetTraffic:hover:!checked,
+#btnPeers:hover:!checked,
+#btnRepair:hover:!checked,
+/* Options dialog buttons */
+#btnMain:hover:!checked,
+#btnWallet:hover:!checked,
+#btnNetwork:hover:!checked,
+#btnWindow:hover:!checked,
+#btnDisplay:hover:!checked,
+#btnAppearance:hover:!checked,
+/* Sign/Verify dialog buttons */
+#btnSignMessage:hover:!checked,
+#btnVerifyMessage:hover:!checked {
+    border: none;
+    border-radius: 0px;
+    border-bottom: 3px solid red;
+    background-color: #00000000;
+    border-color: #047ac2;
+}
+
+/* Debug window buttons */
+#btnInfo:checked,
+#btnConsole:checked,
+#btnNetwork:checked,
+#btnPeers:checked,
+#btnRepair:checked,
+/* Options dialog buttons */
+#btnMain:checked,
+#btnWallet:checked,
+#btnNetwork:checked,
+#btnWindow:checked,
+#btnDisplay:checked,
+#btnAppearance:checked,
+/* Sign/Verify dialog buttons */
+#btnSignMessage:checked,
+#btnVerifyMessage:checked {
+    border: none;
+    border-radius: 0px;
+    border-bottom: 3px solid red;
+    background-color: #00000000;
+    border-color: #333;
+}
+
+/******************************************************
+ModalOverlay
+******************************************************/
+
+QWidget#bgWidget { /* The frame overlaying the overview-page */
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: #ccfafafa;
+}
+
+QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
+    background-color: #fff;
+    margin: 0;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border: 1px solid;
+    border-radius: 6px;
+}
+
+/******************************************************
+AppearanceSetup
+******************************************************/
+
+QDialog#AppearanceSetup {
+    min-width: 600px;
+    max-width: 600px;
+    min-height: 400px;
+    max-height: 400px;
+}
+
+QDialog#AppearanceSetup > QFrame {
+    border-bottom: 1px solid red;
+}
+
+QDialog#AppearanceSetup > QLabel#lblHeading {
+    min-height: 50px;
+    max-height: 50px;
+}
+
+QDialog#AppearanceSetup > QLabel#lblSubHeading {
+    min-height: 30px;
+    max-height: 30px;
+}
+
+QDialog#AppearanceSetup > AppearanceWidget {
+    min-height: 250px;
+    max-height: 250px;
+}
+
+/******************************************************
+AppearanceWidget
+******************************************************/
+
+AppearanceWidget #lblSmaller,
+AppearanceWidget #lblBigger,
+AppearanceWidget #lblBolderNormal,
+AppearanceWidget #lblBolderBold,
+AppearanceWidget #lblLighterNormal,
+AppearanceWidget #lblLighterBold {
+    /* Exceptional use of font-size here to
+    avoid changes of the slider postions */
+    font-size: 13px;
+}
+
+AppearanceWidget #lblTheme,
+AppearanceWidget #lblFontFamily,
+AppearanceWidget #lblFontScale,
+AppearanceWidget #lblFontWeightNormal,
+AppearanceWidget #lblFontWeightBold,
+AppearanceWidget #lblSmaller,
+AppearanceWidget #lblBigger,
+AppearanceWidget #lblBolderNormal,
+AppearanceWidget #lblBolderBold,
+AppearanceWidget #lblLighterNormal,
+AppearanceWidget #lblLighterBold {
+    min-height: 40px;
+}
+
+AppearanceWidget #lblTheme,
+AppearanceWidget #lblFontFamily,
+AppearanceWidget #lblFontScale,
+AppearanceWidget #lblFontWeightNormal,
+AppearanceWidget #lblFontWeightBold {
+    min-width: 170px;
+    max-width: 170px;
+}
+
+/******************************************************
+OverviewPage
+******************************************************/
+
+QWidget .QFrame#frame .QLabel#labelWalletStatus, /* Wallet Sync Status */
+QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendSyncStatus, /* PrivateSend Sync Status */
+QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
+    color: #a84832;
+}
+
+/******************************************************
+SendCoinsDialog
+******************************************************/
+
+QDialog#SendCoinsDialog QLabel#labelBalance {
+    margin-left: 0px;
+    padding-left: 0px;
+}
+
+QDialog#SendCoinsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffFunds { /* Insufficient Funds Label */
+    color: #a84832;
+}

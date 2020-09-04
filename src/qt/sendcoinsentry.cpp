@@ -10,38 +10,42 @@
 #include <qt/addresstablemodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 
 #include <QApplication>
 #include <QClipboard>
 
-SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
+SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
     QStackedWidget(parent),
     ui(new Ui::SendCoinsEntry),
-    model(0),
-    platformStyle(_platformStyle)
+    model(0)
 {
     ui->setupUi(this);
 
+    GUIUtil::disableMacFocusRect(this);
+
     setCurrentWidget(ui->SendCoins);
 
-    if (platformStyle->getUseExtraSpacing())
-        ui->payToLayout->setSpacing(4);
 #if QT_VERSION >= 0x040700
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
 
-    // These icons are needed on Mac also!
     ui->addressBookButton->setIcon(QIcon(":/icons/address-book"));
     ui->pasteButton->setIcon(QIcon(":/icons/editpaste"));
     ui->deleteButton->setIcon(QIcon(":/icons/remove"));
     ui->deleteButton_is->setIcon(QIcon(":/icons/remove"));
     ui->deleteButton_s->setIcon(QIcon(":/icons/remove"));
-      
+
     // normal dash address field
     GUIUtil::setupAddressWidget(ui->payTo, this, true);
     // just a label for displaying dash address(es)
     ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
+
+    GUIUtil::setFont({ui->payToLabel,
+                     ui->labellLabel,
+                     ui->amountLabel,
+                     ui->messageLabel}, GUIUtil::FontWeight::Normal, 15);
+
+    GUIUtil::updateFonts();
 
     // Connect signals
     connect(ui->payAmount, SIGNAL(valueChanged()), this, SIGNAL(payAmountChanged()));
@@ -67,7 +71,7 @@ void SendCoinsEntry::on_addressBookButton_clicked()
 {
     if(!model)
         return;
-    AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+    AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
     if(dlg.exec())
     {

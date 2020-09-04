@@ -95,6 +95,8 @@ ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    GUIUtil::updateFonts();
+
 #ifndef USE_QRCODE
     ui->btnSaveAs->setVisible(false);
     ui->lblQRCode->setVisible(false);
@@ -137,10 +139,11 @@ void ReceiveRequestDialog::update()
     QString uri = GUIUtil::formatBitcoinURI(info);
     ui->btnSaveAs->setEnabled(false);
     QString html;
-    html += "<html><font face='verdana, arial, helvetica, sans-serif'>";
-    html += "<b>"+tr("Payment information")+"</b><br>";
+    html += "<html>";
+    html += "<b>" + tr("Payment information") + "</b><br><br>";
     html += "<b>"+tr("URI")+"</b>: ";
-    html += "<a href=\""+uri+"\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
+    html += QString("<a style=\"%1\"href=\"").arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND)) +
+            uri + "\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
     html += "<b>"+tr("Address")+"</b>: " + GUIUtil::HtmlEscape(info.address) + "<br>";
     if(info.amount)
         html += "<b>"+tr("Amount")+"</b>: " + BitcoinUnits::formatHtmlWithUnit(model->getDisplayUnit(), info.amount) + "<br>";
@@ -165,32 +168,39 @@ void ReceiveRequestDialog::update()
                 ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
                 return;
             }
-            QImage qrImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-            qrImage.fill(0xffffff);
+            QImage qrImage = QImage(code->width + 6, code->width + 6, QImage::Format_RGB32);
+            qrImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
             unsigned char *p = code->data;
             for (int y = 0; y < code->width; y++)
             {
                 for (int x = 0; x < code->width; x++)
                 {
-                    qrImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+                    qrImage.setPixel(x + 3, y + 3, ((*p & 1) ? GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL).rgb() : GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET).rgb()));
                     p++;
                 }
             }
             QRcode_free(code);
-
-            QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE+20, QImage::Format_RGB32);
-            qrAddrImage.fill(0xffffff);
+            // Create the image with respect to the device pixel ratio
+            int qrAddrImageWidth = QR_IMAGE_SIZE;
+            int qrAddrImageHeight = QR_IMAGE_SIZE + 20;
+            qreal scale = qApp->devicePixelRatio();
+            QImage qrAddrImage = QImage(qrAddrImageWidth * scale, qrAddrImageHeight * scale, QImage::Format_RGB32);
+            qrAddrImage.setDevicePixelRatio(scale);
             QPainter painter(&qrAddrImage);
-            painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
-            QFont font = GUIUtil::fixedPitchFont();
-            QRect paddedRect = qrAddrImage.rect();
-
+            // Fill the whole image with border color
+            qrAddrImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
+            // Create a 2px/2px smaller rect and fill it with background color to keep the 1px border with the border color
+            QRect paddedRect = QRect(1, 1, qrAddrImageWidth - 2, qrAddrImageHeight - 2);
+            painter.fillRect(paddedRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
+            painter.drawImage(2, 2, qrImage.scaled(QR_IMAGE_SIZE - 4, QR_IMAGE_SIZE - 4));
             // calculate ideal font size
-            qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 20, info.address, font);
+            QFont font = GUIUtil::fixedPitchFont();
+            qreal font_size = GUIUtil::calculateIdealFontSize((paddedRect.width() - 20), info.address, font);
             font.setPointSizeF(font_size);
-
+            // paint the address
             painter.setFont(font);
-            paddedRect.setHeight(QR_IMAGE_SIZE+12);
+            painter.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL));
+            paddedRect.setHeight(QR_IMAGE_SIZE + 3);
             painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, info.address);
             painter.end();
 

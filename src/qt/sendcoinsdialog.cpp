@@ -12,7 +12,6 @@
 #include <qt/coincontroldialog.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/sendcoinsentry.h>
 
 #include <base58.h>
@@ -52,27 +51,36 @@ int getIndexForConfTarget(int target) {
     return confTargets.size() - 1;
 }
 
-SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
+SendCoinsDialog::SendCoinsDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
     clientModel(0),
     model(0),
     fNewRecipientAllowed(true),
     fFeeMinimized(true),
-    platformStyle(_platformStyle),
     fPrivateSend(false)
 {
     ui->setupUi(this);
 
-    if (!_platformStyle->getImagesOnButtons()) {
-        ui->addButton->setIcon(QIcon());
-        ui->clearButton->setIcon(QIcon());
-        ui->sendButton->setIcon(QIcon());
-    } else {
-        ui->addButton->setIcon(QIcon(":/icons/add"));
-        ui->clearButton->setIcon(QIcon(":/icons/remove"));
-        ui->sendButton->setIcon(QIcon(":/icons/send"));
-    }
+    GUIUtil::setFont({ui->labelCoinControlFeatures,
+                      ui->labelCoinControlInsuffFunds,
+                      ui->labelCoinControlQuantityText,
+                      ui->labelCoinControlBytesText,
+                      ui->labelCoinControlAmountText,
+                      ui->labelCoinControlLowOutputText,
+                      ui->labelCoinControlFeeText,
+                      ui->labelCoinControlAfterFeeText,
+                      ui->labelCoinControlChangeText,
+                      ui->labelFeeHeadline,
+                      ui->fallbackFeeWarningLabel
+                     }, GUIUtil::FontWeight::Bold);
+
+    GUIUtil::setFont({ui->labelBalance,
+                      ui->labelBalanceText
+                     }, GUIUtil::FontWeight::Bold, 14);
+
+    GUIUtil::setFont({ui->labelCoinControlFeatures
+                     }, GUIUtil::FontWeight::Bold, 16);
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
 
@@ -197,7 +205,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(setMinimumFee()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateFeeSectionControls()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
-        ui->customFee->setSingleStep(GetRequiredFee(1000));
+
         updateFeeSectionControls();
         updateMinFeeLabel();
         updateSmartFeeLabel();
@@ -486,7 +494,7 @@ void SendCoinsDialog::accept()
 
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
-    SendCoinsEntry *entry = new SendCoinsEntry(platformStyle, this);
+    SendCoinsEntry* entry = new SendCoinsEntry(this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
@@ -879,7 +887,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg(platformStyle);
+    CoinControlDialog dlg(this);
     dlg.setModel(model);
     dlg.exec();
     coinControlUpdateLabels();

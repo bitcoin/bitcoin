@@ -27,7 +27,6 @@ class ClientModel;
 class NetworkStyle;
 class Notificator;
 class OptionsModel;
-class PlatformStyle;
 class RPCConsole;
 class SendCoinsRecipient;
 class UnitDisplayStatusBarControl;
@@ -40,6 +39,7 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QProgressBar;
 class QProgressDialog;
+class QToolButton;
 QT_END_NAMESPACE
 
 /**
@@ -54,7 +54,7 @@ public:
     static const QString DEFAULT_WALLET;
     static const std::string DEFAULT_UIPLATFORM;
 
-    explicit BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = 0);
+    explicit BitcoinGUI(const NetworkStyle* networkStyle, QWidget* parent = 0);
     ~BitcoinGUI();
 
     /** Set the client model.
@@ -95,20 +95,20 @@ private:
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
-    QAction *overviewAction;
-    QAction *historyAction;
-    QAction *masternodeAction;
+    QToolButton *overviewAction;
+    QToolButton *historyAction;
+    QToolButton *masternodeAction;
     QAction *quitAction;
-    QAction *sendCoinsAction;
+    QToolButton *sendCoinsAction;
     QAction *sendCoinsMenuAction;
-    QAction *privateSendCoinsAction;
+    QToolButton *privateSendCoinsAction;
     QAction *privateSendCoinsMenuAction;
     QAction *usedSendingAddressesAction;
     QAction *usedReceivingAddressesAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
-    QAction *receiveCoinsAction;
+    QToolButton *receiveCoinsAction;
     QAction *receiveCoinsMenuAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
@@ -136,6 +136,7 @@ private:
     RPCConsole *rpcConsole;
     HelpMessageDialog *helpMessageDialog;
     ModalOverlay *modalOverlay;
+    QButtonGroup *tabGroup;
 
 #ifdef Q_OS_MAC
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
@@ -144,8 +145,6 @@ private:
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
     int spinnerFrame;
-
-    const PlatformStyle *platformStyle;
 
     struct IncomingTransactionMessage {
         QString date;
@@ -251,6 +250,9 @@ private Q_SLOTS:
 
     /** Show open dialog */
     void openClicked();
+
+    /** Highlight checked tab button */
+    void highlightTabButton(QAbstractButton *button, bool checked);
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
@@ -308,7 +310,7 @@ class UnitDisplayStatusBarControl : public QLabel
     Q_OBJECT
 
 public:
-    explicit UnitDisplayStatusBarControl(const PlatformStyle *platformStyle);
+    explicit UnitDisplayStatusBarControl();
     /** Lets the control know about the Options Model (and its signals) */
     void setOptionsModel(OptionsModel *optionsModel);
 

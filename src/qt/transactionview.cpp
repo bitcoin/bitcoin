@@ -9,7 +9,6 @@
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/qrdialog.h>
 #include <qt/transactiondescdialog.h>
 #include <qt/transactionfilterproxy.h>
@@ -19,6 +18,7 @@
 
 #include <ui_interface.h>
 
+#include <QCalendarWidget>
 #include <QComboBox>
 #include <QDateTimeEdit>
 #include <QDesktopServices>
@@ -33,6 +33,7 @@
 #include <QSettings>
 #include <QSignalMapper>
 #include <QTableView>
+#include <QTextCharFormat>
 #include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -40,7 +41,7 @@
 /** Date format for persistence */
 static const char* PERSISTENCE_DATE_FORMAT = "yyyy-MM-dd";
 
-TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
+TransactionView::TransactionView(QWidget* parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
     transactionView(0), abandonAction(0), columnResizingFixer(0)
 {
@@ -50,13 +51,9 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     QHBoxLayout *hlayout = new QHBoxLayout();
     hlayout->setContentsMargins(0,0,0,0);
-    if (platformStyle->getUseExtraSpacing()) {
-        hlayout->setSpacing(0);
-        hlayout->addSpacing(STATUS_COLUMN_WIDTH - 1);
-    } else {
-        hlayout->setSpacing(1);
-        hlayout->addSpacing(STATUS_COLUMN_WIDTH - 2);
-    }
+    hlayout->setSpacing(1);
+    hlayout->addSpacing(STATUS_COLUMN_WIDTH - 2);
+
     watchOnlyWidget = new QComboBox(this);
     watchOnlyWidget->setFixedWidth(24);
     watchOnlyWidget->addItem("", TransactionFilterProxy::WatchOnlyFilter_All);
@@ -69,14 +66,11 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     instantsendWidget->addItem(tr("All"), TransactionFilterProxy::InstantSendFilter_All);
     instantsendWidget->addItem(tr("Locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_Yes);
     instantsendWidget->addItem(tr("Not locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_No);
+    instantsendWidget->setObjectName("instantsendWidget");
     hlayout->addWidget(instantsendWidget);
 
     dateWidget = new QComboBox(this);
-    if (platformStyle->getUseExtraSpacing()) {
-        dateWidget->setFixedWidth(120);
-    } else {
-        dateWidget->setFixedWidth(120);
-    }
+    dateWidget->setFixedWidth(120);
     dateWidget->addItem(tr("All"), All);
     dateWidget->addItem(tr("Today"), Today);
     dateWidget->addItem(tr("This week"), ThisWeek);
@@ -88,12 +82,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     hlayout->addWidget(dateWidget);
 
     typeWidget = new QComboBox(this);
-    if (platformStyle->getUseExtraSpacing()) {
-        typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH);
-    } else {
-        typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH-1);
-    }
-
+    typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH - 1);
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
     typeWidget->addItem(tr("Most Common"), TransactionFilterProxy::COMMON_TYPES);
     typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(TransactionRecord::RecvWithAddress) |
@@ -123,11 +112,6 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 #if QT_VERSION >= 0x040700
     amountWidget->setPlaceholderText(tr("Min amount"));
 #endif
-    if (platformStyle->getUseExtraSpacing()) {
-        amountWidget->setFixedWidth(118);
-    } else {
-        amountWidget->setFixedWidth(125);
-    }
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
     amountWidget->setObjectName("amountWidget");
     hlayout->addWidget(amountWidget);
@@ -155,11 +139,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 #ifndef Q_OS_MAC
     int width = view->verticalScrollBar()->sizeHint().width();
     // Cover scroll bar width with spacing
-    if (platformStyle->getUseExtraSpacing()) {
-        hlayout->addSpacing(width+2);
-    } else {
-        hlayout->addSpacing(width);
-    }
+    hlayout->addSpacing(width);
     // Always show scroll bar
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 #endif
@@ -561,7 +541,7 @@ void TransactionView::showDetails()
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        TransactionDescDialog *dlg = new TransactionDescDialog(selection.at(0));
+        TransactionDescDialog* dlg = new TransactionDescDialog(selection.at(0), this);
         dlg->setAttribute(Qt::WA_DeleteOnClose);
         dlg->show();
     }
@@ -650,7 +630,23 @@ QWidget *TransactionView::createDateRangeWidget()
     connect(dateFrom, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
     connect(dateTo, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
 
+    updateCalendarWidgets();
+
     return dateRangeWidget;
+}
+
+void TransactionView::updateCalendarWidgets()
+{
+    auto adjustWeekEndColors = [](QCalendarWidget* w) {
+        QTextCharFormat format = w->weekdayTextFormat(Qt::Saturday);
+        format.setForeground(QBrush(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT), Qt::SolidPattern));
+
+        w->setWeekdayTextFormat(Qt::Saturday, format);
+        w->setWeekdayTextFormat(Qt::Sunday, format);
+    };
+
+    adjustWeekEndColors(dateFrom->calendarWidget());
+    adjustWeekEndColors(dateTo->calendarWidget());
 }
 
 void TransactionView::dateRangeChanged()
@@ -688,6 +684,13 @@ void TransactionView::resizeEvent(QResizeEvent* event)
     columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
 }
 
+void TransactionView::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::StyleChange) {
+        updateCalendarWidgets();
+    }
+}
+
 // Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
 bool TransactionView::eventFilter(QObject *obj, QEvent *event)
 {
@@ -698,6 +701,14 @@ bool TransactionView::eventFilter(QObject *obj, QEvent *event)
         {
              GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxPlainTextRole);
              return true;
+        }
+    }
+    if (event->type() == QEvent::Show) {
+        // Give the search field the first focus on startup
+        static bool fGotFirstFocus = false;
+        if (!fGotFirstFocus) {
+            search_widget->setFocus();
+            fGotFirstFocus = true;
         }
     }
     return QWidget::eventFilter(obj, event);

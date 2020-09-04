@@ -5,8 +5,11 @@
 
 #include <qt/guiutil.h>
 
+#include <qt/appearancewidget.h>
 #include <qt/bitcoinaddressvalidator.h>
+#include <qt/bitcoingui.h>
 #include <qt/bitcoinunits.h>
+#include <qt/optionsdialog.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
@@ -16,6 +19,7 @@
 #include <protocol.h>
 #include <script/script.h>
 #include <script/standard.h>
+#include <ui_interface.h>
 #include <util.h>
 
 #ifdef WIN32
@@ -42,8 +46,10 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDateTime>
+#include <QDebug>
 #include <QDesktopServices>
 #include <QDesktopWidget>
+#include <QDialogButtonBox>
 #include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
@@ -51,7 +57,9 @@
 #include <QSettings>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
+#include <QTimer>
 #include <QMouseEvent>
+#include <QVBoxLayout>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -85,50 +93,112 @@ void ForceActivation();
 
 namespace GUIUtil {
 
+static CCriticalSection cs_css;
+// The default stylesheet directory
+static const QString defaultStylesheetDirectory = ":css";
+// The actual stylesheet directory
+static QString stylesheetDirectory = defaultStylesheetDirectory;
 // The name of the traditional theme
 static const QString traditionalTheme = "Traditional";
 // The theme to set by default if settings are missing or incorrect
 static const QString defaultTheme = "Light";
 // The prefix a theme name should have if we want to apply dark colors and styles to it
 static const QString darkThemePrefix = "Dark";
+// Mapping css file => theme.
+static const std::map<QString, QString> mapStyleToTheme{
+    {"general.css", ""},
+    {"dark.css", "Dark"},
+    {"light.css", "Light"},
+    {"traditional.css", "Traditional"}
+};
+
+/** loadFonts stores the SystemDefault font in osDefaultFont to be able to reference it later again */
+static std::unique_ptr<QFont> osDefaultFont;
+/** Font related default values. */
+static const FontFamily defaultFontFamily = FontFamily::SystemDefault;
+static const int defaultFontSize = 12;
+static const double fontScaleSteps = 0.01;
+#ifdef Q_OS_MAC
+static const QFont::Weight defaultFontWeightNormal = QFont::ExtraLight;
+static const QFont::Weight defaultFontWeightBold = QFont::Medium;
+static const int defaultFontScale = 0;
+#else
+static const QFont::Weight defaultFontWeightNormal = QFont::Light;
+static const QFont::Weight defaultFontWeightBold = QFont::Medium;
+static const int defaultFontScale = 0;
+#endif
+
+/** Font related variables. */
+// Application font family. May be overwritten by -font-family.
+static FontFamily fontFamily = defaultFontFamily;
+// Application font scale value. May be overwritten by -font-scale.
+static int fontScale = defaultFontScale;
+// Application font weight for normal text. May be overwritten by -font-weight-normal.
+static QFont::Weight fontWeightNormal = defaultFontWeightNormal;
+// Application font weight for bold text. May be overwritten by -font-weight-bold.
+static QFont::Weight fontWeightBold = defaultFontWeightBold;
+
+// Contains all widgets and its font attributes (weight, italic) with font changes due to GUIUtil::setFont
+static std::map<QWidget*, std::pair<FontWeight, bool>> mapNormalFontUpdates;
+// Contains all widgets where a fixed pitch font has been set with GUIUtil::setFixedPitchFont
+static std::set<QWidget*> setFixedPitchFontUpdates;
+// Contains all widgets where a non-default fontsize has been seet with GUIUtil::setFont
+static std::map<QWidget*, int> mapFontSizeUpdates;
+// Contains a list of supported font weights for all members of GUIUtil::FontFamily
+static std::map<FontFamily, std::vector<QFont::Weight>> mapSupportedWeights;
+
+#ifdef Q_OS_MAC
+// Contains all widgets where the macOS focus rect has been disabled.
+static std::set<QWidget*> setRectsDisabled;
+#endif
 
 static const std::map<ThemedColor, QColor> themedColors = {
-    { ThemedColor::DEFAULT, QColor(0, 0, 0) },
+    { ThemedColor::DEFAULT, QColor(85, 85, 85) },
     { ThemedColor::UNCONFIRMED, QColor(128, 128, 128) },
-    { ThemedColor::NEGATIVE, QColor(255, 0, 0) },
+    { ThemedColor::BLUE, QColor(0, 141, 228) },
+    { ThemedColor::RED, QColor(168, 72, 50) },
+    { ThemedColor::GREEN, QColor(8, 110, 3) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
     { ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255) },
     { ThemedColor::TX_STATUS_OFFLINE, QColor(192, 192, 192) },
-    { ThemedColor::TX_STATUS_DANGER, QColor(200, 100, 100) },
-    { ThemedColor::TX_STATUS_LOCKED, QColor(0, 128, 255) },
+    { ThemedColor::TX_STATUS_DANGER, QColor(168, 72, 50) },
+    { ThemedColor::TX_STATUS_LOCKED, QColor(28, 117, 188) },
+    { ThemedColor::BACKGROUND_WIDGET, QColor(234, 234, 236) },
+    { ThemedColor::BORDER_WIDGET, QColor(220, 220, 220) },
+    { ThemedColor::QR_PIXEL, QColor(85, 85, 85) },
 };
 
 static const std::map<ThemedColor, QColor> themedDarkColors = {
-    { ThemedColor::DEFAULT, QColor(170, 170, 170) },
-    { ThemedColor::UNCONFIRMED, QColor(204, 204, 204) },
-    { ThemedColor::NEGATIVE, QColor(255, 69, 0) },
+    { ThemedColor::DEFAULT, QColor(199, 199, 199) },
+    { ThemedColor::UNCONFIRMED, QColor(170, 170, 170) },
+    { ThemedColor::BLUE, QColor(0, 89, 154) },
+    { ThemedColor::RED, QColor(168, 72, 50) },
+    { ThemedColor::GREEN, QColor(8, 110, 3) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
     { ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255) },
     { ThemedColor::TX_STATUS_OFFLINE, QColor(192, 192, 192) },
-    { ThemedColor::TX_STATUS_DANGER, QColor(200, 100, 100) },
-    { ThemedColor::TX_STATUS_LOCKED, QColor(0, 128, 255) },
+    { ThemedColor::TX_STATUS_DANGER, QColor(168, 72, 50) },
+    { ThemedColor::TX_STATUS_LOCKED, QColor(28, 117, 188) },
+    { ThemedColor::BACKGROUND_WIDGET, QColor(45, 45, 46) },
+    { ThemedColor::BORDER_WIDGET, QColor(74, 74, 75) },
+    { ThemedColor::QR_PIXEL, QColor(199, 199, 199) },
 };
 
 static const std::map<ThemedStyle, QString> themedStyles = {
-    { ThemedStyle::TS_INVALID, "background:#FF8080;" },
-    { ThemedStyle::TS_ERROR, "color:red;" },
-    { ThemedStyle::TS_SUCCESS, "color:green;" },
-    { ThemedStyle::TS_COMMAND, "color:#006060;" },
-    { ThemedStyle::TS_PRIMARY, "color:black;" },
-    { ThemedStyle::TS_SECONDARY, "color:#808080;" },
+    { ThemedStyle::TS_INVALID, "background:#e87b68;" },
+    { ThemedStyle::TS_ERROR, "color:#a84832;" },
+    { ThemedStyle::TS_SUCCESS, "color:#096e03;" },
+    { ThemedStyle::TS_COMMAND, "color:#1c75bc;" },
+    { ThemedStyle::TS_PRIMARY, "color:#333;" },
+    { ThemedStyle::TS_SECONDARY, "color:#444;" },
 };
 
 static const std::map<ThemedStyle, QString> themedDarkStyles = {
-    { ThemedStyle::TS_INVALID, "background:#ff4500;" },
-    { ThemedStyle::TS_ERROR, "color:#ff4500;" },
-    { ThemedStyle::TS_SUCCESS, "color:green;" },
-    { ThemedStyle::TS_COMMAND, "color:#0cc;" },
-    { ThemedStyle::TS_PRIMARY, "color:#ccc;" },
+    { ThemedStyle::TS_INVALID, "background:#a84832;" },
+    { ThemedStyle::TS_ERROR, "color:#a84832;" },
+    { ThemedStyle::TS_SUCCESS, "color:#096e03;" },
+    { ThemedStyle::TS_COMMAND, "color:#1c75bc;" },
+    { ThemedStyle::TS_PRIMARY, "color:#c7c7c7;" },
     { ThemedStyle::TS_SECONDARY, "color:#aaa;" },
 };
 
@@ -156,17 +226,21 @@ QString dateTimeStr(qint64 nTime)
 
 QFont fixedPitchFont()
 {
+    if (dashThemeActive()) {
+        return getFontNormal();
+    } else {
 #if QT_VERSION >= 0x50200
-    return QFontDatabase::systemFont(QFontDatabase::FixedFont);
+        return QFontDatabase::systemFont(QFontDatabase::FixedFont);
 #else
-    QFont font("Monospace");
+        QFont font("Monospace");
 #if QT_VERSION >= 0x040800
-    font.setStyleHint(QFont::Monospace);
+        font.setStyleHint(QFont::Monospace);
 #else
-    font.setStyleHint(QFont::TypeWriter);
+        font.setStyleHint(QFont::TypeWriter);
 #endif
-    return font;
+        return font;
 #endif
+    }
 }
 
 // Just some dummy data to generate an convincing random-looking (but consistent) address
@@ -191,7 +265,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllow
 {
     parent->setFocusProxy(widget);
 
-    widget->setFont(fixedPitchFont());
+    setFixedPitchFont({widget});
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
@@ -209,6 +283,55 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
     amountValidator->setBottom(0.0);
     widget->setValidator(amountValidator);
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
+}
+
+void setupAppearance(QWidget* parent, OptionsModel* model)
+{
+    if (!QSettings().value("fAppearanceSetupDone", false).toBool()) {
+        // First make sure SystemDefault has reasonable default values if it does not support the full range of weights.
+        if (fontFamily == FontFamily::SystemDefault && getSupportedWeights().size() < 4) {
+            fontWeightNormal = mapSupportedWeights[FontFamily::SystemDefault].front();
+            fontWeightBold = mapSupportedWeights[FontFamily::SystemDefault].back();
+            QSettings().setValue("fontWeightNormal", weightToArg(fontWeightNormal));
+            QSettings().setValue("fontWeightBold", weightToArg(fontWeightBold));
+        }
+        // Create the dialog
+        QDialog dlg(parent);
+        dlg.setObjectName("AppearanceSetup");
+        dlg.setWindowTitle(QObject::tr("Appearance Setup"));
+        dlg.setWindowIcon(QIcon(":icons/bitcoin"));
+        // And the widgets we add to it
+        QLabel lblHeading(QObject::tr("Please choose your prefered settings for the appearance of %1").arg(QObject::tr(PACKAGE_NAME)), &dlg);
+        lblHeading.setObjectName("lblHeading");
+        lblHeading.setWordWrap(true);
+        QLabel lblSubHeading(QObject::tr("This can also be adjusted later in the \"Appearance\" tab of the preferences."), &dlg);
+        lblSubHeading.setObjectName("lblSubHeading");
+        lblSubHeading.setWordWrap(true);
+        AppearanceWidget appearance(&dlg);
+        appearance.setModel(model);
+        QFrame line(&dlg);
+        line.setFrameShape(QFrame::HLine);
+        QDialogButtonBox buttonBox(QDialogButtonBox::Save);
+        // Put them into a vbox and add the vbox to the dialog
+        QVBoxLayout layout;
+        layout.addWidget(&lblHeading);
+        layout.addWidget(&lblSubHeading);
+        layout.addWidget(&line);
+        layout.addWidget(&appearance);
+        layout.addWidget(&buttonBox);
+        dlg.setLayout(&layout);
+        // Adjust the headings
+        setFont({&lblHeading}, FontWeight::Bold, 16);
+        setFont({&lblSubHeading}, FontWeight::Normal, 14, true);
+        // Make sure the dialog closes and accepts the settings if save has been pressed
+        QObject::connect(&buttonBox, &QDialogButtonBox::accepted, [&]() {
+            QSettings().setValue("fAppearanceSetupDone", true);
+            appearance.accept();
+            dlg.accept();
+        });
+        // And fire it!
+        dlg.exec();
+    }
 }
 
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
@@ -973,48 +1096,633 @@ void migrateQtSettings()
     }
 }
 
-// Open CSS when configured
-QString loadStyleSheet()
+void setStyleSheetDirectory(const QString& path)
 {
-    static std::unique_ptr<QString> stylesheet;
+    stylesheetDirectory = path;
+}
 
-    if (stylesheet.get() == nullptr) {
+bool isStyleSheetDirectoryCustom()
+{
+    return stylesheetDirectory != defaultStylesheetDirectory;
+}
 
-        stylesheet = std::make_unique<QString>();
+const std::vector<QString> listStyleSheets()
+{
+    std::vector<QString> vecStylesheets;
+    for (const auto& it : mapStyleToTheme) {
+        vecStylesheets.push_back(it.first);
+    }
+    return vecStylesheets;
+}
 
-        QSettings settings;
-        QDir themes(":themes");
-        QString theme = settings.value("theme", "").toString();
-
-        // Make sure settings are pointing to an existent theme
-        if (theme.isEmpty() || !themes.exists(theme)) {
-            theme = defaultTheme;
-            settings.setValue("theme", theme);
+const std::vector<QString> listThemes()
+{
+    std::vector<QString> vecThemes;
+    for (const auto& it : mapStyleToTheme) {
+        if (!it.second.isEmpty()) {
+            vecThemes.push_back(it.second);
         }
+    }
+    return vecThemes;
+}
 
+const QString getDefaultTheme()
+{
+    return defaultTheme;
+}
+
+void loadStyleSheet(QWidget* widget, bool fForceUpdate)
+{
+    AssertLockNotHeld(cs_css);
+    LOCK(cs_css);
+
+    static std::unique_ptr<QString> stylesheet;
+    static std::set<QWidget*> setWidgets;
+
+    bool fDebugCustomStyleSheets = gArgs.GetBoolArg("-debug-ui", false) && isStyleSheetDirectoryCustom();
+    bool fStyleSheetChanged = false;
+
+    if (stylesheet == nullptr || fForceUpdate || fDebugCustomStyleSheets) {
+        auto hasModified = [](const std::vector<QString>& vecFiles) -> bool {
+            static std::map<const QString, QDateTime> mapLastModified;
+
+            bool fModified = false;
+            for (auto file = vecFiles.begin(); file != vecFiles.end() && !fModified; ++file) {
+                QFileInfo info(*file);
+                QDateTime lastModified = info.lastModified(), prevLastModified;
+                auto it = mapLastModified.emplace(std::make_pair(*file, lastModified));
+                prevLastModified = it.second ? QDateTime() : it.first->second;
+                it.first->second = lastModified;
+                fModified = prevLastModified != lastModified;
+            }
+            return fModified;
+        };
+
+        auto loadFiles = [&](const std::vector<QString>& vecFiles) -> bool {
+            if (!fForceUpdate && fDebugCustomStyleSheets && !hasModified(vecFiles)) {
+                return false;
+            }
+
+            std::string platformName = gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
+            stylesheet = std::make_unique<QString>();
+
+            for (const auto& file : vecFiles) {
+                QFile qFile(file);
+                if (!qFile.open(QFile::ReadOnly)) {
+                    throw std::runtime_error(strprintf("%s: Failed to open file: %s", __func__, file.toStdString()));
+                }
+
+                QString strStyle = QLatin1String(qFile.readAll());
+                // Process all <os=...></os> groups in the stylesheet first
+                QRegularExpressionMatch osStyleMatch;
+                QRegularExpression osStyleExp(
+                        "^"
+                        "(<os=(?:'|\").+(?:'|\")>)" // group 1
+                        "((?:.|\n)+?)"              // group 2
+                        "(</os>?)"                  // group 3
+                        "$");
+                osStyleExp.setPatternOptions(QRegularExpression::MultilineOption);
+                QRegularExpressionMatchIterator it = osStyleExp.globalMatch(strStyle);
+
+                // For all <os=...></os> sections
+                while (it.hasNext() && (osStyleMatch = it.next()).isValid()) {
+                    QStringList listMatches = osStyleMatch.capturedTexts();
+
+                    // Full match + 3 group matches
+                    if (listMatches.size() % 4) {
+                        throw std::runtime_error(strprintf("%s: Invalid <os=...></os> section in file %s", __func__, file.toStdString()));
+                    }
+
+                    for (int i = 0; i < listMatches.size(); i += 4) {
+                        if (!listMatches[i + 1].contains(QString::fromStdString(platformName))) {
+                            // If os is not supported for this styles
+                            // just remove the full match
+                            strStyle.replace(listMatches[i], "");
+                        } else {
+                            // If its supported remove the <os=...></os> tags
+                            strStyle.replace(listMatches[i + 1], "");
+                            strStyle.replace(listMatches[i + 3], "");
+                        }
+                    }
+                }
+                stylesheet->append(strStyle);
+            }
+            return true;
+        };
+
+        auto pathToFile = [&](const QString& file) -> QString {
+            return stylesheetDirectory + "/" + file + (isStyleSheetDirectoryCustom() ? ".css" : "");
+        };
+
+        std::vector<QString> vecFiles;
         // If light/dark theme is used load general styles first
         if (dashThemeActive()) {
-            QFile qFileGeneral(":css/general");
-            if (qFileGeneral.open(QFile::ReadOnly)) {
-                stylesheet.get()->append(QLatin1String(qFileGeneral.readAll()));
-            }
-
-#ifndef Q_OS_MAC
-            // Apply some styling to scrollbars
-            QFile qFileScrollbars(QString(":/css/scrollbars"));
-            if (qFileScrollbars.open(QFile::ReadOnly)) {
-                stylesheet.get()->append(QLatin1String(qFileScrollbars.readAll()));
-            }
-#endif
+            vecFiles.push_back(pathToFile("general"));
         }
+        vecFiles.push_back(pathToFile(getActiveTheme()));
 
-        QFile qFileTheme(":themes/" + theme);
-        if (qFileTheme.open(QFile::ReadOnly)) {
-            stylesheet.get()->append(QLatin1String(qFileTheme.readAll()));
+        fStyleSheetChanged = loadFiles(vecFiles);
+    }
+
+    bool fUpdateStyleSheet = fForceUpdate || (fDebugCustomStyleSheets && fStyleSheetChanged);
+
+    if (widget) {
+        setWidgets.insert(widget);
+        widget->setStyleSheet(*stylesheet);
+    }
+
+    QWidgetList allWidgets = QApplication::allWidgets();
+    auto it = setWidgets.begin();
+    while (it != setWidgets.end()) {
+        if (!allWidgets.contains(*it)) {
+            it = setWidgets.erase(it);
+            continue;
+        }
+        if (fUpdateStyleSheet && *it != widget) {
+            (*it)->setStyleSheet(*stylesheet);
+        }
+        ++it;
+    }
+
+    if (!ShutdownRequested() && fDebugCustomStyleSheets && !fForceUpdate) {
+        QTimer::singleShot(200, [] { loadStyleSheet(); });
+    }
+}
+
+FontFamily fontFamilyFromString(const QString& strFamily)
+{
+    if (strFamily == "SystemDefault") {
+        return FontFamily::SystemDefault;
+    }
+    if (strFamily == "Montserrat") {
+        return FontFamily::Montserrat;
+    }
+    throw std::invalid_argument(strprintf("Invalid font-family: %s", strFamily.toStdString()));
+}
+
+QString fontFamilyToString(FontFamily family)
+{
+    switch (family) {
+    case FontFamily::SystemDefault:
+        return "SystemDefault";
+    case FontFamily::Montserrat:
+        return "Montserrat";
+    default:
+        assert(false);
+    }
+}
+
+void setFontFamily(FontFamily family)
+{
+    fontFamily = family;
+    updateFonts();
+}
+
+FontFamily getFontFamilyDefault()
+{
+    return defaultFontFamily;
+}
+
+FontFamily getFontFamily()
+{
+    return fontFamily;
+}
+
+bool weightFromArg(int nArg, QFont::Weight& weight)
+{
+    const std::map<int, QFont::Weight> mapWeight{
+        {0, QFont::Thin},
+        {1, QFont::ExtraLight},
+        {2, QFont::Light},
+        {3, QFont::Normal},
+        {4, QFont::Medium},
+        {5, QFont::DemiBold},
+        {6, QFont::Bold},
+        {7, QFont::ExtraBold},
+        {8, QFont::Black}
+    };
+    auto it = mapWeight.find(nArg);
+    if (it == mapWeight.end()) {
+        return false;
+    }
+    weight = it->second;
+    return true;
+}
+
+int weightToArg(const QFont::Weight weight)
+{
+    const std::map<QFont::Weight, int> mapWeight{
+        {QFont::Thin, 0},
+        {QFont::ExtraLight, 1},
+        {QFont::Light, 2},
+        {QFont::Normal, 3},
+        {QFont::Medium, 4},
+        {QFont::DemiBold, 5},
+        {QFont::Bold, 6},
+        {QFont::ExtraBold, 7},
+        {QFont::Black, 8}
+    };
+    assert(mapWeight.count(weight));
+    return mapWeight.find(weight)->second;
+}
+
+QFont::Weight getFontWeightNormalDefault()
+{
+    return defaultFontWeightNormal;
+}
+
+QFont::Weight toQFontWeight(FontWeight weight)
+{
+    return weight == FontWeight::Bold ? getFontWeightBold() : getFontWeightNormal();
+}
+
+QFont::Weight getFontWeightNormal()
+{
+    return fontWeightNormal;
+}
+
+void setFontWeightNormal(QFont::Weight weight)
+{
+    fontWeightNormal = weight;
+    updateFonts();
+}
+
+QFont::Weight getFontWeightBoldDefault()
+{
+    return defaultFontWeightBold;
+}
+
+QFont::Weight getFontWeightBold()
+{
+    return fontWeightBold;
+}
+
+void setFontWeightBold(QFont::Weight weight)
+{
+    fontWeightBold = weight;
+    updateFonts();
+}
+
+int getFontScaleDefault()
+{
+    return defaultFontScale;
+}
+
+int getFontScale()
+{
+    return fontScale;
+}
+
+void setFontScale(int nScale)
+{
+    fontScale = nScale;
+    updateFonts();
+}
+
+double getScaledFontSize(int nSize)
+{
+    return (nSize * (1 + (fontScale * fontScaleSteps)));
+}
+
+bool loadFonts()
+{
+    // Before any font changes store the applications default font to use it as SystemDefault.
+    osDefaultFont = std::make_unique<QFont>(QApplication::font());
+
+    QString family = fontFamilyToString(FontFamily::Montserrat);
+    QString italic = "Italic";
+
+    std::map<QString, bool> mapStyles{
+        {"Thin", true},
+        {"ExtraLight", true},
+        {"Light", true},
+        {"Italic", false},
+        {"Regular", false},
+        {"Medium", true},
+        {"SemiBold", true},
+        {"Bold", true},
+        {"ExtraBold", true},
+        {"Black", true},
+    };
+
+    QFontDatabase database;
+    std::vector<int> vecFontIds;
+
+    for (const auto& it : mapStyles) {
+        QString font = ":fonts/" + family + "-" + it.first;
+        vecFontIds.push_back(QFontDatabase::addApplicationFont(font));
+        qDebug() << __func__ << ": " << font << " loaded with id " << vecFontIds.back();
+        if (it.second) {
+            vecFontIds.push_back(QFontDatabase::addApplicationFont(font + italic));
+            qDebug() << __func__ << ": " << font + italic << " loaded with id " << vecFontIds.back();
         }
     }
 
-    return *stylesheet.get();
+    // Fail if an added id is -1 which means QFontDatabase::addApplicationFont failed.
+    if (std::find(vecFontIds.begin(), vecFontIds.end(), -1) != vecFontIds.end()) {
+        return false;
+    }
+
+    // Print debug logs for added fonts fetched by the added ids
+    for (const auto& i : vecFontIds) {
+        auto families = QFontDatabase::applicationFontFamilies(i);
+        for (const QString& f : families) {
+            qDebug() << __func__ << ": - Font id " << i << " is family: " << f;
+            const QStringList fontStyles = database.styles(f);
+            for (const QString& style : fontStyles) {
+                qDebug() << __func__ << ": Style for family " << f << " with id: " << i << ": " << style;
+            }
+        }
+    }
+    // Print debug logs for added fonts fetched by the family name
+    const QStringList fontFamilies = database.families();
+    for (const QString& f : fontFamilies) {
+        if (f.contains(family)) {
+            const QStringList fontStyles = database.styles(f);
+            for (const QString& style : fontStyles) {
+                qDebug() << __func__ << ": Family: " << f << ", Style: " << style;
+            }
+        }
+    }
+
+    // Load font related settings
+    QSettings settings;
+    QFont::Weight weight;
+
+    if (!gArgs.IsArgSet("-font-family")) {
+        fontFamily = fontFamilyFromString(settings.value("fontFamily").toString());
+    }
+
+    if (!gArgs.IsArgSet("-font-scale")) {
+        fontScale = settings.value("fontScale").toInt();
+    }
+
+    if (!gArgs.IsArgSet("-font-weight-normal") && weightFromArg(settings.value("fontWeightNormal").toInt(), weight)) {
+        fontWeightNormal = weight;
+    }
+
+    if (!gArgs.IsArgSet("-font-weight-bold") && weightFromArg(settings.value("fontWeightBold").toInt(), weight)) {
+        fontWeightBold = weight;
+    }
+
+    setApplicationFont();
+
+    // Initialize supported font weights for all available fonts
+    // Generate a vector with supported font weights by comparing the width of a certain test text for all font weights
+    auto supportedWeights = [](FontFamily family) -> std::vector<QFont::Weight> {
+        auto getTestWidth = [&](QFont::Weight weight) -> int {
+            QFont font = getFont(family, weight, false, defaultFontSize);
+            return QFontMetrics(font).width("Check the width of this text to see if the weight change has an impact!");
+        };
+        std::vector<QFont::Weight> vecWeights{QFont::Thin, QFont::ExtraLight, QFont::Light,
+                                              QFont::Normal, QFont::Medium, QFont::DemiBold,
+                                              QFont::Bold, QFont::Black};
+        std::vector<QFont::Weight> vecSupported;
+        QFont::Weight prevWeight = vecWeights.front();
+        for (auto weight = vecWeights.begin() + 1; weight != vecWeights.end(); ++weight) {
+            if (getTestWidth(prevWeight) != getTestWidth(*weight)) {
+                if (vecSupported.empty()) {
+                    vecSupported.push_back(prevWeight);
+                }
+                vecSupported.push_back(*weight);
+            }
+            prevWeight = *weight;
+        }
+        return vecSupported;
+    };
+
+    mapSupportedWeights.insert(std::make_pair(FontFamily::SystemDefault, supportedWeights(FontFamily::SystemDefault)));
+    mapSupportedWeights.insert(std::make_pair(FontFamily::Montserrat, supportedWeights(FontFamily::Montserrat)));
+
+    return true;
+}
+
+void setApplicationFont()
+{
+    std::unique_ptr<QFont> font;
+
+    if (fontFamily == FontFamily::Montserrat) {
+        QString family = fontFamilyToString(FontFamily::Montserrat);
+#ifdef Q_OS_MAC
+        if (getFontWeightNormal() != getFontWeightNormalDefault()) {
+            font = std::make_unique<QFont>(getFontNormal());
+        } else {
+            font = std::make_unique<QFont>(family);
+            font->setWeight(getFontWeightNormalDefault());
+        }
+#else
+        font = std::make_unique<QFont>(family);
+        font->setWeight(getFontWeightNormal());
+#endif
+    } else {
+        font = std::make_unique<QFont>(*osDefaultFont);
+    }
+
+    font->setPointSizeF(defaultFontSize);
+    qApp->setFont(*font);
+
+    qDebug() << __func__ << ": " << qApp->font().toString() <<
+                " family: " << qApp->font().family() <<
+                ", style: " << qApp->font().styleName() <<
+                " match: " << qApp->font().exactMatch();
+}
+
+void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPointSize, bool fItalic)
+{
+    QFont font = getFont(weight, fItalic, nPointSize);
+
+    for (auto it : vecWidgets) {
+        auto fontAttributes = std::make_pair(weight, fItalic);
+        auto itw = mapNormalFontUpdates.emplace(std::make_pair(it, fontAttributes));
+        if (!itw.second) itw.first->second = fontAttributes;
+
+        if (nPointSize != -1) {
+            auto its = mapFontSizeUpdates.emplace(std::make_pair(it, nPointSize));
+            if (!its.second) its.first->second = nPointSize;
+        }
+
+        it->setFont(font);
+    }
+}
+
+void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets)
+{
+    for (auto it : vecWidgets) {
+        setFixedPitchFontUpdates.emplace(it);
+        it->setFont(fixedPitchFont());
+    }
+}
+
+void updateFonts()
+{
+    setApplicationFont();
+
+    auto getKey = [](QWidget* w) -> QString {
+        return w->parent() ? w->parent()->objectName() + w->objectName() : w->objectName();
+    };
+
+    static std::map<QString, int> mapDefaultFontSizes;
+    std::map<QWidget*, QFont> mapWidgetFonts;
+
+    for (QWidget* w : qApp->allWidgets()) {
+        QFont font = w->font();
+        font.setFamily(qApp->font().family());
+        font.setWeight(getFontWeightNormal());
+        font.setStyleName(qApp->font().styleName());
+        font.setStyle(qApp->font().style());
+        // Set the font size based on the widgets default font size + the font scale
+        QString key = getKey(w);
+        if (!mapDefaultFontSizes.count(key)) {
+            mapDefaultFontSizes.emplace(std::make_pair(key, font.pointSize() > 0 ? font.pointSize() : defaultFontSize));
+        }
+        font.setPointSizeF(getScaledFontSize(mapDefaultFontSizes[key]));
+        mapWidgetFonts.emplace(w, font);
+    }
+
+    auto itn = mapNormalFontUpdates.begin();
+    while (itn != mapNormalFontUpdates.end()) {
+        if (mapWidgetFonts.count(itn->first)) {
+            mapWidgetFonts[itn->first] = getFont(itn->second.first, itn->second.second, mapDefaultFontSizes[getKey(itn->first)]);
+            ++itn;
+        } else {
+            itn = mapNormalFontUpdates.erase(itn);
+        }
+    }
+    auto its = mapFontSizeUpdates.begin();
+    while (its != mapFontSizeUpdates.end()) {
+        if (mapWidgetFonts.count(its->first)) {
+            QFont font = mapWidgetFonts[its->first];
+            font.setPointSizeF(getScaledFontSize(its->second));
+            mapWidgetFonts[its->first] = font;
+            ++its;
+        } else {
+            its = mapFontSizeUpdates.erase(its);
+        }
+    }
+    auto itf = setFixedPitchFontUpdates.begin();
+    while (itf != setFixedPitchFontUpdates.end()) {
+        if (mapWidgetFonts.count(*itf)) {
+            QFont font = fixedPitchFont();
+            font.setPointSizeF(getScaledFontSize(mapDefaultFontSizes[getKey(*itf)]));
+            mapWidgetFonts[*itf] = font;
+            ++itf;
+        } else {
+            itf = setFixedPitchFontUpdates.erase(itf);
+        }
+    }
+
+    for (auto it : mapWidgetFonts) {
+        it.first->setFont(it.second);
+    }
+}
+
+QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPointSize)
+{
+    QFont font;
+
+    if (family == FontFamily::Montserrat) {
+        static std::map<QFont::Weight, QString> mapMontserratMapping{
+            {QFont::Thin, "Thin"},
+            {QFont::ExtraLight, "ExtraLight"},
+            {QFont::Light, "Light"},
+            {QFont::Medium, "Medium"},
+            {QFont::DemiBold, "SemiBold"},
+            {QFont::ExtraBold, "ExtraBold"},
+            {QFont::Black, "Black"},
+#ifdef Q_OS_MAC
+            {QFont::Normal, "Regular"},
+            {QFont::Bold, "Bold"},
+#else
+            {QFont::Normal, ""},
+            {QFont::Bold, ""},
+#endif
+        };
+
+        assert(mapMontserratMapping.count(qWeight));
+
+#ifdef Q_OS_MAC
+
+        QString styleName = mapMontserratMapping[qWeight];
+
+        if (fItalic) {
+            if (styleName == "Regular") {
+                styleName = "Italic";
+            } else {
+                styleName += " Italic";
+            }
+        }
+
+        font.setFamily(fontFamilyToString(FontFamily::Montserrat));
+        font.setStyleName(styleName);
+#else
+        font.setFamily(fontFamilyToString(FontFamily::Montserrat) + " " + mapMontserratMapping[qWeight]);
+        font.setWeight(qWeight);
+        font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
+#endif
+    } else {
+        font.setFamily(osDefaultFont->family());
+        font.setWeight(qWeight);
+        font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
+    }
+
+    if (nPointSize != -1) {
+        font.setPointSizeF(getScaledFontSize(nPointSize));
+    }
+
+    if (gArgs.GetBoolArg("-debug-ui", false)) {
+        qDebug() << __func__ << ": font size: " << font.pointSizeF() << " family: " << font.family() << ", style: " << font.styleName() << ", weight:" << font.weight() << " match: " << font.exactMatch();
+    }
+
+    return font;
+}
+
+QFont getFont(QFont::Weight qWeight, bool fItalic, int nPointSize)
+{
+    return getFont(fontFamily, qWeight, fItalic, nPointSize);
+}
+QFont getFont(FontWeight weight, bool fItalic, int nPointSize)
+{
+    return getFont(toQFontWeight(weight), fItalic, nPointSize);
+}
+
+QFont getFontNormal()
+{
+    return getFont(FontWeight::Normal);
+}
+
+QFont getFontBold()
+{
+    return getFont(FontWeight::Bold);
+}
+
+std::vector<QFont::Weight> getSupportedWeights()
+{
+    assert(mapSupportedWeights.count(fontFamily));
+    return mapSupportedWeights[fontFamily];
+}
+
+QFont::Weight supportedWeightFromIndex(int nIndex)
+{
+    auto vecWeights = getSupportedWeights();
+    assert(vecWeights.size() > nIndex);
+    return vecWeights[nIndex];
+}
+
+int supportedWeightToIndex(QFont::Weight weight)
+{
+    auto vecWeights = getSupportedWeights();
+    for (int index = 0; index < vecWeights.size(); ++index) {
+        if (weight == vecWeights[index]) {
+            return index;
+        }
+    }
+    assert(false);
+}
+
+QString getActiveTheme()
+{
+    QSettings settings;
+    return settings.value("theme", defaultTheme).toString();
 }
 
 bool dashThemeActive()
@@ -1022,6 +1730,41 @@ bool dashThemeActive()
     QSettings settings;
     QString theme = settings.value("theme", "").toString();
     return theme != traditionalTheme;
+}
+
+void loadTheme(QWidget* widget, bool fForce)
+{
+    loadStyleSheet(widget, fForce);
+    updateFonts();
+    updateMacFocusRects();
+}
+
+void disableMacFocusRect(const QWidget* w)
+{
+#ifdef Q_OS_MAC
+    for (const auto& c : w->findChildren<QWidget*>()) {
+        if (c->testAttribute(Qt::WA_MacShowFocusRect)) {
+            c->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
+            setRectsDisabled.emplace(c);
+        }
+    }
+#endif
+}
+
+void updateMacFocusRects()
+{
+#ifdef Q_OS_MAC
+    QWidgetList allWidgets = QApplication::allWidgets();
+    auto it = setRectsDisabled.begin();
+    while (it != setRectsDisabled.end()) {
+        if (allWidgets.contains(*it)) {
+            (*it)->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
+            ++it;
+        } else {
+            it = setRectsDisabled.erase(it);
+        }
+    }
+#endif
 }
 
 void setClipboard(const QString& str)
@@ -1170,7 +1913,7 @@ void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_EMIT clicked(event->pos());
 }
-    
+
 void ClickableProgressBar::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_EMIT clicked(event->pos());

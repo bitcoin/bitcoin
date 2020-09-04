@@ -246,7 +246,11 @@ int BitcoinUnits::rowCount(const QModelIndex &parent) const
 
 QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
 {
-    int row = index.row();
+    return data(index.row(), role);
+}
+
+QVariant BitcoinUnits::data(const int &row, int role) const
+{
     if(row >= 0 && row < unitlist.size())
     {
         Unit unit = unitlist.at(row);

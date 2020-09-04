@@ -9,7 +9,6 @@
 #include <qt/addresstablemodel.h>
 #include <qt/bitcoinunits.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/receiverequestdialog.h>
 #include <qt/recentrequeststablemodel.h>
 #include <qt/walletmodel.h>
@@ -20,26 +19,23 @@
 #include <QScrollBar>
 #include <QTextDocument>
 
-ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
+ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::ReceiveCoinsDialog),
     columnResizingFixer(0),
-    model(0),
-    platformStyle(_platformStyle)
+    model(0)
 {
     ui->setupUi(this);
-    
-    if (!_platformStyle->getImagesOnButtons()) {
-        ui->clearButton->setIcon(QIcon());
-        ui->receiveButton->setIcon(QIcon());
-        ui->showRequestButton->setIcon(QIcon());
-        ui->removeRequestButton->setIcon(QIcon());
-    } else {
-        ui->clearButton->setIcon(QIcon(":/icons/remove"));
-        ui->receiveButton->setIcon(QIcon(":/icons/receiving_addresses"));
-        ui->showRequestButton->setIcon(QIcon(":/icons/edit"));
-        ui->removeRequestButton->setIcon(QIcon(":/icons/remove"));
-    }
+
+    GUIUtil::setFont({ui->label_6}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont({ui->label,
+                      ui->label_2,
+                      ui->label_3}, GUIUtil::FontWeight::Normal, 15);
+
+#if QT_VERSION >= 0x040700
+    ui->reqLabel->setPlaceholderText(tr("Enter a label to associate with the new receiving address"));
+    ui->reqMessage->setPlaceholderText(tr("Enter a message to attach to the payment request"));
+#endif
 
     // context menu actions
     QAction *copyURIAction = new QAction(tr("Copy URI"), this);
