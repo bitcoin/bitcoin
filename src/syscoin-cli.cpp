@@ -271,7 +271,13 @@ public:
         result.pushKV("headers", batch[ID_BLOCKCHAININFO]["result"]["headers"]);
         result.pushKV("verificationprogress", batch[ID_BLOCKCHAININFO]["result"]["verificationprogress"]);
         result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
-        result.pushKV("connections", batch[ID_NETWORKINFO]["result"]["connections"]);
+
+        UniValue connections(UniValue::VOBJ);
+        connections.pushKV("in", batch[ID_NETWORKINFO]["result"]["connections_in"]);
+        connections.pushKV("out", batch[ID_NETWORKINFO]["result"]["connections_out"]);
+        connections.pushKV("total", batch[ID_NETWORKINFO]["result"]["connections"]);
+        result.pushKV("connections", connections);
+
         result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
