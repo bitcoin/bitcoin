@@ -77,6 +77,20 @@ static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWall
 }
 
 
+static CWallet* GetReadyWallet(std::shared_ptr<CWallet> const wallet) {
+    CWallet* const pwallet = wallet.get();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    // Ensure that the mempool has been synced at least once on startup
+    if (!pwallet->mempoolSynced()) pwallet->syncMempool();
+
+    return pwallet;
+}
+
+
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
 bool HaveKey(const SigningProvider& wallet, const CKey& key)
 {
@@ -757,11 +771,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 

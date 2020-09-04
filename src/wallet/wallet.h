@@ -725,12 +725,21 @@ private:
 
     bool CreateTransactionInternal(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, bool sign);
 
+    /** Wallet was initially synced with the mempool. */
+    bool m_mempool_synced{false};
+
 public:
     /*
      * Main wallet lock.
      * This lock protects all the fields added by CWallet.
      */
     mutable RecursiveMutex cs_wallet;
+
+    /** Indicated the wallet was initially synced with the mempool. */
+    void setMempoolSynced() { m_mempool_synced = true; };
+
+    /** True if the wallet was initially synced with the mempool. */
+    bool mempoolSynced() const { return m_mempool_synced; };
 
     /** Get database handle used by this wallet. Ideally this function would
      * not be necessary.
@@ -1153,6 +1162,8 @@ public:
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
     void postInitProcess();
+
+    void syncMempool();
 
     bool BackupWallet(const std::string& strDest) const;
 
