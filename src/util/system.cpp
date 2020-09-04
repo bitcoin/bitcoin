@@ -70,6 +70,10 @@
 #include <malloc.h>
 #endif
 
+#ifdef HAVE_LINUX_SYSINFO
+#include <sys/sysinfo.h>
+#endif
+
 #include <boost/algorithm/string/replace.hpp>
 #include <thread>
 #include <typeinfo>
@@ -1403,4 +1407,30 @@ std::pair<int, char**> WinCmdLineArgs::get()
     return std::make_pair(argc, argv);
 }
 #endif
+
+bool SystemNeedsMemoryReleased()
+{
+    constexpr size_t low_memory_threshold = 10 * 1024 * 1024 /* 10 MB */;
+#ifdef WIN32
+    MEMORYSTATUSEX mem_status;
+    mem_status.dwLength = sizeof(mem_status);
+    if (GlobalMemoryStatusEx(&mem_status)) {
+        if (mem_status.dwMemoryLoad >= 99) return true;
+        if (mem_status.ullAvailPhys < low_memory_threshold) return true;
+        if (mem_status.ullAvailVirtual < low_memory_threshold) return true;
+    }
+#endif
+#ifdef HAVE_LINUX_SYSINFO
+    struct sysinfo sys_info;
+    if (!sysinfo(&sys_info)) {
+        // Explicitly 64-bit in case of 32-bit userspace on 64-bit kernel
+        const uint64_t free_ram = uint64_t(sys_info.freeram) * sys_info.mem_unit;
+        const uint64_t buffer_ram = uint64_t(sys_info.bufferram) * sys_info.mem_unit;
+        if (free_ram + buffer_ram < low_memory_threshold) return true;
+    }
+#endif
+    // NOTE: sysconf(_SC_AVPHYS_PAGES) doesn't account for caches on at least Linux, so not safe to use here
+    return false;
+}
+
 } // namespace util
