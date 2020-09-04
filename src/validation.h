@@ -612,11 +612,32 @@ public:
      *
      * @returns true unless a system error occurred
      */
-    bool FlushStateToDisk(
+    bool FlushStateToDiskHelper(
         const CChainParams& chainparams,
         BlockValidationState &state,
         FlushStateMode mode,
-        int nManualPruneHeight = 0);
+        int nManualPruneHeight);
+
+    bool FlushStateToDiskWithLockedMempool(
+        const CChainParams& chainparams,
+        BlockValidationState& state,
+        FlushStateMode mode,
+        int nManualPruneHeight = 0) // EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
+        EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
+    {
+        AssertLockHeld(::mempool.cs);
+        return FlushStateToDiskHelper(chainparams, state, mode, nManualPruneHeight);
+    }
+
+    bool FlushStateToDiskWithUnlockedMempool(
+        const CChainParams& chainparams,
+        BlockValidationState& state,
+        FlushStateMode mode,
+        int nManualPruneHeight = 0) EXCLUSIVE_LOCKS_REQUIRED(!::mempool.cs)
+    {
+        AssertLockNotHeld(::mempool.cs);
+        return FlushStateToDiskHelper(chainparams, state, mode, nManualPruneHeight);
+    }
 
     //! Unconditionally flush all changes to disk.
     void ForceFlushStateToDisk();
