@@ -27,6 +27,8 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <sync.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <util/bip32.h>
 #include <util/moneystr.h>
@@ -34,7 +36,6 @@
 #include <util/string.h>
 #include <validation.h>
 #include <validationinterface.h>
-
 
 #include <numeric>
 #include <stdint.h>
@@ -847,6 +848,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureNodeContext(request.context);
+    AssertLockNotHeld(node.mempool->cs);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -926,7 +928,8 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     bool test_accept_res;
     {
         LOCK(cs_main);
-        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
+        AssertLockNotHeld(mempool.cs);
+        test_accept_res = ::AcceptToMemoryPool(mempool, state, std::move(tx),
             nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
     }
     result_0.pushKV("allowed", test_accept_res);

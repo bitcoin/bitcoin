@@ -3,13 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/transaction.h>
+
 #include <consensus/validation.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/context.h>
+#include <sync.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <node/transaction.h>
 
 #include <future>
 
@@ -20,6 +22,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     // and reset after chain clients and RPC sever are stopped. node.connman should never be null here.
     assert(node.connman);
     assert(node.mempool);
+    AssertLockNotHeld(node.mempool->cs);
+
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
     bool callback_set = false;
@@ -38,7 +42,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
         TxValidationState state;
-        if (!AcceptToMemoryPool(*node.mempool, state, std::move(tx),
+        if (!::AcceptToMemoryPool(*node.mempool, state, std::move(tx),
                 nullptr /* plTxnReplaced */, false /* bypass_limits */, max_tx_fee)) {
             err_string = state.ToString();
             if (state.IsInvalid()) {

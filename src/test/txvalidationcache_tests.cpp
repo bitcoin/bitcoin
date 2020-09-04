@@ -7,6 +7,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <validation.h>
@@ -27,9 +28,10 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 
     const auto ToMemPool = [this](const CMutableTransaction& tx) {
         LOCK(cs_main);
+        AssertLockNotHeld(m_node.mempool->cs);
 
         TxValidationState state;
-        return AcceptToMemoryPool(*m_node.mempool, state, MakeTransactionRef(tx),
+        return ::AcceptToMemoryPool(*m_node.mempool, state, MakeTransactionRef(tx),
             nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
     };
 

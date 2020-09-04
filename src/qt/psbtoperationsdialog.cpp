@@ -101,6 +101,7 @@ void PSBTOperationsDialog::broadcastTransaction()
 
     CTransactionRef tx = MakeTransactionRef(mtx);
     std::string err_string;
+    AssertLockNotHeld(m_client_model->node().context()->mempool->cs);
     TransactionError error = BroadcastTransaction(
         *m_client_model->node().context(), tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /* relay */ true, /* await_callback */ false);
 

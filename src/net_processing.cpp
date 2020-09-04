@@ -2036,10 +2036,17 @@ static void ProcessHeadersMessage(CNode& pfrom, CConnman& connman, ChainstateMan
     return;
 }
 
-void static ProcessOrphanTx(CConnman& connman, CTxMemPool& mempool, std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+void static ProcessOrphanTx(
+    CConnman& connman,
+    CTxMemPool& mempool,
+    std::set<uint256>& orphan_work_set,
+    std::list<CTransactionRef>& removed_txn)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans, !mempool.cs)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
+    AssertLockNotHeld(mempool.cs);
+
     std::set<NodeId> setMisbehaving;
     bool done = false;
     while (!done && !orphan_work_set.empty()) {
@@ -2058,7 +2065,7 @@ void static ProcessOrphanTx(CConnman& connman, CTxMemPool& mempool, std::set<uin
         TxValidationState orphan_state;
 
         if (setMisbehaving.count(fromPeer)) continue;
-        if (AcceptToMemoryPool(mempool, orphan_state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        if (::AcceptToMemoryPool(mempool, orphan_state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), connman);
             for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
@@ -2342,6 +2349,8 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
                                          const std::chrono::microseconds time_received,
                                          const CChainParams& chainparams, const std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockNotHeld(m_mempool.cs);
+
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
@@ -3016,7 +3025,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         // (older than our recency filter) if trying to DoS us, without any need
         // for witness malleation.
         if (!AlreadyHaveTx(GenTxid(/* is_wtxid=*/true, wtxid), m_mempool) &&
-            AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+            ::AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             m_mempool.check(&::ChainstateActive().CoinsTip());
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -3844,6 +3853,8 @@ bool PeerLogicValidation::MaybeDiscourageAndDisconnect(CNode& pnode)
 
 bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockNotHeld(::mempool.cs);
+
     const CChainParams& chainparams = Params();
     //
     // Message format

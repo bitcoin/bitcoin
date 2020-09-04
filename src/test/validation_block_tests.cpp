@@ -11,7 +11,9 @@
 #include <pow.h>
 #include <random.h>
 #include <script/standard.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
+#include <txmempool.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -283,10 +285,12 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         // Add the txs to the tx pool
         {
             LOCK(cs_main);
+            AssertLockNotHeld(m_node.mempool->cs);
+
             TxValidationState state;
             std::list<CTransactionRef> plTxnReplaced;
             for (const auto& tx : txs) {
-                BOOST_REQUIRE(AcceptToMemoryPool(
+                BOOST_REQUIRE(::AcceptToMemoryPool(
                     *m_node.mempool,
                     state,
                     tx,
