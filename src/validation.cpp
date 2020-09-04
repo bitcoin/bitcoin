@@ -5104,7 +5104,7 @@ bool LoadMempool(CTxMemPool& pool)
                     // wallet(s) having loaded it while we were processing
                     // mempool transactions; consider these as valid, instead of
                     // failed, but mark them as 'already there'
-                    if (pool.exists(tx->GetHash())) {
+                    if (WITH_LOCK(pool.cs, return pool.exists(tx->GetHash()))) {
                         ++already_there;
                     } else {
                         ++failed;

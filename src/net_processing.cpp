@@ -893,7 +893,7 @@ void PeerManager::ReattemptInitialBroadcast(CScheduler& scheduler) const
 
     for (const auto& elem : unbroadcast_txids) {
         // Sanity check: all unbroadcast txns should exist in the mempool
-        if (m_mempool.exists(elem.first)) {
+        if (WITH_LOCK(m_mempool.cs, return m_mempool.exists(elem.first))) {
             LOCK(cs_main);
             RelayTransaction(elem.first, elem.second, m_connman);
         } else {
@@ -1479,7 +1479,7 @@ bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLU
         if (g_recent_confirmed_transactions->contains(hash)) return true;
     }
 
-    return recentRejects->contains(hash) || mempool.exists(gtxid);
+    return recentRejects->contains(hash) || WITH_LOCK(mempool.cs, return mempool.exists(gtxid));
 }
 
 bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -3120,7 +3120,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 // if they were already in the mempool,
                 // allowing the node to function as a gateway for
                 // nodes hidden behind it.
-                if (!m_mempool.exists(tx.GetHash())) {
+                if (!WITH_LOCK(m_mempool.cs, return m_mempool.exists(tx.GetHash()))) {
                     LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
