@@ -353,6 +353,7 @@ void CMutableTransaction::LoadAssets()
             throw std::ios_base::failure("asset empty map");
         }
         const size_t &nVoutSize = vout.size();
+        uint32_t nLastOut = 0;
         for(const auto &it: voutAssets) {
             const uint32_t &nAsset = it.key;
             if(it.values.empty()) {
@@ -363,9 +364,13 @@ void CMutableTransaction::LoadAssets()
                 if(nOut >= nVoutSize) {
                     throw std::ios_base::failure("asset vout out of range");
                 }
+                if(nOut < nLastOut) {
+                    throw std::ios_base::failure("asset vout indexes must be in ascending order");
+                }
                 if(voutAsset.nValue > MAX_ASSET || voutAsset.nValue < 0) {
                     throw std::ios_base::failure("asset vout value out of range");
                 }
+                nLastOut = nOut;
                 // store in vout
                 CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
                 coinInfo.nAsset = nAsset;
