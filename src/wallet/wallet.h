@@ -547,6 +547,16 @@ public:
     }
 };
 
+struct CompareInputCoinBIP69
+{
+    inline bool operator()(const CInputCoin& a, const CInputCoin& b) const
+    {
+        // Note: CInputCoin-s are essentially inputs, their txouts are used for informational purposes only
+        // that's why we use CompareInputBIP69 to sort them in a BIP69 compliant way.
+        return CompareInputBIP69()(CTxIn(a.outpoint), CTxIn(b.outpoint));
+    }
+};
+
 class COutput
 {
 public:
