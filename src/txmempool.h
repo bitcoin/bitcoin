@@ -718,9 +718,9 @@ public:
     /** Sets the current loaded state */
     void SetIsLoaded(bool loaded);
 
-    unsigned long size() const
+    unsigned long size() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
+        AssertLockHeld(cs);
         return mapTx.size();
     }
 
