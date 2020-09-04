@@ -91,7 +91,13 @@ class NetTest(DashTestFramework):
         self.log.info("Test getnetworkinfo")
         info = self.nodes[0].getnetworkinfo()
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
-        assert_equal(self.nodes[0].getnetworkinfo()['connections'], 3)
+        assert_equal(info['networkactive'], True)
+        assert_equal(info['connections'], 3)
+        assert_equal(info['connections_in'], 2)
+        assert_equal(info['connections_out'], 1)
+        assert_equal(info['connections_mn'], 0)
+        assert_equal(info['connections_mn_in'], 0)
+        assert_equal(info['connections_mn_out'], 0)
 
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.nodes[0].setnetworkactive(state=False)
@@ -106,8 +112,14 @@ class NetTest(DashTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
 
-        assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
-        assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
+        info = self.nodes[1].getnetworkinfo()
+        assert_equal(info['networkactive'], True)
+        assert_equal(info['connections'], 2)
+        assert_equal(info['connections_in'], 1)
+        assert_equal(info['connections_out'], 1)
+        assert_equal(info['connections_mn'], 0)
+        assert_equal(info['connections_mn_in'], 0)
+        assert_equal(info['connections_mn_out'], 0)
 
         # check the `servicesnames` field
         network_info = [node.getnetworkinfo() for node in self.nodes]
@@ -122,11 +134,11 @@ class NetTest(DashTestFramework):
         self.nodes[1].ping()
         self.wait_until(lambda: all(['pingtime' in n for n in self.nodes[1].getpeerinfo()]))
         assert_equal(self.nodes[1].getnetworkinfo()['connections'], 3)
-        assert_equal(self.nodes[1].getnetworkinfo()['inboundconnections'], 1)
-        assert_equal(self.nodes[1].getnetworkinfo()['outboundconnections'], 2)
-        assert_equal(self.nodes[1].getnetworkinfo()['mnconnections'], 1)
-        assert_equal(self.nodes[1].getnetworkinfo()['inboundmnconnections'], 0)
-        assert_equal(self.nodes[1].getnetworkinfo()['outboundmnconnections'], 1)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_in'], 1)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_out'], 2)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_mn'], 1)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_mn_in'], 0)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_mn_out'], 1)
 
     def test_getaddednodeinfo(self):
         self.log.info("Test getaddednodeinfo")
