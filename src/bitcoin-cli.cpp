@@ -273,8 +273,12 @@ public:
         result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
 
         UniValue connections(UniValue::VOBJ);
-        connections.pushKV("in", batch[ID_NETWORKINFO]["result"]["connections_in"]);
-        connections.pushKV("out", batch[ID_NETWORKINFO]["result"]["connections_out"]);
+        const UniValue in{batch[ID_NETWORKINFO]["result"]["connections_in"]};
+        const UniValue out{batch[ID_NETWORKINFO]["result"]["connections_out"]};
+        // RPC getnetworkinfo returns the "connections_in" and "connections_out" fields only since Bitcoin Core 0.21.
+        // To degrade gracefully when calling -getinfo on earlier versions, display them only if they are not null.
+        if (!in.isNull()) connections.pushKV("in", in);
+        if (!out.isNull()) connections.pushKV("out", out);
         connections.pushKV("total", batch[ID_NETWORKINFO]["result"]["connections"]);
         result.pushKV("connections", connections);
 
