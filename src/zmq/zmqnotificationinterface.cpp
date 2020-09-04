@@ -36,6 +36,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubhashtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashTransactionNotifier>;
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
+    factories["pubsequence"] = CZMQAbstractNotifier::Create<CZMQPublishSequenceNotifier>;
 
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
     for (const auto& entry : factories)
@@ -140,31 +141,53 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, co
     });
 }
 
-void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
+void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, uint64_t mempool_sequence)
 {
-    // Used by BlockConnected and BlockDisconnected as well, because they're
-    // all the same external callback.
     const CTransaction& tx = *ptx;
 
-    TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyTransaction(tx);
+    TryForEachAndRemoveFailed(notifiers, [&tx, mempool_sequence](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyTransaction(tx) && notifier->NotifyTransactionAcceptance(tx, mempool_sequence);
+    });
+}
+
+void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason, uint64_t mempool_sequence)
+{
+    // Called for all non-block inclusion reasons
+    const CTransaction& tx = *ptx;
+
+    TryForEachAndRemoveFailed(notifiers, [&tx, mempool_sequence](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyTransactionRemoval(tx, mempool_sequence);
     });
 }
 
 void CZMQNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
 {
     for (const CTransactionRef& ptx : pblock->vtx) {
-        // Do a normal notify for each transaction added in the block
-        TransactionAddedToMempool(ptx);
+        const CTransaction& tx = *ptx;
+        TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
+            return notifier->NotifyTransaction(tx);
+        });
     }
+
+    // Next we notify BlockConnect listeners for *all* blocks
+    TryForEachAndRemoveFailed(notifiers, [pindexConnected](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyBlockConnect(pindexConnected);
+    });
 }
 
 void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
     for (const CTransactionRef& ptx : pblock->vtx) {
-        // Do a normal notify for each transaction removed in block disconnection
-        TransactionAddedToMempool(ptx);
+        const CTransaction& tx = *ptx;
+        TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
+            return notifier->NotifyTransaction(tx);
+        });
     }
+
+    // Next we notify BlockDisconnect listeners for *all* blocks
+    TryForEachAndRemoveFailed(notifiers, [pindexDisconnected](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyBlockDisconnect(pindexDisconnected);
+    });
 }
 
 CZMQNotificationInterface* g_zmq_notification_interface = nullptr;

@@ -409,12 +409,16 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
+    // We increment mempool sequence value no matter removal reason
+    // even if not directly reported below.
+    uint64_t mempool_sequence = GetAndIncrementSequence();
+
     if (reason != MemPoolRemovalReason::BLOCK) {
         // Notify clients that a transaction has been removed from the mempool
         // for any reason except being included in a block. Clients interested
         // in transactions included in blocks can subscribe to the BlockConnected
         // notification.
-        GetMainSignals().TransactionRemovedFromMempool(it->GetSharedTx(), reason);
+        GetMainSignals().TransactionRemovedFromMempool(it->GetSharedTx(), reason, mempool_sequence);
     }
 
     const uint256 hash = it->GetTx().GetHash();

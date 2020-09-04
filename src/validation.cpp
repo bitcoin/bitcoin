@@ -1058,7 +1058,7 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
 
     if (!Finalize(args, workspace)) return false;
 
-    GetMainSignals().TransactionAddedToMempool(ptx);
+    GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
 
     return true;
 }
