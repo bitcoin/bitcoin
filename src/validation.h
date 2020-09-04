@@ -628,7 +628,7 @@ public:
     {
         LOCK(cs_main);
         AssertLockHeld(::mempool.cs);
-        const CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(&::mempool);
+        const CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(::mempool.DynamicMemoryUsageNonLockHelper());
         return FlushStateToDiskHelper(chainparams, state, mode, nManualPruneHeight, cache_state);
     }
 
@@ -640,11 +640,7 @@ public:
     {
         LOCK(cs_main);
         AssertLockNotHeld(::mempool.cs);
-        CoinsCacheSizeState cache_state;
-        {
-            LOCK(::mempool.cs);
-            cache_state = GetCoinsCacheSizeState(&::mempool);
-        }
+        const CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(::mempool.DynamicMemoryUsage());
         return FlushStateToDiskHelper(chainparams, state, mode, nManualPruneHeight, cache_state);
     }
 
@@ -714,13 +710,18 @@ public:
     //! Dictates whether we need to flush the cache to disk or not.
     //!
     //! @return the state of the size of the coins cache.
-    CoinsCacheSizeState GetCoinsCacheSizeState(const CTxMemPool* tx_pool)
+    CoinsCacheSizeState GetCoinsCacheSizeState(int64_t mempool_usage)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     CoinsCacheSizeState GetCoinsCacheSizeState(
-        const CTxMemPool* tx_pool,
+        int64_t mempool_usage,
         size_t max_coins_cache_size_bytes,
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    CoinsCacheSizeState GetCoinsCacheSizeState(
+        const CTxMemPool& tx_pool,
+        size_t max_coins_cache_size_bytes,
+        size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !tx_pool.cs);
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 

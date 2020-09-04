@@ -443,11 +443,11 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx2.vout[0].nValue = 10 * COIN;
     pool.addUnchecked(entry.Fee(5000LL).FromTx(tx2));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage()); // should do nothing
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper()); // should do nothing
     BOOST_CHECK(pool.existsNonLockHelper(tx1.GetHash()));
     BOOST_CHECK(pool.existsNonLockHelper(tx2.GetHash()));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // should remove the lower-feerate transaction
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() * 3 / 4); // should remove the lower-feerate transaction
     BOOST_CHECK(pool.existsNonLockHelper(tx1.GetHash()));
     BOOST_CHECK(!pool.existsNonLockHelper(tx2.GetHash()));
 
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx3.vout[0].nValue = 10 * COIN;
     pool.addUnchecked(entry.Fee(20000LL).FromTx(tx3));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // tx3 should pay for tx2 (CPFP)
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() * 3 / 4); // tx3 should pay for tx2 (CPFP)
     BOOST_CHECK(!pool.existsNonLockHelper(tx1.GetHash()));
     BOOST_CHECK(pool.existsNonLockHelper(tx2.GetHash()));
     BOOST_CHECK(pool.existsNonLockHelper(tx3.GetHash()));
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.addUnchecked(entry.Fee(9000LL).FromTx(tx7));
 
     // we only require this to remove, at max, 2 txn, because it's not clear what we're really optimizing for aside from that
-    pool.TrimToSize(pool.DynamicMemoryUsage() - 1);
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() - 1);
     BOOST_CHECK(pool.existsNonLockHelper(tx4.GetHash()));
     BOOST_CHECK(pool.existsNonLockHelper(tx6.GetHash()));
     BOOST_CHECK(!pool.existsNonLockHelper(tx7.GetHash()));
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
         pool.addUnchecked(entry.Fee(1000LL).FromTx(tx5));
     pool.addUnchecked(entry.Fee(9000LL).FromTx(tx7));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() / 2); // should maximize mempool size by only removing 5/7
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() / 2); // should maximize mempool size by only removing 5/7
     BOOST_CHECK(pool.existsNonLockHelper(tx4.GetHash()));
     BOOST_CHECK(!pool.existsNonLockHelper(tx5.GetHash()));
     BOOST_CHECK(pool.existsNonLockHelper(tx6.GetHash()));
@@ -557,11 +557,11 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // ... then feerate should drop 1/2 each halflife
 
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2);
-    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(pool.DynamicMemoryUsage() * 5 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/4.0));
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(pool.DynamicMemoryUsageNonLockHelper() * 5 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/4.0));
     // ... with a 1/2 halflife when mempool is < 1/2 its target size
 
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
-    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(pool.DynamicMemoryUsage() * 9 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/8.0));
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(pool.DynamicMemoryUsageNonLockHelper() * 9 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/8.0));
     // ... with a 1/4 halflife when mempool is < 1/4 its target size
 
     SetMockTime(42 + 7*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);

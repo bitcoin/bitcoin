@@ -1413,7 +1413,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("loaded", pool.IsLoadedNonLockHelper());
     ret.pushKV("size", (int64_t)pool.sizeNonLockHelper());
     ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
-    ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
+    ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsageNonLockHelper());
     size_t maxmempool = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     ret.pushKV("maxmempool", (int64_t) maxmempool);
     ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFeeNonLockHelper(maxmempool), ::minRelayTxFee).GetFeePerK()));

@@ -911,8 +911,8 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const NO_
     return base->GetCoin(outpoint, coin);
 }
 
-size_t CTxMemPool::DynamicMemoryUsage() const {
-    LOCK(cs);
+size_t CTxMemPool::DynamicMemoryUsageNonLockHelper() const
+{
     // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
@@ -1006,9 +1006,9 @@ CFeeRate CTxMemPool::GetMinFeeNonLockHelper(size_t sizelimit) const
     int64_t time = GetTime();
     if (time > lastRollingFeeUpdate + 10) {
         double halflife = ROLLING_FEE_HALFLIFE;
-        if (DynamicMemoryUsage() < sizelimit / 4)
+        if (DynamicMemoryUsageNonLockHelper() < sizelimit / 4)
             halflife /= 4;
-        else if (DynamicMemoryUsage() < sizelimit / 2)
+        else if (DynamicMemoryUsageNonLockHelper() < sizelimit / 2)
             halflife /= 2;
 
         rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
@@ -1035,7 +1035,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
 
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
-    while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
+    while (!mapTx.empty() && DynamicMemoryUsageNonLockHelper() > sizelimit) {
         indexed_transaction_set::index<descendant_score>::type::iterator it = mapTx.get<descendant_score>().begin();
 
         // We set the new mempool min fee to the feerate of the removed set, plus the

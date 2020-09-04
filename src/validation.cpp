@@ -2257,23 +2257,22 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     return true;
 }
 
-CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(const CTxMemPool* tx_pool)
+CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(int64_t mempool_usage)
 {
     return this->GetCoinsCacheSizeState(
-        tx_pool,
+        mempool_usage,
         m_coinstip_cache_size_bytes,
         gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
 }
 
 CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
-    const CTxMemPool* tx_pool,
+    int64_t mempool_usage,
     size_t max_coins_cache_size_bytes,
     size_t max_mempool_size_bytes)
 {
-    const int64_t nMempoolUsage = tx_pool ? tx_pool->DynamicMemoryUsage() : 0;
     int64_t cacheSize = CoinsTip().DynamicMemoryUsage();
     int64_t nTotalSpace =
-        max_coins_cache_size_bytes + std::max<int64_t>(max_mempool_size_bytes - nMempoolUsage, 0);
+        max_coins_cache_size_bytes + std::max<int64_t>(max_mempool_size_bytes - mempool_usage, 0);
 
     //! No need to periodic flush if at least this much space still available.
     static constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 10 * 1024 * 1024;  // 10MB
@@ -2287,6 +2286,17 @@ CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
         return CoinsCacheSizeState::LARGE;
     }
     return CoinsCacheSizeState::OK;
+}
+
+CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
+    const CTxMemPool& tx_pool,
+    size_t max_coins_cache_size_bytes,
+    size_t max_mempool_size_bytes)
+{
+    return this->GetCoinsCacheSizeState(
+        tx_pool.DynamicMemoryUsage(),
+        max_coins_cache_size_bytes,
+        max_mempool_size_bytes);
 }
 
 bool CChainState::FlushStateToDiskHelper(
