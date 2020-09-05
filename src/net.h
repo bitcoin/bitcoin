@@ -117,7 +117,7 @@ struct CSerializedNetMsg
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
  * connection. Aside from INBOUND, all types are initiated by us. */
-enum class ConnectionType {
+enum class ConnectionType : uint8_t {
     /**
      * Inbound connections are those initiated by a peer. This is the only
      * property we know at the time of connection, until P2P messages are
@@ -688,6 +688,7 @@ public:
     // Bind address of our side of the connection
     CAddress addrBind;
     uint32_t m_mapped_as;
+    uint8_t m_conn_type;
 };
 
 

@@ -542,6 +542,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     }
     stats.fInbound = IsInboundConn();
     stats.m_manual_connection = IsManualConn();
+    stats.m_conn_type = uint8_t(m_conn_type);
     X(nStartingHeight);
     {
         LOCK(cs_vSend);

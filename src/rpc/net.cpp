@@ -113,6 +113,13 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                             {RPCResult::Type::STR, "subver", "The string version"},
                             {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                             {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection"},
+                            {RPCResult::Type::NUM, "conn_type", "Connection type between 0 and 5:\n"
+                                "0 - inbound (initiated by the peer)\n"
+                                "1 - outbound-full-relay (default automatic connections)\n"
+                                "2 - manual (added using the -addnode/-connect configuration options or the addnode RPC)\n"
+                                "3 - feeler (short-lived automatic connection to test addresses)\n"
+                                "4 - block-relay-only (does not relay transactions or addresses)\n"
+                                "5 - addr-fetch (short-lived automatic connection to request addresses)"},
                             {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
                             {RPCResult::Type::NUM, "banscore", "The ban score (DEPRECATED, returned only if config option -deprecatedrpc=banscore is passed)"},
                             {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
@@ -193,6 +200,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("subver", stats.cleanSubVer);
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("addnode", stats.m_manual_connection);
+        obj.pushKV("conn_type", stats.m_conn_type);
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
             if (IsDeprecatedRPCEnabled("banscore")) {
