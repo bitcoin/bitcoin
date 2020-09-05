@@ -2290,6 +2290,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         const uint256& txHash = tx.GetHash(); 
         const bool &isCoinBase = tx.IsCoinBase();
         const bool &hasAssets = tx.HasAssets();
+        vecTXIDPairs.emplace_back(txHash, pindex->nHeight);
         if (!isCoinBase)
         {
             TxValidationState tx_state;
@@ -2304,7 +2305,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                     return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
                 }
             }
-            vecTXIDPairs.emplace_back(txHash, pindex->nHeight);
 
             CAmount txfee = 0;
             if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
