@@ -1769,11 +1769,19 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     }
 
     // Initiate network connections
-    int64_t nStart = GetTime();
+    auto start = GetTime<std::chrono::seconds>();
 
     // Minimum time before next feeler connection (in microseconds).
-    int64_t nNextFeeler = PoissonNextSend(nStart*1000*1000, FEELER_INTERVAL);
-    int64_t nNextExtraBlockRelay = PoissonNextSend(nStart*1000*1000, EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
+
+    int64_t nNextFeeler = PoissonNextSend(count_microseconds(start), FEELER_INTERVAL);
+    int64_t nNextExtraBlockRelay = PoissonNextSend(count_microseconds(start), EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
+    const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
+    bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
+
+    if (!add_fixed_seeds) {
+        LogPrintf("Fixed seeds are disabled\n");
+    }
+
     while (!interruptNet)
     {
         ProcessAddrFetch();
@@ -1785,18 +1793,32 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         if (interruptNet)
             return;
 
-        // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
-        // Note that we only do this if we started with an empty peers.dat,
-        // (in which case we will query DNS seeds immediately) *and* the DNS
-        // seeds have not returned any results.
-        if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
-            static bool done = false;
-            if (!done) {
-                LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
+        if (add_fixed_seeds && addrman.size() == 0) {
+            // When the node starts with an empty peers.dat, there are a few other sources of peers before
+            // we fallback on to fixed seeds: -dnsseed, -seednode, -addnode
+            // If none of those are available, we fallback on to fixed seeds immediately, else we allow
+            // 60 seconds for any of those sources to populate addrman.
+            bool add_fixed_seeds_now = false;
+            // It is cheapest to check if enough time has passed first.
+            if (GetTime<std::chrono::seconds>() > start + std::chrono::minutes{1}) {
+                add_fixed_seeds_now = true;
+                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty\n");
+            }
+
+            // Checking !dnsseed is cheaper before locking 2 mutexes.
+            if (!add_fixed_seeds_now && !dnsseed) {
+                LOCK2(m_addr_fetches_mutex, cs_vAddedNodes);
+                if (m_addr_fetches.empty() && vAddedNodes.empty()) {
+                    add_fixed_seeds_now = true;
+                    LogPrintf("Adding fixed seeds as -dnsseed=0, -addnode is not provided and and all -seednode(s) attempted\n");
+                }
+            }
+
+            if (add_fixed_seeds_now) {
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
                 addrman.Add(convertSeed6(Params().FixedSeeds()), local);
-                done = true;
+                add_fixed_seeds = false;
             }
         }
 
@@ -2434,7 +2456,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&TraceThread<std::function<void()> >, "net", std::function<void()>(std::bind(&CConnman::ThreadSocketHandler, this)));
 
-    if (!gArgs.GetBoolArg("-dnsseed", true))
+    if (!gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED))
         LogPrintf("DNS seeding disabled\n");
     else
         threadDNSAddressSeed = std::thread(&TraceThread<std::function<void()> >, "dnsseed", std::function<void()>(std::bind(&CConnman::ThreadDNSAddressSeed, this)));
