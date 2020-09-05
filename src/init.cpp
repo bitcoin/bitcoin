@@ -2168,7 +2168,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // SYSCOIN
     fZMQEthStatus = args.IsArgSet("-zmqpubethstatus");
 
-     //lite mode disables all governance functionality
     const std::vector<std::string> auth = args.GetArgs("-rpcauth");
     if(!fRegTest && !auth.empty()) {
         return InitError(Untranslated("You can not use rpcauth in any network other than regtest. It is not compliant with the Syscoin Relayer."));
