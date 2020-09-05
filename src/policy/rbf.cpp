@@ -36,3 +36,9 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     }
     return RBFTransactionState::FINAL;
 }
+
+RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
+{
+    // If we don't have a local mempool we can only check the transaction itself.
+    return SignalsOptInRBF(tx) ? RBFTransactionState::REPLACEABLE_BIP125 : RBFTransactionState::UNKNOWN;
+}
