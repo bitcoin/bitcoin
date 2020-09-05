@@ -95,7 +95,8 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast) {
     bool isAdjustmentPeriod = BlockLastSolved->nHeight >= Params().PoSStartHeight() - 1 && BlockLastSolved->nHeight < Params().PoSStartHeight() + PastBlocksMax;
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin || isAdjustmentPeriod)
     {
-        return Params().ProofOfWorkLimit().GetCompact();
+        if (Params().NetworkID() != CBaseChainParams::TESTNET)
+            return Params().ProofOfWorkLimit().GetCompact();
     }
 
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
