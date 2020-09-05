@@ -56,7 +56,10 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
+    cpu: 4  # Double CPU and Memory to avoid timeout
+    memory: 16G
   env:
+    MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
