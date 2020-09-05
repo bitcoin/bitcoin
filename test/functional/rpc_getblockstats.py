@@ -161,6 +161,14 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
         assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats)
 
+        self.log.info('Test block height 0')
+        genesis_stats = self.nodes[0].getblockstats(0)
+        assert_equal(genesis_stats["blockhash"], "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")
+        assert_equal(genesis_stats["utxo_increase"], 1)
+        assert_equal(genesis_stats["utxo_size_inc"], 117)
+        assert_equal(genesis_stats["utxo_increase_actual"], 0)
+        assert_equal(genesis_stats["utxo_size_inc_actual"], 0)
+
 
 if __name__ == '__main__':
     GetblockstatsTest().main()
