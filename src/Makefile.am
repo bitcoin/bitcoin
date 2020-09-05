@@ -332,6 +332,7 @@ BITCOIN_CORE_H = \
   util/string.h \
   util/time.h \
   util/threadnames.h \
+  util/trace.h \
   util/translation.h \
   util/vector.h \
   util/url.h \
