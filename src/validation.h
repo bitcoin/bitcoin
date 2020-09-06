@@ -608,6 +608,7 @@ public:
     bool FlushStateToDisk(
         const CChainParams& chainparams,
         BlockValidationState &state,
+        int64_t mempool_usage,
         FlushStateMode mode,
         int nManualPruneHeight = 0);
 
@@ -686,6 +687,8 @@ public:
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    int64_t MempoolUsage() const;
 
 private:
     bool ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);

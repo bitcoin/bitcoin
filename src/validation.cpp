@@ -1078,7 +1078,8 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
-    ::ChainstateActive().FlushStateToDisk(chainparams, state_dummy, FlushStateMode::PERIODIC);
+    const auto mempool_usage = pool.DynamicMemoryUsage();
+    ::ChainstateActive().FlushStateToDisk(chainparams, state_dummy, mempool_usage, FlushStateMode::PERIODIC);
     return res;
 }
 
@@ -2261,9 +2262,15 @@ CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
+int64_t CChainState::MempoolUsage() const
+{
+    return m_mempool.DynamicMemoryUsage();
+}
+
 bool CChainState::FlushStateToDisk(
     const CChainParams& chainparams,
     BlockValidationState &state,
+    int64_t mempool_usage,
     FlushStateMode mode,
     int nManualPruneHeight)
 {
@@ -2281,7 +2288,6 @@ bool CChainState::FlushStateToDisk(
     {
         bool fFlushForPrune = false;
         bool fDoFullFlush = false;
-        const auto mempool_usage = m_mempool.DynamicMemoryUsage();
         CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(mempool_usage);
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
@@ -2395,7 +2401,7 @@ bool CChainState::FlushStateToDisk(
 void CChainState::ForceFlushStateToDisk() {
     BlockValidationState state;
     const CChainParams& chainparams = Params();
-    if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS)) {
+    if (!this->FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::ALWAYS)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
@@ -2405,7 +2411,7 @@ void CChainState::PruneAndFlush() {
     fCheckForPruning = true;
     const CChainParams& chainparams = Params();
 
-    if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::NONE)) {
+    if (!this->FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::NONE)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
@@ -2510,7 +2516,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED))
+    if (!FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::IF_NEEDED))
         return false;
 
     if (disconnectpool) {
@@ -2627,7 +2633,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCH, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED))
+    if (!FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::IF_NEEDED))
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
@@ -2940,7 +2946,7 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(chainparams, state, FlushStateMode::PERIODIC)) {
+    if (!FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::PERIODIC)) {
         return false;
     }
 
@@ -3830,7 +3836,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return AbortNode(state, std::string("System error: ") + e.what());
     }
 
-    FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
+    FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::NONE);
 
     CheckBlockIndex(chainparams.GetConsensus());
 
@@ -3985,8 +3991,9 @@ void PruneBlockFilesManual(int nManualPruneHeight)
 {
     BlockValidationState state;
     const CChainParams& chainparams = Params();
+    const auto mempool_usage = ::ChainstateActive().MempoolUsage();
     if (!::ChainstateActive().FlushStateToDisk(
-            chainparams, state, FlushStateMode::NONE, nManualPruneHeight)) {
+            chainparams, state, mempool_usage, FlushStateMode::NONE, nManualPruneHeight)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
@@ -4561,7 +4568,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
         LimitValidationInterfaceQueue();
 
         // Occasionally flush state to disk.
-        if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
+        if (!FlushStateToDisk(params, state, MempoolUsage(), FlushStateMode::PERIODIC)) {
             LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
             return false;
         }
@@ -4580,7 +4587,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             // and skip it here, we're about to -reindex-chainstate anyway, so
             // it'll get called a bunch real soon.
             BlockValidationState state;
-            if (!FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
+            if (!FlushStateToDisk(params, state, MempoolUsage(), FlushStateMode::ALWAYS)) {
                 LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
                 return false;
             }
@@ -5004,10 +5011,10 @@ bool CChainState::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 
     if (coinstip_size > old_coinstip_size) {
         // Likely no need to flush if cache sizes have grown.
-        ret = FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED);
+        ret = FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::IF_NEEDED);
     } else {
         // Otherwise, flush state to disk and deallocate the in-memory coins map.
-        ret = FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS);
+        ret = FlushStateToDisk(chainparams, state, MempoolUsage(), FlushStateMode::ALWAYS);
         CoinsTip().ReallocateCache();
     }
     return ret;
