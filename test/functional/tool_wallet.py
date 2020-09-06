@@ -70,12 +70,14 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Invalid command: help', 'help')
         self.assert_raises_tool_error('Error: two methods provided (info and create). Only one method should be provided.', 'info', 'create')
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
+        locked_dir = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets")
         self.assert_raises_tool_error(
-            'Error loading wallet.dat. Is wallet being used by another process?',
+            'Error initializing wallet database environment "{}"!'.format(locked_dir),
             '-wallet=wallet.dat',
             'info',
         )
-        self.assert_raises_tool_error('Error: no wallet file at nonexistent.dat', '-wallet=nonexistent.dat', 'info')
+        path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "nonexistent.dat")
+        self.assert_raises_tool_error("Failed to load database path '{}'. Path does not exist.".format(path), '-wallet=nonexistent.dat', 'info')
 
     def test_tool_wallet_info(self):
         # Stop the node to close the wallet to call the info command.

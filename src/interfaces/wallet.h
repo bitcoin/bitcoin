@@ -29,7 +29,6 @@ class CWallet;
 enum class FeeReason;
 enum class OutputType;
 enum class TransactionError;
-enum class WalletCreationStatus;
 enum isminetype : unsigned int;
 struct CRecipient;
 struct PartiallySignedTransaction;
@@ -311,7 +310,7 @@ class WalletClient : public ChainClient
 {
 public:
     //! Create new wallet.
-    virtual std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, WalletCreationStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+    virtual std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Load existing wallet.
    virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;

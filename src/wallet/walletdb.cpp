@@ -13,6 +13,8 @@
 #include <util/bip32.h>
 #include <util/system.h>
 #include <util/time.h>
+#include <util/translation.h>
+#include <wallet/bdb.h>
 #include <wallet/wallet.h>
 
 #include <atomic>
@@ -993,16 +995,41 @@ bool WalletBatch::TxnAbort()
     return m_batch->TxnAbort();
 }
 
-bool IsWalletLoaded(const fs::path& wallet_path)
+std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
 {
-    return IsBDBWalletLoaded(wallet_path);
-}
+    bool exists;
+    try {
+        exists = fs::symlink_status(path).type() != fs::file_not_found;
+    } catch (const fs::filesystem_error& e) {
+        error = Untranslated(strprintf("Failed to access database path '%s': %s", path.string(), fsbridge::get_filesystem_error_message(e)));
+        status = DatabaseStatus::FAILED_BAD_PATH;
+        return nullptr;
+    }
 
-/** Return object for accessing database at specified path. */
-std::unique_ptr<WalletDatabase> CreateWalletDatabase(const fs::path& path)
-{
-    std::string filename;
-    return MakeUnique<BerkeleyDatabase>(GetWalletEnv(path, filename), std::move(filename));
+    Optional<DatabaseFormat> format;
+    if (exists) {
+        if (ExistsBerkeleyDatabase(path)) {
+            format = DatabaseFormat::BERKELEY;
+        }
+    } else if (options.require_existing) {
+        error = Untranslated(strprintf("Failed to load database path '%s'. Path does not exist.", path.string()));
+        status = DatabaseStatus::FAILED_NOT_FOUND;
+        return nullptr;
+    }
+
+    if (!format && options.require_existing) {
+        error = Untranslated(strprintf("Failed to load database path '%s'. Data is not in recognized format.", path.string()));
+        status = DatabaseStatus::FAILED_BAD_FORMAT;
+        return nullptr;
+    }
+
+    if (format && options.require_create) {
+        error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", path.string()));
+        status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+        return nullptr;
+    }
+
+    return MakeBerkeleyDatabase(path, options, status, error);
 }
 
 /** Return object for accessing dummy database with no read/write capabilities. */

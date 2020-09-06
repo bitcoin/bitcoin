@@ -2502,23 +2502,21 @@ static UniValue loadwallet(const JSONRPCRequest& request)
             }.Check(request);
 
     WalletContext& context = EnsureWalletContext(request.context);
-    WalletLocation location(request.params[0].get_str());
+    const std::string name(request.params[0].get_str());
 
-    if (!location.Exists()) {
-        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet " + location.GetName() + " not found.");
-    } else if (fs::is_directory(location.GetPath())) {
-        // The given filename is a directory. Check that there's a wallet.dat file.
-        fs::path wallet_dat_file = location.GetPath() / "wallet.dat";
-        if (fs::symlink_status(wallet_dat_file).type() == fs::file_not_found) {
-            throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Directory " + location.GetName() + " does not contain a wallet.dat file.");
-        }
-    }
-
+    DatabaseOptions options;
+    DatabaseStatus status;
+    options.require_existing = true;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
     Optional<bool> load_on_start = request.params[1].isNull() ? nullopt : Optional<bool>(request.params[1].get_bool());
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, location, load_on_start, error, warnings);
-    if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, name, load_on_start, options, status, error, warnings);
+    if (!wallet) {
+        // Map bad format to not found, since bad format is returned when the
+        // wallet directory exists, but doesn't contain a data file.
+        RPCErrorCode code = status == DatabaseStatus::FAILED_NOT_FOUND || status == DatabaseStatus::FAILED_BAD_FORMAT ? RPC_WALLET_NOT_FOUND : RPC_WALLET_ERROR;
+        throw JSONRPCError(code, error.original);
+    }
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
@@ -2647,18 +2645,17 @@ static UniValue createwallet(const JSONRPCRequest& request)
         warnings.emplace_back(Untranslated("Wallet is an experimental descriptor wallet"));
     }
 
+    DatabaseOptions options;
+    DatabaseStatus status;
+    options.require_create = true;
+    options.create_flags = flags;
+    options.create_passphrase = passphrase;
     bilingual_str error;
-    std::shared_ptr<CWallet> wallet;
     Optional<bool> load_on_start = request.params[6].isNull() ? nullopt : Optional<bool>(request.params[6].get_bool());
-    WalletCreationStatus status = CreateWallet(*context.chain, passphrase, flags, request.params[0].get_str(), load_on_start, error, warnings, wallet);
-    switch (status) {
-        case WalletCreationStatus::CREATION_FAILED:
-            throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-        case WalletCreationStatus::ENCRYPTION_FAILED:
-            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, error.original);
-        case WalletCreationStatus::SUCCESS:
-            break;
-        // no default case, so the compiler can warn about missing cases
+    std::shared_ptr<CWallet> wallet = CreateWallet(*context.chain, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+    if (!wallet) {
+        RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
+        throw JSONRPCError(code, error.original);
     }
 
     UniValue obj(UniValue::VOBJ);
