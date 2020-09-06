@@ -13,6 +13,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_raises_rpc_error,
     satoshi_round,
 )
 
@@ -261,6 +262,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
+
+        self.log.info("Testing that fee estimation is disabled in blocksonly.")
+        self.restart_node(0, ["-blocksonly"])
+        assert_raises_rpc_error(-32603, "Fee estimation disabled",
+                                self.nodes[0].estimatesmartfee, 2)
 
 
 if __name__ == '__main__':
