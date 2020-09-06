@@ -6,7 +6,7 @@
 
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
-      m_wallet(m_chain.get(), WalletLocation(), CreateMockWalletDatabase())
+      m_wallet(m_chain.get(), "", CreateMockWalletDatabase())
 {
     bool fFirstRun;
     m_wallet.LoadWallet(fFirstRun);

@@ -52,18 +52,6 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
     return memcmp(value, &rhs.value, sizeof(value)) == 0;
 }
 
-bool IsBDBWalletLoaded(const fs::path& wallet_path)
-{
-    fs::path env_directory;
-    std::string database_filename;
-    SplitWalletPath(wallet_path, env_directory, database_filename);
-    LOCK(cs_db);
-    auto env = g_dbenvs.find(env_directory.string());
-    if (env == g_dbenvs.end()) return false;
-    auto database = env->second.lock();
-    return database && database->IsDatabaseLoaded(database_filename);
-}
-
 /**
  * @param[in] wallet_path Path to wallet directory. Or (for backwards compatibility only) a path to a berkeley btree data file inside a wallet directory.
  * @param[out] database_filename Filename of berkeley btree data file inside the wallet directory.
@@ -371,7 +359,6 @@ void BerkeleyDatabase::Open(const char* pszMode)
             if (ret != 0) {
                 throw std::runtime_error(strprintf("BerkeleyDatabase: Error %d, can't open database %s", ret, strFile));
             }
-            m_file_path = (env->Directory() / strFile).string();
 
             // Call CheckUniqueFileid on the containing BDB environment to
             // avoid BDB data consistency bugs that happen when different data
@@ -823,4 +810,36 @@ void BerkeleyDatabase::RemoveRef()
 std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
 {
     return MakeUnique<BerkeleyBatch>(*this, mode, flush_on_close);
+}
+
+bool ExistsBerkeleyDatabase(const fs::path& path)
+{
+    fs::path env_directory;
+    std::string data_filename;
+    SplitWalletPath(path, env_directory, data_filename);
+    return IsBerkeleyBtree(env_directory / data_filename);
+}
+
+std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
+{
+    std::unique_ptr<BerkeleyDatabase> db;
+    {
+        LOCK(cs_db); // Lock env.m_databases until insert in BerkeleyDatabase constructor
+        std::string data_filename;
+        std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(path, data_filename);
+        if (env->m_databases.count(data_filename)) {
+            error = Untranslated(strprintf("Refusing to load database. Data file '%s' is already loaded.", (env->Directory() / data_filename).string()));
+            status = DatabaseStatus::FAILED_ALREADY_LOADED;
+            return nullptr;
+        }
+        db = MakeUnique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
+    }
+
+    if (options.verify && !db->Verify(error)) {
+        status = DatabaseStatus::FAILED_VERIFY;
+        return nullptr;
+    }
+
+    status = DatabaseStatus::SUCCESS;
+    return db;
 }

@@ -23,11 +23,3 @@ void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::
         database_filename = "wallet.dat";
     }
 }
-
-fs::path WalletDataFilePath(const fs::path& wallet_path)
-{
-    fs::path env_directory;
-    std::string database_filename;
-    SplitWalletPath(wallet_path, env_directory, database_filename);
-    return env_directory / database_filename;
-}
