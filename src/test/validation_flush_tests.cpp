@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 
     constexpr bool is_64_bit = sizeof(void*) == 8;
 
-    LOCK(::cs_main);
+    LOCK2(::cs_main, tx_pool.cs);
     auto& view = chainstate.CoinsTip();
 
     //! Create and add a Coin with DynamicMemoryUsage of 80 bytes to the given view.

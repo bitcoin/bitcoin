@@ -736,7 +736,7 @@ public:
     TxMempoolInfo info(const GenTxid& gtxid) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
-    size_t DynamicMemoryUsage() const;
+    size_t DynamicMemoryUsage() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Adds a transaction to the unbroadcast set */
     void AddUnbroadcastTx(const uint256& txid, const uint256& wtxid) {

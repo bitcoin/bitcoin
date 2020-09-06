@@ -3033,7 +3033,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
                 pfrom.GetId(),
                 tx.GetHash().ToString(),
-                m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
+                m_mempool.size(), WITH_LOCK(m_mempool.cs, return m_mempool.DynamicMemoryUsage()) / 1000);
 
             // Recursively process any orphan transactions that depended on this one
             ProcessOrphanTx(m_connman, m_mempool, pfrom.orphan_work_set, lRemovedTxn);
