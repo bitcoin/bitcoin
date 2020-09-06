@@ -56,8 +56,9 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     constexpr size_t MAX_COINS_CACHE_BYTES = 1024;
 
     // Without any coins in the cache, we shouldn't need to flush.
+    auto mempool_usage = tx_pool.DynamicMemoryUsage();
     BOOST_CHECK_EQUAL(
-        chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
+        chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
         CoinsCacheSizeState::OK);
 
     // If the initial memory allocations of cacheCoins don't match these common
@@ -71,8 +72,9 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
             BOOST_CHECK_EQUAL(view.AccessCoin(res).DynamicMemoryUsage(), COIN_SIZE);
         }
 
+        const auto mempool_usage = tx_pool.DynamicMemoryUsage();
         BOOST_CHECK_EQUAL(
-            chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
+            chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
             CoinsCacheSizeState::CRITICAL);
 
         BOOST_TEST_MESSAGE("Exiting cache flush tests early due to unsupported arch");
@@ -92,8 +94,9 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         COutPoint res = add_coin(view);
         print_view_mem_usage(view);
         BOOST_CHECK_EQUAL(view.AccessCoin(res).DynamicMemoryUsage(), COIN_SIZE);
+        const auto mempool_usage = tx_pool.DynamicMemoryUsage();
         BOOST_CHECK_EQUAL(
-            chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
+            chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
             CoinsCacheSizeState::OK);
     }
 
@@ -101,26 +104,29 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     for (int i{0}; i < 4; ++i) {
         add_coin(view);
         print_view_mem_usage(view);
-        if (chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0) ==
+        const auto mempool_usage = tx_pool.DynamicMemoryUsage();
+        if (chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0) ==
             CoinsCacheSizeState::CRITICAL) {
             break;
         }
     }
 
+    mempool_usage = tx_pool.DynamicMemoryUsage();
     BOOST_CHECK_EQUAL(
-        chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
+        chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0),
         CoinsCacheSizeState::CRITICAL);
 
     // Passing non-zero max mempool usage should allow us more headroom.
     BOOST_CHECK_EQUAL(
-        chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 1 << 10),
+        chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 1 << 10),
         CoinsCacheSizeState::OK);
 
     for (int i{0}; i < 3; ++i) {
         add_coin(view);
         print_view_mem_usage(view);
+        const auto mempool_usage = tx_pool.DynamicMemoryUsage();
         BOOST_CHECK_EQUAL(
-            chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 1 << 10),
+            chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 1 << 10),
             CoinsCacheSizeState::OK);
     }
 
@@ -135,32 +141,35 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         BOOST_TEST_MESSAGE("CoinsTip usage percentage: " << usage_percentage);
         BOOST_CHECK(usage_percentage >= 0.9);
         BOOST_CHECK(usage_percentage < 1);
+        const auto mempool_usage = tx_pool.DynamicMemoryUsage();
         BOOST_CHECK_EQUAL(
-            chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, 1 << 10),
+            chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, 1 << 10),
             CoinsCacheSizeState::LARGE);
     }
 
     // Using the default max_* values permits way more coins to be added.
     for (int i{0}; i < 1000; ++i) {
         add_coin(view);
+        const auto mempool_usage = tx_pool.DynamicMemoryUsage();
         BOOST_CHECK_EQUAL(
-            chainstate.GetCoinsCacheSizeState(&tx_pool),
+            chainstate.GetCoinsCacheSizeState(mempool_usage),
             CoinsCacheSizeState::OK);
     }
 
     // Flushing the view doesn't take us back to OK because cacheCoins has
     // preallocated memory that doesn't get reclaimed even after flush.
-
+    mempool_usage = tx_pool.DynamicMemoryUsage();
     BOOST_CHECK_EQUAL(
-        chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, 0),
+        chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, 0),
         CoinsCacheSizeState::CRITICAL);
 
     view.SetBestBlock(InsecureRand256());
     BOOST_CHECK(view.Flush());
     print_view_mem_usage(view);
 
+    mempool_usage = tx_pool.DynamicMemoryUsage();
     BOOST_CHECK_EQUAL(
-        chainstate.GetCoinsCacheSizeState(&tx_pool, MAX_COINS_CACHE_BYTES, 0),
+        chainstate.GetCoinsCacheSizeState(mempool_usage, MAX_COINS_CACHE_BYTES, 0),
         CoinsCacheSizeState::CRITICAL);
 }
 
