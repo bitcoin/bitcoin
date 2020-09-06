@@ -8,10 +8,6 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 
-#ifndef WIN32
-# include <arpa/inet.h>
-#endif
-
 static std::atomic<bool> g_initial_block_download_completed(false);
 
 namespace NetMsgType {
