@@ -244,6 +244,9 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, UniValue& txobj, uint32_t txTyp
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
             populateRPCTypeUnfreezeTokens(mp_obj, txobj);
             break;
+        case MSC_TYPE_ANYDATA:
+            populateRPCTypeAnyData(mp_obj, txobj);
+            break;
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             populateRPCTypeActivation(mp_obj, txobj);
             break;
@@ -275,6 +278,7 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_DISABLE_FREEZING: return false;
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return true;
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return true;
+        case MSC_TYPE_ANYDATA: return false;
         case OMNICORE_MESSAGE_TYPE_ACTIVATION: return false;
     }
     return true; // default to true, shouldn't be needed but just in case
@@ -571,6 +575,11 @@ void populateRPCTypeFreezeTokens(CMPTransaction& omniObj, UniValue& txobj)
 void populateRPCTypeUnfreezeTokens(CMPTransaction& omniObj, UniValue& txobj)
 {
     txobj.pushKV("propertyid", (uint64_t) omniObj.getProperty());
+}
+
+void populateRPCTypeAnyData(CMPTransaction& omniObj, UniValue& txobj)
+{
+    txobj.pushKV("data", omniObj.getPayloadData());
 }
 
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, UniValue& txobj, uint16_t version, interfaces::Wallet *iWallet)

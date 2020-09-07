@@ -425,6 +425,16 @@ BOOST_AUTO_TEST_CASE(payload_unfreeze_tokens)
         "000000ba0000000400000000000003e800946cb2e08075bcbaf157e47bcb67eb2b2339d242");
 }
 
+BOOST_AUTO_TEST_CASE(payload_anydata)
+{
+    // Freeze tokens [type 200, version 0]
+    std::vector<unsigned char> vch = CreatePayload_AnyData(
+        ParseHex("646578782032303230"));                            // data
+
+    BOOST_CHECK_EQUAL(HexStr(vch),
+        "000000c8646578782032303230");
+}
+
 BOOST_AUTO_TEST_CASE(payload_feature_deactivation)
 {
     // Omni Core feature activation [type 65533, version 65535]

@@ -649,6 +649,31 @@ static UniValue omni_createpayload_unfreeze(const JSONRPCRequest& request)
     return HexStr(payload.begin(), payload.end());
 }
 
+static UniValue omni_createpayload_anydata(const JSONRPCRequest& request)
+{
+   if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+           RPCHelpMan{"omni_createpayload_anydata",
+              "\nCreates the payload to embed arbitrary data.\n",
+              {
+                  {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "the hex-encoded data\n"},
+              },
+              RPCResult{
+                  "\"payload\"             (string) the hex-encoded payload\n"
+              },
+              RPCExamples{
+                  HelpExampleCli("omni_createpayload_anydata", "\"646578782032303230\"")
+                  + HelpExampleRpc("omni_createpayload_anydata", "\"646578782032303230\"")
+              }
+           }.ToString());
+
+    std::vector<unsigned char> data = ParseHexV(request.params[0], "data");
+
+    std::vector<unsigned char> payload = CreatePayload_AnyData(data);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
 static const CRPCCommand commands[] =
 { //  category                         name                                      actor (function)                         okSafeMode
   //  -------------------------------- ----------------------------------------- ---------------------------------------- ----------
@@ -672,6 +697,7 @@ static const CRPCCommand commands[] =
     { "omni layer (payload creation)", "omni_createpayload_disablefreezing",     &omni_createpayload_disablefreezing,     {"propertyid"} },
     { "omni layer (payload creation)", "omni_createpayload_freeze",              &omni_createpayload_freeze,              {"toaddress", "propertyid", "amount"} },
     { "omni layer (payload creation)", "omni_createpayload_unfreeze",            &omni_createpayload_unfreeze,            {"toaddress", "propertyid", "amount"} },
+    { "omni layer (payload creation)", "omni_createpayload_anydata",             &omni_createpayload_anydata,             {"data"} },
 };
 
 void RegisterOmniPayloadCreationRPCCommands(CRPCTable &tableRPC)

@@ -123,6 +123,7 @@ private:
     bool interpret_DisableFreezing();
     bool interpret_FreezeTokens();
     bool interpret_UnfreezeTokens();
+    bool interpret_AnyData();
     bool interpret_Activation();
     bool interpret_Deactivation();
     bool interpret_Alert();
@@ -150,6 +151,7 @@ private:
     int logicMath_DisableFreezing(CBlockIndex *pindex);
     int logicMath_FreezeTokens(CBlockIndex *pindex);
     int logicMath_UnfreezeTokens(CBlockIndex *pindex);
+    int logicMath_AnyData();
     int logicMath_Activation();
     int logicMath_Deactivation();
     int logicMath_Alert();
@@ -187,6 +189,7 @@ public:
     std::string getSender() const { return sender; }
     std::string getReceiver() const { return receiver; }
     std::string getPayload() const { return HexStr(pkt, pkt + pkt_size); }
+    std::string getPayloadData() const { return HexStr(pkt + 4 /* skip version and type */, pkt + pkt_size); }
     uint64_t getAmount() const { return nValue; }
     uint64_t getNewAmount() const { return nNewValue; }
     uint8_t getEcosystem() const { return ecosystem; }
