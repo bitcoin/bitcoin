@@ -116,20 +116,20 @@ public:
 };
 
 /**
- * Wrapped mutex: supports recursive locking, but no waiting
+ * Wrapped std::recursive_mutex -- supports recursive locking, but no waiting
  * TODO: We should move away from using the recursive lock by default.
  */
 using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
 
-/** Wrapped mutex: supports waiting but not recursive locking */
-typedef AnnotatedMixin<std::mutex> Mutex;
+/** Wrapped std::mutex -- supports waiting but not recursive locking */
+using Mutex = AnnotatedMixin<std::mutex>;
 
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
 #endif
 
-/** Wrapper around std::unique_lock style lock for Mutex. */
-template <typename Mutex, typename Base = typename Mutex::UniqueLock>
+/** Wrapper around std::unique_lock<MutexType> */
+template <typename MutexType, typename Base = typename MutexType::UniqueLock>
 class SCOPED_LOCKABLE UniqueLock : public Base
 {
 private:
@@ -156,7 +156,7 @@ private:
     }
 
 public:
-    UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
+    UniqueLock(MutexType& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
     {
         if (fTry)
             TryEnter(pszName, pszFile, nLine);
