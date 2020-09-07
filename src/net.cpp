@@ -1892,7 +1892,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
         int64_t nTime = GetTimeMicros();
-        bool fFeeler = false;
 
         // Determine what type of connection to open. Opening
         // OUTBOUND_FULL_RELAY connections gets the highest priority until we
@@ -1912,7 +1911,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         } else if (nTime > nNextFeeler) {
             nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
             conn_type = ConnectionType::FEELER;
-            fFeeler = true;
         } else {
             // skip to next iteration of while loop
             continue;
@@ -1930,20 +1928,22 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // in our "tried" table.
             // For feelers iterations, since feelers should be selected from the "new" table in the AddrMan,
             // skip selecting collisions.
-            if (!fFeeler) {
+            // Also require non-feelers to be distinct network groups to preserve connection diversity.
+            // It's much less relevant for feelers, because it's a frequent procedure
+            // to sanitize AddrMan (not critical), and selecting from AddrMan is
+            // sufficiently (for this case) random/difficult-to-Sybil due to the bucketing.
+            if (conn_type != ConnectionType::FEELER) {
                 // SelectTriedCollision returns an invalid address if it is empty.
                 addr = addrman.SelectTriedCollision();
                 if (!addr.IsValid()) {
                     // If no collisions, consider an address from the "tried" table.
                     addr = addrman.Select(true);
                 }
+                if (setConnected.count(addr.GetGroup(addrman.m_asmap))) {
+                    break;
+                }
             } else {
                 addr = addrman.Select(false);
-            }
-
-            // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
-                break;
             }
 
             // if we selected an invalid or local address, restart
@@ -1968,9 +1968,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // for non-feelers, require all the services we'll want,
             // for feelers, only require they be a full node (only because most
             // SPV clients don't have a good address DB available)
-            if (!fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
+            if (conn_type != ConnectionType::FEELER && !HasAllDesirableServiceFlags(addr.nServices)) {
                 continue;
-            } else if (fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
+            } else if (conn_type == ConnectionType::FEELER && !MayHaveUsefulAddressDB(addr.nServices)) {
                 continue;
             }
 
@@ -1984,7 +1984,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         if (addrConnect.IsValid()) {
 
-            if (fFeeler) {
+            if (conn_type == ConnectionType::FEELER) {
                 // Add small amount of random noise before connection to avoid synchronization.
                 int randsleep = GetRandInt(FEELER_SLEEP_WINDOW * 1000);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(randsleep)))
