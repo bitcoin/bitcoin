@@ -9,6 +9,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <scheduler.h>
+#include <txmempool.h>
 
 NodeContext::NodeContext() {}
 NodeContext::~NodeContext() {}
