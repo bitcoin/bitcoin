@@ -538,6 +538,8 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         if(!mintSyscoin.IsNull())
             mapMintKeysMempool.erase(mintSyscoin.nBridgeTransferID);
     }
+    cachedInnerUsage -= memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());
+    mapTx.erase(it);
     nTransactionsUpdated++;
     if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
 }
