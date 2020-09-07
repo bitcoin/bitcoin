@@ -60,15 +60,15 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     LOCK2(cs_main, testPool.cs);
 
     // Nothing in pool, remove should do nothing:
-    unsigned int poolSize = testPool.size();
+    unsigned int poolSize = testPool.sizeNonLockHelper();
     testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
-    BOOST_CHECK_EQUAL(testPool.size(), poolSize);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), poolSize);
 
     // Just the parent:
     testPool.addUnchecked(entry.FromTx(txParent));
-    poolSize = testPool.size();
+    poolSize = testPool.sizeNonLockHelper();
     testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
-    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 1);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), poolSize - 1);
 
     // Parent, children, grandchildren:
     testPool.addUnchecked(entry.FromTx(txParent));
@@ -78,21 +78,21 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         testPool.addUnchecked(entry.FromTx(txGrandChild[i]));
     }
     // Remove Child[0], GrandChild[0] should be removed:
-    poolSize = testPool.size();
+    poolSize = testPool.sizeNonLockHelper();
     testPool.removeRecursive(CTransaction(txChild[0]), REMOVAL_REASON_DUMMY);
-    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 2);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), poolSize - 2);
     // ... make sure grandchild and child are gone:
-    poolSize = testPool.size();
+    poolSize = testPool.sizeNonLockHelper();
     testPool.removeRecursive(CTransaction(txGrandChild[0]), REMOVAL_REASON_DUMMY);
-    BOOST_CHECK_EQUAL(testPool.size(), poolSize);
-    poolSize = testPool.size();
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), poolSize);
+    poolSize = testPool.sizeNonLockHelper();
     testPool.removeRecursive(CTransaction(txChild[0]), REMOVAL_REASON_DUMMY);
-    BOOST_CHECK_EQUAL(testPool.size(), poolSize);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), poolSize);
     // Remove parent, all children/grandchildren should go:
-    poolSize = testPool.size();
+    poolSize = testPool.sizeNonLockHelper();
     testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
-    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 5);
-    BOOST_CHECK_EQUAL(testPool.size(), 0U);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), poolSize - 5);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), 0U);
 
     // Add children and grandchildren, but NOT the parent (simulate the parent being in a block)
     for (int i = 0; i < 3; i++)
@@ -102,16 +102,16 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     }
     // Now remove the parent, as might happen if a block-re-org occurs but the parent cannot be
     // put into the mempool (maybe because it is non-standard):
-    poolSize = testPool.size();
+    poolSize = testPool.sizeNonLockHelper();
     testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
-    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 6);
-    BOOST_CHECK_EQUAL(testPool.size(), 0U);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), poolSize - 6);
+    BOOST_CHECK_EQUAL(testPool.sizeNonLockHelper(), 0U);
 }
 
 template<typename name>
 static void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
-    BOOST_CHECK_EQUAL(pool.size(), sortedOrder.size());
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), sortedOrder.size());
     typename CTxMemPool::indexed_transaction_set::index<name>::type::iterator it = pool.mapTx.get<name>().begin();
     int count=0;
     for (; it != pool.mapTx.get<name>().end(); ++it, ++count) {
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx5.vout[0].nValue = 11 * COIN;
     entry.nTime = 1;
     pool.addUnchecked(entry.Fee(10000LL).FromTx(tx5));
-    BOOST_CHECK_EQUAL(pool.size(), 5U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 5U);
 
     std::vector<std::string> sortedOrder;
     sortedOrder.resize(5);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx6.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx6.vout[0].nValue = 20 * COIN;
     pool.addUnchecked(entry.Fee(0LL).FromTx(tx6));
-    BOOST_CHECK_EQUAL(pool.size(), 6U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 6U);
     // Check that at this point, tx6 is sorted low
     sortedOrder.insert(sortedOrder.begin(), tx6.GetHash().ToString());
     CheckSort<descendant_score>(pool, sortedOrder);
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     BOOST_CHECK(setAncestorsCalculated == setAncestors);
 
     pool.addUnchecked(entry.FromTx(tx7), setAncestors);
-    BOOST_CHECK_EQUAL(pool.size(), 7U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 7U);
 
     // Now tx6 should be sorted higher (high fee child): tx7, tx6, tx2, ...
     sortedOrder.erase(sortedOrder.begin());
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     pool.addUnchecked(entry.Fee(0LL).Time(3).FromTx(tx9), setAncestors);
 
     // tx9 should be sorted low
-    BOOST_CHECK_EQUAL(pool.size(), 9U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 9U);
     sortedOrder.insert(sortedOrder.begin(), tx9.GetHash().ToString());
     CheckSort<descendant_score>(pool, sortedOrder);
 
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     CheckSort<descendant_score>(pool, sortedOrder);
 
     // there should be 10 transactions in the mempool
-    BOOST_CHECK_EQUAL(pool.size(), 10U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 10U);
 
     // Now try removing tx10 and verify the sort order returns to normal
     pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx(), REMOVAL_REASON_DUMMY);
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     tx5.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx5.vout[0].nValue = 11 * COIN;
     pool.addUnchecked(entry.Fee(10000LL).FromTx(tx5));
-    BOOST_CHECK_EQUAL(pool.size(), 5U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 5U);
 
     std::vector<std::string> sortedOrder;
     sortedOrder.resize(5);
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     uint64_t tx6Size = GetVirtualTransactionSize(CTransaction(tx6));
 
     pool.addUnchecked(entry.Fee(0LL).FromTx(tx6));
-    BOOST_CHECK_EQUAL(pool.size(), 6U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 6U);
     // Ties are broken by hash
     if (tx3.GetHash() < tx6.GetHash())
         sortedOrder.push_back(tx6.GetHash().ToString());
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     CAmount fee = (20000/tx2Size)*(tx7Size + tx6Size) - 1;
 
     pool.addUnchecked(entry.Fee(fee).FromTx(tx7));
-    BOOST_CHECK_EQUAL(pool.size(), 7U);
+    BOOST_CHECK_EQUAL(pool.sizeNonLockHelper(), 7U);
     sortedOrder.insert(sortedOrder.begin()+1, tx7.GetHash().ToString());
     CheckSort<ancestor_score>(pool, sortedOrder);
 
@@ -443,13 +443,13 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx2.vout[0].nValue = 10 * COIN;
     pool.addUnchecked(entry.Fee(5000LL).FromTx(tx2));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage()); // should do nothing
-    BOOST_CHECK(pool.exists(tx1.GetHash()));
-    BOOST_CHECK(pool.exists(tx2.GetHash()));
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper()); // should do nothing
+    BOOST_CHECK(pool.existsNonLockHelper(tx1.GetHash()));
+    BOOST_CHECK(pool.existsNonLockHelper(tx2.GetHash()));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // should remove the lower-feerate transaction
-    BOOST_CHECK(pool.exists(tx1.GetHash()));
-    BOOST_CHECK(!pool.exists(tx2.GetHash()));
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() * 3 / 4); // should remove the lower-feerate transaction
+    BOOST_CHECK(pool.existsNonLockHelper(tx1.GetHash()));
+    BOOST_CHECK(!pool.existsNonLockHelper(tx2.GetHash()));
 
     pool.addUnchecked(entry.FromTx(tx2));
     CMutableTransaction tx3 = CMutableTransaction();
@@ -461,18 +461,18 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx3.vout[0].nValue = 10 * COIN;
     pool.addUnchecked(entry.Fee(20000LL).FromTx(tx3));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // tx3 should pay for tx2 (CPFP)
-    BOOST_CHECK(!pool.exists(tx1.GetHash()));
-    BOOST_CHECK(pool.exists(tx2.GetHash()));
-    BOOST_CHECK(pool.exists(tx3.GetHash()));
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() * 3 / 4); // tx3 should pay for tx2 (CPFP)
+    BOOST_CHECK(!pool.existsNonLockHelper(tx1.GetHash()));
+    BOOST_CHECK(pool.existsNonLockHelper(tx2.GetHash()));
+    BOOST_CHECK(pool.existsNonLockHelper(tx3.GetHash()));
 
     pool.TrimToSize(GetVirtualTransactionSize(CTransaction(tx1))); // mempool is limited to tx1's size in memory usage, so nothing fits
-    BOOST_CHECK(!pool.exists(tx1.GetHash()));
-    BOOST_CHECK(!pool.exists(tx2.GetHash()));
-    BOOST_CHECK(!pool.exists(tx3.GetHash()));
+    BOOST_CHECK(!pool.existsNonLockHelper(tx1.GetHash()));
+    BOOST_CHECK(!pool.existsNonLockHelper(tx2.GetHash()));
+    BOOST_CHECK(!pool.existsNonLockHelper(tx3.GetHash()));
 
     CFeeRate maxFeeRateRemoved(25000, GetVirtualTransactionSize(CTransaction(tx3)) + GetVirtualTransactionSize(CTransaction(tx2)));
-    BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
 
     CMutableTransaction tx4 = CMutableTransaction();
     tx4.vin.resize(2);
@@ -528,20 +528,20 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.addUnchecked(entry.Fee(9000LL).FromTx(tx7));
 
     // we only require this to remove, at max, 2 txn, because it's not clear what we're really optimizing for aside from that
-    pool.TrimToSize(pool.DynamicMemoryUsage() - 1);
-    BOOST_CHECK(pool.exists(tx4.GetHash()));
-    BOOST_CHECK(pool.exists(tx6.GetHash()));
-    BOOST_CHECK(!pool.exists(tx7.GetHash()));
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() - 1);
+    BOOST_CHECK(pool.existsNonLockHelper(tx4.GetHash()));
+    BOOST_CHECK(pool.existsNonLockHelper(tx6.GetHash()));
+    BOOST_CHECK(!pool.existsNonLockHelper(tx7.GetHash()));
 
-    if (!pool.exists(tx5.GetHash()))
+    if (!pool.existsNonLockHelper(tx5.GetHash()))
         pool.addUnchecked(entry.Fee(1000LL).FromTx(tx5));
     pool.addUnchecked(entry.Fee(9000LL).FromTx(tx7));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() / 2); // should maximize mempool size by only removing 5/7
-    BOOST_CHECK(pool.exists(tx4.GetHash()));
-    BOOST_CHECK(!pool.exists(tx5.GetHash()));
-    BOOST_CHECK(pool.exists(tx6.GetHash()));
-    BOOST_CHECK(!pool.exists(tx7.GetHash()));
+    pool.TrimToSize(pool.DynamicMemoryUsageNonLockHelper() / 2); // should maximize mempool size by only removing 5/7
+    BOOST_CHECK(pool.existsNonLockHelper(tx4.GetHash()));
+    BOOST_CHECK(!pool.existsNonLockHelper(tx5.GetHash()));
+    BOOST_CHECK(pool.existsNonLockHelper(tx6.GetHash()));
+    BOOST_CHECK(!pool.existsNonLockHelper(tx7.GetHash()));
 
     pool.addUnchecked(entry.Fee(1000LL).FromTx(tx5));
     pool.addUnchecked(entry.Fee(9000LL).FromTx(tx7));
@@ -549,27 +549,27 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     std::vector<CTransactionRef> vtx;
     SetMockTime(42);
     SetMockTime(42 + CTxMemPool::ROLLING_FEE_HALFLIFE);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
     // ... we should keep the same min fee until we get a block
     pool.removeForBlock(vtx, 1);
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/2.0));
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/2.0));
     // ... then feerate should drop 1/2 each halflife
 
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 5 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/4.0));
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(pool.DynamicMemoryUsageNonLockHelper() * 5 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/4.0));
     // ... with a 1/2 halflife when mempool is < 1/2 its target size
 
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 9 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/8.0));
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(pool.DynamicMemoryUsageNonLockHelper() * 9 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/8.0));
     // ... with a 1/4 halflife when mempool is < 1/4 its target size
 
     SetMockTime(42 + 7*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), 1000);
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(1).GetFeePerK(), 1000);
     // ... but feerate should never drop below 1000
 
     SetMockTime(42 + 8*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), 0);
+    BOOST_CHECK_EQUAL(pool.GetMinFeeNonLockHelper(1).GetFeePerK(), 0);
     // ... unless it has gone all the way to 0 (after getting past 1000/2)
 
     SetMockTime(0);
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     tb = make_tx(/* output_values */ {5 * COIN, 3 * COIN}, /* inputs */  {ta});
     tc = make_tx(/* output_values */ {2 * COIN}, /* inputs */ {tb}, /* input_indices */ {1});
     td = make_tx(/* output_values */ {6 * COIN}, /* inputs */ {tb, tc}, /* input_indices */ {0, 0});
-    pool.clear();
+    pool.clearNonLockHelper();
     pool.addUnchecked(entry.Fee(10000LL).FromTx(ta));
     pool.addUnchecked(entry.Fee(10000LL).FromTx(tb));
     pool.addUnchecked(entry.Fee(10000LL).FromTx(tc));

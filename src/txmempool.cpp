@@ -59,6 +59,7 @@ size_t CTxMemPoolEntry::GetTxSize() const
 // descendants.
 void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
 {
+    AssertLockHeld(cs);
     setEntries stageEntries, setAllDescendants;
     stageEntries = GetMemPoolChildren(updateIt);
 
@@ -151,6 +152,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
 
 bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents /* = true */) const
 {
+    AssertLockHeld(cs);
     setEntries parentHashes;
     const CTransaction &tx = entry.GetTx();
 
@@ -213,6 +215,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
 
 void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors)
 {
+    AssertLockHeld(cs);
     setEntries parentIters = GetMemPoolParents(it);
     // add or remove this tx as a child of each parent
     for (txiter piter : parentIters) {
@@ -228,6 +231,7 @@ void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors
 
 void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries &setAncestors)
 {
+    AssertLockHeld(cs);
     int64_t updateCount = setAncestors.size();
     int64_t updateSize = 0;
     CAmount updateFee = 0;
@@ -242,6 +246,7 @@ void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries &setAncesto
 
 void CTxMemPool::UpdateChildrenForRemoval(txiter it)
 {
+    AssertLockHeld(cs);
     const setEntries &setMemPoolChildren = GetMemPoolChildren(it);
     for (txiter updateIt : setMemPoolChildren) {
         UpdateParent(updateIt, it, false);
@@ -250,6 +255,7 @@ void CTxMemPool::UpdateChildrenForRemoval(txiter it)
 
 void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants)
 {
+    AssertLockHeld(cs);
     // For each entry, walk back all ancestors and decrement size associated with this
     // transaction
     const uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
@@ -329,7 +335,7 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
 CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator)
     : nTransactionsUpdated(0), minerPolicyEstimator(estimator), m_epoch(0), m_has_epoch_guard(false)
 {
-    _clear(); //lock free clear
+    clearInternal();
 
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
@@ -337,9 +343,9 @@ CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator)
     nCheckFrequency = 0;
 }
 
-bool CTxMemPool::isSpent(const COutPoint& outpoint) const
+bool CTxMemPool::isSpent(const COutPoint& outpoint) const NO_THREAD_SAFETY_ANALYSIS
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     return mapNextTx.count(outpoint);
 }
 
@@ -355,6 +361,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
 {
+    AssertLockHeld(cs);
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
@@ -405,6 +412,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
+    AssertLockHeld(cs);
     if (reason != MemPoolRemovalReason::BLOCK) {
         // Notify clients that a transaction has been removed from the mempool
         // for any reason except being included in a block. Clients interested
@@ -417,7 +425,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     for (const CTxIn& txin : it->GetTx().vin)
         mapNextTx.erase(txin.prevout);
 
-    RemoveUnbroadcastTx(hash, true /* add logging because unchecked */ );
+    RemoveUnbroadcastTxNonLockHelper(hash, true /* add logging because unchecked */ );
 
     if (vTxHashes.size() > 1) {
         vTxHashes[it->vTxHashesIdx] = std::move(vTxHashes.back());
@@ -445,6 +453,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // can save time by not iterating over those entries.
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
+    AssertLockHeld(cs);
     setEntries stage;
     if (setDescendants.count(entryit) == 0) {
         stage.insert(entryit);
@@ -582,8 +591,9 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     blockSinceLastRollingFeeBump = true;
 }
 
-void CTxMemPool::_clear()
+void CTxMemPool::clearInternal()
 {
+    // No AssertLockHeld(cs) as this method should be used in CTxMemPool constructors only.
     mapLinks.clear();
     mapTx.clear();
     mapNextTx.clear();
@@ -595,12 +605,6 @@ void CTxMemPool::_clear()
     ++nTransactionsUpdated;
 }
 
-void CTxMemPool::clear()
-{
-    LOCK(cs);
-    _clear();
-}
-
 static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& mempoolDuplicate, const int64_t spendheight)
 {
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
@@ -610,9 +614,9 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
 
-void CTxMemPool::check(const CCoinsViewCache *pcoins) const
+void CTxMemPool::checkNonLockHelper(const CCoinsViewCache* pcoins) const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     if (nCheckFrequency == 0)
         return;
 
@@ -728,6 +732,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
 bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid)
 {
+    AssertLockNotHeld(cs);
     LOCK(cs);
     indexed_transaction_set::const_iterator i = wtxid ? get_iter_from_wtxid(hasha) : mapTx.find(hasha);
     if (i == mapTx.end()) return false;
@@ -773,7 +778,7 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
 
 void CTxMemPool::queryHashes(std::vector<uint256>& vtxid) const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     auto iters = GetSortedDepthAndScore();
 
     vtxid.clear();
@@ -790,7 +795,7 @@ static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator
 
 std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     auto iters = GetSortedDepthAndScore();
 
     std::vector<TxMempoolInfo> ret;
@@ -802,9 +807,9 @@ std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
     return ret;
 }
 
-CTransactionRef CTxMemPool::get(const uint256& hash) const
+CTransactionRef CTxMemPool::getNonLockHelper(const uint256& hash) const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     indexed_transaction_set::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end())
         return nullptr;
@@ -813,6 +818,7 @@ CTransactionRef CTxMemPool::get(const uint256& hash) const
 
 TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 {
+    AssertLockNotHeld(cs);
     LOCK(cs);
     indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
     if (i == mapTx.end())
@@ -824,6 +830,7 @@ TxMempoolInfo CTxMemPool::info(const uint256& txid) const { return info(GenTxid{
 
 void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
 {
+    AssertLockNotHeld(cs);
     {
         LOCK(cs);
         CAmount &delta = mapDeltas[hash];
@@ -870,12 +877,14 @@ void CTxMemPool::ClearPrioritisation(const uint256& hash)
 
 const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
 {
+    AssertLockHeld(cs);
     const auto it = mapNextTx.find(prevout);
     return it == mapNextTx.end() ? nullptr : it->second;
 }
 
 Optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
 {
+    AssertLockHeld(cs);
     auto it = mapTx.find(txid);
     if (it != mapTx.end()) return it;
     return Optional<txiter>{};
@@ -883,6 +892,7 @@ Optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
 
 CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<uint256>& hashes) const
 {
+    AssertLockHeld(cs);
     CTxMemPool::setEntries ret;
     for (const auto& h : hashes) {
         const auto mi = GetIter(h);
@@ -893,19 +903,21 @@ CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<uint256>& hashes) c
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
+    AssertLockHeld(cs);
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (exists(tx.vin[i].prevout.hash))
+        if (existsNonLockHelper(tx.vin[i].prevout.hash))
             return false;
     return true;
 }
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
+bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const NO_THREAD_SAFETY_ANALYSIS
+{
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
-    CTransactionRef ptx = mempool.get(outpoint.hash);
+    CTransactionRef ptx = mempool.getNonLockHelper(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
@@ -917,17 +929,17 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     return base->GetCoin(outpoint, coin);
 }
 
-size_t CTxMemPool::DynamicMemoryUsage() const {
-    LOCK(cs);
+size_t CTxMemPool::DynamicMemoryUsageNonLockHelper() const
+{
+    AssertLockHeld(cs);
     // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
-void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {
-    LOCK(cs);
-
-    if (m_unbroadcast_txids.erase(txid))
-    {
+void CTxMemPool::RemoveUnbroadcastTxNonLockHelper(const uint256& txid, const bool unchecked)
+{
+    AssertLockHeld(cs);
+    if (m_unbroadcast_txids.erase(txid)) {
         LogPrint(BCLog::MEMPOOL, "Removed %i from set of unbroadcast txns%s\n", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
     }
 }
@@ -959,6 +971,7 @@ int CTxMemPool::Expire(std::chrono::seconds time)
 
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, bool validFeeEstimate)
 {
+    AssertLockHeld(cs);
     setEntries setAncestors;
     uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
@@ -990,6 +1003,7 @@ void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add)
 
 const CTxMemPool::setEntries & CTxMemPool::GetMemPoolParents(txiter entry) const
 {
+    AssertLockHeld(cs);
     assert (entry != mapTx.end());
     txlinksMap::const_iterator it = mapLinks.find(entry);
     assert(it != mapLinks.end());
@@ -998,23 +1012,25 @@ const CTxMemPool::setEntries & CTxMemPool::GetMemPoolParents(txiter entry) const
 
 const CTxMemPool::setEntries & CTxMemPool::GetMemPoolChildren(txiter entry) const
 {
+    AssertLockHeld(cs);
     assert (entry != mapTx.end());
     txlinksMap::const_iterator it = mapLinks.find(entry);
     assert(it != mapLinks.end());
     return it->second.children;
 }
 
-CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
-    LOCK(cs);
+CFeeRate CTxMemPool::GetMinFeeNonLockHelper(size_t sizelimit) const
+{
+    AssertLockHeld(cs);
     if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
         return CFeeRate(llround(rollingMinimumFeeRate));
 
     int64_t time = GetTime();
     if (time > lastRollingFeeUpdate + 10) {
         double halflife = ROLLING_FEE_HALFLIFE;
-        if (DynamicMemoryUsage() < sizelimit / 4)
+        if (DynamicMemoryUsageNonLockHelper() < sizelimit / 4)
             halflife /= 4;
-        else if (DynamicMemoryUsage() < sizelimit / 2)
+        else if (DynamicMemoryUsageNonLockHelper() < sizelimit / 2)
             halflife /= 2;
 
         rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
@@ -1041,7 +1057,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
 
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
-    while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
+    while (!mapTx.empty() && DynamicMemoryUsageNonLockHelper() > sizelimit) {
         indexed_transaction_set::index<descendant_score>::type::iterator it = mapTx.get<descendant_score>().begin();
 
         // We set the new mempool min fee to the feerate of the removed set, plus the
@@ -1067,7 +1083,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
-                    if (exists(txin.prevout.hash)) continue;
+                    if (existsNonLockHelper(txin.prevout.hash)) continue;
                     pvNoSpendsRemaining->push_back(txin.prevout);
                 }
             }
@@ -1079,7 +1095,9 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     }
 }
 
-uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const {
+uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const
+{
+    AssertLockHeld(cs);
     // find parent with highest descendant count
     std::vector<txiter> candidates;
     setEntries counted;
@@ -1101,8 +1119,9 @@ uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const {
     return maximum;
 }
 
-void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const {
-    LOCK(cs);
+void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const
+{
+    AssertLockHeld(cs);
     auto it = mapTx.find(txid);
     ancestors = descendants = 0;
     if (it != mapTx.end()) {
@@ -1111,14 +1130,15 @@ void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, 
     }
 }
 
-bool CTxMemPool::IsLoaded() const
+bool CTxMemPool::IsLoadedNonLockHelper() const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     return m_is_loaded;
 }
 
 void CTxMemPool::SetIsLoaded(bool loaded)
 {
+    AssertLockNotHeld(cs);
     LOCK(cs);
     m_is_loaded = loaded;
 }
@@ -1126,6 +1146,7 @@ void CTxMemPool::SetIsLoaded(bool loaded)
 
 CTxMemPool::EpochGuard CTxMemPool::GetFreshEpoch() const
 {
+    AssertLockHeld(cs);
     return EpochGuard(*this);
 }
 CTxMemPool::EpochGuard::EpochGuard(const CTxMemPool& in) : pool(in)

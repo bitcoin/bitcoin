@@ -5,12 +5,12 @@
 #include <bench/bench.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <sync.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/wallet.h>
 #include <txmempool.h>
 #include <validation.h>
-
 
 #include <vector>
 
@@ -46,10 +46,11 @@ static void AssembleBlock(benchmark::Bench& bench)
     }
     {
         LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
+        AssertLockNotHeld(test_setup.m_node.mempool->cs);
 
         for (const auto& txr : txs) {
             TxValidationState state;
-            bool ret{::AcceptToMemoryPool(*test_setup.m_node.mempool, state, txr, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
+            bool ret{::AcceptToMemoryPoolWithUnlockedMempool(*test_setup.m_node.mempool, state, txr, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
             assert(ret);
         }
     }

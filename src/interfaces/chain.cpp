@@ -290,7 +290,7 @@ public:
     bool broadcastTransaction(const CTransactionRef& tx,
         const CAmount& max_tx_fee,
         bool relay,
-        std::string& err_string) override
+        std::string& err_string) override EXCLUSIVE_LOCKS_REQUIRED(!m_node.mempool->cs)
     {
         const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
@@ -298,10 +298,12 @@ public:
         // that Chain clients do not need to know about.
         return TransactionError::OK == err;
     }
-    void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
+    void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override EXCLUSIVE_LOCKS_REQUIRED(!::mempool.cs)
     {
         ancestors = descendants = 0;
         if (!m_node.mempool) return;
+        AssertLockNotHeld(m_node.mempool->cs);
+        LOCK(m_node.mempool->cs);
         m_node.mempool->GetTransactionAncestry(txid, ancestors, descendants);
     }
     void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) override
@@ -333,9 +335,10 @@ public:
     {
         return ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     }
-    CFeeRate mempoolMinFee() override
+    CFeeRate mempoolMinFee() override EXCLUSIVE_LOCKS_REQUIRED(!::mempool.cs)
     {
         if (!m_node.mempool) return {};
+        AssertLockNotHeld(m_node.mempool->cs);
         return m_node.mempool->GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     }
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }

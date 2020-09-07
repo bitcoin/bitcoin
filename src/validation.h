@@ -200,9 +200,16 @@ void PruneBlockFilesManual(int nManualPruneHeight);
 
 /** (try to) add transaction to memory pool
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
-                        std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool AcceptToMemoryPoolWithLockedMempool(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept = false)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs);
+bool AcceptToMemoryPoolWithUnlockedMempool(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept = false)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main, !pool.cs);
 
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
@@ -604,11 +611,37 @@ public:
      *
      * @returns true unless a system error occurred
      */
-    bool FlushStateToDisk(
+    bool FlushStateToDiskHelper(
         const CChainParams& chainparams,
         BlockValidationState &state,
         FlushStateMode mode,
-        int nManualPruneHeight = 0);
+        int nManualPruneHeight,
+        CoinsCacheSizeState cache_state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    bool FlushStateToDiskWithLockedMempool(
+        const CChainParams& chainparams,
+        BlockValidationState& state,
+        FlushStateMode mode,
+        int nManualPruneHeight = 0) // EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
+        EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
+    {
+        LOCK(cs_main);
+        AssertLockHeld(::mempool.cs);
+        const CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(::mempool.DynamicMemoryUsageNonLockHelper());
+        return FlushStateToDiskHelper(chainparams, state, mode, nManualPruneHeight, cache_state);
+    }
+
+    bool FlushStateToDiskWithUnlockedMempool(
+        const CChainParams& chainparams,
+        BlockValidationState& state,
+        FlushStateMode mode,
+        int nManualPruneHeight = 0) EXCLUSIVE_LOCKS_REQUIRED(!::mempool.cs)
+    {
+        LOCK(cs_main);
+        AssertLockNotHeld(::mempool.cs);
+        const CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(::mempool.DynamicMemoryUsage());
+        return FlushStateToDiskHelper(chainparams, state, mode, nManualPruneHeight, cache_state);
+    }
 
     //! Unconditionally flush all changes to disk.
     void ForceFlushStateToDisk();
@@ -679,13 +712,18 @@ public:
     //! Dictates whether we need to flush the cache to disk or not.
     //!
     //! @return the state of the size of the coins cache.
-    CoinsCacheSizeState GetCoinsCacheSizeState(const CTxMemPool* tx_pool)
+    CoinsCacheSizeState GetCoinsCacheSizeState(int64_t mempool_usage)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     CoinsCacheSizeState GetCoinsCacheSizeState(
-        const CTxMemPool* tx_pool,
+        int64_t mempool_usage,
         size_t max_coins_cache_size_bytes,
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    CoinsCacheSizeState GetCoinsCacheSizeState(
+        const CTxMemPool& tx_pool,
+        size_t max_coins_cache_size_bytes,
+        size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !tx_pool.cs);
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 

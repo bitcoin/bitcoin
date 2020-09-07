@@ -385,12 +385,12 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
         // ignore validation errors in resurrected transactions
         TxValidationState stateDummy;
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            !AcceptToMemoryPool(mempool, stateDummy, *it,
+            !::AcceptToMemoryPoolWithLockedMempool(mempool, stateDummy, *it,
                                 nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
-        } else if (mempool.exists((*it)->GetHash())) {
+        } else if (mempool.existsNonLockHelper((*it)->GetHash())) {
             vHashUpdate.push_back((*it)->GetHash());
         }
         ++it;
@@ -412,13 +412,9 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
 // were somehow broken and returning the wrong scriptPubKeys
 static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& view, const CTxMemPool& pool,
-                 unsigned int flags, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+                 unsigned int flags, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs) {
     AssertLockHeld(cs_main);
-
-    // pool.cs should be locked already, but go ahead and re-take the lock here
-    // to enforce that mempool doesn't change between when we check the view
-    // and when we actually call through to CheckInputScripts
-    LOCK(pool.cs);
+    AssertLockHeld(pool.cs);
 
     assert(!tx.IsCoinBase());
     for (const CTxIn& txin : tx.vin) {
@@ -430,7 +426,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
         if (coin.IsSpent()) return false;
 
         // Check equivalence for available inputs.
-        const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
+        const CTransactionRef& txFrom = pool.getNonLockHelper(txin.prevout.hash);
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
             assert(txFrom->vout.size() > txin.prevout.n);
@@ -513,7 +509,7 @@ private:
     // result in the scriptcache. This should be done after
     // PolicyScriptChecks(). This requires that all inputs either be in our
     // utxo set or in the mempool.
-    bool ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData &txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData &txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Try to add the transaction to the mempool, removing any conflicts first.
     // Returns true if the transaction is in the mempool after any size
@@ -521,9 +517,9 @@ private:
     bool Finalize(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Compare a package's feerate against minimum allowed.
-    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state)
+    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(m_pool.cs)
     {
-        CAmount mempoolRejectFee = m_pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(package_size);
+        CAmount mempoolRejectFee = m_pool.GetMinFeeNonLockHelper(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(package_size);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
@@ -599,7 +595,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
     // is it already in the memory pool?
-    if (m_pool.exists(hash)) {
+    if (m_pool.existsNonLockHelper(hash)) {
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
     }
 
@@ -888,7 +884,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // Rather than check the UTXO set - potentially expensive -
                 // it's cheaper to just check if the new input refers to a
                 // tx that's in the mempool.
-                if (m_pool.exists(tx.vin[j].prevout.hash)) {
+                if (m_pool.existsNonLockHelper(tx.vin[j].prevout.hash)) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "replacement-adds-unconfirmed",
                             strprintf("replacement %s adds unconfirmed input, idx %d",
                                 hash.ToString(), j));
@@ -1021,7 +1017,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     // trim mempool and check if tx was trimmed
     if (!bypass_limits) {
         LimitMempoolSize(m_pool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, std::chrono::hours{gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY)});
-        if (!m_pool.exists(hash))
+        if (!m_pool.existsNonLockHelper(hash))
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
     }
     return true;
@@ -1030,7 +1026,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
 bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args)
 {
     AssertLockHeld(cs_main);
-    LOCK(m_pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
+    LockAssertion lock(m_pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
 
     Workspace workspace(ptx);
 
@@ -1058,11 +1054,14 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
 
 } // anon namespace
 
+namespace {
 /** (try to) add transaction to memory pool with a specified acceptance time **/
-static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
+bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
                         int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
+    AssertLockHeld(pool.cs);
+
     std::vector<COutPoint> coins_to_uncache;
     MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept };
     bool res = MemPoolAccept(pool).AcceptSingleTransaction(tx, args);
@@ -1077,16 +1076,40 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
-    ::ChainstateActive().FlushStateToDisk(chainparams, state_dummy, FlushStateMode::PERIODIC);
+    LockAssertion lock(::mempool.cs);
+    ::ChainstateActive().FlushStateToDiskWithLockedMempool(chainparams, state_dummy, FlushStateMode::PERIODIC);
     return res;
 }
 
-bool AcceptToMemoryPool(CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
-                        std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+bool AcceptToMemoryPoolHelper(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
+    AssertLockHeld(pool.cs);
     const CChainParams& chainparams = Params();
     return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
+}
+} // namespace
+
+bool AcceptToMemoryPoolWithLockedMempool(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+{
+    AssertLockHeld(pool.cs);
+    return AcceptToMemoryPoolHelper(pool, state, tx, plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
+}
+
+bool AcceptToMemoryPoolWithUnlockedMempool(
+    CTxMemPool& pool, TxValidationState& state, const CTransactionRef& tx,
+    std::list<CTransactionRef>* plTxnReplaced,
+    bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
+{
+    AssertLockNotHeld(pool.cs);
+    LOCK(pool.cs);
+    return AcceptToMemoryPoolHelper(pool, state, tx, plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
@@ -2229,23 +2252,22 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     return true;
 }
 
-CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(const CTxMemPool* tx_pool)
+CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(int64_t mempool_usage)
 {
     return this->GetCoinsCacheSizeState(
-        tx_pool,
+        mempool_usage,
         m_coinstip_cache_size_bytes,
         gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
 }
 
 CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
-    const CTxMemPool* tx_pool,
+    int64_t mempool_usage,
     size_t max_coins_cache_size_bytes,
     size_t max_mempool_size_bytes)
 {
-    const int64_t nMempoolUsage = tx_pool ? tx_pool->DynamicMemoryUsage() : 0;
     int64_t cacheSize = CoinsTip().DynamicMemoryUsage();
     int64_t nTotalSpace =
-        max_coins_cache_size_bytes + std::max<int64_t>(max_mempool_size_bytes - nMempoolUsage, 0);
+        max_coins_cache_size_bytes + std::max<int64_t>(max_mempool_size_bytes - mempool_usage, 0);
 
     //! No need to periodic flush if at least this much space still available.
     static constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 10 * 1024 * 1024;  // 10MB
@@ -2261,13 +2283,24 @@ CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
-bool CChainState::FlushStateToDisk(
+CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
+    const CTxMemPool& tx_pool,
+    size_t max_coins_cache_size_bytes,
+    size_t max_mempool_size_bytes)
+{
+    return this->GetCoinsCacheSizeState(
+        tx_pool.DynamicMemoryUsage(),
+        max_coins_cache_size_bytes,
+        max_mempool_size_bytes);
+}
+
+bool CChainState::FlushStateToDiskHelper(
     const CChainParams& chainparams,
     BlockValidationState &state,
     FlushStateMode mode,
-    int nManualPruneHeight)
+    int nManualPruneHeight,
+    const CoinsCacheSizeState cache_state)
 {
-    LOCK(cs_main);
     assert(this->CanFlushToDisk());
     static std::chrono::microseconds nLastWrite{0};
     static std::chrono::microseconds nLastFlush{0};
@@ -2281,7 +2314,6 @@ bool CChainState::FlushStateToDisk(
     {
         bool fFlushForPrune = false;
         bool fDoFullFlush = false;
-        CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(&m_mempool);
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             if (nManualPruneHeight > 0) {
@@ -2394,7 +2426,8 @@ bool CChainState::FlushStateToDisk(
 void CChainState::ForceFlushStateToDisk() {
     BlockValidationState state;
     const CChainParams& chainparams = Params();
-    if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS)) {
+    AssertLockNotHeld(::mempool.cs);
+    if (!this->FlushStateToDiskWithUnlockedMempool(chainparams, state, FlushStateMode::ALWAYS)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
@@ -2404,7 +2437,8 @@ void CChainState::PruneAndFlush() {
     fCheckForPruning = true;
     const CChainParams& chainparams = Params();
 
-    if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::NONE)) {
+    AssertLockNotHeld(::mempool.cs);
+    if (!this->FlushStateToDiskWithUnlockedMempool(chainparams, state, FlushStateMode::NONE)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
@@ -2509,7 +2543,8 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED))
+    LockAssertion lock(::mempool.cs);
+    if (!FlushStateToDiskWithLockedMempool(chainparams, state, FlushStateMode::IF_NEEDED))
         return false;
 
     if (disconnectpool) {
@@ -2626,7 +2661,8 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCH, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED))
+    LockAssertion lock(::mempool.cs);
+    if (!FlushStateToDiskWithLockedMempool(chainparams, state, FlushStateMode::IF_NEEDED))
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
@@ -2800,7 +2836,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
         // any disconnected transactions back to the mempool.
         UpdateMempoolForReorg(m_mempool, disconnectpool, true);
     }
-    m_mempool.check(&CoinsTip());
+    m_mempool.checkNonLockHelper(&CoinsTip());
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -2939,7 +2975,8 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(chainparams, state, FlushStateMode::PERIODIC)) {
+    AssertLockNotHeld(::mempool.cs);
+    if (!FlushStateToDiskWithUnlockedMempool(chainparams, state, FlushStateMode::PERIODIC)) {
         return false;
     }
 
@@ -3829,7 +3866,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return AbortNode(state, std::string("System error: ") + e.what());
     }
 
-    FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
+    AssertLockNotHeld(::mempool.cs);
+    FlushStateToDiskWithUnlockedMempool(chainparams, state, FlushStateMode::NONE);
 
     CheckBlockIndex(chainparams.GetConsensus());
 
@@ -3984,7 +4022,8 @@ void PruneBlockFilesManual(int nManualPruneHeight)
 {
     BlockValidationState state;
     const CChainParams& chainparams = Params();
-    if (!::ChainstateActive().FlushStateToDisk(
+    AssertLockNotHeld(::mempool.cs);
+    if (!::ChainstateActive().FlushStateToDiskWithUnlockedMempool(
             chainparams, state, FlushStateMode::NONE, nManualPruneHeight)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
@@ -4568,7 +4607,8 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
         LimitValidationInterfaceQueue();
 
         // Occasionally flush state to disk.
-        if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
+        AssertLockNotHeld(::mempool.cs);
+        if (!FlushStateToDiskWithUnlockedMempool(params, state, FlushStateMode::PERIODIC)) {
             LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
             return false;
         }
@@ -4587,7 +4627,8 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             // and skip it here, we're about to -reindex-chainstate anyway, so
             // it'll get called a bunch real soon.
             BlockValidationState state;
-            if (!FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
+            AssertLockNotHeld(::mempool.cs);
+            if (!FlushStateToDiskWithUnlockedMempool(params, state, FlushStateMode::ALWAYS)) {
                 LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
                 return false;
             }
@@ -5011,10 +5052,10 @@ bool CChainState::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 
     if (coinstip_size > old_coinstip_size) {
         // Likely no need to flush if cache sizes have grown.
-        ret = FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED);
+        ret = FlushStateToDiskWithUnlockedMempool(chainparams, state, FlushStateMode::IF_NEEDED);
     } else {
         // Otherwise, flush state to disk and deallocate the in-memory coins map.
-        ret = FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS);
+        ret = FlushStateToDiskWithUnlockedMempool(chainparams, state, FlushStateMode::ALWAYS);
         CoinsTip().ReallocateCache();
     }
     return ret;
@@ -5093,9 +5134,13 @@ bool LoadMempool(CTxMemPool& pool)
             TxValidationState state;
             if (nTime + nExpiryTimeout > nNow) {
                 LOCK(cs_main);
-                AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
-                                           nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
-                                           false /* test_accept */);
+                AssertLockNotHeld(pool.cs);
+                {
+                    LOCK(pool.cs);
+                    AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
+                                               nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
+                                               false /* test_accept */);
+                }
                 if (state.IsValid()) {
                     ++count;
                 } else {

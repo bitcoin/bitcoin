@@ -541,7 +541,7 @@ public:
      * changing the chain tip. It's necessary to keep both mutexes locked until
      * the mempool is consistent with the new chain tip and fully populated.
      */
-    mutable RecursiveMutex cs;
+    mutable Mutex cs;
     indexed_transaction_set mapTx GUARDED_BY(cs);
 
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
@@ -579,6 +579,10 @@ private:
      */
     std::map<uint256, uint256> m_unbroadcast_txids GUARDED_BY(cs);
 
+    void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    // This method does not contain AssertLockHeld(cs), and should be used in CTxMemPool constructors only.
+    void clearInternal() EXCLUSIVE_LOCKS_REQUIRED(cs);
+
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas;
@@ -593,8 +597,20 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(double dFrequency = 1.0) { LOCK(cs); nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
+    void checkNonLockHelper(const CCoinsViewCache* pcoins) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void check(const CCoinsViewCache* pcoins) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        checkNonLockHelper(pcoins);
+    }
+
+    void setSanityCheck(double dFrequency = 1.0) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0);
+    }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
@@ -611,11 +627,21 @@ public:
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void clear();
-    void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
-    bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
-    void queryHashes(std::vector<uint256>& vtxid) const;
-    bool isSpent(const COutPoint& outpoint) const;
+    void clearNonLockHelper() EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        clearInternal();
+    }
+    void clear() EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        clearInternal();
+    }
+
+    bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid = false) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void queryHashes(std::vector<uint256>& vtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool isSpent(const COutPoint& outpoint) const; // EXCLUSIVE_LOCKS_REQUIRED(cs);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
     /**
@@ -625,9 +651,8 @@ public:
     bool HasNoInputsOf(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Affect CreateNewBlock prioritisation of transactions */
-    void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
+    void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Get the transaction in the pool that spends the same prevout */
     const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -681,7 +706,13 @@ public:
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
-    CFeeRate GetMinFee(size_t sizelimit) const;
+    CFeeRate GetMinFeeNonLockHelper(size_t sizelimit) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CFeeRate GetMinFee(size_t sizelimit) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return GetMinFeeNonLockHelper(sizelimit);
+    }
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
       *  pvNoSpendsRemaining, if set, will be populated with the list of outpoints
@@ -696,18 +727,31 @@ public:
      * Calculate the ancestor and descendant count for the given transaction.
      * The counts include the transaction itself.
      */
-    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const;
+    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** @returns true if the mempool is fully loaded */
-    bool IsLoaded() const;
+    bool IsLoadedNonLockHelper() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool IsLoaded() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return IsLoadedNonLockHelper();
+    }
 
     /** Sets the current loaded state */
-    void SetIsLoaded(bool loaded);
+    void SetIsLoaded(bool loaded) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    unsigned long size() const
+    unsigned long sizeNonLockHelper() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
+        AssertLockHeld(cs);
         return mapTx.size();
+    }
+
+    unsigned long size() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return sizeNonLockHelper();
     }
 
     uint64_t GetTotalTxSize() const EXCLUSIVE_LOCKS_REQUIRED(cs)
@@ -716,43 +760,84 @@ public:
         return totalTxSize;
     }
 
-    bool exists(const GenTxid& gtxid) const
+    bool existsNonLockHelper(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
+        AssertLockHeld(cs);
         if (gtxid.IsWtxid()) {
             return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
         }
         return (mapTx.count(gtxid.GetHash()) != 0);
     }
-    bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
 
-    CTransactionRef get(const uint256& hash) const;
+    bool exists(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return existsNonLockHelper(gtxid);
+    }
+
+    bool existsNonLockHelper(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        return existsNonLockHelper(GenTxid{false, txid});
+    }
+
+    bool exists(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return existsNonLockHelper(txid);
+    }
+
+    CTransactionRef getNonLockHelper(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CTransactionRef get(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return getNonLockHelper(hash);
+    }
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
-    TxMempoolInfo info(const uint256& hash) const;
-    TxMempoolInfo info(const GenTxid& gtxid) const;
-    std::vector<TxMempoolInfo> infoAll() const;
 
-    size_t DynamicMemoryUsage() const;
+    TxMempoolInfo info(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    TxMempoolInfo info(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::vector<TxMempoolInfo> infoAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    size_t DynamicMemoryUsageNonLockHelper() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    size_t DynamicMemoryUsage() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return DynamicMemoryUsageNonLockHelper();
+    }
 
     /** Adds a transaction to the unbroadcast set */
-    void AddUnbroadcastTx(const uint256& txid, const uint256& wtxid) {
+    void AddUnbroadcastTx(const uint256& txid, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
         LOCK(cs);
         // Sanity Check: the transaction should also be in the mempool
-        if (exists(txid)) {
+        if (existsNonLockHelper(txid)) {
             m_unbroadcast_txids[txid] = wtxid;
         }
     }
 
     /** Removes a transaction from the unbroadcast set */
-    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
+    void RemoveUnbroadcastTxNonLockHelper(const uint256& txid, const bool unchecked) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        RemoveUnbroadcastTxNonLockHelper(txid, unchecked);
+    }
 
     /** Returns transactions in unbroadcast set */
-    std::map<uint256, uint256> GetUnbroadcastTxs() const {
-        LOCK(cs);
+    std::map<uint256, uint256> GetUnbroadcastTxs() const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
         return m_unbroadcast_txids;
     }
 
@@ -838,14 +923,18 @@ public:
      * triggered.
      *
      */
-    bool visited(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    bool visited(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
         assert(m_has_epoch_guard);
         bool ret = it->m_epoch >= m_epoch;
         it->m_epoch = std::max(it->m_epoch, m_epoch);
         return ret;
     }
 
-    bool visited(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    bool visited(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
         assert(m_has_epoch_guard);
         return !it || visited(*it);
     }

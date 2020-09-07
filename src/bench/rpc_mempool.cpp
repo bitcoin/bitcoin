@@ -18,21 +18,23 @@ static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& poo
 static void RpcMempool(benchmark::Bench& bench)
 {
     CTxMemPool pool;
-    LOCK2(cs_main, pool.cs);
-
-    for (int i = 0; i < 1000; ++i) {
-        CMutableTransaction tx = CMutableTransaction();
-        tx.vin.resize(1);
-        tx.vin[0].scriptSig = CScript() << OP_1;
-        tx.vin[0].scriptWitness.stack.push_back({1});
-        tx.vout.resize(1);
-        tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
-        tx.vout[0].nValue = i;
-        const CTransactionRef tx_r{MakeTransactionRef(tx)};
-        AddTx(tx_r, /* fee */ i, pool);
+    {
+        LOCK2(cs_main, pool.cs);
+        for (int i = 0; i < 1000; ++i) {
+            CMutableTransaction tx = CMutableTransaction();
+            tx.vin.resize(1);
+            tx.vin[0].scriptSig = CScript() << OP_1;
+            tx.vin[0].scriptWitness.stack.push_back({1});
+            tx.vout.resize(1);
+            tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
+            tx.vout[0].nValue = i;
+            const CTransactionRef tx_r{MakeTransactionRef(tx)};
+            AddTx(tx_r, /* fee */ i, pool);
+        }
     }
 
     bench.run([&] {
+        LOCK(pool.cs);
         (void)MempoolToJSON(pool, /*verbose*/ true);
     });
 }
