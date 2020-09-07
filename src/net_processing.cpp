@@ -1952,6 +1952,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 // Ignore GETDATA requests for transactions from blocks-only peers.
                 continue;
             }
+
             CTransactionRef tx = FindTxForGetData(mempool, pfrom, ToGenTxid(inv), mempool_req, now);
             if (tx) {
                 // WTX and WITNESS_TX imply we serialize with witness
@@ -1964,12 +1965,11 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     LOCK(mempool.cs);
                     auto txiter = mempool.GetIter(tx->GetHash());
                     if (txiter) {
-                        const CTxMemPoolEntry::Parents& parents = (*txiter)->GetMemPoolParentsConst();
+                        const CTxMemPool::setEntries& parents = mempool.GetMemPoolParents(*txiter);
                         parent_ids_to_add.reserve(parents.size());
-                        for (const CTxMemPoolEntry& parent : parents) {
-                            if (parent.GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
-                                parent_ids_to_add.push_back(parent.GetTx().GetHash());
-                            }
+                        for (CTxMemPool::txiter parent_iter : parents) {
+                            if (parent_iter->GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
+                                parent_ids_to_add.push_back(parent_iter->GetTx().GetHash());
                         }
                     }
                 }
