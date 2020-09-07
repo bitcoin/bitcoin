@@ -243,7 +243,7 @@ void PSBTOperationsDialog::showTransactionStatus(const PartiallySignedTransactio
             break;
         }
         case PSBTRole::SIGNER: {
-            QString need_sig_text = tr("Transaction still needs signature(s).");
+            QString need_sig_text = tr("Transaction still needs some or all signature(s).");
             StatusLevel level = StatusLevel::INFO;
             if (m_wallet_model->wallet().privateKeysDisabled()) {
                 need_sig_text += " " + tr("(But this wallet cannot sign transactions.)");

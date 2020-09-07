@@ -70,8 +70,8 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
                 input_analysis.missing_witness_script = outdata.missing_witness_script;
                 input_analysis.missing_sigs = outdata.missing_sigs;
 
-                // If we are only missing signatures and nothing else, then next is signer
-                if (outdata.missing_pubkeys.empty() && outdata.missing_redeem_script.IsNull() && outdata.missing_witness_script.IsNull() && !outdata.missing_sigs.empty()) {
+                // If we are only missing some of the signatures and nothing else, then next is signer
+                if (outdata.missing_redeem_script.IsNull() && outdata.missing_witness_script.IsNull()) {
                     input_analysis.next = PSBTRole::SIGNER;
                 } else {
                     input_analysis.next = PSBTRole::UPDATER;
