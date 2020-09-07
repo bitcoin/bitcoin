@@ -135,7 +135,7 @@ extern arith_uint256 nMinimumChainWork;
 extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 /** Unload database information */
-void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+void UnloadBlockIndex(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 /** Run instances of script checking worker threads */
 void StartScriptCheckWorkerThreads(int threads_num);
 /** Stop all of the script checking worker threads */
@@ -996,9 +996,10 @@ public:
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    ~ChainstateManager() {
+    ~ChainstateManager()
+    {
         LOCK(::cs_main);
-        UnloadBlockIndex(/*mempool=*/nullptr, *this);
+        UnloadBlockIndex(*this);
     }
 };
 

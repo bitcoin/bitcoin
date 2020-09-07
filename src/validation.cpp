@@ -4117,11 +4117,10 @@ void CChainState::UnloadBlockIndex()
 // May NOT be used after any connections are up as much
 // of the peer-processing logic assumes a consistent
 // block index state
-void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
+void UnloadBlockIndex(ChainstateManager& chainman)
 {
     AssertLockHeld(::cs_main);
     chainman.Unload();
-    if (mempool) mempool->clear();
     g_versionbitscache.Clear();
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
         warningcache[b].clear();
