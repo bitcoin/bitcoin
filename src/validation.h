@@ -101,7 +101,21 @@ struct BlockHasher
     // this used to call `GetCheapHash()` in uint256, which was later moved; the
     // cheap hash function simply calls ReadLE64() however, so the end result is
     // identical
-    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
+    mutable CBlockIndex mock;
+    BlockHasher() : mock() {};
+    size_t operator()(CBlockIndex* const& ptr) const { return ReadLE64(ptr->GetBlockHash().begin()); }
+    // Helper for querying by hash
+    // e.g., map.find(map.hash_function()(h))
+    CBlockIndex* operator()(const uint256& hash) {
+        mock.m_hash_block = hash;
+        return &mock;
+    }
+};
+
+
+struct BlockEqual
+{
+    bool operator()(CBlockIndex* const& ptr, CBlockIndex* const& ptr2) const { return ptr->GetBlockHash() == ptr2->GetBlockHash(); }
 };
 
 /** Current sync state passed to tip changed callbacks. */
@@ -114,7 +128,7 @@ enum class SynchronizationState {
 extern RecursiveMutex cs_main;
 extern CBlockPolicyEstimator feeEstimator;
 extern CTxMemPool mempool;
-typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+typedef std::unordered_set<CBlockIndex*, BlockHasher, BlockEqual> BlockMap;
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
