@@ -2,9 +2,7 @@ OpenBSD build guide
 ======================
 (updated for OpenBSD 6.7)
 
-This guide describes how to build bitcoind and command-line utilities on OpenBSD.
-
-OpenBSD is most commonly used as a server OS, so this guide does not contain instructions for building the GUI.
+This guide describes how to build bitcoind, bitcoin-qt, and command-line utilities on OpenBSD.
 
 Preparation
 -------------
@@ -13,6 +11,7 @@ Run the following as root to install the base dependencies for building:
 
 ```bash
 pkg_add git gmake libevent libtool boost
+pkg_add qt5 # (optional for enabling the GUI)
 pkg_add autoconf # (select highest version, e.g. 2.69)
 pkg_add automake # (select highest version, e.g. 1.16)
 pkg_add python # (select highest version, e.g. 3.8)
@@ -78,6 +77,14 @@ To configure with wallet:
 To configure without wallet:
 ```bash
 ./configure --disable-wallet --with-gui=no CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake
+```
+
+To configure with GUI:
+```bash
+./configure --with-gui=yes CC=cc CXX=c++ \
+    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
+    BDB_CFLAGS="-I${BDB_PREFIX}/include" \
+    MAKE=gmake
 ```
 
 Build and run the tests:
