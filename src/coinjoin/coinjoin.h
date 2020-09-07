@@ -24,6 +24,7 @@ class CConnman;
 class CBLSPublicKey;
 class CBlockIndex;
 class CMasternodeSync;
+class CTxMemPool;
 
 namespace llmq {
 class CChainLocksHandler;
@@ -343,7 +344,7 @@ protected:
 
     void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
-    bool IsValidInOuts(const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const;
+    bool IsValidInOuts(const CTxMemPool& mempool, const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const;
 
 public:
     int nSessionDenom{0}; // Users must submit a denom matching this
@@ -472,7 +473,7 @@ public:
     static constexpr CAmount GetMaxPoolAmount() { return COINJOIN_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
 
     /// If the collateral is valid given by a client
-    static bool IsCollateralValid(const CTransaction& txCollateral);
+    static bool IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral);
     static constexpr CAmount GetCollateralAmount() { return GetSmallestDenomination() / 10; }
     static constexpr CAmount GetMaxCollateralAmount() { return GetCollateralAmount() * 4; }
 

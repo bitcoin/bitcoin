@@ -377,13 +377,14 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     std::string strHash = govobj.GetHash().ToString();
 
+    const CTxMemPool& mempool = EnsureMemPool(request.context);
     bool fMissingConfirmations;
     {
         if (g_txindex) {
             g_txindex->BlockUntilSyncedToCurrentChain();
         }
 
-        LOCK2(cs_main, ::mempool.cs);
+        LOCK2(cs_main, mempool.cs);
         std::string strError;
         if (!govobj.IsValidLocally(strError, fMissingConfirmations, true) && !fMissingConfirmations) {
             LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);

@@ -134,7 +134,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream&
     }
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -153,12 +153,12 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, std:
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(peer, connman, msg_type, vRecv);
+            session.ProcessMessage(peer, connman, mempool, msg_type, vRecv);
         }
     }
 }
 
-void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -193,7 +193,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, std:
         LogPrint(BCLog::COINJOIN, "DSFINALTX -- txNew %s", txNew.ToString()); /* Continued */
 
         // check to see if input is spent already? (and probably not confirmed)
-        SignFinalTransaction(txNew, peer, connman);
+        SignFinalTransaction(mempool, txNew, peer, connman);
 
     } else if (msg_type == NetMsgType::DSCOMPLETE) {
         if (!mixingMasternode) return;
@@ -539,7 +539,7 @@ void CCoinJoinClientSession::ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //
-bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode& peer, CConnman& connman)
+bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, const CTransaction& finalTransactionNew, CNode& peer, CConnman& connman)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
@@ -568,7 +568,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTrans
 
     // Make sure all inputs/outputs are valid
     PoolMessage nMessageID{MSG_NOERR};
-    if (!IsValidInOuts(finalMutableTransaction.vin, finalMutableTransaction.vout, nMessageID, nullptr)) {
+    if (!IsValidInOuts(mempool, finalMutableTransaction.vin, finalMutableTransaction.vout, nMessageID, nullptr)) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- ERROR! IsValidInOuts() failed: %s\n", __func__, CCoinJoin::GetMessageByID(nMessageID).translated);
         UnlockCoins();
         keyHolderStorage.ReturnAll();
@@ -756,7 +756,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
 //
 // Passively run mixing in the background to mix funds based on the given configuration.
 //
-bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDryRun)
+bool CCoinJoinClientSession::DoAutomaticDenominating(CTxMemPool& mempool, CConnman& connman, bool fDryRun)
 {
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (nState != POOL_STATE_IDLE) return false;
@@ -909,7 +909,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
                 return false;
             }
         } else {
-            if (!CCoinJoin::IsCollateralValid(CTransaction(txMyCollateral))) {
+            if (!CCoinJoin::IsCollateralValid(mempool, CTransaction(txMyCollateral))) {
                 LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- invalid collateral, recreating...\n");
                 if (!CreateCollateralTransaction(txMyCollateral, strReason)) {
                     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- create collateral error: %s\n", strReason);
@@ -936,7 +936,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
     return false;
 }
 
-bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, bool fDryRun)
+bool CCoinJoinClientManager::DoAutomaticDenominating(CTxMemPool& mempool, CConnman& connman, bool fDryRun)
 {
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
@@ -978,7 +978,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, bool fDr
             return false;
         }
 
-        fResult &= session.DoAutomaticDenominating(connman, fDryRun);
+        fResult &= session.DoAutomaticDenominating(mempool, connman, fDryRun);
     }
 
     return fResult;
@@ -1815,7 +1815,7 @@ void CCoinJoinClientQueueManager::DoMaintenance()
     CheckQueue();
 }
 
-void CCoinJoinClientManager::DoMaintenance(CConnman& connman)
+void CCoinJoinClientManager::DoMaintenance(CTxMemPool& mempool, CConnman& connman)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (m_mn_sync == nullptr) return;
@@ -1830,7 +1830,7 @@ void CCoinJoinClientManager::DoMaintenance(CConnman& connman)
     CheckTimeout();
     ProcessPendingDsaRequest(connman);
     if (nDoAutoNextRun == nTick) {
-        DoAutomaticDenominating(connman);
+        DoAutomaticDenominating(mempool, connman);
         nDoAutoNextRun = nTick + COINJOIN_AUTO_TIMEOUT_MIN + GetRandInt(COINJOIN_AUTO_TIMEOUT_MAX - COINJOIN_AUTO_TIMEOUT_MIN);
     }
 }
@@ -1867,14 +1867,14 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
     obj.pushKV("sessions",  arrSessions);
 }
 
-void DoCoinJoinMaintenance(CConnman& connman)
+void DoCoinJoinMaintenance(CTxMemPool& mempool, CConnman& connman)
 {
     if (coinJoinClientQueueManager != nullptr) {
         coinJoinClientQueueManager->DoMaintenance();
     }
 
     for (const auto& pair : coinJoinClientManagers) {
-        pair.second->DoMaintenance(connman);
+        pair.second->DoMaintenance(mempool, connman);
     }
 }
 

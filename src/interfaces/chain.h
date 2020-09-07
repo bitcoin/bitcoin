@@ -22,6 +22,7 @@ class CConnman;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
+class CTxMemPool;
 class CValidationState;
 class CFeeRate;
 class CBlockIndex;

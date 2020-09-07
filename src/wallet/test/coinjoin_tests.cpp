@@ -129,6 +129,7 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+        node.mempool = std::make_unique<CTxMemPool>(&::feeEstimator);
         chain = interfaces::MakeChain(node);
         wallet = std::make_unique<CWallet>(chain.get(), "", CreateMockWalletDatabase());
         bool firstRun;

@@ -62,7 +62,7 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry);
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempool, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry);
 
 NodeContext& EnsureNodeContext(const CoreContext& context)
 {
@@ -2333,6 +2333,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
     int nTxNum = 0;
     UniValue result(UniValue::VARR);
     LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    CTxMemPool& mempool = EnsureMemPool(request.context);
 
     for(const auto& tx : block.vtx)
     {
@@ -2352,7 +2353,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
             case 2 :
                 {
                     UniValue objTx(UniValue::VOBJ);
-                    TxToJSON(*tx, uint256(), *llmq_ctx.clhandler, *llmq_ctx.isman, objTx);
+                    TxToJSON(*tx, uint256(), mempool, *llmq_ctx.clhandler, *llmq_ctx.isman, objTx);
                     result.push_back(objTx);
                     break;
                 }

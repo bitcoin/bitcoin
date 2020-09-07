@@ -9,6 +9,7 @@
 #include <net.h>
 
 class CCoinJoinServer;
+class CTxMemPool;
 class UniValue;
 
 // The main object for accessing mixing
@@ -19,6 +20,7 @@ extern std::unique_ptr<CCoinJoinServer> coinJoinServer;
 class CCoinJoinServer : public CCoinJoinBaseSession, public CCoinJoinBaseManager
 {
 private:
+    CTxMemPool& mempool;
     CConnman& connman;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
@@ -75,7 +77,8 @@ private:
     void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinServer(CConnman& _connman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+    explicit CCoinJoinServer(CTxMemPool& mempool, CConnman& _connman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+        mempool(mempool),
         connman(_connman),
         m_mn_sync(mn_sync),
         vecSessionCollaterals(),

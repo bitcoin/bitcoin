@@ -155,7 +155,6 @@ arith_uint256 nMinimumChainWork;
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 CBlockPolicyEstimator feeEstimator;
-CTxMemPool mempool(&feeEstimator);
 
 // Internal stuff
 namespace {
@@ -852,7 +851,7 @@ bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::v
     return true;
 }
 
-bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value)
+bool GetSpentIndex(CTxMemPool& mempool, CSpentIndexKey &key, CSpentIndexValue &value)
 {
     if (!fSpentIndex)
         return false;
@@ -4590,6 +4589,14 @@ bool static LoadBlockIndexDB(ChainstateManager& chainman, const CChainParams& ch
     LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
 
     return true;
+}
+
+void CChainState::LoadMempool(const ArgsManager& args)
+{
+    if (args.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+        ::LoadMempool(m_mempool);
+    }
+    m_mempool.SetIsLoaded(!ShutdownRequested());
 }
 
 bool CChainState::LoadChainTip(const CChainParams& chainparams)

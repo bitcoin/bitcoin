@@ -227,7 +227,8 @@ void PrepareShutdown(NodeContext& node)
     /// Be sure that anything that writes files or flushes caches only does this if the respective
     /// module was initialized.
     util::ThreadRename("shutoff");
-    mempool.AddTransactionsUpdated(1);
+    if (node.mempool) node.mempool->AddTransactionsUpdated(1);
+
     StopHTTPRPC();
     StopREST();
     StopRPC();
@@ -281,8 +282,8 @@ void PrepareShutdown(NodeContext& node)
     node.connman.reset();
     node.banman.reset();
 
-    if (::mempool.IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        DumpMempool(::mempool);
+    if (node.mempool && node.mempool->IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+        DumpMempool(*node.mempool);
     }
 
     if (fFeeEstimatesInitialized)
@@ -403,7 +404,7 @@ void Shutdown(NodeContext& node)
     // Shutdown part 2: delete wallet instance
     globalVerifyHandle.reset();
     ECC_Stop();
-    node.mempool = nullptr;
+    node.mempool.reset();
     node.chainman = nullptr;
     node.scheduler.reset();
 
@@ -974,13 +975,10 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
 
     g_wallet_init_interface.AutoLockMasternodeCollaterals();
 
-    if (args.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        LoadMempool(::mempool);
-    }
-    ::mempool.SetIsLoaded(!ShutdownRequested());
+    chainman.ActiveChainstate().LoadMempool(args);
 }
 
-void PeriodicStats(ArgsManager& args)
+static void PeriodicStats(ArgsManager& args, const CTxMemPool& mempool)
 {
     assert(args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
     CCoinsStats stats;
@@ -1021,10 +1019,13 @@ void PeriodicStats(ArgsManager& args)
     statsClient.gauge("transactions.txCacheSize", WITH_LOCK(cs_main, return ::ChainstateActive().CoinsTip().GetCacheSize()), 1.0f);
     statsClient.gauge("transactions.totalTransactions", tip->nChainTx, 1.0f);
 
-    statsClient.gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
-    statsClient.gauge("transactions.mempool.totalTxBytes", (int64_t) mempool.GetTotalTxSize(), 1.0f);
-    statsClient.gauge("transactions.mempool.memoryUsageBytes", (int64_t) mempool.DynamicMemoryUsage(), 1.0f);
-    statsClient.gauge("transactions.mempool.minFeePerKb", mempool.GetMinFee(args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 1.0f);
+    {
+        LOCK(mempool.cs);
+        statsClient.gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
+        statsClient.gauge("transactions.mempool.totalTxBytes", (int64_t) mempool.GetTotalTxSize(), 1.0f);
+        statsClient.gauge("transactions.mempool.memoryUsageBytes", (int64_t) mempool.DynamicMemoryUsage(), 1.0f);
+        statsClient.gauge("transactions.mempool.minFeePerKb", mempool.GetMinFee(args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 1.0f);
+    }
 }
 
 /** Sanity checks
@@ -1387,11 +1388,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         }
     }
 
-    // Checkmempool and checkblockindex default to true in regtest mode
-    int ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
-    if (ratio != 0) {
-        mempool.setSanityCheck(1.0 / ratio);
-    }
     fCheckBlockIndex = args.GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = args.GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
 
@@ -1773,7 +1769,14 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     // Make mempool generally available in the node context. For example the connection manager, wallet, or RPC threads,
     // which are all started after this, may use it from the node context.
     assert(!node.mempool);
-    node.mempool = &::mempool;
+    node.mempool = std::make_unique<CTxMemPool>(&::feeEstimator);
+    if (node.mempool) {
+        int ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+        if (ratio != 0) {
+            node.mempool->setSanityCheck(1.0 / ratio);
+        }
+    }
+
     assert(!node.chainman);
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
@@ -2017,7 +2020,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 
-                UnloadBlockIndex(node.mempool);
+                UnloadBlockIndex(node.mempool.get());
 
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
@@ -2320,7 +2323,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 10a: Setup CoinJoin
 
-    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.connman, ::masternodeSync);
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.mempool, *node.connman, ::masternodeSync);
 #ifdef ENABLE_WALLET
     ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, ::masternodeSync);
 #endif // ENABLE_WALLET
@@ -2394,13 +2397,13 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.llmq_ctx->qdkgsman)), std::chrono::hours{1});
 #ifdef ENABLE_WALLET
     } else if(CCoinJoinClientOptions::IsEnabled()) {
-        node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.connman)), std::chrono::seconds{1});
+        node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.mempool), std::ref(*node.connman)), std::chrono::seconds{1});
 #endif // ENABLE_WALLET
     }
 
     if (args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {
         int nStatsPeriod = std::min(std::max((int)args.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
-        node.scheduler->scheduleEvery(std::bind(&PeriodicStats, std::ref(*node.args)), std::chrono::seconds{nStatsPeriod});
+        node.scheduler->scheduleEvery(std::bind(&PeriodicStats, std::ref(*node.args), std::cref(*node.mempool)), std::chrono::seconds{nStatsPeriod});
     }
 
     node.llmq_ctx->Start();

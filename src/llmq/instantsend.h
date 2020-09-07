@@ -120,7 +120,7 @@ public:
             db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
     {}
 
-    void Upgrade() LOCKS_EXCLUDED(cs_db);
+    void Upgrade(const CTxMemPool& mempool) LOCKS_EXCLUDED(cs_db);
 
     /**
      * This method is called when an InstantSend Lock is processed and adds the lock to the database

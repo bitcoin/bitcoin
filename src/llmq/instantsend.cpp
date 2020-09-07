@@ -57,9 +57,9 @@ uint256 CInstantSendLock::GetRequestId() const
 ////////////////
 
 
-void CInstantSendDb::Upgrade()
+void CInstantSendDb::Upgrade(const CTxMemPool& mempool)
 {
-    LOCK2(cs_main, ::mempool.cs);
+    LOCK2(cs_main, mempool.cs);
     LOCK(cs_db);
     int v{0};
     if (!db->Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
@@ -1315,7 +1315,7 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     if (!fUpgradedDB) {
         if (WITH_LOCK(cs_llmq_vbc, return VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0020, llmq_versionbitscache) == ThresholdState::ACTIVE)) {
-            db.Upgrade();
+            db.Upgrade(mempool);
             fUpgradedDB = true;
         }
     }
