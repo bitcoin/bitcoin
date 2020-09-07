@@ -164,17 +164,6 @@ public:
             Enter(pszName, pszFile, nLine);
     }
 
-    UniqueLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
-    {
-        if (!pmutexIn) return;
-
-        *static_cast<Base*>(this) = Base(*pmutexIn, std::defer_lock);
-        if (fTry)
-            TryEnter(pszName, pszFile, nLine);
-        else
-            Enter(pszName, pszFile, nLine);
-    }
-
     ~UniqueLock() UNLOCK_FUNCTION()
     {
         if (Base::owns_lock())
