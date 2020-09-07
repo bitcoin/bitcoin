@@ -1924,11 +1924,21 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         int nTries = 0;
         while (!interruptNet)
         {
-            CAddrInfo addr = addrman.SelectTriedCollision();
+            CAddrInfo addr;
 
-            // SelectTriedCollision returns an invalid address if it is empty.
-            if (!fFeeler || !addr.IsValid()) {
-                addr = addrman.Select(fFeeler);
+            // For non-feeler connections, attempt to connect to an address among the collisions
+            // in our "tried" table.
+            // For feelers iterations, since feelers should be selected from the "new" table in the AddrMan,
+            // skip selecting collisions.
+            if (!fFeeler) {
+                // SelectTriedCollision returns an invalid address if it is empty.
+                addr = addrman.SelectTriedCollision();
+                if (!addr.IsValid()) {
+                    // If no collisions, consider an address from the "tried" table.
+                    addr = addrman.Select(true);
+                }
+            } else {
+                addr = addrman.Select(false);
             }
 
             // Require outbound connections, other than feelers, to be to distinct network groups
