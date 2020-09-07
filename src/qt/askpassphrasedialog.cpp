@@ -20,7 +20,7 @@
 #include <QPushButton>
 
 AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent, SecureString* passphrase_out) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::AskPassphraseDialog),
     mode(_mode),
     model(nullptr),

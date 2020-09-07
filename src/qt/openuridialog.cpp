@@ -11,7 +11,7 @@
 #include <QUrl>
 
 OpenURIDialog::OpenURIDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::OpenURIDialog)
 {
     ui->setupUi(this);

@@ -11,7 +11,7 @@
 #include <QModelIndex>
 
 TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::TransactionDescDialog)
 {
     ui->setupUi(this);
