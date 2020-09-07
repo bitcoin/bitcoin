@@ -86,7 +86,7 @@ void AppTests::appTests()
     AbortShutdown();
     {
         LOCK(cs_main);
-        UnloadBlockIndex(/* mempool */ nullptr, g_chainman);
+        UnloadBlockIndex(g_chainman);
         g_chainman.Reset();
     }
 }
