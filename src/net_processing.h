@@ -11,9 +11,13 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+class BlockTransactionsRequest;
+class BlockValidationState;
+class CBlockHeader;
 class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
+class TxValidationState;
 
 extern RecursiveMutex cs_main;
 extern RecursiveMutex g_cs_orphans;
@@ -27,18 +31,10 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
-class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
-private:
-    CConnman& m_connman;
-    /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
-    BanMan* const m_banman;
-    ChainstateManager& m_chainman;
-    CTxMemPool& m_mempool;
-
-    bool MaybeDiscourageAndDisconnect(CNode& pnode);
-
+class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
-    PeerLogicValidation(CConnman& connman, BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
+    PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
+                CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
 
     /**
      * Overridden from CValidationInterface.
@@ -88,12 +84,58 @@ public:
 
     /** Process a single message from a peer. Public for fuzz testing */
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const CChainParams& chainparams,
-                        const std::atomic<bool>& interruptMsgProc);
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc);
+
+    /**
+     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
+     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
+     * Public for unit testing.
+     */
+    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
 
 private:
-    int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
+    /**
+     * Potentially mark a node discouraged based on the contents of a BlockValidationState object
+     *
+     * @param[in] via_compact_block this bool is passed in because net_processing should
+     * punish peers differently depending on whether the data was provided in a compact
+     * block message or not. If the compact block had a valid header, but contained invalid
+     * txs, the peer should not be punished. See BIP 152.
+     *
+     * @return Returns true if the peer was punished (probably disconnected)
+     */
+    bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
+                                 bool via_compact_block, const std::string& message = "");
 
+    /**
+     * Potentially disconnect and discourage a node based on the contents of a TxValidationState object
+     *
+     * @return Returns true if the peer was punished (probably disconnected)
+     */
+    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "");
+
+    /** Maybe disconnect a peer and discourage future connections from its address.
+     *
+     * @param[in]   pnode     The node to check.
+     * @return                True if the peer was marked for disconnection in this function
+     */
+    bool MaybeDiscourageAndDisconnect(CNode& pnode);
+
+    void ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+    /** Process a single headers message from a peer. */
+    void ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHeader>& headers, bool via_compact_block);
+
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
+
+    const CChainParams& m_chainparams;
+    CConnman& m_connman;
+    /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
+    BanMan* const m_banman;
+    ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
+
+    int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
 };
 
 struct CNodeStateStats {
