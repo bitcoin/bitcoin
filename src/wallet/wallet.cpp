@@ -2713,6 +2713,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
 
 const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int output) const
 {
+    AssertLockHeld(cs_wallet);
     const CTransaction* ptx = &tx;
     int n = output;
     while (IsChange(ptx->vout[n]) && ptx->vin.size() > 0) {
@@ -3984,6 +3985,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         return false;
     }
 
+    WalletBatch batch(GetDatabase());
     {
         LOCK(cs_wallet);
 
@@ -3991,15 +3993,15 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         std::string strAddress = EncodeDestination(address);
         for (const std::pair<const std::string, std::string> &item : m_address_book[address].destdata)
         {
-            WalletBatch(GetDatabase()).EraseDestData(strAddress, item.first);
+            batch.EraseDestData(strAddress, item.first);
         }
         m_address_book.erase(address);
     }
 
     NotifyAddressBookChanged(this, address, "", IsMine(address) != ISMINE_NO, "", CT_DELETED);
 
-    WalletBatch(GetDatabase()).ErasePurpose(EncodeDestination(address));
-    return WalletBatch(GetDatabase()).EraseName(EncodeDestination(address));
+    batch.ErasePurpose(EncodeDestination(address));
+    return batch.EraseName(EncodeDestination(address));
 }
 
 size_t CWallet::KeypoolCountExternalKeys() const
