@@ -2199,11 +2199,11 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     LOCK(m_mempool.cs);
                     auto txiter = m_mempool.GetIter(tx->GetHash());
                     if (txiter) {
-                        const CTxMemPool::setEntries& parents = m_mempool.GetMemPoolParents(*txiter);
+                        const CTxMemPoolEntry::Parents& parents = (*txiter)->GetMemPoolParentsConst();
                         parent_ids_to_add.reserve(parents.size());
-                        for (CTxMemPool::txiter parent_iter : parents) {
-                            if (parent_iter->GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
-                                parent_ids_to_add.push_back(parent_iter->GetTx().GetHash());
+                        for (const CTxMemPoolEntry& parent : parents) {
+                            if (parent.GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
+                                parent_ids_to_add.push_back(parent.GetTx().GetHash());
                             }
                         }
                     }
