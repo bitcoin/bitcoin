@@ -9,6 +9,8 @@
 #include <qt/createwalletdialog.h>
 #include <qt/forms/ui_createwalletdialog.h>
 
+#include <qt/guiutil.h>
+
 #include <QPushButton>
 
 CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
