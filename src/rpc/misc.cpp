@@ -97,7 +97,6 @@ UniValue mnsync(const JSONRPCRequest& request)
         objStatus.pushKV("Attempt", masternodeSync.GetAttempt());
         objStatus.pushKV("IsBlockchainSynced", masternodeSync.IsBlockchainSynced());
         objStatus.pushKV("IsSynced", masternodeSync.IsSynced());
-        objStatus.pushKV("IsFailed", masternodeSync.IsFailed());
         return objStatus;
     }
 
