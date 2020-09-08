@@ -197,6 +197,7 @@ FUZZ_SUITE_LDFLAGS_COMMON = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(
 if ENABLE_FUZZ_BINARY
 test_fuzz_fuzz_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_fuzz_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_fuzz_CFLAGS = $(AM_CFLAGS) $(PIE_FLAGS)
 test_fuzz_fuzz_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_fuzz_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_fuzz_SOURCES = \
@@ -226,6 +227,8 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/crypto_common.cpp \
  test/fuzz/crypto_hkdf_hmac_sha256_l32.cpp \
  test/fuzz/crypto_poly1305.cpp \
+ test/fuzz/crypto_siphash.cpp \
+ test/fuzz/siphash.c \
  test/fuzz/cuckoocache.cpp \
  test/fuzz/data_stream.cpp \
  test/fuzz/decode_tx.cpp \
