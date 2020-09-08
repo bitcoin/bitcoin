@@ -68,7 +68,7 @@ public:
      * Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound.
      * Public for unit testing.
      */
-    virtual void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams) = 0;
+    virtual void CheckForStaleTipAndEvictPeers() = 0;
 
     /** Process a single message from a peer. Public for fuzz testing */
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
