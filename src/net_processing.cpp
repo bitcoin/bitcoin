@@ -1247,13 +1247,12 @@ PeerManager::PeerManager(const CChainParams& chainparams, CConnman& connman, Ban
     // same probability that we have in the reject filter).
     g_recent_confirmed_transactions.reset(new CRollingBloomFilter(48000, 0.000001));
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
     // Stale tip checking and peer eviction are on two different timers, but we
     // don't want them to get out of sync due to drift in the scheduler, so we
     // combine them in one function and schedule at the quicker (peer-eviction)
     // timer.
     static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
-    scheduler.scheduleEvery([this, consensusParams] { this->CheckForStaleTipAndEvictPeers(consensusParams); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
+    scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
 
     // schedule next run for 10-15 minutes in the future
     const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
@@ -1344,7 +1343,7 @@ void PeerManager::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_
         return;
     nHighestFastAnnounce = pindex->nHeight;
 
-    bool fWitnessEnabled = IsWitnessEnabled(pindex->pprev, Params().GetConsensus());
+    bool fWitnessEnabled = IsWitnessEnabled(pindex->pprev, m_chainparams.GetConsensus());
     uint256 hashBlock(pblock->GetHash());
 
     {
@@ -1572,7 +1571,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
     } // release cs_main before calling ActivateBestChain
     if (need_activate_chain) {
         BlockValidationState state;
-        if (!ActivateBestChain(state, Params(), a_recent_block)) {
+        if (!ActivateBestChain(state, chainparams, a_recent_block)) {
             LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
         }
     }
@@ -2786,7 +2785,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 a_recent_block = most_recent_block;
             }
             BlockValidationState state;
-            if (!ActivateBestChain(state, Params(), a_recent_block)) {
+            if (!ActivateBestChain(state, m_chainparams, a_recent_block)) {
                 LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
             }
         }
@@ -4027,7 +4026,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
     }
 }
 
-void PeerManager::CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams)
+void PeerManager::CheckForStaleTipAndEvictPeers()
 {
     LOCK(cs_main);
 
@@ -4038,7 +4037,7 @@ void PeerManager::CheckForStaleTipAndEvictPeers(const Consensus::Params &consens
     if (time_in_seconds > m_stale_tip_check_time) {
         // Check whether our tip is stale, and if so, allow using an extra
         // outbound peer
-        if (!fImporting && !fReindex && m_connman.GetNetworkActive() && m_connman.GetUseAddrmanOutgoing() && TipMayBeStale(consensusParams)) {
+        if (!fImporting && !fReindex && m_connman.GetNetworkActive() && m_connman.GetUseAddrmanOutgoing() && TipMayBeStale(m_chainparams.GetConsensus())) {
             LogPrintf("Potential stale tip detected, will try using extra outbound peer (last tip update: %d seconds ago)\n", time_in_seconds - g_last_tip_update);
             m_connman.SetTryNewOutboundPeer(true);
         } else if (m_connman.GetTryNewOutboundPeer()) {
@@ -4071,7 +4070,7 @@ public:
 
 bool PeerManager::SendMessages(CNode* pto)
 {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
     // disconnect misbehaving peers even before the version handshake is complete.
