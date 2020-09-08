@@ -1516,6 +1516,11 @@ void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets)
 
 void updateFonts()
 {
+    // Fonts need to be loaded by GUIIUtil::loadFonts(), if not just return.
+    if (!osDefaultFont) {
+        return;
+    }
+
     setApplicationFont();
 
     auto getKey = [](QWidget* w) -> QString {
