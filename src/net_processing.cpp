@@ -889,15 +889,22 @@ void PeerManager::InitializeNode(CNode *pnode) {
 
 void PeerManager::ReattemptInitialBroadcast(CScheduler& scheduler) const
 {
+    std::vector<std::pair<uint256, uint256>> relay_transactions;
     std::map<uint256, uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
 
+    relay_transactions.reserve(unbroadcast_txids.size());
     for (const auto& elem : unbroadcast_txids) {
         // Sanity check: all unbroadcast txns should exist in the mempool
         if (m_mempool.exists(elem.first)) {
-            LOCK(cs_main);
-            RelayTransaction(elem.first, elem.second, m_connman);
+            relay_transactions.push_back(elem);
         } else {
             m_mempool.RemoveUnbroadcastTx(elem.first, true);
+        }
+    }
+    {
+        LOCK(cs_main);
+        for (const auto& elem : relay_transactions) {
+            RelayTransaction(elem.first, elem.second, m_connman);
         }
     }
 
