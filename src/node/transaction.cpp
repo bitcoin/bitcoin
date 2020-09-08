@@ -35,7 +35,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // So if the output does exist, then this transaction exists in the chain.
         if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
     }
-    if (!node.mempool->exists(hashTx)) {
+    if (!WITH_LOCK(node.mempool->cs, return node.mempool->exists(hashTx))) {
         // Transaction is not already in the mempool. Submit it.
         TxValidationState state;
         if (!AcceptToMemoryPool(*node.mempool, state, std::move(tx),

@@ -729,15 +729,15 @@ public:
         return totalTxSize;
     }
 
-    bool exists(const GenTxid& gtxid) const
+    bool exists(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
+        AssertLockHeld(cs);
         if (gtxid.IsWtxid()) {
             return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
         }
         return (mapTx.count(gtxid.GetHash()) != 0);
     }
-    bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
+    bool exists(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs) { return exists(GenTxid{false, txid}); }
 
     CTransactionRef get(const uint256& hash) const;
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
