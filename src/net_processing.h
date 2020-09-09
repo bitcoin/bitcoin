@@ -86,12 +86,6 @@ public:
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc);
 
-    /**
-     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
-     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
-     * Public for unit testing.
-     */
-    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
 
 private:
     /**
@@ -152,7 +146,12 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 // files such as mnauth.cpp and governance.cpp it makes sense to keep it in the header
 /** Increase a node's misbehavior score. */
 bool IsBanned(NodeId nodeid, BanMan& banman);
-void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+/**
+    * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
+    * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
+    * Public for unit testing.
+    */
+void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
 // SYSCOIN
 void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 size_t GetRequestedOtherCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

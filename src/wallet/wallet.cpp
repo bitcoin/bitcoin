@@ -3490,7 +3490,7 @@ void CWallet::AutoLockMasternodeCollaterals()
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
 
-    LOCK2(cs_main, cs_wallet);
+    LOCK(cs_wallet);
     for (const auto& pair : mapWallet) {
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {

@@ -473,7 +473,6 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
 
     auto badNodes = BatchVerifyMessageSigs(session, preverifiedMessages);
     if (!badNodes.empty()) {
-        LOCK(cs_main);
         for (auto nodeId : badNodes) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- failed to verify signature, peer=%d\n", __func__, nodeId);
             Misbehaving(nodeId, 100, "failed to verify signature");
