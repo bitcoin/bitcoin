@@ -206,7 +206,6 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
     }
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
 
     std::string strError = "";
