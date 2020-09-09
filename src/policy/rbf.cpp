@@ -66,7 +66,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, C
         }
     }
     return RBFTransactionState::FINAL;
-
+}
 RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
 {
     // If we don't have a local mempool we can only check the transaction itself.
