@@ -40,6 +40,10 @@ class MiniWallet:
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
         return blocks
 
+    def get_utxo(self):
+        """Return the last utxo. Can be used to get the change output immediately after a send_self_transfer"""
+        return self._utxos.pop()
+
     def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])
