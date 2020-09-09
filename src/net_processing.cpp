@@ -1263,8 +1263,8 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     }
     return nEvicted;
 }
-
-void PeerManager::Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
+// SYSCOIN
+void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
 {
     assert(howmuch > 0);
 
