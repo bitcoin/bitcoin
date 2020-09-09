@@ -193,7 +193,6 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
