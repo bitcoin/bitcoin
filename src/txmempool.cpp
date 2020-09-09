@@ -619,7 +619,7 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
 
-void CTxMemPool::check(const CCoinsViewCache *pcoins) const
+void CTxMemPool::check(CChainState& active_chainstate) const
 {
     if (m_check_ratio == 0) return;
 
@@ -633,8 +633,11 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     CAmount check_total_fee{0};
     uint64_t innerUsage = 0;
 
-    CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
-    const int64_t spendheight = g_chainman.m_blockman.GetSpendHeight(mempoolDuplicate);
+    CCoinsViewCache& active_coins_tip = active_chainstate.CoinsTip();
+    assert(std::addressof(::ChainstateActive().CoinsTip()) == std::addressof(active_coins_tip)); // TODO: REVIEW-ONLY, REMOVE IN FUTURE COMMIT
+    CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip));
+    const int64_t spendheight = active_chainstate.m_chain.Height() + 1;
+    assert(g_chainman.m_blockman.GetSpendHeight(mempoolDuplicate) == spendheight); // TODO: REVIEW-ONLY, REMOVE IN FUTURE COMMIT
 
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
@@ -655,7 +658,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                 fDependsWait = true;
                 setParentCheck.insert(*it2);
             } else {
-                assert(pcoins->HaveCoin(txin.prevout));
+                assert(active_coins_tip.HaveCoin(txin.prevout));
             }
             // Check whether its inputs are marked in mapNextTx.
             auto it3 = mapNextTx.find(txin.prevout);

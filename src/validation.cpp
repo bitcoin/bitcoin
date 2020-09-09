@@ -2799,7 +2799,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
         // any disconnected transactions back to the mempool.
         UpdateMempoolForReorg(::ChainstateActive(), m_mempool, disconnectpool, true);
     }
-    m_mempool.check(&CoinsTip());
+    m_mempool.check(*this);
 
     CheckForkWarningConditions();
 
