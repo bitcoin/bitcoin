@@ -42,12 +42,12 @@ class MiniWallet:
 
     def send_self_transfer(self, *, fee_rate, from_node):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
-        self._utxos = sorted(self._utxos, key=lambda k: -k['value'])
+        self._utxos = sorted(self._utxos, key=lambda k: k['value'])
         largest_utxo = self._utxos.pop()  # Pick the largest utxo and hope it covers the fee
         vsize = Decimal(96)
         send_value = satoshi_round(largest_utxo['value'] - fee_rate * (vsize / 1000))
         fee = largest_utxo['value'] - send_value
-        assert (send_value > 0)
+        assert send_value > 0
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(largest_utxo['txid'], 16), largest_utxo['vout']))]
