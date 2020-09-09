@@ -268,7 +268,7 @@ UniValue convertaddress(const JSONRPCRequest& request)	 {
 
 int CheckActorsInTransactionGraph(const uint256& lookForTxHash) {
     LOCK(cs_main);
-    LOCK(mempool.cs);
+    LOCK(m_mempool.cs);
     {
         CTxMemPool::setEntries setAncestors;
         const CTransactionRef &txRef = mempool.get(lookForTxHash);
@@ -392,7 +392,7 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
     // block may not be found
-    rawTx = GetTransaction(blockindex, node.mempool, rawTx->GetHash(), Params().GetConsensus(), hashBlock);
+    rawTx = GetTransaction(blockindex, node.mempool.get(), rawTx->GetHash(), Params().GetConsensus(), hashBlock);
 
     UniValue output(UniValue::VOBJ);
     if(rawTx && !DecodeSyscoinRawtransaction(*rawTx, hashBlock, output))
