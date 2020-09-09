@@ -819,18 +819,12 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         }
     }
 
-    int tipHeight;
-    {
-        LOCK(cs_main);
-        tipHeight = chainActive.Height();
-    }
-
     // This might end up giving different results on different members
     // This might happen when we are on the brink of confirming a new quorum
     // This gives a slight risk of not getting enough shares to recover a signature
     // But at least it shouldn't be possible to get conflicting recovered signatures
     // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-    CQuorumCPtr quorum = SelectQuorumForSigning(llmqType, tipHeight, id);
+    CQuorumCPtr quorum = SelectQuorumForSigning(llmqType, id);
     if (!quorum) {
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
         return false;
@@ -898,7 +892,7 @@ bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& 
     return db.GetVoteForId(llmqType, id, msgHashRet);
 }
 
-std::vector<CQuorumCPtr> CSigningManager::GetActiveQuorumSet(Consensus::LLMQType llmqType, int signHeight)
+CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, const uint256& selectionHash, int signHeight, int signOffset)
 {
     auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
     size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
@@ -906,19 +900,17 @@ std::vector<CQuorumCPtr> CSigningManager::GetActiveQuorumSet(Consensus::LLMQType
     CBlockIndex* pindexStart;
     {
         LOCK(cs_main);
-        int startBlockHeight = signHeight - SIGN_HEIGHT_OFFSET;
+        if (signHeight == -1) {
+            signHeight = chainActive.Height();
+        }
+        int startBlockHeight = signHeight - signOffset;
         if (startBlockHeight > chainActive.Height()) {
             return {};
         }
         pindexStart = chainActive[startBlockHeight];
     }
 
-    return quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
-}
-
-CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash)
-{
-    auto quorums = GetActiveQuorumSet(llmqType, signHeight);
+    auto quorums =  quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
     if (quorums.empty()) {
         return nullptr;
     }
@@ -938,7 +930,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
 
 bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
 {
-    auto quorum = SelectQuorumForSigning(llmqType, signedAtHeight, id);
+    auto quorum = SelectQuorumForSigning(llmqType, id, signedAtHeight);
     if (!quorum) {
         return false;
     }
