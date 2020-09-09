@@ -288,7 +288,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
 {
     // SYSCOIN
-    AssertLockHeld(mempool.cs);
+    AssertLockHeld(m_mempool.cs);
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
@@ -296,7 +296,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
             return false;
         // SYSCOIN
         // If conflicting syscoin related dbl-spent input in this tx, skip it if its newer (prefer first tx based on time)
-        if(!mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
+        if(!m_mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
             return false;
         }      
     }

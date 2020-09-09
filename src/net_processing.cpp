@@ -1954,6 +1954,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                         for (const CTxMemPoolEntry& parent : parents) {
                             if (parent.GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
                                 parent_ids_to_add.push_back(parent.GetTx().GetHash());
+                            }
                         }
                     }
                 }
@@ -3298,7 +3299,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = ::ChainActive().Next(pindex))
         {
-            const CBlockHeader header = pindex->GetBlockHeader(chainparams.GetConsensus());
+            const CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus());
             ++nCount;
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
             vHeaders.push_back(header);
