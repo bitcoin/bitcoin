@@ -440,15 +440,9 @@ UniValue quorum_selectquorum(const JSONRPCRequest& request)
 
     uint256 id = ParseHashV(request.params[2], "id");
 
-    int tipHeight;
-    {
-        LOCK(cs_main);
-        tipHeight = ::ChainActive().Height();
-    }
-
     UniValue ret(UniValue::VOBJ);
 
-    auto quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, tipHeight, id);
+    auto quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id);
     if (!quorum) {
         throw JSONRPCError(RPC_MISC_ERROR, "no quorums active");
     }
