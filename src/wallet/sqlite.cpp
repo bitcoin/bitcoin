@@ -4,6 +4,8 @@
 
 #include <wallet/sqlite.h>
 
+#include <chainparams.h>
+#include <crypto/common.h>
 #include <logging.h>
 #include <sync.h>
 #include <util/memory.h>
@@ -113,6 +115,28 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
 {
     assert(m_db);
 
+    // Check the application ID matches our network magic
+    sqlite3_stmt* app_id_stmt{nullptr};
+    int ret = sqlite3_prepare_v2(m_db, "PRAGMA application_id", -1, &app_id_stmt, nullptr);
+    if (ret != SQLITE_OK) {
+        sqlite3_finalize(app_id_stmt);
+        error = strprintf(_("SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s"), sqlite3_errstr(ret));
+        return false;
+    }
+    ret = sqlite3_step(app_id_stmt);
+    if (ret != SQLITE_ROW) {
+        sqlite3_finalize(app_id_stmt);
+        error = strprintf(_("SQLiteDatabase: Failed to fetch the application id: %s"), sqlite3_errstr(ret));
+        return false;
+    }
+    uint32_t app_id = static_cast<uint32_t>(sqlite3_column_int(app_id_stmt, 0));
+    sqlite3_finalize(app_id_stmt);
+    uint32_t net_magic = ReadBE32(Params().MessageStart());
+    if (app_id != net_magic) {
+        error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
+        return false;
+    }
+
     sqlite3_stmt* stmt{nullptr};
     ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
@@ -213,6 +237,14 @@ void SQLiteDatabase::Open()
         ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
         if (ret != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
+        }
+
+        // Set the application id
+        uint32_t app_id = ReadBE32(Params().MessageStart());
+        std::string set_app_id = strprintf("PRAGMA application_id = %d", static_cast<int32_t>(app_id));
+        ret = sqlite3_exec(m_db, set_app_id.c_str(), nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set the application id: %s\n", sqlite3_errstr(ret)));
         }
     }
 }
@@ -544,9 +576,20 @@ bool IsSQLiteFile(const fs::path& path)
     // Magic is at beginning and is 16 bytes long
     char magic[16];
     file.read(magic, 16);
+
+    // Application id is at offset 68 and 4 bytes long
+    file.seekg(68, std::ios::beg);
+    char app_id[4];
+    file.read(app_id, 4);
+
     file.close();
 
     // Check the magic, see https://sqlite.org/fileformat2.html
     std::string magic_str(magic);
-    return magic_str == std::string("SQLite format 3");
+    if (magic_str != std::string("SQLite format 3")) {
+        return false;
+    }
+
+    // Check the application id matches our network magic
+    return memcmp(Params().MessageStart(), app_id, 4) == 0;
 }
