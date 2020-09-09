@@ -873,9 +873,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }
                 storedAssetRef.auxFeeDetails = std::move(theAsset.auxFeeDetails);
                 if (!storedAssetRef.auxFeeDetails.IsNull()) {
-                    storedAssetRef.nUpdateMask |= ASSET_UPDATE_DATA;
+                    storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
                 } else {
-                    storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_DATA;
+                    storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE_DETAILS;
                 }
             } else {
                 if(!theAsset.auxFeeDetails.IsNull() || !theAsset.prevAuxFeeDetails.IsNull()) {
