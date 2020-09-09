@@ -266,9 +266,9 @@ UniValue convertaddress(const JSONRPCRequest& request)	 {
     return ret;	
 }
 
-int CheckActorsInTransactionGraph(const uint256& lookForTxHash) {
+int CheckActorsInTransactionGraph(const CTxMemPool& mempool, const uint256& lookForTxHash) {
     LOCK(cs_main);
-    LOCK(m_mempool.cs);
+    LOCK(mempool.cs);
     {
         CTxMemPool::setEntries setAncestors;
         const CTransactionRef &txRef = mempool.get(lookForTxHash);
@@ -304,8 +304,8 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash) {
     return ZDAG_STATUS_OK;
 }
 
-int VerifyTransactionGraph(const uint256& lookForTxHash) {  
-    int status = CheckActorsInTransactionGraph(lookForTxHash);
+int VerifyTransactionGraph(const CTxMemPool& mempool, const uint256& lookForTxHash) {  
+    int status = CheckActorsInTransactionGraph(mempool, lookForTxHash);
     if(status != ZDAG_STATUS_OK){
         return status;
     }
@@ -334,11 +334,11 @@ UniValue assetallocationverifyzdag(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationverifyzdag", "\"txid\"")
         }
     }.Check(request);
-
+    const CTxMemPool& mempool = EnsureMemPool(request.context);
 	uint256 txid;
 	txid.SetHex(params[0].get_str());
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
-    oAssetAllocationStatus.__pushKV("status", VerifyTransactionGraph(txid));
+    oAssetAllocationStatus.__pushKV("status", VerifyTransactionGraph(mempool, txid));
 	return oAssetAllocationStatus;
 }
 
