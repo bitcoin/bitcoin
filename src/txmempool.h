@@ -652,7 +652,7 @@ public:
     void removeProTxSpentCollateralConflicts(const CTransaction &tx);
     void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash);
     void removeProTxConflicts(const CTransaction &tx);
-    bool existsConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool existsConflicts(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool isSyscoinConflictIsFirstSeen(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     // SYSCOIN

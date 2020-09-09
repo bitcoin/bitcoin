@@ -641,7 +641,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
 }
 // SYSCOIN
-bool CTxMemPool::existsConflicts(const CTransaction &tx)
+bool CTxMemPool::existsConflicts(const CTransaction &tx) const
 {
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
