@@ -146,7 +146,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     }
 
 	if(asset.nUpdateMask & ASSET_UPDATE_DATA) 
-		entry.__pushKV("public_value", DecodeBase64(asset.strPubData));
+		entry.__pushKV("public_value", asset.strPubData);
 
 	if(asset.nUpdateMask & ASSET_UPDATE_CONTRACT) 
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
