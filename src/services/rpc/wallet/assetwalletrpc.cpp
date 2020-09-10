@@ -555,7 +555,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for updating the capability flags (which fields are updatable). 255 for all. 0 for none (not updatable)."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -668,7 +668,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("desc", EncodeBase64(strPubData));
-    uint8_t nUpdateMask = ASSET_UPDATE_SUPPLY | ASSET_UPDATE_CAPABILITYFLAGS;
+    uint8_t nUpdateMask = ASSET_UPDATE_SUPPLY;
     const std::string &strPubDataField  = publicData.write();
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
@@ -697,13 +697,16 @@ UniValue assetnew(const JSONRPCRequest& request) {
         nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
         newAsset.auxFeeDetails = auxFeeDetails;
     }
+    if(nUpdateCapabilityFlags != 0) {
+        nUpdateMask |= ASSET_UPDATE_CAPABILITYFLAGS;
+        newAsset.nPrevUpdateCapabilityFlags = nUpdateCapabilityFlags;
+    }
     newAsset.nUpdateMask = nUpdateMask;
     newAsset.nBalance = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
-    newAsset.nUpdateCapabilityFlags = nUpdateCapabilityFlags;
     newAsset.nTotalSupply = 0;
-    newAsset.nPrevUpdateCapabilityFlags = nUpdateCapabilityFlags;
+    
     std::vector<unsigned char> data;
     newAsset.SerializeData(data);
     // use the script pub key to create the vecsend which sendmoney takes and puts it into vout
@@ -792,7 +795,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for updating the capability flags (which fields are updatable). 255 for all. 0 for none (not updatable)."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -926,7 +929,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
             {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
-            {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 1 to give admin status (needed to update flags), 2 for updating public data field, 4 for updating the smart contract field, 8 for updating supply, 16 for updating witness, 32 for being able to update flags (need admin access to update flags as well). 63 for all."},
+            {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for updating the capability flags (which fields are updatable). 255 for all. 0 for none (not updatable)."},
             {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
             {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
             {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
