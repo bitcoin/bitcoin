@@ -414,12 +414,11 @@ UniValue assetinfo(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR, "symbol", "The asset symbol"},
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
                 {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
-                {RPCResult::Type::STR, "address", "The address that controls this asset"},
                 {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
                 {RPCResult::Type::NUM, "balance", "The current balance"},
                 {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
                 {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
-                {RPCResult::Type::NUM, "update_flag", "The flag in decimal"},
+                {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                 {RPCResult::Type::NUM, "precision", "The precision of this asset"},
             }},
         RPCExamples{
@@ -450,12 +449,6 @@ UniValue listassets(const JSONRPCRequest& request) {
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter"},
-                    {"addresses", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json array with owners",  
-                        {
-                            {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter"},
-                        },
-                        "[addressobjects,...]"
-                    }
                 }
                 }
             },
@@ -467,13 +460,11 @@ UniValue listassets(const JSONRPCRequest& request) {
                         {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
                         {RPCResult::Type::STR, "symbol", "The asset symbol"},
                         {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
-                        {RPCResult::Type::STR, "address", "The address that controls this asset"},
                         {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
                         {RPCResult::Type::NUM, "balance", "The current balance"},
-                        {RPCResult::Type::NUM, "burn_balance", "The current burn balance"},
                         {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
                         {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
-                        {RPCResult::Type::NUM, "update_flag", "The flag in decimal"},
+                        {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                         {RPCResult::Type::NUM, "precision", "The precision of this asset"},
                     }},
                 }
@@ -481,9 +472,7 @@ UniValue listassets(const JSONRPCRequest& request) {
             RPCExamples{
             HelpExampleCli("listassets", "0")
             + HelpExampleCli("listassets", "10 10")
-            + HelpExampleCli("listassets", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
             + HelpExampleCli("listassets", "0 0 '{\"asset_guid\":3473733}'")
-            + HelpExampleRpc("listassets", "0, 0, '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
             + HelpExampleRpc("listassets", "0, 0, '{\"asset_guid\":3473733}'")
             }
     }.Check(request);
