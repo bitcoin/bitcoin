@@ -7,6 +7,7 @@
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
+#include <crypto/sha3.h>
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
 #include <hash.h>
@@ -40,6 +41,15 @@ static void SHA256(benchmark::Bench& bench)
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     bench.batch(in.size()).unit("byte").run([&] {
         CSHA256().Write(in.data(), in.size()).Finalize(hash);
+    });
+}
+
+static void SHA3_256_1M(benchmark::Bench& bench)
+{
+    uint8_t hash[SHA3_256::OUTPUT_SIZE];
+    std::vector<uint8_t> in(BUFFER_SIZE,0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        SHA3_256().Write(in).Finalize(hash);
     });
 }
 
@@ -99,6 +109,7 @@ BENCHMARK(RIPEMD160);
 BENCHMARK(SHA1);
 BENCHMARK(SHA256);
 BENCHMARK(SHA512);
+BENCHMARK(SHA3_256_1M);
 
 BENCHMARK(SHA256_32b);
 BENCHMARK(SipHash_32b);
