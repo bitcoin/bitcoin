@@ -33,7 +33,6 @@ enum {
     ASSET_UPDATE_AUXFEE_KEY=32, // can you update aux fees?
     ASSET_UPDATE_AUXFEE_DETAILS=64, // can you update aux fees details?
     ASSET_UPDATE_CAPABILITYFLAGS=128, // can you update capability flags?
-    ASSET_UPDATE_ALL=255
 };
 class CAuxFee {
 public:
@@ -186,8 +185,6 @@ public:
         if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
             READWRITE(obj.vchAuxFeeKeyID);
             READWRITE(obj.vchPrevAuxFeeKeyID);
-            READWRITE(obj.auxFeeDetails);
-            READWRITE(obj.prevAuxFeeDetails);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
             READWRITE(obj.auxFeeDetails);
