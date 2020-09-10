@@ -86,20 +86,6 @@
                <property name="text">
                 <string/>
                </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/icons/warning</normaloff>
-                 <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>48</width>
-                 <height>48</height>
-                </size>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
               </widget>
              </item>
              <item>

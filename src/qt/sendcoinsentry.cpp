@@ -29,11 +29,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
 
-    ui->addressBookButton->setIcon(QIcon(":/icons/address-book"));
-    ui->pasteButton->setIcon(QIcon(":/icons/editpaste"));
-    ui->deleteButton->setIcon(QIcon(":/icons/remove"));
-    ui->deleteButton_is->setIcon(QIcon(":/icons/remove"));
-    ui->deleteButton_s->setIcon(QIcon(":/icons/remove"));
+    setButtonIcons();
 
     // normal dash address field
     GUIUtil::setupAddressWidget(ui->payTo, this, true);
@@ -275,6 +271,24 @@ void SendCoinsEntry::updateDisplayUnit()
         ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
+}
+
+void SendCoinsEntry::changeEvent(QEvent* e)
+{
+    QStackedWidget::changeEvent(e);
+    if (e->type() == QEvent::StyleChange) {
+        // Adjust button icon colors on theme changes
+        setButtonIcons();
+    }
+}
+
+void SendCoinsEntry::setButtonIcons()
+{
+    GUIUtil::setIcon(ui->addressBookButton, "address-book");
+    GUIUtil::setIcon(ui->pasteButton, "editpaste");
+    GUIUtil::setIcon(ui->deleteButton, "remove", GUIUtil::ThemedColor::RED);
+    GUIUtil::setIcon(ui->deleteButton_is, "remove", GUIUtil::ThemedColor::RED);
+    GUIUtil::setIcon(ui->deleteButton_s, "remove", GUIUtil::ThemedColor::RED);
 }
 
 bool SendCoinsEntry::updateLabel(const QString &address)
