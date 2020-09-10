@@ -141,7 +141,6 @@ public:
         voutAssets.clear();
         strPrevPubData.clear();
         vchPrevContract.clear();
-        voutAssets.clear();
         strSymbol.clear();
         nPrevUpdateCapabilityFlags = nUpdateCapabilityFlags = 0;
         nBalance = 0;
