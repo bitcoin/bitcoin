@@ -98,8 +98,6 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 #define MIN_CORE_FILEDESCRIPTORS 150
 #endif
 
-static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
-
 static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
 /**
@@ -235,17 +233,8 @@ void Shutdown(NodeContext& node)
         DumpMempool(*node.mempool);
     }
 
-    if (node.fee_estimator) {
-        node.fee_estimator->FlushUnconfirmed();
-        fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-        CAutoFile est_fileout(fsbridge::fopen(est_path, "wb"), SER_DISK, CLIENT_VERSION);
-        if (!est_fileout.IsNull()) {
-            node.fee_estimator->Write(est_fileout);
-        } else {
-            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
-        }
-    }
-
+    // Drop transactions we were still watching, and record fee estimations.
+    if (node.fee_estimator) node.fee_estimator->Flush();
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
@@ -1790,12 +1779,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         return false;
     }
 
-    fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
-    // Allowed to fail as this file IS missing on first startup.
-    if (node.fee_estimator && !est_filein.IsNull()) {
-        node.fee_estimator->Read(est_filein);
-    }
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);

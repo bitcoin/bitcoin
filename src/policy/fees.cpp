@@ -10,6 +10,8 @@
 #include <txmempool.h>
 #include <util/system.h>
 
+static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+
 static constexpr double INF_FEERATE = 1e99;
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
@@ -489,6 +491,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;
+
     for (double bucketBoundary = MIN_BUCKET_FEERATE; bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING, bucketIndex++) {
         buckets.push_back(bucketBoundary);
         bucketMap[bucketBoundary] = bucketIndex;
@@ -500,6 +503,13 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
     feeStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
     shortStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
     longStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
+
+    // If the fee estimation file is present, read recorded estimations
+    fs::path est_filepath = GetDataDir() / FEE_ESTIMATES_FILENAME;
+    CAutoFile est_file(fsbridge::fopen(est_filepath, "rb"), SER_DISK, CLIENT_VERSION);
+    if (est_file.IsNull() || !Read(est_file)) {
+        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", est_filepath.string());
+    }
 }
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator()
@@ -856,6 +866,15 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     return CFeeRate(llround(median));
 }
 
+void CBlockPolicyEstimator::Flush() {
+    FlushUnconfirmed();
+
+    fs::path est_filepath = GetDataDir() / FEE_ESTIMATES_FILENAME;
+    CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
+    if (est_file.IsNull() || !Write(est_file)) {
+        LogPrintf("Failed to write fee estimates to %s\n", est_filepath.string());
+    }
+}
 
 bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 {
