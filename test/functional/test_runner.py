@@ -82,6 +82,7 @@ BASE_SCRIPTS= [
     'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
     'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
     'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
+    'feature_block_reward_reallocation.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
     'wallet_zapwallettxes.py',

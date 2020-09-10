@@ -290,7 +290,7 @@ bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams,
 
 double ConvertBitsToDouble(unsigned int nBits);
 CAmount GetBlockSubsidy(int nBits, int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue);
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight = std::numeric_limits<int>::max() /* not activated */);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
