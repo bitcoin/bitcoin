@@ -108,7 +108,7 @@ Q_SIGNALS:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
-    void networkActiveChanged(bool networkActive);
+    void networkActiveChanged();
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 
@@ -120,7 +120,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void updateNumConnections(int numConnections);
-    void updateNetworkActive(bool networkActive);
+    void updateNetworkActive();
     void updateAlert();
     void updateBanlist();
 };

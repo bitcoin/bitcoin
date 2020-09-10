@@ -200,7 +200,7 @@ public:
     virtual std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) = 0;
 
     //! Register handler for network active messages.
-    using NotifyNetworkActiveChangedFn = std::function<void(bool network_active)>;
+    using NotifyNetworkActiveChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) = 0;
 
     //! Register handler for notify alert messages.

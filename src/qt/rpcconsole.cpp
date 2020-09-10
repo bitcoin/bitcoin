@@ -863,7 +863,7 @@ void RPCConsole::setNumConnections(int count)
     updateNetworkState();
 }
 
-void RPCConsole::setNetworkActive(bool networkActive)
+void RPCConsole::setNetworkActive()
 {
     updateNetworkState();
 }

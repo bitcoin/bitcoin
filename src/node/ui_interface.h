@@ -86,7 +86,7 @@ public:
     ADD_SIGNALS_DECL_WRAPPER(NotifyNumConnectionsChanged, void, int newNumConnections);
 
     /** Network activity state changed. */
-    ADD_SIGNALS_DECL_WRAPPER(NotifyNetworkActiveChanged, void, bool networkActive);
+    ADD_SIGNALS_DECL_WRAPPER(NotifyNetworkActiveChanged, void, void);
 
     /**
      * Status bar alerts changed.
