@@ -227,7 +227,7 @@ CNotaryDetails::CNotaryDetails(const UniValue& value){
 
 UniValue CNotaryDetails::ToJson() const {
     UniValue value(UniValue::VOBJ);
-    value.pushKV("endpoint", DecodeBase64(strEndPoint));
+    value.pushKV("endpoint", strEndPoint);
     value.pushKV("instant_transfers", bEnableInstantTransfers);
     value.pushKV("hd_required", bRequireHD);
     return value;
