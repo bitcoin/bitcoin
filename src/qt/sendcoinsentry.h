@@ -64,11 +64,16 @@ private Q_SLOTS:
     void on_pasteButton_clicked();
     void updateDisplayUnit();
 
+protected:
+    void changeEvent(QEvent* e);
+
 private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
 
+    /** Set required icons for buttons inside the dialog */
+    void setButtonIcons();
     bool updateLabel(const QString &address);
 };
 

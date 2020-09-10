@@ -225,7 +225,7 @@ void CoinControlDialog::buttonToggleLockClicked()
             else{
                 model->lockCoin(outpt);
                 item->setDisabled(true);
-                item->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+                item->setIcon(COLUMN_CHECKBOX, GUIUtil::getIcon("lock_closed", GUIUtil::ThemedColor::RED));
             }
             updateLabelLocked();
         }
@@ -314,7 +314,7 @@ void CoinControlDialog::lockCoin()
     COutPoint outpt(uint256S(contextMenuItem->text(COLUMN_TXHASH).toStdString()), contextMenuItem->text(COLUMN_VOUT_INDEX).toUInt());
     model->lockCoin(outpt);
     contextMenuItem->setDisabled(true);
-    contextMenuItem->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+    contextMenuItem->setIcon(COLUMN_CHECKBOX, GUIUtil::getIcon("lock_closed", GUIUtil::ThemedColor::RED));
     updateLabelLocked();
 }
 
@@ -782,7 +782,7 @@ void CoinControlDialog::updateView()
                     COutPoint outpt(txhash, out.i);
                     coinControl()->UnSelect(outpt); // just to be sure
                     itemOutput->setDisabled(true);
-                    itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+                    itemOutput->setIcon(COLUMN_CHECKBOX, GUIUtil::getIcon("lock_closed", GUIUtil::ThemedColor::RED));
                 }
 
                 // set checkbox

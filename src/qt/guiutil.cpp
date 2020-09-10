@@ -42,6 +42,7 @@
 
 #include <boost/scoped_array.hpp>
 
+#include <QAbstractButton>
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QClipboard>
@@ -149,6 +150,7 @@ static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::DEFAULT, QColor(85, 85, 85) },
     { ThemedColor::UNCONFIRMED, QColor(128, 128, 128) },
     { ThemedColor::BLUE, QColor(0, 141, 228) },
+    { ThemedColor::ORANGE, QColor(199, 147, 4) },
     { ThemedColor::RED, QColor(168, 72, 50) },
     { ThemedColor::GREEN, QColor(8, 110, 3) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
@@ -159,12 +161,14 @@ static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::BACKGROUND_WIDGET, QColor(234, 234, 236) },
     { ThemedColor::BORDER_WIDGET, QColor(220, 220, 220) },
     { ThemedColor::QR_PIXEL, QColor(85, 85, 85) },
+    { ThemedColor::ICON_ALTERNATIVE_COLOR, QColor(167, 167, 167) },
 };
 
 static const std::map<ThemedColor, QColor> themedDarkColors = {
     { ThemedColor::DEFAULT, QColor(199, 199, 199) },
     { ThemedColor::UNCONFIRMED, QColor(170, 170, 170) },
     { ThemedColor::BLUE, QColor(0, 89, 154) },
+    { ThemedColor::ORANGE, QColor(199, 147, 4) },
     { ThemedColor::RED, QColor(168, 72, 50) },
     { ThemedColor::GREEN, QColor(8, 110, 3) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
@@ -175,6 +179,7 @@ static const std::map<ThemedColor, QColor> themedDarkColors = {
     { ThemedColor::BACKGROUND_WIDGET, QColor(45, 45, 46) },
     { ThemedColor::BORDER_WIDGET, QColor(74, 74, 75) },
     { ThemedColor::QR_PIXEL, QColor(199, 199, 199) },
+    { ThemedColor::ICON_ALTERNATIVE_COLOR, QColor(74, 74, 75) },
 };
 
 static const std::map<ThemedStyle, QString> themedStyles = {
@@ -205,6 +210,48 @@ QString getThemedStyleQString(ThemedStyle style)
 {
     QString theme = QSettings().value("theme", "").toString();
     return theme.startsWith(darkThemePrefix) ? themedDarkStyles.at(style) : themedStyles.at(style);
+}
+
+QIcon getIcon(const QString& strIcon, const ThemedColor color, const ThemedColor colorAlternative, const QString& strIconPath)
+{
+    QColor qcolor = getThemedQColor(color);
+    QColor qcolorAlternative = getThemedQColor(colorAlternative);
+    QIcon icon(strIconPath + strIcon);
+    QIcon themedIcon;
+    for (const QSize& size : icon.availableSizes()) {
+        QImage image(icon.pixmap(size).toImage());
+        image = image.convertToFormat(QImage::Format_ARGB32);
+        for (int x = 0; x < image.width(); ++x) {
+            for (int y = 0; y < image.height(); ++y) {
+                const QRgb rgb = image.pixel(x, y);
+                QColor* pColor;
+                if ((rgb & RGB_MASK) < RGB_HALF) {
+                    pColor = &qcolor;
+                } else {
+                    pColor = &qcolorAlternative;
+                }
+                image.setPixel(x, y, qRgba(pColor->red(), pColor->green(), pColor->blue(), qAlpha(rgb)));
+            }
+        }
+        themedIcon.addPixmap(QPixmap::fromImage(image));
+    }
+    return themedIcon;
+}
+
+QIcon getIcon(const QString& strIcon, const ThemedColor color, const QString& strIconPath)
+{
+    return getIcon(strIcon, color, ThemedColor::ICON_ALTERNATIVE_COLOR, strIconPath);
+}
+
+void setIcon(QAbstractButton* button, const QString& strIcon, const ThemedColor color, const ThemedColor colorAlternative, const QSize& size)
+{
+    button->setIcon(getIcon(strIcon, color, colorAlternative));
+    button->setIconSize(size);
+}
+
+void setIcon(QAbstractButton* button, const QString& strIcon, const ThemedColor color, const QSize& size)
+{
+    setIcon(button, strIcon, color, ThemedColor::ICON_ALTERNATIVE_COLOR, size);
 }
 
 QString dateTimeStr(const QDateTime &date)

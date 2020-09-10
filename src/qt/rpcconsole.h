@@ -151,6 +151,8 @@ private:
     void buildParameterlist(QString arg);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
+    /** Set required icons for buttons inside the dialog */
+    void setButtonIcons();
 
     enum ColumnWidths
     {

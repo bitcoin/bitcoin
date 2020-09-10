@@ -479,10 +479,7 @@ RPCConsole::RPCConsole(QWidget* parent) :
 
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
 
-    // Needed on Mac also
-    ui->clearButton->setIcon(QIcon(":/icons/console_remove"));
-    ui->fontBiggerButton->setIcon(QIcon(":/icons/fontbigger"));
-    ui->fontSmallerButton->setIcon(QIcon(":/icons/fontsmaller"));
+    setButtonIcons();
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
@@ -867,17 +864,12 @@ void RPCConsole::clear(bool clearHistory)
     ui->lineEdit->setFocus();
 
     // Add smoothly scaled icon images.
-    // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
-    QString iconPath = ":/icons/";
-    QString iconName = "";
-
     for(int i=0; ICON_MAPPING[i].url; ++i)
     {
-        iconName = ICON_MAPPING[i].source;
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    QImage(iconPath + iconName).scaled(QSize(consoleFontSize*2, consoleFontSize*2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    GUIUtil::getIcon(ICON_MAPPING[i].source).pixmap(QSize(consoleFontSize, consoleFontSize)));
     }
 
     // Set default style sheet
@@ -1274,6 +1266,14 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->detailWidget->show();
 }
 
+void RPCConsole::setButtonIcons()
+{
+    const QSize consoleButtonsSize(BUTTON_ICONSIZE * 0.8, BUTTON_ICONSIZE * 0.8);
+    GUIUtil::setIcon(ui->clearButton, "remove", GUIUtil::ThemedColor::RED, consoleButtonsSize);
+    GUIUtil::setIcon(ui->fontBiggerButton, "fontbigger", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);
+    GUIUtil::setIcon(ui->fontSmallerButton, "fontsmaller", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);
+}
+
 void RPCConsole::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
@@ -1306,6 +1306,8 @@ void RPCConsole::changeEvent(QEvent* e)
     if (e->type() == QEvent::StyleChange) {
         clear();
         ui->promptIcon->setHidden(GUIUtil::dashThemeActive());
+        // Adjust button icon colors on theme changes
+        setButtonIcons();
     }
 
     QWidget::changeEvent(e);

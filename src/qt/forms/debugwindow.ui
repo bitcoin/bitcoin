@@ -547,98 +547,26 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="fontSmallerButton">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
+          <widget class="QToolButton" name="fontSmallerButton">
            <property name="toolTip">
             <string>Decrease font size</string>
            </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>:/icons/fontsmaller</normaloff>:/icons/fontsmaller</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>24</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>true</bool>
-           </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="fontBiggerButton">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
+          <widget class="QToolButton" name="fontBiggerButton">
            <property name="toolTip">
             <string>Increase font size</string>
            </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>:/icons/fontbigger</normaloff>:/icons/fontbigger</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>24</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>true</bool>
-           </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="clearButton">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
+          <widget class="QToolButton" name="clearButton">
            <property name="toolTip">
             <string>Clear console</string>
            </property>
-           <property name="layoutDirection">
-            <enum>Qt::LeftToRight</enum>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>:/icons/console_remove</normaloff>:/icons/console_remove</iconset>
-           </property>
            <property name="shortcut">
             <string notr="true">Ctrl+L</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>true</bool>
            </property>
           </widget>
          </item>
