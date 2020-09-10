@@ -57,9 +57,11 @@ bool IsBerkeleyBtree(const fs::path& path)
 std::vector<fs::path> ListWalletDir()
 {
     const fs::path wallet_dir = GetWalletDir();
-    const size_t offset = wallet_dir.string().size() + 1;
     std::vector<fs::path> paths;
     boost::system::error_code ec;
+
+    // account for possible trailing backslash, since we might have only boost 1.47 we could not use fs::relative
+    const size_t offset = (wallet_dir.string().back() != '/') ? wallet_dir.string().size() + 1 : wallet_dir.parent_path().string().size() + 1;
 
     for (auto it = fs::recursive_directory_iterator(wallet_dir, ec); it != fs::recursive_directory_iterator(); it.increment(ec)) {
         if (ec) {
