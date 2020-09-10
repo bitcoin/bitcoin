@@ -140,7 +140,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-		entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
+		entry.__pushKV("symbol", asset.strSymbol);
         entry.__pushKV("max_supply", asset.nMaxSupply);
 		entry.__pushKV("precision", asset.nPrecision);
     }
