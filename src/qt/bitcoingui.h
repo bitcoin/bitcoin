@@ -218,7 +218,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */
-    void setNumConnections(int count);
+    void setNumConnections();
     /** Set network state shown in the UI */
     void setNetworkActive();
     /** Set number of blocks and last block date shown in the UI */

@@ -105,7 +105,7 @@ private:
     void unsubscribeFromCoreSignals();
 
 Q_SIGNALS:
-    void numConnectionsChanged(int count);
+    void numConnectionsChanged();
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void networkActiveChanged();
@@ -119,7 +119,7 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
-    void updateNumConnections(int numConnections);
+    void updateNumConnections();
     void updateNetworkActive();
     void updateAlert();
     void updateBanlist();

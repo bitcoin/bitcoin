@@ -83,7 +83,7 @@ public:
     ADD_SIGNALS_DECL_WRAPPER(InitMessage, void, const std::string& message);
 
     /** Number of network connections changed. */
-    ADD_SIGNALS_DECL_WRAPPER(NotifyNumConnectionsChanged, void, int newNumConnections);
+    ADD_SIGNALS_DECL_WRAPPER(NotifyNumConnectionsChanged, void, void);
 
     /** Network activity state changed. */
     ADD_SIGNALS_DECL_WRAPPER(NotifyNetworkActiveChanged, void, void);

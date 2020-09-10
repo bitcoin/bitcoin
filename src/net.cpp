@@ -1213,15 +1213,12 @@ void CConnman::DisconnectNodes()
 
 void CConnman::NotifyNumConnectionsChanged()
 {
-    size_t vNodesSize;
-    {
-        LOCK(cs_vNodes);
-        vNodesSize = vNodes.size();
-    }
-    if(vNodesSize != nPrevNodeCount) {
+    const size_t vNodesSize = WITH_LOCK(cs_vNodes, return vNodes.size());
+    if (vNodesSize != nPrevNodeCount) {
         nPrevNodeCount = vNodesSize;
-        if(clientInterface)
-            clientInterface->NotifyNumConnectionsChanged(vNodesSize);
+        if (clientInterface) {
+            clientInterface->NotifyNumConnectionsChanged();
+        }
     }
 }
 

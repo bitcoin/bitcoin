@@ -196,7 +196,7 @@ public:
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
 
     //! Register handler for number of connections changed messages.
-    using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;
+    using NotifyNumConnectionsChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) = 0;
 
     //! Register handler for network active messages.

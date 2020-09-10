@@ -574,7 +574,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
     ui->trafficGraph->setClientModel(model);
     if (model && clientModel->getPeerTableModel() && clientModel->getBanTableModel()) {
         // Keep up to date with client
-        setNumConnections(model->getNumConnections());
+        setNumConnections();
         connect(model, &ClientModel::numConnectionsChanged, this, &RPCConsole::setNumConnections);
 
         setNumBlocks(bestblock_height, QDateTime::fromTime_t(bestblock_date), verification_progress, false);
@@ -855,7 +855,7 @@ void RPCConsole::updateNetworkState()
     ui->numberOfConnections->setText(connections);
 }
 
-void RPCConsole::setNumConnections(int count)
+void RPCConsole::setNumConnections()
 {
     if (!clientModel)
         return;
