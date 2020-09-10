@@ -1608,13 +1608,14 @@ static UniValue omni_sendanydata(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
 
-    if (request.fHelp || request.params.size() != 2)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
             RPCHelpMan{"omni_sendanydata",
-               "\nCreate and broadcast a transaction with an arbitrary payload.\n",
+               "\nCreate and broadcast a transaction with an arbitrary payload.\nWhen no receiver is specified, the sender is also considered as receiver.\n",
                {
                    {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
                    {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "the hex-encoded data\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the optional address of the receiver\n"},
                },
                RPCResult{
                    "\"hash\"                  (string) the hex-encoded transaction hash\n"
@@ -1628,6 +1629,10 @@ static UniValue omni_sendanydata(const JSONRPCRequest& request)
     // obtain parameters
     std::string fromAddress = ParseAddress(request.params[0]);
     std::vector<unsigned char> data = ParseHexV(request.params[1], "data");
+    std::string toAddress;
+    if (request.params.size() > 2) {
+        toAddress = ParseAddressOrEmpty(request.params[2]);
+    }
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_AnyData(data);
@@ -1635,7 +1640,7 @@ static UniValue omni_sendanydata(const JSONRPCRequest& request)
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid;
     std::string rawHex;
-    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
+    int result = WalletTxBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
@@ -1902,7 +1907,7 @@ static const CRPCCommand commands[] =
     { "omni layer (transaction creation)", "omni_senddisablefreezing",     &omni_senddisablefreezing,     {"fromaddress", "propertyid"} },
     { "omni layer (transaction creation)", "omni_sendfreeze",              &omni_sendfreeze,              {"fromaddress", "toaddress", "propertyid", "amount"} },
     { "omni layer (transaction creation)", "omni_sendunfreeze",            &omni_sendunfreeze,            {"fromaddress", "toaddress", "propertyid", "amount"} },
-    { "omni layer (transaction creation)", "omni_sendanydata",             &omni_sendanydata,             {"fromaddress", "data"} },
+    { "omni layer (transaction creation)", "omni_sendanydata",             &omni_sendanydata,             {"fromaddress", "data", "toaddress"} },
     { "hidden",                            "omni_senddeactivation",        &omni_senddeactivation,        {"fromaddress", "featureid"} },
     { "hidden",                            "omni_sendactivation",          &omni_sendactivation,          {"fromaddress", "featureid", "block", "minclientversion"} },
     { "hidden",                            "omni_sendalert",               &omni_sendalert,               {"fromaddress", "alerttype", "expiryvalue", "message"} },

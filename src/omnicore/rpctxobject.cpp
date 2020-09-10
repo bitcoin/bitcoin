@@ -278,7 +278,7 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_DISABLE_FREEZING: return false;
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return true;
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return true;
-        case MSC_TYPE_ANYDATA: return false;
+        case MSC_TYPE_ANYDATA: return true;
         case OMNICORE_MESSAGE_TYPE_ACTIVATION: return false;
     }
     return true; // default to true, shouldn't be needed but just in case

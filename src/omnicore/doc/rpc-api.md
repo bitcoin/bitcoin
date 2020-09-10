@@ -788,12 +788,15 @@ $ omnicore-cli "omni_sendunfreeze" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "3HTHRxu
 
 Create and broadcast a transaction with an arbitrary payload.
 
+When no receiver is specified, the sender is also considered as receiver.
+
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `data`              | string  | required | the hex-encoded data                                                                         |
+| `toaddress`         | string  | optional | the optional address of the receiver                                                                  |
 
 **Result:**
 ```js
@@ -804,6 +807,10 @@ Create and broadcast a transaction with an arbitrary payload.
 
 ```bash
 $ omnicore-cli "omni_sendanydata" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "646578782032303230"
+```
+
+```bash
+$ omnicore-cli "omni_sendanydata" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "646578782032303230" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs"
 ```
 
 ---
