@@ -220,8 +220,10 @@ public:
      * If the signature is not exactly 64 bytes, false is returned.
      */
     bool VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const;
+    bool CheckPayToContract(const XOnlyPubKey& base, const uint256& hash, bool parity) const;
 
     const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
+    const unsigned char* data() const { return m_keydata.begin(); }
     size_t size() const { return m_keydata.size(); }
 };
 
