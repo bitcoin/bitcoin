@@ -9,6 +9,7 @@
 
 #include <hash.h>
 #include <serialize.h>
+#include <span.h>
 #include <uint256.h>
 
 #include <stdexcept>
@@ -204,6 +205,24 @@ public:
 
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
+};
+
+class XOnlyPubKey {
+private:
+    uint256 m_keydata;
+
+public:
+    /** Construct an x-only pubkey from exactly 32 bytes. */
+    XOnlyPubKey(Span<const unsigned char> input);
+
+    /** Verify a 64-byte Schnorr signature.
+     *
+     * If the signature is not exactly 64 bytes, false is returned.
+     */
+    bool VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const;
+
+    const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
+    size_t size() const { return m_keydata.size(); }
 };
 
 struct CExtPubKey {
