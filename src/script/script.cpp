@@ -140,6 +140,9 @@ std::string GetOpName(opcodetype opcode)
     case OP_NOP9                   : return "OP_NOP9";
     case OP_NOP10                  : return "OP_NOP10";
 
+    // Opcode added by BIP 342 (Tapscript)
+    case OP_CHECKSIGADD            : return "OP_CHECKSIGADD";
+
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
     default:
@@ -327,4 +330,12 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
 
     opcodeRet = static_cast<opcodetype>(opcode);
     return true;
+}
+
+bool IsOpSuccess(const opcodetype& opcode)
+{
+    return (opcode == 0x50 || opcode == 0x62 || opcode == 0x89 ||
+            opcode == 0x8a || opcode == 0x8d || opcode == 0x8e ||
+            (opcode >= 0x7e && opcode <= 0x81) || (opcode >= 0x83 && opcode <= 0x86) ||
+            (opcode >= 0x95 && opcode <= 0x99) || (opcode >= 0xbb && opcode <= 0xfe));
 }
