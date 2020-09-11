@@ -1,6 +1,6 @@
 # Block and Transaction Broadcasting with ZeroMQ
 
-[ZeroMQ](http://zeromq.org/) is a lightweight wrapper around TCP
+[ZeroMQ](https://zeromq.org/) is a lightweight wrapper around TCP
 connections, inter-process communication, and shared-memory,
 providing various message-oriented semantics such as publish/subscribe,
 request/reply, and push/pull.
@@ -37,8 +37,9 @@ The ZeroMQ feature in Dash Core requires ZeroMQ API version 4.x or
 newer. Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
-In order to run the example Python client scripts in contrib/ one must
-also install *python3-zmq*, though this is not necessary for daemon
+In order to run the example Python client scripts in the `contrib/zmq/`
+directory, one must also install [PyZMQ](https://github.com/zeromq/pyzmq)
+(generally with `pip install pyzmq`), though this is not necessary for daemon
 operation.
 
 ## Enabling
