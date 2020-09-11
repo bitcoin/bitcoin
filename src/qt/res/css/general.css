@@ -33,7 +33,7 @@ in the <theme.css> file.
 # Used colors in general.css for commit 44de8a93f2
 
 #00000000
-#096e03
+#5e8c41
 #a84832
 #c79304
 
@@ -1628,7 +1628,7 @@ QWidget#RPCConsole QPushButton#promptIcon { /* Prompt Icon */
 }
 
 QWidget#RPCConsole .QGroupBox #line { /* Network In Line */
-    background-color: #096e03;
+    background-color: #5e8c41;
 }
 
 QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
