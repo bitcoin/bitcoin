@@ -77,11 +77,7 @@ static RPCHelpMan mnsync()
 
     if(strMode == "reset")
     {
-        if (!node.connman)
-            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-        masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset(*node.connman);
+        masternodeSync.Reset(true);
         return "success";
     }
     return "failure";

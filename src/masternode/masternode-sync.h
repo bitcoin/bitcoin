@@ -9,16 +9,15 @@
 #include <util/translation.h>
 class CMasternodeSync;
 
-static const int MASTERNODE_SYNC_FAILED          = -1;
-static const int MASTERNODE_SYNC_INITIAL         = 0; // sync just started, was reset recently or still in IDB
-static const int MASTERNODE_SYNC_WAITING         = 1; // waiting after initial to see if we can get more headers/blocks
+static const int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static const int MASTERNODE_SYNC_GOVERNANCE      = 4;
 static const int MASTERNODE_SYNC_GOVOBJ          = 10;
 static const int MASTERNODE_SYNC_GOVOBJ_VOTE     = 11;
 static const int MASTERNODE_SYNC_FINISHED        = 999;
 
 static const int MASTERNODE_SYNC_TICK_SECONDS    = 6;
-static const int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 1 minute so 30 seconds should be fine
+static const int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 2.5 minutes so 30 seconds should be fine
+static const int MASTERNODE_SYNC_RESET_SECONDS = 600; // Reset fReachedBestHeader in CMasternodeSync::Reset if UpdateBlockTip hasn't been called for this seconds
 
 extern CMasternodeSync masternodeSync;
 
@@ -41,14 +40,18 @@ private:
     // ... or failed
     int64_t nTimeLastFailure;
 
+    /// Set to true if best header is reached in CMasternodeSync::UpdatedBlockTip
+    bool fReachedBestHeader{false};
+    /// Last time UpdateBlockTip has been called
+    int64_t nTimeLastUpdateBlockTip{0};
+
 public:
-    CMasternodeSync() { Reset(); }
+    CMasternodeSync() { Reset(true, false); }
 
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
-    bool IsFailed() const { return nCurrentAsset == MASTERNODE_SYNC_FAILED; }
-    bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_WAITING; }
+    bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
     bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
 
     int GetAssetID() const { return nCurrentAsset; }
@@ -58,7 +61,7 @@ public:
     std::string GetAssetName() const;
     bilingual_str GetSyncStatus();
 
-    void Reset();
+    void Reset(bool fForce = false, bool fNotifyReset = true);
     void SwitchToNextAsset(CConnman& connman);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const;

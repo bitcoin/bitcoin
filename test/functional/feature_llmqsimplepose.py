@@ -114,6 +114,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             mn.node.setnetworkactive(False)
             self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
+            force_finish_mnsync(mn.node)
             connect_nodes(mn.node, 0)
 
     def reset_probe_timeouts(self):
