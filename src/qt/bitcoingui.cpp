@@ -898,7 +898,7 @@ void BitcoinGUI::gotoLoadPSBT(bool from_clipboard)
 
 void BitcoinGUI::updateNetworkState()
 {
-    int count = clientModel->getNumConnections();
+    int count = m_node.peerCount();
     QString icon;
     switch(count)
     {

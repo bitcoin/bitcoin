@@ -183,17 +183,20 @@ enum class ConnectionType {
     ADDR_FETCH,
 };
 
+struct ConnCounts {
+    const int all{0};
+    const int in{0};
+    const int out{0};
+
+    ConnCounts() {}
+    ConnCounts(int num_in, int num_out)
+        : all(num_in + num_out), in(num_in), out(num_out) {}
+};
+
 class NetEventsInterface;
 class CConnman
 {
 public:
-
-    enum NumConnections {
-        CONNECTIONS_NONE = 0,
-        CONNECTIONS_IN = (1U << 0),
-        CONNECTIONS_OUT = (1U << 1),
-        CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
-    };
 
     struct Options
     {
@@ -346,7 +349,8 @@ public:
     bool RemoveAddedNode(const std::string& node);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
-    size_t GetNodeCount(NumConnections num);
+    size_t PeerCount() { return WITH_LOCK(cs_vNodes, return vNodes.size()); }
+    ConnCounts GetConnectionCounts();
     void GetNodeStats(std::vector<CNodeStats>& vstats);
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(const CSubNet& subnet);

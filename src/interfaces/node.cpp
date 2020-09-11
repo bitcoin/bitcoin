@@ -87,10 +87,17 @@ public:
         }
     }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
-    size_t getNodeCount(CConnman::NumConnections flags) override
+
+    size_t peerCount() override
     {
-        return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;
+        return m_context->connman ? m_context->connman->PeerCount() : 0;
     }
+
+    ConnCounts connectionCounts() override
+    {
+        return m_context->connman ? m_context->connman->GetConnectionCounts() : ConnCounts();
+    }
+
     bool getNodesStats(NodesStats& stats) override
     {
         stats.clear();

@@ -2729,20 +2729,17 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
     return false;
 }
 
-size_t CConnman::GetNodeCount(NumConnections flags)
+ConnCounts CConnman::GetConnectionCounts()
 {
-    LOCK(cs_vNodes);
-    if (flags == CConnman::CONNECTIONS_ALL) // Shortcut if we want total
-        return vNodes.size();
-
-    int nNum = 0;
-    for (const auto& pnode : vNodes) {
-        if (flags & (pnode->IsInboundConn() ? CONNECTIONS_IN : CONNECTIONS_OUT)) {
-            nNum++;
+    int num_in{0};
+    int num_out{0};
+    {
+        LOCK(cs_vNodes);
+        for (const auto& pnode : vNodes) {
+            pnode->IsInboundConn() ? ++num_in : ++num_out;
         }
     }
-
-    return nNum;
+    return {num_in, num_out};
 }
 
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)

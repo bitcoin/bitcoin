@@ -6,7 +6,7 @@
 #define BITCOIN_INTERFACES_NODE_H
 
 #include <amount.h>     // For CAmount
-#include <net.h>        // For CConnman::NumConnections
+#include <net.h>        // For ConnCounts
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
 #include <support/allocators/secure.h> // For SecureString
@@ -87,8 +87,11 @@ public:
     //! Get proxy.
     virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
 
-    //! Get number of connections.
-    virtual size_t getNodeCount(CConnman::NumConnections flags) = 0;
+    //! Get number of peers.
+    virtual size_t peerCount() = 0;
+
+    //! Get numbers of connections of different types.
+    virtual ConnCounts connectionCounts() = 0;
 
     //! Get stats for connected nodes.
     using NodesStats = std::vector<std::tuple<CNodeStats, bool, CNodeStateStats>>;
