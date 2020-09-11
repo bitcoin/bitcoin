@@ -35,4 +35,7 @@ static void secp256k1_rand256_test(unsigned char *b32);
 /** Generate pseudorandom bytes with long sequences of zero and one bits. */
 static void secp256k1_rand_bytes_test(unsigned char *bytes, size_t len);
 
+/** Flip a single random bit in a byte array */
+static void secp256k1_rand_flip(unsigned char *b, size_t len);
+
 #endif /* SECP256K1_TESTRAND_H */

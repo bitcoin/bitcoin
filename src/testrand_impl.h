@@ -107,4 +107,8 @@ static void secp256k1_rand256_test(unsigned char *b32) {
     secp256k1_rand_bytes_test(b32, 32);
 }
 
+static void secp256k1_rand_flip(unsigned char *b, size_t len) {
+    b[secp256k1_rand_int(len)] ^= (1 << secp256k1_rand_int(8));
+}
+
 #endif /* SECP256K1_TESTRAND_IMPL_H */
