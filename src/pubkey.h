@@ -169,7 +169,7 @@ public:
     /*
      * Check syntactic correctness.
      *
-     * Note that this is consensus critical as CheckSig() calls it!
+     * Note that this is consensus critical as CheckECDSASignature() calls it!
      */
     bool IsValid() const
     {
