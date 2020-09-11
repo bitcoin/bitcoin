@@ -7,12 +7,14 @@
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
 #include <script/script_error.h>
+#include <span.h>
 #include <primitives/transaction.h>
 
 #include <vector>
 #include <stdint.h>
 
 class CPubKey;
+class XOnlyPubKey;
 class CScript;
 class CTransaction;
 class CTxOut;
@@ -176,6 +178,11 @@ public:
         return false;
     }
 
+    virtual bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptError* serror = nullptr) const
+    {
+        return false;
+    }
+
     virtual bool CheckLockTime(const CScriptNum& nLockTime) const
     {
          return false;
@@ -200,11 +207,13 @@ private:
 
 protected:
     virtual bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
+    virtual bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const;
 
 public:
     GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
     GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
+    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
 };
