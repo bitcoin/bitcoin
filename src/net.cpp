@@ -1391,6 +1391,13 @@ void CConnman::NotifyNumConnectionsChanged()
         LOCK(cs_vNodes);
         vNodesSize = vNodes.size();
     }
+
+    // If we had zero connections before and new connections now or if we just dropped
+    // to zero connections reset the sync process if its outdated.
+    if ((vNodesSize > 0 && nPrevNodeCount == 0) || (vNodesSize == 0 && nPrevNodeCount > 0)) {
+        masternodeSync.Reset();
+    }
+
     if(vNodesSize != nPrevNodeCount) {
         nPrevNodeCount = vNodesSize;
         if(clientInterface)
@@ -2509,7 +2516,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         didConnect = false;
 
-        if (!fNetworkActive)
+        if (!fNetworkActive || !masternodeSync.IsBlockchainSynced())
             continue;
 
         std::set<CService> connectedNodes;
@@ -2898,6 +2905,10 @@ void CConnman::SetNetworkActive(bool active)
     }
 
     fNetworkActive = active;
+
+    // Always call the Reset() if the network gets enabled/disabled to make sure the sync process
+    // gets a reset if its outdated..
+    masternodeSync.Reset();
 
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
