@@ -62,7 +62,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes,
 )
 from test_framework.segwit_addr import (
     encode,
@@ -94,7 +93,7 @@ class AddressTypeTest(BitcoinTestFramework):
         # Fully mesh-connect nodes for faster mempool sync
         for i, j in itertools.product(range(self.num_nodes), repeat=2):
             if i > j:
-                connect_nodes(self.nodes[i], j)
+                self.connect_nodes(i, j)
         self.sync_all()
 
     def get_balances(self, key='trusted'):

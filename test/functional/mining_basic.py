@@ -25,7 +25,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes,
 )
 
 
@@ -56,7 +55,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['currentblocktx'], 0)
         assert_equal(mining_info['currentblockweight'], 4000)
         self.restart_node(0)
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
 
     def run_test(self):
         self.mine_chain()

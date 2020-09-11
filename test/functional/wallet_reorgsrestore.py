@@ -20,7 +20,6 @@ import shutil
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
         assert_equal,
-        connect_nodes,
         disconnect_nodes,
 )
 
@@ -40,7 +39,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Disconnect node1 from others to reorg its chain later
         disconnect_nodes(self.nodes[0], 1)
         disconnect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 2)
 
         # Send a tx to be unconfirmed later
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
@@ -69,7 +68,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.nodes[2].generate(9)
 
         # Reconnect node0 and node2 and check that conflicted_txid is effectively conflicted
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 2)
         self.sync_blocks([self.nodes[0], self.nodes[2]])
         conflicted = self.nodes[0].gettransaction(conflicted_txid)
         conflicting = self.nodes[0].gettransaction(conflicting_txid)

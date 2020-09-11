@@ -12,7 +12,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes,
     disconnect_nodes,
     find_output,
 )
@@ -80,8 +79,8 @@ class PSBTTest(BitcoinTestFramework):
         wonline.unloadwallet()
 
         # Reconnect
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
 
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC

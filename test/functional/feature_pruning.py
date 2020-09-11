@@ -18,7 +18,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes,
     disconnect_nodes,
 )
 
@@ -102,11 +101,11 @@ class PruneTest(BitcoinTestFramework):
 
         self.prunedir = os.path.join(self.nodes[2].datadir, self.chain, 'blocks', '')
 
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
-        connect_nodes(self.nodes[0], 4)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(0, 3)
+        self.connect_nodes(0, 4)
         self.sync_blocks(self.nodes[0:5])
 
     def setup_nodes(self):
@@ -158,8 +157,8 @@ class PruneTest(BitcoinTestFramework):
             mine_large_blocks(self.nodes[0], 25)
 
             # Create connections in the order so both nodes can see the reorg at the same time
-            connect_nodes(self.nodes[0], 1)
-            connect_nodes(self.nodes[0], 2)
+            self.connect_nodes(0, 1)
+            self.connect_nodes(0, 2)
             self.sync_blocks(self.nodes[0:3])
 
         self.log.info("Usage can be over target because of high stale rate: %d" % calc_usage(self.prunedir))
@@ -195,8 +194,8 @@ class PruneTest(BitcoinTestFramework):
         self.nodes[1].generate(300)
 
         self.log.info("Reconnect nodes")
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
         self.sync_blocks(self.nodes[0:3], timeout=120)
 
         self.log.info("Verify height on node 2: %d" % self.nodes[2].getblockcount())
@@ -337,7 +336,7 @@ class PruneTest(BitcoinTestFramework):
         # check that wallet loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
         self.log.info("Syncing node 5 to test wallet")
-        connect_nodes(self.nodes[0], 5)
+        self.connect_nodes(0, 5)
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
         self.restart_node(5, extra_args=["-prune=550"]) # restart to trigger rescan
