@@ -6,17 +6,17 @@
 #ifndef BITCOIN_SRC_VBK_POP_COMMON_HPP
 #define BITCOIN_SRC_VBK_POP_COMMON_HPP
 
-#include <veriblock/altintegration.hpp>
+#include <veriblock/pop_context.hpp>
 
 namespace VeriBlock {
 
-altintegration::Altintegration& GetPop();
+altintegration::PopContext& GetPop();
 
 void SetPopConfig(const altintegration::Config& config);
 
 void SetPop(std::shared_ptr<altintegration::PayloadsProvider>& db);
 
-std::string toPrettyString(const altintegration::Altintegration& pop);
+std::string toPrettyString(const altintegration::PopContext& pop);
 
 } // namespace VeriBlock
 

@@ -40,7 +40,7 @@ struct E2eFixture : public TestChain100Setup {
     CScript cbKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     MockMiner popminer;
     altintegration::ValidationState state;
-    altintegration::Altintegration* pop;
+    altintegration::PopContext* pop;
     std::vector<uint8_t> defaultPayoutInfo = {1, 2, 3, 4, 5};
 
     E2eFixture()
