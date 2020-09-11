@@ -40,17 +40,21 @@ class MiniWallet:
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
         return blocks
 
-    def send_self_transfer(self, *, fee_rate, from_node):
+    def get_utxo(self):
+        """Return the last utxo. Can be used to get the change output immediately after a send_self_transfer"""
+        return self._utxos.pop()
+
+    def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
-        self._utxos = sorted(self._utxos, key=lambda k: -k['value'])
-        largest_utxo = self._utxos.pop()  # Pick the largest utxo and hope it covers the fee
+        self._utxos = sorted(self._utxos, key=lambda k: k['value'])
+        utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
         vsize = Decimal(96)
-        send_value = satoshi_round(largest_utxo['value'] - fee_rate * (vsize / 1000))
-        fee = largest_utxo['value'] - send_value
-        assert (send_value > 0)
+        send_value = satoshi_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
+        fee = utxo_to_spend['value'] - send_value
+        assert send_value > 0
 
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(largest_utxo['txid'], 16), largest_utxo['vout']))]
+        tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']))]
         tx.vout = [CTxOut(int(send_value * COIN), self._scriptPubKey)]
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
