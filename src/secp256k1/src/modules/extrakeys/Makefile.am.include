@@ -1,0 +1,3 @@
+include_HEADERS += include/secp256k1_extrakeys.h
+noinst_HEADERS += src/modules/extrakeys/tests_impl.h
+noinst_HEADERS += src/modules/extrakeys/main_impl.h
