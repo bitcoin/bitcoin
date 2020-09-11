@@ -25,6 +25,10 @@ enum
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
+
+    SIGHASH_DEFAULT = 0, //!< Taproot only; implied when sighash byte is missing, and equivalent to SIGHASH_ALL
+    SIGHASH_OUTPUT_MASK = 3,
+    SIGHASH_INPUT_MASK = 0x80,
 };
 
 /** Script verification flags.
@@ -121,9 +125,24 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
 
 struct PrecomputedTransactionData
 {
+    // BIP341 precomputed data.
+    // These are single-SHA256, see https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#cite_note-15.
+    uint256 m_prevouts_single_hash;
+    uint256 m_sequences_single_hash;
+    uint256 m_outputs_single_hash;
+    uint256 m_spent_amounts_single_hash;
+    uint256 m_spent_scripts_single_hash;
+    //! Whether the 5 fields above are initialized.
+    bool m_bip341_taproot_ready = false;
+
+    // BIP143 precomputed data (double-SHA256).
     uint256 hashPrevouts, hashSequence, hashOutputs;
-    bool m_ready = false;
+    //! Whether the 3 fields above are initialized.
+    bool m_bip143_segwit_ready = false;
+
     std::vector<CTxOut> m_spent_outputs;
+    //! Whether m_spent_outputs is initialized.
+    bool m_spent_outputs_ready = false;
 
     PrecomputedTransactionData() = default;
 
@@ -136,13 +155,15 @@ struct PrecomputedTransactionData
 
 enum class SigVersion
 {
-    BASE = 0,
-    WITNESS_V0 = 1,
+    BASE = 0,        //!< Bare scripts and BIP16 P2SH-wrapped redeemscripts
+    WITNESS_V0 = 1,  //!< Witness v0 (P2WPKH and P2WSH); see BIP 141
+    TAPROOT = 2,     //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, key path spending; see BIP 341
 };
 
 /** Signature hash sizes */
 static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
 static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
+static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
 
 template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
