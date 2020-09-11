@@ -2733,13 +2733,16 @@ ConnCounts CConnman::GetConnectionCounts()
 {
     int num_in{0};
     int num_out{0};
+    bool onion_only{false};
     {
         LOCK(cs_vNodes);
+        if (!vNodes.empty()) onion_only = true;
         for (const auto& pnode : vNodes) {
             pnode->IsInboundConn() ? ++num_in : ++num_out;
+            if (pnode->ConnectedThroughNetwork() != NET_ONION) onion_only = false;
         }
     }
-    return {num_in, num_out};
+    return {num_in, num_out, onion_only};
 }
 
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)

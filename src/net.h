@@ -187,10 +187,11 @@ struct ConnCounts {
     const int all{0};
     const int in{0};
     const int out{0};
+    const bool onion_only{false};
 
     ConnCounts() {}
-    ConnCounts(int num_in, int num_out)
-        : all(num_in + num_out), in(num_in), out(num_out) {}
+    ConnCounts(int num_in, int num_out, bool is_onion_only)
+        : all(num_in + num_out), in(num_in), out(num_out), onion_only(is_onion_only) {}
 };
 
 class NetEventsInterface;
