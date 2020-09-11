@@ -1379,6 +1379,9 @@ template PrecomputedTransactionData::PrecomputedTransactionData(const CTransacti
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
 static const CHashWriter HASHER_TAPSIGHASH = TaggedHash("TapSighash");
+static const CHashWriter HASHER_TAPLEAF = TaggedHash("TapLeaf");
+static const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
+static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
 
 template<typename T>
 bool SignatureHashSchnorr(uint256& hash_out, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache)
@@ -1679,14 +1682,35 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
     return true;
 }
 
-static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const CScript& script)
 {
-    CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH)
+    const int path_len = (control.size() - TAPROOT_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
+    const XOnlyPubKey p{uint256(std::vector<unsigned char>(control.begin() + 1, control.begin() + TAPROOT_CONTROL_BASE_SIZE))};
+    const XOnlyPubKey q{uint256(program)};
+    uint256 tapleaf_hash = (CHashWriter(HASHER_TAPLEAF) << uint8_t(control[0] & TAPROOT_LEAF_MASK) << script).GetSHA256();
+    uint256 k = tapleaf_hash;
+    for (int i = 0; i < path_len; ++i) {
+        CHashWriter ss_branch{HASHER_TAPBRANCH};
+        Span<const unsigned char> node(control.data() + TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * i, TAPROOT_CONTROL_NODE_SIZE);
+        if (std::lexicographical_compare(k.begin(), k.end(), node.begin(), node.end())) {
+            ss_branch << k << node;
+        } else {
+            ss_branch << node << k;
+        }
+        k = ss_branch.GetSHA256();
+    }
+    k = (CHashWriter(HASHER_TAPTWEAK) << MakeSpan(p) << k).GetSHA256();
+    return q.CheckPayToContract(p, k, control[0] & 1);
+}
+
+static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
+{
+    CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
     Span<const valtype> stack{witness.stack};
 
     if (witversion == 0) {
         if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            // Version 0 segregated witness program: SHA256(CScript) inside the program, CScript + inputs in witness
+            // BIP141 P2WSH: 32-byte witness v0 program (which encodes SHA256(script))
             if (stack.size() == 0) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
             }
@@ -1699,7 +1723,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             }
             return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::WITNESS_V0, checker, serror);
         } else if (program.size() == WITNESS_V0_KEYHASH_SIZE) {
-            // Special case for pay-to-pubkeyhash; signature + pubkey in witness
+            // BIP141 P2WPKH: 20-byte witness v0 program (which encodes Hash160(pubkey))
             if (stack.size() != 2) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
             }
@@ -1708,11 +1732,41 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         } else {
             return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH);
         }
+    } else if (witversion == 1 && program.size() == WITNESS_V1_TAPROOT_SIZE && !is_p2sh) {
+        // BIP341 Taproot: 32-byte non-P2SH witness v1 program (which encodes a P2C-tweaked pubkey)
+        if (!(flags & SCRIPT_VERIFY_TAPROOT)) return set_success(serror);
+        if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
+        if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+            // Drop annex (this is non-standard; see IsWitnessStandard)
+            SpanPopBack(stack);
+        }
+        if (stack.size() == 1) {
+            // Key path spending (stack size is 1 after removing optional annex)
+            if (!checker.CheckSchnorrSignature(stack.front(), program, SigVersion::TAPROOT, serror)) {
+                return false; // serror is set
+            }
+            return set_success(serror);
+        } else {
+            // Script path spending (stack size is >1 after removing optional annex)
+            const valtype& control = SpanPopBack(stack);
+            const valtype& script_bytes = SpanPopBack(stack);
+            exec_script = CScript(script_bytes.begin(), script_bytes.end());
+            if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE || ((control.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) {
+                return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
+            }
+            if (!VerifyTaprootCommitment(control, program, exec_script)) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            }
+            if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION) {
+                return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);
+            }
+            return set_success(serror);
+        }
     } else {
         if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
         }
-        // Higher version witness scripts return true for future softfork compatibility
+        // Other version/size/p2sh combinations return true for future softfork compatibility
         return true;
     }
     // There is intentionally no return statement here, to be able to use "control reaches end of non-void function" warnings to detect gaps in the logic above.
@@ -1758,7 +1812,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                 // The scriptSig must be _exactly_ CScript(), otherwise we reintroduce malleability.
                 return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED);
             }
-            if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror)) {
+            if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /* is_p2sh */ false)) {
                 return false;
             }
             // Bypass the cleanstack check at the end. The actual stack is obviously not clean
@@ -1803,7 +1857,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                     // reintroduce malleability.
                     return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED_P2SH);
                 }
-                if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror)) {
+                if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /* is_p2sh */ true)) {
                     return false;
                 }
                 // Bypass the cleanstack check at the end. The actual stack is obviously not clean

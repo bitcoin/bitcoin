@@ -73,6 +73,8 @@ std::string ScriptErrorString(const ScriptError serror)
             return "NOPx reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM:
             return "Witness version reserved for soft-fork upgrades";
+        case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION:
+            return "Taproot version reserved for soft-fork upgrades";
         case SCRIPT_ERR_PUBKEYTYPE:
             return "Public key is neither compressed or uncompressed";
         case SCRIPT_ERR_CLEANSTACK:
@@ -97,6 +99,8 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Invalid Schnorr signature hash type";
         case SCRIPT_ERR_SCHNORR_SIG:
             return "Invalid Schnorr signature";
+        case SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE:
+            return "Invalid Taproot control block size";
         case SCRIPT_ERR_OP_CODESEPARATOR:
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:
