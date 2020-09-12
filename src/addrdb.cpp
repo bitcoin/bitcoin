@@ -163,3 +163,16 @@ void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& a
     LOG_TIME_SECONDS(strprintf("Flush %d outbound block-relay-only peer addresses to anchors.dat", anchors.size()));
     SerializeFileDB("anchors", anchors_db_path, anchors);
 }
+
+std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
+{
+    std::vector<CAddress> anchors;
+    if (DeserializeFileDB(anchors_db_path, anchors)) {
+        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), anchors_db_path.filename());
+    } else {
+        anchors.clear();
+    }
+
+    fs::remove(anchors_db_path);
+    return anchors;
+}
