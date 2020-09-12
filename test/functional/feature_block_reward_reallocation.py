@@ -58,20 +58,26 @@ class BlockRewardReallocationTest(DashTestFramework):
             test_block = self.create_test_block()
             self.nodes[0].p2p.send_blocks_and_test([test_block], self.nodes[0], timeout=5)
         # generate at most 10 signaling blocks at a time
-        for i in range((num_blocks - 1) // 10):
-            self.bump_mocktime(10)
-            self.nodes[0].generate(10)
+        if num_blocks > 0:
+            for i in range((num_blocks - 1) // 10):
+                self.bump_mocktime(10)
+                self.nodes[0].generate(10)
+                self.sync_blocks()
+            self.nodes[0].generate((num_blocks - 1) % 10)
             self.sync_blocks()
-        self.nodes[0].generate((num_blocks - 1) % 10)
+            assert_equal(get_bip9_status(self.nodes[0], 'realloc')['status'], 'started')
+            self.nodes[0].generate(1)
         self.sync_blocks()
-        assert_equal(get_bip9_status(self.nodes[0], 'realloc')['status'], 'started')
-        bestblockhash = self.nodes[0].generate(1)[0]
-        self.sync_blocks()
-        self.nodes[0].getblock(bestblockhash, 1)
         if expected_lockin:
             assert_equal(get_bip9_status(self.nodes[0], 'realloc')['status'], 'locked_in')
         else:
             assert_equal(get_bip9_status(self.nodes[0], 'realloc')['status'], 'started')
+
+    def threshold(self, attempt):
+        threshold_calc = 400 - attempt * attempt
+        if threshold_calc < 300:
+            return 300
+        return threshold_calc
 
     def run_test(self):
         self.log.info("Wait for DIP3 to activate")
@@ -101,40 +107,56 @@ class BlockRewardReallocationTest(DashTestFramework):
         bi = self.nodes[0].getblockchaininfo()
         assert_equal(bi['blocks'], 499)
         assert_equal(bi['bip9_softforks']['realloc']['status'], 'started')
-        assert_equal(bi['bip9_softforks']['realloc']['statistics']['threshold'], 400)
+        assert_equal(bi['bip9_softforks']['realloc']['statistics']['threshold'], self.threshold(0))
 
         self.signal(399, False) # 1 block short
-        self.signal(400, True) # just enough to lock in
 
-        self.log.info("Still LOCKED_IN at height = 1498")
+        self.log.info("Still STARTED but new threshold should be lower at height = 999")
+        bi = self.nodes[0].getblockchaininfo()
+        assert_equal(bi['blocks'], 999)
+        assert_equal(bi['bip9_softforks']['realloc']['statistics']['threshold'], self.threshold(1))
+
+        self.signal(398, False) # 1 block short again
+
+        self.log.info("Still STARTED but new threshold should be even lower at height = 1499")
+        bi = self.nodes[0].getblockchaininfo()
+        assert_equal(bi['blocks'], 1499)
+        assert_equal(bi['bip9_softforks']['realloc']['statistics']['threshold'], self.threshold(2))
+        pre_locked_in_blockhash = bi['bestblockhash']
+
+        self.signal(396, True) # just enough to lock in
+        self.log.info("Advanced to LOCKED_IN at height = 1999")
+
         for i in range(49):
             self.bump_mocktime(10)
             self.nodes[0].generate(10)
             self.sync_blocks()
         self.nodes[0].generate(9)
         self.sync_blocks()
+
+        self.log.info("Still LOCKED_IN at height = 2498")
         bi = self.nodes[0].getblockchaininfo()
-        assert_equal(bi['blocks'], 1998)
+        assert_equal(bi['blocks'], 2498)
         assert_equal(bi['bip9_softforks']['realloc']['status'], 'locked_in')
 
-        self.log.info("Advance from LOCKED_IN to ACTIVE at height = 1999")
+        self.log.info("Advance from LOCKED_IN to ACTIVE at height = 2499")
         self.nodes[0].generate(1) # activation
         bi = self.nodes[0].getblockchaininfo()
-        assert_equal(bi['blocks'], 1999)
+        assert_equal(bi['blocks'], 2499)
         assert_equal(bi['bip9_softforks']['realloc']['status'], 'active')
-        assert_equal(bi['bip9_softforks']['realloc']['since'], 2000)
+        assert_equal(bi['bip9_softforks']['realloc']['since'], 2500)
 
         self.log.info("Reward split should stay ~50/50 before the first superblock after activation")
         # This applies even if reallocation was activated right at superblock height like it does here
         bt = self.nodes[0].getblocktemplate()
-        assert_equal(bt['height'], 2000)
-        assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2000))
+        assert_equal(bt['height'], 2500)
+        assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2500))
         self.nodes[0].generate(9)
         self.sync_blocks()
         bt = self.nodes[0].getblocktemplate()
-        assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2000))
-        assert_equal(bt['coinbasevalue'], 17171634268)
-        assert_equal(bt['masternode'][0]['amount'], 8585817128) # 0.4999999997
+        assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2500))
+        assert_equal(bt['coinbasevalue'], 13748571607)
+        assert_equal(bt['masternode'][0]['amount'], 6874285801) # 0.4999999998
 
         self.log.info("Reallocation should kick-in with the superblock mined at height = 2010")
         for period in range(19): # there will be 19 adjustments, 3 superblocks long each
@@ -143,11 +165,11 @@ class BlockRewardReallocationTest(DashTestFramework):
                 self.nodes[0].generate(10)
                 self.sync_blocks()
                 bt = self.nodes[0].getblocktemplate()
-                assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2000))
+                assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2500))
 
         self.log.info("Reward split should reach ~60/40 after reallocation is done")
-        assert_equal(bt['coinbasevalue'], 12766530779)
-        assert_equal(bt['masternode'][0]['amount'], 7659918467) # 0.6
+        assert_equal(bt['coinbasevalue'], 10221599170)
+        assert_equal(bt['masternode'][0]['amount'], 6132959502) # 0.6
 
         self.log.info("Reward split should stay ~60/40 after reallocation is done")
         for period in range(10): # check 10 next superblocks
@@ -155,9 +177,31 @@ class BlockRewardReallocationTest(DashTestFramework):
             self.nodes[0].generate(10)
             self.sync_blocks()
             bt = self.nodes[0].getblocktemplate()
-            assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2000))
-        assert_equal(bt['coinbasevalue'], 12766530779)
-        assert_equal(bt['masternode'][0]['amount'], 7659918467) # 0.6
+            assert_equal(bt['masternode'][0]['amount'], get_masternode_payment(bt['height'], bt['coinbasevalue'], 2500))
+        assert_equal(bt['coinbasevalue'], 9491484944)
+        assert_equal(bt['masternode'][0]['amount'], 5694890966) # 0.6
+
+        self.log.info("Rollback the chain back to the STARTED state")
+        self.mocktime = self.nodes[0].getblock(pre_locked_in_blockhash, 1)['time']
+        for node in self.nodes:
+            node.invalidateblock(pre_locked_in_blockhash)
+        self.sync_all()
+        # create and send non-signalling block
+        test_block = self.create_test_block()
+        self.nodes[0].p2p.send_blocks_and_test([test_block], self.nodes[0], timeout=5)
+        bi = self.nodes[0].getblockchaininfo()
+        assert_equal(bi['blocks'], 1499)
+        assert_equal(bi['bip9_softforks']['realloc']['status'], 'started')
+        assert_equal(bi['bip9_softforks']['realloc']['statistics']['threshold'], self.threshold(2))
+
+        self.log.info("Check thresholds reach min level and stay there")
+        for i in range(8): # 7 to reach min level and 1 more to check it doesn't go lower than that
+            self.signal(0, False) # no need to signal
+            bi = self.nodes[0].getblockchaininfo()
+            assert_equal(bi['blocks'], 1999 + i * 500)
+            assert_equal(bi['bip9_softforks']['realloc']['status'], 'started')
+            assert_equal(bi['bip9_softforks']['realloc']['statistics']['threshold'], self.threshold(i + 3))
+        assert_equal(bi['bip9_softforks']['realloc']['statistics']['threshold'], 300)
 
 if __name__ == '__main__':
     BlockRewardReallocationTest().main()

@@ -59,6 +59,7 @@ BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
+    'feature_block_reward_reallocation.py',
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
@@ -82,7 +83,6 @@ BASE_SCRIPTS= [
     'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
     'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
     'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
-    'feature_block_reward_reallocation.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
     'wallet_zapwallettxes.py',
