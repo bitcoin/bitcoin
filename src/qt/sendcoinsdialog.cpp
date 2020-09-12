@@ -728,7 +728,7 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
     // Calculate available amount to send.
     CAmount amount;
     if (fPrivateSend) {
-        amount = model->getAnonymizedBalance();
+        amount = model->getAnonymizedBalance(&coin_control);
     } else {
         amount = model->getBalance(&coin_control);
     }
