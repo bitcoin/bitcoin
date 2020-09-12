@@ -460,6 +460,11 @@ private:
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
 
+    /**
+     * Return vector of current BLOCK_RELAY peers.
+     */
+    std::vector<CAddress> GetCurrentBlockRelayOnlyConns() const;
+
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
 
