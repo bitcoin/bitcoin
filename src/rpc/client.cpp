@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/client.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 
 #include <set>
@@ -214,8 +215,14 @@ CRPCConvertTable::CRPCConvertTable()
 
 static CRPCConvertTable rpcCvtTable;
 
+// Identify hash values that are part of a hash_or_height parameter
+static bool IsHashVal(const std::string& str) {
+    return (str.length() == 64) && IsHex(str);
+}
+
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
  * as well as objects and arrays.
+ *
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal)
 {
@@ -233,7 +240,7 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
     for (unsigned int idx = 0; idx < strParams.size(); idx++) {
         const std::string& strVal = strParams[idx];
 
-        if (!rpcCvtTable.convert(strMethod, idx)) {
+        if (!rpcCvtTable.convert(strMethod, idx) || IsHashVal(strVal)) {
             // insert string value directly
             params.push_back(strVal);
         } else {
@@ -258,7 +265,7 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         std::string name = s.substr(0, pos);
         std::string value = s.substr(pos+1);
 
-        if (!rpcCvtTable.convert(strMethod, name)) {
+        if (!rpcCvtTable.convert(strMethod, name) || IsHashVal(value)) {
             // insert string value directly
             params.pushKV(name, value);
         } else {
