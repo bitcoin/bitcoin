@@ -2839,25 +2839,25 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             if (nDepth < nMinDepth || nDepth > nMaxDepth)
                 continue;
 
-        for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
-            bool found = false;
-            if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                if (!CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
-                found = IsFullyMixed(COutPoint(wtxid, i));
-            } else if(nCoinType == CoinType::ONLY_READY_TO_MIX) {
-                if (!CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
-                found = !IsFullyMixed(COutPoint(wtxid, i));
-            } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
-                if (CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
-                found = !CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
-            } else if(nCoinType == CoinType::ONLY_MASTERNODE_COLLATERAL) {
-                found = pcoin->tx->vout[i].nValue == 1000*COIN;
-            } else if(nCoinType == CoinType::ONLY_PRIVATESEND_COLLATERAL) {
-                found = CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue);
-            } else {
-                found = true;
-            }
-            if(!found) continue;
+            for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
+                bool found = false;
+                if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
+                    if (!CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
+                    found = IsFullyMixed(COutPoint(wtxid, i));
+                } else if(nCoinType == CoinType::ONLY_READY_TO_MIX) {
+                    if (!CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
+                    found = !IsFullyMixed(COutPoint(wtxid, i));
+                } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
+                    if (CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
+                    found = !CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
+                } else if(nCoinType == CoinType::ONLY_MASTERNODE_COLLATERAL) {
+                    found = pcoin->tx->vout[i].nValue == 1000*COIN;
+                } else if(nCoinType == CoinType::ONLY_PRIVATESEND_COLLATERAL) {
+                    found = CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue);
+                } else {
+                    found = true;
+                }
+                if(!found) continue;
 
                 if (pcoin->tx->vout[i].nValue < nMinimumAmount || pcoin->tx->vout[i].nValue > nMaximumAmount)
                     continue;
