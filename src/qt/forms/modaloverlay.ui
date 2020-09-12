@@ -79,10 +79,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="warningIcon">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
+              <widget class="QLabel" name="warningIcon">
                <property name="text">
                 <string/>
                </property>
@@ -171,6 +168,9 @@
           <layout class="QFormLayout" name="formLayout">
            <property name="fieldGrowthPolicy">
             <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+           </property>
+           <property name="formAlignment">
+            <set>Qt::AlignHCenter|Qt::AlignTop</set>
            </property>
            <property name="horizontalSpacing">
             <number>6</number>
