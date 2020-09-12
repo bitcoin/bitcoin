@@ -320,6 +320,10 @@ class PSBTTest(BitcoinTestFramework):
         psbtx_np2wkh = self.nodes[1].walletcreatefundedpsbt([], [small_output], 0, {"change_type":"p2sh-segwit"})
         self.assert_change_type(psbtx_np2wkh, "scripthash")
 
+        # Make sure the change type cannot be specified if a change address is given
+        invalid_options = {"change_type":"legacy","changeAddress":self.nodes[0].getnewaddress()}
+        assert_raises_rpc_error(-8, "both change address and address type options", self.nodes[0].walletcreatefundedpsbt, [], [small_output], 0, invalid_options)
+
         # Regression test for 14473 (mishandling of already-signed witness transaction):
         psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], 0, {"add_inputs": True})
         complete_psbt = self.nodes[0].walletprocesspsbt(psbtx_info["psbt"])
