@@ -77,7 +77,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 
     int nStartHeight{std::numeric_limits<int>::max()};
     for (const auto& pair : cache) {
-        if (pair.second == ThresholdState::STARTED && nStartHeight > pair.first->nHeight + 1) {
+        if (pair.second == THRESHOLD_STARTED && nStartHeight > pair.first->nHeight + 1) {
             nStartHeight = pair.first->nHeight + 1;
         }
     }
@@ -154,7 +154,7 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     // Re-calculate current threshold
     int nAttempt{0};
     const ThresholdState state = GetStateFor(pindexEndOfPrevPeriod, params, cache);
-    if (state == ThresholdState::STARTED) {
+    if (state == THRESHOLD_STARTED) {
         int nStartHeight = GetStateSinceHeightFor(pindexEndOfPrevPeriod, params, cache);
         nAttempt = (pindexEndOfPrevPeriod->nHeight + 1 - nStartHeight)/stats.period;
     }

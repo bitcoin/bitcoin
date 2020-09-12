@@ -327,7 +327,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
         pindex = chainActive[nBlockHeight - 1];
 
         const Consensus::Params& consensusParams = Params().GetConsensus();
-        if (VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_REALLOC, versionbitscache) == ThresholdState::ACTIVE) {
+        if (VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_REALLOC, versionbitscache) == THRESHOLD_ACTIVE) {
             nReallocActivationHeight = VersionBitsStateSinceHeight(pindex, consensusParams, Consensus::DEPLOYMENT_REALLOC, versionbitscache);
         }
     }
