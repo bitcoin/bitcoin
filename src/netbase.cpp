@@ -120,7 +120,7 @@ bool static LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, un
         {
             assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
             struct sockaddr_in6* s6 = (struct sockaddr_in6*) aiTrav->ai_addr;
-            resolved = CNetAddr(s6->sin6_addr, s6->sin6_scope_id);
+            resolved = CNetAddr(s6->sin6_addr);
         }
         /* Never allow resolving to an internal address. Consider any such result invalid */
         if (!resolved.IsInternal()) {

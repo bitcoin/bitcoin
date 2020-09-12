@@ -102,8 +102,6 @@ class CNetAddr
          */
         Network m_net{NET_IPV6};
 
-        uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
-
     public:
         CNetAddr();
         explicit CNetAddr(const struct in_addr& ipv4Addr);
@@ -164,7 +162,7 @@ class CNetAddr
         std::vector<unsigned char> GetAddrBytes() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = nullptr) const;
 
-        explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
+        explicit CNetAddr(const struct in6_addr& pipv6Addr);
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);

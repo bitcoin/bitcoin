@@ -129,10 +129,9 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
     m_addr.assign(ptr, ptr + ADDR_IPV4_SIZE);
 }
 
-CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
+CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr)
 {
     SetLegacyIPv6(Span<const uint8_t>(reinterpret_cast<const uint8_t*>(&ipv6Addr), sizeof(ipv6Addr)));
-    scopeId = scope;
 }
 
 bool CNetAddr::IsBindAny() const
@@ -648,7 +647,7 @@ CService::CService(const struct sockaddr_in& addr) : CNetAddr(addr.sin_addr), po
     assert(addr.sin_family == AF_INET);
 }
 
-CService::CService(const struct sockaddr_in6 &addr) : CNetAddr(addr.sin6_addr, addr.sin6_scope_id), port(ntohs(addr.sin6_port))
+CService::CService(const struct sockaddr_in6 &addr) : CNetAddr(addr.sin6_addr), port(ntohs(addr.sin6_port))
 {
    assert(addr.sin6_family == AF_INET6);
 }
@@ -716,7 +715,6 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         memset(paddrin6, 0, *addrlen);
         if (!GetIn6Addr(&paddrin6->sin6_addr))
             return false;
-        paddrin6->sin6_scope_id = scopeId;
         paddrin6->sin6_family = AF_INET6;
         paddrin6->sin6_port = htons(port);
         return true;

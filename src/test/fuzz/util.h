@@ -245,7 +245,7 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
         if (fuzzed_data_provider.remaining_bytes() >= 16) {
             in6_addr v6_addr = {};
             memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
-            net_addr = CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+            net_addr = CNetAddr{v6_addr};
         }
     } else if (network == Network::NET_INTERNAL) {
         net_addr.SetInternal(fuzzed_data_provider.ConsumeBytesAsString(32));
