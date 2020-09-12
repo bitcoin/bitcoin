@@ -69,6 +69,9 @@ public:
     */
     bool addWallet(const QString& name, WalletModel *walletModel);
     bool setCurrentWallet(const QString& name);
+    /** Set the UI status indicators based on the currently selected wallet.
+    */
+    void updateWalletStatus();
     void removeAllWallets();
 #endif // ENABLE_WALLET
     bool enableWallet;

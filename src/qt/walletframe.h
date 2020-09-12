@@ -56,6 +56,7 @@ private:
 
     bool bOutOfSync;
 
+public:
     WalletView *currentWalletView();
 
 public Q_SLOTS:
