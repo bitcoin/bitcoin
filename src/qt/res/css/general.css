@@ -1231,11 +1231,10 @@ QWidget#bgWidget { /* The frame overlaying the overview-page */
     padding-right: 10px;
 }
 
-QWidget#bgWidget .QPushButton#warningIcon {
+QWidget#bgWidget .QLabel#warningIcon {
     background-color: #00000000;
-    width: 64px;
-    height: 64px;
-    padding: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 QWidget#contentWidget { /* The actual content with the text/buttons/etc... */

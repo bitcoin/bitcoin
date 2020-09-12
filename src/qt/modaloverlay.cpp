@@ -31,7 +31,7 @@ foreverHidden(false)
                       ui->labelEstimatedTimeLeft,
                      }, GUIUtil::FontWeight::Bold);
 
-    GUIUtil::setIcon(ui->warningIcon, "warning", GUIUtil::ThemedColor::ORANGE, QSize(48, 48));
+    ui->warningIcon->setPixmap(GUIUtil::getIcon("warning", GUIUtil::ThemedColor::ORANGE).pixmap(48, 48));
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
     if (parent) {
