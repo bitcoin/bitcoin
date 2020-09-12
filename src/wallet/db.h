@@ -212,6 +212,7 @@ enum class DatabaseStatus {
     FAILED_ALREADY_EXISTS,
     FAILED_NOT_FOUND,
     FAILED_CREATE,
+    FAILED_LOAD,
     FAILED_VERIFY,
     FAILED_ENCRYPT,
 };
