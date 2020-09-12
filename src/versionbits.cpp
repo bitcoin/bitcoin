@@ -46,7 +46,6 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
     int nPeriod = Period(params);
-    int nThreshold = Threshold(params);
     int64_t nTimeStart = BeginTime(params);
     int64_t nTimeTimeout = EndTime(params);
 
@@ -76,6 +75,13 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     assert(cache.count(pindexPrev));
     ThresholdState state = cache[pindexPrev];
 
+    int nStartHeight{std::numeric_limits<int>::max()};
+    for (const auto& pair : cache) {
+        if (pair.second == ThresholdState::STARTED && nStartHeight > pair.first->nHeight + 1) {
+            nStartHeight = pair.first->nHeight + 1;
+        }
+    }
+
     // Now walk forward and compute the state of descendants of pindexPrev
     while (!vToCompute.empty()) {
         ThresholdState stateNext = state;
@@ -88,6 +94,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                     stateNext = THRESHOLD_FAILED;
                 } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
                     stateNext = THRESHOLD_STARTED;
+                    nStartHeight = pindexPrev->nHeight + 1;
                 }
                 break;
             }
@@ -105,7 +112,9 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                     }
                     pindexCount = pindexCount->pprev;
                 }
-                if (count >= nThreshold) {
+                assert(nStartHeight > 0 && nStartHeight < std::numeric_limits<int>::max());
+                int nAttempt = (pindexCount->nHeight + 1 - nStartHeight) / nPeriod;
+                if (count >= Threshold(params, nAttempt)) {
                     stateNext = THRESHOLD_LOCKED_IN;
                 }
                 break;
@@ -128,12 +137,12 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 }
 
 // return the numerical statistics of blocks signalling the specified BIP9 condition in this current period
-BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const
+BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
     BIP9Stats stats = {};
 
     stats.period = Period(params);
-    stats.threshold = Threshold(params);
+    stats.threshold = Threshold(params, 0);
 
     if (pindex == nullptr)
         return stats;
@@ -141,6 +150,15 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     // Find beginning of period
     const CBlockIndex* pindexEndOfPrevPeriod = pindex->GetAncestor(pindex->nHeight - ((pindex->nHeight + 1) % stats.period));
     stats.elapsed = pindex->nHeight - pindexEndOfPrevPeriod->nHeight;
+
+    // Re-calculate current threshold
+    int nAttempt{0};
+    const ThresholdState state = GetStateFor(pindexEndOfPrevPeriod, params, cache);
+    if (state == ThresholdState::STARTED) {
+        int nStartHeight = GetStateSinceHeightFor(pindexEndOfPrevPeriod, params, cache);
+        nAttempt = (pindexEndOfPrevPeriod->nHeight + 1 - nStartHeight)/stats.period;
+    }
+    stats.threshold = Threshold(params, nAttempt);
 
     // Count from current block to beginning of period
     int count = 0;
@@ -200,7 +218,17 @@ protected:
     int64_t BeginTime(const Consensus::Params& params) const override { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeout; }
     int Period(const Consensus::Params& params) const override { return params.vDeployments[id].nWindowSize ? params.vDeployments[id].nWindowSize : params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const override { return params.vDeployments[id].nThreshold ? params.vDeployments[id].nThreshold : params.nRuleChangeActivationThreshold; }
+    int Threshold(const Consensus::Params& params, int nAttempt) const override
+    {
+        if (params.vDeployments[id].nThresholdStart == 0) {
+            return params.nRuleChangeActivationThreshold;
+        }
+        if (params.vDeployments[id].nThresholdMin == 0 || params.vDeployments[id].nFalloffCoeff == 0) {
+            return params.vDeployments[id].nThresholdStart;
+        }
+        int64_t nThresholdCalc = params.vDeployments[id].nThresholdStart - nAttempt * nAttempt * Period(params) / 100 / params.vDeployments[id].nFalloffCoeff;
+        return std::max(params.vDeployments[id].nThresholdMin, nThresholdCalc);
+    }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
     {
@@ -219,9 +247,9 @@ ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::
     return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, cache.caches[pos]);
 }
 
-BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
+BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
 {
-    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindexPrev, params);
+    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindexPrev, params, cache.caches[pos]);
 }
 
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
