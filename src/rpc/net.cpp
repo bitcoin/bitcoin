@@ -140,7 +140,8 @@ static RPCHelpMan getpeerinfo()
                             {
                                 {RPCResult::Type::NUM, "msg", "The total bytes received aggregated by message type\n"
                                                               "When a message type is not listed in this json object, the bytes received are 0.\n"
-                                                              "Only known message types can appear as keys in the object and all bytes received of unknown message types are listed under '"+NET_MESSAGE_COMMAND_OTHER+"'."}
+                                                              "Only known message types can appear as keys in the object and all bytes received\n"
+                                                              "of unknown message types are listed under '"+NET_MESSAGE_COMMAND_OTHER+"'."}
                             }},
                         }},
                     }},
