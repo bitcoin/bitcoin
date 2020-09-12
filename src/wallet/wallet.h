@@ -487,7 +487,7 @@ public:
     CAmount GetAvailableWatchOnlyCredit(const bool fUseCache=true) const;
     CAmount GetChange() const;
 
-    CAmount GetAnonymizedCredit(bool fUseCache=true) const;
+    CAmount GetAnonymizedCredit(const CCoinControl* coinControl = nullptr) const;
     CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const;
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
@@ -1050,7 +1050,7 @@ public:
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account, const bool fAddLocked) const;
 
     CAmount GetAnonymizableBalance(bool fSkipDenominated = false, bool fSkipUnconfirmed = true) const;
-    CAmount GetAnonymizedBalance() const;
+    CAmount GetAnonymizedBalance(const CCoinControl* coinControl = nullptr) const;
     float GetAverageAnonymizedRounds() const;
     CAmount GetNormalizedAnonymizedBalance() const;
     CAmount GetDenominatedBalance(bool unconfirmed=false) const;
