@@ -246,6 +246,25 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK(!addr.IsBindAny());
     BOOST_CHECK_EQUAL(addr.ToString(), "1122:3344:5566:7788:9900:aabb:ccdd:eeff");
 
+    // IPv6, scoped/link-local. See https://tools.ietf.org/html/rfc4007
+    // We support non-negative decimal integers (uint32_t) as zone id indices.
+    // Test with a fairly-high value, e.g. 32, to avoid locally reserved ids.
+    const std::string link_local{"fe80::1"};
+    const std::string scoped_addr{link_local + "%32"};
+    BOOST_REQUIRE(LookupHost(scoped_addr, addr, false));
+    BOOST_REQUIRE(addr.IsValid());
+    BOOST_REQUIRE(addr.IsIPv6());
+    BOOST_CHECK(!addr.IsBindAny());
+    const std::string addr_str{addr.ToString()};
+    BOOST_CHECK(addr_str == scoped_addr || addr_str == "fe80:0:0:0:0:0:0:1");
+    // The fallback case "fe80:0:0:0:0:0:0:1" is needed for macOS 10.14/10.15 and (probably) later.
+    // Test that the delimiter "%" and default zone id of 0 can be omitted for the default scope.
+    BOOST_REQUIRE(LookupHost(link_local + "%0", addr, false));
+    BOOST_REQUIRE(addr.IsValid());
+    BOOST_REQUIRE(addr.IsIPv6());
+    BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK_EQUAL(addr.ToString(), link_local);
+
     // TORv2
     BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
     BOOST_REQUIRE(addr.IsValid());
