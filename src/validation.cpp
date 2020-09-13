@@ -1155,7 +1155,7 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
     return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
 }
 
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight)
 {
     CAmount ret = blockValue/5; // start at 20%
 
@@ -1173,7 +1173,47 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
     if(nHeight > nMNPIBlock+(nMNPIPeriod* 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
     if(nHeight > nMNPIBlock+(nMNPIPeriod* 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
 
-    return ret;
+    if (nHeight < nReallocActivationHeight) {
+        // Block Reward Realocation is not activated yet, nothing to do
+        return ret;
+    }
+
+    int nSuperblockCycle = Params().GetConsensus().nSuperblockCycle;
+    // Actual realocation starts in the cycle next to one activation happens in
+    int nReallocStart = nReallocActivationHeight - nReallocActivationHeight % nSuperblockCycle + nSuperblockCycle;
+
+    if (nHeight < nReallocStart) {
+        // Activated but we have to wait for the next cycle to start realocation, nothing to do
+        return ret;
+    }
+
+    // Periods used to reallocate the masternode reward from 50% to 60%
+    static std::vector<int> vecPeriods{
+        513, // Period 1:  51.3%
+        526, // Period 2:  52.6%
+        533, // Period 3:  53.3%
+        540, // Period 4:  54%
+        546, // Period 5:  54.6%
+        552, // Period 6:  55.2%
+        557, // Period 7:  55.7%
+        562, // Period 8:  56.2%
+        567, // Period 9:  56.7%
+        572, // Period 10: 57.2%
+        577, // Period 11: 57.7%
+        582, // Period 12: 58.2%
+        585, // Period 13: 58.5%
+        588, // Period 14: 58.8%
+        591, // Period 15: 59.1%
+        594, // Period 16: 59.4%
+        597, // Period 17: 59.7%
+        599, // Period 18: 59.9%
+        600  // Period 19: 60%
+    };
+
+    int nReallocCycle = nSuperblockCycle * 3;
+    int nCurrentPeriod = std::min<int>((nHeight - nReallocStart) / nReallocCycle, vecPeriods.size() - 1);
+
+    return static_cast<CAmount>(blockValue * vecPeriods[nCurrentPeriod] / 1000);
 }
 
 bool IsInitialBlockDownload()
@@ -1875,7 +1915,7 @@ public:
     int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
     int64_t EndTime(const Consensus::Params& params) const override { return std::numeric_limits<int64_t>::max(); }
     int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
+    int Threshold(const Consensus::Params& params, int nAttempt) const override { return params.nRuleChangeActivationThreshold; }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
     {
@@ -4855,7 +4895,7 @@ ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::D
 BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     LOCK(cs_main);
-    return VersionBitsStatistics(chainActive.Tip(), params, pos);
+    return VersionBitsStatistics(chainActive.Tip(), params, pos, versionbitscache);
 }
 
 int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos)
