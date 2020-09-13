@@ -3052,7 +3052,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
-                        pfrom.orphan_work_set.insert(elem->first);
+                        pfrom.m_orphan_work_set.insert(elem->first);
                     }
                 }
             }
@@ -3069,7 +3069,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             }
 
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(pfrom.orphan_work_set);
+            ProcessOrphanTx(pfrom.m_orphan_work_set);
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
@@ -3868,9 +3868,9 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(*pfrom, m_chainparams, m_connman, m_mempool, interruptMsgProc);
 
-    if (!pfrom->orphan_work_set.empty()) {
+    if (!pfrom->m_orphan_work_set.empty()) {
         LOCK2(cs_main, g_cs_orphans);
-        ProcessOrphanTx(pfrom->orphan_work_set);
+        ProcessOrphanTx(pfrom->m_orphan_work_set);
     }
 
     if (pfrom->fDisconnect)
@@ -3879,7 +3879,7 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
     // this maintains the order of responses
     // and prevents vRecvGetData to grow unbounded
     if (!pfrom->vRecvGetData.empty()) return true;
-    if (!pfrom->orphan_work_set.empty()) return true;
+    if (!pfrom->m_orphan_work_set.empty()) return true;
 
     // Don't bother if send buffer is too full to respond anyway
     if (pfrom->fPauseSend)
