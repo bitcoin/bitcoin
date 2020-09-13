@@ -753,47 +753,30 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         return false;
     }
 
-    int tipHeight;
-    {
-        LOCK(cs_main);
-        tipHeight = chainActive.Height();
-    }
-
     auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
+    auto dkgInterval = Params().GetConsensus().llmqs.at(llmqType).dkgInterval;
 
-    // Every time a new quorum enters the active set, an older one is removed. This means that between two blocks, the
-    // active set can be different, leading to different selection of the signing quorum. When we detect such rotation
-    // of the active set, we must re-check invalid sigs against the previous active set and only ban nodes when this also
-    // fails.
-    auto quorums1 = quorumSigningManager->GetActiveQuorumSet(llmqType, tipHeight);
-    auto quorums2 = quorumSigningManager->GetActiveQuorumSet(llmqType, tipHeight - 1);
-    bool quorumsRotated = quorums1 != quorums2;
+    // First check against the current active set and don't ban
+    auto badISLocks = ProcessPendingInstantSendLocks(0, pend, false);
+    if (!badISLocks.empty()) {
+        LogPrintf("CInstantSendManager::%s -- doing verification on old active set\n", __func__);
 
-    if (quorumsRotated) {
-        // first check against the current active set and don't ban
-        auto badISLocks = ProcessPendingInstantSendLocks(tipHeight, pend, false);
-        if (!badISLocks.empty()) {
-            LogPrintf("CInstantSendManager::%s -- detected LLMQ active set rotation, redoing verification on old active set\n", __func__);
-
-            // filter out valid IS locks from "pend"
-            for (auto it = pend.begin(); it != pend.end(); ) {
-                if (!badISLocks.count(it->first)) {
-                    it = pend.erase(it);
-                } else {
-                    ++it;
-                }
+        // filter out valid IS locks from "pend"
+        for (auto it = pend.begin(); it != pend.end(); ) {
+            if (!badISLocks.count(it->first)) {
+                it = pend.erase(it);
+            } else {
+                ++it;
             }
-            // now check against the previous active set and perform banning if this fails
-            ProcessPendingInstantSendLocks(tipHeight - 1, pend, true);
         }
-    } else {
-        ProcessPendingInstantSendLocks(tipHeight, pend, true);
+        // Now check against the previous active set and perform banning if this fails
+        ProcessPendingInstantSendLocks(dkgInterval, pend, true);
     }
 
     return true;
 }
 
-std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(int signHeight, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>, StaticSaltedHasher>& pend, bool ban)
+std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>, StaticSaltedHasher>& pend, bool ban)
 {
     auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
@@ -824,7 +807,7 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
             continue;
         }
 
-        auto quorum = quorumSigningManager->SelectQuorumForSigning(llmqType, signHeight, id);
+        auto quorum = quorumSigningManager->SelectQuorumForSigning(llmqType, id, -1, signOffset);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
             return {};

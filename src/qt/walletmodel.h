@@ -136,7 +136,7 @@ public:
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
     CAmount getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) const;
-    CAmount getAnonymizedBalance() const;
+    CAmount getAnonymizedBalance(const CCoinControl* coinControl = nullptr) const;
     CAmount getDenominatedBalance(bool unconfirmed) const;
     CAmount getNormalizedAnonymizedBalance() const;
     CAmount getAverageAnonymizedRounds() const;
