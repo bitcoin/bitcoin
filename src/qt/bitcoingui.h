@@ -69,6 +69,9 @@ public:
     */
     bool addWallet(const QString& name, WalletModel *walletModel);
     bool setCurrentWallet(const QString& name);
+    /** Set the UI status indicators based on the currently selected wallet.
+    */
+    void updateWalletStatus();
     void removeAllWallets();
 #endif // ENABLE_WALLET
     bool enableWallet;
@@ -142,9 +145,19 @@ private:
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
 #endif
 
-    /** Keep track of previous number of blocks, to detect progress */
-    int prevBlocks;
-    int spinnerFrame;
+    /** Timer to update the spinner animation in the status bar periodically */
+    QTimer* timerSpinner;
+    /** Start the spinner animation in the status bar if it's not running and if labelBlocksIcon is visible. */
+    void startSpinner();
+    /** Stop the spinner animation in the status bar */
+    void stopSpinner();
+
+    /** Timer to update the connection icon during connecting phase */
+    QTimer* timerConnecting;
+    /** Start the connecting animation */
+    void startConnectingAnimation();
+    /** Stop the connecting animation */
+    void stopConnectingAnimation();
 
     struct IncomingTransactionMessage {
         QString date;
@@ -180,6 +193,8 @@ private:
     void updateNetworkState();
 
     void updateHeadersSyncProgressLabel();
+
+    void updateProgressBarVisibility();
 
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */

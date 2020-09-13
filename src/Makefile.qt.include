@@ -305,18 +305,14 @@ BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
 
 RES_IMAGES = \
-  qt/res/images/arrow_down_normal.png \
-  qt/res/images/arrow_down_hover.png \
-  qt/res/images/arrow_down_pressed.png \
-  qt/res/images/arrow_left_normal.png \
-  qt/res/images/arrow_left_hover.png \
-  qt/res/images/arrow_left_pressed.png \
-  qt/res/images/arrow_right_normal.png \
-  qt/res/images/arrow_right_hover.png \
-  qt/res/images/arrow_right_pressed.png \
-  qt/res/images/arrow_up_normal.png \
-  qt/res/images/arrow_up_hover.png \
-  qt/res/images/arrow_up_pressed.png \
+  qt/res/images/arrow_down_dark.png \
+  qt/res/images/arrow_down_light.png \
+  qt/res/images/arrow_left_dark.png \
+  qt/res/images/arrow_left_light.png \
+  qt/res/images/arrow_right_dark.png \
+  qt/res/images/arrow_right_light.png \
+  qt/res/images/arrow_up_dark.png \
+  qt/res/images/arrow_up_light.png \
   qt/res/images/arrow_light_down_normal.png \
   qt/res/images/arrow_light_down_hover.png \
   qt/res/images/arrow_light_left_normal.png \
@@ -325,29 +321,39 @@ RES_IMAGES = \
   qt/res/images/arrow_light_right_hover.png \
   qt/res/images/arrow_light_up_normal.png \
   qt/res/images/arrow_light_up_hover.png \
-  qt/res/images/checkbox_normal.png \
-  qt/res/images/checkbox_normal_hover.png \
-  qt/res/images/checkbox_normal_pressed.png \
-  qt/res/images/checkbox_normal_disabled.png \
-  qt/res/images/checkbox_checked.png \
-  qt/res/images/checkbox_checked_hover.png \
-  qt/res/images/checkbox_checked_pressed.png \
-  qt/res/images/checkbox_checked_disabled.png \
-  qt/res/images/checkbox_partly_checked.png \
-  qt/res/images/checkbox_partly_checked_hover.png \
-  qt/res/images/checkbox_partly_checked_pressed.png \
-  qt/res/images/checkbox_partly_checked_disabled.png \
+  qt/res/images/checkbox_normal_dark.png \
+  qt/res/images/checkbox_normal_hover_dark.png \
+  qt/res/images/checkbox_normal_disabled_dark.png \
+  qt/res/images/checkbox_checked_dark.png \
+  qt/res/images/checkbox_checked_hover_dark.png \
+  qt/res/images/checkbox_checked_disabled_dark.png \
+  qt/res/images/checkbox_partly_checked_dark.png \
+  qt/res/images/checkbox_partly_checked_hover_dark.png \
+  qt/res/images/checkbox_partly_checked_disabled_dark.png \
+  qt/res/images/checkbox_normal_light.png \
+  qt/res/images/checkbox_normal_hover_light.png \
+  qt/res/images/checkbox_normal_disabled_light.png \
+  qt/res/images/checkbox_checked_light.png \
+  qt/res/images/checkbox_checked_hover_light.png \
+  qt/res/images/checkbox_checked_disabled_light.png \
+  qt/res/images/checkbox_partly_checked_light.png \
+  qt/res/images/checkbox_partly_checked_hover_light.png \
+  qt/res/images/checkbox_partly_checked_disabled_light.png \
   qt/res/images/dash_logo_horizontal.png \
   qt/res/images/dash_logo_toolbar.png \
   qt/res/images/dash_logo_toolbar_blue.png \
-  qt/res/images/radio_normal.png \
-  qt/res/images/radio_normal_hover.png \
-  qt/res/images/radio_normal_pressed.png \
-  qt/res/images/radio_checked.png \
-  qt/res/images/radio_checked_hover.png \
-  qt/res/images/radio_checked_pressed.png \
-  qt/res/images/radio_normal_disabled.png \
-  qt/res/images/radio_checked_disabled.png \
+  qt/res/images/radio_normal_dark.png \
+  qt/res/images/radio_normal_hover_dark.png \
+  qt/res/images/radio_checked_dark.png \
+  qt/res/images/radio_checked_hover_dark.png \
+  qt/res/images/radio_normal_disabled_dark.png \
+  qt/res/images/radio_checked_disabled_dark.png \
+  qt/res/images/radio_normal_light.png \
+  qt/res/images/radio_normal_hover_light.png \
+  qt/res/images/radio_checked_light.png \
+  qt/res/images/radio_checked_hover_light.png \
+  qt/res/images/radio_normal_disabled_light.png \
+  qt/res/images/radio_checked_disabled_light.png \
   qt/res/images/splash.png
 
 RES_CSS = \

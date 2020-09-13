@@ -39,6 +39,8 @@ public:
     bool fOverrideFeeRate;
     //! Override the default payTxFee if set
     boost::optional<CFeeRate> m_feerate;
+    //! Override the discard feerate estimation with m_discard_feerate in CreateTransaction if set
+    boost::optional<CFeeRate> m_discard_feerate;
     //! Override the default confirmation target if set
     boost::optional<unsigned int> m_confirm_target;
     //! Fee estimation mode to control arguments to estimateSmartFee
@@ -59,6 +61,7 @@ public:
         fAllowWatchOnly = false;
         setSelected.clear();
         m_feerate.reset();
+        m_discard_feerate.reset();
         fOverrideFeeRate = false;
         m_confirm_target.reset();
         m_fee_mode = FeeEstimateMode::UNSET;

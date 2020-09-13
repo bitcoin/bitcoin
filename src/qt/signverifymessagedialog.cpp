@@ -37,11 +37,10 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     ui->signatureIn_VM->setPlaceholderText(tr("Enter a signature for the message to be verified"));
 #endif
 
-    ui->addressBookButton_SM->setIcon(QIcon(":/icons/address-book"));
-    ui->pasteButton_SM->setIcon(QIcon(":/icons/editpaste"));
-    ui->copySignatureButton_SM->setIcon(QIcon(":/icons/editcopy"));
-    ui->addressBookButton_VM->setIcon(QIcon(":/icons/address-book"));
-
+    GUIUtil::setIcon(ui->addressBookButton_SM, "address-book");
+    GUIUtil::setIcon(ui->pasteButton_SM, "editpaste");
+    GUIUtil::setIcon(ui->copySignatureButton_SM, "editcopy");
+    GUIUtil::setIcon(ui->addressBookButton_VM, "address-book");
 
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
     GUIUtil::setupAddressWidget(ui->addressIn_VM, this);

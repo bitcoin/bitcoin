@@ -7,6 +7,7 @@
 
 #include <amount.h>
 #include <fs.h>
+#include <qt/guiconstants.h>
 
 #include <QEvent>
 #include <QHeaderView>
@@ -22,6 +23,7 @@ class OptionsModel;
 class SendCoinsRecipient;
 
 QT_BEGIN_NAMESPACE
+class QAbstractButton;
 class QAbstractItemView;
 class QDateTime;
 class QFont;
@@ -42,6 +44,8 @@ namespace GUIUtil
         UNCONFIRMED,
         /* Theme related blue color */
         BLUE,
+        /* Eye-friendly orange color */
+        ORANGE,
         /* Eye-friendly red color, e.g. Transaction list -- negative amount */
         RED,
         /* Eye-friendly green color */
@@ -62,6 +66,8 @@ namespace GUIUtil
         BORDER_WIDGET,
         /* Pixel color of generated QR codes. */
         QR_PIXEL,
+        /* Alternative color for black/white icons. White part will be filled with this color by default. */
+        ICON_ALTERNATIVE_COLOR,
     };
 
     /* Enumeration of possible "styles" */
@@ -84,6 +90,14 @@ namespace GUIUtil
 
     /** Helper to get css style strings which are injected into rich text through qt */
     QString getThemedStyleQString(ThemedStyle style);
+
+    /** Helper to get an icon colorized with the given color (replaces black) and colorAlternative (replaces white)  */
+    QIcon getIcon(const QString& strIcon, ThemedColor color, ThemedColor colorAlternative, const QString& strIconPath = ICONS_PATH);
+    QIcon getIcon(const QString& strIcon, ThemedColor color = ThemedColor::BLUE, const QString& strIconPath = ICONS_PATH);
+
+    /** Helper to set an icon for a button with the given color (replaces black) and colorAlternative (replaces white). */
+    void setIcon(QAbstractButton* button, const QString& strIcon, ThemedColor color, ThemedColor colorAlternative, const QSize& size);
+    void setIcon(QAbstractButton* button, const QString& strIcon, ThemedColor color = ThemedColor::BLUE, const QSize& size = QSize(BUTTON_ICONSIZE, BUTTON_ICONSIZE));
 
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);

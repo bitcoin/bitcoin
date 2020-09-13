@@ -2,7 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/validation.h>
+#include <policy/fees.h>
+#include <policy/policy.h>
 #include <privatesend/privatesend-util.h>
+#include <script/sign.h>
+#include <validation.h>
+#include <wallet/fees.h>
+
+inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
+{
+    assert(nSizePrev <= nSizeNew);
+    return ::GetSizeOfCompactSize(nSizeNew) - ::GetSizeOfCompactSize(nSizePrev);
+}
 
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
     reserveKey(pwallet)
@@ -69,4 +81,249 @@ void CKeyHolderStorage::ReturnAll()
         }
         LogPrintf("CKeyHolderStorage::%s -- %lld keys returned\n", __func__, tmp.size());
     }
+}
+
+CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn, CWallet* pwalletIn, CAmount nAmountIn) :
+    pTxBuilder(pTxBuilderIn),
+    key(pwalletIn),
+    nAmount(nAmountIn)
+{
+    assert(pTxBuilder);
+    CPubKey pubKey;
+    key.GetReservedKey(pubKey, false);
+    script = ::GetScriptForDestination(pubKey.GetID());
+}
+
+bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
+{
+    LOCK(pTxBuilder->cs_outputs);
+    if (nNewAmount <= 0 || nNewAmount - nAmount > pTxBuilder->GetAmountLeft()) {
+        return false;
+    }
+    nAmount = nNewAmount;
+    return true;
+}
+
+CTransactionBuilder::CTransactionBuilder(CWallet* pwalletIn, const CompactTallyItem& tallyItemIn) :
+    pwallet(pwalletIn),
+    dummyReserveKey(pwalletIn),
+    tallyItem(tallyItemIn)
+{
+    // Generate a feerate which will be used to consider if the remainder is dust and will go into fees or not
+    coinControl.m_discard_feerate = ::GetDiscardRate(::feeEstimator);
+    // Generate a feerate which will be used by calculations of this class and also by CWallet::CreateTransaction
+    coinControl.m_feerate = std::max(::feeEstimator.estimateSmartFee((int)::nTxConfirmTarget, nullptr, true), payTxFee);
+    // Change always goes back to origin
+    coinControl.destChange = tallyItemIn.txdest;
+    // Only allow tallyItems inputs for tx creation
+    coinControl.fAllowOtherInputs = false;
+    // Select all tallyItem outputs in the coinControl so that CreateTransaction knows what to use
+    for (const auto& outpoint : tallyItem.vecOutPoints) {
+        coinControl.Select(outpoint);
+    }
+    // Create dummy tx to calculate the exact required fees upfront for accurate amount and fee calculations
+    CMutableTransaction dummyTx;
+    // Get a comparable dummy scriptPubKey
+    CTransactionBuilderOutput dummyOutput(this, pwallet, 0);
+    CScript dummyScript = dummyOutput.GetScript();
+    dummyOutput.ReturnKey();
+    // And create dummy signatures for all inputs
+    SignatureData dummySignature;
+    ProduceSignature(DummySignatureCreator(pwallet), dummyScript, dummySignature);
+    for (auto out : tallyItem.vecOutPoints) {
+        dummyTx.vin.emplace_back(out, dummySignature.scriptSig);
+    }
+    // Calculate required bytes for the dummy tx with tallyItem's inputs only
+    nBytesBase = ::GetSerializeSize(dummyTx, SER_NETWORK, PROTOCOL_VERSION);
+    // Calculate the output size
+    nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), SER_NETWORK, PROTOCOL_VERSION);
+    // Just to make sure..
+    Clear();
+}
+
+CTransactionBuilder::~CTransactionBuilder()
+{
+    Clear();
+}
+
+void CTransactionBuilder::Clear()
+{
+    std::vector<std::unique_ptr<CTransactionBuilderOutput>> vecOutputsTmp;
+    {
+        // Don't hold cs_outputs while clearing the outputs which might indirectly call lock cs_wallet
+        LOCK(cs_outputs);
+        std::swap(vecOutputs, vecOutputsTmp);
+        vecOutputs.clear();
+    }
+
+    for (auto& key : vecOutputsTmp) {
+        if (fKeepKeys) {
+            key->KeepKey();
+        } else {
+            key->ReturnKey();
+        }
+    }
+    // Always return this key just to make sure..
+    dummyReserveKey.ReturnKey();
+}
+
+bool CTransactionBuilder::CouldAddOutput(CAmount nAmountOutput) const
+{
+    if (nAmountOutput < 0) {
+        return false;
+    }
+    // Adding another output can change the serialized size of the vout size hence + GetSizeOfCompactSizeDiff()
+    unsigned int nBytes = GetBytesTotal() + nBytesOutput + GetSizeOfCompactSizeDiff(1);
+    return GetAmountLeft(GetAmountInitial(), GetAmountUsed() + nAmountOutput, GetFee(nBytes)) >= 0;
+}
+
+bool CTransactionBuilder::CouldAddOutputs(const std::vector<CAmount>& vecOutputAmounts) const
+{
+    CAmount nAmountAdditional{0};
+    assert(vecOutputAmounts.size() < INT_MAX);
+    int nBytesAdditional = nBytesOutput * (int)vecOutputAmounts.size();
+    for (const auto nAmountOutput : vecOutputAmounts) {
+        if (nAmountOutput < 0) {
+            return false;
+        }
+        nAmountAdditional += nAmountOutput;
+    }
+    // Adding other outputs can change the serialized size of the vout size hence + GetSizeOfCompactSizeDiff()
+    unsigned int nBytes = GetBytesTotal() + nBytesAdditional + GetSizeOfCompactSizeDiff(vecOutputAmounts.size());
+    return GetAmountLeft(GetAmountInitial(), GetAmountUsed() + nAmountAdditional, GetFee(nBytes)) >= 0;
+}
+
+CTransactionBuilderOutput* CTransactionBuilder::AddOutput(CAmount nAmountOutput)
+{
+    LOCK(cs_outputs);
+    if (CouldAddOutput(nAmountOutput)) {
+        vecOutputs.push_back(std::make_unique<CTransactionBuilderOutput>(this, pwallet, nAmountOutput));
+        return vecOutputs.back().get();
+    }
+    return nullptr;
+}
+
+unsigned int CTransactionBuilder::GetBytesTotal() const
+{
+    // Adding other outputs can change the serialized size of the vout size hence + GetSizeOfCompactSizeDiff()
+    return nBytesBase + vecOutputs.size() * nBytesOutput + ::GetSizeOfCompactSizeDiff(0, vecOutputs.size());
+}
+
+CAmount CTransactionBuilder::GetAmountLeft(const CAmount nAmountInitial, const CAmount nAmountUsed, const CAmount nFee)
+{
+    return nAmountInitial - nAmountUsed - nFee;
+}
+
+CAmount CTransactionBuilder::GetAmountUsed() const
+{
+    CAmount nAmountUsed{0};
+    for (const auto& out : vecOutputs) {
+        nAmountUsed += out->GetAmount();
+    }
+    return nAmountUsed;
+}
+
+CAmount CTransactionBuilder::GetFee(unsigned int nBytes) const
+{
+    CAmount nFeeCalc = coinControl.m_feerate->GetFee(nBytes);
+    CAmount nRequiredFee = GetRequiredFee(nBytes);
+    if (nRequiredFee > nFeeCalc) {
+        nFeeCalc = nRequiredFee;
+    }
+    if (nFeeCalc > ::maxTxFee) {
+        nFeeCalc = ::maxTxFee;
+    }
+    return nFeeCalc;
+}
+
+int CTransactionBuilder::GetSizeOfCompactSizeDiff(size_t nAdd) const
+{
+    size_t nSize = vecOutputs.size();
+    unsigned int ret = ::GetSizeOfCompactSizeDiff(nSize, nSize + nAdd);
+    assert(ret <= INT_MAX);
+    return (int)ret;
+}
+
+bool CTransactionBuilder::IsDust(CAmount nAmount) const
+{
+    return ::IsDust(CTxOut(nAmount, ::GetScriptForDestination(tallyItem.txdest)), coinControl.m_discard_feerate.get());
+}
+
+bool CTransactionBuilder::Commit(std::string& strResult)
+{
+    CWalletTx wtx;
+    CAmount nFeeRet = 0;
+    int nChangePosRet = -1;
+
+    // Transform the outputs to the format CWallet::CreateTransaction requires
+    std::vector<CRecipient> vecSend;
+    {
+        LOCK(cs_outputs);
+        vecSend.reserve(vecOutputs.size());
+        for (const auto& out : vecOutputs) {
+            vecSend.push_back((CRecipient){out->GetScript(), out->GetAmount(), false});
+        }
+    }
+
+    if (!pwallet->CreateTransaction(vecSend, wtx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
+        return false;
+    }
+
+    CAmount nAmountLeft = GetAmountLeft();
+    bool fDust = IsDust(nAmountLeft);
+    // If there is a either remainder which is considered to be dust (will be added to fee in this case) or no amount left there should be no change output, return if there is a change output.
+    if (nChangePosRet != -1 && fDust) {
+        strResult = strprintf("Unexpected change output %s at position %d", wtx.tx->vout[nChangePosRet].ToString(), nChangePosRet);
+        return false;
+    }
+
+    // If there is a remainder which is not considered to be dust it should end up in a change output, return if not.
+    if (nChangePosRet == -1 && !fDust) {
+        strResult = strprintf("Change output missing: %d", nAmountLeft);
+        return false;
+    }
+
+    CAmount nFeeAdditional{0};
+    unsigned int nBytesAdditional{0};
+
+    if (fDust) {
+        nFeeAdditional = nAmountLeft;
+    } else {
+        // Add a change output and GetSizeOfCompactSizeDiff(1) as another output can changes the serialized size of the vout size in CTransaction
+        nBytesAdditional = nBytesOutput + GetSizeOfCompactSizeDiff(1);
+    }
+
+    // If the calculated fee does not match the fee returned by CreateTransaction aka if this check fails something is wrong!
+    CAmount nFeeCalc = GetFee(GetBytesTotal() + nBytesAdditional) + nFeeAdditional;
+    if (nFeeRet != nFeeCalc) {
+        strResult = strprintf("Fee validation failed -> nFeeRet: %d, nFeeCalc: %d, nFeeAdditional: %d, nBytesAdditional: %d, %s", nFeeRet, nFeeCalc, nFeeAdditional, nBytesAdditional, ToString());
+        return false;
+    }
+
+    CValidationState state;
+    if (!pwallet->CommitTransaction(wtx, dummyReserveKey, g_connman.get(), state)) {
+        strResult = state.GetRejectReason();
+        return false;
+    }
+
+    fKeepKeys = true;
+
+    strResult = wtx.GetHash().ToString();
+
+    return true;
+}
+
+std::string CTransactionBuilder::ToString() const
+{
+    return strprintf("CTransactionBuilder(Amount initial: %d, Amount left: %d, Bytes base: %d, Bytes output: %d, Bytes total: %d, Amount used: %d, Outputs: %d, Fee rate: %d, Discard fee rate: %d, Fee: %d)",
+        GetAmountInitial(),
+        GetAmountLeft(),
+        nBytesBase,
+        nBytesOutput,
+        GetBytesTotal(),
+        GetAmountUsed(),
+        CountOutputs(),
+        coinControl.m_feerate->GetFeePerK(),
+        coinControl.m_discard_feerate->GetFeePerK(),
+        GetFee(GetBytesTotal()));
 }

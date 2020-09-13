@@ -31,6 +31,8 @@ foreverHidden(false)
                       ui->labelEstimatedTimeLeft,
                      }, GUIUtil::FontWeight::Bold);
 
+    ui->warningIcon->setPixmap(GUIUtil::getIcon("warning", GUIUtil::ThemedColor::ORANGE).pixmap(48, 48));
+
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
     if (parent) {
         parent->installEventFilter(this);
