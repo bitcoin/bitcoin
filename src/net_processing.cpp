@@ -512,6 +512,9 @@ struct Peer {
     /** Whether this peer should be disconnected and marked as discouraged (unless it has the noban permission). */
     bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
 
+    /** Set of txids to reconsider once their parent transactions have been accepted **/
+    std::set<uint256> m_orphan_work_set;
+
     Peer(NodeId id) : m_id(id) {}
 };
 
@@ -2363,6 +2366,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         return;
     }
 
+    PeerRef peer = GetPeerRef(pfrom.GetId());
+    if (peer == nullptr) return;
 
     if (msg_type == NetMsgType::VERSION) {
         // Each connection can only send one version message
@@ -3052,7 +3057,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
-                        pfrom.m_orphan_work_set.insert(elem->first);
+                        peer->m_orphan_work_set.insert(elem->first);
                     }
                 }
             }
@@ -3069,7 +3074,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             }
 
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(pfrom.m_orphan_work_set);
+            ProcessOrphanTx(peer->m_orphan_work_set);
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
@@ -3865,12 +3870,15 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
 {
     bool fMoreWork = false;
 
+    PeerRef peer = GetPeerRef(pfrom->GetId());
+    if (peer == nullptr) return false;
+
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(*pfrom, m_chainparams, m_connman, m_mempool, interruptMsgProc);
 
-    if (!pfrom->m_orphan_work_set.empty()) {
+    if (!peer->m_orphan_work_set.empty()) {
         LOCK2(cs_main, g_cs_orphans);
-        ProcessOrphanTx(pfrom->m_orphan_work_set);
+        ProcessOrphanTx(peer->m_orphan_work_set);
     }
 
     if (pfrom->fDisconnect)
@@ -3879,7 +3887,7 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
     // this maintains the order of responses
     // and prevents vRecvGetData to grow unbounded
     if (!pfrom->vRecvGetData.empty()) return true;
-    if (!pfrom->m_orphan_work_set.empty()) return true;
+    if (!peer->m_orphan_work_set.empty()) return true;
 
     // Don't bother if send buffer is too full to respond anyway
     if (pfrom->fPauseSend)
