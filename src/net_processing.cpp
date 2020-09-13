@@ -513,7 +513,7 @@ struct Peer {
     bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
 
     /** Set of txids to reconsider once their parent transactions have been accepted **/
-    std::set<uint256> m_orphan_work_set;
+    std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
 
     Peer(NodeId id) : m_id(id) {}
 };
@@ -3876,9 +3876,11 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(*pfrom, m_chainparams, m_connman, m_mempool, interruptMsgProc);
 
-    if (!peer->m_orphan_work_set.empty()) {
+    {
         LOCK2(cs_main, g_cs_orphans);
-        ProcessOrphanTx(peer->m_orphan_work_set);
+        if (!peer->m_orphan_work_set.empty()) {
+            ProcessOrphanTx(peer->m_orphan_work_set);
+        }
     }
 
     if (pfrom->fDisconnect)
@@ -3887,7 +3889,10 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
     // this maintains the order of responses
     // and prevents vRecvGetData to grow unbounded
     if (!pfrom->vRecvGetData.empty()) return true;
-    if (!peer->m_orphan_work_set.empty()) return true;
+    {
+        LOCK(g_cs_orphans);
+        if (!peer->m_orphan_work_set.empty()) return true;
+    }
 
     // Don't bother if send buffer is too full to respond anyway
     if (pfrom->fPauseSend)
