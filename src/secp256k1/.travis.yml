@@ -17,19 +17,19 @@ compiler:
   - gcc
 env:
   global:
-    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=yes  ECMULTGENPRECISION=auto  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=no  RECOVERY=no  EXPERIMENTAL=no CTIMETEST=yes BENCH=yes ITERS=2
+    - WIDEMUL=auto  BIGNUM=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=yes  ECMULTGENPRECISION=auto  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=no  RECOVERY=no SCHNORRSIG=no EXPERIMENTAL=no CTIMETEST=yes BENCH=yes ITERS=2
   matrix:
-    - SCALAR=32bit    RECOVERY=yes
-    - SCALAR=32bit    FIELD=32bit       ECDH=yes  EXPERIMENTAL=yes
-    - SCALAR=64bit
-    - FIELD=64bit     RECOVERY=yes
-    - FIELD=64bit     ENDOMORPHISM=yes
-    - FIELD=64bit     ENDOMORPHISM=yes  ECDH=yes EXPERIMENTAL=yes
-    - FIELD=64bit                       ASM=x86_64
-    - FIELD=64bit     ENDOMORPHISM=yes  ASM=x86_64
-    - FIELD=32bit     ENDOMORPHISM=yes
+    - WIDEMUL=int64   RECOVERY=yes
+    - WIDEMUL=int64   ECDH=yes  EXPERIMENTAL=yes SCHNORRSIG=yes
+    - WIDEMUL=int64   ENDOMORPHISM=yes
+    - WIDEMUL=int128
+    - WIDEMUL=int128  RECOVERY=yes EXPERIMENTAL=yes SCHNORRSIG=yes
+    - WIDEMUL=int128  ENDOMORPHISM=yes
+    - WIDEMUL=int128  ENDOMORPHISM=yes  ECDH=yes EXPERIMENTAL=yes SCHNORRSIG=yes
+    - WIDEMUL=int128                    ASM=x86_64
+    - WIDEMUL=int128  ENDOMORPHISM=yes  ASM=x86_64
     - BIGNUM=no
-    - BIGNUM=no       ENDOMORPHISM=yes RECOVERY=yes EXPERIMENTAL=yes
+    - BIGNUM=no       ENDOMORPHISM=yes RECOVERY=yes EXPERIMENTAL=yes SCHNORRSIG=yes
     - BIGNUM=no       STATICPRECOMPUTATION=no
     - BUILD=distcheck CTIMETEST= BENCH=
     - CPPFLAGS=-DDETERMINISTIC
@@ -83,6 +83,10 @@ matrix:
             - valgrind
             - libtool-bin
             - libc6-dbg:i386
+    # S390x build (big endian system)
+    - compiler: gcc
+      env: HOST=s390x-unknown-linux-gnu ECDH=yes RECOVERY=yes EXPERIMENTAL=yes CTIMETEST=
+      arch: s390x
 
 # We use this to install macOS dependencies instead of the built in `homebrew` plugin,
 # because in xcode earlier than 11 they have a bug requiring updating the system which overall takes ~8 minutes.
