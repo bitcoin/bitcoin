@@ -174,6 +174,8 @@ std::string mastercore::strMPProperty(uint32_t propertyId)
 
 std::string FormatDivisibleShortMP(int64_t n)
 {
+    if (n == std::numeric_limits<int64_t>::min()) // Avoids overflow when getting absolute value
+        return "ErrorAmount";
     int64_t n_abs = (n > 0 ? n : -n);
     int64_t quotient = n_abs / COIN;
     int64_t remainder = n_abs % COIN;
@@ -193,6 +195,8 @@ std::string FormatDivisibleMP(int64_t n, bool fSign)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
+    if (n == std::numeric_limits<int64_t>::min()) // Avoids overflow when getting absolute value
+        return "ErrorAmount";
     int64_t n_abs = (n > 0 ? n : -n);
     int64_t quotient = n_abs / COIN;
     int64_t remainder = n_abs % COIN;
