@@ -82,6 +82,17 @@ P2P and network changes
   node using P2P relay. This version reduces the initial broadcast guarantees
   for wallet transactions submitted via P2P to a node running the wallet. (#18038)
 
+- The Tor onion service that is automatically created by setting the
+  `-listenonion` configuration parameter will now be created as a Tor v3 service
+  instead of Tor v2. The private key that was used for Tor v2 (if any) will be
+  left untouched in the `onion_private_key` file in the data directory (see
+  `-datadir`) and can be removed if not needed. Bitcoin Core will no longer
+  attempt to read it. The private key for the Tor v3 service will be saved in a
+  file named `onion_v3_private_key`. To use the deprecated Tor v2 service (not
+  recommended), then `onion_private_key` can be copied over
+  `onion_v3_private_key`, e.g.
+  `cp -f onion_private_key onion_v3_private_key`. (#19954)
+
 Updated RPCs
 ------------
 
