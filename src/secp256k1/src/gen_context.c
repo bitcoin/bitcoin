@@ -13,6 +13,7 @@
 #include "basic-config.h"
 
 #include "include/secp256k1.h"
+#include "assumptions.h"
 #include "util.h"
 #include "field_impl.h"
 #include "scalar_impl.h"
