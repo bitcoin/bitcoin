@@ -5832,7 +5832,7 @@ void DoGethMaintenance() {
             // start node and relayer again
             int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
             int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-            bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
+            bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
             const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
             StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
             int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
