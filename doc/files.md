@@ -56,7 +56,7 @@ Subdirectory       | File(s)               | Description
 `./`               | `fee_estimates.dat`   | Stores statistics used to estimate minimum transaction fees and priorities required for confirmation
 `./`               | `guisettings.ini.bak` | Backup of former [GUI settings](#gui-settings) after `-resetguisettings` option is used
 `./`               | `mempool.dat`         | Dump of the mempool's transactions
-`./`               | `onion_private_key`   | Cached Tor onion service private key for `-listenonion` option
+`./`               | `onion_v3_private_key` | Cached Tor onion service private key for `-listenonion` option
 `./`               | `peers.dat`           | Peer IP address database (custom format)
 `./`               | `settings.json`       | Read-write settings set through GUI or RPC interfaces, augmenting manual settings from [bitcoin.conf](bitcoin-conf.md). File is created automatically if read-write settings storage is not disabled with `-nosettings` option. Path can be specified with `-settings` option
 `./`               | `.cookie`             | Session RPC authentication cookie; if used, created at start and deleted on shutdown; can be specified by `-rpccookiefile` option
@@ -98,6 +98,7 @@ Path           | Description | Repository notes
 `blkindex.dat` | Blockchain index BDB database; replaced by {`chainstate/`, `blocks/index/`, `blocks/revNNNNN.dat`<sup>[\[2\]](#note2)</sup>} in 0.8.0 | [PR #1677](https://github.com/bitcoin/bitcoin/pull/1677)
 `blk000?.dat`  | Block data (custom format, 2 GiB per file); replaced by `blocks/blkNNNNN.dat`<sup>[\[2\]](#note2)</sup> in 0.8.0 | [PR #1677](https://github.com/bitcoin/bitcoin/pull/1677)
 `addr.dat`     | Peer IP address BDB database; replaced by `peers.dat` in [0.7.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.7.0.md) | [PR #1198](https://github.com/bitcoin/bitcoin/pull/1198), [`928d3a01`](https://github.com/bitcoin/bitcoin/commit/928d3a011cc66c7f907c4d053f674ea77dc611cc)
+`onion_private_key` | Cached Tor onion service private key for `-listenonion` option. Was used for Tor v2 services; replaced by `onion_v3_private_key` in [0.21.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.21.0.md) | [PR #19954](https://github.com/bitcoin/bitcoin/pull/19954)
 
 ## Notes
 
