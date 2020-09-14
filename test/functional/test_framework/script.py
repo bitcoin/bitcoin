@@ -6,10 +6,14 @@
 
 This file is modified from python-bitcoinlib.
 """
+
+from collections import namedtuple
 import hashlib
 import struct
 import unittest
 from typing import List, Dict
+
+from .key import TaggedHash, tweak_add_pubkey
 
 from .messages import (
     CTransaction,
@@ -22,7 +26,12 @@ from .messages import (
 )
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
+LOCKTIME_THRESHOLD = 500000000
+ANNEX_TAG = 0x50
+
 OPCODE_NAMES = {}  # type: Dict[CScriptOp, str]
+
+LEAF_VERSION_TAPSCRIPT = 0xc0
 
 def hash160(s):
     return hashlib.new('ripemd160', sha256(s)).digest()
@@ -239,11 +248,8 @@ OP_NOP8 = CScriptOp(0xb7)
 OP_NOP9 = CScriptOp(0xb8)
 OP_NOP10 = CScriptOp(0xb9)
 
-# template matching params
-OP_SMALLINTEGER = CScriptOp(0xfa)
-OP_PUBKEYS = CScriptOp(0xfb)
-OP_PUBKEYHASH = CScriptOp(0xfd)
-OP_PUBKEY = CScriptOp(0xfe)
+# BIP 342 opcodes (Tapscript)
+OP_CHECKSIGADD = CScriptOp(0xba)
 
 OP_INVALIDOPCODE = CScriptOp(0xff)
 
@@ -359,10 +365,7 @@ OPCODE_NAMES.update({
     OP_NOP8: 'OP_NOP8',
     OP_NOP9: 'OP_NOP9',
     OP_NOP10: 'OP_NOP10',
-    OP_SMALLINTEGER: 'OP_SMALLINTEGER',
-    OP_PUBKEYS: 'OP_PUBKEYS',
-    OP_PUBKEYHASH: 'OP_PUBKEYHASH',
-    OP_PUBKEY: 'OP_PUBKEY',
+    OP_CHECKSIGADD: 'OP_CHECKSIGADD',
     OP_INVALIDOPCODE: 'OP_INVALIDOPCODE',
 })
 
@@ -593,6 +596,7 @@ class CScript(bytes):
         return n
 
 
+SIGHASH_DEFAULT = 0 # Taproot-only default, semantics same as SIGHASH_ALL
 SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
@@ -614,7 +618,6 @@ def FindAndDelete(script, sig):
     if not skip:
         r += script[last_sop_idx:]
     return CScript(r)
-
 
 def LegacySignatureHash(script, txTo, inIdx, hashtype):
     """Consensus-correct SignatureHash
@@ -738,3 +741,113 @@ class TestFrameworkScript(unittest.TestCase):
         values = [0, 1, -1, -2, 127, 128, -255, 256, (1 << 15) - 1, -(1 << 16), (1 << 24) - 1, (1 << 31), 1 - (1 << 32), 1 << 40, 1500, -1500]
         for value in values:
             self.assertEqual(CScriptNum.decode(CScriptNum.encode(CScriptNum(value))), value)
+
+def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpath = False, script = CScript(), codeseparator_pos = -1, annex = None, leaf_ver = LEAF_VERSION_TAPSCRIPT):
+    assert (len(txTo.vin) == len(spent_utxos))
+    assert (input_index < len(txTo.vin))
+    out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
+    in_type = hash_type & SIGHASH_ANYONECANPAY
+    spk = spent_utxos[input_index].scriptPubKey
+    ss = bytes([0, hash_type]) # epoch, hash_type
+    ss += struct.pack("<i", txTo.nVersion)
+    ss += struct.pack("<I", txTo.nLockTime)
+    if in_type != SIGHASH_ANYONECANPAY:
+        ss += sha256(b"".join(i.prevout.serialize() for i in txTo.vin))
+        ss += sha256(b"".join(struct.pack("<q", u.nValue) for u in spent_utxos))
+        ss += sha256(b"".join(ser_string(u.scriptPubKey) for u in spent_utxos))
+        ss += sha256(b"".join(struct.pack("<I", i.nSequence) for i in txTo.vin))
+    if out_type == SIGHASH_ALL:
+        ss += sha256(b"".join(o.serialize() for o in txTo.vout))
+    spend_type = 0
+    if annex is not None:
+        spend_type |= 1
+    if (scriptpath):
+        spend_type |= 2
+    ss += bytes([spend_type])
+    if in_type == SIGHASH_ANYONECANPAY:
+        ss += txTo.vin[input_index].prevout.serialize()
+        ss += struct.pack("<q", spent_utxos[input_index].nValue)
+        ss += ser_string(spk)
+        ss += struct.pack("<I", txTo.vin[input_index].nSequence)
+    else:
+        ss += struct.pack("<I", input_index)
+    if (spend_type & 1):
+        ss += sha256(ser_string(annex))
+    if out_type == SIGHASH_SINGLE:
+        if input_index < len(txTo.vout):
+            ss += sha256(txTo.vout[input_index].serialize())
+        else:
+            ss += bytes(0 for _ in range(32))
+    if (scriptpath):
+        ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(script))
+        ss += bytes([0])
+        ss += struct.pack("<i", codeseparator_pos)
+    assert len(ss) ==  175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
+    return TaggedHash("TapSighash", ss)
+
+def taproot_tree_helper(scripts):
+    if len(scripts) == 0:
+        return ([], bytes(0 for _ in range(32)))
+    if len(scripts) == 1:
+        # One entry: treat as a leaf
+        script = scripts[0]
+        assert(not callable(script))
+        if isinstance(script, list):
+            return taproot_tree_helper(script)
+        assert(isinstance(script, tuple))
+        version = LEAF_VERSION_TAPSCRIPT
+        name = script[0]
+        code = script[1]
+        if len(script) == 3:
+            version = script[2]
+        assert version & 1 == 0
+        assert isinstance(code, bytes)
+        h = TaggedHash("TapLeaf", bytes([version]) + ser_string(code))
+        if name is None:
+            return ([], h)
+        return ([(name, version, code, bytes())], h)
+    elif len(scripts) == 2 and callable(scripts[1]):
+        # Two entries, and the right one is a function
+        left, left_h = taproot_tree_helper(scripts[0:1])
+        right_h = scripts[1](left_h)
+        left = [(name, version, script, control + right_h) for name, version, script, control in left]
+        right = []
+    else:
+        # Two or more entries: descend into each side
+        split_pos = len(scripts) // 2
+        left, left_h = taproot_tree_helper(scripts[0:split_pos])
+        right, right_h = taproot_tree_helper(scripts[split_pos:])
+        left = [(name, version, script, control + right_h) for name, version, script, control in left]
+        right = [(name, version, script, control + left_h) for name, version, script, control in right]
+    if right_h < left_h:
+        right_h, left_h = left_h, right_h
+    h = TaggedHash("TapBranch", left_h + right_h)
+    return (left + right, h)
+
+TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,inner_pubkey,negflag,tweak,leaves")
+TaprootLeafInfo = namedtuple("TaprootLeafInfo", "script,version,merklebranch")
+
+def taproot_construct(pubkey, scripts=None):
+    """Construct a tree of Taproot spending conditions
+
+    pubkey: an ECPubKey object for the internal pubkey
+    scripts: a list of items; each item is either:
+             - a (name, CScript) tuple
+             - a (name, CScript, leaf version) tuple
+             - another list of items (with the same structure)
+             - a function, which specifies how to compute the hashing partner
+               in function of the hash of whatever it is combined with
+
+    Returns: script (sPK or redeemScript), tweak, {name:(script, leaf version, negation flag, innerkey, merklepath), ...}
+    """
+    if scripts is None:
+        scripts = []
+
+    ret, h = taproot_tree_helper(scripts)
+    tweak = TaggedHash("TapTweak", pubkey + h)
+    tweaked, negated = tweak_add_pubkey(pubkey, tweak)
+    leaves = dict((name, TaprootLeafInfo(script, version, merklebranch)) for name, version, script, merklebranch in ret)
+    return TaprootInfo(CScript([OP_1, tweaked]), pubkey, negated + 0, tweak, leaves)
+
+def is_op_success(o):
+    return o == 0x50 or o == 0x62 or o == 0x89 or o == 0x8a or o == 0x8d or o == 0x8e or (o >= 0x7e and o <= 0x81) or (o >= 0x83 and o <= 0x86) or (o >= 0x95 and o <= 0x99) or (o >= 0xbb and o <= 0xfe)
