@@ -476,7 +476,7 @@ def verify_schnorr(key, sig, msg):
         return False
     return True
 
-def sign_schnorr(key, msg, aux=None):
+def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
     """Create a Schnorr signature (see BIP 340)."""
 
     if aux is None:
@@ -490,13 +490,13 @@ def sign_schnorr(key, msg, aux=None):
     if sec == 0 or sec >= SECP256K1_ORDER:
         return None
     P = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, sec)]))
-    if not SECP256K1.has_even_y(P):
+    if SECP256K1.has_even_y(P) == flip_p:
         sec = SECP256K1_ORDER - sec
     t = (sec ^ int.from_bytes(TaggedHash("BIP0340/aux", aux), 'big')).to_bytes(32, 'big')
     kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + P[0].to_bytes(32, 'big') + msg), 'big') % SECP256K1_ORDER
     assert kp != 0
     R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, kp)]))
-    k = kp if SECP256K1.has_even_y(R) else SECP256K1_ORDER - kp
+    k = kp if SECP256K1.has_even_y(R) != flip_r else SECP256K1_ORDER - kp
     e = int.from_bytes(TaggedHash("BIP0340/challenge", R[0].to_bytes(32, 'big') + P[0].to_bytes(32, 'big') + msg), 'big') % SECP256K1_ORDER
     return R[0].to_bytes(32, 'big') + ((k + e * sec) % SECP256K1_ORDER).to_bytes(32, 'big')
 
