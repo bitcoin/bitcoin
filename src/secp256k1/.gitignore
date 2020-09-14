@@ -1,9 +1,9 @@
 bench_inv
 bench_ecdh
 bench_ecmult
+bench_schnorrsig
 bench_sign
 bench_verify
-bench_schnorr_verify
 bench_recover
 bench_internal
 tests
@@ -31,6 +31,8 @@ libtool
 *.lo
 *.o
 *~
+*.log
+*.trs
 src/libsecp256k1-config.h
 src/libsecp256k1-config.h.in
 src/ecmult_static_context.h

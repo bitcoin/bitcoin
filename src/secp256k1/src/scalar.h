@@ -8,6 +8,7 @@
 #define SECP256K1_SCALAR_H
 
 #include "num.h"
+#include "util.h"
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"
@@ -15,12 +16,12 @@
 
 #if defined(EXHAUSTIVE_TEST_ORDER)
 #include "scalar_low.h"
-#elif defined(USE_SCALAR_4X64)
+#elif defined(SECP256K1_WIDEMUL_INT128)
 #include "scalar_4x64.h"
-#elif defined(USE_SCALAR_8X32)
+#elif defined(SECP256K1_WIDEMUL_INT64)
 #include "scalar_8x32.h"
 #else
-#error "Please select scalar implementation"
+#error "Please select wide multiplication implementation"
 #endif
 
 /** Clear a scalar to prevent the leak of sensitive data. */

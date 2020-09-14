@@ -3,10 +3,6 @@
 set -e
 set -x
 
-if [ -n "$HOST" ]
-then
-    export USE_HOST="--host=$HOST"
-fi
 if [ "$HOST" = "i686-linux-gnu" ]
 then
     export CC="$CC -m32"
@@ -18,9 +14,11 @@ fi
 
 ./configure \
     --enable-experimental="$EXPERIMENTAL" --enable-endomorphism="$ENDOMORPHISM" \
-    --with-field="$FIELD" --with-bignum="$BIGNUM" --with-asm="$ASM" --with-scalar="$SCALAR" \
+    --with-test-override-wide-multiply="$WIDEMUL" --with-bignum="$BIGNUM" --with-asm="$ASM" \
     --enable-ecmult-static-precomputation="$STATICPRECOMPUTATION" --with-ecmult-gen-precision="$ECMULTGENPRECISION" \
-    --enable-module-ecdh="$ECDH" --enable-module-recovery="$RECOVERY" "$EXTRAFLAGS" "$USE_HOST"
+    --enable-module-ecdh="$ECDH" --enable-module-recovery="$RECOVERY" \
+    --enable-module-schnorrsig="$SCHNORRSIG" \
+    --host="$HOST" $EXTRAFLAGS
 
 if [ -n "$BUILD" ]
 then

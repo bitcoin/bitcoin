@@ -105,16 +105,22 @@ static int secp256k1_wnaf_const(int *wnaf, const secp256k1_scalar *scalar, int w
     /* 4 */
     u_last = secp256k1_scalar_shr_int(&s, w);
     do {
-        int sign;
         int even;
 
         /* 4.1 4.4 */
         u = secp256k1_scalar_shr_int(&s, w);
         /* 4.2 */
         even = ((u & 1) == 0);
-        sign = 2 * (u_last > 0) - 1;
-        u += sign * even;
-        u_last -= sign * even * (1 << w);
+        /* In contrast to the original algorithm, u_last is always > 0 and
+         * therefore we do not need to check its sign. In particular, it's easy
+         * to see that u_last is never < 0 because u is never < 0. Moreover,
+         * u_last is never = 0 because u is never even after a loop
+         * iteration. The same holds analogously for the initial value of
+         * u_last (in the first loop iteration). */
+        VERIFY_CHECK(u_last > 0);
+        VERIFY_CHECK((u_last & 1) == 1);
+        u += even;
+        u_last -= even * (1 << w);
 
         /* 4.3, adapted for global sign change */
         wnaf[word++] = u_last * global_sign;
@@ -202,7 +208,7 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
         int n;
         int j;
         for (j = 0; j < WINDOW_A - 1; ++j) {
-            secp256k1_gej_double_nonzero(r, r);
+            secp256k1_gej_double(r, r);
         }
 
         n = wnaf_1[i];

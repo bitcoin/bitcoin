@@ -14,12 +14,12 @@
 #include "util.h"
 #include "num.h"
 
-#if defined(USE_FIELD_10X26)
-#include "field_10x26_impl.h"
-#elif defined(USE_FIELD_5X52)
+#if defined(SECP256K1_WIDEMUL_INT128)
 #include "field_5x52_impl.h"
+#elif defined(SECP256K1_WIDEMUL_INT64)
+#include "field_10x26_impl.h"
 #else
-#error "Please select field implementation"
+#error "Please select wide multiplication implementation"
 #endif
 
 SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
