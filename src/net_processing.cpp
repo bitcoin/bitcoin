@@ -1193,8 +1193,9 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
     std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
 
     for (const uint256& txid : unbroadcast_txids) {
-        // Sanity check: all unbroadcast txns should exist in the mempool
-        if (m_mempool.exists(txid)) {
+        CTransactionRef tx = m_mempool.get(txid);
+
+        if (tx != nullptr) {
             RelayTransaction(txid);
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
