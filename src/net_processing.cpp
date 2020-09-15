@@ -889,15 +889,16 @@ void PeerManager::InitializeNode(CNode *pnode) {
 
 void PeerManager::ReattemptInitialBroadcast(CScheduler& scheduler) const
 {
-    std::map<uint256, uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+    std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
 
-    for (const auto& elem : unbroadcast_txids) {
-        // Sanity check: all unbroadcast txns should exist in the mempool
-        if (m_mempool.exists(elem.first)) {
+    for (const auto& txid : unbroadcast_txids) {
+        CTransactionRef tx = m_mempool.get(txid);
+
+        if (tx != nullptr) {
             LOCK(cs_main);
-            RelayTransaction(elem.first, elem.second, m_connman);
+            RelayTransaction(txid, tx->GetWitnessHash(), m_connman);
         } else {
-            m_mempool.RemoveUnbroadcastTx(elem.first, true);
+            m_mempool.RemoveUnbroadcastTx(txid, true);
         }
     }
 
@@ -1492,8 +1493,9 @@ void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman&
     {
         LockAssertion lock(::cs_main);
 
-        CNodeState &state = *State(pnode->GetId());
-        if (state.m_wtxid_relay) {
+        CNodeState* state = State(pnode->GetId());
+        if (state == nullptr) return;
+        if (state->m_wtxid_relay) {
             pnode->PushTxInventory(wtxid);
         } else {
             pnode->PushTxInventory(txid);
@@ -3105,8 +3107,6 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 if (RecursiveDynamicUsage(*ptx) < 100000) {
                     AddToCompactExtraTransactions(ptx);
                 }
-            } else if (tx.HasWitness() && RecursiveDynamicUsage(*ptx) < 100000) {
-                AddToCompactExtraTransactions(ptx);
             }
 
             if (pfrom.HasPermission(PF_FORCERELAY)) {

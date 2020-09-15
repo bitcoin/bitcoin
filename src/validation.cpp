@@ -5123,7 +5123,7 @@ bool LoadMempool(CTxMemPool& pool)
         }
 
         // TODO: remove this try except in v0.22
-        std::map<uint256, uint256> unbroadcast_txids;
+        std::set<uint256> unbroadcast_txids;
         try {
           file >> unbroadcast_txids;
           unbroadcast = unbroadcast_txids.size();
@@ -5131,13 +5131,10 @@ bool LoadMempool(CTxMemPool& pool)
           // mempool.dat files created prior to v0.21 will not have an
           // unbroadcast set. No need to log a failure if parsing fails here.
         }
-        for (const auto& elem : unbroadcast_txids) {
-            // Don't add unbroadcast transactions that didn't get back into the
-            // mempool.
-            const CTransactionRef& added_tx = pool.get(elem.first);
-            if (added_tx != nullptr) {
-                pool.AddUnbroadcastTx(elem.first, added_tx->GetWitnessHash());
-            }
+        for (const auto& txid : unbroadcast_txids) {
+            // Ensure transactions were accepted to mempool then add to
+            // unbroadcast set.
+            if (pool.get(txid) != nullptr) pool.AddUnbroadcastTx(txid);
         }
     } catch (const std::exception& e) {
         LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
@@ -5154,7 +5151,7 @@ bool DumpMempool(const CTxMemPool& pool)
 
     std::map<uint256, CAmount> mapDeltas;
     std::vector<TxMempoolInfo> vinfo;
-    std::map<uint256, uint256> unbroadcast_txids;
+    std::set<uint256> unbroadcast_txids;
 
     static Mutex dump_mutex;
     LOCK(dump_mutex);
