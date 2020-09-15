@@ -11,6 +11,7 @@
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
+#include <policy/policy.h>
 #include <policy/rbf.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
@@ -2955,13 +2956,22 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         RPCTypeCheckObj(options,
             {
                 {"add_inputs", UniValueType(UniValue::VBOOL)},
+                {"add_to_wallet", UniValueType(UniValue::VBOOL)},
                 {"changeAddress", UniValueType(UniValue::VSTR)},
+                {"change_address", UniValueType(UniValue::VSTR)},
                 {"changePosition", UniValueType(UniValue::VNUM)},
+                {"change_position", UniValueType(UniValue::VNUM)},
                 {"change_type", UniValueType(UniValue::VSTR)},
                 {"includeWatching", UniValueType(UniValue::VBOOL)},
+                {"include_watching", UniValueType(UniValue::VBOOL)},
+                {"inputs", UniValueType(UniValue::VARR)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
-                {"feeRate", UniValueType()}, // will be checked below
+                {"lock_unspents", UniValueType(UniValue::VBOOL)},
+                {"locktime", UniValueType(UniValue::VNUM)},
+                {"feeRate", UniValueType()}, // will be checked below,
+                {"psbt", UniValueType(UniValue::VBOOL)},
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
+                {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
@@ -2972,22 +2982,24 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             coinControl.m_add_inputs = options["add_inputs"].get_bool();
         }
 
-        if (options.exists("changeAddress")) {
-            CTxDestination dest = DecodeDestination(options["changeAddress"].get_str());
+        if (options.exists("changeAddress") || options.exists("change_address")) {
+            const std::string change_address_str = (options.exists("change_address") ? options["change_address"] : options["changeAddress"]).get_str();
+            CTxDestination dest = DecodeDestination(change_address_str);
 
             if (!IsValidDestination(dest)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "changeAddress must be a valid bitcoin address");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
             }
 
             coinControl.destChange = dest;
         }
 
-        if (options.exists("changePosition"))
-            change_position = options["changePosition"].get_int();
+        if (options.exists("changePosition") || options.exists("change_position")) {
+            change_position = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).get_int();
+        }
 
         if (options.exists("change_type")) {
-            if (options.exists("changeAddress")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both changeAddress and address_type options");
+            if (options.exists("changeAddress") || options.exists("change_address")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both change address and address type options");
             }
             OutputType out_type;
             if (!ParseOutputType(options["change_type"].get_str(), out_type)) {
@@ -2996,10 +3008,12 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             coinControl.m_change_type.emplace(out_type);
         }
 
-        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(options["includeWatching"], *pwallet);
+        const UniValue include_watching_option = options.exists("include_watching") ? options["include_watching"] : options["includeWatching"];
+        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(include_watching_option, *pwallet);
 
-        if (options.exists("lockUnspents"))
-            lockUnspents = options["lockUnspents"].get_bool();
+        if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
+            lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
+        }
 
         if (options.exists("feeRate"))
         {
@@ -3013,8 +3027,8 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             coinControl.fOverrideFeeRate = true;
         }
 
-        if (options.exists("subtractFeeFromOutputs"))
-            subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
+        if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") )
+            subtractFeeFromOutputs = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array();
 
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
@@ -3857,6 +3871,185 @@ static UniValue listlabels(const JSONRPCRequest& request)
     return ret;
 }
 
+static RPCHelpMan send()
+{
+    return RPCHelpMan{"send",
+        "\nSend a transaction.\n",
+        {
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "a json array with outputs (key-value pairs), where none of the keys are duplicated.\n"
+                    "That is, each address can only appear once and there can only be one 'data' object.\n"
+                    "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
+                {
+                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
+                        },
+                        },
+                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                        },
+                    },
+                },
+            },
+            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+            {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+                        "       \"" + FeeModes("\"\n\"") + "\""},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                {
+                    {"add_inputs", RPCArg::Type::BOOL, /* default */ "false", "If inputs are specified, automatically include more if they are not enough."},
+                    {"add_to_wallet", RPCArg::Type::BOOL, /* default */ "true", "When false, returns a serialized transaction which will not be added to the wallet or broadcast"},
+                    {"change_address", RPCArg::Type::STR_HEX, /* default */ "pool address", "The bitcoin address to receive the change"},
+                    {"change_position", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
+                    {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if change_address is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+            "       \"" + FeeModes("\"\n\"") + "\""},
+                    {"include_watching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only.\n"
+                                          "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                                          "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
+                    {"inputs", RPCArg::Type::ARR, /* default */ "empty array", "Specify inputs instead of adding them automatically. A json array of json objects",
+                        {
+                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                            {"sequence", RPCArg::Type::NUM, RPCArg::Optional::NO, "The sequence number"},
+                        },
+                    },
+                    {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"lock_unspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
+                    {"psbt", RPCArg::Type::BOOL,  /* default */ "automatic", "Always return a PSBT, implies add_to_wallet=false."},
+                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, /* default */ "empty array", "A json array of integers.\n"
+                    "The fee will be equally deducted from the amount of each specified output.\n"
+                    "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                    "If no outputs are specified here, the sender pays the fee.",
+                        {
+                            {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
+                        },
+                    },
+                    {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
+                    "                              Allows this transaction to be replaced by a transaction with higher fees"},
+                },
+                "options"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
+                    {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
+                    {RPCResult::Type::STR_HEX, "hex", "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
+                    {RPCResult::Type::STR, "psbt", "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
+                }
+        },
+        RPCExamples{""
+        "\nSend with a fee rate of 1 satoshi per byte\n"
+        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 sat/b\n" +
+            "\nCreate a transaction that should confirm the next block, with a specific input, and return result without adding to wallet or broadcasting to the network\n")
+        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 economical '{\"add_to_wallet\": false, \"inputs\": [{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\", \"vout\":1}]}'")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            RPCTypeCheck(request.params, {
+                UniValueType(), // ARR or OBJ, checked later
+                UniValue::VNUM,
+                UniValue::VSTR,
+                UniValue::VOBJ
+                }, true
+            );
+
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return NullUniValue;
+            CWallet* const pwallet = wallet.get();
+
+            UniValue options = request.params[3];
+            if (options.exists("feeRate") || options.exists("fee_rate") || options.exists("estimate_mode") || options.exists("conf_target")) {
+                if (!request.params[1].isNull() || !request.params[2].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Use either conf_target and estimate_mode or the options dictionary to control fee rate");
+                }
+            } else {
+                options.pushKV("conf_target", request.params[1]);
+                options.pushKV("estimate_mode", request.params[2]);
+            }
+            if (!options["conf_target"].isNull() && (options["estimate_mode"].isNull() || (options["estimate_mode"].get_str() == "unset"))) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
+            }
+            if (options.exists("changeAddress")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_address");
+            }
+            if (options.exists("changePosition")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position");
+            }
+            if (options.exists("includeWatching")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching");
+            }
+            if (options.exists("lockUnspents")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents");
+            }
+            if (options.exists("subtractFeeFromOutputs")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use subtract_fee_from_outputs");
+            }
+
+            const bool psbt_opt_in = options.exists("psbt") && options["psbt"].get_bool();
+
+            CAmount fee;
+            int change_position;
+            bool rbf = pwallet->m_signal_rbf;
+            if (options.exists("replaceable")) {
+                rbf = options["add_to_wallet"].get_bool();
+            }
+            CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
+            CCoinControl coin_control;
+            // Automatically select coins, unless at least one is manually selected. Can
+            // be overriden by options.add_inputs.
+            coin_control.m_add_inputs = rawTx.vin.size() == 0;
+            FundTransaction(pwallet, rawTx, fee, change_position, options, coin_control);
+
+            bool add_to_wallet = true;
+            if (options.exists("add_to_wallet")) {
+                add_to_wallet = options["add_to_wallet"].get_bool();
+            }
+
+            // Make a blank psbt
+            PartiallySignedTransaction psbtx(rawTx);
+
+            // Fill transaction with out data and sign
+            bool complete = true;
+            const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, true, false);
+            if (err != TransactionError::OK) {
+                throw JSONRPCTransactionError(err);
+            }
+
+            CMutableTransaction mtx;
+            complete = FinalizeAndExtractPSBT(psbtx, mtx);
+
+            UniValue result(UniValue::VOBJ);
+
+            // Serialize the PSBT
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+            ssTx << psbtx;
+            const std::string result_str = EncodeBase64(ssTx.str());
+
+            if (psbt_opt_in || !complete || !add_to_wallet) {
+                result.pushKV("psbt", result_str);
+            }
+
+            if (complete) {
+                std::string err_string;
+                std::string hex = EncodeHexTx(CTransaction(mtx));
+                CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+                result.pushKV("txid", tx->GetHash().GetHex());
+                if (add_to_wallet && !psbt_opt_in) {
+                    pwallet->CommitTransaction(tx, {}, {} /* orderForm */);
+                } else {
+                    result.pushKV("hex", hex);
+                }
+            }
+            result.pushKV("complete", complete);
+
+            return result;
+        }
+    };
+}
+
 UniValue sethdseed(const JSONRPCRequest& request)
 {
             RPCHelpMan{"sethdseed",
@@ -3997,7 +4190,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                 "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator and Updater roles.\n",
                 {
-                    {"inputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The inputs. Leave empty to add inputs automatically. See add_inputs option.",
+                    {"inputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Leave empty to add inputs automatically. See add_inputs option.",
                         {
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                 {
@@ -4214,6 +4407,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
+    { "wallet",             "send",                             &send,                          {"outputs","conf_target","estimate_mode","options"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode","avoid_reuse"} },
     { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
