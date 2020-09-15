@@ -255,10 +255,10 @@ class WalletSendTest(SyscoinTestFramework):
         # Fee rate of 0.1 satoshi per byte should throw an error
         # TODO: error should say 1.000 sat/b
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b",
-                       expect_error=(-4, "Fee rate (0.00000100 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
+                       expect_error=(-4, "Fee rate (0.00000100 SYS/kB) is lower than the minimum fee rate setting (0.00001000 SYS/kB)"))
 
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.000001, estimate_mode="BTC/KB",
-                       expect_error=(-4, "Fee rate (0.00000100 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.000001, estimate_mode="SYS/KB",
+                       expect_error=(-4, "Fee rate (0.00000100 SYS/kB) is lower than the minimum fee rate setting (0.00001000 SYS/kB)"))
 
         # TODO: Return hex if fee rate is below -maxmempool
         # res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b", add_to_wallet=False)

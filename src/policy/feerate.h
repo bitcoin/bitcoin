@@ -19,7 +19,7 @@ enum class FeeEstimateMode {
     UNSET,        //!< Use default settings based on other criteria
     ECONOMICAL,   //!< Force estimateSmartFee to use non-conservative estimates
     CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
-    SYS_KB,       //!< Use explicit BTC/kB fee given in coin control
+    SYS_KB,       //!< Use explicit SYS/kB fee given in coin control
     SAT_B,        //!< Use explicit sat/B fee given in coin control
 };
 
