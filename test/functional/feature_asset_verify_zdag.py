@@ -33,8 +33,8 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
-        self.nodes[0].sendtoaddress(useraddress3, 1)
-        self.nodes[3].importprivkey(self.nodes[0].dumpprivkey(useraddress0))
+        self.nodes[0].sendtoaddress(useraddress2, 1)
+        self.nodes[2].importprivkey(self.nodes[0].dumpprivkey(useraddress0))
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
@@ -43,7 +43,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.sync_mempools(self.nodes[0:3],timeout=30)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1)['txid']
         # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
-        tx4a = self.nodes[3].assetallocationsend(self.asset, useraddress0, 1)['txid']
+        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress0, 1)['txid']
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.0001)['txid']
         tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 1)['txid']
         self.sync_mempools(self.nodes[0:3], timeout=30)
