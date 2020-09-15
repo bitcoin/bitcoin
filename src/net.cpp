@@ -1784,7 +1784,7 @@ void CConnman::SetTryNewOutboundPeer(bool flag)
 
 // Return the number of peers we have over our outbound connection limit
 // Exclude peers that are marked for disconnect, or are going to be
-// disconnected soon (eg one-shots and feelers)
+// disconnected soon (eg ADDR_FETCH and FEELER)
 // Also exclude peers that haven't finished initial connection handshake yet
 // (so that we don't decide we're over our desired connection limit, and then
 // evict some peer that has finished the handshake)
