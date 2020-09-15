@@ -233,6 +233,7 @@ BASE_SCRIPTS = [
     # renable with SYS data
     #'rpc_getblockstats.py',
     'wallet_create_tx.py',
+    'wallet_send.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
