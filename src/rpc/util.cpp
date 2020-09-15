@@ -74,6 +74,19 @@ void RPCTypeCheckObj(const UniValue& o,
     }
 }
 
+void RPCTypeCheckAliases(UniValue& o,
+    const std::map<std::string, std::string>& aliases)
+{
+    for (const auto& alias : aliases) {
+        if (o.exists(alias.second)) {
+            if (o.exists(alias.first)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "May not use both " + alias.first + " and " + alias.second + " simultaneously.");
+            }
+            o.pushKV(alias.first, o[alias.second]);
+        }
+    }
+}
+
 CAmount AmountFromValue(const UniValue& value)
 {
     if (!value.isNum() && !value.isStr())

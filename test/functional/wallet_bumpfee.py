@@ -116,7 +116,7 @@ class BumpFeeTest(BitcoinTestFramework):
             "estimate_mode": Decimal("3.141592"),
         })
         # confTarget and conf_target
-        assert_raises_rpc_error(-8, "confTarget and conf_target options should not both be set", node.bumpfee, txid, {
+        assert_raises_rpc_error(-8, "May not use both conf_target and confTarget simultaneously", node.bumpfee, txid, {
             "confTarget": 123,
             "conf_target": 456,
         })

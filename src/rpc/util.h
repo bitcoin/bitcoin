@@ -70,6 +70,15 @@ void RPCTypeCheckObj(const UniValue& o,
     bool fStrict = false);
 
 /**
+ * Check and merge aliased values in an Object.
+ *
+ * Moves all non-null values from the alias (value) to the primary (key).
+ * @throws a JSONRPCError of type RPC_INVALID_PARAMETER if both are non-null for any of the aliases
+ */
+void RPCTypeCheckAliases(UniValue& o,
+    const std::map<std::string, std::string>& aliases);
+
+/**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */

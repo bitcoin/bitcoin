@@ -2953,6 +2953,13 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
       }
       else {
         RPCTypeCheckArgument(options, UniValue::VOBJ);
+        RPCTypeCheckAliases(options, {
+            {"change_address", "changeAddress"},
+            {"change_position", "changePosition"},
+            {"include_watching", "includeWatching"},
+            {"lock_unspents", "lockUnspents"},
+            {"subtract_fee_from_outputs", "subtractFeeFromOutputs"},
+        });
         RPCTypeCheckObj(options,
             {
                 {"add_inputs", UniValueType(UniValue::VBOOL)},
@@ -2982,9 +2989,8 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             coinControl.m_add_inputs = options["add_inputs"].get_bool();
         }
 
-        if (options.exists("changeAddress") || options.exists("change_address")) {
-            const std::string change_address_str = (options.exists("change_address") ? options["change_address"] : options["changeAddress"]).get_str();
-            CTxDestination dest = DecodeDestination(change_address_str);
+        if (options.exists("change_address")) {
+            const CTxDestination dest = DecodeDestination(options["change_address"].get_str());
 
             if (!IsValidDestination(dest)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
@@ -2993,12 +2999,12 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             coinControl.destChange = dest;
         }
 
-        if (options.exists("changePosition") || options.exists("change_position")) {
-            change_position = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).get_int();
+        if (options.exists("change_position")) {
+            change_position = options["change_position"].get_int();
         }
 
         if (options.exists("change_type")) {
-            if (options.exists("changeAddress") || options.exists("change_address")) {
+            if (options.exists("change_address")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both change address and address type options");
             }
             OutputType out_type;
@@ -3008,11 +3014,10 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             coinControl.m_change_type.emplace(out_type);
         }
 
-        const UniValue include_watching_option = options.exists("include_watching") ? options["include_watching"] : options["includeWatching"];
-        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(include_watching_option, *pwallet);
+        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(options["include_watching"], *pwallet);
 
-        if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
-            lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
+        if (options.exists("lock_unspents")) {
+            lockUnspents = options["lock_unspents"].get_bool();
         }
 
         if (options.exists("feeRate"))
@@ -3027,8 +3032,9 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             coinControl.fOverrideFeeRate = true;
         }
 
-        if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") )
-            subtractFeeFromOutputs = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array();
+        if (options.exists("subtract_fee_from_outputs")) {
+            subtractFeeFromOutputs = options["subtract_fee_from_outputs"].get_array();
+        }
 
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
@@ -3333,6 +3339,9 @@ static UniValue bumpfee(const JSONRPCRequest& request)
 
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
+        RPCTypeCheckAliases(options, {
+            {"conf_target", "confTarget"},
+        });
         RPCTypeCheckObj(options,
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
@@ -3343,17 +3352,11 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             },
             true, true);
 
-        if (options.exists("confTarget") && options.exists("conf_target")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and conf_target options should not both be set. Use conf_target (confTarget is deprecated).");
-        }
-
-        auto conf_target = options.exists("confTarget") ? options["confTarget"] : options["conf_target"];
-
-        if (!conf_target.isNull()) {
+        if (!options["conf_target"].isNull()) {
             if (options.exists("fee_rate")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "conf_target can't be set with fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
             }
-            coin_control.m_confirm_target = ParseConfirmTarget(conf_target, pwallet->chain().estimateMaxBlocks());
+            coin_control.m_confirm_target = ParseConfirmTarget(options["conf_target"], pwallet->chain().estimateMaxBlocks());
         } else if (options.exists("fee_rate")) {
             CFeeRate fee_rate(AmountFromValue(options["fee_rate"]));
             if (fee_rate <= CFeeRate(0)) {
@@ -3365,7 +3368,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         if (options.exists("replaceable")) {
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
-        SetFeeEstimateMode(pwallet, coin_control, options["estimate_mode"], conf_target);
+        SetFeeEstimateMode(pwallet, coin_control, options["estimate_mode"], options["conf_target"]);
     }
 
     // Make sure the results are valid at least up to the most recent block
