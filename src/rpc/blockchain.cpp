@@ -1236,7 +1236,7 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
 
     UniValue bip9(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
+    const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     switch (thresholdState) {
     case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
@@ -1250,12 +1250,12 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     }
     bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    int64_t since_height = VersionBitsTipStateSinceHeight(consensusParams, id);
+    int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
+        BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
