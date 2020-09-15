@@ -207,7 +207,7 @@ struct WitnessUnknown
  *  * WitnessV0ScriptHash: TxoutType::WITNESS_V0_SCRIPTHASH destination (P2WSH)
  *  * WitnessV0KeyHash: TxoutType::WITNESS_V0_KEYHASH destination (P2WPKH)
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W???)
- *  A CTxDestination is the internal data type encoded in a bitcoin address
+ *  A CTxDestination is the internal data type encoded in a syscoin address
  */
 typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
 
