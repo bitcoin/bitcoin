@@ -34,7 +34,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         newaddress2 = self.nodes[1].getnewaddress()
         newaddress3 = self.nodes[1].getnewaddress()
         newaddress1 = self.nodes[0].getnewaddress()
-        self.nodes[3].importprivkey(self.nodes[1].dumpprivkey(newaddress2))
+        self.nodes[2].importprivkey(self.nodes[1].dumpprivkey(newaddress2))
         self.nodes[0].assetsend(self.asset, newaddress1, 2)
         # create 2 utxo's so below newaddress1 recipient of 0.5 COIN uses 1 and the newaddress3 recipient on node3 uses the other on dbl spend
         self.nodes[0].sendtoaddress(newaddress2, 1)
@@ -43,7 +43,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset': 0.5})
         assert_equal(len(out), 1)
-        out =  self.nodes[3].listunspent()
+        out =  self.nodes[2].listunspent()
         assert_equal(len(out), 2)
         # send 2 asset UTXOs to newaddress2 same logic as explained above about dbl spend
         self.nodes[0].assetallocationsend(self.asset, newaddress2, 0.4)
@@ -51,21 +51,21 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         # should have 2 sys utxos and 2 asset utxos
-        out =  self.nodes[3].listunspent()
+        out =  self.nodes[2].listunspent()
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
         self.nodes[1].assetallocationsend(self.asset, newaddress1, 0.4)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
-        out =  self.nodes[3].listunspent(minconf=0)
+        out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
         tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, 1)['txid']
         # dbl spend
-        tx2 = self.nodes[3].assetallocationsend(self.asset, newaddress1, 0.9)['txid']
+        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.9)['txid']
         # use tx2 to build tx3
-        tx3 = self.nodes[3].assetallocationsend(self.asset, newaddress1, 0.05)['txid']
+        tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.05)['txid']
         # use tx2 to build tx4
-        tx4 = self.nodes[3].assetallocationsend(self.asset, newaddress1, 0.025)['txid']
+        tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.025)['txid']
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
             self.nodes[i].getrawtransaction(tx1)
