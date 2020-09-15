@@ -1099,7 +1099,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return error("AcceptToMemoryPool: : CheckTransaction failed");
 
     if (!Platform::CheckSpecialTx(tx, chainActive.Tip(), state))
-        return false;
+    {
+        if (Params().NetworkID() != CBaseChainParams::TESTNET || chainActive.Tip()->nHeight > 371000)
+        {
+            return false;
+        }
+    }
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase() || tx.IsCoinStake())
@@ -2436,7 +2441,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
 
     if (!Platform::ProcessSpecialTxsInBlock(fJustCheck, block, pindex, state))
-        return false;
+    {
+        if (Params().NetworkID() != CBaseChainParams::TESTNET || pindex->nHeight > 371000)
+        {
+            return false;
+        }
+    }
 
     // Check that block's created coins is under the maximum allowed amount
     if (!IsBlockValueValid(block, GetBlockValue(pindex->pprev->nHeight, nFees))){
