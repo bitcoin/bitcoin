@@ -68,6 +68,8 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[3].assetallocationsend(self.asset, newaddress1, 0.025)['txid']
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
+            self.nodes[i].getrawtransaction(tx1)
+            self.nodes[i].getrawtransaction(tx2)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
             # ensure the tx2 made it to mempool, should propogate dbl-spend first time
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_MAJOR_CONFLICT)
