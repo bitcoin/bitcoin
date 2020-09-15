@@ -82,7 +82,15 @@ void RPCTypeCheckAliases(UniValue& o,
             if (o.exists(alias.first)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "May not use both " + alias.first + " and " + alias.second + " simultaneously.");
             }
-            o.pushKV(alias.first, o[alias.second]);
+            // we (ab)use the fact UniValue::getKeys() returns a const direct reference to the keys vector
+            // and handwave away the constness and modify the keys directly
+            std::vector<std::string>& keys = const_cast<std::vector<std::string>&>(o.getKeys());
+            for (size_t i = 0; i < keys.size(); ++i) {
+                if (keys.at(i) == alias.second) {
+                    keys[i] = alias.first;
+                    break;
+                }
+            }
         }
     }
 }
