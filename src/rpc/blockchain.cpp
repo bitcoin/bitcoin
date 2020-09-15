@@ -1036,7 +1036,7 @@ static RPCHelpMan pruneblockchain()
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(height);
+    PruneBlockFilesManual(::ChainstateActive(), height);
     const CBlockIndex* block = ::ChainActive().Tip();
     CHECK_NONFATAL(block);
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
