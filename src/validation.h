@@ -226,15 +226,6 @@ struct MempoolAcceptResult {
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-/** Get the BIP9 state for a given deployment at the current tip. */
-ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
-
-/** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
-BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos);
-
-/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
-int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos);
-
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
