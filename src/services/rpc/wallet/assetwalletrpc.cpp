@@ -706,6 +706,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
     newAsset.nTotalSupply = 0;
+    newAsset.nUpdateCapabilityFlags = nUpdateCapabilityFlags;
     
     std::vector<unsigned char> data;
     newAsset.SerializeData(data);
