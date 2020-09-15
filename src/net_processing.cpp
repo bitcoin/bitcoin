@@ -889,15 +889,15 @@ void PeerManager::InitializeNode(CNode *pnode) {
 
 void PeerManager::ReattemptInitialBroadcast(CScheduler& scheduler) const
 {
-    std::map<uint256, uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+    std::map<uint256, uint256> unbroadcast_txids = WITH_LOCK(m_mempool.cs, return m_mempool.GetUnbroadcastTxs());
 
     for (const auto& elem : unbroadcast_txids) {
         // Sanity check: all unbroadcast txns should exist in the mempool
-        if (m_mempool.exists(elem.first)) {
+        if (WITH_LOCK(m_mempool.cs, return m_mempool.exists(elem.first))) {
             LOCK(cs_main);
             RelayTransaction(elem.first, elem.second, m_connman);
         } else {
-            m_mempool.RemoveUnbroadcastTx(elem.first, true);
+            WITH_LOCK(m_mempool.cs, m_mempool.RemoveUnbroadcastTx(elem.first, true));
         }
     }
 
@@ -1478,7 +1478,7 @@ bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLU
         if (g_recent_confirmed_transactions->contains(hash)) return true;
     }
 
-    return recentRejects->contains(hash) || mempool.exists(gtxid);
+    return recentRejects->contains(hash) || WITH_LOCK(mempool.cs, return mempool.exists(gtxid));
 }
 
 bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1755,11 +1755,11 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
             // WTX and WITNESS_TX imply we serialize with witness
             int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
             connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
-            mempool.RemoveUnbroadcastTx(tx->GetHash());
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
             std::vector<uint256> parent_ids_to_add;
             {
                 LOCK(mempool.cs);
+                mempool.RemoveUnbroadcastTx(tx->GetHash());
                 auto txiter = mempool.GetIter(tx->GetHash());
                 if (txiter) {
                     const CTxMemPoolEntry::Parents& parents = (*txiter)->GetMemPoolParentsConst();
@@ -2102,6 +2102,7 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
             EraseOrphanTx(orphanHash);
             done = true;
         }
+        LOCK(m_mempool.cs);
         m_mempool.check(&::ChainstateActive().CoinsTip());
     }
 }
@@ -3001,7 +3002,10 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         // for witness malleation.
         if (!AlreadyHaveTx(GenTxid(/* is_wtxid=*/true, wtxid), m_mempool) &&
             AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
-            m_mempool.check(&::ChainstateActive().CoinsTip());
+            {
+                LOCK(m_mempool.cs);
+                m_mempool.check(&::ChainstateActive().CoinsTip());
+            }
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
@@ -3017,7 +3021,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
                 pfrom.GetId(),
                 tx.GetHash().ToString(),
-                m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
+                WITH_LOCK(m_mempool.cs, return m_mempool.size()),
+                m_mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
             ProcessOrphanTx(pfrom.orphan_work_set, lRemovedTxn);
@@ -3114,7 +3119,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 // if they were already in the mempool,
                 // allowing the node to function as a gateway for
                 // nodes hidden behind it.
-                if (!m_mempool.exists(tx.GetHash())) {
+                if (!WITH_LOCK(m_mempool.cs, return m_mempool.exists(tx.GetHash()))) {
                     LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
@@ -4360,7 +4365,7 @@ bool PeerManager::SendMessages(CNode* pto)
 
                 // Respond to BIP35 mempool requests
                 if (fSendTrickle && pto->m_tx_relay->fSendMempool) {
-                    auto vtxinfo = m_mempool.infoAll();
+                    const auto vtxinfo = WITH_LOCK(m_mempool.cs, return m_mempool.infoAll());
                     pto->m_tx_relay->fSendMempool = false;
                     CFeeRate filterrate;
                     {
@@ -4644,7 +4649,8 @@ bool PeerManager::SendMessages(CNode* pto)
         if (pto->m_tx_relay != nullptr && pto->nVersion >= FEEFILTER_VERSION && gArgs.GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&
             !pto->HasPermission(PF_FORCERELAY) // peers with the forcerelay permission should not filter txs to us
         ) {
-            CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+            const auto min_fee = WITH_LOCK(m_mempool.cs, return m_mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000));
+            CAmount currentFilter = min_fee.GetFeePerK();
             int64_t timeNow = GetTimeMicros();
             static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
             if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {

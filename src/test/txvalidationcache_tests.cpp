@@ -92,7 +92,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     }
     // spends[1] should have been removed from the mempool when the
     // block with spends[0] is accepted:
-    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
+    BOOST_CHECK_EQUAL(WITH_LOCK(m_node.mempool->cs, return m_node.mempool->size()), 0U);
 }
 
 // Run CheckInputScripts (using CoinsTip()) on the given transaction, for all script

@@ -606,7 +606,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(const CCoinsViewCache *pcoins) const;
+    void check(const CCoinsViewCache *pcoins) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     void setSanityCheck(double dFrequency = 1.0) { LOCK(cs); nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
@@ -627,7 +627,7 @@ public:
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
-    void queryHashes(std::vector<uint256>& vtxid) const;
+    void queryHashes(std::vector<uint256>& vtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
@@ -694,7 +694,7 @@ public:
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
-    CFeeRate GetMinFee(size_t sizelimit) const;
+    CFeeRate GetMinFee(size_t sizelimit) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
       *  pvNoSpendsRemaining, if set, will be populated with the list of outpoints
@@ -709,17 +709,18 @@ public:
      * Calculate the ancestor and descendant count for the given transaction.
      * The counts include the transaction itself.
      */
-    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const;
+    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** @returns true if the mempool is fully loaded */
-    bool IsLoaded() const;
+    bool IsLoaded() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Sets the current loaded state */
     void SetIsLoaded(bool loaded);
 
-    unsigned long size() const
+    unsigned long size() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
+        AssertLockHeld(cs);
         return mapTx.size();
     }
 
@@ -729,15 +730,19 @@ public:
         return totalTxSize;
     }
 
-    bool exists(const GenTxid& gtxid) const
+    bool exists(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
+        AssertLockHeld(cs);
         if (gtxid.IsWtxid()) {
             return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
         }
         return (mapTx.count(gtxid.GetHash()) != 0);
     }
-    bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
+    bool exists(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        return exists(GenTxid{false, txid});
+    }
 
     CTransactionRef get(const uint256& hash) const;
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
@@ -747,7 +752,7 @@ public:
     }
     TxMempoolInfo info(const uint256& hash) const;
     TxMempoolInfo info(const GenTxid& gtxid) const;
-    std::vector<TxMempoolInfo> infoAll() const;
+    std::vector<TxMempoolInfo> infoAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     size_t DynamicMemoryUsage() const;
 
@@ -761,11 +766,13 @@ public:
     }
 
     /** Removes a transaction from the unbroadcast set */
-    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
+    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false)
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Returns transactions in unbroadcast set */
-    std::map<uint256, uint256> GetUnbroadcastTxs() const {
-        LOCK(cs);
+    std::map<uint256, uint256> GetUnbroadcastTxs() const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
         return m_unbroadcast_txids;
     }
 

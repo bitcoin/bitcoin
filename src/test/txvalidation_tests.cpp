@@ -34,7 +34,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
 
     LOCK(cs_main);
 
-    unsigned int initialPoolSize = m_node.mempool->size();
+    unsigned int initialPoolSize = WITH_LOCK(m_node.mempool->cs, return m_node.mempool->size());
 
     BOOST_CHECK_EQUAL(
             false,
@@ -44,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
                 0 /* nAbsurdFee */));
 
     // Check that the transaction hasn't been added to mempool.
-    BOOST_CHECK_EQUAL(m_node.mempool->size(), initialPoolSize);
+    BOOST_CHECK_EQUAL(WITH_LOCK(m_node.mempool->cs, return m_node.mempool->size()), initialPoolSize);
 
     // Check that the validation state reflects the unsuccessful attempt.
     BOOST_CHECK(state.IsInvalid());

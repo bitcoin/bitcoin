@@ -500,7 +500,7 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose)
         return o;
     } else {
         std::vector<uint256> vtxid;
-        pool.queryHashes(vtxid);
+        WITH_LOCK(pool.cs, pool.queryHashes(vtxid));
 
         UniValue a(UniValue::VARR);
         for (const uint256& hash : vtxid)
@@ -1964,7 +1964,7 @@ static UniValue savemempool(const JSONRPCRequest& request)
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
 
-    if (!mempool.IsLoaded()) {
+    if (!WITH_LOCK(mempool.cs, return mempool.IsLoaded())) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 
