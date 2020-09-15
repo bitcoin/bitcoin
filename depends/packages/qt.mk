@@ -10,7 +10,7 @@ $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch fix_riscv64_arch.patch
 $(package)_patches+= fix_rcc_determinism.patch xkb-default.patch no-xlib.patch
 $(package)_patches+= fix_android_qmake_conf.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
-$(package)_patches+= freetype_back_compat.patch drop_lrelease_dependency.patch
+$(package)_patches+= freetype_back_compat.patch drop_lrelease_dependency.patch fix_powerpc_libpng.patch
 $(package)_patches+= fix_limits_header.patch
 
 # Update OSX_QT_TRANSLATIONS when this is updated
@@ -162,6 +162,7 @@ endef
 
 define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/freetype_back_compat.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_powerpc_libpng.patch && \
   sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   patch -p1 -i $($(package)_patch_dir)/drop_lrelease_dependency.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch &&\
