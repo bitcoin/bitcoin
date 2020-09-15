@@ -3999,15 +3999,17 @@ void BlockManager::FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nM
     assert(fPruneMode && nManualPruneHeight > 0);
 
     LOCK2(cs_main, cs_LastBlockFile);
-    if (chain_tip_height < 0)
+    if (chain_tip_height < 0) {
         return;
+    }
 
     // last block to prune is the lesser of (user-specified height, MIN_BLOCKS_TO_KEEP from the tip)
     unsigned int nLastBlockWeCanPrune = std::min((unsigned)nManualPruneHeight, chain_tip_height - MIN_BLOCKS_TO_KEEP);
-    int count=0;
+    int count = 0;
     for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
-        if (vinfoBlockFile[fileNumber].nSize == 0 || vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune)
+        if (vinfoBlockFile[fileNumber].nSize == 0 || vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
             continue;
+        }
         PruneOneBlockFile(fileNumber);
         setFilesToPrune.insert(fileNumber);
         count++;
@@ -4058,7 +4060,7 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
     // before the next pruning.
     uint64_t nBuffer = BLOCKFILE_CHUNK_SIZE + UNDOFILE_CHUNK_SIZE;
     uint64_t nBytesToPrune;
-    int count=0;
+    int count = 0;
 
     if (nCurrentUsage + nBuffer >= nPruneTarget) {
         // On a prune event, the chainstate DB is flushed.
@@ -4073,15 +4075,18 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
         for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
             nBytesToPrune = vinfoBlockFile[fileNumber].nSize + vinfoBlockFile[fileNumber].nUndoSize;
 
-            if (vinfoBlockFile[fileNumber].nSize == 0)
+            if (vinfoBlockFile[fileNumber].nSize == 0) {
                 continue;
+            }
 
-            if (nCurrentUsage + nBuffer < nPruneTarget)  // are we below our target?
+            if (nCurrentUsage + nBuffer < nPruneTarget) { // are we below our target?
                 break;
+            }
 
             // don't prune files that could have a block within MIN_BLOCKS_TO_KEEP of the main chain's tip but keep scanning
-            if (vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune)
+            if (vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
                 continue;
+            }
 
             PruneOneBlockFile(fileNumber);
             // Queue up the files for removal
