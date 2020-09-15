@@ -9,8 +9,7 @@ $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_uti
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_no_printer.patch no-xlib.patch
 $(package)_patches+= fix_android_jni_static.patch dont_hardcode_pwd.patch
-$(package)_patches+= drop_lrelease_dependency.patch
-$(package)_patches+= fix_mingw_cross_compile.patch fix_qpainter_non_determinism.patch
+$(package)_patches+= drop_lrelease_dependency.patch fix_qpainter_non_determinism.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=d5788e86257b21d5323f1efd94376a213e091d1e5e03b45a95dd052b5f570db8
@@ -227,7 +226,6 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_no_printer.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_mingw_cross_compile.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qpainter_non_determinism.patch &&\
   sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
