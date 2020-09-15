@@ -2281,51 +2281,12 @@ bool CChainState::FlushStateToDisk(
         CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(&m_mempool);
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
-            // Previously, we called the global function ::ChainActive() in
-            // FindFilesToPrune{,Manual} to get the tip height and to determine
-            // whether or not a tip even exists. Now, we are simply passing in
-            // m_chain.Height() (which returns -1 if the tip doesn't exist). To
-            // make sure we're not changing behaviour, let's check that
-            // ::ChainActive() is the same object as m_chain (not just
-            // identical).
-            //
-            // This comment and the following assert will be removed in a
-            // subsequent commit, as they're just meant to demonstrate
-            // correctness (you can run tests against it and see that nothing
-            // exit unexpectedly).
-            assert(std::addressof(::ChainActive()) == std::addressof(m_chain));
             if (nManualPruneHeight > 0) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCH);
 
                 m_blockman.FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight, m_chain.Height());
             } else {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCH);
-
-                // Previously, we called the global function
-                // ::ChainstateActive() in FindFilesToPrune{,Manual} to get the
-                // IBD status. Now, we are simply passing in
-                // IsInitialBlockDownload(). To make sure we're not changing
-                // behaviour, let's check that ::ChainstateActive() is the same
-                // object as *this (not just identical).
-                //
-                // This comment and the following assert will be removed in a
-                // subsequent commit, as they're just meant to demonstrate
-                // correctness (you can run tests against it and see that
-                // nothing exit unexpectedly).
-                assert(std::addressof(::ChainstateActive()) == std::addressof(*this));
-
-                // Previously, we called PruneOneBlockFile on g_chainman's
-                // m_blockman in FindFilesToPrune{,Manual}. Now, we are instead
-                // calling PruneOneBlockFile on _our_ m_blockman. To make sure
-                // we're not changing behaviour, let's check that
-                // g_chainman.m_blockman is the same object as _our_ m_blockman
-                // (not just identical).
-                //
-                // This comment and the following assert will be removed in a
-                // subsequent commit, as they're just meant to demonstrate
-                // correctness (you can run tests against it and see that
-                // nothing exit unexpectedly).
-                assert(std::addressof(g_chainman.m_blockman) == std::addressof(m_blockman));
 
                 m_blockman.FindFilesToPrune(setFilesToPrune, chainparams.PruneAfterHeight(), m_chain.Height(), IsInitialBlockDownload());
                 fCheckForPruning = false;
