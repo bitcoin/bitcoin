@@ -39,6 +39,8 @@ static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
+static const std::string ONION{".onion"};
+static const size_t ONION_LEN{ONION.size()};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -56,6 +58,8 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0).", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -294,6 +298,211 @@ public:
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
         return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+};
+
+/** Process netinfo requests */
+class NetinfoRequestHandler : public BaseRequestHandler
+{
+private:
+    bool IsAddrIPv6(const std::string& addr) const
+    {
+        return !addr.empty() && addr.front() == '[';
+    }
+    bool IsInboundOnion(const std::string& addr_local, int mapped_as) const
+    {
+        return mapped_as == 0 && addr_local.find(ONION) != std::string::npos;
+    }
+    bool IsOutboundOnion(const std::string& addr, int mapped_as) const
+    {
+        const size_t addr_len{addr.size()};
+        const size_t onion_pos{addr.rfind(ONION)};
+        return mapped_as == 0 && onion_pos != std::string::npos && addr_len > ONION_LEN &&
+               (onion_pos == addr_len - ONION_LEN || onion_pos == addr.find_last_of(":") - ONION_LEN);
+    }
+    uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
+    bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
+    bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
+    bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
+    enum struct NetType {
+        ipv4,
+        ipv6,
+        onion,
+    };
+    struct Peer {
+        int id;
+        int mapped_as;
+        int version;
+        int64_t conn_time;
+        int64_t last_blck;
+        int64_t last_recv;
+        int64_t last_send;
+        int64_t last_trxn;
+        double min_ping;
+        double ping;
+        std::string addr;
+        std::string sub_version;
+        NetType net_type;
+        bool is_block_relay;
+        bool is_outbound;
+        bool operator<(const Peer& rhs) const { return std::tie(is_outbound, min_ping) < std::tie(rhs.is_outbound, rhs.min_ping); }
+    };
+    std::string NetTypeEnumToString(NetType t)
+    {
+        switch (t) {
+        case NetType::ipv4: return "ipv4";
+        case NetType::ipv6: return "ipv6";
+        case NetType::onion: return "onion";
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    }
+    std::string ChainToString() const
+    {
+        if (gArgs.GetChainName() == CBaseChainParams::TESTNET) return " testnet";
+        if (gArgs.GetChainName() == CBaseChainParams::REGTEST) return " regtest";
+        return "";
+    }
+public:
+    const int ID_PEERINFO = 0;
+    const int ID_NETWORKINFO = 1;
+
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        if (!args.empty()) {
+            uint8_t n{0};
+            if (ParseUInt8(args.at(0), &n)) {
+                m_details_level = n;
+            }
+        }
+        UniValue result(UniValue::VARR);
+        result.push_back(JSONRPCRequestObj("getpeerinfo", NullUniValue, ID_PEERINFO));
+        result.push_back(JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO));
+        return result;
+    }
+
+    UniValue ProcessReply(const UniValue& batch_in) override
+    {
+        const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
+        if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
+        if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
+
+        const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
+        if (networkinfo["version"].get_int() < 209900) {
+            throw std::runtime_error("-netinfo requires bitcoind server to be running v0.21.0 and up");
+        }
+
+        // Count peer connection totals, and if DetailsRequested(), store peer data in a vector of structs.
+        const int64_t time_now{GetSystemTimeInSeconds()};
+        int ipv4_i{0}, ipv6_i{0}, onion_i{0}, block_relay_i{0}, total_i{0}; // inbound conn counters
+        int ipv4_o{0}, ipv6_o{0}, onion_o{0}, block_relay_o{0}, total_o{0}; // outbound conn counters
+        size_t max_peer_id_length{2}, max_addr_length{0};
+        bool is_asmap_on{false};
+        std::vector<Peer> peers;
+        const UniValue& getpeerinfo{batch[ID_PEERINFO]["result"]};
+
+        for (const UniValue& peer : getpeerinfo.getValues()) {
+            const std::string addr{peer["addr"].get_str()};
+            const std::string addr_local{peer["addrlocal"].isNull() ? "" : peer["addrlocal"].get_str()};
+            const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
+            const bool is_block_relay{!peer["relaytxes"].get_bool()};
+            const bool is_inbound{peer["inbound"].get_bool()};
+            NetType net_type{NetType::ipv4};
+            if (is_inbound) {
+                if (IsAddrIPv6(addr)) {
+                    net_type = NetType::ipv6;
+                    ++ipv6_i;
+                } else if (IsInboundOnion(addr_local, mapped_as)) {
+                    net_type = NetType::onion;
+                    ++onion_i;
+                } else {
+                    ++ipv4_i;
+                }
+                if (is_block_relay) ++block_relay_i;
+            } else {
+                if (IsAddrIPv6(addr)) {
+                    net_type = NetType::ipv6;
+                    ++ipv6_o;
+                } else if (IsOutboundOnion(addr, mapped_as)) {
+                    net_type = NetType::onion;
+                    ++onion_o;
+                } else {
+                    ++ipv4_o;
+                }
+                if (is_block_relay) ++block_relay_o;
+            }
+            if (DetailsRequested()) {
+                // Push data for this peer to the peers vector.
+                const int peer_id{peer["id"].get_int()};
+                const int version{peer["version"].get_int()};
+                const std::string sub_version{peer["subver"].get_str()};
+                const int64_t conn_time{peer["conntime"].get_int64()};
+                const int64_t last_blck{peer["last_block"].get_int64()};
+                const int64_t last_recv{peer["lastrecv"].get_int64()};
+                const int64_t last_send{peer["lastsend"].get_int64()};
+                const int64_t last_trxn{peer["last_transaction"].get_int64()};
+                const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
+                const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
+                peers.push_back({peer_id, mapped_as, version, conn_time, last_blck, last_recv, last_send, last_trxn, min_ping, ping, addr, sub_version, net_type, is_block_relay, !is_inbound});
+                max_peer_id_length = std::max(ToString(peer_id).length(), max_peer_id_length);
+                max_addr_length = std::max(addr.length() + 1, max_addr_length);
+                is_asmap_on |= (mapped_as != 0);
+            }
+        }
+
+        // Generate report header.
+        std::string result{strprintf("%s %s%s - %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
+
+        // Report detailed peer connections list sorted by direction and minimum ping time.
+        if (DetailsRequested() && !peers.empty()) {
+            std::sort(peers.begin(), peers.end());
+            result += "Peer connections sorted by direction and min ping\n<-> relay   net mping   ping send recv  txn  blk uptime ";
+            if (is_asmap_on) result += " asmap ";
+            result += strprintf("%*s %-*s%s\n", max_peer_id_length, "id", IsAddressSelected() ? max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
+            for (const Peer& peer : peers) {
+                std::string version{ToString(peer.version) + peer.sub_version};
+                result += strprintf(
+                    "%3s %5s %5s%6s%7s%5s%5s%5s%5s%7s%*i %*s %-*s%s\n",
+                    peer.is_outbound ? "out" : "in",
+                    peer.is_block_relay ? "block" : "full",
+                    NetTypeEnumToString(peer.net_type),
+                    peer.min_ping == -1 ? "" : ToString(round(1000 * peer.min_ping)),
+                    peer.ping == -1 ? "" : ToString(round(1000 * peer.ping)),
+                    peer.last_send == 0 ? "" : ToString(time_now - peer.last_send),
+                    peer.last_recv == 0 ? "" : ToString(time_now - peer.last_recv),
+                    peer.last_trxn == 0 ? "" : ToString((time_now - peer.last_trxn) / 60),
+                    peer.last_blck == 0 ? "" : ToString((time_now - peer.last_blck) / 60),
+                    peer.conn_time == 0 ? "" : ToString((time_now - peer.conn_time) / 60),
+                    is_asmap_on ? 7 : 0, // variable spacing
+                    is_asmap_on && peer.mapped_as != 0 ? ToString(peer.mapped_as) : "",
+                    max_peer_id_length, // variable spacing
+                    peer.id,
+                    IsAddressSelected() ? max_addr_length : 0, // variable spacing
+                    IsAddressSelected() ? peer.addr : "",
+                    IsVersionSelected() && version != "0" ? version : "");
+            }
+            result += "                   ms     ms  sec  sec  min  min    min\n\n";
+        }
+
+        // Report peer connection totals by type.
+        total_i = ipv4_i + ipv6_i + onion_i;
+        total_o = ipv4_o + ipv6_o + onion_o;
+        result += "        ipv4    ipv6   onion   total  block-relay\n";
+        result += strprintf("in     %5i   %5i   %5i   %5i   %5i\n", ipv4_i, ipv6_i, onion_i, total_i, block_relay_i);
+        result += strprintf("out    %5i   %5i   %5i   %5i   %5i\n", ipv4_o, ipv6_o, onion_o, total_o, block_relay_o);
+        result += strprintf("total  %5i   %5i   %5i   %5i   %5i\n", ipv4_i + ipv4_o, ipv6_i + ipv6_o, onion_i + onion_o, total_i + total_o, block_relay_i + block_relay_o);
+
+        // Report local addresses, ports, and scores.
+        result += "\nLocal addresses";
+        const UniValue& local_addrs{networkinfo["localaddresses"]};
+        if (local_addrs.empty()) {
+            result += ": n/a\n";
+        } else {
+            for (const UniValue& addr : local_addrs.getValues()) {
+                result += strprintf("\n%-40i  port %5i     score %6i", addr["address"].get_str(), addr["port"].get_int(), addr["score"].get_int());
+            }
+        }
+
+        return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
 };
 
@@ -624,6 +833,8 @@ static int CommandLineRPC(int argc, char *argv[])
         std::string method;
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
+        } else if (gArgs.GetBoolArg("-netinfo", false)) {
+            rh.reset(new NetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-generate", false)) {
             const UniValue getnewaddress{GetNewAddress()};
             const UniValue& error{find_value(getnewaddress, "error")};
