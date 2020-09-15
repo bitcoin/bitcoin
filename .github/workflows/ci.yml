@@ -20,9 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v1
-        with:
-          path: main
+        uses: actions/checkout@v2
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -112,9 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v1
-        with:
-          path: main
+        uses: actions/checkout@v2
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -189,9 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v1
-        with:
-          path: main
+        uses: actions/checkout@v2
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -267,9 +261,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v1
-        with:
-          path: main
+        uses: actions/checkout@v2
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -333,9 +325,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v1
-        with:
-          path: main
+        uses: actions/checkout@v2
       - name: Extract branch name & commit
         id: extract_branch
         run: |
