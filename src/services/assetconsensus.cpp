@@ -890,7 +890,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
                 }
                 storedAssetRef.nUpdateCapabilityFlags = std::move(theAsset.nUpdateCapabilityFlags);
-                if (!storedAssetRef.nUpdateCapabilityFlags != 0) {
+                if (storedAssetRef.nUpdateCapabilityFlags != 0) {
                     storedAssetRef.nUpdateMask |= ASSET_UPDATE_CAPABILITYFLAGS;
                 } else {
                     storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_CAPABILITYFLAGS;
