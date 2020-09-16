@@ -45,7 +45,7 @@ class RPCInterfaceTest(SyscoinTestFramework):
             # work fine.
             {"method": "invalidmethod", "id": 2},
             # Another call that should succeed.
-            {"method": "getbestblockhash", "id": 3},
+            {"method": "getblockhash", "id": 3, "params": [0]},
         ])
 
         result_by_id = {}
