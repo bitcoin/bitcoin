@@ -356,7 +356,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
 {
     // Add to memory pool without checking anything.
-    // Used by AcceptToMemoryPool(), which DOES do
+    // Used by AcceptToMemoryPool(::ChainstateActive(), ), which DOES do
     // all the appropriate checks.
     indexed_transaction_set::iterator newit = mapTx.insert(entry).first;
 
