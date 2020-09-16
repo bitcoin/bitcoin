@@ -255,22 +255,23 @@ bool TestLockPointValidity(const LockPoints* lp)
     return true;
 }
 
-bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flags, LockPoints* lp, bool useExistingLockPoints)
+bool CheckSequenceLocks(CChainState& active_chainstate, const CTxMemPool& pool, const CTransaction& tx, int flags, LockPoints* lp, bool useExistingLockPoints)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(pool.cs);
+    assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
 
-    CBlockIndex* tip = ::ChainActive().Tip();
+    CBlockIndex* tip = active_chainstate.m_chain.Tip();
     assert(tip != nullptr);
 
     CBlockIndex index;
     index.pprev = tip;
-    // CheckSequenceLocks() uses ::ChainActive().Height()+1 to evaluate
+    // CheckSequenceLocks() uses active_chainstate.m_chain.Height()+1 to evaluate
     // height based locks because when SequenceLocks() is called within
     // ConnectBlock(), the height of the block *being*
     // evaluated is what is used.
     // Thus if we want to know if a transaction can be part of the
-    // *next* block, we need to use one more than ::ChainActive().Height()
+    // *next* block, we need to use one more than active_chainstate.m_chain.Height()
     index.nHeight = tip->nHeight + 1;
 
     std::pair<int, int64_t> lockPair;
@@ -280,8 +281,8 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
         lockPair.second = lp->time;
     }
     else {
-        // CoinsTip() contains the UTXO set for ::ChainActive().Tip()
-        CCoinsViewMemPool viewMemPool(&::ChainstateActive().CoinsTip(), pool);
+        // CoinsTip() contains the UTXO set for active_chainstate.m_chain.Tip()
+        CCoinsViewMemPool viewMemPool(&active_chainstate.CoinsTip(), pool);
         std::vector<int> prevheights;
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
@@ -684,7 +685,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // be mined yet.
     // Must keep pool.cs for this unless we change CheckSequenceLocks to take a
     // CoinsViewCache instead of create its own
-    if (!CheckSequenceLocks(m_pool, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
+    if (!CheckSequenceLocks(::ChainstateActive(), m_pool, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     if (!Consensus::CheckTxInputs(tx, state, m_view, g_chainman.m_blockman.GetSpendHeight(m_view), ws.m_base_fees)) {
