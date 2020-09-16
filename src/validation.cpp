@@ -387,7 +387,7 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
     while (it != disconnectpool.queuedTx.get<insertion_order>().rend()) {
         // ignore validation errors in resurrected transactions
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            AcceptToMemoryPool(mempool, *it, true /* bypass_limits */).m_result_type != MempoolAcceptResult::ResultType::VALID) {
+            AcceptToMemoryPool(::ChainstateActive(), mempool, *it, true /* bypass_limits */).m_result_type != MempoolAcceptResult::ResultType::VALID) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
@@ -1103,7 +1103,13 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
 
 MempoolAcceptResult AcceptToMemoryPool(CTxMemPool& pool, const CTransactionRef &tx, bool bypass_limits, bool test_accept)
 {
-    return AcceptToMemoryPoolWithTime(Params(), pool, ::ChainstateActive(), tx, GetTime(), bypass_limits, test_accept);
+    return AcceptToMemoryPool(::ChainstateActive(), pool, tx, bypass_limits, test_accept);
+}
+
+MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx, bool bypass_limits, bool test_accept)
+{
+    assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
+    return AcceptToMemoryPoolWithTime(Params(), pool, active_chainstate, tx, GetTime(), bypass_limits, test_accept);
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
