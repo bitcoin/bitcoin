@@ -92,7 +92,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         txid_0 = tx.rehash()
         self.check_mempool_result(
-            result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': 110, 'fees': {'base': Decimal(str(fee))}}],
+            result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': Decimal(str(fee))}}],
             rawtxs=[raw_tx_0],
         )
 
@@ -107,7 +107,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_final)))
         fee_expected = int(coin['amount']) - output_amount
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': 188, 'fees': {'base': Decimal(str(fee_expected))}}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': Decimal(str(fee_expected))}}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
@@ -130,7 +130,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         txid_0 = tx.rehash()
         self.check_mempool_result(
-            result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': 110, 'fees': {'base': Decimal(str(2 * fee))}}],
+            result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': Decimal(str(2 * fee))}}],
             rawtxs=[raw_tx_0],
         )
 
@@ -190,7 +190,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         # Reference tx should be valid on itself
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': 110, 'fees': { 'base': Decimal(str(0.1 - 0.05))}}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal(str(0.1 - 0.05))}}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
