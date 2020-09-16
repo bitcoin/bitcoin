@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/data/script_tests.json.h>
+#include <test/data/script_taproot_tests.json.h>
 
 #include <core_io.h>
 #include <key.h>
@@ -1339,13 +1340,41 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
     BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
 }
 
-static CScript
-ScriptFromHex(const char* hex)
+static CScript ScriptFromHex(const std::string& str)
 {
-    std::vector<unsigned char> data = ParseHex(hex);
+    std::vector<unsigned char> data = ParseHex(str);
     return CScript(data.begin(), data.end());
 }
 
+static CMutableTransaction TxFromHex(const std::string& str)
+{
+    CMutableTransaction tx;
+    VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, ParseHex(str), 0) >> tx;
+    return tx;
+}
+
+static std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
+{
+    assert(univalue.isArray());
+    std::vector<CTxOut> prevouts;
+    for (size_t i = 0; i < univalue.size(); ++i) {
+        CTxOut txout;
+        VectorReader(SER_DISK, 0, ParseHex(univalue[i].get_str()), 0) >> txout;
+        prevouts.push_back(std::move(txout));
+    }
+    return prevouts;
+}
+
+static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
+{
+    assert(univalue.isArray());
+    CScriptWitness scriptwitness;
+    for (size_t i = 0; i < univalue.size(); ++i) {
+        auto bytes = ParseHex(univalue[i].get_str());
+        scriptwitness.stack.push_back(std::move(bytes));
+    }
+    return scriptwitness;
+}
 
 BOOST_AUTO_TEST_CASE(script_FindAndDelete)
 {
@@ -1469,6 +1498,7 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     script = ScriptFromHex("88acc0"); // Script with undefined opcode
     BOOST_CHECK(!script.HasValidOps());
 }
+
 
 #if defined(HAVE_CONSENSUS_LIB)
 
@@ -1608,6 +1638,51 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_invalid_flags)
     int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_INVALID_FLAGS);
+}
+
+BOOST_AUTO_TEST_CASE(script_taproot)
+{
+    UniValue tests = read_json(std::string(std::begin(json_tests::script_taproot_tests), std::end(json_tests::script_taproot_tests)));
+
+    static constexpr unsigned int VERIFY_FLAGS =
+        SCRIPT_VERIFY_P2SH |
+        SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
+        SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
+        SCRIPT_VERIFY_WITNESS |
+        SCRIPT_VERIFY_NULLFAIL |
+        SCRIPT_VERIFY_TAPROOT;
+
+    for (size_t i = 0; i < tests.size(); i++) {
+        const UniValue& test = tests[i];
+
+        CMutableTransaction tx = TxFromHex(test["tx"].get_str());
+        const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
+        BOOST_CHECK_EQUAL(prevouts.size(), tx.vin.size());
+        size_t idx = test["index"].get_int64();
+        CScript success_scriptsig = ScriptFromHex(test["success"]["scriptSig"].get_str());
+        CScriptWitness success_witness = ScriptWitnessFromJSON(test["success"]["witness"]);
+        CScript failure_scriptsig = ScriptFromHex(test["failure"]["scriptSig"].get_str());
+        CScriptWitness failure_witness = ScriptWitnessFromJSON(test["failure"]["witness"]);
+
+        // Successful scriptSig/witness
+        {
+            tx.vin[idx].scriptSig = std::move(success_scriptsig);
+            tx.vin[idx].scriptWitness = std::move(success_witness);
+            PrecomputedTransactionData txdata;
+            txdata.Init(tx, std::vector<CTxOut>(prevouts));
+            MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, txdata);
+            BOOST_CHECK(VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, VERIFY_FLAGS, txcheck, nullptr));
+        }
+        // Failing scriptSig/witness
+        {
+            tx.vin[idx].scriptSig = std::move(failure_scriptsig);
+            tx.vin[idx].scriptWitness = std::move(failure_witness);
+            PrecomputedTransactionData txdata;
+            txdata.Init(tx, std::vector<CTxOut>(prevouts));
+            MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, txdata);
+            BOOST_CHECK(!VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, VERIFY_FLAGS, txcheck, nullptr));
+        }
+    }
 }
 
 #endif
