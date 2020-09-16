@@ -1625,6 +1625,16 @@ void updateFonts()
     for (auto it : mapWidgetFonts) {
         it.first->setFont(it.second);
     }
+
+    // Get the global font for QToolTip labels
+    QFont fontToolTip = qApp->font("QTipLabel");
+    // Store the default QToolTip font size before ever applying any scale to it
+    if (!mapDefaultFontSizes.count("QTipLabel")) {
+        mapDefaultFontSizes.emplace("QTipLabel", fontToolTip.pointSize());
+    }
+    // And give it the proper scaled size based on its default size
+    fontToolTip.setPointSizeF(getScaledFontSize(mapDefaultFontSizes["QTipLabel"]));
+    qApp->setFont(fontToolTip, "QTipLabel");
 }
 
 QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPointSize)
