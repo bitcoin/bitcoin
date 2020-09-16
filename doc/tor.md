@@ -62,13 +62,18 @@ The directory can be different of course, but virtual port numbers should be equ
 your bitcoind's P2P listen port (8333 by default), and target addresses and ports
 should be equal to binding address and port for inbound Tor connections (127.0.0.1:8334 by default).
 
-	-externalip=X   You can tell bitcoin about its publicly reachable address using
-	                this option, and this can be a .onion address. Given the above
-	                configuration, you can find your .onion address in
+	-externalip=X   You can tell bitcoin about its publicly reachable addresses using
+	                this option, and this can be an onion address. Given the above
+	                configuration, you can find your onion address in
 	                /var/lib/tor/bitcoin-service/hostname. For connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
-	                Tor proxy typically runs), .onion addresses are given
+	                Tor proxy typically runs), onion addresses are given
 	                preference for your node to advertise itself with.
+
+	                You can set multiple local addresses with -externalip. The
+	                one that will be rumoured to a particular peer is the most
+	                compatible one and also using heuristics, e.g. the address
+	                with the most incoming connections, etc.
 
 	-listen         You'll need to enable listening for incoming connections, as this
 	                is off by default behind a proxy.
