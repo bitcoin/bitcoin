@@ -246,7 +246,7 @@ void BitcoinAmountField::unitChanged(int idx)
     // Determine new unit ID
     int newUnit = units->data(idx, BitcoinUnits::UnitRole).toInt();
 
-    amount->setPlaceholderText(tr("Amount in ") + units->data(idx,Qt::DisplayRole).toString());
+    amount->setPlaceholderText(tr("Amount in %1").arg(units->data(idx,Qt::DisplayRole).toString()));
 
     amount->setDisplayUnit(newUnit);
 }

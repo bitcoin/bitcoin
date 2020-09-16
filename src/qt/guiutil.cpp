@@ -327,7 +327,7 @@ void setupAppearance(QWidget* parent, OptionsModel* model)
         dlg.setWindowTitle(QObject::tr("Appearance Setup"));
         dlg.setWindowIcon(QIcon(":icons/bitcoin"));
         // And the widgets we add to it
-        QLabel lblHeading(QObject::tr("Please choose your prefered settings for the appearance of %1").arg(QObject::tr(PACKAGE_NAME)), &dlg);
+        QLabel lblHeading(QObject::tr("Please choose your preferred settings for the appearance of %1").arg(QObject::tr(PACKAGE_NAME)), &dlg);
         lblHeading.setObjectName("lblHeading");
         lblHeading.setWordWrap(true);
         QLabel lblSubHeading(QObject::tr("This can also be adjusted later in the \"Appearance\" tab of the preferences."), &dlg);
