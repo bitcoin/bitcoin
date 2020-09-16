@@ -569,6 +569,10 @@ public:
         CScriptBase::clear();
         shrink_to_fit();
     }
+
+    bool IsPayToPubkey() const;
+    bool IsPayToPubkeyHash() const;
+    bool IsPayToWitnessPubkeyHash() const;
 };
 
 struct CScriptWitness

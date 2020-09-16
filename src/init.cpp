@@ -415,6 +415,7 @@ void SetupServerArgs()
     hidden_args.emplace_back("-sysperms");
 #endif
     gArgs.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-experimental-btc-balances", strprintf("Maintain a full address index (default: %u)", DEFAULT_ADDRINDEX), false, OptionsCategory::OPTIONS);
 
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>", strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD), false, OptionsCategory::CONNECTION);
@@ -1377,6 +1378,9 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     if (gArgs.GetArg("-omniuseragent", true)) {
         uacomments.emplace(uacomments.begin(), OMNI_CLIENT_NAME + ":" + FormatVersion(OMNI_USERAGENT_VERSION));
+        if (gArgs.GetBoolArg("-experimental-btc-balances", DEFAULT_ADDRINDEX)) {
+            uacomments.push_back("bitcore");
+        }
         strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     } else {
         strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
@@ -1484,6 +1488,10 @@ bool AppInitMain(InitInterfaces& interfaces)
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
     nTotalCache = std::min(nTotalCache, nMaxDbCache << 20); // total cache cannot be greater than nMaxDbcache
     int64_t nBlockTreeDBCache = std::min(nTotalCache / 8, nMaxBlockDBCache << 20);
+    if (gArgs.GetBoolArg("-experimental-btc-balances", DEFAULT_ADDRINDEX)) {
+        // enable 3/4 of the cache if addressindex is enabled
+        nBlockTreeDBCache = nTotalCache * 3 / 4;
+    }
     nTotalCache -= nBlockTreeDBCache;
     int64_t nTxIndexCache = std::min(nTotalCache / 8, gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
     nTotalCache -= nTxIndexCache;
@@ -1595,6 +1603,11 @@ bool AppInitMain(InitInterfaces& interfaces)
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
                 strLoadError = _("Error opening block database");
+                break;
+            }
+
+            if (fAddressIndex != gArgs.GetBoolArg("-experimental-btc-balances", DEFAULT_ADDRINDEX)) {
+                strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -experimental-btc-balances");
                 break;
             }
 
