@@ -57,29 +57,33 @@ class P2PBlocksOnly(BitcoinTestFramework):
             self.nodes[0].p2p.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
 
-        self.log.info('Check that txs from forcerelay peers are not rejected and relayed to others')
-        self.log.info("Restarting node 0 with forcerelay permission and blocksonly")
-        self.restart_node(0, ["-persistmempool=0", "-whitelist=127.0.0.1", "-whitelistforcerelay", "-blocksonly"])
+        self.log.info('Check that txs from peers with relay-permission are not rejected and relayed to others')
+        self.log.info("Restarting node 0 with relay permission and blocksonly")
+        self.restart_node(0, ["-persistmempool=0", "-whitelist=relay@127.0.0.1", "-blocksonly"])
         assert_equal(self.nodes[0].getrawmempool(), [])
         first_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         second_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         peer_1_info = self.nodes[0].getpeerinfo()[0]
-        assert_equal(peer_1_info['whitelisted'], True)
-        assert_equal(peer_1_info['permissions'], ['noban', 'forcerelay', 'relay', 'mempool', 'download'])
+        assert_equal(peer_1_info['permissions'], ['relay'])
         peer_2_info = self.nodes[0].getpeerinfo()[1]
-        assert_equal(peer_2_info['whitelisted'], True)
-        assert_equal(peer_2_info['permissions'], ['noban', 'forcerelay', 'relay', 'mempool', 'download'])
+        assert_equal(peer_2_info['permissions'], ['relay'])
         assert_equal(self.nodes[0].testmempoolaccept([sigtx])[0]['allowed'], True)
         txid = self.nodes[0].testmempoolaccept([sigtx])[0]['txid']
 
-        self.log.info('Check that the tx from forcerelay first_peer is relayed to others (ie.second_peer)')
+        self.log.info('Check that the tx from first_peer with relay-permission is relayed to others (ie.second_peer)')
         with self.nodes[0].assert_debug_log(["received getdata"]):
+            # Note that normally, first_peer would never send us transactions since we're a blocksonly node.
+            # By activating blocksonly, we explicitly tell our peers that they should not send us transactions,
+            # and Bitcoin Core respects that choice and will not send transactions.
+            # But if, for some reason, first_peer decides to relay transactions to us anyway, we should relay them to
+            # second_peer since we gave relay permission to first_peer.
+            # See https://github.com/bitcoin/bitcoin/issues/19943 for details.
             first_peer.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
-            self.log.info('Check that the forcerelay peer is still connected after sending the transaction')
+            self.log.info('Check that the peer with relay-permission is still connected after sending the transaction')
             assert_equal(first_peer.is_connected, True)
             second_peer.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
-        self.log.info("Forcerelay peer's transaction is accepted and relayed")
+        self.log.info("Relay-permission peer's transaction is accepted and relayed")
 
 
 if __name__ == '__main__':
