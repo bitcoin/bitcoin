@@ -3267,7 +3267,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
                 {"lock_unspents", UniValueType(UniValue::VBOOL)},
                 {"locktime", UniValueType(UniValue::VNUM)},
-                {"feeRate", UniValueType()}, // will be checked below,
+                {"feeRate", UniValueType()}, // will be checked below
                 {"psbt", UniValueType(UniValue::VBOOL)},
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
@@ -4006,9 +4006,10 @@ static UniValue listlabels(const JSONRPCRequest& request)
 static UniValue send(const JSONRPCRequest& request)
 {
     RPCHelpMan{"send",
+        "\nEXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
         {
-            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "a json array with outputs (key-value pairs), where none of the keys are duplicated.\n"
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A JSON array with outputs (key-value pairs), where none of the keys are duplicated.\n"
                     "That is, each address can only appear once and there can only be one 'data' object.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
                 {
@@ -4039,7 +4040,7 @@ static UniValue send(const JSONRPCRequest& request)
                     {"include_watching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only.\n"
                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
-                    {"inputs", RPCArg::Type::ARR, /* default */ "empty array", "Specify inputs instead of adding them automatically. A json array of json objects",
+                    {"inputs", RPCArg::Type::ARR, /* default */ "empty array", "Specify inputs instead of adding them automatically. A JSON array of JSON objects",
                         {
                             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
                             {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
@@ -4049,7 +4050,7 @@ static UniValue send(const JSONRPCRequest& request)
                     {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                     {"psbt", RPCArg::Type::BOOL,  /* default */ "automatic", "Always return a PSBT, implies add_to_wallet=false."},
-                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, /* default */ "empty array", "A json array of integers.\n"
+                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, /* default */ "empty array", "A JSON array of integers.\n"
                     "The fee will be equally deducted from the amount of each specified output.\n"
                     "Those recipients will receive less funds than you enter in their corresponding amount field.\n"
                     "If no outputs are specified here, the sender pays the fee.",
@@ -4071,8 +4072,8 @@ static UniValue send(const JSONRPCRequest& request)
         },
         RPCExamples{""
         "\nSend with a fee rate of 1 " + CURRENCY_ATOM + "/B\n"
-        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 " + CURRENCY_ATOM + "/B\n" +
-            "\nCreate a transaction that should confirm the next block, with a specific input, and return result without adding to wallet or broadcasting to the network\n")
+        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 " + CURRENCY_ATOM + "/B\n") +
+            "\nCreate a transaction that should confirm the next block, with a specific input, and return result without adding to wallet or broadcasting to the network\n"
         + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 economical '{\"add_to_wallet\": false, \"inputs\": [{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\", \"vout\":1}]}'")
         }
     }.Check(request);
@@ -4136,7 +4137,7 @@ static UniValue send(const JSONRPCRequest& request)
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx);
 
-    // Fill transaction with out data and sign
+    // Fill transaction with our data and sign
     bool complete = true;
     const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, true, false);
     if (err != TransactionError::OK) {
@@ -4148,13 +4149,11 @@ static UniValue send(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
 
-    // Serialize the PSBT
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
-    const std::string result_str = EncodeBase64(ssTx.str());
-
     if (psbt_opt_in || !complete || !add_to_wallet) {
-        result.pushKV("psbt", result_str);
+        // Serialize the PSBT
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << psbtx;
+        result.pushKV("psbt", EncodeBase64(ssTx.str()));
     }
 
     if (complete) {

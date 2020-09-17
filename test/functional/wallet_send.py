@@ -29,9 +29,9 @@ class WalletSendTest(BitcoinTestFramework):
 
     def test_send(self, from_wallet, to_wallet=None, amount=None, data=None,
                   arg_conf_target=None, arg_estimate_mode=None,
-                  conf_target=None, estimate_mode=None, add_to_wallet=None,psbt=None,
-                  inputs=None,add_inputs=None,change_address=None,change_position=None,
-                  include_watching=None,locktime=None,lock_unspents=None,subtract_fee_from_outputs=None,
+                  conf_target=None, estimate_mode=None, add_to_wallet=None, psbt=None,
+                  inputs=None, add_inputs=None, change_address=None, change_position=None,
+                  include_watching=None, locktime=None, lock_unspents=None, subtract_fee_from_outputs=None,
                   expect_error=None):
         assert (amount is None) != (data is None)
 
@@ -86,13 +86,13 @@ class WalletSendTest(BitcoinTestFramework):
             res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
         else:
             try:
-                assert_raises_rpc_error(expect_error[0],expect_error[1],from_wallet.send,
-                                        outputs=outputs,conf_target=arg_conf_target,estimate_mode=arg_estimate_mode,options=options)
+                assert_raises_rpc_error(expect_error[0], expect_error[1], from_wallet.send,
+                                        outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
             except AssertionError:
                 # Provide debug info if the test fails
                 self.log.error("Unexpected successful result:")
                 self.log.error(options)
-                res = from_wallet.send(outputs=outputs,conf_target=arg_conf_target,estimate_mode=arg_estimate_mode,options=options)
+                res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
                 self.log.error(res)
                 if "txid" in res and add_to_wallet:
                     self.log.error("Transaction details:")
@@ -124,7 +124,7 @@ class WalletSendTest(BitcoinTestFramework):
             tx = from_wallet.gettransaction(res["txid"])
             assert tx
             # Ensure transaction exists in the mempool:
-            tx = from_wallet.getrawtransaction(res["txid"],True)
+            tx = from_wallet.getrawtransaction(res["txid"], True)
             assert tx
             if amount:
                 if subtract_fee_from_outputs:
@@ -157,7 +157,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name="w2")
         w2 = self.nodes[1].get_wallet_rpc("w2")
         # w3 is a watch-only wallet, based on w2
-        self.nodes[1].createwallet(wallet_name="w3",disable_private_keys=True)
+        self.nodes[1].createwallet(wallet_name="w3", disable_private_keys=True)
         w3 = self.nodes[1].get_wallet_rpc("w3")
         for _ in range(3):
             a2_receive = w2.getnewaddress()
@@ -181,7 +181,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.sync_blocks()
 
         # w4 has private keys enabled, but only contains watch-only keys (from w2)
-        self.nodes[1].createwallet(wallet_name="w4",disable_private_keys=False)
+        self.nodes[1].createwallet(wallet_name="w4", disable_private_keys=False)
         w4 = self.nodes[1].get_wallet_rpc("w4")
         for _ in range(3):
             a2_receive = w2.getnewaddress()
@@ -312,7 +312,8 @@ class WalletSendTest(BitcoinTestFramework):
         locked_coins = w0.listlockunspent()
         assert_equal(len(locked_coins), 1)
         # Locked coins are automatically unlocked when manually selected
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1],add_to_wallet=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1], add_to_wallet=False)
+        assert res["complete"]
 
         self.log.info("Subtract fee from output")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, subtract_fee_from_outputs=[0])
