@@ -12,7 +12,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes,
     find_output,
 )
 
@@ -79,8 +78,8 @@ class PSBTTest(BitcoinTestFramework):
         wonline.unloadwallet()
 
         # Reconnect
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
 
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""

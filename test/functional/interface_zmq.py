@@ -11,7 +11,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import CTransaction, hash256, FromHex
 from test_framework.util import (
     assert_equal,
-    connect_nodes,
     assert_raises_rpc_error,
 )
 from io import BytesIO
@@ -102,7 +101,7 @@ class ZMQTest (BitcoinTestFramework):
         rawtx = subs[3]
 
         self.restart_node(0, ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [hashblock, hashtx, rawblock, rawtx]])
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         for socket in sockets:
             socket.connect(address)
 
@@ -207,7 +206,7 @@ class ZMQTest (BitcoinTestFramework):
         connect_blocks = self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_P2WSH_OP_TRUE)
 
         # nodes[0] will reorg chain after connecting back nodes[1]
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         self.sync_blocks() # tx in mempool valid but not advertised
 
         # Should receive nodes[1] tip
@@ -264,7 +263,7 @@ class ZMQTest (BitcoinTestFramework):
         self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_P2WSH_OP_TRUE)
 
         # nodes[0] will reorg chain after connecting back nodes[1]
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
 
         # Then we receive all block (dis)connect notifications for the 2 block reorg
         assert_equal((dc_block, "D", None), seq.receive_sequence())
@@ -406,7 +405,7 @@ class ZMQTest (BitcoinTestFramework):
         seq = ZMQSubscriber(socket, b'sequence')
 
         self.restart_node(0, ['-zmqpub%s=%s' % (seq.topic.decode(), address)])
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         socket.connect(address)
         # Relax so that the subscriber is ready before publishing zmq messages
         sleep(0.2)

@@ -20,7 +20,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes,
     hex_str_to_bytes,
 )
 
@@ -60,7 +59,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def setup_network(self):
         super().setup_network()
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 2)
 
     def run_test(self):
         self.log.info('prepare some coins for multiple *rawtransaction commands')
