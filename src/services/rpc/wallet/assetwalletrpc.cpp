@@ -304,25 +304,11 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
     if (!mintSyscoin.IsNull()) {
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);  
-        std::vector<unsigned char> vchTxValue;
-        if(mintSyscoin.vchTxValue.size() == 2) {
-            const uint16_t &posTx = (static_cast<uint16_t>(mintSyscoin.vchTxValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchTxValue[0]) << 8);
-            vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
-        }
-        else {
-            vchTxValue = mintSyscoin.vchTxValue;
-        }  
+        std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
         oSPVProofObj.__pushKV("txvalue", HexStr(vchTxValue));   
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
         oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath));
-        std::vector<unsigned char> vchReceiptValue;
-        if(mintSyscoin.vchReceiptValue.size() == 2) {
-            const uint16_t &posReceipt = (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[0]) << 8);
-            vchReceiptValue = std::vector<unsigned char>(mintSyscoin.vchReceiptParentNodes.begin()+posReceipt, mintSyscoin.vchReceiptParentNodes.end());
-        }
-        else{
-            vchReceiptValue = mintSyscoin.vchReceiptValue;
-        } 
+        std::vector<unsigned char> vchReceiptValue(mintSyscoin.vchReceiptParentNodes.begin()+mintSyscoin.posReceipt, mintSyscoin.vchReceiptParentNodes.end());
         oSPVProofObj.__pushKV("receiptvalue", HexStr(vchReceiptValue));   
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
         oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 

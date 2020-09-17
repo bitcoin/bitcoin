@@ -82,14 +82,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
 
     const std::vector<unsigned char> &vchReceiptParentNodes = mintSyscoin.vchReceiptParentNodes;
     dev::RLP rlpReceiptParentNodes(&vchReceiptParentNodes);
-    std::vector<unsigned char> vchReceiptValue;
-    if(mintSyscoin.vchReceiptValue.size() == 2) {
-        const uint16_t &posReceipt = (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[0]) << 8);
-        vchReceiptValue = std::vector<unsigned char>(mintSyscoin.vchReceiptParentNodes.begin()+posReceipt, mintSyscoin.vchReceiptParentNodes.end());
-    }
-    else{
-        vchReceiptValue = mintSyscoin.vchReceiptValue;
-    }
+    std::vector<unsigned char> vchReceiptValue(mintSyscoin.vchReceiptParentNodes.begin()+mintSyscoin.posReceipt, mintSyscoin.vchReceiptParentNodes.end());
     dev::RLP rlpReceiptValue(&vchReceiptValue);
     
     if (!rlpReceiptValue.isList()) {
@@ -171,14 +164,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     
     const std::vector<unsigned char> &vchTxParentNodes = mintSyscoin.vchTxParentNodes;
     dev::RLP rlpTxParentNodes(&vchTxParentNodes);
-    std::vector<unsigned char> vchTxValue;
-    if(mintSyscoin.vchTxValue.size() == 2) {
-        const uint16_t &posTx = (static_cast<uint16_t>(mintSyscoin.vchTxValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchTxValue[0]) << 8);
-        vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
-    }
-    else {
-        vchTxValue = mintSyscoin.vchTxValue;
-    }
+    std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
