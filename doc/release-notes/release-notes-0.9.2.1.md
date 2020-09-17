@@ -47,7 +47,7 @@ Gitian OSX build
 The deterministic build system that was already used for Windows and Linux
 builds is now used for OSX as well. Although the resulting executables have
 been tested quite a bit, there could be possible regressions. Be sure to report
-these on the Github bug tracker mentioned above.
+these on the GitHub bug tracker mentioned above.
 
 Compatibility of Linux build
 -----------------------------
