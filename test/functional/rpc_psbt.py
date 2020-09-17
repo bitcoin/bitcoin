@@ -13,7 +13,6 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     connect_nodes,
-    disconnect_nodes,
     find_output,
 )
 
@@ -46,7 +45,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Disconnect offline node from others
         # Topology of test network is linear, so this one call is enough
-        disconnect_nodes(offline_node, 1)
+        self.disconnect_nodes(0, 1)
 
         # Create watchonly on online_node
         online_node.createwallet(wallet_name='wonline', disable_private_keys=True)
