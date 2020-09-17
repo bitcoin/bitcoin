@@ -3874,6 +3874,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
 static RPCHelpMan send()
 {
     return RPCHelpMan{"send",
+        "\nEXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "a json array with outputs (key-value pairs), where none of the keys are duplicated.\n"
