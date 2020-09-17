@@ -36,12 +36,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.num_nodes = 6
         # Add new version after each release:
         self.extra_args = [
-            ["-addresstype=bech32"], # Pre-release: use to mine blocks
+            ["-addresstype=bech32", "-wallet="], # Pre-release: use to mine blocks
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # Pre-release: use to receive coins, swap wallets, etc
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.19.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.18.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.17.2
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.16.3
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-wallet=wallet.dat"], # v0.16.3
         ]
 
     def skip_test_if_missing_module(self):
