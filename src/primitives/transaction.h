@@ -731,7 +731,7 @@ public:
     }
 
     inline void SetNull() { voutAssets.clear(); posTx = 0; vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
-    inline bool IsNull() const { return (voutAssets.empty() && posTx === 0 && posReceipt == 0); }
+    inline bool IsNull() const { return (voutAssets.empty() && posTx == 0 && posReceipt == 0); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);
