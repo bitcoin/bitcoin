@@ -732,13 +732,6 @@ public:
      */
     mutable RecursiveMutex cs_wallet;
 
-    /** Get database handle used by this wallet. Ideally this function would
-     * not be necessary.
-     */
-    WalletDatabase& GetDBHandle()
-    {
-        return *database;
-    }
     WalletDatabase& GetDatabase() const override { return *database; }
 
     /**
