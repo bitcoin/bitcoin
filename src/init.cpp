@@ -2364,9 +2364,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     if(!fRegTest) {
         // SYSCOIN
         node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
-    } else {
-        SetSYSXAssetForUnitTests(args.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
-    }
+    } 
+    SetSYSXAssetForUnitTests(args.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
 
     return true;
 }
