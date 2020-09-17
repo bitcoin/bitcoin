@@ -328,8 +328,12 @@ class WalletSendTest(BitcoinTestFramework):
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1],add_to_wallet=False)
 
         self.log.info("Replaceable...")
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, replaceable=True)
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, replaceable=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=True, replaceable=True)
+        assert res["complete"]
+        assert_equal(self.nodes[0].gettransaction(res["txid"])["bip125-replaceable"], "yes")
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=True, replaceable=False)
+        assert res["complete"]
+        assert_equal(self.nodes[0].gettransaction(res["txid"])["bip125-replaceable"], "no")
 
         self.log.info("Subtract fee from output")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, subtract_fee_from_outputs=[0])

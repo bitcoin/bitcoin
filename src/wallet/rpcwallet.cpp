@@ -3995,7 +3995,7 @@ static RPCHelpMan send()
             int change_position;
             bool rbf = pwallet->m_signal_rbf;
             if (options.exists("replaceable")) {
-                rbf = options["add_to_wallet"].get_bool();
+                rbf = options["replaceable"].get_bool();
             }
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
             CCoinControl coin_control;
