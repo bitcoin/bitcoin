@@ -31,7 +31,7 @@ class MempoolCompatibilityTest(SyscoinTestFramework):
             150200, # oldest version supported by the test framework
             None,
         ])
-        self.start_nodes()
+        self.start_nodes([[], ["-wallet="]])
         self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):

@@ -695,6 +695,11 @@ void SyscoinGUI::setWalletController(WalletController* wallet_controller)
     }
 }
 
+WalletController* SyscoinGUI::getWalletController()
+{
+    return m_wallet_controller;
+}
+
 void SyscoinGUI::addWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return;
