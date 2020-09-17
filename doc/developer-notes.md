@@ -793,19 +793,24 @@ bool ChainstateManager::ProcessNewBlock(...)
 }
 ```
 
-- When Clang Thread Safety Analysis is unable to determine if a mutex is locked, use `LockAssertion` class instances:
+- When Clang Thread Safety Analysis is unable to determine that a mutex is always locked, use the `LOCK_ASSERTION` macro to override it:
 
 ```C++
 // net_processing.h
 void RelayTransaction(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 // net_processing.cpp
+static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{ ... }
+
 void RelayTransaction(...)
 {
     AssertLockHeld(::cs_main);
 
     connman.ForEachNode([&txid, &wtxid](CNode* pnode) {
-        LockAssertion lock(::cs_main);
+        LOCK_ASSERTION(::cs_main);
+
+        CNodeState* state = State(pnode->GetId());
         ...
     });
 }
