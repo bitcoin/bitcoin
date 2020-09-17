@@ -725,8 +725,8 @@ public:
 
     SERIALIZE_METHODS(CMintSyscoin, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nBridgeTransferID, obj.nBlockNumber, obj.vchTxValue,
-        obj.vchTxParentNodes, obj.vchTxPath, obj.vchReceiptValue,
+        READWRITE(obj.nBridgeTransferID, obj.nBlockNumber, obj.posTx,
+        obj.vchTxParentNodes, obj.vchTxPath, obj.posReceipt,
         obj.vchReceiptParentNodes);
     }
 
