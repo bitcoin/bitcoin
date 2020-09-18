@@ -1176,6 +1176,12 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
             // SYSCOIN
             mapAssetAllocationConflicts.erase(hashTx);
         }
+        // remove bridge transfer id from mempool structure
+        if(IsSyscoinMintTx(tx->nVersion)) {
+            CMintSyscoin mintSyscoin(*tx);
+            if(!mintSyscoin.IsNull())
+                mapMintKeysMempool.erase(mintSyscoin.nBridgeTransferID);
+        }
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
