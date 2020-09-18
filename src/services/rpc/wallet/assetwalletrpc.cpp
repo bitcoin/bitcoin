@@ -1674,10 +1674,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.voutAssets.emplace_back(assetOut);
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.nBridgeTransferID = nBridgeTransferID;
-    mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
+    mintSyscoin.posTx = posTxValue;
     mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
     mintSyscoin.vchTxPath = ParseHex(vchTxPath);
-    mintSyscoin.vchReceiptValue = ushortToBytes(posReceiptValue);
+    mintSyscoin.posReceipt = posReceiptValue;
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
     
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
