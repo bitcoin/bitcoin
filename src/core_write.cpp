@@ -66,12 +66,10 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         entry.__pushKV("blockhash", hashBlock.GetHex());  
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);  
-        std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
-        oSPVProofObj.__pushKV("txvalue", HexStr(vchTxValue));
+        oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
         oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
-        std::vector<unsigned char> vchReceiptValue(mintSyscoin.vchReceiptParentNodes.begin()+mintSyscoin.posReceipt, mintSyscoin.vchReceiptParentNodes.end());
-        oSPVProofObj.__pushKV("receiptvalue", HexStr(vchReceiptValue));   
+        oSPVProofObj.__pushKV("posReceipt", mintSyscoin.posReceipt);   
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes));  
         oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj);
