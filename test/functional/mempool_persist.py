@@ -111,7 +111,6 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(tx_creation_time, self.nodes[0].getmempoolentry(txid=last_txid)['time'])
 
         # Verify accounting of mempool transactions after restart is correct
-        self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
         assert_equal(node2_balance, self.nodes[2].getbalance())
 
         # start node0 with wallet disabled so wallet transactions don't get resubmitted
