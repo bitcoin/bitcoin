@@ -215,11 +215,12 @@ UniValue getbestchainlock(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getbestchainlock\n"
-            "\nReturns the block hash of the best chainlock. Throws an error if there is no known chainlock yet. "
+            "\nReturns information about the best chainlock. Throws an error if there is no known chainlock yet."
             "\nResult:\n"
             "{\n"
             "  \"blockhash\" : \"hash\",      (string) The block hash hex encoded\n"
             "  \"height\" : n,              (numeric) The block height or index\n"
+            "  \"signature\" : \"hash\",    (string) The chainlock's BLS signature.\n"
             "  \"known_block\" : true|false (boolean) True if the block is known by our node\n"
             "}\n"
             "\nExamples:\n"
@@ -234,6 +235,8 @@ UniValue getbestchainlock(const JSONRPCRequest& request)
     }
     result.pushKV("blockhash", clsig.blockHash.GetHex());
     result.pushKV("height", clsig.nHeight);
+    result.pushKV("signature", clsig.sig.ToString());
+
     LOCK(cs_main);
     result.pushKV("known_block", mapBlockIndex.count(clsig.blockHash) > 0);
     return result;
