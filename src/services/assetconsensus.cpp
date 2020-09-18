@@ -80,8 +80,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     
      // check transaction receipt validity
 
-    const std::vector<unsigned char> &vchReceiptParentNodes = mintSyscoin.vchReceiptParentNodes;
-    dev::RLP rlpReceiptParentNodes(&vchReceiptParentNodes);
+    dev::RLP rlpReceiptParentNodes(&mintSyscoin.vchReceiptParentNodes);
     std::vector<unsigned char> vchReceiptValue(mintSyscoin.vchReceiptParentNodes.begin()+mintSyscoin.posReceipt, mintSyscoin.vchReceiptParentNodes.end());
     dev::RLP rlpReceiptValue(&vchReceiptValue);
     
@@ -162,8 +161,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxRoot(&txRootDB.vchTxRoot);
     dev::RLP rlpReceiptRoot(&txRootDB.vchReceiptRoot);
     
-    const std::vector<unsigned char> &vchTxParentNodes = mintSyscoin.vchTxParentNodes;
-    dev::RLP rlpTxParentNodes(&vchTxParentNodes);
+    dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNode);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
