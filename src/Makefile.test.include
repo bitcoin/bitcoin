@@ -233,6 +233,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/net.cpp \
  test/fuzz/net_permissions.cpp \
  test/fuzz/netaddress.cpp \
+ test/fuzz/node_eviction.cpp \
  test/fuzz/p2p_transport_deserializer.cpp \
  test/fuzz/parse_hd_keypath.cpp \
  test/fuzz/parse_iso8601.cpp \
