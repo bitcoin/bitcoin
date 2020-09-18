@@ -161,6 +161,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     appearance = new AppearanceWidget(ui->widgetAppearance);
     appearanceLayout->addWidget(appearance);
     ui->widgetAppearance->setLayout(appearanceLayout);
+
+    updatePrivateSendVisibility();
 }
 
 OptionsDialog::~OptionsDialog()
@@ -392,6 +394,28 @@ void OptionsDialog::updateDefaultProxyNets()
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+}
+
+void OptionsDialog::updatePrivateSendVisibility()
+{
+#ifdef ENABLE_WALLET
+    bool fEnabled = CPrivateSendClientOptions::IsEnabled();
+#else
+    bool fEnabled = false;
+#endif
+    std::vector<QWidget*> vecWidgets{
+        ui->showAdvancedPSUI,
+        ui->showPrivateSendPopups,
+        ui->lowKeysWarning,
+        ui->privateSendMultiSession,
+        ui->privateSendAmount,
+        ui->lblPrivateSendAmountText,
+        ui->lblPrivateSendRoundsText,
+        ui->privateSendRounds,
+    };
+    for (auto w : vecWidgets) {
+        w->setVisible(fEnabled);
+    }
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :
