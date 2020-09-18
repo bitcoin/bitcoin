@@ -161,7 +161,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxRoot(&txRootDB.vchTxRoot);
     dev::RLP rlpReceiptRoot(&txRootDB.vchReceiptRoot);
     
-    dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNode);
+    dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
