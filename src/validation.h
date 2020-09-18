@@ -212,6 +212,14 @@ BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::D
 /** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
 int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
+/**
+* Calculate the fee of a transaction by looking up inputs from the mempool if
+* necessary. Return true if the fee was successfully calculated, or false if
+* an error with the transaction was discovered.
+* If the transaction is valid, then the fee returned is correct.
+* However, success does not imply that the transaction is valid.
+*/
+Optional<CAmount> GetTransactionFee(CTxMemPool& pool, TxValidationState& state, const CTransaction& tx);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
