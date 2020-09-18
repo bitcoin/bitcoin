@@ -44,6 +44,13 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     GUIUtil::disableMacFocusRect(this);
 
+#ifdef Q_OS_MAC
+    /* Hide some options on Mac */
+    ui->hideTrayIcon->hide();
+    ui->minimizeToTray->hide();
+    ui->minimizeOnClose->hide();
+#endif
+
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
@@ -80,13 +87,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         pageButtons.addButton(ui->btnWallet, pageButtons.buttons().size());
     }
     pageButtons.addButton(ui->btnNetwork, pageButtons.buttons().size());
-#ifdef Q_OS_MAC
-    /* remove Window tab on Mac */
-    ui->stackedWidgetOptions->removeWidget(ui->pageWindow);
-    ui->btnWindow->hide();
-#else
-    pageButtons.addButton(ui->btnWindow, pageButtons.buttons().size());
-#endif
     pageButtons.addButton(ui->btnDisplay, pageButtons.buttons().size());
     pageButtons.addButton(ui->btnAppearance, pageButtons.buttons().size());
 
@@ -208,6 +208,11 @@ void OptionsDialog::setMapper()
 {
     /* Main */
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
+#ifndef Q_OS_MAC
+    mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
+    mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
+    mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
+#endif
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
 
@@ -233,13 +238,6 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->connectSocksTor, OptionsModel::ProxyUseTor);
     mapper->addMapping(ui->proxyIpTor, OptionsModel::ProxyIPTor);
     mapper->addMapping(ui->proxyPortTor, OptionsModel::ProxyPortTor);
-
-    /* Window */
-#ifndef Q_OS_MAC
-    mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
-    mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
-    mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
-#endif
 
     /* Display */
     mapper->addMapping(ui->digits, OptionsModel::Digits);

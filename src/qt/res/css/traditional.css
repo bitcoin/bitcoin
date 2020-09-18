@@ -54,7 +54,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain,
 #btnWallet,
 #btnNetwork,
-#btnWindow,
 #btnDisplay,
 #btnAppearance,
 /* Sign/Verify dialog buttons */
@@ -78,7 +77,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:hover:checked,
 #btnWallet:hover:checked,
 #btnNetwork:hover:checked,
-#btnWindow:hover:checked,
 #btnDisplay:hover:checked,
 #btnAppearance:hover:checked,
 /* Sign/Verify dialog buttons */
@@ -101,7 +99,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:hover:!checked,
 #btnWallet:hover:!checked,
 #btnNetwork:hover:!checked,
-#btnWindow:hover:!checked,
 #btnDisplay:hover:!checked,
 #btnAppearance:hover:!checked,
 /* Sign/Verify dialog buttons */
@@ -124,7 +121,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:checked,
 #btnWallet:checked,
 #btnNetwork:checked,
-#btnWindow:checked,
 #btnDisplay:checked,
 #btnAppearance:checked,
 /* Sign/Verify dialog buttons */
@@ -190,17 +186,6 @@ QDialog#AppearanceSetup > AppearanceWidget {
 AppearanceWidget
 ******************************************************/
 
-AppearanceWidget #lblSmaller,
-AppearanceWidget #lblBigger,
-AppearanceWidget #lblBolderNormal,
-AppearanceWidget #lblBolderBold,
-AppearanceWidget #lblLighterNormal,
-AppearanceWidget #lblLighterBold {
-    /* Exceptional use of font-size here to
-    avoid changes of the slider postions */
-    font-size: 13px;
-}
-
 AppearanceWidget #lblTheme,
 AppearanceWidget #lblFontFamily,
 AppearanceWidget #lblFontScale,
@@ -220,8 +205,21 @@ AppearanceWidget #lblFontFamily,
 AppearanceWidget #lblFontScale,
 AppearanceWidget #lblFontWeightNormal,
 AppearanceWidget #lblFontWeightBold {
-    min-width: 170px;
-    max-width: 170px;
+    min-width: 280px;
+    max-width: 280px;
+}
+
+/******************************************************
+OptionsDialog
+******************************************************/
+
+QDialog#OptionsDialog {
+    min-width: 650px;
+}
+
+QDialog#OptionsDialog QCheckBox#connectSocksTor,
+QDialog#OptionsDialog QLabel#overriddenByCommandLineInfoLabel {
+    min-width: 550px;
 }
 
 /******************************************************
