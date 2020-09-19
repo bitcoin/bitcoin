@@ -24,6 +24,7 @@ std::vector<unsigned char> vchFromString(const std::string &str);
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 std::string stringFromSyscoinTx(const int &nVersion);
 std::string assetFromTx(const int &nVersion);
+typedef std::unordered_map<uint32_t, std::pair<bool, CAmount> > CAssetsMap;
 enum {
     ASSET_UPDATE_DATA=1, // can you update public data field?
     ASSET_UPDATE_CONTRACT=2, // can you update smart contract?
@@ -214,5 +215,5 @@ public:
 };
 static CAsset emptyAsset;
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetIn, const std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut);
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 #endif // SYSCOIN_SERVICES_ASSET_H

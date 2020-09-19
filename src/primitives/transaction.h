@@ -550,7 +550,7 @@ public:
     CAmount GetValueOut() const;
     // SYSCOIN
     CAmount GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const;
-    bool GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const;
+    bool GetAssetValueOut(CAssetsMap &mapAssetOut, TxValidationState& state) const;
     uint256 GetNotarySigHash(const CAssetOut &vecOut) const;
     /**
      * Get the total transaction size in bytes, including witness data.

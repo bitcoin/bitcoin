@@ -98,11 +98,11 @@ bool GetAsset(const uint32_t &nAsset,
     return true;
 }
 
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetIn, const std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut) {
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (mapAssetOut.empty()) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outputs-empty");
     }
-    std::unordered_map<uint32_t, std::pair<bool, CAmount> >::const_iterator itOut;
+    CAssetsMap::const_iterator itOut;
     const bool &isNoInput = IsSyscoinWithNoInputTx(tx.nVersion);
     if(isNoInput) {
         itOut = mapAssetOut.find(nAsset);

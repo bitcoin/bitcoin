@@ -382,7 +382,7 @@ CAmount CTransaction::GetAssetValueOut(const std::vector<CAssetOutValue> &vecVou
     }
     return nTotal;
 }
-bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, CAmount> > &mapAssetOut, TxValidationState& state) const
+bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
     for(const auto &it: voutAssets) {
