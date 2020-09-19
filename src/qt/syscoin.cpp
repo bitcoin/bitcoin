@@ -167,8 +167,8 @@ void SyscoinCore::initialize()
 {
     try
     {
-        qDebug() << __func__ << ": Running initialization in thread";
         util::ThreadRename("qt-init");
+        qDebug() << __func__ << ": Running initialization in thread";
         interfaces::BlockAndHeaderTipInfo tip_info;
         bool rv = m_node.appInitMain(&tip_info);
         Q_EMIT initializeResult(rv, tip_info);
