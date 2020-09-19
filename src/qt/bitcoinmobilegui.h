@@ -31,6 +31,8 @@ public Q_SLOTS:
     void showInitMessage(const QString &message, int alignment, const QColor &color);
     void message(const QString &title, QString message, unsigned int style, bool *ret);
     void splashFinished();
+    /** called by a timer to check if ShutdownRequested() has been set **/
+    void detectShutdown();
 
 private Q_SLOTS:
     void requestBitcoin();

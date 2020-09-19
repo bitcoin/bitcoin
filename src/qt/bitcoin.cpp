@@ -237,6 +237,8 @@ void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 #ifdef MOBILE_GUI
     window = new BitcoinMobileGUI(m_node, platformStyle, networkStyle, nullptr);
     connect(this, &BitcoinApplication::splashFinished, window, &BitcoinMobileGUI::splashFinished);
+    pollShutdownTimer = new QTimer(window);
+    connect(pollShutdownTimer, &QTimer::timeout, window, &BitcoinMobileGUI::detectShutdown);
     window->show();
 #else
     window = new BitcoinGUI(m_node, platformStyle, networkStyle, nullptr);
