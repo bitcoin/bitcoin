@@ -258,8 +258,8 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
+    using NodeFn = std::function<void(CNode*)>;
+    void ForEachNode(const NodeFn& func)
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
@@ -268,8 +268,7 @@ public:
         }
     };
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func) const
+    void ForEachNode(const NodeFn& func) const
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
