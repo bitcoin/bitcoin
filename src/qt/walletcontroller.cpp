@@ -14,6 +14,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <util/string.h>
+#include <util/threadnames.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
 
@@ -45,6 +46,9 @@ WalletController::WalletController(ClientModel& client_model, const PlatformStyl
 
     m_activity_worker->moveToThread(m_activity_thread);
     m_activity_thread->start();
+    QTimer::singleShot(0, m_activity_worker, []() {
+        util::ThreadRename("qt-walletctrl");
+    });
 }
 
 // Not using the default destructor because not all member types definitions are
