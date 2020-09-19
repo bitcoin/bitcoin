@@ -698,7 +698,7 @@ private:
     std::string m_name;
 
     /** Internal database handle. */
-    std::unique_ptr<WalletDatabase> database;
+    std::unique_ptr<WalletDatabase> const m_database;
 
     /**
      * The following is used to keep track of how far behind the wallet is
@@ -732,7 +732,11 @@ public:
      */
     mutable RecursiveMutex cs_wallet;
 
-    WalletDatabase& GetDatabase() const override { return *database; }
+    WalletDatabase& GetDatabase() const override
+    {
+        assert(static_cast<bool>(m_database));
+        return *m_database;
+    }
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
@@ -754,7 +758,7 @@ public:
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
           m_name(name),
-          database(std::move(database))
+          m_database(std::move(database))
     {
     }
 
