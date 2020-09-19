@@ -24,7 +24,6 @@ std::vector<unsigned char> vchFromString(const std::string &str);
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 std::string stringFromSyscoinTx(const int &nVersion);
 std::string assetFromTx(const int &nVersion);
-typedef std::unordered_map<uint32_t, std::pair<bool, CAmount> > CAssetsMap;
 enum {
     ASSET_UPDATE_DATA=1, // can you update public data field?
     ASSET_UPDATE_CONTRACT=2, // can you update smart contract?
