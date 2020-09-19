@@ -616,15 +616,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     size_t& nConflictingSize = ws.m_conflicting_size;
     if (!CheckTransaction(tx, state))
         return false; // state filled in by CheckTransaction
-    // SYSCOIN
-    bool isAssetTx = false;
-    if(tx.HasAssets()) {
-        isAssetTx = IsAssetTx(tx.nVersion);
-        TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept)) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT, "bad-syscoin-tx", tx_state.ToString()); 
-        } 
-    }  
+
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
@@ -751,10 +743,22 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     CAmount nFees = 0;
-    if (!Consensus::CheckTxInputs(tx, state, m_view, GetSpendHeight(m_view), nFees)) {
+    // SYSCOIN
+    CAssetsMap mapAssetIn;
+    CAssetsMap mapAssetOut;
+    if (!Consensus::CheckTxInputs(tx, state, m_view, GetSpendHeight(m_view), nFees), mapAssetIn, mapAssetOut) {
         return false; // state filled in by CheckTxInputs
     }
 
+    // SYSCOIN
+    bool isAssetTx = false;
+    if(tx.HasAssets()) {
+        isAssetTx = IsAssetTx(tx.nVersion);
+        TxValidationState tx_state;
+        if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
+            return state.Invalid(TxValidationResult::TX_CONFLICT, "bad-syscoin-tx", tx_state.ToString()); 
+        } 
+    }  
     // Check for non-standard pay-to-script-hash in inputs
     if (fRequireStandard && !AreInputsStandard(tx, m_view)) {
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
@@ -1947,6 +1951,10 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 error("DisconnectBlock(): transaction and undo data inconsistent");
                 return DISCONNECT_FAILED;
             }
+            // SYSCOIN
+            if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, txundo, view, mapAssets, mapMintKeys))
+                fClean = false;
+                
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
                 int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
@@ -1955,9 +1963,6 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
-        // SYSCOIN
-        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, view, mapAssets, mapMintKeys))
-            fClean = false;
     } 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
@@ -2299,24 +2304,26 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         if (!isCoinBase)
         {
             TxValidationState tx_state;
+            CAmount txfee = 0;
+            // SYSCOIN
+            CAssetsMap mapAssetIn;
+            CAssetsMap mapAssetOut;
+            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee, mapAssetIn, mapAssetOut)) {
+                // Any transaction validation failure in ConnectBlock is a block consensus failure
+                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                            tx_state.GetRejectReason(), tx_state.GetDebugMessage());
+                return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+            }
             // SYSCOIN
             if(hasAssets){
                 TxValidationState tx_statesys;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_statesys, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys)){
+                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_statesys, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_statesys.GetRejectReason(), tx_statesys.GetDebugMessage());
                     return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
                 }
-            }
-
-            CAmount txfee = 0;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
-                // Any transaction validation failure in ConnectBlock is a block consensus failure
-                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-                            tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
             }
             nFees += txfee;
             if (!MoneyRange(nFees)) {
@@ -4704,6 +4711,12 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
             const uint256& txHash = tx->GetHash();
             if(tx->HasAssets()){
                 TxValidationState tx_state;
+                CAmount txfee = 0;
+                CAssetsMap mapAssetIn;
+                CAssetsMap mapAssetOut;
+                if (!Consensus::CheckTxInputs(tx, tx_state, inputs, pindex->nHeight, txfee, mapAssetIn, mapAssetOut)) {
+                    return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+                }
                 // just temp var not used in !fJustCheck mode
                 if (!CheckSyscoinInputs(ibd, *tx, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys)) {
                     return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, txHash.ToString(), tx_state.ToString());

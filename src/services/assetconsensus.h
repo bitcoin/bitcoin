@@ -8,6 +8,7 @@
 #include <dbwrapper.h>
 class TxValidationState;
 class CCoinsViewCache;
+class CTxUndo;
 class EthereumTxRoot {
     public:
     std::vector<unsigned char> vchBlockHash;
@@ -61,14 +62,14 @@ extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
-bool DisconnectAssetSend(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
+bool DisconnectAssetSend(const CTransaction &tx, const uint256& txHash, const CTxUndo& txundo, AssetMap &mapAssets);
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys);
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys);
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys);
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys);
-bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck=false);
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck);
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys);
-bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck = false);
+bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
+bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string &errorMessage, bool bConsensus);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H
