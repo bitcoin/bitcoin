@@ -878,6 +878,11 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                             {RPCResult::Type::BOOL, "allowed", "If the mempool allows this tx to be inserted"},
+                            {RPCResult::Type::NUM, "vsize", "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
+                            {RPCResult::Type::OBJ, "fees", "Transaction fees (only present if 'allowed' is true)",
+                            {
+                                {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
+                            }},
                             {RPCResult::Type::STR, "reject-reason", "Rejection string (only present when 'allowed' is false)"},
                         }},
                     }
@@ -924,13 +929,22 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
 
     TxValidationState state;
     bool test_accept_res;
+    CAmount fee;
     {
         LOCK(cs_main);
         test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true, &fee);
     }
     result_0.pushKV("allowed", test_accept_res);
-    if (!test_accept_res) {
+
+    // Only return the fee and vsize if the transaction would pass ATMP.
+    // These can be used to calculate the feerate.
+    if (test_accept_res) {
+        result_0.pushKV("vsize", virtual_size);
+        UniValue fees(UniValue::VOBJ);
+        fees.pushKV("base", ValueFromAmount(fee));
+        result_0.pushKV("fees", fees);
+    } else {
         if (state.IsInvalid()) {
             if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
                 result_0.pushKV("reject-reason", "missing-inputs");
