@@ -65,12 +65,14 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(ResolveIP("2001:10::").IsRFC4843());
     BOOST_CHECK(ResolveIP("2001:20::").IsRFC7343());
     BOOST_CHECK(ResolveIP("FE80::").IsRFC4862());
+    BOOST_CHECK(ResolveIP("FEC0::").IsRFC3897());
     BOOST_CHECK(ResolveIP("64:FF9B::").IsRFC6052());
     BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").IsTor());
     BOOST_CHECK(ResolveIP("127.0.0.1").IsLocal());
     BOOST_CHECK(ResolveIP("::1").IsLocal());
     BOOST_CHECK(ResolveIP("8.8.8.8").IsRoutable());
     BOOST_CHECK(ResolveIP("2001::1").IsRoutable());
+    BOOST_CHECK(!ResolveIP("FEC0::").IsRoutable());
     BOOST_CHECK(ResolveIP("127.0.0.1").IsValid());
     BOOST_CHECK(CreateInternal("FD6B:88C0:8724:edb1:8e4:3588:e546:35ca").IsInternal());
     BOOST_CHECK(CreateInternal("bar.com").IsInternal());

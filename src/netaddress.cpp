@@ -229,6 +229,11 @@ bool CNetAddr::IsRFC7343() const
            (m_addr[3] & 0xF0) == 0x20;
 }
 
+bool CNetAddr::IsRFC3897() const
+{
+    return IsIPv6() && m_addr[0] == 0xFE && (m_addr[1] & 0xC0) == 0xC0;
+}
+
 bool CNetAddr::IsHeNet() const
 {
     return IsIPv6() && HasPrefix(m_addr, std::array<uint8_t, 4>{0x20, 0x01, 0x04, 0x70});
@@ -304,7 +309,7 @@ bool CNetAddr::IsValid() const
  */
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsRFC7343() || IsLocal() || IsInternal());
+    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsRFC7343() || IsRFC3897() || IsLocal() || IsInternal());
 }
 
 /**
