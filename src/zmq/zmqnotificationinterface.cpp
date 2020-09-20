@@ -177,7 +177,6 @@ void CZMQNotificationInterface::NotifyGovernanceVote(const CGovernanceVote &vote
 
 void CZMQNotificationInterface::NotifyGovernanceObject(const CGovernanceObject &object)
 {
-    {
     TryForEachAndRemoveFailed(notifiers, [&object](CZMQAbstractNotifier* notifier) {
         return notifier->NotifyGovernanceObject(object);
     });
