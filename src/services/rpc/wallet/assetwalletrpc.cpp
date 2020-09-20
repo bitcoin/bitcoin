@@ -1318,13 +1318,13 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         const CAmount &nAuxFee = getAuxFee(theAsset.auxFeeDetails, it.second);
-        if(nAuxFee > 0 && !theAsset.vchAuxFeeKeyID.empty()){
+        if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
                  throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
             }
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
-            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.vchAuxFeeKeyID}));
+            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
@@ -1623,13 +1623,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         const CAmount &nAuxFee = getAuxFee(theAsset.auxFeeDetails, nAmount);
-        if(nAuxFee > 0 && !theAsset.vchAuxFeeKeyID.empty()){
+        if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
             auto itVout = std::find_if( mintSyscoin.voutAssets.begin(), mintSyscoin.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == mintSyscoin.voutAssets.end()) {
                 throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
             }
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
-            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.vchAuxFeeKeyID}));
+            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
