@@ -136,6 +136,7 @@ void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>&
         }
     }
 }
+} // anonymous namespace
 // SYSCOIN
 void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, bool fBlock)
 {
@@ -143,7 +144,7 @@ void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef&
     // all the same external callback.
     const CTransaction& tx = *ptx;
 
-    TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
+    TryForEachAndRemoveFailed(notifiers, [&tx, fBlock](CZMQAbstractNotifier* notifier) {
         // SYSCOIN
         return notifier->NotifyTransaction(tx) && (fBlock || notifier->NotifyTransactionMempool(tx));
     });
