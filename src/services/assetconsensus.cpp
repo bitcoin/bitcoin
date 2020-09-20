@@ -869,11 +869,8 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
-            if (!(theAsset.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
+            if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
-            }
-            if((theAsset.nUpdateMask & ASSET_INIT) || (theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
             }
             // db will be stored with total supply
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
