@@ -166,7 +166,6 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
         return;
     }
     const std::string &strAuxFee = addressObj.get_str();
-    std::vector<unsigned char> vchAuxFeeKeyID;
     if(!strAuxFee.empty()) {
         CTxDestination txDest = DecodeDestination(strAuxFee);
         if (!IsValidDestination(txDest)) {
