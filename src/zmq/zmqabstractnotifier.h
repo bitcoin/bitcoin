@@ -50,7 +50,6 @@ public:
     virtual bool NotifyTransaction(const CTransaction &transaction);
     // SYSCOIN
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
-    virtual bool NotifySyscoinUpdate(const char *, const char *);
     virtual bool NotifyGovernanceVote(const CGovernanceVote &vote);
     virtual bool NotifyGovernanceObject(const CGovernanceObject &object);
 

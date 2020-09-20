@@ -684,14 +684,6 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     }
     LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
     ret.__pushKV("missing_blocks", retArray);
-    if(fZMQEthStatus){
-        UniValue oEthStatus(UniValue::VOBJ);
-        oEthStatus.__pushKV("geth_sync_status",  fGethSyncStatus);
-        oEthStatus.__pushKV("geth_total_blocks",  fGethSyncHeight);
-        oEthStatus.__pushKV("geth_current_block",  fGethCurrentHeight);
-        oEthStatus.push_back(ret);
-        GetMainSignals().NotifySyscoinUpdate(oEthStatus.write().c_str(), "ethstatus");
-    }
     nLastExecTime = GetSystemTimeInSeconds();
     return ret;
 }

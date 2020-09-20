@@ -13,7 +13,6 @@
                 -zmqpubrawblock=tcp://127.0.0.1:28370 \
                 -zmqpubhashtx=tcp://127.0.0.1:28370 \
                 -zmqpubhashblock=tcp://127.0.0.1:28370 \
-                -zmqpubethstatus=tcp://127.0.0.1:28370 \
                 -zmqpubhashgovernancevote=tcp://127.0.0.1:28370 \
                 -zmqpubhashgovernanceobject=tcp://127.0.0.1:28370 \
                 -zmqpubrawgovernancevote=tcp://127.0.0.1:28370 \

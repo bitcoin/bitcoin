@@ -36,7 +36,3 @@ bool CZMQAbstractNotifier::NotifyGovernanceObject(const CGovernanceObject& /*obj
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifySyscoinUpdate(const char *, const char *)
-{
-    return true;
-}

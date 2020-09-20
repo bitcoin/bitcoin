@@ -57,11 +57,6 @@ class CZMQPublishRawMempoolTransactionNotifier : public CZMQAbstractPublishNotif
 public:
     bool NotifyTransactionMempool(const CTransaction &transaction) override;
 };
-class CZMQPublishRawSyscoinNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifySyscoinUpdate(const char *value, const char *topic) override;
-};
 class CZMQPublishHashGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
 {
 public:

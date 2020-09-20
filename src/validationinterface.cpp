@@ -267,9 +267,6 @@ void CMainSignals::NotifyGovernanceObject(const CGovernanceObject &object) {
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
      m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
 }
-void CMainSignals::NotifySyscoinUpdate(const char *value, const char *topic) {
-    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifySyscoinUpdate(value, topic); });
-}
 void CMainSignals::NotifyHeaderTip(const CBlockIndex * pindex, bool fInitialDownload) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyHeaderTip(pindex, fInitialDownload); });
 }

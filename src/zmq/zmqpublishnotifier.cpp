@@ -277,9 +277,3 @@ bool CZMQPublishRawMempoolTransactionNotifier::NotifyTransactionMempool(const CT
     ss << transaction;
     return SendZmqMessage(MSG_RAWMEMPOOLTX, &(*ss.begin()), ss.size());
 }
-
-bool CZMQPublishRawSyscoinNotifier::NotifySyscoinUpdate(const char * value, const char * topic)
-{
-    LogPrint(BCLog::ZMQ, "zmq: Publish raw syscoin payload for topic %s: %s\n", topic, value);
-    return SendZmqMessage(topic, value, strlen(value));
-}
