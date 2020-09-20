@@ -64,7 +64,6 @@ Currently, the following notifications are supported:
     -zmqpubrawblock=address
     -zmqpubrawtx=address
     -zmqpubrawmempooltx=address
-    -zmqpubethstatus=address
     -zmqpubhashgovernancevote=address
     -zmqpubhashgovernanceobject=address
     -zmqpubrawgovernancevote=address

@@ -601,7 +601,6 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-zmqpubrawblockhwm=<n>", strprintf("Set publish raw block outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawtxhwm=<n>", strprintf("Set publish raw transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     // SYSCOIN
-    argsman.AddArg("-zmqpubethstatus=<address>", "Enable publish Ethereum status updates in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernancevote=<address>", "Enable publish hash of governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernanceobject=<address>", "Enable publish hash of governance objects transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawgovernancevote=<address>", "Enable publish raw governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -610,7 +609,6 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-zmqpubrawmempooltxhwm=<n>", strprintf("Set publish raw mempool transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
 #else
     // SYSCOIN
-    hidden_args.emplace_back("-zmqpubethstatus=<address>");
     hidden_args.emplace_back("-zmqpubhashblock=<address>");
     hidden_args.emplace_back("-zmqpubhashtx=<address>");
     hidden_args.emplace_back("-zmqpubrawblock=<address>");
@@ -2164,8 +2162,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         block_notify_genesis_wait_connection.disconnect();
     }
     // SYSCOIN
-    fZMQEthStatus = args.IsArgSet("-zmqpubethstatus");
-
     const std::vector<std::string> auth = args.GetArgs("-rpcauth");
     if(!fRegTest && !auth.empty()) {
         return InitError(Untranslated("You can not use rpcauth in any network other than regtest. It is not compliant with the Syscoin Relayer."));

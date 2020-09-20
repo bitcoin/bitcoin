@@ -34,7 +34,6 @@ protected:
     // SYSCOIN
     void NotifyGovernanceVote(const CGovernanceVote& vote) override;
     void NotifyGovernanceObject(const CGovernanceObject& object) override;
-    void NotifySyscoinUpdate(const char *value, const char *topic) override;
 private:
     CZMQNotificationInterface();
 

@@ -40,7 +40,6 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
     // SYSCOIN
-    factories["pubethstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawMempoolTransactionNotifier>;
     factories["pubhashgovernancevote"] = CZMQAbstractNotifier::Create<CZMQPublishHashGovernanceVoteNotifier>;
     factories["pubhashgovernanceobject"] = CZMQAbstractNotifier::Create<CZMQPublishHashGovernanceObjectNotifier>;
@@ -168,63 +167,18 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
     }
 }
 // SYSCOIN
-void CZMQNotificationInterface::NotifySyscoinUpdate(const char *value, const char *topic)
-{
-
-    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i != notifiers.end(); )
-    {
-        CZMQAbstractNotifier *notifier = *i;
-        std::string strTopic(topic);
-
-        // look for topic in notifier list, if finds it, sends an update
-        if (notifier->GetType() != "pub" + strTopic) {
-            i++;
-            continue;
-        }
-
-        if (notifier->NotifySyscoinUpdate(value, topic))
-        {
-            i++;
-        }
-        else
-        {
-            notifier->Shutdown();
-            i = notifiers.erase(i);
-        }
-    }
-}
-
 void CZMQNotificationInterface::NotifyGovernanceVote(const CGovernanceVote &vote)
 {
-    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i != notifiers.end(); )
-    {
-        CZMQAbstractNotifier *notifier = *i;
-        if (notifier->NotifyGovernanceVote(vote))
-        {
-            i++;
-        }
-        else
-        {
-            notifier->Shutdown();
-            i = notifiers.erase(i);
-        }
-    }
+    TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyGovernanceVote(vote));
+    });
 }
 
 void CZMQNotificationInterface::NotifyGovernanceObject(const CGovernanceObject &object)
 {
-    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i != notifiers.end(); )
     {
-        CZMQAbstractNotifier *notifier = *i;
-        if (notifier->NotifyGovernanceObject(object))
-        {
-            i++;
-        }
-        else
-        {
-            notifier->Shutdown();
-            i = notifiers.erase(i);
-        }
-    }
+    TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyGovernanceObject(vote));
+    });
 }
 CZMQNotificationInterface* g_zmq_notification_interface = nullptr;

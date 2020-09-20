@@ -76,7 +76,6 @@ bool fMasternodeMode = false;
 bool bGethTestnet = false;
 bool fDisableGovernance = false;
 bool fRegTest = false;
-bool fZMQEthStatus = false;
 bool fAssetIndex = false;
 uint32_t fGethSyncHeight = 0;
 uint32_t fGethCurrentHeight = 0;
