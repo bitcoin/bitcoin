@@ -622,10 +622,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(itOut->second.second != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-zeroval", bSanityCheck);
             }
-            // check that the first input asset has zero val input spent
-            if (!itIn->second.first) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-vin-zeroval", bSanityCheck);
-            }
             if (tx.vout[nOut].nValue < 150*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
@@ -896,7 +892,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!itIn->second.first) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
-            
+
             if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }
