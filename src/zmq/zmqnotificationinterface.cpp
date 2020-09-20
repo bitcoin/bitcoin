@@ -138,6 +138,14 @@ void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>&
 }
 } // anonymous namespace
 // SYSCOIN
+void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+{
+    if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
+        return;
+    TryForEachAndRemoveFailed(notifiers, [pindexNew](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyBlock(pindexNew);
+    });
+}
 void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, bool fBlock)
 {
     // Used by BlockConnected and BlockDisconnected as well, because they're
