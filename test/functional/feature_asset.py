@@ -97,7 +97,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], asset)
         assert_equal(assetInfo['total_supply'], maxUint)
         assert_equal(assetInfo['max_supply'], maxUint)
-        assert_raises_rpc_error(-4, 'asset-amount-outofrange', self.nodes[0].assetsend, asset, self.nodes[0].getnewaddress(), 1)
+        assert_raises_rpc_error(-4, 'asset-supply-outofrange', self.nodes[0].assetsend, asset, self.nodes[0].getnewaddress(), 1)
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 0, maxUint+1, 127, '', {}, {})
 
     def asset_transfer(self):
