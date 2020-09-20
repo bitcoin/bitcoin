@@ -159,6 +159,25 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
         SetNull();
         return;
     }
+    const UniValue& addressObj = find_value(value.get_obj(), "auxfee_address");
+    if(!addressObj.isStr()) {
+        SetNull();
+        return;
+    }
+    const std::string &strAuxFee = addressObj.get_str();
+    std::vector<unsigned char> vchAuxFeeKeyID;
+    if(!strAuxFee.empty()) {
+        CTxDestination txDest = DecodeDestination(strAuxFee);
+        if (!IsValidDestination(txDest)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address");
+        }
+        if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+            CKeyID keyID = ToKeyID(*witness_id);
+            vchAuxFeeKeyID = std::vector<unsigned char>(keyID.begin(), keyID.end());
+        } else {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address: Please use P2PWKH address.");
+        }
+    }
     const UniValue& arrObj = find_value(value.get_obj(), "fee_struct");
     if(!arrObj.isArray()) {
         SetNull();
@@ -196,7 +215,8 @@ UniValue CAuxFeeDetails::ToJson() const {
         auxfeeArr.push_back(auxfee.nPercent);
         feeStruct.push_back(auxfeeArr);
     }
-    value.pushKV("fee_struct", feeStruct);
+    value.__pushKV("auxfee_address", vchAuxFeeKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{vchAuxFeeKeyID})));
+    value.__pushKV("fee_struct", feeStruct);
     return value;
 }
 

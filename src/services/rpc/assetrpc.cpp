@@ -32,10 +32,8 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsse
     oAsset.__pushKV("notary_address", asset.vchNotaryKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
     if (!asset.notaryDetails.IsNull())
         oAsset.__pushKV("notary_details", asset.notaryDetails.ToJson());
-    oAsset.__pushKV("auxfee_address", asset.vchAuxFeeKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID})));
     if (!asset.auxFeeDetails.IsNull())
-		oAsset.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
-    oAsset.__pushKV("balance", asset.nBalance);
+		oAsset.__pushKV("auxfee", asset.auxFeeDetails.ToJson());
 	oAsset.__pushKV("total_supply", asset.nTotalSupply);
 	oAsset.__pushKV("max_supply", asset.nMaxSupply);
 	oAsset.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);

@@ -48,7 +48,7 @@ class AssetReOrgTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], self.asset)
 
     def basic_asset(self):
-        self.asset = self.nodes[2].assetnew('1', 'TST', 'asset description', '0x', 8, 1000, 10000, 255, '', '', {}, {})['asset_guid']
+        self.asset = self.nodes[2].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
 
 if __name__ == '__main__':
     AssetReOrgTest().main()

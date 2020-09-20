@@ -245,7 +245,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         return false;
     CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
-        if (wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+        if(asset.nUpdateMask & ASSET_INIT)  {
             entry.__pushKV("symbol", asset.strSymbol);
             entry.__pushKV("max_supply", asset.nMaxSupply);
             entry.__pushKV("precision", asset.nPrecision);
@@ -260,20 +260,14 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) 
             entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
 
-        if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) 
-            entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID})));
-
-        if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) 
-            entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
+        if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) 
+            entry.__pushKV("auxfee", asset.auxFeeDetails.ToJson());
 
         if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) 
             entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
 
         if(asset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) 
             entry.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
-
-        if(asset.nUpdateMask & ASSET_UPDATE_SUPPLY) 
-            entry.__pushKV("balance", asset.nBalance);
 
         entry.__pushKV("update_flags", asset.nUpdateMask);
     }
@@ -537,11 +531,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for ability to update the capability flags (this field). 255 for all. 0 for none (not updatable)."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
-        {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
                 {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
@@ -549,8 +541,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
                 {"hd_required", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires HD Wallet approval (for sender approval specifically applicable to change address schemes), usually in the form of account XPUB or Verifiable Credential of account XPUB using DID"},  
             }
         },
-        {"auxfee_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary and auxfee_address is set)",
+        {"auxfee_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
             {
+                {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
                 {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
                         {"", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
@@ -568,8 +561,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 \"notary_address\" \"auxfee_address\" {} {}")
-    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, \"notary_address\", \"auxfee_address\", {}, {}")
+    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 63 \"notary_address\" {} {}")
+    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 63, \"notary_address\", {}, {}")
     }
     }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -601,22 +594,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
     catch(...) {
         nGas = 0;
     }
-    CAmount nBalance;
-    try{
-        nBalance = AssetAmountFromValue(params[5], precision);
-    }
-    catch(...) {
-        nBalance = params[5].get_int64();
-    }
     CAmount nMaxSupply;
     try{
-        nMaxSupply = AssetAmountFromValue(params[6], precision);
+        nMaxSupply = AssetAmountFromValue(params[5], precision);
     }
     catch(...) {
-        nMaxSupply = params[6].get_int64();
+        nMaxSupply = params[5].get_int64();
     }
-    uint32_t nUpdateCapabilityFlags = params[7].get_uint();
-    std::string strNotary = params[8].get_str();
+    uint32_t nUpdateCapabilityFlags = params[6].get_uint();
+    std::string strNotary = params[7].get_str();
     std::vector<unsigned char> vchNotaryKeyID;
     if(!strNotary.empty()) {
         CTxDestination txDest = DecodeDestination(strNotary);
@@ -630,29 +616,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid notary address: Please use P2PWKH address.");
         }
     }
-    std::string strAuxFee = params[9].get_str();
-    std::vector<unsigned char> vchAuxFeeKeyID;
-    if(!strAuxFee.empty()) {
-        CTxDestination txDest = DecodeDestination(strAuxFee);
-        if (!IsValidDestination(txDest)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address");
-        }
-        if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-            CKeyID keyID = ToKeyID(*witness_id);
-            vchAuxFeeKeyID = std::vector<unsigned char>(keyID.begin(), keyID.end());
-        } else {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address: Please use P2PWKH address.");
-        }
-    }
-    CNotaryDetails notaryDetails(params[10]);
-    CAuxFeeDetails auxFeeDetails(params[11], precision);
+    CNotaryDetails notaryDetails(params[8]);
+    CAuxFeeDetails auxFeeDetails(params[9], precision);
     // calculate net
     // build asset object
     CAsset newAsset;
 
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("desc", EncodeBase64(strPubData));
-    uint8_t nUpdateMask = ASSET_UPDATE_SUPPLY;
+    uint8_t nUpdateMask = ASSET_INIT;
     const std::string &strPubDataField  = publicData.write();
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     newAsset.voutAssets.emplace_back(CAssetOut(0, outVec));
@@ -669,16 +641,12 @@ UniValue assetnew(const JSONRPCRequest& request) {
         nUpdateMask |= ASSET_UPDATE_NOTARY_KEY;
         newAsset.vchNotaryKeyID = vchNotaryKeyID;
     }
-    if(!vchAuxFeeKeyID.empty()) {
-        nUpdateMask |= ASSET_UPDATE_AUXFEE_KEY;
-        newAsset.vchAuxFeeKeyID = vchAuxFeeKeyID;
-    }
     if(!notaryDetails.IsNull()) {
         nUpdateMask |= ASSET_UPDATE_NOTARY_DETAILS;
         newAsset.notaryDetails = notaryDetails;
     }
     if(!auxFeeDetails.IsNull()) {
-        nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
+        nUpdateMask |= ASSET_UPDATE_AUXFEE
         newAsset.auxFeeDetails = auxFeeDetails;
     }
     if(nUpdateCapabilityFlags != 0) {
@@ -686,10 +654,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
         newAsset.nPrevUpdateCapabilityFlags = nUpdateCapabilityFlags;
     }
     newAsset.nUpdateMask = nUpdateMask;
-    newAsset.nBalance = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
-    newAsset.nTotalSupply = 0;
     newAsset.nUpdateCapabilityFlags = nUpdateCapabilityFlags;
     
     std::vector<unsigned char> data;
@@ -778,11 +744,9 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"total_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for ability to update the capability flags (this field). 255 for all. 0 for none (not updatable)."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
-        {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
                 {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
@@ -790,8 +754,9 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
                 {"hd_required", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires HD Wallet approval (for sender approval specifically applicable to change address schemes), usually in the form of account XPUB or Verifiable Credential of account XPUB using DID"},  
             }
         },
-        {"auxfee_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary and auxfee_address is set)",
+        {"auxfee_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
             {
+                {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
                 {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                     {
                         {"", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
@@ -808,13 +773,13 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 63 \"notary_address\" \"auxfee_address\" {} {}")
-    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 63, \"notary_address\", \"auxfee_address\", {}, {}")
+    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 63 \"notary_address\" {} {}")
+    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 63, \"notary_address\", {}, {}")
     }
     }.Check(request);
     UniValue paramsFund(UniValue::VARR);
     nCustomAssetGuid = params[0].get_uint();
-    for(int i = 1;i<=12;i++)
+    for(int i = 1;i<=10;i++)
         paramsFund.push_back(params[i]);
     JSONRPCRequest assetNewRequest(request.context);
     assetNewRequest.params = paramsFund;
@@ -913,10 +878,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
-            {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for ability to update the capability flags (this field). 255 for all. 0 for none (not updatable)."},
             {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
-            {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
             {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
                 {
                     {"endpoint", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary API endpoint (if applicable)"},
@@ -924,8 +887,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                     {"hd_required", RPCArg::Type::BOOL, RPCArg::Optional::NO, "If Notary requires HD Wallet approval (for sender approval specifically applicable to change address schemes), usually in the form of account XPUB or Verifiable Credential of account XPUB using DID"},  
                 }
             },
-            {"auxfee_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary and auxfee_address is set)",
+            {"auxfee_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure (may be enforced if notary is set)",
                 {
+                    {"auxfee_address", RPCArg::Type::STR, RPCArg::Optional::NO, "AuxFee address"},
                     {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
                         {
                             {"", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
@@ -941,8 +905,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"}
             }},
         RPCExamples{
-            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"supply\" \"update_flags\" \"notary_address\" \"auxfee_address\" {} {}")
-            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", \"notary_address\", \"auxfee_address\", {}, {}")
+            HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"updatecapability_flags\" \"notary_address\" {} {}")
+            + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"updatecapability_flags\", \"notary_address\", {}, {}")
         }
         }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -966,7 +930,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if(!strContract.empty())
         boost::erase_all(strContract, "0x");  // strip 0x if exist
     std::vector<unsigned char> vchContract = ParseHex(strContract);
-    uint8_t nUpdateCapabilityFlags = (uint8_t)params[4].get_uint();
+    uint8_t nUpdateCapabilityFlags = (uint8_t)params[3].get_uint();
     
     CAsset theAsset;
 
@@ -976,21 +940,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     const std::string oldData = theAsset.strPubData;
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
     const std::vector<unsigned char> vchOldNotaryKeyID(theAsset.vchNotaryKeyID);
-    const std::vector<unsigned char> vchOldAuxFeeKeyID(theAsset.vchAuxFeeKeyID);
     const CNotaryDetails oldNotaryDetails = theAsset.notaryDetails;
     const CAuxFeeDetails oldAuxFeeDetails = theAsset.auxFeeDetails;
     const uint8_t nOldUpdateCapabilityFlags = theAsset.nUpdateCapabilityFlags;
     theAsset.ClearAsset();
-    CAmount nBalance;
-    try{
-        nBalance = AssetAmountFromValue(params[3], theAsset.nPrecision);
-    }
-    catch(...) {
-        nBalance = params[3].get_int64();
-    }
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("desc", EncodeBase64(strPubData));
-    std::string strNotary = params[5].get_str();
+    std::string strNotary = params[4].get_str();
     std::vector<unsigned char> vchNotaryKeyID;
     if(!strNotary.empty()) {
         CTxDestination txDest = DecodeDestination(strNotary);
@@ -1004,23 +960,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid notary address: Please use P2PWKH address.");
         }
     }
-    std::string strAuxFee = params[6].get_str();
-    std::vector<unsigned char> vchAuxFeeKeyID;
-    if(!strAuxFee.empty()) {
-        CTxDestination txDest = DecodeDestination(strAuxFee);
-        if (!IsValidDestination(txDest)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address");
-        }
-        if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
-            CKeyID keyID = ToKeyID(*witness_id);
-            vchAuxFeeKeyID = std::vector<unsigned char>(keyID.begin(), keyID.end());
-        } else {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address: Please use P2PWKH address.");
-        }
-    }
     uint8_t nUpdateMask = 0;
-    CNotaryDetails notaryDetails(params[7]);
-    CAuxFeeDetails auxFeeDetails(params[8], theAsset.nPrecision);
+    CNotaryDetails notaryDetails(params[5]);
+    CAuxFeeDetails auxFeeDetails(params[6], theAsset.nPrecision);
     strPubData = publicData.write();
     if(strPubData != oldData) {
         nUpdateMask |= ASSET_UPDATE_DATA;
@@ -1046,20 +988,10 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.notaryDetails = notaryDetails;
     }
 
-    if(vchAuxFeeKeyID != vchOldAuxFeeKeyID) {
-        nUpdateMask |= ASSET_UPDATE_AUXFEE_KEY;
-        theAsset.vchPrevAuxFeeKeyID = vchOldAuxFeeKeyID;
-        theAsset.vchAuxFeeKeyID = vchAuxFeeKeyID;
-    }
-
     if(auxFeeDetails != oldAuxFeeDetails) {
-        nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
+        nUpdateMask |= ASSET_UPDATE_AUXFEE;
         theAsset.prevAuxFeeDetails = oldAuxFeeDetails;
         theAsset.auxFeeDetails = auxFeeDetails;
-    }
-    if(nBalance > 0) {
-        nUpdateMask |= ASSET_UPDATE_SUPPLY;
-        theAsset.nBalance = nBalance;
     }
     if(nUpdateCapabilityFlags != nOldUpdateCapabilityFlags) {
         nUpdateMask |= ASSET_UPDATE_CAPABILITYFLAGS;
@@ -2117,9 +2049,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptmerkleproof","auxfee_test"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
-    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","total_supply","max_supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","updatecapability_flags","notary_address","auxfee_address","notary_details","auxfee_details"}},
+    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","max_supply","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
+    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","max_supply","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
+    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},

@@ -123,7 +123,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     }
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+    if(asset.nUpdateMask & ASSET_INIT) 
 		entry.__pushKV("symbol", asset.strSymbol);
         entry.__pushKV("max_supply", asset.nMaxSupply);
 		entry.__pushKV("precision", asset.nPrecision);
@@ -138,20 +138,15 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) 
 		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
 
-    if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) 
-		entry.__pushKV("auxfee_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchAuxFeeKeyID})));
-
-    if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) 
-		entry.__pushKV("auxfee_details", asset.auxFeeDetails.ToJson());
-
     if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) 
 		entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
 
+    if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE)
+        entry.__pushKV("auxfee", asset.auxFeeDetails.ToJson());
+    
+
 	if(asset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) 
 		entry.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
-
-	if(asset.nUpdateMask & ASSET_UPDATE_SUPPLY) 
-		entry.__pushKV("balance", asset.nBalance);
 
     entry.__pushKV("update_flags", asset.nUpdateMask);
 
