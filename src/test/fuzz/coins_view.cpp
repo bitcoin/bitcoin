@@ -235,6 +235,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         case 2: {
             TxValidationState state;
             CAmount tx_fee_out;
+            // SYSCOIN
+            CAssetsMap mapAssetIn, mapAssetOut;
             const CTransaction transaction{random_mutable_transaction};
             if (ContainsSpentInput(transaction, coins_view_cache)) {
                 // Avoid:
@@ -242,7 +244,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                 break;
             }
             try {
-                (void)Consensus::CheckTxInputs(transaction, state, coins_view_cache, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out);
+                (void)Consensus::CheckTxInputs(transaction, state, coins_view_cache, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out, mapAssetIn, mapAssetOut);
                 assert(MoneyRange(tx_fee_out));
             } catch (const std::runtime_error&) {
             }
