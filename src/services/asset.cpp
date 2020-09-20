@@ -110,35 +110,6 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
         if (itOut == mapAssetOut.end()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-output-first-asset-not-found");
         }
-    }
-    // case 1: asset send without zero val input, covered by this check
-    // case 2: asset send with zero val of another asset, covered by mapAssetIn != mapAssetOut
-    // case 3: asset send with multiple zero val input/output, covered by GetAssetValueOut() for output and CheckTxInputs() for input
-    // case 4: asset send sending assets without inputs of those assets, covered by this check + mapAssetIn != mapAssetOut
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
-        if (mapAssetIn.empty()) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-inputs-empty");
-        }
-        auto itIn = mapAssetIn.find(nAsset);
-        if (itIn == mapAssetIn.end()) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-input-first-asset-not-found");
-        }
-        // check that the first input asset and first output asset match
-        // note that we only care about first asset because below we will end up enforcing in == out for the rest
-        if (itIn->first != itOut->first) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-guid-mismatch");
-        }
-        // check that the first input asset has zero val input spent
-        if (!itIn->second.first) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-missing-zero-val-input");
-        }
-        // check that the first output asset has zero val output
-        if (!itOut->second.first) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-missing-zero-val-output");
-        }
-    }
-    // asset send also falls into this so for the first out we need to check for asset send seperately above
-    if (isNoInput) {
         // add first asset out to in so it matches, the rest should be the same
         // the first one is verified by checksyscoininputs() later on (part of asset send is also)
         // emplace will add if it doesn't exist or update it below

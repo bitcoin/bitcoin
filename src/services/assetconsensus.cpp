@@ -238,11 +238,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
+    // if input for this asset exists, must also include it as change in output, so output-input should be the new amount created
     auto itIn = mapAssetIn.find(nAsset);
-    if(itIn == mapAssetIn.end()) {
-        return FormatSyscoinErrorMessage(state, "mint-asset-input-notfound", bSanityCheck);           
-    } 
-    const CAmount &nTotal = itOut->second.second - itIn->second.second;
+    CAmount nTotal;
+    if(itIn != mapAssetIn.end()) {
+        nTotal = itOut->second.second - itIn->second.second;
+    } else {
+        nTotal = itOut->second.second;
+    }
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
@@ -356,15 +359,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
             }
-            auto itIn = mapAssetIn.find(nAsset);
-            if(itIn == mapAssetIn.end()) {
-                return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-input-notfound", bSanityCheck);           
-            } 
             auto itOut = mapAssetOut.find(nAsset);
             if(itOut == mapAssetOut.end()) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-output-notfound", bSanityCheck);             
             } 
-            const CAmount &nTotal = itOut->second.second - itIn->second.second;
+            // if input for this asset exists, must also include it as change in output, so output-input should be the new amount created
+            auto itIn = mapAssetIn.find(nAsset);
+            CAmount nTotal;
+            if(itIn != mapAssetIn.end()) {
+                nTotal = itOut->second.second - itIn->second.second;
+            } else {
+                nTotal = itOut->second.second;
+            }
 
             // the burn amount in opreturn (SYS) should match total output for SYSX
             if(nTotal != nBurnAmount) {
@@ -576,7 +582,19 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     auto itOut = mapAssetOut.find(nAsset);
     if(itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "asset-output-notfound", bSanityCheck);             
+    }
+    auto itIn = mapAssetIn.find(nAsset);
+    if(itIn == mapAssetIn.end()) {
+        return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
     } 
+    // check that the first input asset has zero val input spent
+    if (!itIn->second.first) {
+        return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
+    }
+    // check that the first output asset has zero val output
+    if (!itOut->second.first) {
+        return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
+    }
     CAsset dbAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
@@ -609,8 +627,12 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
-            if(!itOut->second.first || itOut->second.second != 0) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
+            if(itOut->second.second != 0) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-zeroval", bSanityCheck);
+            }
+            // check that the first input asset has zero val input spent
+            if (!itIn->second.first) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-vin-zeroval", bSanityCheck);
             }
             if (tx.vout[nOut].nValue < 150*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
@@ -713,9 +735,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
         {
-            if(!itOut->second.first || itOut->second.second != 0) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
-            }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             } 
@@ -874,13 +893,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             }
             // db will be stored with total supply
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
-            if(!itOut->second.first) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
-            }
-            auto itIn = mapAssetIn.find(nAsset);
-            if(itIn == mapAssetIn.end()) {
-                return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
-            } 
             const CAmount &nTotal = itOut->second.second - itIn->second.second;
             storedAssetRef.nTotalSupply += nTotal;
             if (!MoneyRangeAsset(nTotal)) {
