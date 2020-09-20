@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <limits>
+#include <unordered_map>
 /** Amount in satoshis (Can be negative) */
 typedef int64_t CAmount;
 
@@ -27,4 +28,5 @@ static const CAmount MAX_MONEY = 888000000 * COIN;
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL; // 10^18 - 1 max decimal value that will fit in CAmount
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 inline bool MoneyRangeAsset(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_ASSET); }
+typedef std::unordered_map<uint32_t, std::pair<bool, CAmount> > CAssetsMap;
 #endif //  SYSCOIN_AMOUNT_H
