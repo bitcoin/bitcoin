@@ -4720,8 +4720,8 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                 CAmount txfee = 0;
                 CAssetsMap mapAssetIn;
                 CAssetsMap mapAssetOut;
-                if (!Consensus::CheckTxInputs(tx, tx_state, inputs, pindex->nHeight, txfee, mapAssetIn, mapAssetOut)) {
-                    return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+                if (!Consensus::CheckTxInputs(*tx, tx_state, inputs, pindex->nHeight, txfee, mapAssetIn, mapAssetOut)) {
+                    return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), tx_state.ToString());
                 }
                 // just temp var not used in !fJustCheck mode
                 if (!CheckSyscoinInputs(ibd, *tx, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys)) {
