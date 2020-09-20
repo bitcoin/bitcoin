@@ -76,7 +76,7 @@ class AssetTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetsend, asset, self.nodes[0].getnewaddress(), 0.1)
         self.nodes[0].generate(1)
         # int64 limits
-        # largest decmal amount that we can use, without compression overflow of uint (~1 quintillion)
+        # largest decimal amount that we can use, without compression overflow of uint (~1 quintillion)
         # 10^18 - 1
         maxUint = 999999999999999999
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 0, maxUint, 127, '', {}, {})['asset_guid']

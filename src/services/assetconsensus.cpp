@@ -703,6 +703,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             } else if (!storedAssetRef.auxFeeDetails.IsNull()) {
                 return FormatSyscoinErrorMessage(state, "asset-empty-auxfee", bSanityCheck);
             }
+            if (!MoneyRangeAsset(storedAssetRef.nMaxSupply)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
+            }
             if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning) {
                 if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                     return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
