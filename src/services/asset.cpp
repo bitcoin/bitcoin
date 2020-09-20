@@ -99,7 +99,7 @@ bool GetAsset(const uint32_t &nAsset,
     return true;
 }
 
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (mapAssetOut.empty()) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outputs-empty");
     }
