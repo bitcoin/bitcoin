@@ -747,7 +747,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN
     CAssetsMap mapAssetIn;
     CAssetsMap mapAssetOut;
-    if (!Consensus::CheckTxInputs(tx, state, m_view, GetSpendHeight(m_view), nFees), mapAssetIn, mapAssetOut) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, GetSpendHeight(m_view), nFees, mapAssetIn, mapAssetOut)) {
         return false; // state filled in by CheckTxInputs
     }
 
