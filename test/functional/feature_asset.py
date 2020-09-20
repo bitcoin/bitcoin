@@ -22,7 +22,7 @@ class AssetTest(SyscoinTestFramework):
         self.asset_transfer()
 
     def basic_asset(self):
-        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, {}, {})['asset_guid']
+        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
