@@ -646,7 +646,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         newAsset.notaryDetails = notaryDetails;
     }
     if(!auxFeeDetails.IsNull()) {
-        nUpdateMask |= ASSET_UPDATE_AUXFEE
+        nUpdateMask |= ASSET_UPDATE_AUXFEE;
         newAsset.auxFeeDetails = auxFeeDetails;
     }
     if(nUpdateCapabilityFlags != 0) {
