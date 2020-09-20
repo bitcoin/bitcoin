@@ -1614,7 +1614,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 bool failed_chainstate_init = false;
 
                 for (CChainState* chainstate : chainman.GetAll()) {
-                    LogPrintf("Initializing chainstate %s\n", chainstate->ToString());
                     chainstate->InitCoinsDB(
                         /* cache_size_bytes */ nCoinDBCache,
                         /* in_memory */ false,
