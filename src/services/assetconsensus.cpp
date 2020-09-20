@@ -583,14 +583,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     if(itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "asset-output-notfound", bSanityCheck);             
     }
-    auto itIn = mapAssetIn.find(nAsset);
-    if(itIn == mapAssetIn.end()) {
-        return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
-    } 
-    // check that the first input asset has zero val input spent
-    if (!itIn->second.first) {
-        return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
-    }
     // check that the first output asset has zero val output
     if (!itOut->second.first) {
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
@@ -735,6 +727,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
         {
+            auto itIn = mapAssetIn.find(nAsset);
+            if(itIn == mapAssetIn.end()) {
+                return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
+            } 
+            // check that the first input asset has zero val input spent
+            if (!itIn->second.first) {
+                return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
+            }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             } 
@@ -888,6 +888,15 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
+            auto itIn = mapAssetIn.find(nAsset);
+            if(itIn == mapAssetIn.end()) {
+                return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
+            } 
+            // check that the first input asset has zero val input spent
+            if (!itIn->second.first) {
+                return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
+            }
+            
             if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }
