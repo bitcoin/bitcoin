@@ -10,6 +10,7 @@
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/system.h>
+#include <key_io.h>
 
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
