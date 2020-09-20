@@ -55,7 +55,7 @@ class AssetTest(SyscoinTestFramework):
         gooddata = 'asset description'
         self.nodes[0].assetnew('1', 'T', gooddata, '0x', 8, 10000, 127, '', {}, {})
         assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', '', gooddata, '0x', 8, 10000, 127, '', {}, {})
-        self.nodes[0].assetnew('1', 'ABCDEFGHI', gooddata, '0x', 8, 1000, 10000, 127, '', '', {}, {})
+        self.nodes[0].assetnew('1', 'ABCDEFGHI', gooddata, '0x', 8, 10000, 127, '', {}, {})
         assert_raises_rpc_error(-4, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', 'ABCDEFGHIJ', gooddata, '0x', 8, 10000, 127, '', {}, {})
         self.nodes[0].generate(1)
 
@@ -98,7 +98,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['total_supply'], maxUint)
         assert_equal(assetInfo['max_supply'], maxUint)
         assert_raises_rpc_error(-4, 'asset-amount-outofrange', self.nodes[0].assetsend, asset, self.nodes[0].getnewaddress(), 1)
-        assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 0, maxUint+1, 127, '', '', {}, {})
+        assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 0, maxUint+1, 127, '', {}, {})
 
     def asset_transfer(self):
         useraddress1 = self.nodes[1].getnewaddress()
@@ -117,13 +117,13 @@ class AssetTest(SyscoinTestFramework):
         self.sync_blocks()
         self.nodes[0].assettransfer(asset0, self.nodes[1].getnewaddress())
         self.nodes[1].assettransfer(asset1, self.nodes[0].getnewaddress())
-        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assetupdate, asset0, '', '', 0, 127, '', '', {}, {})
-        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assetupdate, asset1, '', '', 0, 127, '', '', {}, {})
+        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assetupdate, asset0, '', '', 0, 127, '', {}, {})
+        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assetupdate, asset1, '', '', 0, 127, '', {}, {})
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
-        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assetupdate, asset0, '', '', 0, 127, '', '', {}, {})
-        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assetupdate, asset1, '', '', 0, 127, '', '', {}, {})
+        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assetupdate, asset0, '', '', 0, 127, '', {}, {})
+        assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assetupdate, asset1, '', '', 0, 127, '', {}, {})
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assettransfer, asset0, self.nodes[1].getnewaddress())
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assettransfer, asset1, self.nodes[0].getnewaddress())
         self.nodes[0].assetupdate(asset1, '', '', 127, '', {}, {})

@@ -71,7 +71,7 @@ class AssetMintTest(SyscoinTestFramework):
     
     def basic_asset(self):
         auxfees = {'fee_struct': [[0,'1'],[10,'0.4'],[250,'0.2'],[2500,'0.07'],[25000,'0.007'],[250000,'0']]}
-        self.nodes[0].assetnewtest(self.asset, '1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, 1000, 10000, 127, '', self.nodes[0].getnewaddress(), {}, auxfees)
+        self.nodes[0].assetnewtest(self.asset, '1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, 10000, 127, '', self.nodes[0].getnewaddress(), {}, auxfees)
         
 if __name__ == '__main__':
     AssetMintTest().main()

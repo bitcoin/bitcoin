@@ -61,7 +61,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.asset2 = self.nodes[0].assetnew('1', 'TST2', 'asset description', '0x', 8, 10000, 127, self.notary_address2, notary, {})['asset_guid']
         self.asset3 = self.nodes[0].assetnew('1', 'TST3', 'asset description', '0x', 8, 10000, 127, self.notary_address3, notary, {})['asset_guid']
         self.asset4 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 10000, 127, self.notary_address4, notary, {})['asset_guid']
-        self.asset5 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 10000, 127, '', '', {}, {})['asset_guid']
+        self.asset5 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset0, self.nodes[0].getnewaddress(), 1)
         self.nodes[0].assetsend(self.asset1, self.nodes[0].getnewaddress(), 2)
