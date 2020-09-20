@@ -46,6 +46,45 @@ class AssetReOrgTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], self.asset)
         assetInfo = self.nodes[2].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
+        # increase total supply
+        self.nodes[2].assetsend(asset, self.nodes[1].getnewaddress(), 100)
+        blockhash = self.nodes[0].getbestblockhash()
+        self.nodes[2].generate(1)
+        self.sync_blocks()
+        assetInfo = self.nodes[0].assetinfo(self.asset)
+        assert_equal(assetInfo['asset_guid'], self.asset)
+        assert_equal(assetInfo['total_supply'], 100)
+        assetInfo = self.nodes[1].assetinfo(self.asset)
+        assert_equal(assetInfo['total_supply'], 100)
+        assert_equal(assetInfo['asset_guid'], self.asset)
+        assetInfo = self.nodes[2].assetinfo(self.asset)
+        assert_equal(assetInfo['total_supply'], 100)
+        # revert back to before supply was created
+        self.nodes[0].invalidateblock(blockhash)
+        self.nodes[1].invalidateblock(blockhash)
+        self.nodes[2].invalidateblock(blockhash)
+        assetInfo = self.nodes[0].assetinfo(self.asset)
+        assert_equal(assetInfo['asset_guid'], self.asset)
+        assert_equal(assetInfo['total_supply'], 0)
+        assetInfo = self.nodes[1].assetinfo(self.asset)
+        assert_equal(assetInfo['total_supply'], 0)
+        assert_equal(assetInfo['asset_guid'], self.asset)
+        assetInfo = self.nodes[2].assetinfo(self.asset)
+        assert_equal(assetInfo['total_supply'], 0)
+        # back to tip
+        # revert back to before supply was created
+        self.nodes[0].reconsiderblock(blockhash)
+        self.nodes[1].reconsiderblock(blockhash)
+        self.nodes[2].reconsiderblock(blockhash)
+        assetInfo = self.nodes[0].assetinfo(self.asset)
+        assert_equal(assetInfo['asset_guid'], self.asset)
+        assert_equal(assetInfo['total_supply'], 100)
+        assetInfo = self.nodes[1].assetinfo(self.asset)
+        assert_equal(assetInfo['total_supply'], 100)
+        assert_equal(assetInfo['asset_guid'], self.asset)
+        assetInfo = self.nodes[2].assetinfo(self.asset)
+        assert_equal(assetInfo['total_supply'], 100)
+
 
     def basic_asset(self):
         self.asset = self.nodes[2].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
