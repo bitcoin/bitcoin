@@ -35,8 +35,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
-    auto itOut = mapAssetOut.find(nAsset)
-    if(itOut == mapAssetOut.end()){
+    auto itOut = mapAssetOut.find(nAsset);
+    if(itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "mint-asset-output-notfound", bSanityCheck);             
     } 
     // do this check only when not in IBD (initial block download)
@@ -356,12 +356,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
             }
-            auto itIn = mapAssetIn.find(nAsset)
-            if(itIn == mapAssetIn.end()){
+            auto itIn = mapAssetIn.find(nAsset);
+            if(itIn == mapAssetIn.end()) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-input-notfound", bSanityCheck);           
             } 
-            auto itOut = mapAssetOut.find(nAsset)
-            if(itOut == mapAssetOut.end()){
+            auto itOut = mapAssetOut.find(nAsset);
+            if(itOut == mapAssetOut.end()) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-output-notfound", bSanityCheck);             
             } 
             const CAmount &nTotal = itOut->second.second - itIn->second.second;
@@ -425,7 +425,6 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
             }
         }
     }
-
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
     const std::vector<CAssetOutValue> &vecVout = it->values;
@@ -458,7 +457,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset input from mapAssetIn %d\n",nAsset);
         return false;               
     } 
-    storedAssetRef.nBalance += (tx.GetAssetValueOut(vecVout) - itIn->second.second);      
+    storedAssetRef.nTotalSupply -= (tx.GetAssetValueOut(vecVout) - itIn->second.second); 
     return true;  
 }
 
@@ -491,15 +490,6 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         mapAsset->second = std::move(dbAsset);                    
     }
     CAsset& storedAssetRef = mapAsset->second;  
-    if(theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY) {
-        if(theAsset.nBalance > storedAssetRef.nBalance || theAsset.nBalance > storedAssetRef.nTotalSupply) {
-            LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld payload %lld\n",storedAssetRef.nBalance, storedAssetRef.nTotalSupply, theAsset.nBalance);
-            return false;
-        }  
-        // reverse asset minting by the issuer
-        storedAssetRef.nBalance -= theAsset.nBalance;
-        storedAssetRef.nTotalSupply -= theAsset.nBalance;                                    
-    }
     // undo data fields from last update
     // if fields changed then undo them using prev fields
     if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
@@ -530,19 +520,12 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         else
             storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_NOTARY_DETAILS;          
     }
-    if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
-        storedAssetRef.vchAuxFeeKeyID = theAsset.vchPrevAuxFeeKeyID;
-        if(!storedAssetRef.vchAuxFeeKeyID.empty())
-            storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE_KEY;
-        else
-            storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE_KEY;    
-    }
-    if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+    if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
         storedAssetRef.auxFeeDetails = theAsset.prevAuxFeeDetails;
         if(!storedAssetRef.auxFeeDetails.IsNull())
-            storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
+            storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE;
         else
-            storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE_DETAILS;         
+            storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE;
     }
     if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
         storedAssetRef.nUpdateCapabilityFlags = theAsset.nPrevUpdateCapabilityFlags;
@@ -590,8 +573,8 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
     const std::vector<CAssetOutValue> &vecVout = it->values;
-    auto itOut = mapAssetOut.find(nAsset)
-    if(itOut == mapAssetOut.end()){
+    auto itOut = mapAssetOut.find(nAsset);
+    if(itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "asset-output-notfound", bSanityCheck);             
     } 
     CAsset dbAsset;
@@ -626,7 +609,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
-            if(tx.vout[vecVout[0].n].assetInfo.nValue != 0 || itOut->second.second != 0) {
+            if(!itOut->second.first || itOut->second.second != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
             if (tx.vout[nOut].nValue < 150*COIN) {
@@ -641,7 +624,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.strSymbol.size() > MAX_SYMBOL_SIZE || storedAssetRef.strSymbol.size() < MIN_SYMBOL_SIZE) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
-       
+            if(!(storedAssetRef.nUpdateMask & ASSET_INIT) || (storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
+            }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_CONTRACT) {
                 if (storedAssetRef.vchContract.size() != MAX_GUID_LENGTH || !storedAssetRef.vchPrevContract.empty()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
@@ -659,9 +644,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 if (!storedAssetRef.strPubData.empty() || !storedAssetRef.strPrevPubData.empty()) {
                     return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
                 }
-            }
-            if(!(storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-updatemask", bSanityCheck);
             }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
                 if (storedAssetRef.vchNotaryKeyID.size() != MAX_GUID_LENGTH || !storedAssetRef.vchPrevNotaryKeyID.empty()) {
@@ -681,16 +663,12 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-notary-too-big", bSanityCheck);
                 }
             }
-            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
-                if (storedAssetRef.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH || !storedAssetRef.vchPrevAuxFeeKeyID.empty()) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
-                }  
-            } else {
-                if (!storedAssetRef.vchAuxFeeKeyID.empty() || !storedAssetRef.vchPrevAuxFeeKeyID.empty()) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
-                } 
-            }
-            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+            if(storedAssetRef.nUpdateMask & ASSET_UPDATE_AUXFEE) {
+                if(!storedAssetRef.auxFeeDetail.vchAuxFeeKeyID.empty()) {
+                    if (storedAssetRef.auxFeeDetail.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
+                        return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
+                    } 
+                }
                 if (storedAssetRef.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES || !storedAssetRef.prevAuxFeeDetails.IsNull()) {
                     return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
                 }
@@ -698,12 +676,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 if (!storedAssetRef.auxFeeDetails.IsNull() || !storedAssetRef.prevAuxFeeDetails.IsNull()) {
                     return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
                 }
-            }
-            if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
-            }
-            if (!MoneyRangeAsset(storedAssetRef.nMaxSupply)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
             if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning) {
                 if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
@@ -718,8 +690,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (SignalsOptInRBF(tx)) { 
                 return FormatSyscoinErrorMessage(state, "asset-activate-using-rbf", bSanityCheck);
             }
-            // starting supply is the supplied balance upon init
-            storedAssetRef.nTotalSupply = storedAssetRef.nBalance;
             // clear vouts as we don't need to store them once we have processed.
             storedAssetRef.voutAssets.clear();
         }
@@ -727,7 +697,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
         {
-            if(tx.vout[vecVout[0].n].assetInfo.nValue != 0 || itOut->second.second != 0) {
+            if(!itOut->second.first || itOut->second.second != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
@@ -736,43 +706,15 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.strSymbol.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
-            if(theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
-                }  
-                if(theAsset.nBalance <= 0) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-supply", bSanityCheck);
-                }   
-                // increase total supply
-                storedAssetRef.nTotalSupply += theAsset.nBalance;
-                storedAssetRef.nBalance += theAsset.nBalance;
-                if (!MoneyRangeAsset(storedAssetRef.nBalance) || !MoneyRangeAsset(theAsset.nBalance)) {
-                    return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
-                }
-                if (!MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
-                    return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
-                }
-                if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
-                }   
-            } else {
-                if(theAsset.nBalance != 0) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-supply", bSanityCheck);
-                }   
-            }
-            if (theAsset.nTotalSupply != 0) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
-            }
-            if (theAsset.nMaxSupply != 0) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
-            }
             if (theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH) {
                  return FormatSyscoinErrorMessage(state, "asset-invalid-notaryendpoint", bSanityCheck);
             }
             if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
                  return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
             }
-
+            if((theAsset.nUpdateMask & ASSET_INIT) || (theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
+            }
             if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_DATA)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-pubdata-privileges", bSanityCheck);
@@ -863,31 +805,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 }   
             }
 
-            if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE_KEY)) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-auxfee-key-privileges", bSanityCheck);
                 }
-                if (!theAsset.vchAuxFeeKeyID.empty() && theAsset.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
-                }  
-                if(theAsset.vchPrevAuxFeeKeyID != storedAssetRef.vchAuxFeeKeyID) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevauxfee-key", bSanityCheck);
-                }
-                storedAssetRef.vchAuxFeeKeyID = std::move(theAsset.vchAuxFeeKeyID);
-                if (!storedAssetRef.vchAuxFeeKeyID.empty()) {
-                    storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE_KEY;
-                } else {
-                    storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE_KEY;
-                }
-            } else {
-                if(!theAsset.vchAuxFeeKeyID.empty() || !theAsset.vchPrevAuxFeeKeyID.empty()) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
-                }   
-            }
-
-            if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE_DETAILS)) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-auxfees-privileges", bSanityCheck);
+                if(!theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()) {
+                    if (theAsset.auxFeeDetails.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
+                        return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
+                    } 
                 }
                 if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
                     return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
@@ -896,22 +821,27 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevauxfees", bSanityCheck);
                 }
                 storedAssetRef.auxFeeDetails = std::move(theAsset.auxFeeDetails);
+                
                 if (!storedAssetRef.auxFeeDetails.IsNull()) {
-                    storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE_DETAILS;
+                    storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE;
                 } else {
-                    storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE_DETAILS;
+                    storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE;
                 }
             } else {
                 if(!theAsset.auxFeeDetails.IsNull() || !theAsset.prevAuxFeeDetails.IsNull()) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
                 }   
             }
+
             if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CAPABILITYFLAGS)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-flags-privileges", bSanityCheck);
                 }
                 if(theAsset.nPrevUpdateCapabilityFlags != storedAssetRef.nUpdateCapabilityFlags) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
+                }
+                if(theAsset.nUpdateCapabilityFlags & ASSET_INIT) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-capabilityflags", bSanityCheck);
                 }
                 storedAssetRef.nUpdateCapabilityFlags = std::move(theAsset.nUpdateCapabilityFlags);
                 if (storedAssetRef.nUpdateCapabilityFlags != 0) {
@@ -925,15 +855,32 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
+            if (!(theAsset.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
+                return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
+            }
+            if((theAsset.nUpdateMask & ASSET_INIT) || (theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
+            }
+            // db will be stored with total supply
+            storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
+            if(!itOut->second.first) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
+            }
             auto itIn = mapAssetIn.find(nAsset)
             if(itIn == mapAssetIn.end()){
                 return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
             } 
             const CAmount &nTotal = itOut->second.second - itIn->second.second;
-            if (storedAssetRef.nBalance < nTotal) {
-                return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
+            storedAssetRef.nTotalSupply += nTotal;
+            if (!MoneyRangeAsset(nTotal)) {
+                return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
             }
-            storedAssetRef.nBalance -= nTotal;
+            if (!MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
+                return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
+            }
+            if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
+            }  
         }         
         break;  
         default:

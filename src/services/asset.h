@@ -30,9 +30,9 @@ enum {
     ASSET_UPDATE_SUPPLY=4, // can you update supply?
     ASSET_UPDATE_NOTARY_KEY=8, // can you update notary?
     ASSET_UPDATE_NOTARY_DETAILS=16, // can you update notary details?
-    ASSET_UPDATE_AUXFEE_KEY=32, // can you update aux fees?
-    ASSET_UPDATE_AUXFEE_DETAILS=64, // can you update aux fees details?
-    ASSET_UPDATE_CAPABILITYFLAGS=128, // can you update capability flags?
+    ASSET_UPDATE_AUXFEE=32, // can you update aux fees?
+    ASSET_UPDATE_CAPABILITYFLAGS=64, // can you update capability flags?
+    ASSET_INIT=128 // set when creating an asset
 };
 class CAuxFee {
 public:
@@ -59,25 +59,26 @@ public:
 };
 class CAuxFeeDetails {
 public:
+    std::vector<unsigned char> vchAuxFeeKeyID;
     std::vector<CAuxFee> vecAuxFees;
     CAuxFeeDetails() {
         SetNull();
     }
     CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision);
     SERIALIZE_METHODS(CAuxFeeDetails, obj) {
-        READWRITE(obj.vecAuxFees);
+        READWRITE(obj.vchAuxFeeKeyID, obj.vecAuxFees);
     }
     inline friend bool operator==(const CAuxFeeDetails &a, const CAuxFeeDetails &b) {
         return (
-        a.vecAuxFees == b.vecAuxFees
+        a.vecAuxFees == b.vecAuxFees && a.vchAuxFeeKeyID == b.vchAuxFeeKeyID
         );
     }
 
     inline friend bool operator!=(const CAuxFeeDetails &a, const CAuxFeeDetails &b) {
         return !(a == b);
     }
-    inline void SetNull() { vecAuxFees.clear();}
-    inline bool IsNull() const { return vecAuxFees.empty(); }
+    inline void SetNull() { vecAuxFees.clear(); vchAuxFeeKeyID.clear();}
+    inline bool IsNull() const { return vecAuxFees.empty() && vchAuxFeeKeyID.empty() }
     UniValue ToJson() const;
 };
 class CNotaryDetails {
@@ -113,7 +114,6 @@ public:
     std::string strSymbol;
     std::string strPubData;
     std::string strPrevPubData;
-    CAmount nBalance;
     CAmount nTotalSupply;
     CAmount nMaxSupply;
     uint8_t nPrecision;
@@ -123,8 +123,6 @@ public:
     std::vector<unsigned char> vchPrevNotaryKeyID;
     CNotaryDetails notaryDetails;
     CNotaryDetails prevNotaryDetails;
-    std::vector<unsigned char> vchAuxFeeKeyID;
-    std::vector<unsigned char> vchPrevAuxFeeKeyID;
     CAuxFeeDetails auxFeeDetails;
     CAuxFeeDetails prevAuxFeeDetails;
     uint8_t nUpdateMask;
@@ -143,15 +141,12 @@ public:
         vchPrevContract.clear();
         strSymbol.clear();
         nPrevUpdateCapabilityFlags = nUpdateCapabilityFlags = 0;
-        nBalance = 0;
         nTotalSupply = 0;
         nMaxSupply = 0;
         vchNotaryKeyID.clear();
         vchPrevNotaryKeyID.clear();
         notaryDetails.SetNull();
         prevNotaryDetails.SetNull();
-        vchAuxFeeKeyID.clear();
-        vchPrevAuxFeeKeyID.clear();
         auxFeeDetails.SetNull();
         prevAuxFeeDetails.SetNull();
         nUpdateMask = 0;
@@ -159,7 +154,10 @@ public:
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nPrecision, obj.strSymbol, obj.nUpdateMask);
+        READWRITE(obj.nPrecision, obj.nUpdateMask);
+        if(obj.nUpdateMask & ASSET_INIT) {
+            READWRITE(obj.strSymbol, Using<AmountCompression>(obj.nMaxSupply));
+        }
         if(obj.nUpdateMask & ASSET_UPDATE_CONTRACT) {
             READWRITE(obj.vchContract);
             READWRITE(obj.vchPrevContract);
@@ -169,9 +167,7 @@ public:
             READWRITE(obj.strPrevPubData);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_SUPPLY) {
-            READWRITE(Using<AmountCompression>(obj.nBalance));
             READWRITE(Using<AmountCompression>(obj.nTotalSupply));
-            READWRITE(Using<AmountCompression>(obj.nMaxSupply));
         }
         if(obj.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
             READWRITE(obj.vchNotaryKeyID);
@@ -181,11 +177,7 @@ public:
             READWRITE(obj.notaryDetails);
             READWRITE(obj.prevNotaryDetails);
         }
-        if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE_KEY) {
-            READWRITE(obj.vchAuxFeeKeyID);
-            READWRITE(obj.vchPrevAuxFeeKeyID);
-        }
-        if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE_DETAILS) {
+        if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE) {
             READWRITE(obj.auxFeeDetails);
             READWRITE(obj.prevAuxFeeDetails);
         }
