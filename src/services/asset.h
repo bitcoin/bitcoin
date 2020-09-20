@@ -78,7 +78,7 @@ public:
         return !(a == b);
     }
     inline void SetNull() { vecAuxFees.clear(); vchAuxFeeKeyID.clear();}
-    inline bool IsNull() const { return vecAuxFees.empty() && vchAuxFeeKeyID.empty() }
+    inline bool IsNull() const { return (vecAuxFees.empty() && vchAuxFeeKeyID.empty()); }
     UniValue ToJson() const;
 };
 class CNotaryDetails {
