@@ -47,7 +47,7 @@ class AssetReOrgTest(SyscoinTestFramework):
         assetInfo = self.nodes[2].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
         # increase total supply
-        self.nodes[2].assetsend(asset, self.nodes[1].getnewaddress(), 100)
+        self.nodes[2].assetsend(self.asset, self.nodes[1].getnewaddress(), 100)
         blockhash = self.nodes[0].getbestblockhash()
         self.nodes[2].generate(1)
         self.sync_blocks()
