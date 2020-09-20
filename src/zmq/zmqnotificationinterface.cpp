@@ -169,16 +169,16 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
 // SYSCOIN
 void CZMQNotificationInterface::NotifyGovernanceVote(const CGovernanceVote &vote)
 {
-    TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyGovernanceVote(vote));
+    TryForEachAndRemoveFailed(notifiers, [&vote](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyGovernanceVote(vote);
     });
 }
 
 void CZMQNotificationInterface::NotifyGovernanceObject(const CGovernanceObject &object)
 {
     {
-    TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyGovernanceObject(vote));
+    TryForEachAndRemoveFailed(notifiers, [&object](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyGovernanceObject(object);
     });
 }
 CZMQNotificationInterface* g_zmq_notification_interface = nullptr;
