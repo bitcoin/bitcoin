@@ -62,17 +62,6 @@ const QString ZAPTXES2("-zapwallettxes=2 -persistmempool=0");
 const QString UPGRADEWALLET("-upgradewallet");
 const QString REINDEX("-reindex");
 
-const struct {
-    const char *url;
-    const char *source;
-} ICON_MAPPING[] = {
-    {"cmd-request", "tx_input"},
-    {"cmd-reply", "tx_output"},
-    {"cmd-error", "tx_output"},
-    {"misc", "tx_inout"},
-    {nullptr, nullptr}
-};
-
 namespace {
 
 // don't add private key handling cmd's to the history
@@ -608,9 +597,6 @@ void RPCConsole::setClientModel(ClientModel *model)
         connect(model, SIGNAL(masternodeListChanged()), this, SLOT(updateMasternodeCount()));
         clientModel->refreshMasternodeList();
 
-        updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
-        connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
-
         connect(model, SIGNAL(mempoolSizeChanged(long,size_t)), this, SLOT(setMempoolSize(long,size_t)));
         connect(model, SIGNAL(islockCountChanged(size_t)), this, SLOT(setInstantSendLockCount(size_t)));
 
@@ -846,25 +832,16 @@ void RPCConsole::clear(bool clearHistory)
     ui->lineEdit->clear();
     ui->lineEdit->setFocus();
 
-    // Add smoothly scaled icon images.
-    for(int i=0; ICON_MAPPING[i].url; ++i)
-    {
-        ui->messagesWidget->document()->addResource(
-                    QTextDocument::ImageResource,
-                    QUrl(ICON_MAPPING[i].url),
-                    GUIUtil::getIcon(ICON_MAPPING[i].source).pixmap(QSize(consoleFontSize, consoleFontSize)));
-    }
-
     // Set default style sheet
     QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont());
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
-                "td.time { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_SECONDARY) + " font-size: %2; padding-top: 3px; } "
+                "td.time { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_SECONDARY) + " font-size: %2; } "
                 "td.message { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_PRIMARY) + " font-family: %1; font-size: %2; white-space:pre-wrap; } "
                 "td.cmd-request, b { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND) + " } "
                 "td.cmd-error, .secwarning { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + " }"
-            ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
+            ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize)).arg(consoleFontSize * 0.1)
         );
 
 #ifdef Q_OS_MAC
@@ -897,7 +874,6 @@ void RPCConsole::message(int category, const QString &message, bool html)
     QString timeString = time.toString();
     QString out;
     out += "<table><tr><td class=\"time\" width=\"65\">" + timeString + "</td>";
-    out += "<td class=\"icon\" width=\"32\"><img src=\"" + categoryClass(category) + "\"></td>";
     out += "<td class=\"message " + categoryClass(category) + "\" valign=\"middle\">";
     if(html)
         out += message;
@@ -1098,12 +1074,6 @@ void RPCConsole::setTrafficGraphRange(TrafficGraphData::GraphRange range)
 {
     ui->trafficGraph->setGraphRangeMins(range);
     ui->lblGraphRange->setText(GUIUtil::formatDurationStr(TrafficGraphData::RangeMinutes[range] * 60));
-}
-
-void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)
-{
-    ui->lblBytesIn->setText(GUIUtil::formatBytes(totalBytesIn));
-    ui->lblBytesOut->setText(GUIUtil::formatBytes(totalBytesOut));
 }
 
 void RPCConsole::peerSelected(const QItemSelection &selected, const QItemSelection &deselected)
