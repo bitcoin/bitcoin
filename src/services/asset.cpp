@@ -121,7 +121,7 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
     // this will check that all assets with inputs match amounts being sent on outputs
     // it will also ensure that inputs and outputs per asset are equal with respects to zero-val inputs/outputs (asset ownership utxos) 
     if (mapAssetIn != mapAssetOut) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-io-mismatch");
     }
     return true;
 }
