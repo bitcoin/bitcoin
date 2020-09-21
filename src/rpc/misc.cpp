@@ -109,9 +109,9 @@ static RPCHelpMan spork()
                     RPCResult::Type::STR, "result", "\"success\" if spork value was updated or this help otherwise"},
             },
             RPCExamples{
-                HelpExampleCli("spork", "SPORK_6_NEW_SIGS 4070908800") 
+                HelpExampleCli("spork", "SPORK_9_NEW_SIGS 4070908800") 
                 + HelpExampleCli("spork", "show")
-                + HelpExampleRpc("spork", "\"SPORK_6_NEW_SIGS\", 4070908800")
+                + HelpExampleRpc("spork", "\"SPORK_9_NEW_SIGS\", 4070908800")
                 + HelpExampleRpc("spork", "\"show\"")
             },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
