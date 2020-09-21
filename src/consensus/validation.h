@@ -12,6 +12,12 @@
 #include <primitives/transaction.h>
 #include <primitives/block.h>
 
+/** Index marker for when no witness commitment is present in a coinbase transaction. */
+static constexpr int NO_WITNESS_COMMITMENT{-1};
+
+/** Minimum size of a witness commitment structure. Defined in BIP 141. **/
+static constexpr size_t MINIMUM_WITNESS_COMMITMENT{38};
+
 /** A "reason" why a transaction was invalid, suitable for determining whether the
   * provider of the transaction should be banned/ignored/disconnected/etc.
   */
@@ -149,6 +155,27 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
 {
     // scriptWitness size is added here because witnesses and txins are split up in segwit serialization.
     return ::GetSerializeSize(txin, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, PROTOCOL_VERSION);
+}
+
+/** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
+inline int GetWitnessCommitmentIndex(const CBlock& block)
+{
+    int commitpos = NO_WITNESS_COMMITMENT;
+    if (!block.vtx.empty()) {
+        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
+            const CTxOut& vout = block.vtx[0]->vout[o];
+            if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
+                vout.scriptPubKey[0] == OP_RETURN &&
+                vout.scriptPubKey[1] == 0x24 &&
+                vout.scriptPubKey[2] == 0xaa &&
+                vout.scriptPubKey[3] == 0x21 &&
+                vout.scriptPubKey[4] == 0xa9 &&
+                vout.scriptPubKey[5] == 0xed) {
+                commitpos = o;
+            }
+        }
+    }
+    return commitpos;
 }
 
 #endif // BITCOIN_CONSENSUS_VALIDATION_H
