@@ -181,4 +181,57 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
     }
 }
 
+void sanity_check_chainparams(const ArgsManager& args, std::string chainName)
+{
+    const auto chainParams = CreateChainParams(args, chainName);
+    const auto consensus = chainParams->GetConsensus();
+
+    // hash genesis is correct
+    BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHash());
+
+    // target timespan is an even multiple of spacing
+    BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan % consensus.nPowTargetSpacing, 0);
+
+    // genesis nBits is positive, doesn't overflow and is lower than powLimit
+    arith_uint256 pow_compact;
+    bool neg, over;
+    pow_compact.SetCompact(chainParams->GenesisBlock().nBits, &neg, &over);
+    BOOST_CHECK(!neg && pow_compact != 0);
+    BOOST_CHECK(!over);
+    BOOST_CHECK(UintToArith256(consensus.powLimit) >= pow_compact);
+
+    // check max target * 4*nPowTargetTimespan doesn't overflow -- see pow.cpp:CalculateNextWorkRequired()
+    if (!consensus.fPowNoRetargeting) {
+        arith_uint256 targ_max("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        targ_max /= consensus.nPowTargetTimespan*4;
+        // for devnets pow-no-retargeting may work as non-expected but it's a breaking change to fix it
+        // TODO: remove this special case for devnet
+        if (chainName != CBaseChainParams::DEVNET) {
+            BOOST_CHECK(UintToArith256(consensus.powLimit) < targ_max);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_MAIN_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::MAIN);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_REGTEST_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::REGTEST);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_TESTNET_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::TESTNET);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_DEVNET_sanity)
+{
+    gArgs.SoftSetBoolArg("-devnet", true);
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::DEVNET);
+    gArgs.ForceRemoveArg("devnet");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
