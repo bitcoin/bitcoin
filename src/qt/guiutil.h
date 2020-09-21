@@ -63,6 +63,10 @@ namespace GUIUtil
         BACKGROUND_WIDGET,
         /* Border color used for some widgets. Its slightly brighter than BACKGROUND_WIDGET. */
         BORDER_WIDGET,
+        /* Border color of network statistics overlay in debug window. */
+        BORDER_NETSTATS,
+        /* Background color of network statistics overlay in debug window. */
+        BACKGROUND_NETSTATS,
         /* Pixel color of generated QR codes. */
         QR_PIXEL,
         /* Alternative color for black/white icons. White part will be filled with this color by default. */
