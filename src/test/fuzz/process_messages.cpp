@@ -51,7 +51,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         p2p_node.fSuccessfullyConnected = true;
         p2p_node.fPauseSend = false;
         p2p_node.nVersion = PROTOCOL_VERSION;
-        p2p_node.SetSendVersion(PROTOCOL_VERSION);
+        p2p_node.SetCommonVersion(PROTOCOL_VERSION);
         g_setup->m_node.peerman->InitializeNode(&p2p_node);
 
         connman.AddTestNode(p2p_node);
