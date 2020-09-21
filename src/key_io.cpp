@@ -227,3 +227,42 @@ bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
 }
+
+bool DecodeIndexKey(const std::string &str, uint256 &hashBytes, int &type)
+{
+    CTxDestination dest = DecodeDestination(str);
+    if (IsValidDestination(dest))
+    {
+        const CKeyID *keyID = boost::get<CKeyID>(&dest);
+        if(keyID)
+        {
+            memcpy(&hashBytes, keyID, 20);
+            type = 1;
+            return true;
+        }
+
+        const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+        if(scriptID)
+        {
+            memcpy(&hashBytes, scriptID, 20);
+            type = 2;
+            return true;
+        }
+
+        const WitnessV0ScriptHash *witnessV0ScriptID = boost::get<WitnessV0ScriptHash>(&dest);
+        if (witnessV0ScriptID) {
+            memcpy(&hashBytes, witnessV0ScriptID, 32);
+            type = 3;
+            return true;
+        }
+
+        const WitnessV0KeyHash *witnessV0KeyID = boost::get<WitnessV0KeyHash>(&dest);
+        if (witnessV0KeyID) {
+            memcpy(&hashBytes, witnessV0KeyID, 20);
+            type = 4;
+            return true;
+        }
+    }
+
+    return false;
+}

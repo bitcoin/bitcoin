@@ -185,4 +185,14 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
  */
 CScript GetScriptForWitness(const CScript& redeemscript);
 
+struct DataVisitor : public boost::static_visitor<std::vector<unsigned char>>
+{
+    std::vector<unsigned char> operator()(const CNoDestination& noDest) const;
+    std::vector<unsigned char> operator()(const CKeyID& keyID) const;
+    std::vector<unsigned char> operator()(const CScriptID& scriptID) const;
+    std::vector<unsigned char> operator()(const WitnessV0ScriptHash& witnessScriptHash) const;
+    std::vector<unsigned char> operator()(const WitnessV0KeyHash& witnessKeyHash) const;
+    std::vector<unsigned char> operator()(const WitnessUnknown& witnessUnknown) const;
+};
+
 #endif // BITCOIN_SCRIPT_STANDARD_H
