@@ -421,7 +421,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     if (ctrl.IsUsingPrivateSend()) {
         // append number of inputs
         questionString.append("<hr />");
-        int nInputs = currentTransaction.getTransaction()->tx->vin.size();
+        int nInputs = currentTransaction.getTransaction()->vin.size();
         questionString.append(tr("This transaction will consume %n input(s)", "", nInputs));
 
         // warn about potential privacy issues when spending too many inputs at once
@@ -461,7 +461,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     }
 
     // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
+    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction, ctrl.IsUsingPrivateSend());
     // process sendStatus and on error generate message shown to user
     processSendCoinsReturn(sendStatus);
 

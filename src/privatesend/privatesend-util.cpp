@@ -251,7 +251,6 @@ bool CTransactionBuilder::IsDust(CAmount nAmount) const
 
 bool CTransactionBuilder::Commit(std::string& strResult)
 {
-    CWalletTx wtx;
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
 
@@ -265,7 +264,8 @@ bool CTransactionBuilder::Commit(std::string& strResult)
         }
     }
 
-    if (!pwallet->CreateTransaction(vecSend, wtx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
+    CTransactionRef tx;
+    if (!pwallet->CreateTransaction(vecSend, tx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
         return false;
     }
 
@@ -273,7 +273,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     bool fDust = IsDust(nAmountLeft);
     // If there is a either remainder which is considered to be dust (will be added to fee in this case) or no amount left there should be no change output, return if there is a change output.
     if (nChangePosRet != -1 && fDust) {
-        strResult = strprintf("Unexpected change output %s at position %d", wtx.tx->vout[nChangePosRet].ToString(), nChangePosRet);
+        strResult = strprintf("Unexpected change output %s at position %d", tx->vout[nChangePosRet].ToString(), nChangePosRet);
         return false;
     }
 
@@ -301,14 +301,14 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, dummyReserveKey, g_connman.get(), state)) {
+    if (!pwallet->CommitTransaction(tx, {}, {}, {}, dummyReserveKey, g_connman.get(), state)) {
         strResult = state.GetRejectReason();
         return false;
     }
 
     fKeepKeys = true;
 
-    strResult = wtx.GetHash().ToString();
+    strResult = tx->GetHash().ToString();
 
     return true;
 }
