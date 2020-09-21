@@ -123,11 +123,17 @@ CTransactionBuilder::CTransactionBuilder(CWallet* pwalletIn, const CompactTallyI
     }
     // Create dummy tx to calculate the exact required fees upfront for accurate amount and fee calculations
     CMutableTransaction dummyTx;
-    // Get a comparable dummy scriptPubKey
-    CTransactionBuilderOutput dummyOutput(this, pwallet, 0);
-    CScript dummyScript = dummyOutput.GetScript();
-    dummyOutput.ReturnKey();
-    // And create dummy signatures for all inputs
+    // Get a comparable dummy scriptPubKey, avoid writting/flushing to the actual wallet db
+    CScript dummyScript;
+    {
+        LOCK(pwallet->cs_wallet);
+        WalletBatch dummyBatch(pwallet->GetDBHandle(), "r+", false);
+        dummyBatch.TxnBegin();
+        CPubKey dummyPubkey = pwallet->GenerateNewKey(dummyBatch, 0, false);
+        dummyBatch.TxnAbort();
+        dummyScript = ::GetScriptForDestination(dummyPubkey.GetID());
+    }
+    // Create dummy signatures for all inputs
     SignatureData dummySignature;
     ProduceSignature(DummySignatureCreator(pwallet), dummyScript, dummySignature);
     for (auto out : tallyItem.vecOutPoints) {
