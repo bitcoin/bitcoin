@@ -416,21 +416,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
 }
 
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxUndo& txundo, AssetMap &mapAssets) {
-    // build mapAssetIn from txundo information
-    CAssetsMap mapAssetIn;
-    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        const Coin& coin = txundo.vprevout[i];
-        if (!coin.out.assetInfo.IsNull()) {
-            const bool &zeroVal = coin.out.assetInfo.nValue == 0;
-            auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, std::make_pair(zeroVal, coin.out.assetInfo.nValue));
-            if (!inRes.second) {
-                inRes.first->second.second += coin.out.assetInfo.nValue;
-                if (!inRes.first->second.first) {
-                    inRes.first->second.first = zeroVal;
-                }
-            }
-        }
-    }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
     const std::vector<CAssetOutValue> &vecVout = it->values;
@@ -439,7 +424,22 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
         return false;
     }
-
+    CAmount valueIn = 0;
+    bool bFoundIn = false;
+    // build mapAssetIn from txundo information
+    CAssetsMap mapAssetIn;
+    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
+        const Coin& coin = txundo.vprevout[i];
+        if (!coin.out.assetInfo.IsNull() && coin.out.assetInfo.nAsset == nAsset) {
+            valueIn += coin.out.assetInfo.nValue;
+            if(!bFoundIn)
+                bFoundIn = true;
+        }
+    }
+    if(!bFoundIn) {
+        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset input from mapAssetIn %d\n",nAsset);
+        return false;               
+    } 
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -457,13 +457,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         mapAsset->second = std::move(dbAsset);                        
     }
     CAsset& storedAssetRef = mapAsset->second;
-    // get total amount of input for this asset from mapAssetIn and apply to balance via out - in
-    auto itIn = mapAssetIn.find(nAsset);
-    if(itIn == mapAssetIn.end()) {
-        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset input from mapAssetIn %d\n",nAsset);
-        return false;               
-    } 
-    storedAssetRef.nTotalSupply -= (tx.GetAssetValueOut(vecVout) - itIn->second.second); 
+    storedAssetRef.nTotalSupply -= (tx.GetAssetValueOut(vecVout) - valueIn); 
     if(storedAssetRef.nTotalSupply <= 0) {
         storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_SUPPLY;
     }
