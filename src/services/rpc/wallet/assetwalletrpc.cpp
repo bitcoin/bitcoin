@@ -532,7 +532,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for ability to update the capability flags (this field). 255 for all. 0 for none (not updatable)."},
+        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee details, 64 for ability to update the capability flags (this field). 127 for all. 0 for none (not updatable)."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
@@ -561,8 +561,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 63 \"notary_address\" {} {}")
-    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 63, \"notary_address\", {}, {}")
+    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
+    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
     }
     }.Check(request);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -745,7 +745,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for ability to update the capability flags (this field). 255 for all. 0 for none (not updatable)."},
+        {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee details, 64 for ability to update the capability flags (this field). 127 for all. 0 for none (not updatable)."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
             {
@@ -773,8 +773,8 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 63 \"notary_address\" {} {}")
-    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 63, \"notary_address\", {}, {}")
+    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
+    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
     }
     }.Check(request);
     UniValue paramsFund(UniValue::VARR);
@@ -878,7 +878,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
-            {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee address, 64 for updating auxfee details, 128 for ability to update the capability flags (this field). 255 for all. 0 for none (not updatable)."},
+            {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee details, 64 for ability to update the capability flags (this field). 127 for all. 0 for none (not updatable)."},
             {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
             {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
                 {

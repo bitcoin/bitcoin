@@ -712,12 +712,16 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-reserved-symbol-sysx", bSanityCheck);
                 }
             }
+            if(storedAssetRef.nUpdateCapabilityFlags & ASSET_INIT) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-capabilityflags", bSanityCheck);
+            }
             // activate not allowed to use RBF because GUID is deterministic of first input which cannot be reused       
             if (SignalsOptInRBF(tx)) { 
                 return FormatSyscoinErrorMessage(state, "asset-activate-using-rbf", bSanityCheck);
             }
             // clear vouts as we don't need to store them once we have processed.
             storedAssetRef.voutAssets.clear();
+            
         }
         break;
 
