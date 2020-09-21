@@ -200,6 +200,12 @@ struct Params {
     /** Block height at which DIP0003 becomes enforced */
     int DIP0003EnforcementHeight;
     std::map<uint8_t, LLMQParams> llmqs;
+        /**
+     * If true, witness commitments contain a payload equal to a Bitcoin Script solution
+     * to the signet challenge. See BIP325.
+     */
+    bool signet_blocks{false};
+    std::vector<uint8_t> signet_challenge;
 };
 } // namespace Consensus
 #endif // SYSCOIN_CONSENSUS_PARAMS_H
