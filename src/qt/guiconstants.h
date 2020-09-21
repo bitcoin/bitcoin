@@ -46,6 +46,7 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 #define QAPP_ORG_DOMAIN "syscoin.org"
 #define QAPP_APP_NAME_DEFAULT "Syscoin-Qt"
 #define QAPP_APP_NAME_TESTNET "Syscoin-Qt-testnet"
+#define QAPP_APP_NAME_SIGNET "Syscoin-Qt-signet"
 #define QAPP_APP_NAME_REGTEST "Syscoin-Qt-regtest"
 
 /* One gigabyte (GB) in bytes */
