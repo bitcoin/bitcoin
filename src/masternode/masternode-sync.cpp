@@ -45,7 +45,6 @@ std::string CMasternodeSync::GetAssetName() const
     {
         case(MASTERNODE_SYNC_BLOCKCHAIN):   return "MASTERNODE_SYNC_BLOCKCHAIN";
         case(MASTERNODE_SYNC_GOVERNANCE):   return "MASTERNODE_SYNC_GOVERNANCE";
-        case(MASTERNODE_SYNC_FAILED):       return "MASTERNODE_SYNC_FAILED";
         case MASTERNODE_SYNC_FINISHED:      return "MASTERNODE_SYNC_FINISHED";
         default:                            return "UNKNOWN";
     }
@@ -82,7 +81,6 @@ bilingual_str CMasternodeSync::GetSyncStatus()
     switch (nCurrentAsset) {
         case MASTERNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...");
         case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
-        case MASTERNODE_SYNC_FAILED:        return _("Synchronization failed");
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished");
         default:                            return _("Unknown State");
     }
