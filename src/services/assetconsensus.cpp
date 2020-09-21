@@ -464,6 +464,9 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         return false;               
     } 
     storedAssetRef.nTotalSupply -= (tx.GetAssetValueOut(vecVout) - itIn->second.second); 
+    if(storedAssetRef.nTotalSupply <= 0) {
+        storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_SUPPLY;
+    }
     return true;  
 }
 
