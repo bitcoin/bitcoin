@@ -34,7 +34,7 @@ void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 
 void CMasternodeSync::BumpAssetLastTime(const std::string& strFuncName)
 {
-    if(IsSynced() || IsFailed()) return;
+    if(IsSynced()) return;
     nTimeLastBumped = GetTime();
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::BumpAssetLastTime -- %s\n", strFuncName);
 }
@@ -93,7 +93,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
     if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
 
         //do not care about stats if sync process finished or failed
-        if(IsSynced() || IsFailed()) return;
+        if(IsSynced()) return;
 
         int nItemID;
         int nCount;
@@ -126,16 +126,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
     }
 
     nTimeLastProcess = GetTime();
-
-    // reset sync status in case of any other sync failure
-    if(IsFailed()) {
-        if(nTimeLastFailure + (1*60) < GetTime()) { // 1 minute cooldown after failed sync
-            LogPrintf("CMasternodeSync::ProcessTick -- WARNING: failed to sync, trying again...\n");
-            Reset();
-            SwitchToNextAsset(connman);
-        }
-        return;
-    }
 
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {
@@ -319,7 +309,7 @@ void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitia
 {
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
-    if (IsFailed() || IsSynced() || !pindexBestHeader)
+    if (IsSynced() || !pindexBestHeader)
         return;
 
     if (!IsBlockchainSynced()) {
