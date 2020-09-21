@@ -2470,8 +2470,6 @@ static void UpdateTip(CTxMemPool& mempool, const CBlockIndex* pindexNew, const C
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
-        if (nUpgraded > 0)
-            AppendWarning(warning_messages, strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
     }
     LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n", __func__,
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
