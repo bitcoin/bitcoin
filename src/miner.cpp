@@ -178,9 +178,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     // SYSCOIN
     if (!fRegTest && !chainparams.MineBlocksOnDemand()) {
-        if (masternodeSync.IsFailed()) {	
-            throw std::runtime_error("Masternode information has failed to sync, please restart your node!");	
-        }	
         if (!masternodeSync.IsSynced()) {	
             throw std::runtime_error("Masternode information has not synced, please wait until it finishes before mining!");	
         }
