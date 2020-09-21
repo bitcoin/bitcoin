@@ -269,7 +269,7 @@ bool CMPTxList::getPurchaseDetails(const uint256 txid, int purchaseNumber, std::
             *vout = atoi(vstr[0]);
             *buyer = vstr[1];
             *seller = vstr[2];
-            *propertyId = atoi(vstr[3]);
+            *propertyId = atoi64(vstr[3]);
             *nValue = boost::lexical_cast<boost::uint64_t>(vstr[4]);
             return true;
         }

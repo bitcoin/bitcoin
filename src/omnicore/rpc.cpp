@@ -63,6 +63,8 @@
 #include <string>
 #include <tuple>
 
+#include <boost/algorithm/string.hpp> // boost::split
+
 using std::runtime_error;
 using namespace mastercore;
 
@@ -87,6 +89,8 @@ void PopulateFailure(int error)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Omni Layer Protocol transaction");
         case MP_TXINDEX_STILL_SYNCING:
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No such mempool transaction. Blockchain transactions are still in the process of being indexed.");
+        case MP_RPC_DECODE_INPUTS_MISSING:
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction inputs were not found. Please provide inputs explicitly (see help description) or fully synchronize node.");
 
     }
     throw JSONRPCError(RPC_INTERNAL_ERROR, "Generic transaction population failure");
@@ -100,6 +104,10 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, UniValue& property_obj)
     property_obj.pushKV("data", sProperty.data);
     property_obj.pushKV("url", sProperty.url);
     property_obj.pushKV("divisible", sProperty.isDivisible());
+    property_obj.pushKV("issuer", sProperty.issuer);
+    property_obj.pushKV("creationtxid", sProperty.txid.GetHex());
+    property_obj.pushKV("fixedissuance", sProperty.fixed);
+    property_obj.pushKV("managedissuance", sProperty.manual);
 }
 
 void MetaDexObjectToJSON(const CMPMetaDEx& obj, UniValue& metadex_obj)
@@ -1206,6 +1214,7 @@ static UniValue omni_getproperty(const JSONRPCRequest& request)
                    "  \"creationtxid\" : \"hash\",         (string) the hex-encoded creation transaction hash\n"
                    "  \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
                    "  \"managedissuance\" : true|false,    (boolean) whether the token supply is managed\n"
+                   "  \"freezingenabled\" : true|false,    (boolean) whether freezing is enabled for the property (managed properties only)\n"
                    "  \"totaltokens\" : \"n.nnnnnnnn\"     (string) the total number of tokens in existence\n"
                    "}\n"
                },
@@ -1232,11 +1241,7 @@ static UniValue omni_getproperty(const JSONRPCRequest& request)
 
     UniValue response(UniValue::VOBJ);
     response.pushKV("propertyid", (uint64_t) propertyId);
-    PropertyToJSON(sp, response); // name, category, subcategory, data, url, divisible
-    response.pushKV("issuer", sp.issuer);
-    response.pushKV("creationtxid", strCreationHash);
-    response.pushKV("fixedissuance", sp.fixed);
-    response.pushKV("managedissuance", sp.manual);
+    PropertyToJSON(sp, response); // name, category, subcategory, ...
     if (sp.manual) {
         int currentBlock = GetHeight();
         LOCK(cs_tally);
@@ -1252,7 +1257,7 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
     if (request.fHelp)
         throw runtime_error(
             RPCHelpMan{"omni_listproperties",
-               "\nLists all tokens or smart properties.\n",
+               "\nLists all tokens or smart properties. To get the total number of tokens, please use omni_getproperty.\n",
                {},
                RPCResult{
                    "[                                (array of JSON objects)\n"
@@ -1263,7 +1268,11 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
                    "    \"subcategory\" : \"subcategory\",   (string) the subcategory used for the tokens\n"
                    "    \"data\" : \"information\",          (string) additional information or a description\n"
                    "    \"url\" : \"uri\",                   (string) an URI, for example pointing to a website\n"
-                   "    \"divisible\" : true|false         (boolean) whether the tokens are divisible\n"
+                   "    \"divisible\" : true|false,        (boolean) whether the tokens are divisible\n"
+                   "    \"issuer\" : \"address\",            (string) the Bitcoin address of the issuer on record\n"
+                   "    \"creationtxid\" : \"hash\",         (string) the hex-encoded creation transaction hash\n"
+                   "    \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
+                   "    \"managedissuance\" : true|false   (boolean) whether the token supply is managed\n"
                    "  },\n"
                    "  ...\n"
                    "]\n"
@@ -1284,7 +1293,7 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
         if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.pushKV("propertyid", (uint64_t) propertyId);
-            PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
+            PropertyToJSON(sp, propertyObj); // name, category, subcategory, ...
 
             response.push_back(propertyObj);
         }
@@ -1296,7 +1305,7 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
         if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.pushKV("propertyid", (uint64_t) propertyId);
-            PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
+            PropertyToJSON(sp, propertyObj); // name, category, subcategory, ...
 
             response.push_back(propertyObj);
         }
@@ -1901,8 +1910,9 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
 
     for (OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it) {
         const CMPOffer& selloffer = it->second;
-        const std::string& sellCombo = it->first;
-        std::string seller = sellCombo.substr(0, sellCombo.size() - 2);
+        std::vector<std::string> vstr;
+        boost::split(vstr, it->first, boost::is_any_of("-"), boost::token_compress_on);
+        std::string seller = vstr[0];
 
         // filtering
         if (!addressFilter.empty() && seller != addressFilter) continue;
@@ -1924,6 +1934,9 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
         double unitPriceFloat = 0.0;
         if ((sellOfferAmount > 0) && (sellBitcoinDesired > 0)) {
             unitPriceFloat = (double) sellBitcoinDesired / (double) sellOfferAmount; // divide by zero protection
+            if (!isPropertyDivisible(propertyId)) {
+                unitPriceFloat /= 100000000.0;
+            }
         }
         int64_t unitPrice = rounduint64(unitPriceFloat * COIN);
         int64_t bitcoinDesired = calculateDesiredBTC(sellOfferAmount, sellBitcoinDesired, amountAvailable);
@@ -1932,14 +1945,14 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
         responseObj.pushKV("txid", txid);
         responseObj.pushKV("propertyid", (uint64_t) propertyId);
         responseObj.pushKV("seller", seller);
-        responseObj.pushKV("amountavailable", FormatDivisibleMP(amountAvailable));
+        responseObj.pushKV("amountavailable", FormatMP(propertyId, amountAvailable));
         responseObj.pushKV("bitcoindesired", FormatDivisibleMP(bitcoinDesired));
         responseObj.pushKV("unitprice", FormatDivisibleMP(unitPrice));
         responseObj.pushKV("timelimit", timeLimit);
         responseObj.pushKV("minimumfee", FormatDivisibleMP(minFee));
 
         // display info about accepts related to sell
-        responseObj.pushKV("amountaccepted", FormatDivisibleMP(amountAccepted));
+        responseObj.pushKV("amountaccepted", FormatMP(propertyId, amountAccepted));
         UniValue acceptsMatched(UniValue::VARR);
         for (AcceptMap::const_iterator ait = my_accepts.begin(); ait != my_accepts.end(); ++ait) {
             UniValue matchedAccept(UniValue::VOBJ);
@@ -1958,7 +1971,7 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
                 matchedAccept.pushKV("buyer", buyer);
                 matchedAccept.pushKV("block", blockOfAccept);
                 matchedAccept.pushKV("blocksleft", blocksLeftToPay);
-                matchedAccept.pushKV("amount", FormatDivisibleMP(amountAccepted));
+                matchedAccept.pushKV("amount", FormatMP(propertyId, amountAccepted));
                 matchedAccept.pushKV("amounttopay", FormatDivisibleMP(amountToPayInBTC));
                 acceptsMatched.push_back(matchedAccept);
             }
@@ -2272,7 +2285,7 @@ static UniValue omni_getinfo(const JSONRPCRequest& request)
                    "{\n"
                    "  \"omnicoreversion_int\" : xxxxxxx,       (number) client version as integer\n"
                    "  \"omnicoreversion\" : \"x.x.x.x-xxx\",     (string) client version\n"
-                   "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version (DEPRECIATED)\n"
+                   "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version (DEPRECATED)\n"
                    "  \"bitcoincoreversion\" : \"x.x.x\",        (string) BitcoinHD Core version\n"
                    "  \"block\" : nnnnnn,                      (number) index of the last processed block\n"
                    "  \"blocktime\" : nnnnnnnnnn,              (number) timestamp of the last processed block\n"
@@ -2707,7 +2720,7 @@ static const CRPCCommand commands[] =
 #endif
     { "hidden",                      "mscrpc",                         &mscrpc,                          {"extra", "extra2", "extra3"}  },
 
-    /* depreciated: */
+    /* deprecated: */
     { "hidden",                      "getinfo_MP",                     &omni_getinfo,                    {}  },
     { "hidden",                      "getbalance_MP",                  &omni_getbalance,                 {"address", "propertyid"} },
     { "hidden",                      "getallbalancesforaddress_MP",    &omni_getallbalancesforaddress,   {"address"} },

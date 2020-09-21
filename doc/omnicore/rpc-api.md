@@ -14,7 +14,9 @@ All available commands can be listed with `"help"`, and information about a spec
 
 - [Transaction creation](#transaction-creation)
   - [omni_send](#omni_send)
-  - [omni_senddexsell](#omni_senddexsell)
+  - [omni_sendnewdexorder](#omni_sendnewdexorder)
+  - [omni_sendupdatedexorder](#omni_sendupdatedexorder)
+  - [omni_sendcanceldexorder](#omni_sendcanceldexorder)
   - [omni_senddexaccept](#omni_senddexaccept)
   - [omni_senddexpay](#omni_senddexpay)
   - [omni_sendissuancecrowdsale](#omni_sendissuancecrowdsale)
@@ -99,7 +101,7 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_getfeedistributions](#omni_getfeedistributions)
 - [Configuration](#configuration)
   - [omni_setautocommit](#omni_setautocommit)
-- [Depreciated API calls](#depreciated-api-calls)
+- [Deprecated API calls](#deprecated-api-calls)
 
 ---
 
@@ -139,14 +141,20 @@ $ omnicore-cli "omni_send" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoML
 
 ### omni_senddexsell
 
-Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.
+Place, update or cancel a sell offer on the distributed token/BTC exchange.
+
+**Please note: this RPC is replaced by:**
+
+- [omni_sendnewdexorder](#omni_sendnewdexorder)
+- [omni_sendupdatedexorder](#omni_sendupdatedexorder)
+- [omni_sendcanceldexorder](#omni_sendcanceldexorder)
 
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
-| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale (must be `1` for `OMN` or `2`for `TOMN`)       |
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale                                                |
 | `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
 | `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
 | `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |
@@ -161,7 +169,87 @@ Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exc
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_senddexsell" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "1.5" "0.75" 25 "0.0005" 1
+$ omnicore-cli "omni_senddexsell" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "1.5" "0.75" 25 "0.0001" 1
+```
+
+---
+
+### omni_sendnewdexorder
+
+Creates a new sell offer on the distributed token/BTC exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale                                                |
+| `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
+| `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
+| `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |
+| `minacceptfee`      | string  | required | a minimum mining fee a buyer has to pay to accept the offer                                  |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendnewdexorder" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "1.5" "0.75" 50 "0.0001"
+```
+
+---
+
+### omni_sendupdatedexorder
+
+Updates an existing sell offer on the distributed token/BTC exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to update                                                       |
+| `amountforsale`     | string  | required | the new amount of tokens to list for sale                                                    |
+| `amountdesired`     | string  | required | the new amount of bitcoins desired                                                           |
+| `paymentwindow`     | number  | required | a new time limit in blocks a buyer has to pay following a successful accepting order         |
+| `minacceptfee`      | string  | required | a new minimum mining fee a buyer has to pay to accept the offer                              |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendupdatedexorder" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "1.0" "1.75" 50 "0.0001"
+```
+
+---
+
+### omni_sendcanceldexorder
+
+Cancels existing sell offer on the distributed token/BTC exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to cancel                                                       |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendcanceldexorder" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1
 ```
 
 ---
@@ -196,6 +284,9 @@ $ omnicore-cli "omni_senddexaccept" \
 ### omni_senddexpay
 
 Create and broadcast payment for an accept offer.
+
+Please note:
+Partial purchases are not possible and the whole accepted amount must be paid.
 
 **Arguments:**
 
@@ -799,7 +890,7 @@ Result:
 {
   "omnicoreversion_int" : xxxxxxx,      // (number) client version as integer
   "omnicoreversion" : "x.x.x.x-xxx",    // (string) client version
-  "mastercoreversion" : "x.x.x.x-xxx",  // (string) client version (DEPRECIATED)
+  "mastercoreversion" : "x.x.x.x-xxx",  // (string) client version (DEPRECATED)
   "bitcoincoreversion" : "x.x.x",       // (string) Bitcoin Core version
   "commitinfo" : "xxxxxxx",             // (string) build commit identifier
   "block" : nnnnnn,                     // (number) index of the last processed block
@@ -1212,6 +1303,8 @@ $ omnicore-cli "omni_getactivedexsells"
 
 Lists all tokens or smart properties.
 
+To get the total number of tokens, please use omni_getproperty.
+
 **Arguments:**
 
 *None*
@@ -1227,6 +1320,10 @@ Lists all tokens or smart properties.
     "data" : "information",         // (string) additional information or a description
     "url" : "uri",                  // (string) an URI, for example pointing to a website
     "divisible" : true|false        // (boolean) whether the tokens are divisible
+    "issuer" : "address",           // (string) the Bitcoin address of the issuer on record
+    "creationtxid" : "hash",        // (string) the hex-encoded creation transaction hash
+    "fixedissuance" : true|false,   // (boolean) whether the token supply is fixed
+    "managedissuance" : true|false, // (boolean) whether the token supply is managed by the issuer
   },
   ...
 ]
@@ -2742,9 +2839,9 @@ $ omnicore-cli "omni_setautocommit" false
 
 ---
 
-## Depreciated API calls
+## Deprecated API calls
 
-To ensure backwards compatibility, depreciated RPCs are kept for at least one major version.
+To ensure backwards compatibility, deprecated RPCs are kept for at least one major version.
 
 The following calls are replaced in Omni Core 0.0.10, and queries with the old command are forwarded.
 

@@ -174,7 +174,7 @@ static UniValue omni_createpayload_issuancefixed(const JSONRPCRequest& request)
             RPCHelpMan{"omni_createpayload_issuancefixed",
                "\nCreates the payload for a new tokens issuance with fixed supply.\n",
                {
-                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
                    {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
                    {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (use 0 for new tokens)\n"},
                    {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
@@ -217,7 +217,7 @@ static UniValue omni_createpayload_issuancecrowdsale(const JSONRPCRequest& reque
             RPCHelpMan{"omni_createpayload_issuancecrowdsale",
                "\nCreates the payload for a new tokens issuance with crowdsale.\n",
                {
-                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
                    {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
                    {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (0 for new crowdsales)\n"},
                    {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
@@ -269,7 +269,7 @@ static UniValue omni_createpayload_issuancemanaged(const JSONRPCRequest& request
             RPCHelpMan{"omni_createpayload_issuancemanaged",
                "\nCreates the payload for a new tokens issuance with manageable supply.\n",
                {
-                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
                    {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
                    {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (use 0 for new tokens)\n"},
                    {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},

@@ -40,17 +40,16 @@ bool AddressToPubKey(const interfaces::Wallet* iWallet, const std::string& key, 
 #ifdef ENABLE_WALLET
     // Case 1: Bitcoin address and the key is in the wallet
     CTxDestination dest = DecodeDestination(key);
-    if (!IsValidDestination(dest)) {
-        return false;
-    }
-    CKeyID keyID = iWallet->getKeyForDestination(dest);
-    if (keyID.IsNull()) {
-        PrintToLog("%s: ERROR: redemption address %s does not refer to a public key\n", __func__, key);
-        return false;
-    }
-    if (!iWallet->getPubKey(keyID, pubKey)) {
-        PrintToLog("%s: ERROR: no public key in wallet for redemption address %s\n", __func__, key);
-        return false;
+    if (IsValidDestination(dest)) {
+        CKeyID keyID = iWallet->getKeyForDestination(dest);
+        if (keyID.IsNull()) {
+            PrintToLog("%s: ERROR: redemption address %s does not refer to a public key\n", __func__, key);
+            return false;
+        }
+        if (!iWallet->getPubKey(keyID, pubKey)) {
+            PrintToLog("%s: ERROR: no public key in wallet for redemption address %s\n", __func__, key);
+            return false;
+        }
     }
     // Case 2: Hex-encoded public key
     else

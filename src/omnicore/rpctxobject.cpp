@@ -93,7 +93,12 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     // attempt to parse the transaction
     CMPTransaction mp_obj;
     int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime, pView);
-    if (parseRC < 0) return MP_TX_IS_NOT_OMNI_PROTOCOL;
+    if (parseRC == -101) {
+        return MP_RPC_DECODE_INPUTS_MISSING;
+    }
+    if (parseRC < 0) {
+        return MP_TX_IS_NOT_OMNI_PROTOCOL;
+    }
 
     const uint256& txid = tx.GetHash();
 
@@ -694,7 +699,7 @@ int populateRPCDExPurchases(const CTransaction& wtx, UniValue& purchases, std::s
         purchaseObj.pushKV("ismine", bIsMine);
         purchaseObj.pushKV("referenceaddress", seller);
         purchaseObj.pushKV("propertyid", propertyId);
-        purchaseObj.pushKV("amountbought", FormatDivisibleMP(nValue));
+        purchaseObj.pushKV("amountbought", FormatMP(propertyId, nValue));
         purchaseObj.pushKV("valid", true); //only valid purchases are stored, anything else is regular BTC tx
         purchases.push_back(purchaseObj);
     }

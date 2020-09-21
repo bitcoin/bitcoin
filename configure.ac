@@ -1447,7 +1447,7 @@ if test x$enable_omnicore != xno; then
   AC_DEFINE_UNQUOTED([ENABLE_OMNICORE],[1],[Define to 1 to enable omnicore functions])
   define(_OMNICORE_VERSION_MAJOR, 0)
   define(_OMNICORE_VERSION_MINOR, 8)
-  define(_OMNICORE_VERSION_PATCH, 1)
+  define(_OMNICORE_VERSION_PATCH, 2)
   define(_OMNICORE_VERSION_BUILD, 0)
   define(_OMNICORE_VERSION_RC, 0)
 else
