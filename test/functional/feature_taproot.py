@@ -445,11 +445,11 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
 
     # Compute scriptPubKey and set useful defaults based on the inputs.
     if witv0:
-        assert(tap is None)
+        assert tap is None
         conf["mode"] = "witv0"
         if pkh is not None:
             # P2WPKH
-            assert(script is None)
+            assert script is None
             pubkeyhash = hash160(pkh)
             spk = CScript([OP_0, pubkeyhash])
             conf["scriptcode"] = CScript([OP_DUP, OP_HASH160, pubkeyhash, OP_EQUALVERIFY, OP_CHECKSIG])
@@ -466,7 +466,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         conf["mode"] = "legacy"
         if pkh is not None:
             # P2PKH
-            assert(script is None)
+            assert script is None
             pubkeyhash = hash160(pkh)
             spk = CScript([OP_DUP, OP_HASH160, pubkeyhash, OP_EQUALVERIFY, OP_CHECKSIG])
             conf["scriptcode"] = spk
@@ -478,7 +478,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         else:
             assert False
     else:
-        assert(script is None)
+        assert script is None
         conf["mode"] = "taproot"
         conf["tap"] = tap
         spk = tap.scriptPubKey
@@ -497,7 +497,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         if valid:
             spend(tx, idx, utxos, **conf)
         else:
-            assert(failure is not None)
+            assert failure is not None
             spend(tx, idx, utxos, **{**conf, **failure})
 
     return Spender(script=spk, comment=comment, is_standard=standard, sat_function=sat_fn, err_msg=err_msg, sigops_weight=sigops_weight, no_fail=failure is None, need_vin_vout_mismatch=need_vin_vout_mismatch)
@@ -722,7 +722,7 @@ def spenders_taproot_active():
             for witlen in [20, 31, 32, 33]:
                 def mutate(spk):
                     prog = spk[2:]
-                    assert(len(prog) == 32)
+                    assert len(prog) == 32
                     if witlen < 32:
                         prog = prog[0:witlen]
                     elif witlen > 32:
@@ -1271,7 +1271,7 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("- Running %i spending tests" % done)
         random.shuffle(normal_utxos)
         random.shuffle(mismatching_utxos)
-        assert(done == len(normal_utxos) + len(mismatching_utxos))
+        assert done == len(normal_utxos) + len(mismatching_utxos)
 
         left = done
         while left:
@@ -1310,7 +1310,7 @@ class TaprootTest(BitcoinTestFramework):
             for i in range(len(input_utxos)):
                 if input_utxos[i].spender.need_vin_vout_mismatch:
                     first_mismatch_input = i
-            assert(first_mismatch_input is None or first_mismatch_input > 0)
+            assert first_mismatch_input is None or first_mismatch_input > 0
 
             # Decide fee, and add CTxIns to tx.
             amount = sum(utxo.output.nValue for utxo in input_utxos)
@@ -1336,7 +1336,7 @@ class TaprootTest(BitcoinTestFramework):
                 tx.vout[-1].scriptPubKey = random.choice(host_spks)
                 sigops_weight += CScript(tx.vout[-1].scriptPubKey).GetSigOpCount(False) * WITNESS_SCALE_FACTOR
             fee += in_value
-            assert(fee >= 0)
+            assert fee >= 0
 
             # Select coinbase pubkey
             cb_pubkey = random.choice(host_pubkeys)

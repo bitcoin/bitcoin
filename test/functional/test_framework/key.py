@@ -400,7 +400,7 @@ def compute_xonly_pubkey(key):
     This also returns whether the resulting public key was negated.
     """
 
-    assert(len(key) == 32)
+    assert len(key) == 32
     x = int.from_bytes(key, 'big')
     if x == 0 or x >= SECP256K1_ORDER:
         return (None, None)
@@ -410,8 +410,8 @@ def compute_xonly_pubkey(key):
 def tweak_add_privkey(key, tweak):
     """Tweak a private key (after negating it if needed)."""
 
-    assert(len(key) == 32)
-    assert(len(tweak) == 32)
+    assert len(key) == 32
+    assert len(tweak) == 32
 
     x = int.from_bytes(key, 'big')
     if x == 0 or x >= SECP256K1_ORDER:
@@ -429,8 +429,8 @@ def tweak_add_privkey(key, tweak):
 def tweak_add_pubkey(key, tweak):
     """Tweak a public key and return whether the result had to be negated."""
 
-    assert(len(key) == 32)
-    assert(len(tweak) == 32)
+    assert len(key) == 32
+    assert len(tweak) == 32
 
     x_coord = int.from_bytes(key, 'big')
     if x_coord >= SECP256K1_FIELD_SIZE:
@@ -453,9 +453,9 @@ def verify_schnorr(key, sig, msg):
     - sig is a 64-byte Schnorr signature
     - msg is a 32-byte message
     """
-    assert(len(key) == 32)
-    assert(len(msg) == 32)
-    assert(len(sig) == 64)
+    assert len(key) == 32
+    assert len(msg) == 32
+    assert len(sig) == 64
 
     x_coord = int.from_bytes(key, 'big')
     if x_coord == 0 or x_coord >= SECP256K1_FIELD_SIZE:
@@ -481,11 +481,11 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
     """Create a Schnorr signature (see BIP 340)."""
 
     if aux is None:
-        aux = bytes(0 for _ in range(32))
+        aux = bytes(32)
 
-    assert(len(key) == 32)
-    assert(len(msg) == 32)
-    assert(len(aux) == 32)
+    assert len(key) == 32
+    assert len(msg) == 32
+    assert len(aux) == 32
 
     sec = int.from_bytes(key, 'big')
     if sec == 0 or sec >= SECP256K1_ORDER:
@@ -495,7 +495,7 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         sec = SECP256K1_ORDER - sec
     t = (sec ^ int.from_bytes(TaggedHash("BIP0340/aux", aux), 'big')).to_bytes(32, 'big')
     kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + P[0].to_bytes(32, 'big') + msg), 'big') % SECP256K1_ORDER
-    assert(kp != 0)
+    assert kp != 0
     R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, kp)]))
     k = kp if SECP256K1.has_even_y(R) != flip_r else SECP256K1_ORDER - kp
     e = int.from_bytes(TaggedHash("BIP0340/challenge", R[0].to_bytes(32, 'big') + P[0].to_bytes(32, 'big') + msg), 'big') % SECP256K1_ORDER
@@ -526,7 +526,7 @@ class TestFrameworkKey(unittest.TestCase):
         num_tests = 0
         with open(os.path.join(sys.path[0], 'test_framework', 'bip340_test_vectors.csv'), newline='', encoding='utf8') as csvfile:
             reader = csv.reader(csvfile)
-            reader.__next__()
+            next(reader)
             for row in reader:
                 (i_str, seckey_hex, pubkey_hex, aux_rand_hex, msg_hex, sig_hex, result_str, comment) = row
                 i = int(i_str)
