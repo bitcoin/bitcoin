@@ -1972,12 +1972,6 @@ struct Tracker
         copies = t.copies + 1;
         return *this;
     }
-    Tracker& operator=(Tracker&& t) noexcept
-    {
-        origin = t.origin;
-        copies = t.copies;
-        return *this;
-    }
 };
 
 }
