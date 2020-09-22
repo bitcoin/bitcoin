@@ -951,7 +951,7 @@ public:
     bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
         return Read(txid, nHeight);
     }  
-    bool PruneTxRoots();
+    bool PruneIndex();
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
     bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
 };
