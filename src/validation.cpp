@@ -4662,7 +4662,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
         if(passetdb != nullptr){
             if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
-                return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
+                return error("VerifyDB(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
             }
         }
         while (pindex != ::ChainActive().Tip()) {
@@ -5713,7 +5713,7 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
     return WriteBatch(batch);	
 }
 
-bool CBlockIndexDB::PruneIndex()) {
+bool CBlockIndexDB::PruneIndex() {
     AssertLockHeld(cs_main);
     if(MAX_BLOCK_INDEX > ::ChainActive().Height())
         return true;
