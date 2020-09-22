@@ -1176,7 +1176,7 @@ bool CSigSharesManager::SendMessages()
     bool didSend = false;
 
     for (CNode* pnode : vNodesCopy) {
-        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
         auto it1 = sigSessionAnnouncements.find(pnode->GetId());
         if (it1 != sigSessionAnnouncements.end()) {

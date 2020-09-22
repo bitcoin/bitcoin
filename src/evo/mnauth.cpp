@@ -48,7 +48,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 
     LogPrint(BCLog::NET, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, pnode->GetId());
 
-    connman.PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
+    connman.PushMessage(pnode, CNetMsgMaker(pnode->GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
 void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
