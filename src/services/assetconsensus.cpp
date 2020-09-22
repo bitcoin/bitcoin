@@ -243,9 +243,17 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     CAmount nTotal;
     if(itIn != mapAssetIn.end()) {
         nTotal = itOut->second.second - itIn->second.second;
+        if (itIn->second.first != itOut->second.first) {	
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "mint-zeroval-mismatch");	
+        }
     } else {
         nTotal = itOut->second.second;
+        // cannot create zero val output without an input
+        if(itOut->second.first) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "mint-zeroval-without-input");	
+        }
     }
+
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
@@ -363,6 +371,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(itOut == mapAssetOut.end()) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-output-notfound", bSanityCheck);             
             } 
+            // cannot create zero val output for SYSX
+            if(itOut->second.first) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-asset-output-zeroval");	
+            }
             // if input for this asset exists, must also include it as change in output, so output-input should be the new amount created
             auto itIn = mapAssetIn.find(nAsset);
             CAmount nTotal;
@@ -730,7 +742,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             auto itIn = mapAssetIn.find(nAsset);
             if(itIn == mapAssetIn.end()) {
                 return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
-            } 
+            }
             // check that the first input asset has zero val input spent
             if (!itIn->second.first) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
