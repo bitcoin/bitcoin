@@ -16,9 +16,6 @@
 
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 {
-    if (request.fHelp) {
-        return "help message";
-    }
     return request.params.write(0, 0);
 }
 

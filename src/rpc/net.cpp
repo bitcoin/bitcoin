@@ -262,10 +262,10 @@ static RPCHelpMan addnode()
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
-    if (request.fHelp || request.params.size() != 2 ||
-        (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
+    if (strCommand != "onetry" && strCommand != "add" && strCommand != "remove") {
         throw std::runtime_error(
             self.ToString());
+    }
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -604,7 +604,7 @@ static RPCHelpMan setban()
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
-    if (request.fHelp || !help.IsValidNumArgs(request.params.size()) || (strCommand != "add" && strCommand != "remove")) {
+    if (strCommand != "add" && strCommand != "remove") {
         throw std::runtime_error(help.ToString());
     }
     NodeContext& node = EnsureNodeContext(request.context);

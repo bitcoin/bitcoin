@@ -624,8 +624,6 @@ static RPCHelpMan echo(const std::string& name)
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp) throw std::runtime_error(self.ToString());
-
     if (request.params[9].isStr()) {
         CHECK_NONFATAL(request.params[9].get_str() != "trigger_internal_bug");
     }
