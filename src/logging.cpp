@@ -236,7 +236,9 @@ namespace BCLog {
     }
 }
 
-void BCLog::Logger::LogPrintStr(const std::string& str)
+static constexpr uint64_t HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION{1024 * 1024};
+
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const SourceLocation& source_location, const bool skip_disk_usage_rate_limiting)
 {
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
@@ -246,6 +248,25 @@ void BCLog::Logger::LogPrintStr(const std::string& str)
     }
 
     str_prefixed = LogTimestampStr(str_prefixed);
+
+    // Rate limit logging to disk to avoid disk filling attacks.
+    bool skip_writing_to_disk_due_to_rate_limiting{false};
+    if (!skip_disk_usage_rate_limiting) {
+        const std::chrono::seconds now = GetTime<std::chrono::seconds>();
+        if ((now - m_last_reset_of_bytes_logged_per_source_location) > std::chrono::hours{1}) {
+            m_bytes_logged_per_source_location.clear();
+            m_last_reset_of_bytes_logged_per_source_location = now;
+        }
+        m_bytes_logged_per_source_location[source_location] += str_prefixed.size();
+        if (m_bytes_logged_per_source_location[source_location] > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION) {
+            const bool print_quota_state_change_message = (m_bytes_logged_per_source_location[source_location] - str_prefixed.size()) <= HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION;
+            if (print_quota_state_change_message) {
+                str_prefixed = LogTimestampStr(strprintf("Excessive logging detected from %s:%d (%s): >%d MiB logged during the last hour. Suppressing logging to disk from this source location for up to one hour. Console logging unaffected. Last log entry: %s", source_location.first, source_location.second, logging_function, HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION / (1024 * 1024), str_prefixed));
+            } else {
+                skip_writing_to_disk_due_to_rate_limiting = true;
+            }
+        }
+    }
 
     m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
 
@@ -263,7 +284,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str)
     for (const auto& cb : m_print_callbacks) {
         cb(str_prefixed);
     }
-    if (m_print_to_file) {
+    if (m_print_to_file && !skip_writing_to_disk_due_to_rate_limiting) {
         assert(m_fileout != nullptr);
 
         // reopen the log file, if requested

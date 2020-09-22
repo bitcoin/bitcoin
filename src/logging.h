@@ -6,16 +6,21 @@
 #ifndef BITCOIN_LOGGING_H
 #define BITCOIN_LOGGING_H
 
+#include <crypto/siphash.h>
 #include <fs.h>
 #include <tinyformat.h>
 #include <threadsafety.h>
 #include <util/string.h>
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
+#include <functional>
 #include <list>
 #include <mutex>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -29,6 +34,16 @@ extern bool fLogIPs;
 struct LogCategory {
     std::string category;
     bool active;
+};
+
+// Replace with std::source_location when switching to C++20.
+using SourceLocation = std::pair<const char*, int>;
+struct SourceLocationHasher {
+    size_t operator()(const SourceLocation& source_location) const noexcept
+    {
+        // Use CSipHasher(0, 0) as a simple way to get uniform distribution.
+        return static_cast<size_t>(CSipHasher(0, 0).Write(std::hash<const char*>{}(source_location.first)).Write(std::hash<int>{}(source_location.second)).Finalize());
+    }
 };
 
 namespace BCLog {
@@ -67,6 +82,8 @@ namespace BCLog {
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
+        std::unordered_map<SourceLocation, uint64_t, SourceLocationHasher> m_bytes_logged_per_source_location GUARDED_BY(m_cs);
+        std::chrono::seconds m_last_reset_of_bytes_logged_per_source_location GUARDED_BY(m_cs){0};
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -95,7 +112,7 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str);
+        void LogPrintStr(const std::string& str, const std::string& logging_function, const SourceLocation& source_location, const bool skip_disk_usage_rate_limiting);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const
@@ -161,9 +178,11 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 // Be conservative when using LogPrintf/error or other things which
 // unconditionally log to debug.log! It should not be the case that an inbound
 // peer can fill up a user's disk with debug.log entries.
-
+//
+// An attempt to mitigate disk filling attacks is made unless skip_disk_usage_rate_limiting
+// is set to true.
 template <typename... Args>
-static inline void LogPrintf(const char* fmt, const Args&... args)
+static inline void LogPrintf_(const std::string& logging_function, const char* source_file, const int source_line, const bool skip_disk_usage_rate_limiting, const char* fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;
@@ -173,17 +192,31 @@ static inline void LogPrintf(const char* fmt, const Args&... args)
             /* Original format string will have newline so don't add one here */
             log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
         }
-        LogInstance().LogPrintStr(log_msg);
+        const SourceLocation source_location = std::make_pair(source_file, source_line);
+        LogInstance().LogPrintStr(log_msg, logging_function, source_location, skip_disk_usage_rate_limiting);
     }
 }
 
+// Unconditional logging. Uses basic rate limiting to mitigate disk filling attacks.
+#define LogPrintf(...) LogPrintf_(__func__, __FILE__, __LINE__, /* skip_disk_usage_rate_limiting */ false, __VA_ARGS__)
+
+// Unconditional logging WITHOUT rate limiting. Use only for log messages that
+// MUST NOT be rate limited no matter how often they are logged. That requirement
+// should be extremely rare, so please use with care. Prefer LogPrintf(...) if
+// possible.
+#define LogPrintfWithoutRateLimiting(...) LogPrintf_(__func__, __FILE__, __LINE__, /* skip_disk_usage_rate_limiting */ true, __VA_ARGS__)
+
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
-#define LogPrint(category, ...)              \
-    do {                                     \
-        if (LogAcceptCategory((category))) { \
-            LogPrintf(__VA_ARGS__);          \
-        }                                    \
+//
+// Note that conditional logging is performed WITHOUT rate limiting. Users
+// specifying -debug are assumed to be developers or power users who are aware
+// that -debug may cause excessive disk usage due to logging.
+#define LogPrint(category, ...)                                                                              \
+    do {                                                                                                     \
+        if (LogAcceptCategory((category))) {                                                                 \
+            LogPrintf_(__func__, __FILE__, __LINE__, /* skip_disk_usage_rate_limiting */ true, __VA_ARGS__); \
+        }                                                                                                    \
     } while (0)
 
 #endif // BITCOIN_LOGGING_H
