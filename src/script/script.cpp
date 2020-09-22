@@ -334,8 +334,8 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
 
 bool IsOpSuccess(const opcodetype& opcode)
 {
-    return (opcode == 0x50 || opcode == 0x62 || opcode == 0x89 ||
-            opcode == 0x8a || opcode == 0x8d || opcode == 0x8e ||
-            (opcode >= 0x7e && opcode <= 0x81) || (opcode >= 0x83 && opcode <= 0x86) ||
-            (opcode >= 0x95 && opcode <= 0x99) || (opcode >= 0xbb && opcode <= 0xfe));
+    return opcode == 80 || opcode == 98 || (opcode >= 126 && opcode <= 129) ||
+           (opcode >= 131 && opcode <= 134) || (opcode >= 137 && opcode <= 138) ||
+           (opcode >= 141 && opcode <= 142) || (opcode >= 149 && opcode <= 153) ||
+           (opcode >= 187 && opcode <= 254);
 }
