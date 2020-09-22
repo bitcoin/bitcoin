@@ -622,7 +622,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
         ++nVoteCount;
     }
 
-    CNetMsgMaker msgMaker(pnode->GetSendVersion());
+    CNetMsgMaker msgMaker(pnode->GetCommonVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE, nVoteCount));
     LogPrintf("CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, nVoteCount, pnode->GetId());
 }
@@ -668,7 +668,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
         ++nObjCount;
     }
 
-    CNetMsgMaker msgMaker(pnode->GetSendVersion());
+    CNetMsgMaker msgMaker(pnode->GetCommonVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, nObjCount));
     LogPrintf("CGovernanceManager::%s -- sent %d objects to peer=%d\n", __func__, nObjCount, pnode->GetId());
 }
@@ -892,7 +892,7 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::RequestGovernanceObject -- nHash %s peer=%d\n", nHash.ToString(), pfrom->GetId());
 
-    CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+    CNetMsgMaker msgMaker(pfrom->GetCommonVersion());
 
     CBloomFilter filter;
 

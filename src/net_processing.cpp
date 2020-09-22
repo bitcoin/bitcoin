@@ -1985,7 +1985,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                 }
                 case(MSG_GOVERNANCE_OBJECT): {
                     LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
-                    CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
+                    CDataStream ss(SER_NETWORK, pfrom.GetCommonVersion());
                     bool topush = false;
                     {
                         if(governance.HaveObjectForHash(inv.hash)) {
@@ -2003,7 +2003,7 @@ void static ProcessGetData(CNode& pfrom, const CChainParams& chainparams, CConnm
                     break;
                 }
                 case(MSG_GOVERNANCE_OBJECT_VOTE): {
-                    CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
+                    CDataStream ss(SER_NETWORK, pfrom.GetCommonVersion());
                     bool topush = false;
                     {
                         if(governance.HaveVoteForHash(inv.hash)) {

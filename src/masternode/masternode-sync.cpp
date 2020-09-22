@@ -142,7 +142,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     for (CNode* pnode : vNodesCopy)
     {
-        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
         // Don't try to sync any data from outbound "masternode" connections -
         // they are temporary and should be considered unreliable for a sync process.
@@ -285,7 +285,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
 void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
 {
-    CNetMsgMaker msgMaker(pnode->GetSendVersion());
+    CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
     CBloomFilter filter;
 

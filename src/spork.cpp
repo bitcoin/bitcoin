@@ -171,7 +171,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         LOCK(cs); // make sure to not lock this together with cs_main
         for (const auto& pair : mapSporksActive) {
             for (const auto& signerSporkPair: pair.second) {
-                connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::SPORK, signerSporkPair.second));
+                connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetCommonVersion()).Make(NetMsgType::SPORK, signerSporkPair.second));
             }
         }
     }
