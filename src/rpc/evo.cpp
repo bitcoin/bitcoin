@@ -35,8 +35,8 @@
 #endif//ENABLE_WALLET
 
 #ifdef ENABLE_WALLET
-extern UniValue signrawtransaction(const JSONRPCRequest& request);
-extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+extern RPCHelpMan signrawtransaction();
+extern RPCHelpMan sendrawtransaction();
 #else
 class CWallet;
 #endif//ENABLE_WALLET
@@ -350,7 +350,7 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const Cha
     JSONRPCRequest sendRequest(request);
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
-    return sendrawtransaction(sendRequest).get_str();
+    return sendrawtransaction().HandleRequest(sendRequest).get_str();
 }
 
 static void protx_register_fund_help(const JSONRPCRequest& request, bool legacy)
