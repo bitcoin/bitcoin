@@ -7,8 +7,8 @@
 #include <primitives/block.h>
 #include <signet.h>
 #include <streams.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
 #include <cstdint>
@@ -28,7 +28,5 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         return;
     }
     (void)CheckSignetBlockSolution(*block, Params().GetConsensus());
-    if (GetWitnessCommitmentIndex(*block) != NO_WITNESS_COMMITMENT) {
-        (void)SignetTxs::Create(*block, ConsumeScript(fuzzed_data_provider));
-    }
+    (void)SignetTxs::Create(*block, ConsumeScript(fuzzed_data_provider));
 }
