@@ -810,6 +810,12 @@ void InitParameterInteraction(ArgsManager& args)
         // to protect privacy, do not discover addresses by default
         if (args.SoftSetBoolArg("-discover", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -discover=0\n", __func__);
+        // If -proxy is specified without any proxy server argument, default to 127.0.0.1 (DEFAULT_PROXY_HOST)
+        // instead of continuing without a proxy server.
+        if (args.GetArg("-proxy", "").empty()) {
+            args.ForceSetArg("-proxy", DEFAULT_PROXY_HOST);
+            LogPrintf("%s: parameter interaction: -proxy set without argument -> setting -proxy=%s\n", __func__, DEFAULT_PROXY_HOST);
+        }
     }
 
     if (!args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
