@@ -215,9 +215,9 @@ public:
     /** Construct an x-only pubkey from exactly 32 bytes. */
     XOnlyPubKey(Span<const unsigned char> input);
 
-    /** Verify a 64-byte Schnorr signature.
+    /** Verify a Schnorr signature against this public key.
      *
-     * If the signature is not exactly 64 bytes, false is returned.
+     * sigbytes must be exactly 64 bytes.
      */
     bool VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const;
     bool CheckPayToContract(const XOnlyPubKey& base, const uint256& hash, bool parity) const;
