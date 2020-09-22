@@ -9,6 +9,8 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
+#include <optional.h>
+
 /**
  * Extract signature and check whether a block has a valid solution
  */
@@ -22,21 +24,14 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
  * 2. It skips the nonce.
  */
 class SignetTxs {
-private:
-    struct invalid {};
-    SignetTxs(invalid i) : m_to_spend(), m_to_sign(), m_valid(false) { }
-
     template<class T1, class T2>
-    SignetTxs(const T1& to_spend, const T2& to_sign) : m_to_spend{to_spend}, m_to_sign{to_sign}, m_valid(true) { }
-
-    static SignetTxs Create(const CBlock& block, const CScript& challenge);
+    SignetTxs(const T1& to_spend, const T2& to_sign) : m_to_spend{to_spend}, m_to_sign{to_sign} { }
 
 public:
-    SignetTxs(const CBlock& block, const CScript& challenge) : SignetTxs(Create(block, challenge)) { }
+    static Optional<SignetTxs> Create(const CBlock& block, const CScript& challenge);
 
     const CTransaction m_to_spend;
     const CTransaction m_to_sign;
-    const bool m_valid;
 };
 
 #endif // BITCOIN_SIGNET_H

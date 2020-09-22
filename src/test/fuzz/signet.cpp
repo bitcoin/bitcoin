@@ -29,6 +29,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     (void)CheckSignetBlockSolution(*block, Params().GetConsensus());
     if (GetWitnessCommitmentIndex(*block) != NO_WITNESS_COMMITMENT) {
-        (void)SignetTxs(*block, ConsumeScript(fuzzed_data_provider));
+        (void)SignetTxs::Create(*block, ConsumeScript(fuzzed_data_provider));
     }
 }
