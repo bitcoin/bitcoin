@@ -105,7 +105,7 @@ class EllipticCurve:
         return jacobi_symbol(x_3 + self.a * x + self.b, self.p) != -1
 
     def lift_x(self, x):
-        """Given an X coordinate on the curve, return a corresponding affine point for which the y-coordinate is even."""
+        """Given an X coordinate on the curve, return a corresponding affine point for which the Y coordinate is even."""
         x_3 = pow(x, 3, self.p)
         v = x_3 + self.a * x + self.b
         y = modsqrt(v, self.p)
@@ -407,8 +407,8 @@ def compute_xonly_pubkey(key):
     P = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, x)]))
     return (P[0].to_bytes(32, 'big'), not SECP256K1.has_even_y(P))
 
-def tweak_add_privkey(key, tweak, negated=False):
-    """Tweak a private key (after optionally negating it)."""
+def tweak_add_privkey(key, tweak):
+    """Tweak a private key (after negating it if needed)."""
 
     assert(len(key) == 32)
     assert(len(tweak) == 32)
@@ -416,7 +416,7 @@ def tweak_add_privkey(key, tweak, negated=False):
     x = int.from_bytes(key, 'big')
     if x == 0 or x >= SECP256K1_ORDER:
         return None
-    if negated:
+    if not SECP256K1.has_even_y(SECP256K1.mul([(SECP256K1_G, x)])):
        x = SECP256K1_ORDER - x
     t = int.from_bytes(tweak, 'big')
     if t >= SECP256K1_ORDER:
@@ -427,7 +427,7 @@ def tweak_add_privkey(key, tweak, negated=False):
     return x.to_bytes(32, 'big')
 
 def tweak_add_pubkey(key, tweak):
-    """Tweak a public key and return whether the result was negated."""
+    """Tweak a public key and return whether the result had to be negated."""
 
     assert(len(key) == 32)
     assert(len(tweak) == 32)

@@ -225,8 +225,7 @@ def default_key_tweaked(ctx):
     if tweak is None:
         return key
     else:
-        _, negated = compute_xonly_pubkey(key)
-        return tweak_add_privkey(key, tweak, negated)
+        return tweak_add_privkey(key, tweak)
 
 def default_signature(ctx):
     """Default expression for "signature": BIP340 signature or ECDSA signature depending on mode."""
