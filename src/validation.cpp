@@ -4653,17 +4653,18 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     }
     if (pindexFailure)
         return error("VerifyDB(): *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", ::ChainActive().Height() - pindexFailure->nHeight + 1, nGoodTransactions);
-    // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
-    if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
-            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
-        }
-    }
+
     // store block count as we move pindex at check level >= 4
     int block_count = ::ChainActive().Height() - pindex->nHeight;
 
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
+        // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
+        if(passetdb != nullptr){
+            if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
+                return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
+            }
+        }
         while (pindex != ::ChainActive().Tip()) {
             const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(::ChainActive().Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
             if (reportDone < percentageDone/10) {
@@ -5712,7 +5713,7 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
     return WriteBatch(batch);	
 }
 
-bool CBlockIndexDB::PruneTxRoots() {
+bool CBlockIndexDB::PruneIndex()) {
     AssertLockHeld(cs_main);
     if(MAX_BLOCK_INDEX > ::ChainActive().Height())
         return true;
@@ -5750,7 +5751,7 @@ bool PruneSyscoinDBs() {
      }
     if (pblockindexdb != nullptr)
      {
-        if(!pblockindexdb->PruneTxRoots())
+        if(!pblockindexdb->PruneIndex())
         {
             LogPrintf("Failed to write to prune block index database!\n");
             ret = false;
