@@ -172,6 +172,7 @@ public:
         consensus.BIP65Height = 1; 
         consensus.BIP66Height = 1;
         consensus.CSVHeight = 1;
+        consensus.SegwitHeight = 0;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
         consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
@@ -310,6 +311,7 @@ public:
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
+        consensus.SegwitHeight = 0;
         consensus.CSVHeight = 1;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
