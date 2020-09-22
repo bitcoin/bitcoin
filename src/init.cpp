@@ -1417,7 +1417,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     SetReachable(NET_ONION, false);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
-        if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
+        if (!Lookup(proxyArg, proxyAddr, DEFAULT_PROXY_PORT, fNameLookup)) {
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
         }
 
@@ -1441,7 +1441,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
             SetReachable(NET_ONION, false);
         } else {
             CService onionProxy;
-            if (!Lookup(onionArg, onionProxy, 9050, fNameLookup)) {
+            if (!Lookup(onionArg, onionProxy, DEFAULT_PROXY_PORT, fNameLookup)) {
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
             }
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);

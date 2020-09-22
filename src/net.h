@@ -88,6 +88,9 @@ static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
+static const char* DEFAULT_PROXY_HOST = "127.0.0.1";
+static constexpr uint16_t DEFAULT_PROXY_PORT = 9050;
+
 typedef int64_t NodeId;
 
 struct AddedNodeInfo

@@ -23,8 +23,6 @@
 #include <QSettings>
 #include <QStringList>
 
-const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
-
 static const QString GetDefaultProxyAddress();
 
 OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
@@ -213,7 +211,7 @@ struct ProxySetting {
 
 static ProxySetting GetProxySetting(QSettings &settings, const QString &name)
 {
-    static const ProxySetting default_val = {false, DEFAULT_GUI_PROXY_HOST, QString("%1").arg(DEFAULT_GUI_PROXY_PORT)};
+    static const ProxySetting default_val = {false, DEFAULT_PROXY_HOST, QString("%1").arg(DEFAULT_PROXY_PORT)};
     // Handle the case that the setting is not set at all
     if (!settings.contains(name)) {
         return default_val;
@@ -234,7 +232,7 @@ static void SetProxySetting(QSettings &settings, const QString &name, const Prox
 
 static const QString GetDefaultProxyAddress()
 {
-    return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
+    return QString("%1:%2").arg(DEFAULT_PROXY_HOST).arg(DEFAULT_PROXY_PORT);
 }
 
 void OptionsModel::SetPruneEnabled(bool prune, bool force)
