@@ -47,13 +47,13 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
         } else {
             strTxStatus = tr("%1 confirmations").arg(nDepth);
             if (fChainLocked) {
-                strTxStatus += " (" + tr("locked via LLMQ based ChainLocks") + ")";
+                strTxStatus += ", " + tr("locked via ChainLocks");
                 return strTxStatus;
             }
         }
 
         if (wtx.IsLockedByInstantSend()) {
-            strTxStatus += " (" + tr("verified via LLMQ based InstantSend") + ")";
+            strTxStatus += ", " + tr("verified via InstantSend");
         }
 
         return strTxStatus;
