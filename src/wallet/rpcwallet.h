@@ -36,7 +36,7 @@ void EnsureWalletIsUnlocked(const CWallet*);
 WalletContext& EnsureWalletContext(const util::Ref& context);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 
-UniValue getaddressinfo(const JSONRPCRequest& request);
+RPCHelpMan getaddressinfo();
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
 UniValue sendrawtransaction(const JSONRPCRequest& request);
 #endif //SYSCOIN_WALLET_RPCWALLET_H
