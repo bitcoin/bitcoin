@@ -48,6 +48,11 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
             if (ret != SQLITE_OK) {
                 throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup error log: %s\n", sqlite3_errstr(ret)));
             }
+            // Force serialized threading mode
+            ret = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
+            if (ret != SQLITE_OK) {
+                throw std::runtime_error(strprintf("SQLiteDatabase: Failed to configure serialized threading mode: %s\n", sqlite3_errstr(ret)));
+            }
         }
         int ret = sqlite3_initialize(); // This is a no-op if sqlite3 is already initialized
         if (ret != SQLITE_OK) {
