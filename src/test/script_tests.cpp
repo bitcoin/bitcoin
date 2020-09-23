@@ -3,13 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/data/script_tests.json.h>
-#include <test/data/script_taproot_tests.json.h>
 
 #include <core_io.h>
+#include <fs.h>
 #include <key.h>
 #include <rpc/util.h>
 #include <script/script.h>
 #include <script/script_error.h>
+#include <script/sigcache.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <streams.h>
@@ -1640,49 +1641,103 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_invalid_flags)
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_INVALID_FLAGS);
 }
 
-BOOST_AUTO_TEST_CASE(script_taproot)
+static std::vector<unsigned int> AllConsensusFlags()
 {
-    UniValue tests = read_json(std::string(std::begin(json_tests::script_taproot_tests), std::end(json_tests::script_taproot_tests)));
+    std::vector<unsigned int> ret;
 
-    static constexpr unsigned int VERIFY_FLAGS =
-        SCRIPT_VERIFY_P2SH |
-        SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
-        SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
-        SCRIPT_VERIFY_WITNESS |
-        SCRIPT_VERIFY_NULLFAIL |
-        SCRIPT_VERIFY_TAPROOT;
+    for (unsigned int i = 0; i < 128; ++i) {
+        unsigned int flag = 0;
+        if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
+        if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;
+        if (i & 4) flag |= SCRIPT_VERIFY_NULLDUMMY;
+        if (i & 8) flag |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+        if (i & 16) flag |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+        if (i & 32) flag |= SCRIPT_VERIFY_WITNESS;
+        if (i & 64) flag |= SCRIPT_VERIFY_TAPROOT;
 
-    for (size_t i = 0; i < tests.size(); i++) {
-        const UniValue& test = tests[i];
+        // SCRIPT_VERIFY_WITNESS requires SCRIPT_VERIFY_P2SH
+        if (flag & SCRIPT_VERIFY_WITNESS && !(flag & SCRIPT_VERIFY_P2SH)) continue;
+        // SCRIPT_VERIFY_TAPROOT requires SCRIPT_VERIFY_WITNESS
+        if (flag & SCRIPT_VERIFY_TAPROOT && !(flag & SCRIPT_VERIFY_WITNESS)) continue;
 
-        CMutableTransaction tx = TxFromHex(test["tx"].get_str());
-        const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
-        BOOST_CHECK_EQUAL(prevouts.size(), tx.vin.size());
-        size_t idx = test["index"].get_int64();
-        CScript success_scriptsig = ScriptFromHex(test["success"]["scriptSig"].get_str());
-        CScriptWitness success_witness = ScriptWitnessFromJSON(test["success"]["witness"]);
-        CScript failure_scriptsig = ScriptFromHex(test["failure"]["scriptSig"].get_str());
-        CScriptWitness failure_witness = ScriptWitnessFromJSON(test["failure"]["witness"]);
+        ret.push_back(flag);
+    }
 
-        // Successful scriptSig/witness
-        {
-            tx.vin[idx].scriptSig = std::move(success_scriptsig);
-            tx.vin[idx].scriptWitness = std::move(success_witness);
-            PrecomputedTransactionData txdata;
-            txdata.Init(tx, std::vector<CTxOut>(prevouts));
-            MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, txdata);
-            BOOST_CHECK(VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, VERIFY_FLAGS, txcheck, nullptr));
-        }
-        // Failing scriptSig/witness
-        {
-            tx.vin[idx].scriptSig = std::move(failure_scriptsig);
-            tx.vin[idx].scriptWitness = std::move(failure_witness);
-            PrecomputedTransactionData txdata;
-            txdata.Init(tx, std::vector<CTxOut>(prevouts));
-            MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, txdata);
-            BOOST_CHECK(!VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, VERIFY_FLAGS, txcheck, nullptr));
+    return ret;
+}
+
+/** Precomputed list of all valid combinations of consensus-relevant script validation flags. */
+static const std::vector<unsigned int> ALL_CONSENSUS_FLAGS = AllConsensusFlags();
+
+static void AssetTest(const UniValue& test)
+{
+    BOOST_CHECK(test.isObject());
+
+    CMutableTransaction mtx = TxFromHex(test["tx"].get_str());
+    const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
+    BOOST_CHECK(prevouts.size() == mtx.vin.size());
+    size_t idx = test["index"].get_int64();
+    unsigned int test_flags = ParseScriptFlags(test["flags"].get_str());
+    bool fin = test.exists("final") && test["final"].get_bool();
+
+    if (test.exists("success")) {
+        mtx.vin[idx].scriptSig = ScriptFromHex(test["success"]["scriptSig"].get_str());
+        mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["success"]["witness"]);
+        CTransaction tx(mtx);
+        PrecomputedTransactionData txdata;
+        txdata.Init(tx, std::vector<CTxOut>(prevouts));
+        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata);
+        for (const auto flags : ALL_CONSENSUS_FLAGS) {
+            // "final": true tests are valid for all flags. Others are only valid with flags that are
+            // a subset of test_flags.
+            if (fin || ((flags & test_flags) == flags)) {
+                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
+                BOOST_CHECK(ret);
+            }
         }
     }
+
+    if (test.exists("failure")) {
+        mtx.vin[idx].scriptSig = ScriptFromHex(test["failure"]["scriptSig"].get_str());
+        mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["failure"]["witness"]);
+        CTransaction tx(mtx);
+        PrecomputedTransactionData txdata;
+        txdata.Init(tx, std::vector<CTxOut>(prevouts));
+        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata);
+        for (const auto flags : ALL_CONSENSUS_FLAGS) {
+            // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
+            if ((flags & test_flags) == test_flags) {
+                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
+                BOOST_CHECK(!ret);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(script_assets_test)
+{
+    const char* dir = std::getenv("DIR_UNIT_TEST_DATA");
+    BOOST_WARN_MESSAGE(dir != nullptr, "Variable DIR_UNIT_TEST_DATA unset, skipping script_assets_test");
+    if (dir == nullptr) return;
+    auto path = fs::path(dir) / "script_assets_test.json";
+    bool exists = fs::exists(path);
+    BOOST_WARN_MESSAGE(exists, "File $DIR_UNIT_TEST_DATA/script_assets_test.json not found, skipping script_assets_test");
+    if (!exists) return;
+    fs::ifstream file(path);
+    BOOST_CHECK(file.is_open());
+    file.seekg(0, std::ios::end);
+    size_t length = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::string data(length, '\0');
+    file.read(&data[0], data.size());
+    UniValue tests = read_json(data);
+    BOOST_CHECK(tests.isArray());
+    BOOST_CHECK(tests.size() > 0);
+
+    for (size_t i = 0; i < tests.size(); i++) {
+        AssetTest(tests[i]);
+    }
+    file.close();
 }
 
 #endif
