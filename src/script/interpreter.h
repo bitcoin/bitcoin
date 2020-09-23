@@ -86,6 +86,8 @@ enum
     // "Exactly one stack element must remain, and when interpreted as a boolean, it must be true".
     // (BIP62 rule 6)
     // Note: CLEANSTACK should never be used without P2SH or WITNESS.
+    // Note: WITNESS_V0 and TAPSCRIPT script execution have behavior similar to CLEANSTACK as part of their
+    //       consensus rules. It is automatic there and does not need this flag.
     SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
 
     // Verify CHECKLOCKTIMEVERIFY
@@ -108,6 +110,8 @@ enum
 
     // Segwit script only: Require the argument of OP_IF/NOTIF to be exactly 0x01 or empty vector
     //
+    // Note: TAPSCRIPT script execution has behavior similar to MINIMALIF as part of its consensus
+    //       rules. It is automatic there and does not depend on this flag.
     SCRIPT_VERIFY_MINIMALIF = (1U << 13),
 
     // Signature(s) must be empty vector if a CHECK(MULTI)SIG operation failed
