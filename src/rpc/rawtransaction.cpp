@@ -820,9 +820,9 @@ static RPCHelpMan signrawtransactionwithkey()
     };
 }
 // SYSCOIN
-RPCHelpMan sendrawtransaction()
+UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
-    return RPCHelpMan{"sendrawtransaction",
+    RPCHelpMan{"sendrawtransaction",
                 "\nSubmit a raw transaction (serialized, hex-encoded) to local node and network.\n"
                 "\nNote that the transaction will be sent unconditionally to all peers, so using this\n"
                 "for manual rebroadcast may degrade privacy by leaking the transaction's origin, as\n"
@@ -847,8 +847,8 @@ RPCHelpMan sendrawtransaction()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
+        }.Check(request);
+
     RPCTypeCheck(request.params, {
         UniValue::VSTR,
         UniValueType(), // VNUM or VSTR, checked inside AmountFromValue()
@@ -875,8 +875,6 @@ RPCHelpMan sendrawtransaction()
         throw JSONRPCTransactionError(err, err_string);
     }
     return tx->GetHash().GetHex();
-},
-    };
 }
 
 static RPCHelpMan testmempoolaccept()
