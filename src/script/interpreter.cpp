@@ -1531,7 +1531,7 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
         ss << execdata.m_annex_hash;
     }
 
-    // Data about the output(s)
+    // Data about the output (if only one).
     if (output_type == SIGHASH_SINGLE) {
         if (in_pos >= tx_to.vout.size()) return false;
         CHashWriter sha_single_output(SER_GETHASH, 0);
@@ -1675,7 +1675,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const uns
         if (hashtype == SIGHASH_DEFAULT) return false;
     }
     uint256 sighash;
-    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, 0x00, this->txdata)) return false;
+    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, /* key_version */ 0x00, this->txdata)) return false;
     return VerifySchnorrSignature(sig, pubkey, sighash);
 }
 
