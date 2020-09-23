@@ -349,8 +349,7 @@ public:
                 func(node);
         }
     };
-
-    using NodeFn = std::function<void(CNode*)>;
+    
     void ForEachNode(const NodeFn& func) const
     {
         ForEachNode(FullyConnectedOnly, func);
