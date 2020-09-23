@@ -1828,10 +1828,6 @@ TransactionView QLineEdit#amountWidget { /* Amount Filter */
     text-align: center;
 }
 
-TransactionView QComboBox#instantsendWidget:down-arrow { /* InstantSend Filter */
-    margin-right: -5px;
-}
-
 TransactionView QComboBox {
     margin-bottom: 3px;
     margin-right: 1px;
