@@ -762,13 +762,13 @@ public:
 
     bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, int nChangePosRequest = -1, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
-        CWalletTx wtx;
+        CTransactionRef tx;
         CReserveKey reservekey(wallet.get());
         CAmount nFeeRet;
         int nChangePos = nChangePosRequest;
         std::string strError;
 
-        bool fCreationSucceeded = wallet->CreateTransaction(GetRecipients(vecEntries), wtx, reservekey, nFeeRet, nChangePos, strError, coinControl);
+        bool fCreationSucceeded = wallet->CreateTransaction(GetRecipients(vecEntries), tx, reservekey, nFeeRet, nChangePos, strError, coinControl);
         bool fHitMaxTries = strError == strExceededMaxTries;
         // This should never happen.
         if (fHitMaxTries) {
@@ -800,7 +800,7 @@ public:
             return false;
         }
         // Verify the number of requested outputs does match the resulting outputs
-        return CheckEqual(vecEntries.size(), wtx.tx->vout.size() - (nChangePos != -1 ? 1 : 0));
+        return CheckEqual(vecEntries.size(), tx->vout.size() - (nChangePos != -1 ? 1 : 0));
     }
 
     std::vector<CRecipient> GetRecipients(const std::vector<std::pair<CAmount, bool>>& vecEntries)
@@ -814,36 +814,34 @@ public:
 
     std::vector<COutPoint> GetCoins(const std::vector<std::pair<CAmount, bool>>& vecEntries)
     {
-        CWalletTx wtx;
+        CTransactionRef tx;
         CReserveKey reserveKey(wallet.get());
         CAmount nFeeRet;
         int nChangePosRet = -1;
         std::string strError;
         CCoinControl coinControl;
-        BOOST_CHECK(wallet->CreateTransaction(GetRecipients(vecEntries), wtx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
+        BOOST_CHECK(wallet->CreateTransaction(GetRecipients(vecEntries), tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(wtx, reserveKey, nullptr, state));
+        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, {}, reserveKey, nullptr, state));
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
-            blocktx = CMutableTransaction(*wallet->mapWallet.at(wtx.tx->GetHash()).tx);
+            blocktx = CMutableTransaction(*tx);
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        LOCK(cs_main);
-        LOCK(wallet->cs_wallet);
-        auto it = wallet->mapWallet.find(wtx.GetHash());
+        LOCK2(cs_main, wallet->cs_wallet);
+        auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
         it->second.SetMerkleBranch(chainActive.Tip(), 1);
-        wtx = it->second;
 
         std::vector<COutPoint> vecOutpoints;
         size_t n;
-        for (n = 0; n < wtx.tx->vout.size(); ++n) {
+        for (n = 0; n < tx->vout.size(); ++n) {
             if (nChangePosRet != -1 && n == nChangePosRet) {
                 // Skip the change output to only return the requested coins
                 continue;
             }
-            vecOutpoints.push_back(COutPoint(wtx.GetHash(), n));
+            vecOutpoints.push_back(COutPoint(tx->GetHash(), n));
         }
         assert(vecOutpoints.size() == vecEntries.size());
         return vecOutpoints;

@@ -58,24 +58,22 @@ public:
 
     CWalletTx& AddTxToChain(uint256 nTxHash)
     {
-        assert(wallet->mapWallet.find(nTxHash) != wallet->mapWallet.end());
+        auto it = wallet->mapWallet.find(nTxHash);
+        assert(it != wallet->mapWallet.end());
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
-            blocktx = CMutableTransaction(*wallet->mapWallet.at(nTxHash).tx);
+            blocktx = CMutableTransaction(*it->second.tx);
         }
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        LOCK(cs_main);
-        LOCK(wallet->cs_wallet);
-        auto it = wallet->mapWallet.find(blocktx.GetHash());
-        BOOST_CHECK(it != wallet->mapWallet.end());
+        LOCK2(cs_main, wallet->cs_wallet);
         it->second.SetMerkleBranch(chainActive.Tip(), 1);
         return it->second;
     }
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)
     {
         CompactTallyItem tallyItem;
-        CWalletTx tx;
+        CTransactionRef tx;
         CReserveKey destKey(wallet.get());
         CReserveKey reserveKey(wallet.get());
         CAmount nFeeRet;
@@ -89,15 +87,15 @@ public:
         for (CAmount nAmount : vecAmounts) {
             BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
             CValidationState state;
-            BOOST_CHECK(wallet->CommitTransaction(tx, reserveKey, nullptr, state));
-            CWalletTx& wtx = AddTxToChain(tx.GetHash());
-            for (size_t n = 0; n < wtx.tx->vout.size(); ++n) {
+            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, {}, reserveKey, nullptr, state));
+            AddTxToChain(tx->GetHash());
+            for (size_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && n == nChangePosRet) {
                     // Skip the change output to only return the requested coins
                     continue;
                 }
-                tallyItem.vecOutPoints.push_back(COutPoint(wtx.GetHash(), n));
-                tallyItem.nAmount += wtx.tx->vout[n].nValue;
+                tallyItem.vecOutPoints.push_back(COutPoint(tx->GetHash(), n));
+                tallyItem.nAmount += tx->vout[n].nValue;
             }
         }
         assert(tallyItem.vecOutPoints.size() == vecAmounts.size());
