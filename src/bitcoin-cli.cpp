@@ -39,8 +39,6 @@ static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
-static const std::string ONION{".onion"};
-static const size_t ONION_LEN{ONION.size()};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -298,30 +296,10 @@ public:
 class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    bool IsAddrIPv6(const std::string& addr) const
-    {
-        return !addr.empty() && addr.front() == '[';
-    }
-    bool IsInboundOnion(const std::string& addr_local, int mapped_as) const
-    {
-        return mapped_as == 0 && addr_local.find(ONION) != std::string::npos;
-    }
-    bool IsOutboundOnion(const std::string& addr, int mapped_as) const
-    {
-        const size_t addr_len{addr.size()};
-        const size_t onion_pos{addr.rfind(ONION)};
-        return mapped_as == 0 && onion_pos != std::string::npos && addr_len > ONION_LEN &&
-               (onion_pos == addr_len - ONION_LEN || onion_pos == addr.find_last_of(":") - ONION_LEN);
-    }
     uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
     bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
-    enum struct NetType {
-        ipv4,
-        ipv6,
-        onion,
-    };
     struct Peer {
         int id;
         int mapped_as;
@@ -334,21 +312,12 @@ private:
         double min_ping;
         double ping;
         std::string addr;
+        std::string network;
         std::string sub_version;
-        NetType net_type;
         bool is_block_relay;
         bool is_outbound;
         bool operator<(const Peer& rhs) const { return std::tie(is_outbound, min_ping) < std::tie(rhs.is_outbound, rhs.min_ping); }
     };
-    std::string NetTypeEnumToString(NetType t)
-    {
-        switch (t) {
-        case NetType::ipv4: return "ipv4";
-        case NetType::ipv6: return "ipv6";
-        case NetType::onion: return "onion";
-        } // no default case, so the compiler can warn about missing cases
-        assert(false);
-    }
     std::string ChainToString() const
     {
         if (gArgs.GetChainName() == CBaseChainParams::TESTNET) return " testnet";
@@ -356,8 +325,8 @@ private:
         return "";
     }
 public:
-    const int ID_PEERINFO = 0;
-    const int ID_NETWORKINFO = 1;
+    static constexpr int ID_PEERINFO = 0;
+    static constexpr int ID_NETWORKINFO = 1;
 
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
@@ -394,29 +363,22 @@ public:
         const UniValue& getpeerinfo{batch[ID_PEERINFO]["result"]};
 
         for (const UniValue& peer : getpeerinfo.getValues()) {
-            const std::string addr{peer["addr"].get_str()};
-            const std::string addr_local{peer["addrlocal"].isNull() ? "" : peer["addrlocal"].get_str()};
-            const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
             const bool is_inbound{peer["inbound"].get_bool()};
-            NetType net_type{NetType::ipv4};
+            const std::string network{peer["network"].get_str()};
             if (is_inbound) {
-                if (IsAddrIPv6(addr)) {
-                    net_type = NetType::ipv6;
+                if (network == "ipv6") {
                     ++ipv6_i;
-                } else if (IsInboundOnion(addr_local, mapped_as)) {
-                    net_type = NetType::onion;
+                } else if (network == "onion") {
                     ++onion_i;
                 } else {
                     ++ipv4_i;
                 }
                 if (is_block_relay) ++block_relay_i;
             } else {
-                if (IsAddrIPv6(addr)) {
-                    net_type = NetType::ipv6;
+                if (network == "ipv6") {
                     ++ipv6_o;
-                } else if (IsOutboundOnion(addr, mapped_as)) {
-                    net_type = NetType::onion;
+                } else if (network == "onion") {
                     ++onion_o;
                 } else {
                     ++ipv4_o;
@@ -426,8 +388,8 @@ public:
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
                 const int peer_id{peer["id"].get_int()};
+                const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
                 const int version{peer["version"].get_int()};
-                const std::string sub_version{peer["subver"].get_str()};
                 const int64_t conn_time{peer["conntime"].get_int64()};
                 const int64_t last_blck{peer["last_block"].get_int64()};
                 const int64_t last_recv{peer["lastrecv"].get_int64()};
@@ -435,7 +397,9 @@ public:
                 const int64_t last_trxn{peer["last_transaction"].get_int64()};
                 const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
-                peers.push_back({peer_id, mapped_as, version, conn_time, last_blck, last_recv, last_send, last_trxn, min_ping, ping, addr, sub_version, net_type, is_block_relay, !is_inbound});
+                const std::string addr{peer["addr"].get_str()};
+                const std::string sub_version{peer["subver"].get_str()};
+                peers.push_back({peer_id, mapped_as, version, conn_time, last_blck, last_recv, last_send, last_trxn, min_ping, ping, addr, network, sub_version, is_block_relay, !is_inbound});
                 max_peer_id_length = std::max(ToString(peer_id).length(), max_peer_id_length);
                 max_addr_length = std::max(addr.length() + 1, max_addr_length);
                 is_asmap_on |= (mapped_as != 0);
@@ -457,7 +421,7 @@ public:
                     "%3s %5s %5s%6s%7s%5s%5s%5s%5s%7s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
                     peer.is_block_relay ? "block" : "full",
-                    NetTypeEnumToString(peer.net_type),
+                    peer.network,
                     peer.min_ping == -1 ? "" : ToString(round(1000 * peer.min_ping)),
                     peer.ping == -1 ? "" : ToString(round(1000 * peer.ping)),
                     peer.last_send == 0 ? "" : ToString(time_now - peer.last_send),
