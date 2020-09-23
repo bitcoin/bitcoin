@@ -23,6 +23,8 @@
 #include <memory>
 #include <string>
 
+using namespace std::literals;
+
 class CAddrManSerializationMock : public CAddrMan
 {
 public:
@@ -104,8 +106,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
     BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
     BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
-    BOOST_CHECK(Lookup(std::string("250.7.3.3", 9), addr3, 9999, false));
-    BOOST_CHECK(!Lookup(std::string("250.7.3.3\0example.com", 21), addr3, 9999, false));
+    BOOST_CHECK(Lookup("250.7.3.3"s, addr3, 9999, false));
+    BOOST_CHECK(!Lookup("250.7.3.3\0example.com"s, addr3, 9999, false));
 
     // Add three addresses to new table.
     CService source;

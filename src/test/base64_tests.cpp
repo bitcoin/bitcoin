@@ -6,6 +6,9 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+#include <string>
+
+using namespace std::literals;
 
 BOOST_FIXTURE_TEST_SUITE(base64_tests, BasicTestingSetup)
 
@@ -23,14 +26,14 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
 
     // Decoding strings with embedded NUL characters should fail
     bool failure;
-    (void)DecodeBase64(std::string("invalid", 7), &failure);
-    BOOST_CHECK_EQUAL(failure, true);
-    (void)DecodeBase64(std::string("nQB/pZw=", 8), &failure);
-    BOOST_CHECK_EQUAL(failure, false);
-    (void)DecodeBase64(std::string("nQB/pZw=\0invalid", 16), &failure);
-    BOOST_CHECK_EQUAL(failure, true);
-    (void)DecodeBase64(std::string("nQB/pZw=invalid", 15), &failure);
-    BOOST_CHECK_EQUAL(failure, true);
+    (void)DecodeBase64("invalid\0"s, &failure);
+    BOOST_CHECK(failure);
+    (void)DecodeBase64("nQB/pZw="s, &failure);
+    BOOST_CHECK(!failure);
+    (void)DecodeBase64("nQB/pZw=\0invalid"s, &failure);
+    BOOST_CHECK(failure);
+    (void)DecodeBase64("nQB/pZw=invalid\0"s, &failure);
+    BOOST_CHECK(failure);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
