@@ -79,4 +79,13 @@ class CZMQPublishRawGovernanceObjectNotifier : public CZMQAbstractPublishNotifie
 public:
     bool NotifyGovernanceObject(const CGovernanceObject &object) override;
 };
+class CZMQPublishSequenceNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyBlockConnect(const CBlockIndex *pindex) override;
+    bool NotifyBlockDisconnect(const CBlockIndex *pindex) override;
+    bool NotifyTransactionAcceptance(const CTransaction &transaction, uint64_t mempool_sequence) override;
+    bool NotifyTransactionRemoval(const CTransaction &transaction, uint64_t mempool_sequence) override;
+};
+
 #endif // SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

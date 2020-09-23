@@ -12,7 +12,19 @@ CZMQAbstractNotifier::~CZMQAbstractNotifier()
 {
     assert(!psocket);
 }
-
+// SYSCOIN
+bool CZMQAbstractNotifier::NotifyGovernanceObject(const CGovernanceObject& /*object*/)
+{
+    return true;
+}
+bool CZMQAbstractNotifier::NotifyGovernanceVote(const CGovernanceVote& /*vote*/)
+{
+    return true;
+}
+bool CZMQAbstractNotifier::NotifyTransactionMempool(const CTransaction &/*transaction*/)
+{
+    return true;
+}
 bool CZMQAbstractNotifier::NotifyBlock(const CBlockIndex * /*CBlockIndex*/)
 {
     return true;
@@ -22,17 +34,23 @@ bool CZMQAbstractNotifier::NotifyTransaction(const CTransaction &/*transaction*/
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyTransactionMempool(const CTransaction &/*transaction*/)
-{
-    return true;
-}
-// SYSCOIN
-bool CZMQAbstractNotifier::NotifyGovernanceVote(const CGovernanceVote& /*vote*/)
+
+bool CZMQAbstractNotifier::NotifyBlockConnect(const CBlockIndex * /*CBlockIndex*/)
 {
     return true;
 }
 
-bool CZMQAbstractNotifier::NotifyGovernanceObject(const CGovernanceObject& /*object*/)
+bool CZMQAbstractNotifier::NotifyBlockDisconnect(const CBlockIndex * /*CBlockIndex*/)
+{
+    return true;
+}
+
+bool CZMQAbstractNotifier::NotifyTransactionAcceptance(const CTransaction &/*transaction*/, uint64_t mempool_sequence)
+{
+    return true;
+}
+
+bool CZMQAbstractNotifier::NotifyTransactionRemoval(const CTransaction &/*transaction*/, uint64_t mempool_sequence)
 {
     return true;
 }
