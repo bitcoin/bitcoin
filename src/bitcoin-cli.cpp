@@ -116,11 +116,6 @@ static void libevent_log_cb(int severity, const char *msg)
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// Start
-//
-
 //
 // Exception thrown on connection error.  This error is used to determine
 // when to wait if -rpcwait is given.
@@ -141,9 +136,6 @@ public:
 //
 static int AppInitRPC(int argc, char* argv[])
 {
-    //
-    // Parameters
-    //
     SetupCliArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
@@ -185,7 +177,7 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error reading configuration file: %s\n", error);
         return EXIT_FAILURE;
     }
-    // Check for -chain, -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
+    // Check for chain settings (BaseParams() calls are only valid after this clause)
     try {
         SelectBaseParams(gArgs.GetChainName());
     } catch (const std::exception& e) {

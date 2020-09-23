@@ -87,7 +87,7 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    // Check for chain settings (Params() calls are only valid after this clause)
     SelectParams(args.GetChainName());
 
     return std::nullopt;

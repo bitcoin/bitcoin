@@ -36,10 +36,6 @@ using node::NodeContext;
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// Start
-//
 #if HAVE_DECL_FORK
 
 /** Custom implementation of daemon(). This implements the same order of operations as glibc.
@@ -165,7 +161,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         if (!args.ReadConfigFiles(error, true)) {
             return InitError(Untranslated(strprintf("Error reading configuration file: %s\n", error)));
         }
-        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        // Check for chain settings (Params() calls are only valid after this clause)
         try {
             SelectParams(args.GetChainName());
         } catch (const std::exception& e) {
