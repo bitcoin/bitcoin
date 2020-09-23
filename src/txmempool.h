@@ -501,6 +501,11 @@ private:
     mutable uint64_t m_epoch;
     mutable bool m_has_epoch_guard;
 
+    // In-memory counter for external mempool tracking purposes.
+    // This number is incremented once every time a transaction
+    // is added or removed from the mempool for any reason.
+    mutable uint64_t m_sequence_number{1};
+
     void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool m_is_loaded GUARDED_BY(cs){false};
@@ -774,6 +779,15 @@ public:
     {
         AssertLockHeld(cs);
         return m_unbroadcast_txids.count(txid) != 0;
+    }
+
+    /** Guards this internal counter for external reporting */
+    uint64_t GetAndIncrementSequence() const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        return m_sequence_number++;
+    }
+
+    uint64_t GetSequence() const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        return m_sequence_number;
     }
 
 private:
