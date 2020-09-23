@@ -277,7 +277,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0">
+       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0,0">
         <property name="spacing">
          <number>14</number>
         </property>
@@ -307,6 +307,22 @@
           </property>
           <property name="text">
            <string>toggle lock state</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="hideButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string/>
           </property>
           <property name="autoDefault">
            <bool>false</bool>
@@ -376,7 +392,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>11</number>
+      <number>7</number>
      </property>
      <attribute name="headerShowSortIndicator" stdset="0">
       <bool>true</bool>
@@ -406,7 +422,7 @@
      </column>
      <column>
       <property name="text">
-       <string>PS Rounds</string>
+       <string>Mixing Rounds</string>
       </property>
      </column>
      <column>
@@ -420,26 +436,6 @@
       </property>
       <property name="toolTip">
        <string>Confirmed</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string/>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string/>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string/>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string/>
       </property>
      </column>
     </widget>
