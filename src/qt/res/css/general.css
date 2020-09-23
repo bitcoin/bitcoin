@@ -1145,6 +1145,11 @@ QDialog#CoinControlDialog QHeaderView::section:first { /* Bug Fix: the number 1 
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item {
+    border-bottom: 1px solid red;
+    min-height: 25px;
+}
+QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:hover {
+    background-color: #00000000;
 }
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:selected { /* Coin Control Item (selected) */
 }

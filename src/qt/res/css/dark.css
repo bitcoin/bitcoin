@@ -794,6 +794,10 @@ AskPassphraseDialog
 CoinControlDialog
 ******************************************************/
 
+QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item {
+    border-color: #4a4a4b;
+}
+
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:selected,
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:checked,
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:selected,
