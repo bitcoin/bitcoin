@@ -352,18 +352,4 @@ public:
     }
 };
 
-// Utility class for indicating to compiler thread analysis that a mutex is
-// locked (when it couldn't be determined otherwise).
-struct SCOPED_LOCKABLE LockAssertion
-{
-    template <typename Mutex>
-    explicit LockAssertion(Mutex& mutex) EXCLUSIVE_LOCK_FUNCTION(mutex)
-    {
-#ifdef DEBUG_LOCKORDER
-        AssertLockHeld(mutex);
-#endif
-    }
-    ~LockAssertion() UNLOCK_FUNCTION() {}
-};
-
 #endif // BITCOIN_SYNC_H
