@@ -114,7 +114,7 @@ RPCHelpMan importprivkey()
             "\nImport using default blank label and without rescan\n"
             + HelpExampleCli("importprivkey", "\"mykey\" \"\" false") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
+            + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -206,7 +206,7 @@ RPCHelpMan abortrescan()
             "\nAbort the running wallet rescan\n"
             + HelpExampleCli("abortrescan", "") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("abortrescan", "")
+            + HelpExampleRpc("abortrescan", "", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -245,7 +245,7 @@ RPCHelpMan importaddress()
             "\nImport using a label without rescan\n"
             + HelpExampleCli("importaddress", "\"myaddress\" \"testing\" false") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("importaddress", "\"myaddress\", \"testing\", false")
+            + HelpExampleRpc("importaddress", "\"myaddress\", \"testing\", false", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -392,7 +392,7 @@ RPCHelpMan removeprunedfunds()
                 RPCExamples{
                     HelpExampleCli("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
+            + HelpExampleRpc("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -440,7 +440,7 @@ RPCHelpMan importpubkey()
             "\nImport using a label without rescan\n"
             + HelpExampleCli("importpubkey", "\"mypubkey\" \"testing\" false") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("importpubkey", "\"mypubkey\", \"testing\", false")
+            + HelpExampleRpc("importpubkey", "\"mypubkey\", \"testing\", false", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -522,7 +522,7 @@ RPCHelpMan importwallet()
             "\nImport the wallet\n"
             + HelpExampleCli("importwallet", "\"test\"") +
             "\nImport using the json rpc call\n"
-            + HelpExampleRpc("importwallet", "\"test\"")
+            + HelpExampleRpc("importwallet", "\"test\"", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -679,7 +679,7 @@ RPCHelpMan dumpprivkey()
                 RPCExamples{
                     HelpExampleCli("dumpprivkey", "\"myaddress\"")
             + HelpExampleCli("importprivkey", "\"mykey\"")
-            + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
+            + HelpExampleRpc("dumpprivkey", "\"myaddress\"", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -730,7 +730,7 @@ RPCHelpMan dumpwallet()
                 },
                 RPCExamples{
                     HelpExampleCli("dumpwallet", "\"test\"")
-            + HelpExampleRpc("dumpwallet", "\"test\"")
+            + HelpExampleRpc("dumpwallet", "\"test\"", "wallet/wallet_name")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
