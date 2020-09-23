@@ -334,8 +334,8 @@ public:
         }
     };
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
+    using NodeFn = std::function<void(CNode*)>;
+    void ForEachNode(const NodeFn& func)
     {
         ForEachNode(FullyConnectedOnly, func);
     }
@@ -350,8 +350,8 @@ public:
         }
     };
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func) const
+    using NodeFn = std::function<void(CNode*)>;
+    void ForEachNode(const NodeFn& func) const
     {
         ForEachNode(FullyConnectedOnly, func);
     }
