@@ -1835,7 +1835,6 @@ RPCHelpMan importdescriptors() {
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& main_request) -> UniValue
 {
-
     // Acquire the wallet
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(main_request);
     if (!wallet) return NullUniValue;

@@ -32,10 +32,10 @@
 RPCHelpMan importmulti();
 RPCHelpMan dumpwallet();
 RPCHelpMan importwallet();
-extern UniValue getnewaddress(const JSONRPCRequest& request);
-extern UniValue getrawchangeaddress(const JSONRPCRequest& request);
-extern UniValue getaddressinfo(const JSONRPCRequest& request);
-extern UniValue addmultisigaddress(const JSONRPCRequest& request);
+extern RPCHelpMan getnewaddress();
+extern RPCHelpMan getrawchangeaddress();
+extern RPCHelpMan getaddressinfo();
+extern RPCHelpMan addmultisigaddress();
 
 extern RecursiveMutex cs_wallets;
 
@@ -331,12 +331,12 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
 
     // test p2pkh
     std::string addr;
-    BOOST_CHECK_NO_THROW(addr = ::getrawchangeaddress(request).get_str());
+    BOOST_CHECK_NO_THROW(addr = ::getrawchangeaddress().HandleRequest(request).get_str());
 
     request.params.clear();
     request.params.setArray();
     request.params.push_back(addr);
-    BOOST_CHECK_NO_THROW(response = ::getaddressinfo(request).get_obj());
+    BOOST_CHECK_NO_THROW(response = ::getaddressinfo().HandleRequest(request).get_obj());
 
     BOOST_CHECK_EQUAL(find_value(response, "ismine").get_bool(), true);
     BOOST_CHECK_EQUAL(find_value(response, "solvable").get_bool(), true);
@@ -351,8 +351,8 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     // test p2sh/multisig
     std::string addr1;
     std::string addr2;
-    BOOST_CHECK_NO_THROW(addr1 = ::getnewaddress(request).get_str());
-    BOOST_CHECK_NO_THROW(addr2 = ::getnewaddress(request).get_str());
+    BOOST_CHECK_NO_THROW(addr1 = ::getnewaddress().HandleRequest(request).get_str());
+    BOOST_CHECK_NO_THROW(addr2 = ::getnewaddress().HandleRequest(request).get_str());
 
     UniValue keys;
     keys.setArray();
@@ -364,14 +364,14 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     request.params.push_back(2);
     request.params.push_back(keys);
 
-    BOOST_CHECK_NO_THROW(response = ::addmultisigaddress(request));
+    BOOST_CHECK_NO_THROW(response = ::addmultisigaddress().HandleRequest(request));
 
     std::string multisig = find_value(response.get_obj(), "address").get_str();
 
     request.params.clear();
     request.params.setArray();
     request.params.push_back(multisig);
-    BOOST_CHECK_NO_THROW(response = ::getaddressinfo(request).get_obj());
+    BOOST_CHECK_NO_THROW(response = ::getaddressinfo().HandleRequest(request).get_obj());
 
     BOOST_CHECK_EQUAL(find_value(response, "ismine").get_bool(), true);
     BOOST_CHECK_EQUAL(find_value(response, "solvable").get_bool(), true);
@@ -801,7 +801,7 @@ public:
         CoreContext context{m_node};
         std::vector<CRecipient> vecRecipients;
         for (auto entry : vecEntries) {
-            vecRecipients.push_back({GetScriptForDestination(DecodeDestination(getnewaddress(JSONRPCRequest(context)).get_str())), entry.first, entry.second});
+            vecRecipients.push_back({GetScriptForDestination(DecodeDestination(getnewaddress().HandleRequest(JSONRPCRequest(context)).get_str())), entry.first, entry.second});
         }
         return vecRecipients;
     }
