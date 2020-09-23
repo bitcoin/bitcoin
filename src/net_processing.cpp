@@ -2000,8 +2000,8 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         m_most_recent_compact_block = pcmpctblock;
     }
 
-    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) {
-        LockAssertion lock(::cs_main);
+    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        AssertLockHeld(::cs_main);
         // TODO: Avoid the repeated-serialization here
         if (pnode->fDisconnect)
             return;
@@ -5275,8 +5275,8 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
         // We want to prevent recently connected to Onion peers from being disconnected here, protect them as long as
         // there are more non_onion nodes than onion nodes so far
         size_t onion_count = 0;
-        m_connman.ForEachNode([&](CNode* pnode) {
-            LockAssertion lock(::cs_main);
+        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            AssertLockHeld(::cs_main);
             if (pnode->addr.IsTor() && ++onion_count <= m_connman.GetMaxOutboundOnionNodeCount()) return;
             // Don't disconnect masternodes just because they were slow in block announcement
             if (pnode->m_masternode_connection) return;
@@ -5293,8 +5293,8 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             }
         });
         if (worst_peer != -1) {
-            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode *pnode) {
-                LockAssertion lock(::cs_main);
+            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+                AssertLockHeld(::cs_main);
 
                 // Only disconnect a peer that has been connected to us for
                 // some reasonable fraction of our check-frequency, to give
