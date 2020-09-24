@@ -877,6 +877,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     // SYSCOIN
     pdsNotificationInterface->InitializeCurrentBlockTip();
     {
+        LOCK(cs_main);
         // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
         // and reduce further locking overhead for cs_main in other parts of code including GUI
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
@@ -888,11 +889,8 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
             GetUTXOCoin(dmn->collateralOutpoint, coin);
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
-    }
 
-    if (fMasternodeMode) {
-        {
-            LOCK(cs_main);
+        if (fMasternodeMode) {
             activeMasternodeManager->Init(::ChainActive().Tip());
         }
     }

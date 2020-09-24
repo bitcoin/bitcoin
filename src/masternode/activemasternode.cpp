@@ -78,7 +78,8 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     }
     CDeterministicMNList mnList;
     deterministicMNManager->GetListForBlock(pindex, mnList);
-
+    if(!activeMasternodeInfo.blsPubKeyOperator)
+        return;
     CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeMasternodeInfo.blsPubKeyOperator);
     if (!dmn) {
         // MN not appeared on the chain yet
@@ -105,12 +106,27 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
     // Check socket connectivity
     LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToString());
+    {
+        CNode* pnode = connman.FindNode(static_cast<CService>(activeMasternodeInfo.service));
+        if (pnode)
+        {
+            LogPrintf("Failed to open new connection, already connected\n");
+            activeMasternodeInfo.proTxHash = dmn->proTxHash;
+            activeMasternodeInfo.outpoint = dmn->collateralOutpoint;
+            state = MASTERNODE_READY;
+            return;
+        }
+    }
     SOCKET hSocket = CreateSocket(activeMasternodeInfo.service);
     if (hSocket == INVALID_SOCKET) {
-        state = MASTERNODE_ERROR;
-        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
-        return;
+        UninterruptibleSleep(std::chrono::milliseconds{1000});
+        hSocket = CreateSocket(activeMasternodeInfo.service);
+        if (hSocket == INVALID_SOCKET) {
+            state = MASTERNODE_ERROR;
+            strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
+            LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+            return;
+        }
     }
     bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
