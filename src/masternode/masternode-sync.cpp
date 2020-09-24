@@ -191,12 +191,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             }
 
             if (nCurrentAsset == MASTERNODE_SYNC_BLOCKCHAIN) {
-                if(!pnode->IsInboundConn() && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
-                    netfulfilledman.AddFulfilledRequest(pnode->addr, "mempool-sync");
-                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MEMPOOL));
-                    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());
-                }
-
                 int64_t nTimeSyncTimeout = vNodesCopy.size() > 3 ? MASTERNODE_SYNC_TICK_SECONDS : MASTERNODE_SYNC_TIMEOUT_SECONDS;
                 if (fReachedBestHeader && (GetTime() - nTimeLastBumped > nTimeSyncTimeout)) {
                     // At this point we know that:
