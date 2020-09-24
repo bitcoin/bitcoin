@@ -710,7 +710,7 @@ void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly)
 
 void TransactionView::updatePrivateSendVisibility()
 {
-    bool fEnabled = CPrivateSendClientOptions::IsEnabled();
+    bool fEnabled = privateSendClient.fEnablePrivateSend;
     // If PrivateSend gets enabled use "All" else "Most common"
     typeWidget->setCurrentIndex(fEnabled ? 0 : 1);
     // Hide all PrivateSend related filters

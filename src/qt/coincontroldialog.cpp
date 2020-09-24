@@ -700,7 +700,7 @@ void CoinControlDialog::updateView()
     ui->radioTreeMode->setVisible(fNormalMode);
     ui->radioListMode->setVisible(fNormalMode);
 
-    if (!CPrivateSendClientOptions::IsEnabled()) {
+    if (!privateSendClient.fEnablePrivateSend) {
         fHideAdditional = false;
         ui->hideButton->setVisible(false);
     }
