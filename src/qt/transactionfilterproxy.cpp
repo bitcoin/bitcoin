@@ -34,7 +34,6 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     int type = index.data(TransactionTableModel::TypeRole).toInt();
     qint64 datetime = index.data(TransactionTableModel::DateRoleInt).toLongLong();
     bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
-    bool lockedByInstantSend = index.data(TransactionTableModel::InstantSendRole).toBool();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
     QString txid = index.data(TransactionTableModel::TxIDRole).toString();
