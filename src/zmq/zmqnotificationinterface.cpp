@@ -154,7 +154,7 @@ void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef&
 
     TryForEachAndRemoveFailed(notifiers, [&tx, mempool_sequence](CZMQAbstractNotifier* notifier) {
         // SYSCOIN
-        return notifier->NotifyTransaction(tx) && notifier->NotifyTransactionAcceptance(tx, mempool_sequence) && (mempool_sequence == 0 && notifier->NotifyTransactionMempool(tx));
+        return notifier->NotifyTransaction(tx) && notifier->NotifyTransactionAcceptance(tx, mempool_sequence) && (mempool_sequence > 0 || notifier->NotifyTransactionMempool(tx));
     });
 }
 
