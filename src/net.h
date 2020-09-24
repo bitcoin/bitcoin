@@ -515,7 +515,7 @@ public:
     void RelayOtherInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
-
+    CNode* FindNode(const CService& addr);
 private:
     struct ListenSocket {
     public:
@@ -554,7 +554,6 @@ private:
     CNode* FindNode(const CNetAddr& ip);
     CNode* FindNode(const CSubNet& subNet);
     CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type);

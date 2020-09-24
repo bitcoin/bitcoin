@@ -928,7 +928,7 @@ void CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex, CDeterm
     LOCK(cs);
     snapshot.clear();
     std::list<const CBlockIndex*> listDiffIndexes;
-    while (true) {
+    while (true && pindex) {
         // try using cache before reading from disk
         auto itLists = mnListsCache.find(pindex->GetBlockHash());
         if (itLists != mnListsCache.end()) {
