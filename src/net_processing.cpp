@@ -790,11 +790,9 @@ void PeerManager::FinalizeNode(const CNode& node, bool& fUpdateConnectionTime) {
     LOCK(cs_main);
     int misbehavior{0};
     {
-        PeerRef peer = GetPeerRef(nodeid);
+        PeerRef peer = RemovePeer(nodeid);
         assert(peer != nullptr);
         misbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
-        LOCK(m_peer_mutex);
-        m_peer_map.erase(nodeid);
     }
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
@@ -840,6 +838,18 @@ PeerRef PeerManager::GetPeerRef(NodeId id) const
     LOCK(m_peer_mutex);
     auto it = m_peer_map.find(id);
     return it != m_peer_map.end() ? it->second : nullptr;
+}
+
+PeerRef PeerManager::RemovePeer(NodeId id)
+{
+    PeerRef ret;
+    LOCK(m_peer_mutex);
+    auto it = m_peer_map.find(id);
+    if (it != m_peer_map.end()) {
+        ret = std::move(it->second);
+        m_peer_map.erase(it);
+    }
+    return ret;
 }
 
 bool PeerManager::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {

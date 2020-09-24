@@ -143,6 +143,10 @@ private:
      *  May return an empty shared_ptr if the Peer object can't be found. */
     PeerRef GetPeerRef(NodeId id) const;
 
+    /** Get a shared pointer to the Peer object and remove it from m_peer_map.
+     *  May return an empty shared_ptr if the Peer object can't be found. */
+    PeerRef RemovePeer(NodeId id);
+
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
      *
