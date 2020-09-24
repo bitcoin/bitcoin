@@ -3,13 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
 #include <torcontrol.h>
-#include <util/strencodings.h>
-#include <netbase.h>
-#include <net.h>
-#include <util/system.h>
+
+#include <chainparams.h>
+#include <chainparamsbase.h>
 #include <crypto/hmac_sha256.h>
+#include <net.h>
+#include <netaddress.h>
+#include <netbase.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 
 #include <vector>
 #include <deque>
@@ -410,7 +413,7 @@ static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& tor_control_center);
+    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
     ~TorController();
 
     /** Get name of file to store private key in */
@@ -428,6 +431,7 @@ private:
     struct event *reconnect_ev;
     float reconnect_timeout;
     CService service;
+    const CService m_target;
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
     /** ClientNonce for SAFECOOKIE auth */
@@ -450,10 +454,11 @@ private:
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
-TorController::TorController(struct event_base* _base, const std::string& tor_control_center):
+TorController::TorController(struct event_base* _base, const std::string& tor_control_center, const CService& target):
     base(_base),
     m_tor_control_center(tor_control_center), conn(base), reconnect(true), reconnect_ev(0),
-    reconnect_timeout(RECONNECT_TIMEOUT_START)
+    reconnect_timeout(RECONNECT_TIMEOUT_START),
+    m_target(target)
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
     if (!reconnect_ev)
@@ -536,7 +541,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
             private_key = "NEW:RSA1024"; // Explicitly request RSA1024 - see issue #9214
         // Request onion service, redirect port.
         // Note that the 'virtual' port is always the default port to avoid decloaking nodes using other ports.
-        _conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, Params().GetDefaultPort(), GetListenPort()),
+        _conn.Command(strprintf("ADD_ONION %s Port=%i,%s", private_key, Params().GetDefaultPort(), m_target.ToStringIPPort()),
             std::bind(&TorController::add_onion_cb, this, std::placeholders::_1, std::placeholders::_2));
     } else {
         LogPrintf("tor: Authentication failed\n");
@@ -731,14 +736,14 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 static struct event_base *gBase;
 static std::thread torControlThread;
 
-static void TorControlThread()
+static void TorControlThread(CService onion_service_target)
 {
-    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
 
     event_base_dispatch(gBase);
 }
 
-void StartTorControl()
+void StartTorControl(CService onion_service_target)
 {
     assert(!gBase);
 #ifdef WIN32
@@ -752,7 +757,9 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = std::thread(&TraceThread<std::function<void()>>, "torcontrol", [onion_service_target] {
+        TorControlThread(onion_service_target);
+    });
 }
 
 void InterruptTorControl()
@@ -772,4 +779,11 @@ void StopTorControl()
         event_base_free(gBase);
         gBase = nullptr;
     }
+}
+
+CService DefaultOnionServiceTarget()
+{
+    struct in_addr onion_service_target;
+    onion_service_target.s_addr = htonl(INADDR_LOOPBACK);
+    return {onion_service_target, BaseParams().OnionServiceTargetPort()};
 }

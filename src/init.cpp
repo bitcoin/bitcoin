@@ -1912,7 +1912,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     LogPrintf("nBestHeight = %d\n", chain_active_height);
 
     if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
-        StartTorControl();
+        StartTorControl(DefaultOnionServiceTarget());
 
     Discover();
 
