@@ -28,6 +28,7 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QSettings>
+#include <QShowEvent>
 #include <QTimer>
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
@@ -165,6 +166,11 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     appearanceLayout->addWidget(appearance);
     ui->widgetAppearance->setLayout(appearanceLayout);
 
+    connect(appearance, &AppearanceWidget::appearanceChanged, [=](){
+        updateWidth();
+        Q_EMIT appearanceChanged();
+    });
+
     updatePrivateSendVisibility();
 
     // Store the current PrivateSend enabled state to recover it if it gets changed but the dialog gets not accepted but declined.
@@ -245,6 +251,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
         if (_model != nullptr) {
             _model->emitPrivateSendEnabledChanged();
         }
+        updateWidth();
     });
 }
 
@@ -307,6 +314,7 @@ void OptionsDialog::showPage(int index)
 
     GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Bold, 16);
     GUIUtil::setFont(vecNormal, GUIUtil::FontWeight::Normal, 16);
+    GUIUtil::updateFonts();
 
     ui->stackedWidgetOptions->setCurrentIndex(index);
     btnActive->setChecked(true);
@@ -439,6 +447,32 @@ void OptionsDialog::updatePrivateSendVisibility()
     bool fEnabled = false;
 #endif
     ui->btnPrivateSend->setVisible(fEnabled);
+}
+
+void OptionsDialog::updateWidth()
+{
+    int nWidthWidestButton{0};
+    int nButtonsVisible{0};
+    for (QAbstractButton* button : pageButtons.buttons()) {
+        if (!button->isVisible()) {
+            continue;
+        }
+        QFontMetrics fm(button->font());
+        nWidthWidestButton = std::max<int>(nWidthWidestButton, fm.width(button->text()));
+        ++nButtonsVisible;
+    }
+    // Add 10 per button as padding and use minimum 585 which is what we used in css before
+    int nWidth = std::max<int>(585, (nWidthWidestButton + 10) * nButtonsVisible);
+    setMinimumWidth(nWidth);
+    resize(nWidth, height());
+}
+
+void OptionsDialog::showEvent(QShowEvent* event)
+{
+    if (!event->spontaneous()) {
+        updateWidth();
+    }
+    QDialog::showEvent(event);
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :

@@ -29,6 +29,9 @@ public:
 
     void setModel(OptionsModel* model);
 
+Q_SIGNALS:
+    void appearanceChanged();
+
 public Q_SLOTS:
     void accept();
 

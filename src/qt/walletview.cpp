@@ -62,6 +62,7 @@ WalletView::WalletView(QWidget* parent) :
     GUIUtil::setFont({transactionSumLabel,
                       transactionSum,
                      }, GUIUtil::FontWeight::Bold, 14);
+    GUIUtil::updateFonts();
 
     hbox_buttons->addWidget(transactionSum);
 

@@ -1259,7 +1259,6 @@ OptionsDialog
 ******************************************************/
 
 QDialog#OptionsDialog {
-    min-width: 585px;
 }
 
 QDialog#OptionsDialog QValueComboBox,

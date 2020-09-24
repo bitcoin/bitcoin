@@ -217,6 +217,8 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
         tr("%1 is shutting down...").arg(tr(PACKAGE_NAME)) + "<br /><br />" +
         tr("Do not shut down the computer until this window disappears.")));
     setLayout(layout);
+
+    GUIUtil::updateFonts();
 }
 
 QWidget *ShutdownWindow::showShutdownWindow(BitcoinGUI *window)

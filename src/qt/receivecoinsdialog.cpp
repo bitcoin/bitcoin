@@ -31,6 +31,7 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
     GUIUtil::setFont({ui->label,
                       ui->label_2,
                       ui->label_3}, GUIUtil::FontWeight::Normal, 15);
+    GUIUtil::updateFonts();
 
 #if QT_VERSION >= 0x040700
     ui->reqLabel->setPlaceholderText(tr("Enter a label to associate with the new receiving address"));
