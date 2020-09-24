@@ -3945,8 +3945,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         }
         return;
     }
-    // SYSCOIN no longer supported by protocol
-    /*if (msg_type == NetMsgType::MEMPOOL) {
+
+    if (msg_type == NetMsgType::MEMPOOL) {
         if (!(pfrom.GetLocalServices() & NODE_BLOOM) && !pfrom.HasPermission(PF_MEMPOOL))
         {
             if (!pfrom.HasPermission(PF_NOBAN))
@@ -3972,7 +3972,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             pfrom.m_tx_relay->fSendMempool = true;
         }
         return;
-    }*/
+    }
 
     if (msg_type == NetMsgType::PING) {
         if (pfrom.GetCommonVersion() > BIP0031_VERSION) {
