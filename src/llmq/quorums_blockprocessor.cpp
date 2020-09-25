@@ -268,12 +268,18 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
 }
 
 // TODO remove this with 0.15.0
-void CQuorumBlockProcessor::UpgradeDB()
+bool CQuorumBlockProcessor::UpgradeDB()
 {
     LOCK(cs_main);
+
+    if (chainActive.Tip() == nullptr) {
+        // should have no records
+        return evoDb.IsEmpty();
+    }
+
     uint256 bestBlock;
     if (evoDb.GetRawDB().Read(DB_BEST_BLOCK_UPGRADE, bestBlock) && bestBlock == chainActive.Tip()->GetBlockHash()) {
-        return;
+        return true;
     }
 
     LogPrintf("CQuorumBlockProcessor::%s -- Upgrading DB...\n", __func__);
@@ -283,7 +289,7 @@ void CQuorumBlockProcessor::UpgradeDB()
         while (pindex) {
             if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
                 // Too late, we already pruned blocks we needed to reprocess commitments
-                throw std::runtime_error(std::string(__func__) + ": Quorum Commitments DB upgrade failed, you need to re-download the blockchain");
+                return false;
             }
             CBlock block;
             bool r = ReadBlockFromDisk(block, pindex, Params().GetConsensus());
@@ -310,6 +316,7 @@ void CQuorumBlockProcessor::UpgradeDB()
     }
 
     LogPrintf("CQuorumBlockProcessor::%s -- Upgrade done...\n", __func__);
+    return true;
 }
 
 bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state)

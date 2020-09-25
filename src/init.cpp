@@ -62,6 +62,7 @@
 
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
+#include <llmq/quorums_blockprocessor.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -1980,7 +1981,13 @@ bool AppInitMain()
                     assert(chainActive.Tip() != NULL);
                 }
 
-                if (!deterministicMNManager->UpgradeDBIfNeeded()) {
+                if (is_coinsview_empty && !evoDb->IsEmpty()) {
+                    // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
+                    strLoadError = _("Error initializing block database");
+                    break;
+                }
+
+                if (!deterministicMNManager->UpgradeDBIfNeeded() || !llmq::quorumBlockProcessor->UpgradeDB()) {
                     strLoadError = _("Error upgrading evo database");
                     break;
                 }
