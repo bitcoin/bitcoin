@@ -1435,6 +1435,7 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut> spent_o
                 uses_bip143_segwit = true;
             }
         }
+        if (uses_bip341_taproot && uses_bip143_segwit) break; // No need to scan further if we already need all.
     }
 
     if (uses_bip143_segwit || uses_bip341_taproot) {
