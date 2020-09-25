@@ -707,10 +707,12 @@ public:
     // where in vchTxParentNodes the vchTxValue can be found as an offset
     uint16_t posTx;
     std::vector<unsigned char> vchTxParentNodes;
+    std::vector<unsigned char> vchTxRoot;
     std::vector<unsigned char> vchTxPath;
     // where in vchReceiptParentNodes the vchReceiptValue can be found as an offset
     uint16_t posReceipt;
     std::vector<unsigned char> vchReceiptParentNodes; 
+    std::vector<unsigned char> vchReceiptRoot;
     uint32_t nBlockNumber;
     uint32_t nBridgeTransferID;
 
@@ -726,10 +728,10 @@ public:
         READWRITEAS(CAssetAllocation, obj);
         READWRITE(obj.nBridgeTransferID, obj.nBlockNumber, obj.posTx,
         obj.vchTxParentNodes, obj.vchTxPath, obj.posReceipt,
-        obj.vchReceiptParentNodes);
+        obj.vchReceiptParentNodes, obj.vchTxRoot, obj.vchReceiptRoot);
     }
 
-    inline void SetNull() { voutAssets.clear(); posTx = 0; vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
+    inline void SetNull() { voutAssets.clear(); posTx = 0; vchTxRoot.clear(); vchReceiptRoot.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
     inline bool IsNull() const { return (voutAssets.empty() && posTx == 0 && posReceipt == 0); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
