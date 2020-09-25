@@ -20,6 +20,7 @@ Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
 # Used colors in traditional.css for commit 44de8a93f2
 
 #00000000
+#222222
 #333
 #fff
 #008de4
@@ -226,10 +227,23 @@ QDialog#OptionsDialog QLabel#overriddenByCommandLineInfoLabel {
 OverviewPage
 ******************************************************/
 
+QWidget#OverviewPage QLabel#labelAlerts {
+     background-color: #c79304;
+     color: #222222;
+     border-radius: 5px;
+     padding: 5px;
+ }
+
 QWidget .QFrame#frame .QLabel#labelWalletStatus, /* Wallet Sync Status */
 QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendSyncStatus, /* PrivateSend Sync Status */
 QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
     color: #a84832;
+}
+
+QWidget .QFrame#frame_2 QListView { /* Transaction List */
+    background: #00000000;
+    min-width: 430px;
+    margin-right: 10px;
 }
 
 /******************************************************

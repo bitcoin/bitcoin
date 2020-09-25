@@ -25,9 +25,6 @@
      <property name="visible">
       <bool>false</bool>
      </property>
-     <property name="styleSheet">
-      <string notr="true">QLabel { background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #F0D0A0, stop:1 #F8D488); color:#000000; }</string>
-     </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
@@ -40,7 +37,23 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,1,0,1">
+     <item>
+      <spacer name="horizontalSpacerLeft">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Preferred</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>10</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -564,6 +577,19 @@
       </layout>
      </item>
      <item>
+      <spacer name="horizontalSpacerCenter">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>10</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <widget class="QFrame" name="frame_2">
@@ -613,9 +639,6 @@
           </item>
           <item>
            <widget class="QListView" name="listTransactions">
-            <property name="styleSheet">
-             <string notr="true">QListView { background: transparent; }</string>
-            </property>
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -633,20 +656,23 @@
          </layout>
         </widget>
        </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
+     </item>
+     <item>
+      <spacer name="horizontalSpacerRight">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Preferred</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>10</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

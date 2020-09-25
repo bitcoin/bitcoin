@@ -33,6 +33,7 @@ in the <theme.css> file.
 # Used colors in general.css for commit 44de8a93f2
 
 #00000000
+#222222
 #5e8c41
 #a84832
 #c79304
@@ -1296,6 +1297,17 @@ QDialog#OptionsDialog QLabel#overriddenByCommandLineInfoLabel {
 }
 
 /******************************************************
+ OverviewPage
+ ******************************************************/
+
+QWidget#OverviewPage QLabel#labelAlerts {
+     background-color: #c79304;
+     color: #222222;
+     border-radius: 5px;
+     padding: 5px;
+ }
+
+/******************************************************
 OverviewPage Balances
 ******************************************************/
 
@@ -1304,21 +1316,18 @@ QWidget .QFrame#frame { /* Wallet Balance */
 }
 
 QWidget .QFrame#frame > .QLabel {
-    min-width: 100px;
-    min-height: 25px;
+    min-width: 60px;
+    min-height: 26px;
 }
 
 QWidget .QFrame#frame .QLabel#label_5 { /* Wallet Label */
-    min-width: 180px;
     margin-top: 0;
     margin-right: 5px;
-    padding-right: 5px;
 }
 
 QWidget .QFrame#frame .QLabel#labelWalletStatus { /* Wallet Sync Status */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
     color: #a84832;
-    margin-left: 3px;
 }
 
 QWidget .QFrame#frame .QLabel#labelSpendable { /* Spendable Header */
@@ -1414,25 +1423,22 @@ OverviewPage PrivateSend
 QWidget .QFrame#framePrivateSend { /* PrivateSend Widget */
     background-color: #00000000;
     max-width: 451px;
-    min-width: 451px;
     max-height: 350px;
 }
 
 QWidget .QFrame#framePrivateSend  > .QLabel {
-    min-width: 175px;
+    min-width: 100px;
     min-height: 26px;
 }
 
 QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendHeader { /* PrivateSend Header */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
-    margin-right: 10px;
+    margin-right: 5px;
 }
 
 QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendSyncStatus { /* PrivateSend Sync Status */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
     color: #a84832;
-    margin-left: 2px;
-    padding-right: 5px;
 }
 
 QWidget .QFrame#framePrivateSend  .QLabel#labelPrivateSendEnabledText { /* PrivateSend Enabled Status Label */
@@ -1510,35 +1516,23 @@ OverviewPage RecentTransactions
 ******************************************************/
 
 QWidget .QFrame#frame_2 { /* Transactions Widget */
-    min-width: 510px;
-    margin-right: 20px;
-    margin-left: 0;
-    margin-top: 0;
+    min-width: 430;
 }
 
 QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
-    min-width: 180px;
-    margin-left: 18px;
-    margin-top: 0;
-    margin-right: 5px;
-    padding-right: 5px;
+    margin-right: 0px;
     min-height: 30px;
 }
 
 QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
-    qproperty-alignment: 'AlignBottom | AlignRight';
+    qproperty-alignment: 'AlignVCenter | AlignLeft';
     color: #a84832;
-    min-width: 93px;
-    margin-top: 0;
-    margin-left: 16px;
-    margin-right: 5px;
-    min-height: 16px;
 }
 
 QWidget .QFrame#frame_2 QListView { /* Transaction List */
-    max-width: 369px;
-    margin-top: 12px;
-    margin-left: 0px; /* CSS Voodoo - set to -66px to hide default transaction icons */
+    background: #00000000;
+    max-width: 430px;
+    margin-right: 10px;
 }
 
 /******************************************************
