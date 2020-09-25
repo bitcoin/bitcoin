@@ -299,9 +299,11 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);  
         oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
+        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
         oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath));
         oSPVProofObj.__pushKV("posReceipt", mintSyscoin.posReceipt); 
+        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot));  
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
         oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
