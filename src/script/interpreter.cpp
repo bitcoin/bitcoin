@@ -1475,7 +1475,7 @@ static const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
 static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
 
 template<typename T>
-bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, const uint32_t in_pos, const uint8_t hash_type, const SigVersion sigversion, const uint8_t key_version, const PrecomputedTransactionData* cache)
+bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, const uint32_t in_pos, const uint8_t hash_type, const SigVersion sigversion, const uint8_t key_version, const PrecomputedTransactionData& cache)
 {
     uint8_t ext_flag;
     switch (sigversion) {
@@ -1489,7 +1489,7 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
         assert(false);
     }
     assert(in_pos < tx_to.vin.size());
-    assert(cache != nullptr && cache->m_bip341_taproot_ready && cache->m_spent_outputs_ready);
+    assert(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready);
 
     CHashWriter ss = HASHER_TAPSIGHASH;
 
@@ -1507,13 +1507,13 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
     ss << tx_to.nVersion;
     ss << tx_to.nLockTime;
     if (input_type != SIGHASH_ANYONECANPAY) {
-        ss << cache->m_prevouts_single_hash;
-        ss << cache->m_spent_amounts_single_hash;
-        ss << cache->m_spent_scripts_single_hash;
-        ss << cache->m_sequences_single_hash;
+        ss << cache.m_prevouts_single_hash;
+        ss << cache.m_spent_amounts_single_hash;
+        ss << cache.m_spent_scripts_single_hash;
+        ss << cache.m_sequences_single_hash;
     }
     if (output_type == SIGHASH_ALL) {
-        ss << cache->m_outputs_single_hash;
+        ss << cache.m_outputs_single_hash;
     }
 
     // Data about the input/prevout being spent
@@ -1523,7 +1523,7 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
     ss << spend_type;
     if (input_type == SIGHASH_ANYONECANPAY) {
         ss << tx_to.vin[in_pos].prevout;
-        ss << cache->m_spent_outputs[in_pos];
+        ss << cache.m_spent_outputs[in_pos];
         ss << tx_to.vin[in_pos].nSequence;
     } else {
         ss << in_pos;
@@ -1676,7 +1676,8 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const uns
         if (hashtype == SIGHASH_DEFAULT) return false;
     }
     uint256 sighash;
-    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, /* key_version */ 0x00, this->txdata)) return false;
+    assert(this->txdata);
+    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, /* key_version */ 0x00, *this->txdata)) return false;
     return VerifySchnorrSignature(sig, pubkey, sighash);
 }
 
