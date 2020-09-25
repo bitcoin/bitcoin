@@ -21,7 +21,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]  # alias
 
-        node.add_p2p_connection(P2PTxInvStore())
+        peer_first = node.add_p2p_connection(P2PTxInvStore())
 
         self.log.info("Create a new transaction and wait until it's broadcast")
         txid = node.sendtoaddress(node.getnewaddress(), 1)
@@ -35,11 +35,11 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # Can take a few seconds due to transaction trickling
         def wait_p2p():
             self.bump_mocktime(1)
-            return node.p2p.tx_invs_received[int(txid, 16)] >= 1
+            return peer_first.tx_invs_received[int(txid, 16)] >= 1
         self.wait_until(wait_p2p)
 
         # Add a second peer since txs aren't rebroadcast to the same peer (see filterInventoryKnown)
-        node.add_p2p_connection(P2PTxInvStore())
+        peer_second = node.add_p2p_connection(P2PTxInvStore())
 
         self.log.info("Create a block")
         # Create and submit a block without the transaction.
@@ -73,7 +73,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
         # Transaction should be rebroadcast approximately 24 hours in the future,
         # but can range from 12-36. So bump 36 hours to be sure.
-        node.p2p.wait_for_broadcast([txid])
+        peer_second.wait_for_broadcast([txid])
 
 
 if __name__ == '__main__':
