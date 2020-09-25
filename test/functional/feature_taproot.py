@@ -542,6 +542,7 @@ def byte_popper(expr):
     return lambda ctx: deep_eval(ctx, expr)[:-1]
 
 # Expected error strings
+
 ERR_KEYPATH_INVALID_SIG = {"err_msg": "Invalid signature for Taproot key path spending"}
 ERR_SCRIPTPATH_INVALID_SIG = {"err_msg": "Signature must be zero for failed CHECK(MULTI)SIG operation"}
 ERR_OP_RETURN = {"err_msg": "OP_RETURN was encountered"}
@@ -894,6 +895,8 @@ def spenders_taproot_active():
         ("t34", CScript(big_scriptops[:2000] + [OP_1])),
         # 35) Variant of t9 that uses a non-minimally encoded input arg
         ("t35", CScript([bytes([csa_low_val]), pubs[1], OP_CHECKSIGADD, csa_low_result, OP_EQUAL])),
+        # 36) Empty script
+        ("t36", CScript([])),
     ]
     # Add many dummies to test huge trees
     for j in range(100000):
@@ -949,6 +952,8 @@ def spenders_taproot_active():
     add_spender(spenders, "tapscript/pushmaxlimit", leaf="t25", **common, **SINGLE_SIG, failure={"leaf": "t26"}, **ERR_PUSH_LIMIT)
     # Test that 999-of-999 multisig works (but 1000-of-1000 triggers stack size limits)
     add_spender(spenders, "tapscript/bigmulti", leaf="t33", **common, inputs=big_spend_inputs, num=999, failure={"leaf": "t34", "num": 1000}, **ERR_STACK_SIZE)
+    # Test that the CLEANSTACK rule is consensus critical in tapscript
+    add_spender(spenders, "tapscript/cleanstack", leaf="t36", tap=tap, inputs=[b'\x01'], failure={"inputs": [b'\x01', b'\x01']}, **ERR_CLEANSTACK)
 
     # == Test for sigops ratio limit ==
 
