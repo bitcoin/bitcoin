@@ -4041,32 +4041,17 @@ static RPCHelpMan send()
             if (!wallet) return NullUniValue;
             CWallet* const pwallet = wallet.get();
 
-            UniValue options = request.params[3];
-            if (options.exists("feeRate") || options.exists("fee_rate") || options.exists("estimate_mode") || options.exists("conf_target")) {
+            UniValue options = NormalizedObject(request.params[3]);
+            if (options.exists("feerate") || options.exists("estimatemode") || options.exists("conftarget")) {
                 if (!request.params[1].isNull() || !request.params[2].isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Use either conf_target and estimate_mode or the options dictionary to control fee rate");
                 }
             } else {
-                options.pushKV("conf_target", request.params[1]);
-                options.pushKV("estimate_mode", request.params[2]);
+                options.pushKV("conftarget", request.params[1]);
+                options.pushKV("estimatemode", request.params[2]);
             }
-            if (!options["conf_target"].isNull() && (options["estimate_mode"].isNull() || (options["estimate_mode"].get_str() == "unset"))) {
+            if (!options["conftarget"].isNull() && (options["estimatemode"].isNull() || (options["estimatemode"].get_str() == "unset"))) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
-            }
-            if (options.exists("changeAddress")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_address");
-            }
-            if (options.exists("changePosition")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position");
-            }
-            if (options.exists("includeWatching")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching");
-            }
-            if (options.exists("lockUnspents")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents");
-            }
-            if (options.exists("subtractFeeFromOutputs")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use subtract_fee_from_outputs");
             }
 
             const bool psbt_opt_in = options.exists("psbt") && options["psbt"].get_bool();
@@ -4084,10 +4069,7 @@ static RPCHelpMan send()
             coin_control.m_add_inputs = rawTx.vin.size() == 0;
             FundTransaction(pwallet, rawTx, fee, change_position, options, coin_control);
 
-            bool add_to_wallet = true;
-            if (options.exists("add_to_wallet")) {
-                add_to_wallet = options["add_to_wallet"].get_bool();
-            }
+            bool add_to_wallet = !options.exists("addtowallet") || options["addtowallet"].get_bool();
 
             // Make a blank psbt
             PartiallySignedTransaction psbtx(rawTx);
