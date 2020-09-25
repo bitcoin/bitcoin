@@ -87,7 +87,9 @@ P2P messages. These can be found in the following source files:
 
 #### Using the P2P interface
 
-- [messages.py](test_framework/messages.py) contains all the definitions for objects that pass
+- `P2P`s can be used to test specific P2P protocol behavior.
+[p2p.py](test_framework/p2p.py) contains test framework p2p objects and
+[messages.py](test_framework/messages.py) contains all the definitions for objects passed
 over the network (`CBlock`, `CTransaction`, etc, along with the network-level
 wrappers for them, `msg_block`, `msg_tx`, etc).
 
@@ -100,8 +102,22 @@ contains the higher level logic for processing P2P payloads and connecting to
 the Bitcoin Core node application logic. For custom behaviour, subclass the
 P2PInterface object and override the callback methods.
 
-- Can be used to write tests where specific P2P protocol behavior is tested.
-Examples tests are [p2p_unrequested_blocks.py](p2p_unrequested_blocks.py),
+`P2PConnection`s can be used as such:
+
+```python
+p2p_conn = node.add_p2p_connection(P2PInterface())
+p2p_conn.send_and_ping(msg)
+```
+
+They can also be referenced by indexing into a `TestNode`'s `p2ps` list, which
+contains the list of test framework `p2p` objects connected to itself
+(it does not include any `TestNode`s):
+
+```python
+node.p2ps[0].sync_with_ping()
+```
+
+More examples can be found in [p2p_unrequested_blocks.py](p2p_unrequested_blocks.py),
 [p2p_compactblocks.py](p2p_compactblocks.py).
 
 #### Prototyping tests
@@ -157,7 +173,7 @@ way is the use the `profile_with_perf` context manager, e.g.
 with node.profile_with_perf("send-big-msgs"):
     # Perform activity on the node you're interested in profiling, e.g.:
     for _ in range(10000):
-        node.p2p.send_message(some_large_message)
+        node.p2ps[0].send_message(some_large_message)
 ```
 
 To see useful textual output, run
