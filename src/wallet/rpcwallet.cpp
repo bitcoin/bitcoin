@@ -3008,7 +3008,7 @@ static RPCHelpMan listunspent()
     };
 }
 
-void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl)
+void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, NormalizedUniValue options, CCoinControl& coinControl)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -3028,26 +3028,21 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         RPCTypeCheckArgument(options, UniValue::VOBJ);
         RPCTypeCheckObj(options,
             {
-                {"add_inputs", UniValueType(UniValue::VBOOL)},
-                {"add_to_wallet", UniValueType(UniValue::VBOOL)},
-                {"changeAddress", UniValueType(UniValue::VSTR)},
-                {"change_address", UniValueType(UniValue::VSTR)},
-                {"changePosition", UniValueType(UniValue::VNUM)},
-                {"change_position", UniValueType(UniValue::VNUM)},
-                {"change_type", UniValueType(UniValue::VSTR)},
-                {"includeWatching", UniValueType(UniValue::VBOOL)},
-                {"include_watching", UniValueType(UniValue::VBOOL)},
+                {"addinputs", UniValueType(UniValue::VBOOL)},
+                {"addtowallet", UniValueType(UniValue::VBOOL)},
+                {"changeaddress", UniValueType(UniValue::VSTR)},
+                {"changeposition", UniValueType(UniValue::VNUM)},
+                {"changetype", UniValueType(UniValue::VSTR)},
+                {"includewatching", UniValueType(UniValue::VBOOL)},
                 {"inputs", UniValueType(UniValue::VARR)},
-                {"lockUnspents", UniValueType(UniValue::VBOOL)},
-                {"lock_unspents", UniValueType(UniValue::VBOOL)},
+                {"lockunspents", UniValueType(UniValue::VBOOL)},
                 {"locktime", UniValueType(UniValue::VNUM)},
-                {"feeRate", UniValueType()}, // will be checked below
+                {"feerate", UniValueType()}, // will be checked below
                 {"psbt", UniValueType(UniValue::VBOOL)},
-                {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
-                {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
+                {"subtractfeefromoutputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
-                {"conf_target", UniValueType(UniValue::VNUM)},
-                {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"conftarget", UniValueType(UniValue::VNUM)},
+                {"estimatemode", UniValueType(UniValue::VSTR)},
             },
             true, true);
 
