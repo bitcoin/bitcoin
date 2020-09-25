@@ -457,7 +457,7 @@ void OverviewPage::privateSendStatus(bool fForce)
 
     if(!walletModel) return;
 
-    bool fIsEnabled = CPrivateSendClientOptions::IsEnabled();
+    bool fIsEnabled = privateSendClient.fEnablePrivateSend;
     ui->framePrivateSend->setVisible(fIsEnabled);
     if (!fIsEnabled) {
         SetupTransactionList(NUM_ITEMS_DISABLED);
