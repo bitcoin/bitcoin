@@ -51,6 +51,18 @@ struct UniValueType {
 
 std::string NormalizedParameterName(const std::string& key);
 UniValue NormalizedObject(const UniValue& univalue);
+/**
+ * This is a temporary structure meant to allow a gradual transition to normalized objects.
+ *
+ * It takes a UniValue dictionary (object) in normalized form, and will normalize queries coming in.
+ * I.e. pre-normalization code will work exactly the same with both normalized and non-normalized objects
+ * if using one of these.
+ */
+struct NormalizedUniValue: public UniValue {
+    NormalizedUniValue(const UniValue& univalue) : UniValue(NormalizedObject(univalue)) {}
+    const UniValue& operator[](const std::string& key) const { return UniValue::operator[](NormalizedParameterName(key)); }
+    bool exists(const std::string& key) const { return UniValue::exists(NormalizedParameterName(key)); }
+};
 
 /**
  * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
