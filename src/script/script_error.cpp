@@ -105,6 +105,8 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Too much signature validation relative to witness weight";
         case SCRIPT_ERR_TAPSCRIPT_CHECKMULTISIG:
             return "OP_CHECKMULTISIG(VERIFY) is not available in tapscript";
+        case SCRIPT_ERR_TAPSCRIPT_MINIMALIF:
+            return "OP_IF/NOTIF argument must be minimal in tapscript";
         case SCRIPT_ERR_OP_CODESEPARATOR:
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:
