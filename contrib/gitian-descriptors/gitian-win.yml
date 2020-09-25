@@ -118,10 +118,8 @@ script: |
   mkdir -p "$(dirname "$GIT_ARCHIVE")"
   git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 
-  ORIGPATH="$PATH"
   # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
-    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
