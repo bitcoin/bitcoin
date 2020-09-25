@@ -13,6 +13,7 @@ SUBDIRS += doc/man
 endif
 .PHONY: deploy FORCE
 
+export PATH
 export PYTHONPATH
 
 if BUILD_BITCOIN_LIBS

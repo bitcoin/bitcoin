@@ -14,6 +14,59 @@ AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
+# BITCOIN_ADD_VAR_HELP(VARNAME, DOCUMENTATION)
+# ----------------------------------
+#
+# Document VARNAME in `configure --help' (but only once). This is just like
+# AC_ARG_VAR, but we do NOT register VARNAME as a precious variable, rather we
+# just add the documentation entry.
+AC_DEFUN([BITCOIN_ADD_VAR_HELP],
+[m4_divert_once([HELP_VAR], [[
+Some influential environment variables:]])dnl
+m4_divert_once([HELP_VAR_END], [[
+Use these variables to override the choices made by `configure' or to help
+it to find libraries and programs with nonstandard names/locations.]])dnl
+m4_expand_once([m4_divert_text([HELP_VAR],
+                               [AS_HELP_STRING([$1], [$2], [              ])])],
+               [$0($1)])dnl
+])# BITCOIN_ADD_VAR_HELP
+
+BITCOIN_ADD_VAR_HELP(PATH_TEMPLATE, [snippet to expand to form PATH, defaults to
+'$PATH' if not set, or '${depends_path_fragment}${PATH_SEPARATOR}${PATH}' if a
+depends-generated CONFIG_SITE is provided])
+
+AS_IF([ test "x${PATH_TEMPLATE+set}" != "xset" ],
+      [ dnl When PATH_TEMPLATE is not set, default to just $PATH
+        PATH_TEMPLATE='${PATH}'
+        AS_IF([ test "x${depends_path_fragment+set}" = "xset" ],
+              [ dnl When configuring for depends, be sure to prepend depends' PATH fragment
+                PATH_TEMPLATE='${depends_path_fragment}${PATH_SEPARATOR}'"$PATH_TEMPLATE" ])])
+
+dnl Log to both config.log and the console, à la AC_ECHO_CHECKING.
+dnl
+dnl Note that no trailing newline is output to the console, it is up to the
+dnl result part of this log message to output the newline. This is exactly what
+dnl AC_ECHO_CHECKING does as well. See comments below.
+_AS_ECHO_LOG([expanding PATH_TEMPLATE to form PATH])
+_AS_ECHO_N([expanding PATH_TEMPLATE to form PATH... ])
+
+dnl The following line evaluates $PATH_TEMPLATE in a $(...) subshell where:
+dnl
+dnl   1. stderr is redirected to config.log
+dnl   2. The '-u' shell option is set, such that unset parameters will error
+dnl      immediately
+maybe_PATH="$(exec 2>&AS_MESSAGE_LOG_FD && set -u && eval echo \"$PATH_TEMPLATE\")"
+
+AS_IF([ test "x${maybe_PATH:-empty}" = "xempty" ],
+      [ dnl Dummy echo to output a newline
+        AS_ECHO([]);
+        dnl When maybe_PATH is empty, the 'set -u' failure was most likely triggered
+        AC_MSG_FAILURE([failed to expand PATH_TEMPLATE: '$PATH_TEMPLATE']) ],
+      [ dnl Pin $PATH by creating an output variable for it with the value of
+        AC_SUBST(PATH, "$maybe_PATH")
+        dnl AC_MSG_RESULT outputs a newline
+        AC_MSG_RESULT([$PATH]) ])
+
 m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR([PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh])])
 PKG_PROG_PKG_CONFIG
 if test "x$PKG_CONFIG" = x; then
