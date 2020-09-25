@@ -95,7 +95,9 @@ void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
 
 void TransactionFilterProxy::setLimit(int limit)
 {
+    Q_EMIT layoutAboutToBeChanged();
     this->limitRows = limit;
+    Q_EMIT layoutChanged();
 }
 
 void TransactionFilterProxy::setShowInactive(bool _showInactive)

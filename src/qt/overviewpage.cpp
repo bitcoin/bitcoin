@@ -24,10 +24,10 @@
 #include <QSettings>
 #include <QTimer>
 
-#define ICON_OFFSET 16
-#define DECORATION_SIZE 54
-#define NUM_ITEMS 5
-#define NUM_ITEMS_ADV 7
+#define ITEM_HEIGHT 54
+#define NUM_ITEMS_DISABLED 5
+#define NUM_ITEMS_ENABLED_NORMAL 7
+#define NUM_ITEMS_ENABLED_ADVANCED 9
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -44,70 +44,65 @@ public:
     {
         painter->save();
 
-        QIcon icon = qvariant_cast<QIcon>(index.data(TransactionTableModel::RawDecorationRole));
         QRect mainRect = option.rect;
-        mainRect.moveLeft(ICON_OFFSET);
-        QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
-        int xspace = DECORATION_SIZE + 8;
-        int ypad = 6;
+        int xspace = 8;
+        int ypad = 8;
         int halfheight = (mainRect.height() - 2*ypad)/2;
-        QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace - ICON_OFFSET, halfheight);
-        QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
-        icon = QIcon(icon);
-        icon.paint(painter, decorationRect);
+        QRect rectTopHalf(mainRect.left() + xspace, mainRect.top() + ypad, mainRect.width() - xspace, halfheight);
+        QRect rectBottomHalf(mainRect.left() + xspace, mainRect.top() + ypad + halfheight + 5, mainRect.width() - xspace, halfheight);
+        QRect rectBounding;
+        QColor colorForeground;
+        QFont fontInitial = painter->font();
 
-        QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
-        QString address = index.data(Qt::DisplayRole).toString();
-        qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
-        bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
-        QVariant value = index.data(Qt::ForegroundRole);
-        QColor foreground = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT);
-        if(value.canConvert<QBrush>())
-        {
-            QBrush brush = qvariant_cast<QBrush>(value);
-            foreground = brush.color();
-        }
+        // Grab model indexes for desired data from TransactionTableModel
+        QModelIndex indexDate = index.sibling(index.row(), TransactionTableModel::Date);
+        QModelIndex indexAmount = index.sibling(index.row(), TransactionTableModel::Amount);
+        QModelIndex indexAddress = index.sibling(index.row(), TransactionTableModel::ToAddress);
 
-        painter->setPen(foreground);
-        QRect boundingRect;
-        painter->drawText(addressRect, Qt::AlignLeft|Qt::AlignVCenter, address, &boundingRect);
+        // Draw first line (with slightly bigger font than the second line will get)
+        // Content: Date/Time, Optional IS indicator, Amount
+        QFont font = fontInitial;
+        font.setPointSize(font.pointSize() * 1.17);
+        painter->setFont(font);
+        // Date/Time
+        colorForeground = qvariant_cast<QColor>(indexDate.data(Qt::ForegroundRole));
+        QString strDate = indexDate.data(Qt::DisplayRole).toString();
+        painter->setPen(colorForeground);
+        painter->drawText(rectTopHalf, Qt::AlignLeft | Qt::AlignVCenter, strDate, &rectBounding);
+        // Optional IS indicator
+        QIcon iconInstantSend = qvariant_cast<QIcon>(indexAddress.data(TransactionTableModel::RawDecorationRole));
+        QRect rectInstantSend(rectBounding.right() + 5, rectTopHalf.top(), 16, halfheight);
+        iconInstantSend.paint(painter, rectInstantSend);
+        // Amount
+        colorForeground = qvariant_cast<QColor>(indexAmount.data(Qt::ForegroundRole));
+        // Note: do NOT use Qt::DisplayRole, have format properly here
+        qint64 nAmount = index.data(TransactionTableModel::AmountRole).toLongLong();
+        QString strAmount = BitcoinUnits::floorWithUnit(unit, nAmount, true, BitcoinUnits::separatorAlways);
+        painter->setPen(colorForeground);
+        painter->drawText(rectTopHalf, Qt::AlignRight | Qt::AlignVCenter, strAmount);
 
+        // Draw second line (with the initial font)
+        // Content: Address/label, Optional Watchonly indicator
+        painter->setFont(fontInitial);
+        // Address/Label
+        colorForeground = qvariant_cast<QColor>(indexAddress.data(Qt::ForegroundRole));
+        QString address = indexAddress.data(Qt::DisplayRole).toString();
+        painter->setPen(colorForeground);
+        painter->drawText(rectBottomHalf, Qt::AlignLeft | Qt::AlignVCenter, address, &rectBounding);
+        // Optional Watchonly indicator
         if (index.data(TransactionTableModel::WatchonlyRole).toBool())
         {
             QIcon iconWatchonly = qvariant_cast<QIcon>(index.data(TransactionTableModel::WatchonlyDecorationRole));
-            QRect watchonlyRect(boundingRect.right() + 5, mainRect.top()+ypad+halfheight, 16, halfheight);
-            iconWatchonly.paint(painter, watchonlyRect);
+            QRect rectWatchonly(rectBounding.right() + 5, rectBottomHalf.top(), 16, halfheight);
+            iconWatchonly.paint(painter, rectWatchonly);
         }
-
-        if(amount < 0)
-        {
-            foreground = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::RED);
-        }
-        else if(!confirmed)
-        {
-            foreground = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::UNCONFIRMED);
-        }
-        else
-        {
-            foreground = option.palette.color(QPalette::Text);
-        }
-        painter->setPen(foreground);
-        QString amountText = BitcoinUnits::floorWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
-        if(!confirmed)
-        {
-            amountText = QString("[") + amountText + QString("]");
-        }
-        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
-
-        painter->setPen(option.palette.color(QPalette::Text));
-        painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::dateTimeStr(date));
 
         painter->restore();
     }
 
     inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
     {
-        return QSize(DECORATION_SIZE, DECORATION_SIZE);
+        return QSize(ITEM_HEIGHT, ITEM_HEIGHT);
     }
 
     int unit;
@@ -151,7 +146,6 @@ OverviewPage::OverviewPage(QWidget* parent) :
 
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
-    ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
     // Note: minimum height of listTransactions will be set later in updateAdvancedPSUI() to reflect actual settings
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
@@ -163,7 +157,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
     // hide PS frame (helps to preserve saved size)
-    // we'll setup and make it visible in updateAdvancedPSUI() later
+    // we'll setup and make it visible in privateSendStatus() later
     ui->framePrivateSend->setVisible(false);
 
     // start with displaying the "out of sync" warnings
@@ -301,9 +295,6 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
-
-        // Initialize PS UI
-        privateSendStatus(true);
 
         if(!privateSendClient.fEnablePrivateSend) return;
 
@@ -457,16 +448,7 @@ void OverviewPage::updatePrivateSendProgress()
 
 void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
     this->fShowAdvancedPSUI = fShowAdvancedPSUI;
-    int nNumItems = (!privateSendClient.fEnablePrivateSend || !fShowAdvancedPSUI) ? NUM_ITEMS : NUM_ITEMS_ADV;
-    SetupTransactionList(nNumItems);
-
-    if (!privateSendClient.fEnablePrivateSend) return;
-
-    ui->framePrivateSend->setVisible(true);
-    ui->labelCompletitionText->setVisible(fShowAdvancedPSUI);
-    ui->privateSendProgress->setVisible(fShowAdvancedPSUI);
-    ui->labelSubmittedDenomText->setVisible(fShowAdvancedPSUI);
-    ui->labelSubmittedDenom->setVisible(fShowAdvancedPSUI);
+    privateSendStatus(true);
 }
 
 void OverviewPage::privateSendStatus(bool fForce)
@@ -475,13 +457,43 @@ void OverviewPage::privateSendStatus(bool fForce)
 
     if(!walletModel) return;
 
-    auto tempWidgets = {ui->labelSubmittedDenomText,
-                        ui->labelSubmittedDenom};
+    bool fIsEnabled = CPrivateSendClientOptions::IsEnabled();
+    ui->framePrivateSend->setVisible(fIsEnabled);
+    if (!fIsEnabled) {
+        SetupTransactionList(NUM_ITEMS_DISABLED);
+        return;
+    }
+
+    // Wrap all privatesend related widgets we want to show/hide state based.
+    // Value of the map contains a flag if this widget belongs to the advanced
+    // PrivateSend UI option or not. True if it does, false if not.
+    std::map<QWidget*, bool> privateSendWidgets = {
+        {ui->labelCompletitionText, true},
+        {ui->privateSendProgress, true},
+        {ui->labelSubmittedDenomText, true},
+        {ui->labelSubmittedDenom, true},
+        {ui->labelAmountAndRoundsText, false},
+        {ui->labelAmountRounds, false}
+    };
 
     auto setWidgetsVisible = [&](bool fVisible) {
-        for (const auto& it : tempWidgets) {
-            it->setVisible(fVisible);
+        static bool fInitial{true};
+        static bool fLastVisible{false};
+        static bool fLastShowAdvanced{false};
+        // Only update the widget's visibility if something changed since the last call of setWidgetsVisible
+        if (fLastShowAdvanced == fShowAdvancedPSUI && fLastVisible == fVisible) {
+            if (fInitial) {
+                fInitial = false;
+            } else {
+                return;
+            }
         }
+        // Set visible if: fVisible and not advanced UI element or advanced ui element and advanced ui active
+        for (const auto& it : privateSendWidgets) {
+            it.first->setVisible(fVisible && (!it.second || it.second == fShowAdvancedPSUI));
+        }
+        fLastVisible = fVisible;
+        fLastShowAdvanced = fShowAdvancedPSUI;
     };
 
     static int64_t nLastDSProgressBlockTime = 0;
@@ -511,7 +523,13 @@ void OverviewPage::privateSendStatus(bool fForce)
         if (fShowAdvancedPSUI) strEnabled += ", " + strKeysLeftText;
         ui->labelPrivateSendEnabled->setText(strEnabled);
 
+        // If mixing isn't active always show the lower number of txes because there are
+        // anyway the most PS widgets hidden.
+        SetupTransactionList(NUM_ITEMS_ENABLED_NORMAL);
+
         return;
+    } else {
+        SetupTransactionList(fShowAdvancedPSUI ? NUM_ITEMS_ENABLED_ADVANCED : NUM_ITEMS_ENABLED_NORMAL);
     }
 
     // Warn user that wallet is running out of keys
@@ -636,22 +654,28 @@ void OverviewPage::togglePrivateSend(){
     }
 }
 
-void OverviewPage::SetupTransactionList(int nNumItems) {
-    ui->listTransactions->setMinimumHeight(nNumItems * (DECORATION_SIZE + 2));
+void OverviewPage::SetupTransactionList(int nNumItems)
+{
+    if (walletModel == nullptr || walletModel->getTransactionTableModel() == nullptr) {
+        return;
+    }
 
-    if(walletModel && walletModel->getOptionsModel()) {
-        // Set up transaction list
+    // Set up transaction list
+    if (filter == nullptr) {
         filter.reset(new TransactionFilterProxy());
         filter->setSourceModel(walletModel->getTransactionTableModel());
-        filter->setLimit(nNumItems);
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
         filter->setShowInactive(false);
         filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
-
         ui->listTransactions->setModel(filter.get());
-        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
     }
+
+    if (filter->rowCount() == nNumItems) {
+        return;
+    }
+
+    filter->setLimit(nNumItems);
 }
 
 void OverviewPage::DisablePrivateSendCompletely() {
