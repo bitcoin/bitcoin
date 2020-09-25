@@ -289,8 +289,7 @@ jobs:
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
       - name: install dependencies
         run: |
-          brew install automake berkeley-db4 boost miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq
-          brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/d468bb8c4f5c34b18588e5d1b955021d58e1ff57/Formula/qt.rb
+          brew install automake berkeley-db4 boost miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
       - name: install veriblock-pop-cpp
         env:
           BUILD_TYPE: Release
