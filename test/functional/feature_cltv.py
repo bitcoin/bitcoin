@@ -75,7 +75,7 @@ class BIP65Test(SyscoinTestFramework):
         )
 
     def run_test(self):
-        self.nodes[0].add_p2p_connection(P2PInterface())
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         self.test_cltv_info(is_active=False)
 
@@ -100,7 +100,7 @@ class BIP65Test(SyscoinTestFramework):
         block.solve()
 
         self.test_cltv_info(is_active=False)  # Not active as of current tip and next block does not need to obey rules
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
+        peer.send_and_ping(msg_block(block))
         self.test_cltv_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
@@ -110,11 +110,11 @@ class BIP65Test(SyscoinTestFramework):
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
         block.set_base_version(3)
         block.solve()
-
+        # SYSCOIN
         with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x10000003)'.format(block.hash)]):
-            self.nodes[0].p2p.send_and_ping(msg_block(block))
+            peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
-            self.nodes[0].p2p.sync_with_ping()
+            peer.sync_with_ping()
 
         self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
         block.set_base_version(4)
@@ -137,9 +137,9 @@ class BIP65Test(SyscoinTestFramework):
         block.solve()
 
         with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputScripts on {} failed with non-mandatory-script-verify-flag (Negative locktime)'.format(block.vtx[-1].hash)]):
-            self.nodes[0].p2p.send_and_ping(msg_block(block))
+            peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
-            self.nodes[0].p2p.sync_with_ping()
+            peer.sync_with_ping()
 
         self.log.info("Test that a version 4 block with a valid-according-to-CLTV transaction is accepted")
         spendtx = cltv_validate(self.nodes[0], spendtx, CLTV_HEIGHT - 1)
@@ -151,7 +151,7 @@ class BIP65Test(SyscoinTestFramework):
         block.solve()
 
         self.test_cltv_info(is_active=True)  # Not active as of current tip, but next block must obey rules
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
+        peer.send_and_ping(msg_block(block))
         self.test_cltv_info(is_active=True)  # Active as of current tip
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
 
