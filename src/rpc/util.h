@@ -49,6 +49,9 @@ struct UniValueType {
     UniValue::VType type;
 };
 
+std::string NormalizedParameterName(const std::string& key);
+UniValue NormalizedObject(const UniValue& univalue);
+
 /**
  * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
  * the right number of arguments are passed, just that any passed are the correct type.
