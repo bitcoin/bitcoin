@@ -162,8 +162,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-mismatch-bridge-id", bSanityCheck);
     }
     // check transaction spv proofs
-    dev::RLP rlpTxRoot(&txRootDB.vchTxRoot);
-    dev::RLP rlpReceiptRoot(&txRootDB.vchReceiptRoot);
+    dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
+    dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
+
+    if(!txRootDB.vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchTxRoot){
+        return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
+    }
+
+    if(!txRootDB.vchReceiptRoot.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchReceiptRoot){
+        return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
+    }
     
     dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());

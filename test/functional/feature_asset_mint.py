@@ -47,19 +47,19 @@ class AssetMintTest(SyscoinTestFramework):
 
         newaddress = self.nodes[0].getnewaddress()
         # must wait an hour first
-        assert_raises_rpc_error(-4, 'mint-insufficient-confirmations', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-insufficient-confirmations', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + 3600)
         self.nodes[0].generate(50)
         # try to enable aux fee which should throw an error of invalid value
-        assert_raises_rpc_error(-4, 'mint-mismatch-value', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes, True)
+        assert_raises_rpc_error(-4, 'mint-mismatch-value', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, True)
         self.nodes[0].assetallocationmint(self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
 
         # cannot mint twice
-        assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         self.nodes[0].generate(1)
         self.sync_blocks()
         # after a block it should show a different exists error
-        assert_raises_rpc_error(-4, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         
         # increase time by ~1 week and assetallocationmint should throw timeout error, must send to network by 0.5 week atleast
         numBlocks = int(604800 / (2*60*59))
@@ -67,7 +67,7 @@ class AssetMintTest(SyscoinTestFramework):
         for block in range(numBlocks):
             set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (2*60*59))
             self.nodes[0].generate(1)
-        assert_raises_rpc_error(-4, 'mint-too-old', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-too-old', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
     
     def basic_asset(self):
         auxfees = {'auxfee_address': self.nodes[0].getnewaddress(), 'fee_struct': [[0,'1'],[10,'0.4'],[250,'0.2'],[2500,'0.07'],[25000,'0.007'],[250000,'0']]}

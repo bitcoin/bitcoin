@@ -204,7 +204,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assetallocationmint", 2, "amount" },
     { "assetallocationmint", 3, "blocknumber" },
     { "assetallocationmint", 4, "bridge_transfer_id" },
-    { "assetallocationmint", 10, "auxfee_test" },
+    { "assetallocationmint", 12, "auxfee_test" },
     { "assettransactionnotarize", 1, "asset_guid" },
     { "getnotarysighash", 1, "asset_guid" },
     { "syscoingettxroots", 0, "height" }, 
