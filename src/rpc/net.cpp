@@ -117,6 +117,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                     {RPCResult::Type::STR, "subver", "The string version"},
                     {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                     {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection"},
+                    {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + "."},
                     {RPCResult::Type::BOOL, "masternode", "Whether connection was due to masternode connection attempt"},
                     {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
                     {RPCResult::Type::NUM, "banscore", "The ban score"},
@@ -236,6 +237,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                 recvPerMsgCmd.pushKV(i.first, i.second);
         }
         obj.pushKV("bytesrecv_per_msg", recvPerMsgCmd);
+        obj.pushKV("connection_type", stats.m_conn_type_string);
 
         ret.push_back(obj);
     }

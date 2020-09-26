@@ -580,6 +580,26 @@ bool CNode::IsBlockRelayOnly() const {
     return (ignores_incoming_txs && !HasPermission(PF_RELAY)) || !IsAddrRelayPeer();
 }
 
+std::string CNode::ConnectionTypeAsString() const
+{
+    switch (m_conn_type) {
+    case ConnectionType::INBOUND:
+        return "inbound";
+    case ConnectionType::MANUAL:
+        return "manual";
+    case ConnectionType::FEELER:
+        return "feeler";
+    case ConnectionType::OUTBOUND_FULL_RELAY:
+        return "outbound-full-relay";
+    case ConnectionType::BLOCK_RELAY:
+        return "block-relay-only";
+    case ConnectionType::ADDR_FETCH:
+        return "addr-fetch";
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
+}
+
 std::string CNode::GetAddrName() const {
     LOCK(cs_addrName);
     return addrName;
@@ -684,6 +704,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         X(verifiedPubKeyHash);
     }
     X(m_masternode_connection);
+    stats.m_conn_type_string = ConnectionTypeAsString();
 }
 #undef X
 

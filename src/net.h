@@ -144,6 +144,15 @@ enum class ConnectionType {
     ADDR_FETCH, /**< short lived connections used to solicit addrs when starting the node without a populated AddrMan */
 };
 
+const std::vector<std::string> CONNECTION_TYPE_DOC{
+    "outbound-full-relay (default automatic connections)",
+    "block-relay-only (does not relay transactions or addresses)",
+    "inbound (initiated by the peer)",
+    "manual (added via addnode RPC or -addnode/-connect configuration options)",
+    "addr-fetch (short-lived automatic connection for soliciting addresses)",
+    "feeler (short-lived automatic connection for testing addresses)"};
+
+
 class NetEventsInterface;
 class CConnman
 {
@@ -918,6 +927,7 @@ public:
     // In case this is a verified MN, this value is the hashed operator pubkey of the MN
     uint256 verifiedPubKeyHash;
     bool m_masternode_connection;
+    std::string m_conn_type_string;
 };
 
 
@@ -1471,6 +1481,8 @@ public:
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
 
+
+    std::string ConnectionTypeAsString() const;
     std::string GetLogString() const;
 
     bool CanRelay() const { return !m_masternode_connection || m_masternode_iqr_connection; }
