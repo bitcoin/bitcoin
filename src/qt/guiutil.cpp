@@ -162,10 +162,10 @@ static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::GREEN, QColor(94, 140, 65) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
     { ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255) },
-    { ThemedColor::TX_STATUS_DANGER, QColor(168, 72, 50) },
-    { ThemedColor::TX_STATUS_LOCKED, QColor(28, 117, 188) },
     { ThemedColor::BACKGROUND_WIDGET, QColor(234, 234, 236) },
     { ThemedColor::BORDER_WIDGET, QColor(220, 220, 220) },
+    { ThemedColor::BACKGROUND_NETSTATS, QColor(210, 210, 210, 230) },
+    { ThemedColor::BORDER_NETSTATS, QColor(180, 180, 180) },
     { ThemedColor::QR_PIXEL, QColor(85, 85, 85) },
     { ThemedColor::ICON_ALTERNATIVE_COLOR, QColor(167, 167, 167) },
 };
@@ -179,19 +179,19 @@ static const std::map<ThemedColor, QColor> themedDarkColors = {
     { ThemedColor::GREEN, QColor(94, 140, 65) },
     { ThemedColor::BAREADDRESS, QColor(140, 140, 140) },
     { ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255) },
-    { ThemedColor::TX_STATUS_DANGER, QColor(168, 72, 50) },
-    { ThemedColor::TX_STATUS_LOCKED, QColor(28, 117, 188) },
     { ThemedColor::BACKGROUND_WIDGET, QColor(45, 45, 46) },
     { ThemedColor::BORDER_WIDGET, QColor(74, 74, 75) },
+    { ThemedColor::BACKGROUND_NETSTATS, QColor(45, 45, 46, 230) },
+    { ThemedColor::BORDER_NETSTATS, QColor(74, 74, 75) },
     { ThemedColor::QR_PIXEL, QColor(199, 199, 199) },
     { ThemedColor::ICON_ALTERNATIVE_COLOR, QColor(74, 74, 75) },
 };
 
 static const std::map<ThemedStyle, QString> themedStyles = {
-    { ThemedStyle::TS_INVALID, "background:#e87b68;" },
+    { ThemedStyle::TS_INVALID, "background:#a84832;" },
     { ThemedStyle::TS_ERROR, "color:#a84832;" },
-    { ThemedStyle::TS_SUCCESS, "color:#096e03;" },
-    { ThemedStyle::TS_COMMAND, "color:#1c75bc;" },
+    { ThemedStyle::TS_SUCCESS, "color:#5e8c41;" },
+    { ThemedStyle::TS_COMMAND, "color:#008de4;" },
     { ThemedStyle::TS_PRIMARY, "color:#333;" },
     { ThemedStyle::TS_SECONDARY, "color:#444;" },
 };
@@ -199,8 +199,8 @@ static const std::map<ThemedStyle, QString> themedStyles = {
 static const std::map<ThemedStyle, QString> themedDarkStyles = {
     { ThemedStyle::TS_INVALID, "background:#a84832;" },
     { ThemedStyle::TS_ERROR, "color:#a84832;" },
-    { ThemedStyle::TS_SUCCESS, "color:#096e03;" },
-    { ThemedStyle::TS_COMMAND, "color:#1c75bc;" },
+    { ThemedStyle::TS_SUCCESS, "color:#5e8c41;" },
+    { ThemedStyle::TS_COMMAND, "color:#00599a;" },
     { ThemedStyle::TS_PRIMARY, "color:#c7c7c7;" },
     { ThemedStyle::TS_SECONDARY, "color:#aaa;" },
 };
@@ -346,7 +346,7 @@ void setupAppearance(QWidget* parent, OptionsModel* model)
         dlg.setWindowTitle(QObject::tr("Appearance Setup"));
         dlg.setWindowIcon(QIcon(":icons/bitcoin"));
         // And the widgets we add to it
-        QLabel lblHeading(QObject::tr("Please choose your prefered settings for the appearance of %1").arg(QObject::tr(PACKAGE_NAME)), &dlg);
+        QLabel lblHeading(QObject::tr("Please choose your preferred settings for the appearance of %1").arg(QObject::tr(PACKAGE_NAME)), &dlg);
         lblHeading.setObjectName("lblHeading");
         lblHeading.setWordWrap(true);
         QLabel lblSubHeading(QObject::tr("This can also be adjusted later in the \"Appearance\" tab of the preferences."), &dlg);
@@ -1664,6 +1664,16 @@ void updateFonts()
     for (auto it : mapWidgetFonts) {
         it.first->setFont(it.second);
     }
+
+    // Get the global font for QToolTip labels
+    QFont fontToolTip = qApp->font("QTipLabel");
+    // Store the default QToolTip font size before ever applying any scale to it
+    if (!mapDefaultFontSizes.count("QTipLabel")) {
+        mapDefaultFontSizes.emplace("QTipLabel", fontToolTip.pointSize());
+    }
+    // And give it the proper scaled size based on its default size
+    fontToolTip.setPointSizeF(getScaledFontSize(mapDefaultFontSizes["QTipLabel"]));
+    qApp->setFont(fontToolTip, "QTipLabel");
 }
 
 QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPointSize)

@@ -190,54 +190,31 @@ RES_ICONS = \
   qt/res/icons/bitcoin.png \
   qt/res/icons/chevron.png \
   qt/res/icons/warning.png \
-  qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/browse.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
   qt/res/icons/clock3.png \
   qt/res/icons/clock4.png \
   qt/res/icons/clock5.png \
-  qt/res/icons/configure.png \
-  qt/res/icons/connect0_16.png \
   qt/res/icons/connect1_16.png \
   qt/res/icons/connect2_16.png \
   qt/res/icons/connect3_16.png \
   qt/res/icons/connect4_16.png \
-  qt/res/icons/console_remove.png \
-  qt/res/icons/debugwindow.png \
-  qt/res/icons/edit.png \
   qt/res/icons/editcopy.png \
   qt/res/icons/editpaste.png \
-  qt/res/icons/export.png \
   qt/res/icons/eye.png \
   qt/res/icons/eye_minus.png \
   qt/res/icons/eye_plus.png \
-  qt/res/icons/filesave.png \
-  qt/res/icons/hd_disabled.png \
   qt/res/icons/hd_enabled.png \
-  qt/res/icons/key.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
-  qt/res/icons/quit.png \
-  qt/res/icons/receive.png \
   qt/res/icons/remove.png \
-  qt/res/icons/send.png \
   qt/res/icons/synced.png \
   qt/res/icons/transaction0.png \
-  qt/res/icons/transaction2.png \
-  qt/res/icons/transaction_conflicted.png \
-  qt/res/icons/tx_inout.png \
-  qt/res/icons/tx_input.png \
-  qt/res/icons/tx_output.png \
-  qt/res/icons/tx_mined.png \
-  qt/res/icons/about.png \
-  qt/res/icons/about_qt.png \
   qt/res/icons/verify.png \
   qt/res/icons/fontbigger.png \
   qt/res/icons/fontsmaller.png \
-  qt/res/icons/transaction_abandoned.png \
-  qt/res/icons/network_disabled.png
+  qt/res/icons/transaction_abandoned.png
 
 BITCOIN_QT_BASE_CPP = \
   qt/appearancewidget.cpp \
@@ -339,7 +316,6 @@ RES_IMAGES = \
   qt/res/images/checkbox_partly_checked_light.png \
   qt/res/images/checkbox_partly_checked_hover_light.png \
   qt/res/images/checkbox_partly_checked_disabled_light.png \
-  qt/res/images/dash_logo_horizontal.png \
   qt/res/images/dash_logo_toolbar.png \
   qt/res/images/dash_logo_toolbar_blue.png \
   qt/res/images/radio_normal_dark.png \

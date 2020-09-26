@@ -62,16 +62,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btnWindow">
-       <property name="text">
-        <string>&amp;Window</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="btnDisplay">
        <property name="text">
         <string>&amp;Display</string>
@@ -113,6 +103,36 @@
          </property>
          <property name="text">
           <string>&amp;Start %1 on system login</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="hideTrayIcon">
+         <property name="toolTip">
+          <string>Hide the icon from the system tray.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Hide tray icon</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="minimizeToTray">
+         <property name="toolTip">
+          <string>Show only a tray icon after minimizing the window.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Minimize to the tray instead of the taskbar</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="minimizeOnClose">
+         <property name="toolTip">
+          <string>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</string>
+         </property>
+         <property name="text">
+          <string>M&amp;inimize on close</string>
          </property>
         </widget>
        </item>
@@ -214,88 +234,79 @@
      <widget class="QWidget" name="pageWallet">
       <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Expert</string>
+        <widget class="QCheckBox" name="coinControlFeatures">
+         <property name="toolTip">
+          <string>Whether to show coin control features or not.</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QCheckBox" name="coinControlFeatures">
-            <property name="toolTip">
-             <string>Whether to show coin control features or not.</string>
-            </property>
-            <property name="text">
-             <string>Enable coin &amp;control features</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="showMasternodesTab">
-            <property name="toolTip">
-             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
-            </property>
-            <property name="text">
-             <string>Show Masternodes Tab</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="showAdvancedPSUI">
-            <property name="toolTip">
-             <string>Show additional information and buttons for PrivateSend on overview screen.</string>
-            </property>
-            <property name="text">
-             <string>Enable advanced PrivateSend interface</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="showPrivateSendPopups">
-            <property name="toolTip">
-             <string>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
-            </property>
-            <property name="text">
-             <string>Show popups for PrivateSend transactions</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="lowKeysWarning">
-            <property name="toolTip">
-             <string>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</string>
-            </property>
-            <property name="text">
-             <string>Warn if PrivateSend is running out of keys</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="privateSendMultiSession">
-            <property name="toolTip">
-             <string>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
-            </property>
-            <property name="text">
-             <string>Enable PrivateSend &amp;multi-session</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="spendZeroConfChange">
-            <property name="toolTip">
-             <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
-            </property>
-            <property name="text">
-             <string>&amp;Spend unconfirmed change</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <property name="text">
+          <string>Enable coin &amp;control features</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="showMasternodesTab">
+         <property name="toolTip">
+          <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+         </property>
+         <property name="text">
+          <string>Show Masternodes Tab</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="showAdvancedPSUI">
+         <property name="toolTip">
+          <string>Show additional information and buttons for PrivateSend on overview screen.</string>
+         </property>
+         <property name="text">
+          <string>Enable advanced PrivateSend interface</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="spendZeroConfChange">
+         <property name="toolTip">
+          <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Spend unconfirmed change</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="lowKeysWarning">
+         <property name="toolTip">
+          <string>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</string>
+         </property>
+         <property name="text">
+          <string>Warn if PrivateSend is running out of keys</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="privateSendMultiSession">
+         <property name="toolTip">
+          <string>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
+         </property>
+         <property name="text">
+          <string>Enable PrivateSend &amp;multi-session</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="showPrivateSendPopups">
+         <property name="toolTip">
+          <string>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
+         </property>
+         <property name="text">
+          <string>Show popups for PrivateSend transactions</string>
+         </property>
         </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4_Wallet">
          <item>
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="lblPrivateSendRoundsText">
            <property name="toolTip">
             <string>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
@@ -322,7 +333,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="lblPrivateSendAmountText">
            <property name="toolTip">
             <string>This amount acts as a threshold to turn off PrivateSend once it's reached.</string>
            </property>
@@ -459,13 +470,13 @@
           <widget class="QLineEdit" name="proxyPort">
            <property name="minimumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>0</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>16777215</height>
             </size>
            </property>
@@ -510,17 +521,7 @@
             <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="proxyReachIPv4Label">
-           <property name="text">
             <string>IPv4</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::PlainText</enum>
            </property>
           </widget>
          </item>
@@ -533,17 +534,7 @@
             <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="proxyReachIPv6Label">
-           <property name="text">
             <string>IPv6</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::PlainText</enum>
            </property>
           </widget>
          </item>
@@ -556,17 +547,7 @@
             <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="proxyReachTorLabel">
-           <property name="text">
             <string>Tor</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::PlainText</enum>
            </property>
           </widget>
          </item>
@@ -646,13 +627,13 @@
           <widget class="QLineEdit" name="proxyPortTor">
            <property name="minimumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>0</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>16777215</height>
             </size>
            </property>
@@ -678,53 +659,6 @@
        </item>
        <item>
         <spacer name="verticalSpacer_Network">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="pageWindow">
-      <layout class="QVBoxLayout" name="verticalLayout_Window">
-       <item>
-        <widget class="QCheckBox" name="hideTrayIcon">
-         <property name="toolTip">
-          <string>Hide the icon from the system tray.</string>
-         </property>
-         <property name="text">
-          <string>&amp;Hide tray icon</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="minimizeToTray">
-         <property name="toolTip">
-          <string>Show only a tray icon after minimizing the window.</string>
-         </property>
-         <property name="text">
-          <string>&amp;Minimize to the tray instead of the taskbar</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="minimizeOnClose">
-         <property name="toolTip">
-          <string>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</string>
-         </property>
-         <property name="text">
-          <string>M&amp;inimize on close</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_Window">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -911,6 +845,9 @@ https://www.transifex.com/projects/p/dash/</string>
           </property>
           <property name="textFormat">
            <enum>Qt::PlainText</enum>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

@@ -16,6 +16,7 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
+#include <privatesend/privatesend-client.h>
 #include <ui_interface.h>
 
 #include <QCalendarWidget>
@@ -27,6 +28,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListView>
 #include <QMenu>
 #include <QPoint>
 #include <QScrollBar>
@@ -60,14 +62,6 @@ TransactionView::TransactionView(QWidget* parent) :
     watchOnlyWidget->addItem(GUIUtil::getIcon("eye_plus"), "", TransactionFilterProxy::WatchOnlyFilter_Yes);
     watchOnlyWidget->addItem(GUIUtil::getIcon("eye_minus"), "", TransactionFilterProxy::WatchOnlyFilter_No);
     hlayout->addWidget(watchOnlyWidget);
-
-    instantsendWidget = new QComboBox(this);
-    instantsendWidget->setFixedWidth(24);
-    instantsendWidget->addItem(tr("All"), TransactionFilterProxy::InstantSendFilter_All);
-    instantsendWidget->addItem(tr("Locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_Yes);
-    instantsendWidget->addItem(tr("Not locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_No);
-    instantsendWidget->setObjectName("instantsendWidget");
-    hlayout->addWidget(instantsendWidget);
 
     dateWidget = new QComboBox(this);
     dateWidget->setFixedWidth(120);
@@ -185,7 +179,6 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
     connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
     connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
-    connect(instantsendWidget, SIGNAL(activated(int)), this, SLOT(chooseInstantSend(int)));
     connect(amountWidget, SIGNAL(textChanged(QString)), amount_typing_delay, SLOT(start()));
     connect(amount_typing_delay, SIGNAL(timeout()), this, SLOT(changedAmount()));
     connect(search_widget, SIGNAL(textChanged(QString)), prefix_typing_delay, SLOT(start()));
@@ -205,6 +198,8 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
     connect(showAddressQRCodeAction, SIGNAL(triggered()), this, SLOT(showAddressQRCode()));
+
+    updatePrivateSendVisibility();
 }
 
 void TransactionView::setModel(WalletModel *_model)
@@ -232,7 +227,6 @@ void TransactionView::setModel(WalletModel *_model)
 
         transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::InstantSend, INSTANTSEND_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
@@ -346,14 +340,6 @@ void TransactionView::chooseWatchonly(int idx)
         return;
     transactionProxyModel->setWatchOnlyFilter(
         (TransactionFilterProxy::WatchOnlyFilter)watchOnlyWidget->itemData(idx).toInt());
-}
-
-void TransactionView::chooseInstantSend(int idx)
-{
-    if(!transactionProxyModel)
-        return;
-    transactionProxyModel->setInstantSendFilter(
-        (TransactionFilterProxy::InstantSendFilter)instantsendWidget->itemData(idx).toInt());
 }
 
 void TransactionView::changedSearch()
@@ -686,6 +672,7 @@ void TransactionView::resizeEvent(QResizeEvent* event)
 
 void TransactionView::changeEvent(QEvent* e)
 {
+    QWidget::changeEvent(e);
     if (e->type() == QEvent::StyleChange) {
         updateCalendarWidgets();
     }
@@ -719,4 +706,17 @@ void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly)
 {
     watchOnlyWidget->setVisible(fHaveWatchOnly);
     transactionView->setColumnHidden(TransactionTableModel::Watchonly, !fHaveWatchOnly);
+}
+
+void TransactionView::updatePrivateSendVisibility()
+{
+    bool fEnabled = privateSendClient.fEnablePrivateSend;
+    // If PrivateSend gets enabled use "All" else "Most common"
+    typeWidget->setCurrentIndex(fEnabled ? 0 : 1);
+    // Hide all PrivateSend related filters
+    QListView* typeList = qobject_cast<QListView*>(typeWidget->view());
+    std::vector<int> vecRows{4, 5, 6, 7, 8};
+    for (auto nRow : vecRows) {
+        typeList->setRowHidden(nRow, !fEnabled);
+    }
 }

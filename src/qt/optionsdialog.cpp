@@ -44,6 +44,13 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     GUIUtil::disableMacFocusRect(this);
 
+#ifdef Q_OS_MAC
+    /* Hide some options on Mac */
+    ui->hideTrayIcon->hide();
+    ui->minimizeToTray->hide();
+    ui->minimizeOnClose->hide();
+#endif
+
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
@@ -80,13 +87,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         pageButtons.addButton(ui->btnWallet, pageButtons.buttons().size());
     }
     pageButtons.addButton(ui->btnNetwork, pageButtons.buttons().size());
-#ifdef Q_OS_MAC
-    /* remove Window tab on Mac */
-    ui->stackedWidgetOptions->removeWidget(ui->pageWindow);
-    ui->btnWindow->hide();
-#else
-    pageButtons.addButton(ui->btnWindow, pageButtons.buttons().size());
-#endif
     pageButtons.addButton(ui->btnDisplay, pageButtons.buttons().size());
     pageButtons.addButton(ui->btnAppearance, pageButtons.buttons().size());
 
@@ -161,6 +161,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     appearance = new AppearanceWidget(ui->widgetAppearance);
     appearanceLayout->addWidget(appearance);
     ui->widgetAppearance->setLayout(appearanceLayout);
+
+    updatePrivateSendVisibility();
 }
 
 OptionsDialog::~OptionsDialog()
@@ -216,6 +218,11 @@ void OptionsDialog::setMapper()
 {
     /* Main */
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
+#ifndef Q_OS_MAC
+    mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
+    mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
+    mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
+#endif
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
 
@@ -241,13 +248,6 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->connectSocksTor, OptionsModel::ProxyUseTor);
     mapper->addMapping(ui->proxyIpTor, OptionsModel::ProxyIPTor);
     mapper->addMapping(ui->proxyPortTor, OptionsModel::ProxyPortTor);
-
-    /* Window */
-#ifndef Q_OS_MAC
-    mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
-    mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
-    mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
-#endif
 
     /* Display */
     mapper->addMapping(ui->digits, OptionsModel::Digits);
@@ -394,6 +394,28 @@ void OptionsDialog::updateDefaultProxyNets()
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+}
+
+void OptionsDialog::updatePrivateSendVisibility()
+{
+#ifdef ENABLE_WALLET
+    bool fEnabled = privateSendClient.fEnablePrivateSend;
+#else
+    bool fEnabled = false;
+#endif
+    std::vector<QWidget*> vecWidgets{
+        ui->showAdvancedPSUI,
+        ui->showPrivateSendPopups,
+        ui->lowKeysWarning,
+        ui->privateSendMultiSession,
+        ui->privateSendAmount,
+        ui->lblPrivateSendAmountText,
+        ui->lblPrivateSendRoundsText,
+        ui->privateSendRounds,
+    };
+    for (auto w : vecWidgets) {
+        w->setVisible(fEnabled);
+    }
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :

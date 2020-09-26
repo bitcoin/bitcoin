@@ -158,10 +158,10 @@ SendCoinsDialog::SendCoinsDialog(bool _fPrivateSend, QWidget* parent) :
 
     if (fPrivateSend) {
         ui->sendButton->setText("PrivateS&end");
-        ui->sendButton->setToolTip("Confirm the PrivateSend action");
+        ui->sendButton->setToolTip(tr("Confirm the PrivateSend action"));
     } else {
         ui->sendButton->setText(tr("S&end"));
-        ui->sendButton->setToolTip("Confirm the send action");
+        ui->sendButton->setToolTip(tr("Confirm the send action"));
     }
 }
 
@@ -1007,6 +1007,7 @@ SendConfirmationDialog::SendConfirmationDialog(const QString &title, const QStri
     QWidget *parent) :
     QMessageBox(QMessageBox::Question, title, text, QMessageBox::Yes | QMessageBox::Cancel, parent), secDelay(_secDelay)
 {
+    GUIUtil::updateFonts();
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
     updateYesButton();

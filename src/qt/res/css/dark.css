@@ -478,7 +478,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain,
 #btnWallet,
 #btnNetwork,
-#btnWindow,
 #btnDisplay,
 #btnAppearance,
 /* Sign/Verify dialog buttons */
@@ -498,7 +497,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:hover:checked,
 #btnWallet:hover:checked,
 #btnNetwork:hover:checked,
-#btnWindow:hover:checked,
 #btnDisplay:hover:checked,
 #btnAppearance:hover:checked,
 /* Sign/Verify dialog buttons */
@@ -518,7 +516,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:hover:!checked,
 #btnWallet:hover:!checked,
 #btnNetwork:hover:!checked,
-#btnWindow:hover:!checked,
 #btnDisplay:hover:!checked,
 #btnAppearance:hover:!checked,
 /* Sign/Verify dialog buttons */
@@ -538,7 +535,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:checked,
 #btnWallet:checked,
 #btnNetwork:checked,
-#btnWindow:checked,
 #btnDisplay:checked,
 #btnAppearance:checked,
 /* Sign/Verify dialog buttons */
@@ -797,6 +793,10 @@ AskPassphraseDialog
 /******************************************************
 CoinControlDialog
 ******************************************************/
+
+QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item {
+    border-color: #4a4a4b;
+}
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:selected,
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:checked,

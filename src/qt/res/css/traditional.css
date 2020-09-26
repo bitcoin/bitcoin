@@ -20,6 +20,7 @@ Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
 # Used colors in traditional.css for commit 44de8a93f2
 
 #00000000
+#222222
 #333
 #fff
 #008de4
@@ -54,7 +55,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain,
 #btnWallet,
 #btnNetwork,
-#btnWindow,
 #btnDisplay,
 #btnAppearance,
 /* Sign/Verify dialog buttons */
@@ -78,7 +78,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:hover:checked,
 #btnWallet:hover:checked,
 #btnNetwork:hover:checked,
-#btnWindow:hover:checked,
 #btnDisplay:hover:checked,
 #btnAppearance:hover:checked,
 /* Sign/Verify dialog buttons */
@@ -101,7 +100,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:hover:!checked,
 #btnWallet:hover:!checked,
 #btnNetwork:hover:!checked,
-#btnWindow:hover:!checked,
 #btnDisplay:hover:!checked,
 #btnAppearance:hover:!checked,
 /* Sign/Verify dialog buttons */
@@ -124,7 +122,6 @@ QPushButton - Special case, tabbar replacement buttons
 #btnMain:checked,
 #btnWallet:checked,
 #btnNetwork:checked,
-#btnWindow:checked,
 #btnDisplay:checked,
 #btnAppearance:checked,
 /* Sign/Verify dialog buttons */
@@ -190,17 +187,6 @@ QDialog#AppearanceSetup > AppearanceWidget {
 AppearanceWidget
 ******************************************************/
 
-AppearanceWidget #lblSmaller,
-AppearanceWidget #lblBigger,
-AppearanceWidget #lblBolderNormal,
-AppearanceWidget #lblBolderBold,
-AppearanceWidget #lblLighterNormal,
-AppearanceWidget #lblLighterBold {
-    /* Exceptional use of font-size here to
-    avoid changes of the slider postions */
-    font-size: 13px;
-}
-
 AppearanceWidget #lblTheme,
 AppearanceWidget #lblFontFamily,
 AppearanceWidget #lblFontScale,
@@ -220,18 +206,44 @@ AppearanceWidget #lblFontFamily,
 AppearanceWidget #lblFontScale,
 AppearanceWidget #lblFontWeightNormal,
 AppearanceWidget #lblFontWeightBold {
-    min-width: 170px;
-    max-width: 170px;
+    min-width: 280px;
+    max-width: 280px;
+}
+
+/******************************************************
+OptionsDialog
+******************************************************/
+
+QDialog#OptionsDialog {
+    min-width: 650px;
+}
+
+QDialog#OptionsDialog QCheckBox#connectSocksTor,
+QDialog#OptionsDialog QLabel#overriddenByCommandLineInfoLabel {
+    min-width: 550px;
 }
 
 /******************************************************
 OverviewPage
 ******************************************************/
 
+QWidget#OverviewPage QLabel#labelAlerts {
+     background-color: #c79304;
+     color: #222222;
+     border-radius: 5px;
+     padding: 5px;
+ }
+
 QWidget .QFrame#frame .QLabel#labelWalletStatus, /* Wallet Sync Status */
 QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendSyncStatus, /* PrivateSend Sync Status */
 QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
     color: #a84832;
+}
+
+QWidget .QFrame#frame_2 QListView { /* Transaction List */
+    background: #00000000;
+    min-width: 430px;
+    margin-right: 10px;
 }
 
 /******************************************************

@@ -97,6 +97,8 @@ AddressBookPage::AddressBookPage(Mode _mode, Tabs _tab, QWidget *parent) :
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(accept()));
 
     GUIUtil::updateFonts();
+
+    GUIUtil::disableMacFocusRect(this);
 }
 
 AddressBookPage::~AddressBookPage()

@@ -54,14 +54,14 @@ namespace GUIUtil
         BAREADDRESS,
         /* Transaction list -- TX status decoration - open until date */
         TX_STATUS_OPENUNTILDATE,
-        /* Transaction list -- TX status decoration - danger, tx needs attention */
-        TX_STATUS_DANGER,
-        /* Transaction list -- TX status decoration - LockedByInstantSend color */
-        TX_STATUS_LOCKED,
         /* Background used for some widgets. Its slightly darker than the wallets frame background. */
         BACKGROUND_WIDGET,
         /* Border color used for some widgets. Its slightly brighter than BACKGROUND_WIDGET. */
         BORDER_WIDGET,
+        /* Border color of network statistics overlay in debug window. */
+        BORDER_NETSTATS,
+        /* Background color of network statistics overlay in debug window. */
+        BACKGROUND_NETSTATS,
         /* Pixel color of generated QR codes. */
         QR_PIXEL,
         /* Alternative color for black/white icons. White part will be filled with this color by default. */

@@ -67,6 +67,8 @@ private:
     QAction *lockAction;
     QAction *unlockAction;
 
+    bool fHideAdditional{true};
+
     void sortView(int, Qt::SortOrder);
     void updateView();
 
@@ -79,9 +81,14 @@ private:
         COLUMN_PRIVATESEND_ROUNDS,
         COLUMN_DATE,
         COLUMN_CONFIRMATIONS,
-        COLUMN_TXHASH,
-        COLUMN_VOUT_INDEX,
     };
+
+    enum
+    {
+        TxHashRole = Qt::UserRole,
+        VOutRole
+    };
+
     friend class CCoinControlWidgetItem;
 
     enum class Mode {
@@ -114,6 +121,7 @@ private Q_SLOTS:
     void buttonSelectAllClicked();
     void buttonToggleLockClicked();
     void updateLabelLocked();
+    void on_hideButton_clicked();
 };
 
 #endif // BITCOIN_QT_COINCONTROLDIALOG_H

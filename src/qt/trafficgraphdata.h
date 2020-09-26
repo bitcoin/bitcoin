@@ -61,6 +61,8 @@ public:
     SampleQueue getCurrentRangeQueueWithAverageBandwidth();
     void clear();
     void setLastBytes(quint64 nLastBytesIn, quint64 nLastBytesOut);
+    quint64 getLastBytesIn() { return nLastBytesIn; }
+    quint64 getLastBytesOut() { return nLastBytesOut; }
 
 private:
     static const int DesiredQueueSizes[];
