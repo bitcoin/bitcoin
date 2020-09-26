@@ -42,7 +42,7 @@ class GetdataTest(BitcoinTestFramework):
         good_getdata = msg_getdata()
         good_getdata.inv.append(CInv(t=2, h=best_block))
         p2p_block_store.send_and_ping(good_getdata)
-        p2p_block_store.wait_until(lambda: self.nodes[0].p2ps[0].blocks[best_block] == 1)
+        p2p_block_store.wait_until(lambda: p2p_block_store.blocks[best_block] == 1)
 
 
 if __name__ == '__main__':
