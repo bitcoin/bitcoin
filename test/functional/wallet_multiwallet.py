@@ -21,8 +21,6 @@ from test_framework.util import (
     get_rpc_proxy,
 )
 
-FEATURE_LATEST = 120200
-
 got_loading_error = False
 
 def test_load_unload(node, name):
