@@ -351,8 +351,10 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts();
 
-        nValueOut = newTx->GetValueOut();
-        nVinSize = newTx->vin.size();
+        if (fCreated) {
+            nValueOut = newTx->GetValueOut();
+            nVinSize = newTx->vin.size();
+        }
     }
 
     if(!fCreated)
