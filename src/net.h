@@ -128,6 +128,15 @@ struct CAllNodes {
     bool operator() (const CNode*) const {return true;}
 };
 static constexpr CAllNodes AllNodes{};
+
+const std::vector<std::string> CONNECTION_TYPE_DOC{
+    "outbound-full-relay (default automatic connections)",
+    "block-relay-only (does not relay transactions or addresses)",
+    "inbound (initiated by the peer)",
+    "manual (added via addnode RPC or -addnode/-connect configuration options)",
+    "addr-fetch (short-lived automatic connection for soliciting addresses)",
+    "feeler (short-lived automatic connection for testing addresses)"};
+
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
  * connection. Aside from INBOUND, all types are initiated by us. */
@@ -817,6 +826,7 @@ public:
     // SYSCOIN In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
     bool fMasternode;
+    std::string m_conn_type_string;
 };
 
 
@@ -1294,6 +1304,8 @@ public:
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
+
+    std::string ConnectionTypeAsString() const;
 };
 // SYSCOIN
 class CExplicitNetCleanup
