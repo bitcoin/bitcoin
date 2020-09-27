@@ -3914,6 +3914,13 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                     else if((nTime - txRootDB.nTimestamp) < MAINNET_MIN_MINT_AGE) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "You must wait at least 1 hour to mint");
                     }
+                    // ensure block height provided points to the right block
+                    if(mintSyscoin.vchTxRoot != txRootDB.vchTxRoot) {
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-mismatching-txroot");
+                    }
+                    if(mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot) {
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-mismatching-receiptroot");
+                    }
                 } 
             }
         }
