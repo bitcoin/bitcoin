@@ -218,8 +218,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         # Syncing the blocks could cause nodes to crash, so the test begins here.
         self.sync_node3blocks(block_hashes_to_sync)
 
-        starting_tip_height = self.nodes[3].getblockcount()
-
         # Main test loop:
         # each time through the loop, generate a bunch of transactions,
         # and then either mine a single new block on the tip, or some-sized reorg.

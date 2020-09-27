@@ -227,9 +227,9 @@ class AddressIndexTest(BitcoinTestFramework):
         # Check sorting of utxos
         self.nodes[2].generate(150)
 
-        txidsort1 = self.nodes[2].sendtoaddress(address2, 50)
+        self.nodes[2].sendtoaddress(address2, 50)
         self.nodes[2].generate(1)
-        txidsort2 = self.nodes[2].sendtoaddress(address2, 50)
+        self.nodes[2].sendtoaddress(address2, 50)
         self.nodes[2].generate(1)
         self.sync_all()
 
@@ -297,7 +297,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         self.nodes[2].importprivkey(privKey3)
         signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        memtxid3 = self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
+        self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
         self.bump_mocktime(2)
 
         mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
@@ -329,7 +329,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         self.nodes[0].importprivkey(privkey1)
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        mem_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
 
         self.sync_all()
         mempool_deltas = self.nodes[2].getaddressmempool({"addresses": [address1]})

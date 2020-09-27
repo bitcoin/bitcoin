@@ -81,14 +81,11 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # create three raw TXs, they will conflict with each other
         rawtx1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
-        rawtx3 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx1_obj = FromHex(CTransaction(), rawtx1)
         rawtx2_obj = FromHex(CTransaction(), rawtx2)
-        rawtx3_obj = FromHex(CTransaction(), rawtx3)
 
         rawtx1_txid = self.nodes[0].sendrawtransaction(rawtx1)
         rawtx2_txid = encode(hash256(hex_str_to_bytes(rawtx2))[::-1], 'hex_codec').decode('ascii')
-        rawtx3_txid = encode(hash256(hex_str_to_bytes(rawtx3))[::-1], 'hex_codec').decode('ascii')
 
         # Create a chained TX on top of tx1
         inputs = []
