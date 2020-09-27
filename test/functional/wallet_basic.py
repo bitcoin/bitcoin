@@ -661,5 +661,17 @@ class WalletTest(BitcoinTestFramework):
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
         assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))
 
+        self.log.info("Test send* RPCs with verbose=True")
+        address = self.nodes[0].getnewaddress("test")
+        txid_feeReason_one = self.nodes[2].sendtoaddress(address = address, amount = 5, verbose = True)
+        assert_equal(txid_feeReason_one["fee_reason"], "Fallback fee")
+        txid_feeReason_two = self.nodes[2].sendmany(dummy = '', amounts = {address: 5}, verbose = True)
+        assert_equal(txid_feeReason_two["fee_reason"], "Fallback fee")
+        self.log.info("Test send* RPCs with verbose=False")
+        txid_feeReason_three = self.nodes[2].sendtoaddress(address = address, amount = 5, verbose = False)
+        assert_equal(self.nodes[2].gettransaction(txid_feeReason_three)['txid'], txid_feeReason_three)
+        txid_feeReason_four = self.nodes[2].sendmany(dummy = '', amounts = {address: 5}, verbose = False)
+        assert_equal(self.nodes[2].gettransaction(txid_feeReason_four)['txid'], txid_feeReason_four)
+
 if __name__ == '__main__':
     WalletTest().main()
