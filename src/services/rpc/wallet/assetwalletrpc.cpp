@@ -1611,11 +1611,11 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.nBridgeTransferID = nBridgeTransferID;
     mintSyscoin.posTx = posTxValue;
-    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot)
+    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
     mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
     mintSyscoin.vchTxPath = ParseHex(vchTxPath);
     mintSyscoin.posReceipt = posReceiptValue;
-    mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot)
+    mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
     
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
