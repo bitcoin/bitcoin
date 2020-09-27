@@ -158,23 +158,19 @@ class TxDownloadTest(BitcoinTestFramework):
         self.nodes[0].p2ps[0].send_message(msg_notfound(vec=[CInv(MSG_TX, 1)]))
 
     def run_test(self):
-        # Setup the p2p connections
-        self.peers = []
-        for node in self.nodes:
-            for _ in range(NUM_INBOUND):
-                self.peers.append(node.add_p2p_connection(TestP2PConn()))
-
-        self.log.info("Nodes are setup with {} incoming connections each".format(NUM_INBOUND))
-
-        self.test_spurious_notfound()
-
-        # Test the in-flight max first, because we want no transactions in
-        # flight ahead of this test.
-        self.test_in_flight_max()
-
-        self.test_inv_block()
-
-        self.test_tx_requests()
+        # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when
+        # the next trickle relay event happens.
+        for test in [self.test_spurious_notfound, self.test_in_flight_max, self.test_inv_block, self.test_tx_requests]:
+            self.stop_nodes()
+            self.start_nodes()
+            self.connect_nodes(1, 0)
+            # Setup the p2p connections
+            self.peers = []
+            for node in self.nodes:
+                for _ in range(NUM_INBOUND):
+                    self.peers.append(node.add_p2p_connection(TestP2PConn()))
+            self.log.info("Nodes are setup with {} incoming connections each".format(NUM_INBOUND))
+            test()
 
 
 if __name__ == '__main__':
