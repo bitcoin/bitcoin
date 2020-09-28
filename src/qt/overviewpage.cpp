@@ -163,28 +163,12 @@ OverviewPage::OverviewPage(QWidget* parent) :
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
 
-    if(!privateSendClient.fEnablePrivateSend) return;
+    // Disable privateSendClient builtin support for automatic backups while we are in GUI,
+    // we'll handle automatic backups and user warnings in privateSendStatus()
+    privateSendClient.fCreateAutoBackups = false;
 
-    // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
-    if(fMasternodeMode || nWalletBackups <= 0){
-        DisablePrivateSendCompletely();
-        if (nWalletBackups <= 0) {
-            ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
-        }
-    } else {
-        if(!privateSendClient.fPrivateSendRunning){
-            ui->togglePrivateSend->setText(tr("Start Mixing"));
-        } else {
-            ui->togglePrivateSend->setText(tr("Stop Mixing"));
-        }
-        // Disable privateSendClient builtin support for automatic backups while we are in GUI,
-        // we'll handle automatic backups and user warnings in privateSendStatus()
-        privateSendClient.fCreateAutoBackups = false;
-
-        timer = new QTimer(this);
-        connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
-        timer->start(1000);
-    }
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -296,11 +280,12 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
-        if(!privateSendClient.fEnablePrivateSend) return;
-
         connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(privateSentAmountChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
+        connect(model->getOptionsModel(), &OptionsModel::privateSendEnabledChanged, [=]() {
+            privateSendStatus(true);
+        });
 
         connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
 
@@ -457,11 +442,27 @@ void OverviewPage::privateSendStatus(bool fForce)
 
     if(!walletModel) return;
 
+    // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
+    if (fMasternodeMode || nWalletBackups <= 0) {
+        DisablePrivateSendCompletely();
+        if (nWalletBackups <= 0) {
+            ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
+        }
+        return;
+    }
+
     bool fIsEnabled = privateSendClient.fEnablePrivateSend;
     ui->framePrivateSend->setVisible(fIsEnabled);
     if (!fIsEnabled) {
         SetupTransactionList(NUM_ITEMS_DISABLED);
+        if (timer != nullptr) {
+            timer->stop();
+        }
         return;
+    }
+
+    if (timer != nullptr && !timer->isActive()) {
+        timer->start(1000);
     }
 
     // Wrap all privatesend related widgets we want to show/hide state based.

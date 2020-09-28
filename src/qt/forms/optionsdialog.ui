@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>583</width>
-    <height>537</height>
+    <height>420</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -45,6 +45,16 @@
       <widget class="QPushButton" name="btnWallet">
        <property name="text">
         <string>W&amp;allet</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnPrivateSend">
+       <property name="text">
+        <string>PrivateSend</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -234,25 +244,66 @@
      <widget class="QWidget" name="pageWallet">
       <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
-        <widget class="QCheckBox" name="coinControlFeatures">
-         <property name="toolTip">
-          <string>Whether to show coin control features or not.</string>
-         </property>
-         <property name="text">
-          <string>Enable coin &amp;control features</string>
-         </property>
-        </widget>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="coinControlFeatures">
+            <property name="toolTip">
+             <string>Whether to show coin control features or not.</string>
+            </property>
+            <property name="text">
+             <string>Enable coin &amp;control features</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="showMasternodesTab">
+            <property name="toolTip">
+             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+            </property>
+            <property name="text">
+             <string>Show Masternodes Tab</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="spendZeroConfChange">
+            <property name="toolTip">
+             <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Spend unconfirmed change</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="privateSendEnabled">
+            <property name="toolTip">
+             <string>Show mixing interface on Overview screen and reveal PrivateSend screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</string>
+            </property>
+            <property name="text">
+             <string>Enable PrivateSend features</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="showMasternodesTab">
-         <property name="toolTip">
-          <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+        <spacer name="verticalSpacer_Wallet">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <property name="text">
-          <string>Show Masternodes Tab</string>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
          </property>
-        </widget>
+        </spacer>
        </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pagePrivateSend">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
         <widget class="QCheckBox" name="showAdvancedPSUI">
          <property name="toolTip">
@@ -264,12 +315,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="spendZeroConfChange">
+        <widget class="QCheckBox" name="showPrivateSendPopups">
          <property name="toolTip">
-          <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
+          <string>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
          </property>
          <property name="text">
-          <string>&amp;Spend unconfirmed change</string>
+          <string>Show popups for PrivateSend transactions</string>
          </property>
         </widget>
        </item>
@@ -290,16 +341,6 @@
          </property>
          <property name="text">
           <string>Enable PrivateSend &amp;multi-session</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="showPrivateSendPopups">
-         <property name="toolTip">
-          <string>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
-         </property>
-         <property name="text">
-          <string>Show popups for PrivateSend transactions</string>
          </property>
         </widget>
        </item>
@@ -373,7 +414,7 @@
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer_Wallet">
+        <spacer name="verticalSpacerPS">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>

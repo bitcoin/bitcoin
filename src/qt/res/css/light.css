@@ -459,6 +459,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain,
 #btnWallet,
+#btnPrivateSend,
 #btnNetwork,
 #btnDisplay,
 #btnAppearance,
@@ -478,6 +479,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:checked,
 #btnWallet:hover:checked,
+#btnPrivateSend:hover:checked,
 #btnNetwork:hover:checked,
 #btnDisplay:hover:checked,
 #btnAppearance:hover:checked,
@@ -497,6 +499,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:!checked,
 #btnWallet:hover:!checked,
+#btnPrivateSend:hover:!checked,
 #btnNetwork:hover:!checked,
 #btnDisplay:hover:!checked,
 #btnAppearance:hover:!checked,
@@ -516,6 +519,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:checked,
 #btnWallet:checked,
+#btnPrivateSend:checked,
 #btnNetwork:checked,
 #btnDisplay:checked,
 #btnAppearance:checked,

@@ -74,6 +74,7 @@ private:
     QButtonGroup pageButtons;
     QString previousTheme;
     AppearanceWidget* appearance;
+    bool fPrivateSendEnabledPrev{false};
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

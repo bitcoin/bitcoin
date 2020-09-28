@@ -113,6 +113,13 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("digits", "2");
 
     // PrivateSend
+    if (!settings.contains("fPrivateSendEnabled")) {
+        settings.setValue("fPrivateSendEnabled", true);
+    }
+    if (!gArgs.SoftSetBoolArg("-enableprivatesend", settings.value("fPrivateSendEnabled").toBool())) {
+        addOverriddenOption("-enableprivatesend");
+    }
+
     if (!settings.contains("fShowAdvancedPSUI"))
         settings.setValue("fShowAdvancedPSUI", false);
     fShowAdvancedPSUI = settings.value("fShowAdvancedPSUI", false).toBool();
@@ -330,6 +337,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("bSpendZeroConfChange");
         case ShowMasternodesTab:
             return settings.value("fShowMasternodesTab");
+        case PrivateSendEnabled:
+            return settings.value("fPrivateSendEnabled");
         case ShowAdvancedPSUI:
             return fShowAdvancedPSUI;
         case ShowPrivateSendPopups:
@@ -481,10 +490,18 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case PrivateSendEnabled:
+            if (settings.value("fPrivateSendEnabled") != value) {
+                settings.setValue("fPrivateSendEnabled", value.toBool());
+                Q_EMIT privateSendEnabledChanged();
+            }
+            break;
         case ShowAdvancedPSUI:
-            fShowAdvancedPSUI = value.toBool();
-            settings.setValue("fShowAdvancedPSUI", fShowAdvancedPSUI);
-            Q_EMIT advancedPSUIChanged(fShowAdvancedPSUI);
+            if (settings.value("fShowAdvancedPSUI") != value) {
+                fShowAdvancedPSUI = value.toBool();
+                settings.setValue("fShowAdvancedPSUI", fShowAdvancedPSUI);
+                Q_EMIT advancedPSUIChanged(fShowAdvancedPSUI);
+            }
             break;
         case ShowPrivateSendPopups:
             settings.setValue("fShowPrivateSendPopups", value);
@@ -631,6 +648,11 @@ bool OptionsModel::getProxySettings(QNetworkProxy& proxy) const
         proxy.setType(QNetworkProxy::NoProxy);
 
     return false;
+}
+
+void OptionsModel::emitPrivateSendEnabledChanged()
+{
+    Q_EMIT privateSendEnabledChanged();
 }
 
 void OptionsModel::setRestartRequired(bool fRequired)
