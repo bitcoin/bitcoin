@@ -250,6 +250,8 @@ void TransactionView::setModel(WalletModel *_model)
                     mapperThirdPartyTxUrls->setMapping(thirdPartyTxUrlAction, listUrls[i].trimmed());
                 }
             }
+
+            connect(_model->getOptionsModel(), SIGNAL(privateSendEnabledChanged()), this, SLOT(updatePrivateSendVisibility()));
         }
 
         // show/hide column Watch-only
