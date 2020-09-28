@@ -379,17 +379,20 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(itOut == mapAssetOut.end()) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-output-notfound", bSanityCheck);             
             } 
-            // cannot create zero val output for SYSX
-            if(itOut->second.first) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-asset-output-zeroval");	
-            }
             // if input for this asset exists, must also include it as change in output, so output-input should be the new amount created
             auto itIn = mapAssetIn.find(nAsset);
             CAmount nTotal;
             if(itIn != mapAssetIn.end()) {
                 nTotal = itOut->second.second - itIn->second.second;
+                if (itIn->second.first != itOut->second.first) {	
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-zeroval-mismatch");	
+                }
             } else {
                 nTotal = itOut->second.second;
+                // cannot create zero val output without an input
+                if(itOut->second.first) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-zeroval-without-input");	
+                }
             }
 
             // the burn amount in opreturn (SYS) should match total output for SYSX
@@ -633,6 +636,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
         {
+            auto itIn = mapAssetIn.find(nAsset);
+            // sanity: asset should never exist as an input because it hasn't been created yet
+            if(itIn != mapAssetIn.end()) {
+                return FormatSyscoinErrorMessage(state, "asset-input-found", bSanityCheck);           
+            }
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
