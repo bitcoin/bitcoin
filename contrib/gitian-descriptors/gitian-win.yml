@@ -127,7 +127,15 @@ script: |
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     ./autogen.sh
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}"
+
+    # This violation is intentional: PATH_TEMPLATE will be expanded/evaluated in
+    # ./configure's environment to fill in the value of $depends_path_fragment,
+    # see PATH_TEMPLATE's entry in `./configure --help' for more details.
+    #
+    # shellcheck disable=SC2016
+    PATH_TEMPLATE="$WRAP_DIR"':${depends_path_fragment}:'"$PATH_orig"
+
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" PATH_TEMPLATE="$PATH_TEMPLATE"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
