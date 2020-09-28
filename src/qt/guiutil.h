@@ -102,9 +102,6 @@ namespace GUIUtil
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
-    // Return a monospace font
-    QFont fixedPitchFont();
-
     // Set up widgets for address and amounts
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllowURI = false);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
@@ -331,9 +328,6 @@ namespace GUIUtil
         issues loading variations of montserrat in css it also keeps track of the set fonts to update on
         theme changes. */
     void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPointSize = -1, bool fItalic = false);
-
-    /** Workaround to set a fixed pitch font in traditional theme while keeping track of font updates */
-    void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets);
 
     /** Update the font of all widgets where a custom font has been set with
         GUIUtil::setFont */

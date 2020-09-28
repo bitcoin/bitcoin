@@ -62,7 +62,7 @@ public:
         // Draw first line (with slightly bigger font than the second line will get)
         // Content: Date/Time, Optional IS indicator, Amount
         QFont font = fontInitial;
-        font.setPointSize(font.pointSize() * 1.17);
+        font.setPointSizeF(GUIUtil::getScaledFontSize(font.pointSizeF() * 1.17));
         painter->setFont(font);
         // Date/Time
         colorForeground = qvariant_cast<QColor>(indexDate.data(Qt::ForegroundRole));
@@ -83,6 +83,7 @@ public:
 
         // Draw second line (with the initial font)
         // Content: Address/label, Optional Watchonly indicator
+        fontInitial.setPointSizeF(GUIUtil::getScaledFontSize(fontInitial.pointSizeF()));
         painter->setFont(fontInitial);
         // Address/Label
         colorForeground = qvariant_cast<QColor>(indexAddress.data(Qt::ForegroundRole));
@@ -143,6 +144,8 @@ OverviewPage::OverviewPage(QWidget* parent) :
                       ui->labelWatchonly,
                       ui->labelSpendable
                      }, GUIUtil::FontWeight::Bold);
+
+    GUIUtil::updateFonts();
 
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);

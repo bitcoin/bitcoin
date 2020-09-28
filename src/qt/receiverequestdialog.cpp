@@ -194,7 +194,7 @@ void ReceiveRequestDialog::update()
             painter.fillRect(paddedRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
             painter.drawImage(2, 2, qrImage.scaled(QR_IMAGE_SIZE - 4, QR_IMAGE_SIZE - 4));
             // calculate ideal font size
-            QFont font = GUIUtil::fixedPitchFont();
+            QFont font = GUIUtil::getFontNormal();
             qreal font_size = GUIUtil::calculateIdealFontSize((paddedRect.width() - 20), info.address, font);
             font.setPointSizeF(font_size);
             // paint the address
