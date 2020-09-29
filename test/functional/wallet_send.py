@@ -29,9 +29,9 @@ class WalletSendTest(BitcoinTestFramework):
 
     def test_send(self, from_wallet, to_wallet=None, amount=None, data=None,
                   arg_conf_target=None, arg_estimate_mode=None,
-                  conf_target=None, estimate_mode=None, add_to_wallet=None,psbt=None,
-                  inputs=None,add_inputs=None,change_address=None,change_position=None,change_type=None,
-                  include_watching=None,locktime=None,lock_unspents=None,replaceable=None,subtract_fee_from_outputs=None,
+                  conf_target=None, estimate_mode=None, add_to_wallet=None, psbt=None,
+                  inputs=None, add_inputs=None, change_address=None, change_position=None, change_type=None,
+                  include_watching=None, locktime=None, lock_unspents=None, replaceable=None, subtract_fee_from_outputs=None,
                   expect_error=None):
         assert (amount is None) != (data is None)
 
@@ -92,13 +92,13 @@ class WalletSendTest(BitcoinTestFramework):
             res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
         else:
             try:
-                assert_raises_rpc_error(expect_error[0],expect_error[1],from_wallet.send,
-                                        outputs=outputs,conf_target=arg_conf_target,estimate_mode=arg_estimate_mode,options=options)
+                assert_raises_rpc_error(expect_error[0], expect_error[1], from_wallet.send,
+                                        outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
             except AssertionError:
                 # Provide debug info if the test fails
                 self.log.error("Unexpected successful result:")
                 self.log.error(options)
-                res = from_wallet.send(outputs=outputs,conf_target=arg_conf_target,estimate_mode=arg_estimate_mode,options=options)
+                res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
                 self.log.error(res)
                 if "txid" in res and add_to_wallet:
                     self.log.error("Transaction details:")
@@ -131,7 +131,7 @@ class WalletSendTest(BitcoinTestFramework):
             assert tx
             assert_equal(tx["bip125-replaceable"], "yes" if replaceable else "no")
             # Ensure transaction exists in the mempool:
-            tx = from_wallet.getrawtransaction(res["txid"],True)
+            tx = from_wallet.getrawtransaction(res["txid"], True)
             assert tx
             if amount:
                 if subtract_fee_from_outputs:
@@ -164,7 +164,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name="w2")
         w2 = self.nodes[1].get_wallet_rpc("w2")
         # w3 is a watch-only wallet, based on w2
-        self.nodes[1].createwallet(wallet_name="w3",disable_private_keys=True)
+        self.nodes[1].createwallet(wallet_name="w3", disable_private_keys=True)
         w3 = self.nodes[1].get_wallet_rpc("w3")
         for _ in range(3):
             a2_receive = w2.getnewaddress()
@@ -188,7 +188,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.sync_blocks()
 
         # w4 has private keys enabled, but only contains watch-only keys (from w2)
-        self.nodes[1].createwallet(wallet_name="w4",disable_private_keys=False)
+        self.nodes[1].createwallet(wallet_name="w4", disable_private_keys=False)
         w4 = self.nodes[1].get_wallet_rpc("w4")
         for _ in range(3):
             a2_receive = w2.getnewaddress()
@@ -253,7 +253,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=-1, estimate_mode="sat/b",
                        expect_error=(-3, "Amount out of range"))
         # Fee rate of 0.1 satoshi per byte should throw an error
-        # TODO: error should say 1.000 sat/b
+        # TODO: error should use sat/b
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b",
                        expect_error=(-4, "Fee rate (0.00000100 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
 
@@ -325,11 +325,16 @@ class WalletSendTest(BitcoinTestFramework):
         locked_coins = w0.listlockunspent()
         assert_equal(len(locked_coins), 1)
         # Locked coins are automatically unlocked when manually selected
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1],add_to_wallet=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1], add_to_wallet=False)
+        assert res["complete"]
 
         self.log.info("Replaceable...")
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, replaceable=True)
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, replaceable=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=True, replaceable=True)
+        assert res["complete"]
+        assert_equal(self.nodes[0].gettransaction(res["txid"])["bip125-replaceable"], "yes")
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=True, replaceable=False)
+        assert res["complete"]
+        assert_equal(self.nodes[0].gettransaction(res["txid"])["bip125-replaceable"], "no")
 
         self.log.info("Subtract fee from output")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, subtract_fee_from_outputs=[0])
