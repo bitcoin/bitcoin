@@ -20,16 +20,6 @@
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "bc1q02ad21edsxd23d32dfgqqsz4vv4nmtfzuklhy3"};
 
-std::string NormalizedParameterName(const std::string& key)
-{
-    std::string result = ToLower(key);
-    std::string::size_type pos = 0;
-    while (std::string::npos != (pos = result.find("_", pos))) {
-        result.erase(pos, 1);
-    }
-    return result;
-}
-
 UniValue NormalizedObject(const UniValue& univalue)
 {
     if (!univalue.isObject()) return univalue;

@@ -49,7 +49,16 @@ struct UniValueType {
     UniValue::VType type;
 };
 
-std::string NormalizedParameterName(const std::string& key);
+inline std::string NormalizedParameterName(const std::string& key)
+{
+    std::string result = ToLower(key);
+    std::string::size_type pos = 0;
+    while (std::string::npos != (pos = result.find("_", pos))) {
+        result.erase(pos, 1);
+    }
+    return result;
+}
+
 UniValue NormalizedObject(const UniValue& univalue);
 /**
  * This is a temporary structure meant to allow a gradual transition to normalized objects.
