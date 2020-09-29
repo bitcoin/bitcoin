@@ -192,6 +192,18 @@ public:
 
     /** Count how many announcements are being tracked in total across all peers and transaction hashes. */
     size_t Size() const;
+
+    /** Access to the internal priority computation (testing only) */
+    uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const;
+
+    /** Run internal consistency check (testing only). */
+    void SanityCheck() const;
+
+    /** Run a time-dependent internal consistency check (testing only).
+     *
+     * This can only be called immediately after GetRequestable, with the same 'now' parameter.
+     */
+    void PostGetRequestableSanityCheck(std::chrono::microseconds now) const;
 };
 
 #endif // BITCOIN_TXREQUEST_H
