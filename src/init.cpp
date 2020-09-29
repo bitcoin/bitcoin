@@ -1404,6 +1404,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             return InitError(_("You can not disable governance validation on a masternode."));
         }
     }
+
+    if (args.IsArgSet("-proxy") && args.GetArg("-proxy", "").empty()) {
+        return InitError(_("No proxy server specified. Use -proxy=<ip> or -proxy=<ip:port>."));
+    }
+
     return true;
 }
 
