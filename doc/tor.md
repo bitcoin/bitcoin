@@ -45,11 +45,12 @@ config file): *Needed for Tor version 0.2.7.0 and older versions of Tor only. Fo
 versions of Tor see [Section 3](#3-automatically-listen-on-tor).*
 
 	HiddenServiceDir /var/lib/tor/syscoin-service/
-	HiddenServicePort 8369 127.0.0.1:8369
-	HiddenServicePort 18369 127.0.0.1:18369
+	HiddenServicePort 8369 127.0.0.1:8370
+	HiddenServicePort 18369 127.0.0.1:18370
 
-The directory can be different of course, but (both) port numbers should be equal to
-your syscoind's P2P listen port (8369 by default).
+The directory can be different of course, but virtual port numbers should be equal to
+your syscoind's P2P listen port (8369 by default), and target addresses and ports
+should be equal to binding address and port for inbound Tor connections (127.0.0.1:8370 by default).
 
 	-externalip=X   You can tell syscoin about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
