@@ -70,7 +70,7 @@ should start creating blocks signalling bit 5 in `version` field of the block he
 ### Reallocation periods
 
 Each reallocation period will last three superblock cycles (approximately one
-quarter). The following table shows the split of the non-proposal block rewards during 
+quarter). The following table shows the split of the non-proposal block rewards during
 each period.
 
 |Event|Miner|Masternode|
@@ -244,10 +244,10 @@ given the privacy gains.
 
 GUI changes
 -----------
-All dialogs, tabs, icons, colors and interface elements were reworked to improve 
+All dialogs, tabs, icons, colors and interface elements were reworked to improve
 user experience, let the wallet look more consistent and to make the GUI more
 flexible. There is a new "Appearance setup" dialog that will show up on the first start
-of this version and a corresponding tab has been added to the options which allows the 
+of this version and a corresponding tab has been added to the options which allows the
 user to pick a theme and to tweak the font family, the font weight and the font size.
 This feature specifically should help users who had font size/scaling issues previously.
 
