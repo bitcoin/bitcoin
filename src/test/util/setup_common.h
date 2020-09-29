@@ -11,6 +11,7 @@
 #include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
+#include <stdexcept>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/string.h>
@@ -158,13 +159,15 @@ std::ostream& operator<<(std::ostream& os, const uint256& num);
  * Use as
  * BOOST_CHECK_EXCEPTION(code that throws, exception type, HasReason("foo"));
  */
-class HasReason {
+class HasReason
+{
 public:
     explicit HasReason(const std::string& reason) : m_reason(reason) {}
-    template <typename E>
-    bool operator() (const E& e) const {
+    bool operator()(const std::exception& e) const
+    {
         return std::string(e.what()).find(m_reason) != std::string::npos;
     };
+
 private:
     const std::string m_reason;
 };
