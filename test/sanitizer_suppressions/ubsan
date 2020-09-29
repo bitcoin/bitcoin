@@ -1,6 +1,5 @@
 # -fsanitize=undefined suppressions
 # =================================
-float-divide-by-zero:policy/fees.cpp
 float-divide-by-zero:validation.cpp
 float-divide-by-zero:wallet/wallet.cpp
 
