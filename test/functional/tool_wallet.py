@@ -73,7 +73,7 @@ class ToolWalletTest(BitcoinTestFramework):
         locked_dir = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets")
         self.assert_raises_tool_error(
             'Error initializing wallet database environment "{}"!'.format(locked_dir),
-            '-wallet=wallet.dat',
+            '-wallet=' + self.default_wallet_name,
             'info',
         )
         path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "nonexistent.dat")
@@ -104,7 +104,7 @@ class ToolWalletTest(BitcoinTestFramework):
             Transactions: 0
             Address Book: 3
         ''')
-        self.assert_tool_output(out, '-wallet=wallet.dat', 'info')
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
@@ -143,7 +143,7 @@ class ToolWalletTest(BitcoinTestFramework):
             Transactions: 1
             Address Book: 3
         ''')
-        self.assert_tool_output(out, '-wallet=wallet.dat', 'info')
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         shasum_after = self.wallet_shasum()
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
@@ -181,7 +181,7 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def test_getwalletinfo_on_different_wallet(self):
         self.log.info('Starting node with arg -wallet=foo')
-        self.start_node(0, ['-wallet=foo'])
+        self.start_node(0, ['-nowallet', '-wallet=foo'])
 
         self.log.info('Calling getwalletinfo on a different wallet ("foo"), testing output')
         shasum_before = self.wallet_shasum()

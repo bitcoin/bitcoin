@@ -50,10 +50,10 @@ class WalletBackupTest(BitcoinTestFramework):
         # nodes 1, 2,3 are spenders, let's give them a keypool=100
         # whitelist all peers to speed up tx relay / mempool sync
         self.extra_args = [
-            ["-whitelist=noban@127.0.0.1", "-keypool=100", "-wallet="],
-            ["-whitelist=noban@127.0.0.1", "-keypool=100", "-wallet="],
-            ["-whitelist=noban@127.0.0.1", "-keypool=100", "-wallet="],
-            ["-whitelist=noban@127.0.0.1", "-wallet="],
+            ["-whitelist=noban@127.0.0.1", "-keypool=100"],
+            ["-whitelist=noban@127.0.0.1", "-keypool=100"],
+            ["-whitelist=noban@127.0.0.1", "-keypool=100"],
+            ["-whitelist=noban@127.0.0.1"],
         ]
         self.rpc_timeout = 120
 

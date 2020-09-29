@@ -27,10 +27,11 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [
-            ["-addresstype=bech32", "-wallet="], # current wallet version
+            ["-addresstype=bech32"], # current wallet version
             ["-usehd=1"],            # v0.16.3 wallet
             ["-usehd=0"]             # v0.15.2 wallet
         ]
+        self.wallet_names = [self.default_wallet_name, None, None]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -46,6 +47,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
             150200,
         ])
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def dumb_sync_blocks(self):
         """

@@ -151,7 +151,7 @@ class ImportRescanTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        self.extra_args = [["-wallet="] for _ in range(self.num_nodes)]
+        self.extra_args = [[] for _ in range(self.num_nodes)]
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
                 self.extra_args[i] += ["-prune=1"]
@@ -159,9 +159,8 @@ class ImportRescanTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
 
         # Import keys with pruning disabled
-        self.start_nodes(extra_args=[["-wallet="]] * self.num_nodes)
-        for n in self.nodes:
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+        self.start_nodes(extra_args=[[]] * self.num_nodes)
+        self.import_deterministic_coinbase_privkeys()
         self.stop_nodes()
 
         self.start_nodes()
