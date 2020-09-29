@@ -8,6 +8,7 @@
 
 #include <set>
 #include <stdint.h>
+#include <rpc/util.h>
 
 class CRPCConvertParam
 {
@@ -212,7 +213,7 @@ CRPCConvertTable::CRPCConvertTable()
         members.insert(std::make_pair(vRPCConvertParams[i].methodName,
                                       vRPCConvertParams[i].paramIdx));
         membersByName.insert(std::make_pair(vRPCConvertParams[i].methodName,
-                                            vRPCConvertParams[i].paramName));
+                                            NormalizedParameterName(vRPCConvertParams[i].paramName)));
     }
 }
 
@@ -259,7 +260,7 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
             throw(std::runtime_error("No '=' in named argument '"+s+"', this needs to be present for every argument (even if it is empty)"));
         }
 
-        std::string name = s.substr(0, pos);
+        std::string name = NormalizedParameterName(s.substr(0, pos));
         std::string value = s.substr(pos+1);
 
         if (!rpcCvtTable.convert(strMethod, name)) {

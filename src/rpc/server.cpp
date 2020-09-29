@@ -396,13 +396,13 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     const std::vector<UniValue>& values = in.params.getValues();
     std::unordered_map<std::string, const UniValue*> argsIn;
     for (size_t i=0; i<keys.size(); ++i) {
-        argsIn[keys[i]] = &values[i];
+        argsIn[NormalizedParameterName(keys[i])] = &values[i];
     }
     // Process expected parameters.
     int hole = 0;
     for (const std::string &argNamePattern: argNames) {
         std::vector<std::string> vargNames;
-        boost::algorithm::split(vargNames, argNamePattern, boost::algorithm::is_any_of("|"));
+        boost::algorithm::split(vargNames, NormalizedParameterName(argNamePattern), boost::algorithm::is_any_of("|"));
         auto fr = argsIn.end();
         for (const std::string & argName : vargNames) {
             fr = argsIn.find(argName);
