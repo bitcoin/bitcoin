@@ -270,6 +270,17 @@ public:
             vSeeds.emplace_back("178.128.221.177");
             vSeeds.emplace_back("2a01:7c8:d005:390::5");
             vSeeds.emplace_back("ntv3mtqw5wt63red.onion:38333");
+
+            consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000d145533ce");
+            consensus.defaultAssumeValid = uint256S("0x00000128807d9175c494e24d805fc7854f7d79aa965cbb128342ad8b70cecfa5"); // 5348
+            m_assumed_blockchain_size = 1;
+            m_assumed_chain_state_size = 0;
+            chainTxData = ChainTxData{
+                // Data from RPC: getchaintxstats 4096 00000128807d9175c494e24d805fc7854f7d79aa965cbb128342ad8b70cecfa5
+                /* nTime    */ 1601382000,
+                /* nTxCount */ 5435,
+                /* dTxRate  */ 0.001898346323372538,
+            };
         } else {
             const auto signet_challenge = args.GetArgs("-signetchallenge");
             if (signet_challenge.size() != 1) {
@@ -277,6 +288,13 @@ public:
             }
             bin = ParseHex(signet_challenge[0]);
 
+            m_assumed_blockchain_size = 0;
+            m_assumed_chain_state_size = 0;
+            chainTxData = ChainTxData{
+                0,
+                0,
+                0,
+            };
             LogPrintf("Signet with challenge %s\n", signet_challenge[0]);
         }
 
@@ -313,8 +331,6 @@ public:
 
         nDefaultPort = 38333;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 0;
-        m_assumed_chain_state_size = 0;
 
         genesis = CreateGenesisBlock(1598918400, 52613770, 0x1e0377ae, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -335,12 +351,6 @@ public:
         fRequireStandard = true;
         m_is_test_chain = true;
         m_is_mockable_chain = false;
-
-        chainTxData = ChainTxData{
-            0,
-            0,
-            0
-        };
     }
 };
 
