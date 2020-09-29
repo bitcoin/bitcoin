@@ -37,7 +37,7 @@ public:
     static constexpr size_t HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
-    explicit CMessageHeader(const MessageStartChars& pchMessageStartIn);
+    explicit CMessageHeader();
 
     /** Construct a P2P message header from message-start characters, a command and the size of the message.
      * @note Passing in a `pszCommand` longer than COMMAND_SIZE will result in a run-time assertion error.
@@ -45,7 +45,7 @@ public:
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
-    bool IsValid(const MessageStartChars& messageStart) const;
+    bool IsCommandValid() const;
 
     SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchCommand, obj.nMessageSize, obj.pchChecksum); }
 
