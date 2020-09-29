@@ -191,12 +191,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             }
 
             if (nCurrentAsset == MASTERNODE_SYNC_BLOCKCHAIN) {
-                if(pnode->nVersion >= 70216 && !pnode->fInbound && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
-                    netfulfilledman.AddFulfilledRequest(pnode->addr, "mempool-sync");
-                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MEMPOOL));
-                    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());
-                }
-
                 int64_t nTimeSyncTimeout = vNodesCopy.size() > 3 ? MASTERNODE_SYNC_TICK_SECONDS : MASTERNODE_SYNC_TIMEOUT_SECONDS;
                 if (fReachedBestHeader && (GetTime() - nTimeLastBumped > nTimeSyncTimeout)) {
                     // At this point we know that:
@@ -210,6 +204,18 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                     // We must be at the tip already, let's move to the next asset.
                     SwitchToNextAsset(connman);
                     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
+
+                    if (gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL)) {
+                        // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
+                        for (auto pNodeTmp : vNodesCopy) {
+                            bool fRequestedEarlier = netfulfilledman.HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
+                            if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->fInbound && !fRequestedEarlier) {
+                                netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
+                                connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
+                                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pNodeTmp->GetId());
+                            }
+                        }
+                    }
                 }
             }
 

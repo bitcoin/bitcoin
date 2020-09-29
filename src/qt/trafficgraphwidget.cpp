@@ -159,16 +159,24 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     }
 
     // Draw statistic rect on top of everything else
-    const int nScale = GUIUtil::getFontScale() / 2;
-    const int nMarginStats = 20;
     const int nPadding = 5;
-    const int nWidthStats = 160 + nScale * 3 - 2 * nPadding;
-    const int nHeightStats = 110 + nScale - 2 * nPadding;
-    const int nSizeMark = nWidthStats * 0.15;
-    const int nWidthText = nWidthStats * 0.45;
-    const int nWidthBytes = nWidthStats * 0.4;
-    const int nHeightTotals = nHeightStats * 0.3;
-    const int nHeightInOut = nHeightStats * 0.35;
+    const int nMarginStats = 20;
+    const QString strTotal = tr("Total");
+    const QString strReceived = tr("Received");
+    const QString strSent = tr("Sent");
+    // Get a bold font for the title and a normal one for the rest
+    QFont fontTotal = GUIUtil::getFont(GUIUtil::FontWeight::Bold, false, 16);
+    QFont fontInOut = GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, 12);
+    // Use font metrics to determine minimum rect sizes depending on the font scale
+    QFontMetrics fmTotal(fontTotal);
+    QFontMetrics fmInOut(fontInOut);
+    const int nSizeMark = fmInOut.height() + 2 * nPadding;
+    const int nWidthText = fmInOut.width(strReceived) + 2 * nPadding;
+    const int nWidthBytes = fmInOut.width("1000 GB") + 2 * nPadding;
+    const int nHeightTotals = fmTotal.height() + 2 * nPadding;
+    const int nHeightInOut = fmInOut.height() + 2 * nPadding;
+    const int nWidthStats = nSizeMark + nWidthText + nWidthBytes + 2 * nPadding;
+    const int nHeightStats = nHeightTotals + 2 * nHeightInOut + 2 * nPadding;
     auto addPadding = [&](QRect& rect, int nPadding) {
         rect.adjust(nPadding, nPadding, -nPadding, -nPadding);
     };
@@ -177,26 +185,23 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     QRect rectContent = rectOuter;
     QRect rectContentPadded = rectContent;
     addPadding(rectContentPadded, nPadding);
-    QRect rectTotals(rectContentPadded.topLeft(), QSize(nWidthStats, nHeightTotals));
-    QRect rectIn(rectTotals.bottomLeft(), QSize(nWidthStats, nHeightInOut));
-    QRect rectOut(rectIn.bottomLeft(), QSize(nWidthStats, nHeightInOut));
+    QRect rectTotals(rectContentPadded.topLeft(), QSize(rectContentPadded.width(), nHeightTotals));
+    QRect rectIn(rectTotals.bottomLeft(), QSize(rectContentPadded.width(), nHeightInOut));
+    QRect rectOut(rectIn.bottomLeft(), QSize(rectContentPadded.width(), nHeightInOut));
     // Create subrects for received
     QRect rectInMark(rectIn.topLeft(), QSize(nSizeMark, nSizeMark));
     QRect rectInText(rectInMark.topRight(), QSize(nWidthText, nHeightInOut));
-    QRect rectInBytes(rectInText.topRight(), QSize(nWidthBytes - nPadding, nHeightInOut));
+    QRect rectInBytes(rectInText.topRight(), QSize(nWidthBytes, nHeightInOut));
     // Create subrects for sent
     QRect rectOutMark(rectOut.topLeft(), QSize(nSizeMark, nSizeMark));
     QRect rectOutText(rectOutMark.topRight(), QSize(nWidthText, nHeightInOut));
-    QRect rectOutBytes(rectOutText.topRight(), QSize(nWidthBytes - nPadding, nHeightInOut));
-    // Get a bold font for the title and a normal one for the rest
-    QFont fontTotal = GUIUtil::getFont(GUIUtil::FontWeight::Bold, false, 16);
-    QFont fontInOut = GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, 12);
+    QRect rectOutBytes(rectOutText.topRight(), QSize(nWidthBytes, nHeightInOut));
     // Add padding where required
     addPadding(rectTotals, nPadding);
-    addPadding(rectInMark, nPadding);
+    addPadding(rectInMark, 1.6 * nPadding);
     addPadding(rectInText, nPadding);
     addPadding(rectInBytes, nPadding);
-    addPadding(rectOutMark, nPadding);
+    addPadding(rectOutMark, 1.6 * nPadding);
     addPadding(rectOutText, nPadding);
     addPadding(rectOutBytes, nPadding);
     // Finally draw it all
@@ -205,11 +210,11 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     painter.fillRect(rectContent, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_NETSTATS));
     painter.setPen(axisCol);
     painter.setFont(fontTotal);
-    painter.drawText(rectTotals, Qt::AlignLeft, tr("Totals"));
+    painter.drawText(rectTotals, Qt::AlignLeft, strTotal);
     painter.setFont(fontInOut);
-    painter.drawText(rectInText, Qt::AlignLeft, tr("Received"));
+    painter.drawText(rectInText, Qt::AlignLeft, strReceived);
     painter.drawText(rectInBytes, Qt::AlignRight, GUIUtil::formatBytes(trafficGraphData.getLastBytesIn()));
-    painter.drawText(rectOutText, Qt::AlignLeft, tr("Sent"));
+    painter.drawText(rectOutText, Qt::AlignLeft, strSent);
     painter.drawText(rectOutBytes, Qt::AlignRight, GUIUtil::formatBytes(trafficGraphData.getLastBytesOut()));
     painter.setPen(green);
     painter.setBrush(green);

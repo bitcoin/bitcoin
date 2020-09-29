@@ -26,8 +26,8 @@
 
 #define ITEM_HEIGHT 54
 #define NUM_ITEMS_DISABLED 5
-#define NUM_ITEMS_ENABLED_NORMAL 7
-#define NUM_ITEMS_ENABLED_ADVANCED 9
+#define NUM_ITEMS_ENABLED_NORMAL 6
+#define NUM_ITEMS_ENABLED_ADVANCED 8
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -52,7 +52,7 @@ public:
         QRect rectBottomHalf(mainRect.left() + xspace, mainRect.top() + ypad + halfheight + 5, mainRect.width() - xspace, halfheight);
         QRect rectBounding;
         QColor colorForeground;
-        QFont fontInitial = painter->font();
+        qreal initialFontSize = painter->font().pointSizeF();
 
         // Grab model indexes for desired data from TransactionTableModel
         QModelIndex indexDate = index.sibling(index.row(), TransactionTableModel::Date);
@@ -61,9 +61,7 @@ public:
 
         // Draw first line (with slightly bigger font than the second line will get)
         // Content: Date/Time, Optional IS indicator, Amount
-        QFont font = fontInitial;
-        font.setPointSize(font.pointSize() * 1.17);
-        painter->setFont(font);
+        painter->setFont(GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, GUIUtil::getScaledFontSize(initialFontSize * 1.17)));
         // Date/Time
         colorForeground = qvariant_cast<QColor>(indexDate.data(Qt::ForegroundRole));
         QString strDate = indexDate.data(Qt::DisplayRole).toString();
@@ -83,7 +81,7 @@ public:
 
         // Draw second line (with the initial font)
         // Content: Address/label, Optional Watchonly indicator
-        painter->setFont(fontInitial);
+        painter->setFont(GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, GUIUtil::getScaledFontSize(initialFontSize)));
         // Address/Label
         colorForeground = qvariant_cast<QColor>(indexAddress.data(Qt::ForegroundRole));
         QString address = indexAddress.data(Qt::DisplayRole).toString();
@@ -144,6 +142,8 @@ OverviewPage::OverviewPage(QWidget* parent) :
                       ui->labelSpendable
                      }, GUIUtil::FontWeight::Bold);
 
+    GUIUtil::updateFonts();
+
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     // Note: minimum height of listTransactions will be set later in updateAdvancedPSUI() to reflect actual settings
@@ -163,28 +163,12 @@ OverviewPage::OverviewPage(QWidget* parent) :
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
 
-    if(!privateSendClient.fEnablePrivateSend) return;
+    // Disable privateSendClient builtin support for automatic backups while we are in GUI,
+    // we'll handle automatic backups and user warnings in privateSendStatus()
+    privateSendClient.fCreateAutoBackups = false;
 
-    // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
-    if(fMasternodeMode || nWalletBackups <= 0){
-        DisablePrivateSendCompletely();
-        if (nWalletBackups <= 0) {
-            ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
-        }
-    } else {
-        if(!privateSendClient.fPrivateSendRunning){
-            ui->togglePrivateSend->setText(tr("Start Mixing"));
-        } else {
-            ui->togglePrivateSend->setText(tr("Stop Mixing"));
-        }
-        // Disable privateSendClient builtin support for automatic backups while we are in GUI,
-        // we'll handle automatic backups and user warnings in privateSendStatus()
-        privateSendClient.fCreateAutoBackups = false;
-
-        timer = new QTimer(this);
-        connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
-        timer->start(1000);
-    }
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -296,11 +280,12 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
-        if(!privateSendClient.fEnablePrivateSend) return;
-
         connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(privateSentAmountChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
+        connect(model->getOptionsModel(), &OptionsModel::privateSendEnabledChanged, [=]() {
+            privateSendStatus(true);
+        });
 
         connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
 
@@ -457,11 +442,27 @@ void OverviewPage::privateSendStatus(bool fForce)
 
     if(!walletModel) return;
 
+    // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
+    if (fMasternodeMode || nWalletBackups <= 0) {
+        DisablePrivateSendCompletely();
+        if (nWalletBackups <= 0) {
+            ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
+        }
+        return;
+    }
+
     bool fIsEnabled = privateSendClient.fEnablePrivateSend;
     ui->framePrivateSend->setVisible(fIsEnabled);
     if (!fIsEnabled) {
         SetupTransactionList(NUM_ITEMS_DISABLED);
+        if (timer != nullptr) {
+            timer->stop();
+        }
         return;
+    }
+
+    if (timer != nullptr && !timer->isActive()) {
+        timer->start(1000);
     }
 
     // Wrap all privatesend related widgets we want to show/hide state based.
@@ -676,6 +677,7 @@ void OverviewPage::SetupTransactionList(int nNumItems)
     }
 
     filter->setLimit(nNumItems);
+    ui->listTransactions->setMinimumHeight(nNumItems * ITEM_HEIGHT);
 }
 
 void OverviewPage::DisablePrivateSendCompletely() {

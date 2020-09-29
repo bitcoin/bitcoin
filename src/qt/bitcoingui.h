@@ -196,8 +196,6 @@ private:
 
     void updateProgressBarVisibility();
 
-    void updatePrivateSendVisibility();
-
     void updateToolBarShortcuts();
 
 Q_SIGNALS:
@@ -322,6 +320,10 @@ private Q_SLOTS:
     void toggleNetworkActive();
 
     void showModalOverlay();
+
+    void updatePrivateSendVisibility();
+
+    void updateWidth();
 };
 
 class UnitDisplayStatusBarControl : public QLabel

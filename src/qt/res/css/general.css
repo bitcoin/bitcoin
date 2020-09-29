@@ -621,6 +621,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain,
 #btnWallet,
+#btnPrivateSend,
 #btnNetwork,
 #btnDisplay,
 #btnAppearance,
@@ -643,6 +644,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:checked,
 #btnWallet:hover:checked,
+#btnPrivateSend:hover:checked,
 #btnNetwork:hover:checked,
 #btnDisplay:hover:checked,
 #btnAppearance:hover:checked,
@@ -665,6 +667,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:!checked,
 #btnWallet:hover:!checked,
+#btnPrivateSend:hover:!checked,
 #btnNetwork:hover:!checked,
 #btnDisplay:hover:!checked,
 #btnAppearance:hover:!checked,
@@ -687,6 +690,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:checked,
 #btnWallet:checked,
+#btnPrivateSend:checked,
 #btnNetwork:checked,
 #btnDisplay:checked,
 #btnAppearance:checked,
@@ -708,6 +712,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:pressed,
 #btnWallet:hover:pressed,
+#btnPrivateSend:hover:pressed,
 #btnNetwork:hover:pressed,
 #btnDisplay:hover:pressed,
 #btnAppearance:hover:pressed,
@@ -1254,7 +1259,6 @@ OptionsDialog
 ******************************************************/
 
 QDialog#OptionsDialog {
-    min-width: 585px;
 }
 
 QDialog#OptionsDialog QValueComboBox,

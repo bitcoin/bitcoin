@@ -130,6 +130,9 @@
     </message>
 </context>
 <context>
+    <name>AppearanceWidget</name>
+    </context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
@@ -255,6 +258,9 @@
         <translation>Banat până la</translation>
     </message>
 </context>
+<context>
+    <name>BitcoinAmountField</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -598,6 +604,30 @@
         <translation>Informaţie</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>Tranzactii multiple primite si trimise</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>Tranzactii multiple trimise</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>Tranzactii multiple primite</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>Suma trimisa: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>Suma primita: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Data: %1
@@ -638,10 +668,6 @@
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
         <translation>Generarea de chei HD este &lt;b&gt;activata&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>Generarea de chei HD este &lt;b&gt;dezactivata&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -721,10 +747,6 @@
     <message>
         <source>Received with address</source>
         <translation>Primite cu adresa</translation>
-    </message>
-    <message>
-        <source>PS Rounds</source>
-        <translation>Runde PS</translation>
     </message>
     <message>
         <source>Date</source>
@@ -850,10 +872,6 @@
         <translation>Adresa asociată cu această adresă din listă. Aceasta poate fi modificată doar pentru adresele de trimitere.</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>Noua adresă de primire</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>Noua adresă de trimitere</translation>
     </message>
@@ -963,7 +981,11 @@
         <source>PrivateSend information</source>
         <translation>Informație TrimitePrivat</translation>
     </message>
-    </context>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Informații de bază TrimitePrivat&lt;/h3&gt;TrimitePrivat oferă o intimitate financiară adevărată, ascunzând originea fondurilor. Toate monedele Dash din portofel sunt alcătuite din diferite "intrări" pe care le poți considera drept monede separate, discrete. &lt;br&gt; TrimitePrivat folosește un proces inovator pentru a amesteca intrările tale cu input-urile altor două persoane, fără ca monedele tale să părăsească vreodată portofelul tău. Menții controlul asupra banilor în orice moment.&lt;hr&gt; &lt;b&gt;Procesul TrimitePrivat funcționează astfel:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;TrimitePrivat începe prin ruperea intrărilor de tranzacții în denumiri standard. Aceste denumiri sunt 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH și 10 DASH - ceva asemănător cu banii de hârtie pe care îi folosim zilnic.&lt;/li&gt; &lt;li&gt;Portofelul tău trimite apoi cereri către nodurile software configurate special pe rețea, numite "masternodes". Aceste masternodes sunt informate atunci că eștii interesat să amesteci o anumită denominație. Nu sunt trimise nici un fel de informații identificabile la masternodes, astfel încât să nu știe niciodată "cine" ești.&lt;/li&gt; &lt;li&gt;Atunci când alte două persoane trimit mesaje similare, indicând faptul că doresc să amestece aceeași denominație, începe o sesiune de amestecare. Masternodul amestecă intrările și instruiește portofelele celor trei utilizatori să plătească intrarea transformată acum înapoi la ei înșiși. Portofelul tău plătește această denominație direct la sine, dar într-o altă adresă (numită o adresă de schimbare).&lt;/li&gt; &lt;li&gt;Pentru a închide complet fondurile tale, portofelul tău trebuie să repete acest proces de mai multe ori cu fiecare denominație. De fiecare dată când procesul este finalizat, se numește o "rundă". Fiecare rundă de TrimitePrivat o face exponențial mai dificil de determinat de unde au provenit fondurile.&lt;/li&gt; &lt;li&gt;Acest proces de amestecare se întâmplă în fundal, fără intervenție din partea ta când dorești să efectuezi o tranzacție, fondurile tale vor fi deja anonime. Nu este necesară o așteptare suplimentară.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt;Portofelul tău conține numai 1000 dintre aceste "adrese de schimbare". De fiecare dată când se întâmplă un eveniment de amestecare, până la 9 dintre adresele tale sunt epuizate. Aceasta înseamnă că cele 1000 de adrese durează aproximativ 100 de evenimente de amestecare. Atunci când sunt utilizate 900 dintre ele, portofelul tău trebuie să creeze mai multe adrese. Cu toate acestea, poți face acest lucru numai dacă ai activări de rezervă automate. &lt;br&gt;În consecință, utilizatorii care au backup-urile dezactivate vor avea și TrimitePrivat dezactivat . &lt;hr&gt;Pentru mai multe informații, consultă &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;documentația PrivateSend&lt;/a&gt;.</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1066,6 +1088,10 @@
         <translation>Doar masternode-urile mele</translation>
     </message>
     <message>
+        <source>Service</source>
+        <translation>Serviciu</translation>
+    </message>
+    <message>
         <source>PoSe Score</source>
         <translation>Scorul PoSe</translation>
     </message>
@@ -1082,8 +1108,24 @@
         <translation>Următoarea Plată</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>Adresa de plata</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>Recompensă Operator</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Adresa colaterala</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adresa Proprietarului</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Adresa de vot</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1275,6 +1317,10 @@
         <translation>Această sumă acționează ca un prag pentru a dezactiva TrimitePrivat după ce a fost atins.</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance</source>
+        <translation>Obiectiv Sold TrimitePrivat:</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Deschide automat portul client Dash Core de pe router. Asta funcționează numai atunci când routerul dvs. acceptă UPnP și este activat.</translation>
     </message>
@@ -1297,10 +1343,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Adresele URL ale unor terțe părți (de exemplu, un explorator block) care apar în tab-ul de tranzacții ca elemente de meniu contextual.&lt;br/&gt;%s în URL este înlocuit de hash-ul tranzacției. Adresele URL multiple sunt separate prin bara verticală |.</translation>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation>Expert</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1331,20 +1373,16 @@
         <translation>Cheltuire rest neconfirmat</translation>
     </message>
     <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Această setare determină cantitatea de masternode-uri individuale prin care o intrare va fi amestecată.&lt;br/&gt;Mai multe runde de amestecare oferă un grad mai mare de confidențialitate, dar costă mai mult în taxe.</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>&amp;Retea</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapare port folosind &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Acceptă conexiuni din exterior</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Acceptă conexiuni în curs de sosire</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1383,22 +1421,6 @@
         <translation>Conectare la reteaua Dash printr-un proxy SOCKS5 separat pentru serviciile TOR ascunse.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Utilizează un proxy separat SOCKS5 pentru a ajunge la peers prin intermediul serviciilor ascunse Tor:</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>&amp;Fereastra</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>&amp;Ascunde pictrograma din zona de notificare.</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>Ascunde pictrograma de notificare</translation>
-    </message>
-    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Afişează doar un icon in tray la ascunderea ferestrei</translation>
     </message>
@@ -1429,10 +1451,6 @@ https://www.transifex.com/projects/p/dash/</source>
 https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
-        <source>User Interface Theme:</source>
-        <translation>Tematica Interfaței Utilizatorului:</translation>
-    </message>
-    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Unitatea de măsură pentru afişarea sumelor:</translation>
     </message>
@@ -1443,10 +1461,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Zecimale</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>Adrese URL de tranzacție terță parte</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1471,10 +1485,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>default</source>
         <translation>Initial</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>Niciuna</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1616,10 +1626,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Denominațiile pe care le-ai trimis la Masternode.&lt;br&gt;Pentru a amesteca, ceilalți utilizatori trebuie să trimită exact aceleași denominații.</translation>
     </message>
     <message>
-        <source>(Last Message)</source>
-        <translation>(Ultimul Mesaj)</translation>
-    </message>
-    <message>
         <source>out of sync</source>
         <translation>Nu este sincronizat</translation>
     </message>
@@ -1644,20 +1650,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>%n Rundă</numerusform><numerusform>%n Runde</numerusform><numerusform>%n Runde</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>S-au găsit suficiente intrări compatibile pentru anonimizare %1</translation>
-    </message>
-    <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>Nu există suficiente intrări compatibile pentru anonimizare&lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;va anonimiza&lt;span style='color:red;'&gt;%2&lt;/span&gt;în schimb </translation>
-    </message>
-    <message>
         <source>Overall progress</source>
         <translation>Progres general</translation>
     </message>
     <message>
         <source>Denominated</source>
         <translation>Denominat</translation>
+    </message>
+    <message>
+        <source>Partially mixed</source>
+        <translation>Partial amestecate</translation>
     </message>
     <message>
         <source>Mixed</source>
@@ -1680,8 +1682,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Număr foarte mic de chei rămase de la ultimul backup automat!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>Suntem pe cale să creăm un nou backup automat pentru tine, dar &lt;span style='color:red;'&gt;va trebui să te asiguri întotdeauna că ai backup-urile salvate într-un loc sigur &lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>Suntem pe cale să creăm un nou backup automat pentru tine, dar &lt;span style='%1'&gt;va trebui să te asiguri întotdeauna că ai backup-urile salvate într-un loc sigur &lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1710,12 +1712,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>AVERTIZARE! Nu s-a reușit reîncărcarea keypool-ului, te rog deblochează portofelul pentru a face acest lucru.</translation>
-    </message>
-    <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>Ultimul mesaj TrimitePrivat:
-</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -1839,7 +1835,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -1929,7 +1925,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Error: %1</source>
         <translation>Eroare: %1</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QRDialog</name>
     <message>
@@ -2076,10 +2072,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Network Traffic</source>
         <translation>Trafic reţea</translation>
-    </message>
-    <message>
-        <source>Totals</source>
-        <translation>Totaluri</translation>
     </message>
     <message>
         <source>Received</source>
@@ -2290,10 +2282,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bun venit la consola %1 RPC.</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Scrie &lt;b&gt;help&lt;/b&gt; pentru a vedea comenzile disponibile</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>Foloseste sagetile sus si jos pentru a naviga in istoric si %1 pentru a curata.</translation>
     </message>
@@ -2316,22 +2304,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Total: %1 (Enabled: %2)</source>
         <translation>Total: %1 (Activat: %2)</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2368,14 +2340,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>Reutilizează una dintre adresele primite anterior.&lt;br&gt;Reutilizarea adreselor creează probleme de securitate și confidențialitate.&lt;br&gt;Nu utiliza decât dacă re-generezi o cerere de plată făcută înainte.</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>R&amp;eutilizează o adresă de primire existentă (nerecomandat)</translation>
-    </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
         <translation>Un mesaj opţional de ataşat la cererea de plată, care va fi afişat cînd cererea este deschisă. Notă: Acest mesaj nu va fi trimis cu plata către reţeaua Dash.</translation>
@@ -2618,10 +2582,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Timp confirmare tinta:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>TrimitePrivat</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Dacă taxa vamală este stabilită la 1000 de duffi și tranzacția are doar 250 de octeți, atunci "per kilobyte" plătește doar 250 de duffi în taxă,&lt;br /&gt;în timp ce "cel puțin" plătește 1000 de duffi. Pentru tranzacțiile mai mari decât un kilobyte, ambele plătesc cu kilobyte.</translation>
     </message>
@@ -2746,8 +2706,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;(%1 of %2 înregistrările afișate)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>PrivateSend funds only</source>
+        <translation>Fonduri TrimitePrivat doar</translation>
+    </message>
+    <message>
         <source>any available funds</source>
         <translation>orice fonduri disponibile</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(Tranzactiile TrimitePrivat au taxe mai mari de obicei din cauza ca iesirile cu rest nu sunt permise)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>Marimea tranzactiei: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>Rata taxei: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>Aceasta tranzactie va consuma %n din intrari</numerusform><numerusform>Aceasta tranzactie va consuma %n din intrari</numerusform><numerusform>Aceasta tranzactie va consuma %n din intrari</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Avertisment: Folosirea TrimitePrivat cu %1 sau mai multe intrari poate provoca daune confidentialitatii tale si nu este recomandata</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3064,10 +3048,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>Versiunea %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -3075,7 +3055,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>KB/s</source>
         <translation>KB/s</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -3089,10 +3069,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>conflicted</source>
         <translation>conflictual</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/deconectat</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3119,24 +3095,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 confirmări</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>blocat cu ChainLocks bazat pe LLMQ</translation>
-    </message>
-    <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>verificat cu TrimiteInstant bazat pe LLMQ</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Stare</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, nu s-a propagat încă</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, difuzat prin %n nod</numerusform><numerusform>, difuzat prin %n node-uri</numerusform><numerusform>, difuzat prin %n node-uri</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3293,10 +3253,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Deschis până la %1</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>Deconectat</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>Neconfirmat</translation>
     </message>
@@ -3319,10 +3275,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Imatur (%1 confirmari, va fi disponibil după %2)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Acest bloc nu a fost recepționat de niciun alt nod și probabil nu va fi acceptat!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
@@ -3369,10 +3321,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>TrimitePrivat Creează Denumiri</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>TrimitePrivat</translation>
-    </message>
-    <message>
         <source>watch-only</source>
         <translation>doar-supraveghere</translation>
     </message>
@@ -3401,10 +3349,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Indiferent dacă sau nu o adresa doar-suăpraveghere este implicată în această tranzacţie.</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>Dacă această tranzacție a fost sau nu blocată de TrimiteInstant.</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>Intentie/scop al tranzactie definit de user.</translation>
     </message>
@@ -3418,14 +3362,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>All</source>
         <translation>Toate</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>Blocat de TrimiteInstant</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>Ne-blocat de TrimiteInstant</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3464,10 +3400,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Trimis către</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>TrimitePrivat</translation>
-    </message>
-    <message>
         <source>PrivateSend Make Collateral Inputs</source>
         <translation>TrimitePrivat Realizează Intrări Colaterale </translation>
     </message>
@@ -3494,10 +3426,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Other</source>
         <translation>Altele</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>Introdu adresa sau eticheta pentru căutare</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3731,16 +3659,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nu se poate retrograda portofelul</translation>
     </message>
     <message>
-        <source>Cannot write default address</source>
-        <translation>Nu se poate scrie adresa implicită</translation>
-    </message>
-    <message>
         <source>Collateral not valid.</source>
         <translation>Colateralul nu este valabil.</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Conectează-te la nod pentru a obține adresele partenerilor, și apoi deconectează-te</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -3883,6 +3803,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Depășește minimumul semnătorilor spork pentru a schimba valoarea spork. Doar util pentru regtest și devnet. Folosirea acestui lucru pe mainnet sau testnet te va bloca.</translation>
     </message>
     <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>TrimitePrivat foloseste sume denominate exacte pentru a trimite fonduri, s-ar putea sa ai nevoie pur si simplu sa amesteci niste monede in plus.</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -rescan and -disablegovernance=false. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;=%u = automatically prune block files to stay under the specified target size in MiB)</source>
+        <translation>Redu cerințele de stocare activând tăierea (ștergerea) block-urilor vechi. Asta va permite apelarea la pruneblockchain RPC pentru a șterge block-uri specifice, și permite tăierea automată a block-urilor vechi dacă este furnizată o dimensiune țintă în MiB. Acest mod este incompatibil cu -txindex, -rescan și -disablegovernance=false. Avertisment: Inversarea acestei setări necesită re-descărcarea întregului blockchain. (implicit: 0 = dezactivați tăierea block-urilor, 1 = permiteți tăierea manuală prin RPC, &gt;=%u = taie automat fișierele block pentru a rămâne sub dimensiunea de țintă specificată în MiB)</translation>
+    </message>
+    <message>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
         <translation>Foloseștee N masternode-uri separate în paralel pentru mixarea fondurilor (%u-%u, implicit: %u)</translation>
     </message>
@@ -3901,10 +3829,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Whitelisted peers nu pot fi interziși și tranzacțiile lor sunt întotdeauna transmise, chiar dacă acestea sunt deja în mempool, de ex. pentru un gateway</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(implicit: %s)</translation>
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
@@ -4059,12 +3983,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nici un Masternode compatibil nu a fost găsit.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Nu este în lista Masternode</translation>
+        <source>Not enough funds to mix.</source>
+        <translation>Nu sunt suficiente fonduri pentru amestecare.</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Conectează-te numai la nodurile din rețea &lt;net&gt; (ipv4, ipv6 sau onion)</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Nu este în lista Masternode</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4091,16 +4015,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Setează numărul de fire pentru a activa apelurile RPC (implicit: %d)</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Specifică fișierul de configurare (implicit: %s)</translation>
-    </message>
-    <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
         <translation>Specifică timpul de conectare în milisecunde (minimum: 1, implicit: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Specifică fișierul pid (implicit: %s)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
@@ -4111,24 +4027,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Trimis la masternode, așteaptă la coadă %s</translation>
     </message>
     <message>
-        <source>Synchronization failed</source>
-        <translation>Sincronizarea a eșuat</translation>
-    </message>
-    <message>
         <source>Synchronization finished</source>
         <translation>Sincronizarea s-a terminat</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation> Prag pentru deconectarea acelor peers care au o conduita nepotrivită (implicit: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>Prea multe %f denumiri, se elimină.</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>Prea multe %f denumiri, se sare.</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
@@ -4211,16 +4115,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cheie KeePassHttp pentru comunicarea criptată AES cu KeePass</translation>
     </message>
     <message>
-        <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Dezactivează toate funcționalitățile specifice Dash (Masternode-uri, TrimitePrivat, TrimiteInstant, Guvernanță) (0-1, implicit: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s fișierul conține toate cheile private din acest portofel. Nu le împărtăși nimănui!</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>Leagă-te la adresa dată pentru a asculta conexiunile JSON-RPC. Această opțiune este ignorată doar dacă -rpcallowip este de asemenea trecut. Portul este opțional și suprascrie -rpcport. Utilizează [host]: port de notare pentru IPv6. Această opțiune poate fi specificată de mai multe ori (implicit: 127.0.0.1 și ::1 i.e., localhost, sau dacă -rpcallowip a fost specificat, 0.0.0.0 și :: ex., toate adresele)</translation>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>- optiunea masternode este dezaprobata si ignorata - specificarea masternodeblsprivkey-ului este suficienta pentru a porni acest nod ca si un masternode.</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4275,6 +4175,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Menține cel mult &lt;n&gt;conexiuni cu peers (excluderea conexiunilor temporare) (implicit : %u)</translation>
     </message>
     <message>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>Fii sigur sa criptezi portofelul tau si sa stergi toate backup-urile non-criptate dupa ce ai verificat ca portofelul functioneaza!</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>Marimea totala maxima a tuturor tranzactiilor orfane in megabytes (implicit: %u)</translation>
+    </message>
+    <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation>Reductia e configurata sub minimul de %d MiB. Rugam folositi un numar mai mare.</translation>
     </message>
@@ -4293,6 +4201,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Rescanarile nu sunt posibile in modul redus. Va trebui sa folositi -reindex, ceea ce va descarca din nou intregul blockchain.</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>Seteza cheia BLS privata a masternodului si permite clientului sa se comporte ca un masternode</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4315,10 +4227,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lungimea totala a sirului versiunii retelei (%i) depaseste lungimea maxima (%i). Reduceti numarul sa dimensiunea uacomments. </translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>Indexul tranzacției nu poate fi dezactivat în full mode. Ori porneşti cu comutatorul de linie de comandă -litemode sau activezi indexul tranzacțiilor.</translation>
-    </message>
-    <message>
         <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
         <translation>Încearcă să păstrezi traficul de ieșire sub ținta dată (în MiB per 24h), 0 = fără limită (implicit: %d)</translation>
     </message>
@@ -4337,6 +4245,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Utilizează UPnP pentru a mapa portul de ascultare (implicit: 1 când asculți și nu -proxy)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
+        <translation>Numele de utilizator și parola de salvare pentru conexiunile JSON-RPC. Câmpul &lt;userpw&gt; vine în formatul: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Un script phyton canonic este inclus în share/rpcauth. Apoi, clientul se conectează în mod normal folosind rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt;pereche de argumente. Această opțiune poate fi specificată de mai multe ori </translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4491,10 +4403,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Încarc portofel...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>Locația cookie-ului de autentificare (implicit: dir de date)</translation>
-    </message>
-    <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Fă ca portofelul sa trimită tranzacții</translation>
     </message>
@@ -4531,10 +4439,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Opțiuni pentru node relay:</translation>
     </message>
     <message>
-        <source>Non-standard public key detected.</source>
-        <translation>Cheie publică non-standard detectată.</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>Nu este compatibil cu tranzacțiile existente.</translation>
     </message>
@@ -4565,10 +4469,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>PrivateSend options:</source>
         <translation>opțiuni TrimitePrivat:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>solicitare TrimitePrivat completă:</translation>
     </message>
     <message>
         <source>PrivateSend request incomplete:</source>
@@ -4659,10 +4559,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Dacă funcționează doar într-un mod blocks only (implicit: %u)</translation>
     </message>
     <message>
-        <source>You can not start a masternode in lite mode.</source>
-        <translation>Nu poți porni un masternode în modul lite.</translation>
-    </message>
-    <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>Nu poți porni un masternode cu portofelul activat.</translation>
     </message>
@@ -4719,10 +4615,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Eroare la încărcare %s: Nu poți activa HD pe un portofel non-HD deja existent</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>Eroare la încărcarea portofelului %s. -wallet parametrul trebuie să specifice doar un nume de fișier (nu o cale).</translation>
-    </message>
-    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Eroare la citirea %s! Toate cheile sînt citite corect, dar datele tranzactiei sau anumite intrări din agenda sînt incorecte sau lipsesc.</translation>
     </message>
@@ -4757,10 +4649,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Va rugam sa contribuiti daca apreciati ca %s va este util. Vizitati %s pentru mai multe informatii despre software.</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Redu cerințele de stocare activând tăierea (ștergerea) block-urilor vechi. Asta va permite apelarea la pruneblockchain RPC pentru a șterge block-uri specifice, și permite tăierea automată a block-urilor vechi dacă este furnizată o dimensiune țintă în MiB. Acest mod este incompatibil cu -txindex și -rescan. Avertisment: Inversarea acestei setări necesită re-descărcarea întregului blockchain. (implicit: 0 = dezactivați tăierea block-urilor, 1 = permiteți tăierea manuală prin RPC, &gt;%u = taie automat fișierele block pentru a rămâne sub dimensiunea de țintă specificată în MiB)</translation>
     </message>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
@@ -4803,10 +4691,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Fraza de acces mnemonică definită de utilizator pentru portofelul HD (BIP39). Are efect numai în timpul creării portofelului/primula pornire (implicit: empty string)</translation>
     </message>
     <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>Numele de utilizator și parola de salvare pentru conexiunile JSON-RPC. Câmpul &lt;userpw&gt; vine în  formatul: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Un script phyton canonic este inclus în share/rpcuser. Apoi, clientul se conectează în mod normal folosind rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt;pereche de argumente. Această opțiune poate fi specificată de mai multe ori </translation>
-    </message>
-    <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
         <translation>Portofelul nu va crea tranzacții care încalcă limitele lanțului mempool (implicit: %u)</translation>
     </message>
@@ -4823,10 +4707,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Whitelist peers care se conectează de la adresa IP dată (ex. 1.2.3.4) sau rețeaua notată CIDR (ex. 1.2.3.0/24). Poate fi specificat de mai multe ori.</translation>
     </message>
     <message>
-        <source>You are starting in lite mode, most Dash-specific functionality is disabled.</source>
-        <translation>Începeți în modul lite, cele mai multe funcționalități specifice Dash sunt dezactivate.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d din ultimele 100 de blocuri au versiune neașteptată</translation>
     </message>
@@ -4841,10 +4721,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s is set very high!</source>
         <translation>%s este setata foarte sus!</translation>
-    </message>
-    <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(apasă q pentru a opri și continuă mai târziu)</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -4903,16 +4779,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Eroare la încărcare %s: Nu poți dezactiva HD pe un portofel HD deja existent</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>Eroare la încărcarea portofelului %s. Numele fișierului -wallet trebuie să fie un fișier obișnuit.</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Eroare la încărcarea portofelului %s. Numele de fișier duplicat -walet specificat.</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>Eroare la încărcarea portofelului %s. Caractere invalide în numele de fişier -wallet.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -4983,10 +4851,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Rulează în fundal ca un demon și acceptă comenzi</translation>
     </message>
     <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Trimite informațiile trace/debug la consolă în locul fișierului debug.log</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>Sesiunea nu este completă!</translation>
     </message>
@@ -5019,10 +4883,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Specifică dosarul de date</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Specifică fișierul wallet (în dosarul de date)</translation>
-    </message>
-    <message>
         <source>Specify your own public address</source>
         <translation>Specifică adresa ta publică</translation>
     </message>
@@ -5033,10 +4893,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Starting network threads...</source>
         <translation>Se pornesc threadurile retelei...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>Sincronizare în desfășurare...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5061,10 +4917,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction created successfully.</source>
         <translation>Tranzacția a fost creată cu succes.</translation>
-    </message>
-    <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>Taxa de tranzacție și calculul modificărilor au eșuat</translation>
     </message>
     <message>
         <source>Transaction fees are too high.</source>
@@ -5111,20 +4963,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Un număr foarte scăzut de chei rămase: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Protofelul %s se află în afara directorului de date %s</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>Portofel blocat.</translation>
     </message>
     <message>
         <source>Wallet options:</source>
         <translation>Opțiuni pentru portofel:</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>Titlu fereastră portofel</translation>
     </message>
     <message>
         <source>Warning</source>

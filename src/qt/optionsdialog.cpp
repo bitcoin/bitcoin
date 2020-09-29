@@ -28,6 +28,7 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QSettings>
+#include <QShowEvent>
 #include <QTimer>
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
@@ -79,12 +80,15 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), this, SLOT(updateProxyValidationState()));
 
     pageButtons.addButton(ui->btnMain, pageButtons.buttons().size());
-    /* remove Wallet tab in case of -disablewallet */
+    /* Remove Wallet/PrivateSend tabs in case of -disablewallet */
     if (!enableWallet) {
         ui->stackedWidgetOptions->removeWidget(ui->pageWallet);
         ui->btnWallet->hide();
+        ui->stackedWidgetOptions->removeWidget(ui->pagePrivateSend);
+        ui->btnPrivateSend->hide();
     } else {
         pageButtons.addButton(ui->btnWallet, pageButtons.buttons().size());
+        pageButtons.addButton(ui->btnPrivateSend, pageButtons.buttons().size());
     }
     pageButtons.addButton(ui->btnNetwork, pageButtons.buttons().size());
     pageButtons.addButton(ui->btnDisplay, pageButtons.buttons().size());
@@ -162,7 +166,22 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     appearanceLayout->addWidget(appearance);
     ui->widgetAppearance->setLayout(appearanceLayout);
 
+    connect(appearance, &AppearanceWidget::appearanceChanged, [=](){
+        updateWidth();
+        Q_EMIT appearanceChanged();
+    });
+
     updatePrivateSendVisibility();
+
+    // Store the current PrivateSend enabled state to recover it if it gets changed but the dialog gets not accepted but declined.
+#ifdef ENABLE_WALLET
+    fPrivateSendEnabledPrev = privateSendClient.fEnablePrivateSend;
+    connect(this, &OptionsDialog::rejected, [=]() {
+        if (fPrivateSendEnabledPrev != privateSendClient.fEnablePrivateSend) {
+            ui->privateSendEnabled->click();
+        }
+    });
+#endif
 }
 
 OptionsDialog::~OptionsDialog()
@@ -186,6 +205,17 @@ void OptionsDialog::setModel(OptionsModel *_model)
         } else {
             ui->overriddenByCommandLineLabel->setText(strLabel);
         }
+
+
+#ifdef ENABLE_WALLET
+        // If -enableprivatesend was passed in on the command line, set the checkbox
+        // to the value given via commandline and disable it (make it unclickable).
+        if (strLabel.contains("-enableprivatesend")) {
+            bool fEnabled = privateSendClient.fEnablePrivateSend;
+            ui->privateSendEnabled->setChecked(fEnabled);
+            ui->privateSendEnabled->setEnabled(false);
+        }
+#endif
 
         mapper->setModel(_model);
         setMapper();
@@ -212,6 +242,17 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->digits, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
+
+    connect(ui->privateSendEnabled, &QCheckBox::clicked, [=](bool fChecked) {
+#ifdef ENABLE_WALLET
+        privateSendClient.fEnablePrivateSend = fChecked;
+#endif
+        updatePrivateSendVisibility();
+        if (_model != nullptr) {
+            _model->emitPrivateSendEnabledChanged();
+        }
+        updateWidth();
+    });
 }
 
 void OptionsDialog::setMapper()
@@ -225,6 +266,7 @@ void OptionsDialog::setMapper()
 #endif
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
+    mapper->addMapping(ui->privateSendEnabled, OptionsModel::PrivateSendEnabled);
 
     /* Wallet */
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
@@ -272,6 +314,7 @@ void OptionsDialog::showPage(int index)
 
     GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Bold, 16);
     GUIUtil::setFont(vecNormal, GUIUtil::FontWeight::Normal, 16);
+    GUIUtil::updateFonts();
 
     ui->stackedWidgetOptions->setCurrentIndex(index);
     btnActive->setChecked(true);
@@ -403,19 +446,33 @@ void OptionsDialog::updatePrivateSendVisibility()
 #else
     bool fEnabled = false;
 #endif
-    std::vector<QWidget*> vecWidgets{
-        ui->showAdvancedPSUI,
-        ui->showPrivateSendPopups,
-        ui->lowKeysWarning,
-        ui->privateSendMultiSession,
-        ui->privateSendAmount,
-        ui->lblPrivateSendAmountText,
-        ui->lblPrivateSendRoundsText,
-        ui->privateSendRounds,
-    };
-    for (auto w : vecWidgets) {
-        w->setVisible(fEnabled);
+    ui->btnPrivateSend->setVisible(fEnabled);
+}
+
+void OptionsDialog::updateWidth()
+{
+    int nWidthWidestButton{0};
+    int nButtonsVisible{0};
+    for (QAbstractButton* button : pageButtons.buttons()) {
+        if (!button->isVisible()) {
+            continue;
+        }
+        QFontMetrics fm(button->font());
+        nWidthWidestButton = std::max<int>(nWidthWidestButton, fm.width(button->text()));
+        ++nButtonsVisible;
     }
+    // Add 10 per button as padding and use minimum 585 which is what we used in css before
+    int nWidth = std::max<int>(585, (nWidthWidestButton + 10) * nButtonsVisible);
+    setMinimumWidth(nWidth);
+    resize(nWidth, height());
+}
+
+void OptionsDialog::showEvent(QShowEvent* event)
+{
+    if (!event->spontaneous()) {
+        updateWidth();
+    }
+    QDialog::showEvent(event);
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :

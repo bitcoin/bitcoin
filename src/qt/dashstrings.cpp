@@ -31,7 +31,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "relaying transactions (default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Add a node to connect to and attempt to keep the connection open (see the "
-"`addnode` RPC command help for more info)"),
+"`addnode` RPC command help for more info). This option can be specified "
+"multiple times to add multiple nodes."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Allow JSON-RPC connections from specified source. Valid for <ip> are a "
 "single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or "
@@ -43,7 +44,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Bind to given address and whitelist peers connecting to it. Use [host]:port "
 "notation for IPv6"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Bind to given address to listen for JSON-RPC connections. This option is "
+"Bind to given address to listen for JSON-RPC connections. Do not expose the "
+"RPC server to untrusted networks such as the public internet! This option is "
 "ignored unless -rpcallowip is also passed. Port is optional and overrides -"
 "rpcport. Use [host]:port notation for IPv6. This option can be specified "
 "multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -"
@@ -51,17 +53,21 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Connect only to the specified node(s); -connect=0 disables automatic "
-"connections (the rules for this peer are the same as for -addnode)"),
+"Cannot provide specific connections and have addrman find outgoing "
+"connections at the same."),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Connect only to the specified node; -connect=0 disables automatic "
+"connections (the rules for this peer are the same as for -addnode). This "
+"option can be specified multiple times to connect to multiple nodes."),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Connect to a node to retrieve peer addresses, and disconnect. This option "
+"can be specified multiple times to connect to multiple nodes."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Create new files with system default permissions, instead of umask 077 (only "
 "effective with disabled wallet functionality)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Delete all wallet transactions and only recover those parts of the "
 "blockchain through -rescan on startup"),
-QT_TRANSLATE_NOOP("dash-core", ""
-"Disable all Dash specific functionality (Masternodes, PrivateSend, "
-"InstantSend, Governance) (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Discover own IP addresses (default: 1 when listening and no -externalip or -"
 "proxy)"),
@@ -83,9 +89,6 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Error loading %s: You can't enable HD on an already existing non-HD wallet"),
-QT_TRANSLATE_NOOP("dash-core", ""
-"Error loading wallet %s. -wallet parameter must only specify a filename (not "
-"a path)."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
@@ -142,8 +145,13 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Incorrect or no devnet genesis block found. Wrong datadir for devnet "
 "specified?"),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Invalid -socketevents ('%s') specified. Only these modes are supported: %s"),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Location of the auth cookie. Relative paths will be prefixed by a net-"
+"specific datadir location. (default: data dir)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Maintain a full address index, used to query for the balance, txids and "
 "unspent outputs for addresses (default: %u)"),
@@ -159,6 +167,10 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Maintain at most <n> connections to peers (temporary service connections "
 "excluded) (default: %u)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Make outgoing connections only through network <net> (ipv4, ipv6 or onion). "
+"Incoming connections are not affected by this option. This option can be "
+"specified multiple times to allow multiple networks."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Make sure to encrypt your wallet and delete all non-encrypted backups after "
 "you have verified that the wallet works!"),
@@ -210,14 +222,17 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Reduce storage requirements by enabling pruning (deleting) of old blocks. "
 "This allows the pruneblockchain RPC to be called to delete specific blocks, "
 "and enables automatic pruning of old blocks if a target size in MiB is "
-"provided. This mode is incompatible with -txindex and -rescan. Warning: "
-"Reverting this setting requires re-downloading the entire blockchain. "
-"(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u "
-"= automatically prune block files to stay under the specified target size in "
-"MiB)"),
+"provided. This mode is incompatible with -txindex, -rescan and -"
+"disablegovernance=false. Warning: Reverting this setting requires re-"
+"downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = "
+"allow manual pruning via RPC, >=%u = automatically prune block files to stay "
+"under the specified target size in MiB)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Rescans are not possible in pruned mode. You will need to use -reindex which "
 "will download the whole blockchain again."),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Send trace/debug info to console (default: 1 when no -daemon. To disable "
+"logging to file, set debuglogfile=0)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Set lowest fee rate (in %s/kB) for transactions to be included in block "
 "creation. (default: %s)"),
@@ -228,7 +243,25 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
 "leave that many cores free, default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Specify configuration file. Relative paths will be prefixed by datadir "
+"location. (default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Specify directory to hold wallets (default: <datadir>/wallets if it exists, "
+"otherwise <datadir>)"),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Specify full path to directory for automatic wallet backups (must exist)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Specify location of debug log file. Relative paths will be prefixed by a net-"
+"specific datadir location. (0 to disable; default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Specify pid file. Relative paths will be prefixed by a net-specific datadir "
+"location. (default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Specify wallet database path. Can be specified multiple times to load "
+"multiple wallets. Path is interpreted relative to <walletdir> if it is not "
+"absolute, and will be created if it does not exist (as a directory "
+"containing a wallet.dat file and log files). For backwards compatibility "
+"this will also accept names of existing data files in <walletdir>.)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Support filtering of blocks and transaction with bloom filters (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -259,11 +292,15 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Total length of network version string (%i) exceeds maximum length (%i). "
 "Reduce the number or size of uacomments."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Transaction index can't be disabled in full mode. Either start with -"
-"litemode command line switch or enable transaction index."),
+"Transaction index can't be disabled with governance validation enabled. "
+"Either start with -disablegovernance command line switch or enable "
+"transaction index."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Try to create at least N inputs of each denominated amount (%u-%u, default: "
+"%u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough PrivateSend denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -303,7 +340,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Username and hashed password for JSON-RPC connections. The field <userpw> "
 "comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is "
-"included in share/rpcuser. The client then connects normally using the "
+"included in share/rpcauth. The client then connects normally using the "
 "rpcuser=<USERNAME>/rpcpassword=<PASSWORD> pair of arguments. This option can "
 "be specified multiple times"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -336,8 +373,6 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Whitelisted peers cannot be DoS banned and their transactions are always "
 "relayed, even if they are already in the mempool, useful e.g. for a gateway"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"You are starting in lite mode, most Dash-specific functionality is disabled."),
-QT_TRANSLATE_NOOP("dash-core", ""
 "You need to rebuild the database using -reindex to change -timestampindex"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
@@ -346,10 +381,9 @@ QT_TRANSLATE_NOOP("dash-core", "%d of last 100 blocks have unexpected version"),
 QT_TRANSLATE_NOOP("dash-core", "%s corrupt, salvage failed"),
 QT_TRANSLATE_NOOP("dash-core", "%s is not a valid backup folder!"),
 QT_TRANSLATE_NOOP("dash-core", "%s is set very high!"),
-QT_TRANSLATE_NOOP("dash-core", "(default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", "(default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "(press q to shutdown and continue later)"),
 QT_TRANSLATE_NOOP("dash-core", "-devnet can only be specified once"),
+QT_TRANSLATE_NOOP("dash-core", "-litemode is deprecated."),
 QT_TRANSLATE_NOOP("dash-core", "-maxmempool must be at least %d MB"),
 QT_TRANSLATE_NOOP("dash-core", "-port must be specified when -devnet and -listen are specified"),
 QT_TRANSLATE_NOOP("dash-core", "-rpcport must be specified when -devnet and -server are specified"),
@@ -371,18 +405,17 @@ QT_TRANSLATE_NOOP("dash-core", "Can't mix while sync in progress."),
 QT_TRANSLATE_NOOP("dash-core", "Can't mix: no compatible inputs found!"),
 QT_TRANSLATE_NOOP("dash-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("dash-core", "Cannot resolve -%s address: '%s'"),
-QT_TRANSLATE_NOOP("dash-core", "Cannot write default address"),
 QT_TRANSLATE_NOOP("dash-core", "Chain selection options:"),
 QT_TRANSLATE_NOOP("dash-core", "Change index out of range"),
 QT_TRANSLATE_NOOP("dash-core", "Collateral not valid."),
 QT_TRANSLATE_NOOP("dash-core", "Connect through SOCKS5 proxy"),
 QT_TRANSLATE_NOOP("dash-core", "Connect to KeePassHttp on port <port> (default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "Connect to a node to retrieve peer addresses, and disconnect"),
 QT_TRANSLATE_NOOP("dash-core", "Connection options:"),
 QT_TRANSLATE_NOOP("dash-core", "Copyright (C)"),
 QT_TRANSLATE_NOOP("dash-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("dash-core", "Create up to N inputs of each denominated amount (%u-%u, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Debugging/Testing options:"),
+QT_TRANSLATE_NOOP("dash-core", "Disable governance validation (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Do not load the wallet and disable wallet RPC calls"),
 QT_TRANSLATE_NOOP("dash-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("dash-core", "Done loading"),
@@ -404,15 +437,20 @@ QT_TRANSLATE_NOOP("dash-core", "Error loading %s: Wallet corrupted"),
 QT_TRANSLATE_NOOP("dash-core", "Error loading %s: Wallet requires newer version of %s"),
 QT_TRANSLATE_NOOP("dash-core", "Error loading %s: You can't disable HD on an already existing HD wallet"),
 QT_TRANSLATE_NOOP("dash-core", "Error loading block database"),
-QT_TRANSLATE_NOOP("dash-core", "Error loading wallet %s. -wallet filename must be a regular file."),
 QT_TRANSLATE_NOOP("dash-core", "Error loading wallet %s. Duplicate -wallet filename specified."),
-QT_TRANSLATE_NOOP("dash-core", "Error loading wallet %s. Invalid characters in -wallet filename."),
 QT_TRANSLATE_NOOP("dash-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("dash-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("dash-core", "Error upgrading chainstate database"),
+QT_TRANSLATE_NOOP("dash-core", "Error upgrading evo database"),
 QT_TRANSLATE_NOOP("dash-core", "Error"),
 QT_TRANSLATE_NOOP("dash-core", "Error: A fatal internal error occurred, see debug.log for details"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Disk space is low!"),
+QT_TRANSLATE_NOOP("dash-core", "Error: failed to add socket to epollfd (epoll_ctl returned error %s)"),
+QT_TRANSLATE_NOOP("dash-core", "Exceeded max tries."),
+QT_TRANSLATE_NOOP("dash-core", "Failed to clear fulfilled requests cache at"),
+QT_TRANSLATE_NOOP("dash-core", "Failed to clear governance cache at"),
+QT_TRANSLATE_NOOP("dash-core", "Failed to clear masternode cache at"),
+QT_TRANSLATE_NOOP("dash-core", "Failed to commit EvoDB"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to create backup %s!"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to create backup, error: %s"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to delete backup, error: %s"),
@@ -422,6 +460,7 @@ QT_TRANSLATE_NOOP("dash-core", "Failed to load fulfilled requests cache from"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to load governance cache from"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to load masternode cache from"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to load sporks cache from"),
+QT_TRANSLATE_NOOP("dash-core", "Failed to rescan the wallet during initialization"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to start a new mixing queue"),
 QT_TRANSLATE_NOOP("dash-core", "Fee (in %s/kB) to add to transactions you send (default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Found enough users, signing ( waiting %s )"),
@@ -450,10 +489,10 @@ QT_TRANSLATE_NOOP("dash-core", "Invalid minimum number of spork signers specifie
 QT_TRANSLATE_NOOP("dash-core", "Invalid netmask specified in -whitelist: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid script detected."),
 QT_TRANSLATE_NOOP("dash-core", "Invalid spork address specified with -sporkaddr"),
+QT_TRANSLATE_NOOP("dash-core", "It has been replaced by -disablegovernance."),
+QT_TRANSLATE_NOOP("dash-core", "Its replacement -disablegovernance has been forced instead."),
 QT_TRANSLATE_NOOP("dash-core", "KeePassHttp id for the established association"),
 QT_TRANSLATE_NOOP("dash-core", "KeePassHttp key for AES encrypted communication with KeePass"),
-QT_TRANSLATE_NOOP("dash-core", "Keep N DASH mixed (%u-%u, default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Keep the transaction memory pool below <n> megabytes (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Keypool ran out, please call keypoolrefill first"),
 QT_TRANSLATE_NOOP("dash-core", "Last PrivateSend was too recent."),
@@ -469,7 +508,6 @@ QT_TRANSLATE_NOOP("dash-core", "Loading masternode cache..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading sporks cache..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading wallet... (%3.2f %%)"),
 QT_TRANSLATE_NOOP("dash-core", "Loading wallet..."),
-QT_TRANSLATE_NOOP("dash-core", "Location of the auth cookie (default: data dir)"),
 QT_TRANSLATE_NOOP("dash-core", "Lock is already in place."),
 QT_TRANSLATE_NOOP("dash-core", "Make the wallet broadcast transactions"),
 QT_TRANSLATE_NOOP("dash-core", "Masternode options:"),
@@ -487,13 +525,11 @@ QT_TRANSLATE_NOOP("dash-core", "No compatible Masternode found."),
 QT_TRANSLATE_NOOP("dash-core", "No errors detected."),
 QT_TRANSLATE_NOOP("dash-core", "No matching denominations found for mixing."),
 QT_TRANSLATE_NOOP("dash-core", "Node relay options:"),
-QT_TRANSLATE_NOOP("dash-core", "Non-standard public key detected."),
 QT_TRANSLATE_NOOP("dash-core", "Not compatible with existing transactions."),
 QT_TRANSLATE_NOOP("dash-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("dash-core", "Not enough funds to mix."),
 QT_TRANSLATE_NOOP("dash-core", "Not in the Masternode list."),
 QT_TRANSLATE_NOOP("dash-core", "Number of automatic wallet backups (default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "Only connect to nodes in network <net> (ipv4, ipv6 or onion)"),
 QT_TRANSLATE_NOOP("dash-core", "Options:"),
 QT_TRANSLATE_NOOP("dash-core", "Password for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("dash-core", "Prepend debug output with timestamp (default: %u)"),
@@ -501,9 +537,9 @@ QT_TRANSLATE_NOOP("dash-core", "Print this help message and exit"),
 QT_TRANSLATE_NOOP("dash-core", "Print version and exit"),
 QT_TRANSLATE_NOOP("dash-core", "PrivateSend is idle."),
 QT_TRANSLATE_NOOP("dash-core", "PrivateSend options:"),
-QT_TRANSLATE_NOOP("dash-core", "PrivateSend request complete:"),
 QT_TRANSLATE_NOOP("dash-core", "PrivateSend request incomplete:"),
 QT_TRANSLATE_NOOP("dash-core", "Prune cannot be configured with a negative value."),
+QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -disablegovernance=false."),
 QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("dash-core", "Pruning blockstore..."),
 QT_TRANSLATE_NOOP("dash-core", "RPC server options:"),
@@ -516,7 +552,7 @@ QT_TRANSLATE_NOOP("dash-core", "Replaying blocks..."),
 QT_TRANSLATE_NOOP("dash-core", "Rescan the block chain for missing wallet transactions on startup"),
 QT_TRANSLATE_NOOP("dash-core", "Rescanning..."),
 QT_TRANSLATE_NOOP("dash-core", "Run in the background as a daemon and accept commands"),
-QT_TRANSLATE_NOOP("dash-core", "Send trace/debug info to console instead of debug.log file"),
+QT_TRANSLATE_NOOP("dash-core", "Send reject messages per BIP61 (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Send trace/debug info to debug.log file (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Session not complete!"),
 QT_TRANSLATE_NOOP("dash-core", "Session timed out."),
@@ -527,36 +563,35 @@ QT_TRANSLATE_NOOP("dash-core", "Set the number of threads to service RPC calls (
 QT_TRANSLATE_NOOP("dash-core", "Show all debugging options (usage: --help -help-debug)"),
 QT_TRANSLATE_NOOP("dash-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
 QT_TRANSLATE_NOOP("dash-core", "Signing transaction failed"),
-QT_TRANSLATE_NOOP("dash-core", "Specify configuration file (default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", "Socket events mode, which must be one of: %s (default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", "Specified -walletdir \"%s\" does not exist"),
+QT_TRANSLATE_NOOP("dash-core", "Specified -walletdir \"%s\" is a relative path"),
+QT_TRANSLATE_NOOP("dash-core", "Specified -walletdir \"%s\" is not a directory"),
 QT_TRANSLATE_NOOP("dash-core", "Specify connection timeout in milliseconds (minimum: 1, default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", "Specify data directory"),
-QT_TRANSLATE_NOOP("dash-core", "Specify pid file (default: %s)"),
-QT_TRANSLATE_NOOP("dash-core", "Specify wallet file (within data directory)"),
 QT_TRANSLATE_NOOP("dash-core", "Specify your own public address"),
 QT_TRANSLATE_NOOP("dash-core", "Spend unconfirmed change when sending transactions (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Start PrivateSend automatically (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Starting network threads..."),
 QT_TRANSLATE_NOOP("dash-core", "Submitted to masternode, waiting in queue %s"),
-QT_TRANSLATE_NOOP("dash-core", "Synchronization failed"),
+QT_TRANSLATE_NOOP("dash-core", "Sync mempool from other nodes on start (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Synchronization finished"),
-QT_TRANSLATE_NOOP("dash-core", "Synchronization pending..."),
 QT_TRANSLATE_NOOP("dash-core", "Synchronizing blockchain..."),
 QT_TRANSLATE_NOOP("dash-core", "Synchronizing governance objects..."),
+QT_TRANSLATE_NOOP("dash-core", "Target PrivateSend balance (%u-%u, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "The source code is available from %s."),
 QT_TRANSLATE_NOOP("dash-core", "The transaction amount is too small to pay the fee"),
 QT_TRANSLATE_NOOP("dash-core", "The wallet will avoid paying less than the minimum relay fee."),
+QT_TRANSLATE_NOOP("dash-core", "This is expected because you are running a pruned node."),
 QT_TRANSLATE_NOOP("dash-core", "This is experimental software."),
 QT_TRANSLATE_NOOP("dash-core", "This is the minimum transaction fee you pay on every transaction."),
 QT_TRANSLATE_NOOP("dash-core", "This is the transaction fee you will pay if you send a transaction."),
 QT_TRANSLATE_NOOP("dash-core", "Threshold for disconnecting misbehaving peers (default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "Too many %f denominations, removing."),
-QT_TRANSLATE_NOOP("dash-core", "Too many %f denominations, skipping."),
 QT_TRANSLATE_NOOP("dash-core", "Tor control port password (default: empty)"),
 QT_TRANSLATE_NOOP("dash-core", "Tor control port to use if onion listening enabled (default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction amounts must not be negative"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction created successfully."),
-QT_TRANSLATE_NOOP("dash-core", "Transaction fee and change calculation failed"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction fees are too high."),
 QT_TRANSLATE_NOOP("dash-core", "Transaction has too long of a mempool chain"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction must have at least one recipient"),
@@ -566,6 +601,7 @@ QT_TRANSLATE_NOOP("dash-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("dash-core", "Trying to connect..."),
 QT_TRANSLATE_NOOP("dash-core", "Unable to bind to %s on this computer (bind returned error %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to bind to %s on this computer. %s is probably already running."),
+QT_TRANSLATE_NOOP("dash-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to sign spork message, wrong key?"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to start HTTP server. See debug log for details."),
 QT_TRANSLATE_NOOP("dash-core", "Unknown network specified in -onlynet: '%s'"),
@@ -586,18 +622,18 @@ QT_TRANSLATE_NOOP("dash-core", "Username for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("dash-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("dash-core", "Verifying wallet(s)..."),
 QT_TRANSLATE_NOOP("dash-core", "Very low number of keys left: %d"),
-QT_TRANSLATE_NOOP("dash-core", "Wallet %s resides outside data directory %s"),
+QT_TRANSLATE_NOOP("dash-core", "Wallet %s resides outside wallet directory %s"),
 QT_TRANSLATE_NOOP("dash-core", "Wallet debugging/testing options:"),
 QT_TRANSLATE_NOOP("dash-core", "Wallet is locked."),
 QT_TRANSLATE_NOOP("dash-core", "Wallet needed to be rewritten: restart %s to complete"),
 QT_TRANSLATE_NOOP("dash-core", "Wallet options:"),
-QT_TRANSLATE_NOOP("dash-core", "Wallet window title"),
 QT_TRANSLATE_NOOP("dash-core", "Warning"),
 QT_TRANSLATE_NOOP("dash-core", "Warning: unknown new rules activated (versionbit %i)"),
 QT_TRANSLATE_NOOP("dash-core", "Wasn't able to create wallet backup folder %s!"),
 QT_TRANSLATE_NOOP("dash-core", "Whether to operate in a blocks only mode (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Will retry..."),
-QT_TRANSLATE_NOOP("dash-core", "You can not start a masternode in lite mode."),
+QT_TRANSLATE_NOOP("dash-core", "You are starting with governance validation disabled."),
+QT_TRANSLATE_NOOP("dash-core", "You can not disable governance validation on a masternode."),
 QT_TRANSLATE_NOOP("dash-core", "You can not start a masternode with wallet enabled."),
 QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to change -addressindex"),
 QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to change -spentindex"),
