@@ -215,10 +215,10 @@ class WalletTest(BitcoinTestFramework):
         # dynamically loading the wallet.
         before = self.nodes[1].getbalances()['mine']['untrusted_pending']
         dst = self.nodes[1].getnewaddress()
-        self.nodes[1].unloadwallet('')
+        self.nodes[1].unloadwallet(self.default_wallet_name)
         self.nodes[0].sendtoaddress(dst, 0.1)
         self.sync_all()
-        self.nodes[1].loadwallet('')
+        self.nodes[1].loadwallet(self.default_wallet_name)
         after = self.nodes[1].getbalances()['mine']['untrusted_pending']
         assert_equal(before + Decimal('0.1'), after)
 

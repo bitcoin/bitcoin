@@ -102,6 +102,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
         self.bind_to_localhost_only = True
+        self.default_wallet_name = ""
+        self.wallet_data_filename = "wallet.dat"
         self.set_test_params()
         self.parse_args()
         if self.options.timeout_factor == 0 :

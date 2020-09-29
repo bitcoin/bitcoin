@@ -29,7 +29,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             self.nodes[0].generate(101)
             self.nodes[0].createwallet(wallet_name='nopriv', disable_private_keys=True)
             noprivs0 = self.nodes[0].get_wallet_rpc('nopriv')
-            w0 = self.nodes[0].get_wallet_rpc('')
+            w0 = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
             self.nodes[1].createwallet(wallet_name='nopriv', disable_private_keys=True)
             noprivs1 = self.nodes[1].get_wallet_rpc('nopriv')
 
