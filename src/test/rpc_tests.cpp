@@ -20,6 +20,7 @@
 #include <univalue.h>
 
 #include <rpc/blockchain.h>
+#include <logging.h>
 
 class RPCTestingSetup : public TestingSetup
 {
@@ -471,6 +472,45 @@ BOOST_AUTO_TEST_CASE(help_example)
 
     // test types matter for Rpc
     BOOST_CHECK_NE(HelpExampleRpcNamed("foo", {{"arg", true}}), HelpExampleRpcNamed("foo", {{"arg", "true"}}));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_logparams)
+{
+    LogInstance().EnableCategory(BCLog::RPCPARAMS);
+    // Test zero, 1, and 2 arguments, and array arguments.
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("getnetworkinfo")));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("verifychain 2")));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("verifychain 1 0")));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("logging [\"rpcparams\",\"rpc\"] [\"mempool\"]")));
+
+    // Even though it fails, this RPC should be logged -- but not its arguments.
+    BOOST_CHECK_THROW(CallRPC(std::string("signmessagewithprivkey some-key some-message")), std::runtime_error);
+
+    // Open and read debug.log.
+    FILE* file = fsbridge::fopen(LogInstance().m_file_path, "rb");
+    fseek(file, 0, SEEK_END);
+    std::vector<char> vch(ftell(file), 0);
+    fseek(file, 0, SEEK_SET);
+    size_t nbytes = fread(vch.data(), 1, vch.size(), file);
+    fclose(file);
+
+    // This checks the test (not the code being tested).
+    BOOST_CHECK_EQUAL(nbytes, vch.size());
+
+    // Check that what should appear does, and what shouldn't doesn't.
+    std::string str(vch.begin(), vch.end());
+
+    // These should be found in debug.log.
+    BOOST_CHECK(str.find("rpc=getnetworkinfo()") != std::string::npos);
+    BOOST_CHECK(str.find("rpc=verifychain(2)") != std::string::npos);
+    BOOST_CHECK(str.find("rpc=verifychain(1,0)") != std::string::npos);
+    BOOST_CHECK(str.find("rpc=logging([rpcparams,rpc],[mempool])") != std::string::npos);
+
+    // All arguments replaced by **** (secret information)
+    BOOST_CHECK(str.find("rpc=signmessagewithprivkey(****)") != std::string::npos);
+    // Make sure these don't somehow appear
+    BOOST_CHECK(str.find("some-key") == std::string::npos);
+    BOOST_CHECK(str.find("some-message") == std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
