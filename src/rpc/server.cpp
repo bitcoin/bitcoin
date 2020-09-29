@@ -402,10 +402,10 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     int hole = 0;
     for (const std::string &argNamePattern: argNames) {
         std::vector<std::string> vargNames;
-        boost::algorithm::split(vargNames, NormalizedParameterName(argNamePattern), boost::algorithm::is_any_of("|"));
+        boost::algorithm::split(vargNames, argNamePattern, boost::algorithm::is_any_of("|"));
         auto fr = argsIn.end();
         for (const std::string & argName : vargNames) {
-            fr = argsIn.find(argName);
+            fr = argsIn.find(NormalizedParameterName(argName));
             if (fr != argsIn.end()) {
                 break;
             }
