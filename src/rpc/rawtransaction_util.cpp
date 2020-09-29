@@ -21,14 +21,16 @@
 
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, bool rbf)
 {
-    if (outputs_in.isNull())
+    if (outputs_in.isNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument must be non-null");
+    }
 
     UniValue inputs;
-    if (inputs_in.isNull())
+    if (inputs_in.isNull()) {
         inputs = UniValue::VARR;
-    else
+    } else {
         inputs = inputs_in.get_array();
+    }
 
     const bool outputs_is_obj = outputs_in.isObject();
     UniValue outputs = outputs_is_obj ? outputs_in.get_obj() : outputs_in.get_array();
