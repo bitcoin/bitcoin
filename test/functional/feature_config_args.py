@@ -78,6 +78,12 @@ class ConfArgsTest(BitcoinTestFramework):
         with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear
 
+    def test_invalid_command_line_options(self):
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: No proxy server specified. Use -proxy=<ip> or -proxy=<ip:port>.',
+            extra_args=['-proxy'],
+        )
+
     def test_log_buffer(self):
         with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -connect=0\n']):
             self.start_node(0, extra_args=['-noconnect=0'])
@@ -146,6 +152,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_networkactive()
 
         self.test_config_file_parser()
+        self.test_invalid_command_line_options()
 
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]
