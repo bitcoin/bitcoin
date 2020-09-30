@@ -803,21 +803,6 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     BOOST_CHECK_EQUAL(IsLocal(addr), false);
 }
 
-BOOST_AUTO_TEST_CASE(PoissonNextSend)
-{
-    g_mock_deterministic_tests = true;
-
-    int64_t now = 5000;
-    int average_interval_seconds = 600;
-
-    auto poisson = ::PoissonNextSend(now, average_interval_seconds);
-    std::chrono::microseconds poisson_chrono = ::PoissonNextSend(std::chrono::microseconds{now}, std::chrono::seconds{average_interval_seconds});
-
-    BOOST_CHECK_EQUAL(poisson, poisson_chrono.count());
-
-    g_mock_deterministic_tests = false;
-}
-
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_candidates, FastRandomContext& random_context)
 {
     std::vector<NodeEvictionCandidate> candidates;
