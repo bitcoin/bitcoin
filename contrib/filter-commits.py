@@ -8,7 +8,9 @@ if "INITIAL_COMMIT" in os.environ:
 
 whitelist = [
     "depends/packages/veriblock-pop-cpp.mk",
-    "depends/packages/packages.mk"
+    "depends/packages/packages.mk",
+    "test/functional/feature_pop_*.py",
+    "test/functional/test_framework"
 ]
 
 blacklist = [
@@ -35,7 +37,10 @@ blacklist = [
     "src/bitcoin-cli.cpp",
     "src/fs.cpp",
     "src/leveldb",
-    "src/qt"
+    "src/qt",
+    "src/test/README.md",
+    "src/test/data",
+    "test"
 ]
 
 subprocess.run(["git", "reset", "--soft", initialCommit])
