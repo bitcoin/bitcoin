@@ -32,7 +32,7 @@ bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombine
     case PeerTableModel::Subversion:
         return pLeft->cleanSubVer.compare(pRight->cleanSubVer) < 0;
     case PeerTableModel::Ping:
-        return pLeft->m_min_ping_usec < pRight->m_min_ping_usec;
+        return pLeft->m_min_ping_time < pRight->m_min_ping_time;
     case PeerTableModel::Sent:
         return pLeft->nSendBytes < pRight->nSendBytes;
     case PeerTableModel::Received:
@@ -161,7 +161,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         case Subversion:
             return QString::fromStdString(rec->nodeStats.cleanSubVer);
         case Ping:
-            return GUIUtil::formatPingTime(rec->nodeStats.m_min_ping_usec);
+            return GUIUtil::formatPingTime(rec->nodeStats.m_min_ping_time);
         case Sent:
             return GUIUtil::formatBytes(rec->nodeStats.nSendBytes);
         case Received:

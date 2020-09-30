@@ -3639,8 +3639,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                     const auto ping_time = ping_end - pfrom.m_ping_start.load();
                     if (ping_time.count() >= 0) {
                         // Successful ping time measurement, replace previous
-                        pfrom.nPingUsecTime = count_microseconds(ping_time);
-                        pfrom.nMinPingUsecTime = std::min(pfrom.nMinPingUsecTime.load(), count_microseconds(ping_time));
+                        pfrom.m_ping_time = ping_time;
+                        pfrom.m_min_ping_time = std::min(pfrom.m_min_ping_time.load(), ping_time);
                     } else {
                         // This should never happen
                         sProblem = "Timing mishap";

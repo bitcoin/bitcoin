@@ -18,6 +18,8 @@
 #include <QTableView>
 #include <QLabel>
 
+#include <chrono>
+
 class QValidatedLineEdit;
 class SendCoinsRecipient;
 
@@ -230,8 +232,8 @@ namespace GUIUtil
     /* Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
-    /* Format a CNodeStats.m_ping_usec into a user-readable string or display N/A, if 0*/
-    QString formatPingTime(int64_t ping_usec);
+    /* Format a CNodeStats.m_ping_time into a user-readable string or display N/A, if 0*/
+    QString formatPingTime(std::chrono::microseconds ping_time);
 
     /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
     QString formatTimeOffset(int64_t nTimeOffset);
