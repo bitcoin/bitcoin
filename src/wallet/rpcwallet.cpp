@@ -419,12 +419,12 @@ static RPCHelpMan sendtoaddress()
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Dash address to send to."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
             {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment used to store what the transaction is for.\n"
-    "                             This is not part of the transaction, just kept in your wallet."},
+                "This is not part of the transaction, just kept in your wallet."},
             {"comment_to", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment to store the name of the person or organization\n"
-    "                             to which you're sending the transaction. This is not part of the \n"
-    "                             transaction, just kept in your wallet."},
+                "to which you're sending the transaction. This is not part of the \n"
+                "transaction, just kept in your wallet."},
             {"subtractfeefromamount", RPCArg::Type::BOOL, /* default */ "false", "The fee will be deducted from the amount being sent.\n"
-    "                             The recipient will receive less amount of Dash than you enter in the amount field."},
+                "The recipient will receive less amount of Dash than you enter in the amount field."},
             {"use_is", RPCArg::Type::BOOL, /* default */ "false", "Deprecated and ignored"},
             {"use_cj", RPCArg::Type::BOOL, /* default */ "false", "Use CoinJoin funds only"},
             {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
@@ -923,9 +923,9 @@ static RPCHelpMan sendmany()
                     {"addlocked", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Ignored dummy value"},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment"},
                     {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The addresses.\n"
-            "                           The fee will be equally deducted from the amount of each selected address.\n"
-            "                           Those recipients will receive less Dash than you enter in their corresponding amount field.\n"
-            "                           If no addresses are specified here, the sender pays the fee.",
+                        "The fee will be equally deducted from the amount of each selected address.\n"
+                        "Those recipients will receive less Dash than you enter in their corresponding amount field.\n"
+                        "If no addresses are specified here, the sender pays the fee.",
                         {
                             {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Subtract fee from this address"},
                         },
@@ -939,7 +939,7 @@ static RPCHelpMan sendmany()
                 },
                 {
                     RPCResult{"if verbose is not set or set to false",
-                        RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only  1 transaction is created regardless of\n"
+                        RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."
                     },
                     RPCResult{"if verbose is set to true",
@@ -1582,7 +1582,7 @@ static RPCHelpMan listsinceblock()
             {"target_confirmations", RPCArg::Type::NUM, /* default */ "1", "Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value"},
             {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Include transactions to watch-only addresses (see 'importaddress')"},
             {"include_removed", RPCArg::Type::BOOL, /* default */ "true", "Show transactions that were removed due to a reorg in the \"removed\" array\n"
-    "                                                           (not guaranteed to work on pruned nodes)"},
+                "(not guaranteed to work on pruned nodes)"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -3121,7 +3121,7 @@ static RPCHelpMan listunspent()
                 },
             },
             {"include_unsafe", RPCArg::Type::BOOL, /* default */ "true", "Include outputs that are not safe to spend\n"
-    "                  See description of \"safe\" attribute below."},
+                "See description of \"safe\" attribute below."},
             {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
                 {
                     {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
@@ -3129,8 +3129,8 @@ static RPCHelpMan listunspent()
                     {"maximumCount", RPCArg::Type::NUM, /* default */ "unlimited", "Maximum number of UTXOs"},
                     {"minimumSumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
                     {"coinType", RPCArg::Type::NUM, /* default */ "0", "Filter coinTypes as follows:\n"
-    "                         0=ALL_COINS, 1=ONLY_FULLY_MIXED, 2=ONLY_READY_TO_MIX, 3=ONLY_NONDENOMINATED,\n"
-    "                         4=ONLY_MASTERNODE_COLLATERAL, 5=ONLY_COINJOIN_COLLATERAL" },
+                        "0=ALL_COINS, 1=ONLY_FULLY_MIXED, 2=ONLY_READY_TO_MIX, 3=ONLY_NONDENOMINATED,\n"
+                        "4=ONLY_MASTERNODE_COLLATERAL, 5=ONLY_COINJOIN_COLLATERAL" },
                 },
                 "query_options"},
         },
@@ -3152,7 +3152,7 @@ static RPCHelpMan listunspent()
                     {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
                     {RPCResult::Type::BOOL, "reused", /* optional*/ true, "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
                     {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions"
-                                                    "                             from outside keys and unconfirmed replacement transactions are considered unsafe\n"
+                                                    "from outside keys and unconfirmed replacement transactions are considered unsafe\n"
                                                     "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
                     {RPCResult::Type::NUM, "coinjoin_rounds", "The number of CoinJoin rounds"},
                 }},
@@ -3468,9 +3468,9 @@ static RPCHelpMan fundrawtransaction()
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                             {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The integers.\n"
-                            "                              The fee will be equally deducted from the amount of each specified output.\n"
-                            "                              Those recipients will receive less Dash than you enter in their corresponding amount field.\n"
-                            "                              If no outputs are specified here, the sender pays the fee.",
+                                "The fee will be equally deducted from the amount of each specified output.\n"
+                                "Those recipients will receive less Dash than you enter in their corresponding amount field.\n"
+                                "If no outputs are specified here, the sender pays the fee.",
                                 {
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
@@ -4107,7 +4107,7 @@ static RPCHelpMan send()
         "\nEXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
         {
-            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A JSON array with outputs (key-value pairs), where none of the keys are duplicated.\n"
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
                     "That is, each address can only appear once and there can only be one 'data' object.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
                 {
@@ -4445,7 +4445,7 @@ static RPCHelpMan walletcreatefundedpsbt()
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
                     "That is, each address can only appear once and there can only be one 'data' object.\n"
                     "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
-                    "                             accepted as second parameter.",
+                    "accepted as second parameter.",
                 {
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                         {
@@ -4469,9 +4469,9 @@ static RPCHelpMan walletcreatefundedpsbt()
                     {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                     {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
                     {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The outputs to subtract the fee from.\n"
-                    "                              The fee will be equally deducted from the amount of each specified output.\n"
-                    "                              Those recipients will receive less Dash than you enter in their corresponding amount field.\n"
-                    "                              If no outputs are specified here, the sender pays the fee.",
+                        "The fee will be equally deducted from the amount of each specified output.\n"
+                        "Those recipients will receive less Dash than you enter in their corresponding amount field.\n"
+                        "If no outputs are specified here, the sender pays the fee.",
                         {
                             {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                         },
