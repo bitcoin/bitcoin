@@ -25,7 +25,7 @@ subprocess.run(["git", "reset", "--soft", initialCommit])
 subprocess.run(["git", "add", "--all", "."])
 
 for p in filterPaths:
-    subprocess.run(["git", "rm", "--cached", "-r", p])
+    subprocess.run(["git", "reset", p])
 
 subprocess.run(["git", "commit", "-m", "Features added since " + initialCommit])
 
