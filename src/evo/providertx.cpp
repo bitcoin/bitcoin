@@ -24,8 +24,13 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, TxValidat
     if (Params().RequireRoutableExternalIP() && !proTx.addr.IsRoutable()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
     }
-
-    if (proTx.addr.GetPort() != Params().GetDefaultPort()) {
+    ArgsManager args;
+    static int mainnetDefaultPort = CreateChainParams(args, CBaseChainParams::MAIN)->GetDefaultPort();
+    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        if (proTx.addr.GetPort() != mainnetDefaultPort) {
+            return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr-port", fJustCheck);
+        }
+    } else if (proTx.addr.GetPort() == mainnetDefaultPort) {
         return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr-port", fJustCheck);
     }
 
