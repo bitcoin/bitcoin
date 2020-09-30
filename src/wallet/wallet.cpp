@@ -4479,7 +4479,8 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef tx, uint256 hash, CAmo
     int nChangePosRet = -1;
     CAmount nFeeRequired = 0;
     bilingual_str error;
-    return CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coinControl);
+    FeeCalculation fee_calc_out;
+    return CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coinControl, fee_calc_out);
 }
 
 void CWallet::postInitProcess()
