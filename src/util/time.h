@@ -22,8 +22,8 @@ void UninterruptibleSleep(const std::chrono::microseconds& n);
  * This helper is used to convert durations before passing them over an
  * interface that doesn't support std::chrono (e.g. RPC, debug log, or the GUI)
  */
-inline int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
-inline int64_t count_microseconds(std::chrono::microseconds t) { return t.count(); }
+constexpr inline int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
+constexpr inline int64_t count_microseconds(std::chrono::microseconds t) { return t.count(); }
 
 /**
  * DEPRECATED

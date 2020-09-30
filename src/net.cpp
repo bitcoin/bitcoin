@@ -1858,10 +1858,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     }
 
     // Initiate network connections
-    int64_t nStart = GetTime();
+    auto start = GetTime<std::chrono::microseconds>();
 
     // Minimum time before next feeler connection (in microseconds).
-    int64_t nNextFeeler = PoissonNextSend(nStart*1000*1000, FEELER_INTERVAL);
+    auto next_feeler = PoissonNextSend(start, FEELER_INTERVAL);
     while (!interruptNet)
     {
         ProcessAddrFetch();
@@ -1877,7 +1877,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // Note that we only do this if we started with an empty peers.dat,
         // (in which case we will query DNS seeds immediately) *and* the DNS
         // seeds have not returned any results.
-        if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
+        if (addrman.size() == 0 && (GetTime<std::chrono::microseconds>() - start > std::chrono::minutes{1})) {
             static bool done = false;
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
@@ -1923,7 +1923,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
 
         ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
-        int64_t nTime = GetTimeMicros();
+        auto now = GetTime<std::chrono::microseconds>();
         bool fFeeler = false;
 
         // Determine what type of connection to open. Opening
@@ -1941,8 +1941,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             conn_type = ConnectionType::BLOCK_RELAY;
         } else if (GetTryNewOutboundPeer()) {
             // OUTBOUND_FULL_RELAY
-        } else if (nTime > nNextFeeler) {
-            nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
+        } else if (now > next_feeler) {
+            next_feeler = PoissonNextSend(now, FEELER_INTERVAL);
             conn_type = ConnectionType::FEELER;
             fFeeler = true;
         } else {
@@ -2954,20 +2954,22 @@ bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
     return found != nullptr && NodeFullyConnected(found) && func(found);
 }
 
-int64_t CConnman::PoissonNextSendInbound(int64_t now, int average_interval_seconds)
+std::chrono::microseconds CConnman::PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::microseconds average_interval)
 {
-    if (m_next_send_inv_to_incoming < now) {
+    if (m_next_send_inv_to_incoming.load() < now) {
         // If this function were called from multiple threads simultaneously
         // it would possible that both update the next send variable, and return a different result to their caller.
         // This is not possible in practice as only the net processing thread invokes this function.
-        m_next_send_inv_to_incoming = PoissonNextSend(now, average_interval_seconds);
+        m_next_send_inv_to_incoming = PoissonNextSend(now, average_interval);
     }
     return m_next_send_inv_to_incoming;
 }
 
-int64_t PoissonNextSend(int64_t now, int average_interval_seconds)
+std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::microseconds average_interval)
 {
-    return now + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_seconds * -1000000.0 + 0.5);
+    double unscaled = log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */);
+    double scaled = unscaled * count_microseconds(average_interval);
+    return now + std::chrono::microseconds{int64_t(scaled + 0.5)};
 }
 
 CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const

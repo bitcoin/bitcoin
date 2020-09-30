@@ -51,8 +51,8 @@ static const bool DEFAULT_WHITELISTFORCERELAY = false;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
-/** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
-static const int FEELER_INTERVAL = 120;
+/** Run the feeler connection loop once every 2 minutes. **/
+static constexpr auto FEELER_INTERVAL = std::chrono::minutes{2};
 /** The maximum number of addresses from our addrman to return in response to a getaddr message. */
 static constexpr size_t MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
@@ -402,7 +402,7 @@ public:
         Works assuming that a single interval is used.
         Variable intervals will result in privacy decrease.
     */
-    int64_t PoissonNextSendInbound(int64_t now, int average_interval_seconds);
+    std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::microseconds average_interval);
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
@@ -584,7 +584,7 @@ private:
      *  This takes the place of a feeler connection */
     std::atomic_bool m_try_another_outbound_peer;
 
-    std::atomic<int64_t> m_next_send_inv_to_incoming{0};
+    std::atomic<std::chrono::microseconds> m_next_send_inv_to_incoming{std::chrono::microseconds{0}};
 
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;
@@ -999,7 +999,7 @@ public:
         // Minimum fee rate with which to filter inv's to this node
         CAmount minFeeFilter GUARDED_BY(cs_feeFilter){0};
         CAmount lastSentFeeFilter{0};
-        int64_t nextSendTimeFeeFilter{0};
+        std::chrono::microseconds m_next_send_feefilter{0};
     };
 
     // m_tx_relay == nullptr if we're not relaying transactions with this peer
@@ -1177,12 +1177,6 @@ public:
 };
 
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
-int64_t PoissonNextSend(int64_t now, int average_interval_seconds);
-
-/** Wrapper to return mockable type */
-inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval)
-{
-    return std::chrono::microseconds{PoissonNextSend(now.count(), average_interval.count())};
-}
+std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::microseconds average_interval);
 
 #endif // BITCOIN_NET_H
