@@ -39,15 +39,15 @@ Downgrade warning
 
 ### Downgrade to a version < 0.14.0.3
 
-Downgrading to a version smaller than 0.14.0.3 is not supported anymore due to
+Downgrading to a version older than 0.14.0.3 is no longer supported due to
 changes in the "evodb" database format. If you need to use an older version,
-you have to perform a reindex or re-sync the whole chain.
+you must either reindex or re-sync the whole chain.
 
 ### Downgrade of masternodes to < 0.16
 
-Starting with this release, masternodes will verify protocol versions of other
-masternodes. This will cause PoSe punishment/banning of out of date masternodes,
-so it is not recommended to downgrade masternodes.
+Starting with this release, masternodes will verify the protocol version of other
+masternodes. This will result in PoSe punishment/banning for outdated masternodes,
+so downgrading is not recommended.
 
 Notable changes
 ===============
@@ -60,12 +60,12 @@ formation of masternodes and was voted in by the network. The resulting allocati
 will split all non-proposal block rewards 40% toward miners and 60% toward
 masternodes in the end-state once the transition period is complete.
 
-The reallocation will take place gradually over 4.5 years with a total of 18
-reallocation periods between the start and end-state to avoid market volatility
-and transition toward the new allocation with minimal network disruption.
+The reallocation will take place over 4.5 years with a total of 18 reallocation
+periods between the start and end state. The transition is being made gradually
+to avoid market volatility and minimize network disruption.
 
 Note that this is a hardfork which must be activated by miners. To do this they
-should start creating blocks signalling bit 5 in `version` field of the block header.
+should start creating blocks signalling bit 5 in the `version` field of the block header.
 
 ### Reallocation periods
 
@@ -100,36 +100,36 @@ Dynamic Activation Thresholds
 -----------------------------
 In Dash we have used lower thresholds (80% vs 95% in BTC) to activate upgrades
 via a BIP9-like mechanism for quite some time. While it's preferable to have as much
-of the network hashrate to signal update readiness as possible, this can result in
+of the network hashrate signal update readiness as possible, this can result in
 quite lengthy upgrades if one large non-upgraded entity stalls
 all progress. Simply lowering thresholds even further can result in network
-upgrades being too fast which can potentially cause some chaos. This version
+upgrades occurring too quickly and potentially introducing network instability. This version
 implements BIP9-like dynamic activation thresholds which drop from some initial
 level to a minimally acceptable one over time at an increasing rate. This provides
 a safe non-blocking way of activating proposals.
 
-This mechanism applies to the Block Reward Reallocation proposal mentioned above
-for which the threshold will begin at an 80% level and decay down to 60% over the
-course of 10 periods.
+This mechanism applies to the Block Reward Reallocation proposal mentioned above.
+Its initial threshold is 80% and it will decrease to a minimum of 60% over the
+course of 10 periods. Each period is 4032 blocks (approximately one week).
 
 Concentrated Recovery
 ---------------------
 In the current system, signature shares are propagated to all LLMQ members
-until one of them has collected enough shares to recover the signature. Until
-this recovered signature is propagated in the LLMQ, all members will keep
-propagating shares and verifying each one. This causes significant load on the
-LLMQ, resulting in decreased throughput, which will be avoided with the new system.
+until one of them has collected enough shares to recover the signature. All
+members keep propagating and verifying each share until this recovered signature
+is propagated in the LLMQ. This causes significant load on the LLMQ and results
+in decreased throughput.
 
 This new system initially sends all shares to a single deterministically selected node,
 so that this node can recover the signature and propagate the recovered signature.
 This way only the recovered signature needs to be propagated and verified by all
-members. Each member, after sending their share to this node, waits for some
+members. After sending their share to this node, each member waits for a
 timeout and then sends their share to another deterministically selected member.
 This process is repeated until a recovered signature is finally created and propagated.
 
 This timeout begins at two seconds and increases exponentially up to ten seconds
-(ie. `2,4,8,10,10`) for each node that times out. This is in order to minimize the time
-taken to generate a signature in the case that the recovery node is down, while also
+(i.e. `2,4,8,10,10`) for each node that times out. This is to minimize the time
+taken to generate a signature if the recovery node is down, while also
 minimizing the traffic generated when the network is under stress.
 
 The new system is activated with the newly added `SPORK_21_QUORUM_ALL_CONNECTED`
@@ -138,14 +138,14 @@ Recovery for every LLMQ and `1` excludes `400_60` and `400_85` quorums.
 
 Increased number of masternode connections
 ------------------------------------------
-To implement "Concentrated Recovery", it is now required that all members of a LLMQ
-connect to all other members of the same LLMQ. This significantly increases general
-connection count for masternodes. These intra-quorum connections are less resource
-demanding than normal p2p connections as they only exchange LLMQ/masternode related
-messages, but the hardware and network requirements will still be higher than before.
+To implement "Concentrated Recovery", it is now necessary for all members of a LLMQ
+to connect to all other members of the same LLMQ. This significantly increases the general
+connection count for masternodes. Although these intra-quorum connections are less resource
+intensive than normal p2p connections (as they only exchange LLMQ/masternode related
+messages), masternode hardware and network requirements will still be higher than before.
 
-This change will at first only be activated for the smaller LLMQs (50 members) and
-then may later be activated for larger quorums (400 members).
+Initially this change will only be activated for the smaller LLMQs (50 members).
+Eventually it may be activated for larger quorums (400 members).
 
 This is also controlled via `SPORK_21_QUORUM_ALL_CONNECTED`.
 
