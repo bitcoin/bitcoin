@@ -174,6 +174,15 @@ public:
     const UniValue& get_obj() const;
     const UniValue& get_array() const;
 
+    bool get(bool default_value) const                             { return isNull() ? default_value : get_bool(); }
+    const std::string get(const std::string& default_value) const  { return isNull() ? default_value : get_str(); }
+    const std::string get(const char* default_value) const         { return isNull() ? default_value : get_str(); }
+    int get(int default_value) const                               { return isNull() ? default_value : get_int(); }
+    int64_t get(int64_t default_value) const                       { return isNull() ? default_value : get_int64(); }
+    uint64_t get(uint64_t default_value) const                     { return isNull() ? default_value : (uint64_t)get_int64(); }
+    double get(double default_value) const                         { return isNull() ? default_value : get_real(); }
+    const UniValue& get(const UniValue& default_value) const       { return isNull() ? default_value : default_value.isArray() ? get_array() : get_obj(); }
+
     enum VType type() const { return getType(); }
     friend const UniValue& find_value( const UniValue& obj, const std::string& name);
 };
