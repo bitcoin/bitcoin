@@ -30,6 +30,13 @@ inline int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
 inline int64_t count_milliseconds(std::chrono::milliseconds t) { return t.count(); }
 inline int64_t count_microseconds(std::chrono::microseconds t) { return t.count(); }
 
+using SecondsDouble = std::chrono::duration<double, std::chrono::seconds::period>;
+
+/**
+ * Helper to count the seconds in any std::chrono::duration type
+ */
+inline double CountSecondsDouble(SecondsDouble t) { return t.count(); }
+
 /**
  * DEPRECATED
  * Use either GetSystemTimeInSeconds (not mockable) or GetTime<T> (mockable)

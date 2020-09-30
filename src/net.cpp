@@ -603,8 +603,8 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         stats.minFeeFilter = 0;
     }
 
-    stats.m_ping_usec = m_last_ping_time;
-    stats.m_min_ping_usec = m_min_ping_time;
+    X(m_last_ping_time);
+    X(m_min_ping_time);
 
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();

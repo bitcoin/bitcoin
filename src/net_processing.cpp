@@ -1112,7 +1112,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats)
         ping_wait = GetTime<std::chrono::microseconds>() - peer->m_ping_start.load();
     }
 
-    stats.m_ping_wait_usec = count_microseconds(ping_wait);
+    stats.m_ping_wait = ping_wait;
 
     return true;
 }
