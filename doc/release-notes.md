@@ -363,7 +363,7 @@ A lot of refactoring, code cleanups and other small fixes were done in this rele
 0.16 Change log
 ===============
 
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.15.0.0...dashpay:v0.16.0.0).
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.15.0.0...dashpay:v0.16.0.1).
 
 - [`37fe9a6e2f`](https://github.com/dashpay/dash/commit/37fe9a6e2f) Fix mempool sync (#3725)
 - [`69b77765ba`](https://github.com/dashpay/dash/commit/69b77765ba) qt: Fix font family updates (#3746)
