@@ -9,15 +9,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      VBK_FORK_COMMIT: 8830cb58abc888144a1edb9b2fba427716cc45d8
+      INITIAL_COMMIT: 8830cb58abc888144a1edb9b2fba427716cc45d8
     steps:
       - uses: actions/checkout@v1
-      - name: Commit files
+      - name: Configure GIT
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git reset --soft ${VBK_FORK_COMMIT}
-          git commit -m "Auto squash commits from master since ${VBK_FORK_COMMIT}" -a
+      - name: Commit files
+        run: python3 contrib/filter-commits.py
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
