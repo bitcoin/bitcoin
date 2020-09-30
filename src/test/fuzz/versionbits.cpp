@@ -102,7 +102,7 @@ std::unique_ptr<const CChainParams> g_params;
 void initialize_versionbits()
 {
     // this is actually comparatively slow, so only do it once
-    g_params = CreateChainParams(CBaseChainParams::MAIN);
+    g_params = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN);
     assert(g_params != nullptr);
 }
 

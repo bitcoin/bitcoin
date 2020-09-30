@@ -13,7 +13,7 @@ BOOST_FIXTURE_TEST_SUITE(subsidy_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
 
     uint32_t nPrevBits;
     int32_t nPrevHeight;
