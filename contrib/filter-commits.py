@@ -26,7 +26,16 @@ blacklist = [
     "contrib",
     "Makefile.am",
     "depends",
-    "doc"
+    "doc",
+    "docker-compose.yml",
+    "setup.iss",
+    "share",
+    "sonar-project.properties",
+    "src/bitcoin*.rc",
+    "src/bitcoin-cli.cpp",
+    "src/fs.cpp",
+    "src/leveldb",
+    "src/qt"
 ]
 
 subprocess.run(["git", "reset", "--soft", initialCommit])
