@@ -37,3 +37,15 @@ $(package)_config_opts_x86_64-apple-darwin11=$($(package)_config_opts_darwin)
 # set settings based on host
 $(package)_config_env = $(if $($(package)_config_env_$(HOST)), $($(package)_config_env_$(HOST)), $($(package)_config_env_default))
 $(package)_config_opts = $(if $($(package)_config_opts_$(HOST)), $($(package)_config_opts_$(HOST)), $($(package)_config_opts_default))
+
+define $(package)_config_cmds
+  $($(package)_autoconf)
+endef
+
+define $(package)_build_cmds
+  $(MAKE)
+endef
+
+define $(package)_stage_cmds
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
