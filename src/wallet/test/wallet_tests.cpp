@@ -602,7 +602,8 @@ public:
         int changePos = -1;
         bilingual_str error;
         CCoinControl dummy;
-        BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, fee, changePos, error, dummy));
+        FeeCalculation fee_calc_out;
+        BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, fee, changePos, error, dummy, fee_calc_out));
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
@@ -756,7 +757,8 @@ public:
         int nChangePos = nChangePosRequest;
         bilingual_str strError;
 
-        bool fCreationSucceeded = wallet->CreateTransaction(GetRecipients(vecEntries), tx, nFeeRet, nChangePos, strError, coinControl);
+        FeeCalculation fee_calc_out;
+        bool fCreationSucceeded = wallet->CreateTransaction(GetRecipients(vecEntries), tx, nFeeRet, nChangePos, strError, coinControl, fee_calc_out);
         bool fHitMaxTries = strError.original == strExceededMaxTries;
         // This should never happen.
         if (fHitMaxTries) {
@@ -808,7 +810,8 @@ public:
         int nChangePosRet = -1;
         bilingual_str strError;
         CCoinControl coinControl;
-        BOOST_CHECK(wallet->CreateTransaction(GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl));
+        FeeCalculation fee_calc_out;
+        BOOST_CHECK(wallet->CreateTransaction(GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
@@ -1147,10 +1150,11 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     int changePos = -1;
     bilingual_str error;
     CCoinControl dummy;
+    FeeCalculation fee_calc_out;
     BOOST_CHECK(wallet->CreateTransaction({CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
-                                        tx1, fee, changePos, error, dummy));
+                                        tx1, fee, changePos, error, dummy, fee_calc_out));
     BOOST_CHECK(wallet->CreateTransaction({CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
-                                        tx2, fee, changePos, error, dummy));
+                                        tx2, fee, changePos, error, dummy, fee_calc_out));
     wallet->CommitTransaction(tx1, {}, {});
     BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 0);
     CreateAndProcessBlock({CMutableTransaction(*tx2)}, GetScriptForRawPubKey({}));

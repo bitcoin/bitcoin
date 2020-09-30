@@ -270,7 +270,8 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     bilingual_str strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    FeeCalculation fee_calc_out;
+    if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, fee_calc_out, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason.original);
     }
 

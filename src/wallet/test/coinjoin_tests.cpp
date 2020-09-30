@@ -185,7 +185,8 @@ public:
         }
         for (CAmount nAmount : vecAmounts) {
             CTransactionRef tx;
-            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
+            FeeCalculation fee_calc_out;
+            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
             {
                 LOCK2(wallet->cs_wallet, cs_main);
                 wallet->CommitTransaction(tx, {}, {});
