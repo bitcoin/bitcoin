@@ -44,6 +44,7 @@ More information about the general configuration and Bitcoin Core specific optio
 | `omniprogressfrequency`      | number       | `30`           | time in seconds after which the initial scanning progress is reported           |
 | `omniseedblockfilter`        | boolean      | `1`            | set skipping of blocks without Omni transactions during initial scan            |
 | `omnishowblockconsensushash` | number       | `0`            | calculate and log the consensus hash for the specified block                    |
+| `experimental-btc-balances`  | boolean      | `0`            | maintain a full address index to query any Bitcoin balance                      |
 
 #### Log options:
 
