@@ -51,7 +51,7 @@ static const uint32_t WALLET_BTC_KB_TO_SAT_B = COIN / 1000; // 1 sat / B = 0.000
 
 static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValue& param) {
     bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
-    bool avoid_reuse = param.isNull() ? can_avoid_reuse : param.get_bool();
+    bool avoid_reuse = param.get(can_avoid_reuse);
 
     if (avoid_reuse && !can_avoid_reuse) {
         throw JSONRPCError(RPC_WALLET_ERROR, "wallet does not have the \"avoid reuse\" feature enabled");
@@ -67,13 +67,7 @@ static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValu
  */
 static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& pwallet)
 {
-    if (include_watchonly.isNull()) {
-        // if include_watchonly isn't explicitly set, then check if we have a watchonly wallet
-        return pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-    }
-
-    // otherwise return whatever include_watchonly was set to
-    return include_watchonly.get_bool();
+    return include_watchonly.get(pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
 }
 
 
@@ -261,9 +255,7 @@ static RPCHelpMan getnewaddress()
     }
 
     // Parse the label first so we don't generate a key if there's an error
-    std::string label;
-    if (!request.params[0].isNull())
-        label = LabelFromValue(request.params[0]);
+    std::string label = request.params[0].get("");
 
     OutputType output_type = pwallet->m_default_address_type;
     if (!request.params[1].isNull()) {
@@ -469,10 +461,7 @@ static RPCHelpMan sendtoaddress()
     if (!request.params[3].isNull() && !request.params[3].get_str().empty())
         mapValue["to"] = request.params[3].get_str();
 
-    bool fSubtractFeeFromAmount = false;
-    if (!request.params[4].isNull()) {
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    }
+    bool fSubtractFeeFromAmount = request.params[4].get(false);
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
@@ -644,9 +633,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
     }
 
     // Minimum confirmations
-    int min_depth = 1;
-    if (!params[1].isNull())
-        min_depth = params[1].get_int();
+    int min_depth = params[1].get((int)1);
 
     // Tally
     CAmount amount = 0;
@@ -782,14 +769,11 @@ static RPCHelpMan getbalance()
     LOCK(pwallet->cs_wallet);
 
     const UniValue& dummy_value = request.params[0];
-    if (!dummy_value.isNull() && dummy_value.get_str() != "*") {
+    if (dummy_value.get("*") != "*") {
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
     }
 
-    int min_depth = 0;
-    if (!request.params[1].isNull()) {
-        min_depth = request.params[1].get_int();
-    }
+    int min_depth = request.params[1].get((int)0);
 
     bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
 
@@ -880,18 +864,16 @@ static RPCHelpMan sendmany()
 
     LOCK(pwallet->cs_wallet);
 
-    if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
+    if (!request.params[0].get("").empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"\"");
     }
     UniValue sendTo = request.params[1].get_obj();
 
     mapValue_t mapValue;
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
+    if (!request.params[3].get("").empty())
         mapValue["comment"] = request.params[3].get_str();
 
-    UniValue subtractFeeFromAmount(UniValue::VARR);
-    if (!request.params[4].isNull())
-        subtractFeeFromAmount = request.params[4].get_array();
+    UniValue subtractFeeFromAmount = request.params[4].get(UniValue(UniValue::VARR));
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
@@ -950,9 +932,7 @@ static RPCHelpMan addmultisigaddress()
 
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
-    std::string label;
-    if (!request.params[2].isNull())
-        label = LabelFromValue(request.params[2]);
+    std::string label = request.params[2].get("");
 
     int required = request.params[0].get_int();
 
@@ -1005,14 +985,10 @@ struct tallyitem
 static UniValue ListReceived(const CWallet* const pwallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     // Minimum confirmations
-    int nMinDepth = 1;
-    if (!params[0].isNull())
-        nMinDepth = params[0].get_int();
+    int nMinDepth = params[0].get((int)1);
 
     // Whether to include empty labels
-    bool fIncludeEmpty = false;
-    if (!params[1].isNull())
-        fIncludeEmpty = params[1].get_bool();
+    bool fIncludeEmpty = params[1].get(false);
 
     isminefilter filter = ISMINE_SPENDABLE;
 
@@ -1423,12 +1399,8 @@ static RPCHelpMan listtransactions()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
         }
     }
-    int nCount = 10;
-    if (!request.params[1].isNull())
-        nCount = request.params[1].get_int();
-    int nFrom = 0;
-    if (!request.params[2].isNull())
-        nFrom = request.params[2].get_int();
+    int nCount = request.params[1].get((int)10);
+    int nFrom = request.params[2].get((int)0);
     isminefilter filter = ISMINE_SPENDABLE;
 
     if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
@@ -1539,11 +1511,11 @@ static RPCHelpMan listsinceblock()
     // The way the 'height' is initialized is just a workaround for the gcc bug #47679 since version 4.6.0.
     Optional<int> height = MakeOptional(false, int()); // Height of the specified block or the common ancestor, if the block provided was in a deactivated chain.
     Optional<int> altheight; // Height of the specified block, even if it's in a deactivated chain.
-    int target_confirms = 1;
+    int target_confirms = request.params[1].get((int)1);
     isminefilter filter = ISMINE_SPENDABLE;
 
     uint256 blockId;
-    if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
+    if (!request.params[0].get("").empty()) {
         blockId = ParseHashV(request.params[0], "blockhash");
         height = int{};
         altheight = int{};
@@ -1552,19 +1524,15 @@ static RPCHelpMan listsinceblock()
         }
     }
 
-    if (!request.params[1].isNull()) {
-        target_confirms = request.params[1].get_int();
-
-        if (target_confirms < 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-        }
+    if (target_confirms < 1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
     if (ParseIncludeWatchonly(request.params[2], wallet)) {
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
+    bool include_removed = request.params[3].get(true);
 
     int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
 
@@ -1686,7 +1654,7 @@ static RPCHelpMan gettransaction()
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
+    bool verbose = request.params[2].get(false);
 
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
@@ -1828,12 +1796,9 @@ static RPCHelpMan keypoolrefill()
     LOCK(pwallet->cs_wallet);
 
     // 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
-    unsigned int kpSize = 0;
-    if (!request.params[0].isNull()) {
-        if (request.params[0].get_int() < 0)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
-        kpSize = (unsigned int)request.params[0].get_int();
-    }
+    if (request.params[0].get((int)0) < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
+    unsigned int kpSize = (unsigned int)request.params[0].get((int)0);
 
     EnsureWalletIsUnlocked(pwallet);
     pwallet->TopUpKeyPool(kpSize);
@@ -2622,7 +2587,7 @@ static RPCHelpMan setwalletflag()
     CWallet* const pwallet = wallet.get();
 
     std::string flag_str = request.params[0].get_str();
-    bool value = request.params[1].isNull() || request.params[1].get_bool();
+    bool value = request.params[1].get(true);
 
     if (!WALLET_FLAG_MAP.count(flag_str)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown wallet flag: %s", flag_str));
@@ -2687,11 +2652,11 @@ static RPCHelpMan createwallet()
 {
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
-    if (!request.params[1].isNull() && request.params[1].get_bool()) {
+    if (request.params[1].get(false)) {
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
 
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
+    if (request.params[2].get(false)) {
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
     SecureString passphrase;
@@ -2705,10 +2670,10 @@ static RPCHelpMan createwallet()
         }
     }
 
-    if (!request.params[4].isNull() && request.params[4].get_bool()) {
+    if (request.params[4].get(false)) {
         flags |= WALLET_FLAG_AVOID_REUSE;
     }
-    if (!request.params[5].isNull() && request.params[5].get_bool()) {
+    if (request.params[5].get(false)) {
         flags |= WALLET_FLAG_DESCRIPTORS;
         warnings.emplace_back(Untranslated("Wallet is an experimental descriptor wallet"));
     }
@@ -2848,22 +2813,11 @@ static RPCHelpMan listunspent()
     if (!wallet) return NullUniValue;
     const CWallet* const pwallet = wallet.get();
 
-    int nMinDepth = 1;
-    if (!request.params[0].isNull()) {
-        RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-        nMinDepth = request.params[0].get_int();
-    }
-
-    int nMaxDepth = 9999999;
-    if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
-        nMaxDepth = request.params[1].get_int();
-    }
+    int nMinDepth = request.params[0].get((int)1);
+    int nMaxDepth = request.params[1].get((int)9999999);
 
     std::set<CTxDestination> destinations;
-    if (!request.params[2].isNull()) {
-        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
-        UniValue inputs = request.params[2].get_array();
+        UniValue inputs = request.params[2].get(UniValue(UniValue::VARR));
         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());
@@ -2874,13 +2828,8 @@ static RPCHelpMan listunspent()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + input.get_str());
             }
         }
-    }
 
-    bool include_unsafe = true;
-    if (!request.params[3].isNull()) {
-        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
-        include_unsafe = request.params[3].get_bool();
-    }
+    bool include_unsafe = request.params[3].get(true);
 
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
@@ -3215,8 +3164,8 @@ static RPCHelpMan fundrawtransaction()
 
     // parse hex string from parameter
     CMutableTransaction tx;
-    bool try_witness = request.params[2].isNull() ? true : request.params[2].get_bool();
-    bool try_no_witness = request.params[2].isNull() ? true : !request.params[2].get_bool();
+    bool try_witness = request.params[2].get(true);
+    bool try_no_witness = !request.params[2].get(false); // true if null, otherwise the opposite
     if (!DecodeHexTx(tx, request.params[0].get_str(), try_no_witness, try_witness)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
@@ -3932,10 +3881,7 @@ static RPCHelpMan listlabels()
 
     LOCK(pwallet->cs_wallet);
 
-    std::string purpose;
-    if (!request.params[0].isNull()) {
-        purpose = request.params[0].get_str();
-    }
+    std::string purpose = request.params[0].get("");
 
     // Add to a set to sort by label name, then insert into Univalue array
     std::set<std::string> label_set;
@@ -4177,10 +4123,7 @@ static RPCHelpMan sethdseed()
 
     EnsureWalletIsUnlocked(pwallet);
 
-    bool flush_key_pool = true;
-    if (!request.params[0].isNull()) {
-        flush_key_pool = request.params[0].get_bool();
-    }
+    bool flush_key_pool = request.params[0].get(true);
 
     CPubKey master_pub_key;
     if (request.params[1].isNull()) {
@@ -4253,8 +4196,8 @@ static RPCHelpMan walletprocesspsbt()
     int nHashType = ParseSighashString(request.params[2]);
 
     // Fill transaction with our data and also sign
-    bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+    bool sign = request.params[1].get(true);
+    bool bip32derivs = request.params[3].get(true);
     bool complete = true;
     const TransactionError err = pwallet->FillPSBT(psbtx, complete, nHashType, sign, bip32derivs);
     if (err != TransactionError::OK) {
@@ -4362,12 +4305,7 @@ static RPCHelpMan walletcreatefundedpsbt()
 
     CAmount fee;
     int change_position;
-    bool rbf = pwallet->m_signal_rbf;
-    const UniValue &replaceable_arg = request.params[3]["replaceable"];
-    if (!replaceable_arg.isNull()) {
-        RPCTypeCheckArgument(replaceable_arg, UniValue::VBOOL);
-        rbf = replaceable_arg.isTrue();
-    }
+    bool rbf = request.params[3].get(UniValue(UniValue::VOBJ))["replaceable"].get(pwallet->m_signal_rbf);
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
     CCoinControl coin_control;
     // Automatically select coins, unless at least one is manually selected. Can
@@ -4379,7 +4317,7 @@ static RPCHelpMan walletcreatefundedpsbt()
     PartiallySignedTransaction psbtx(rawTx);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
+    bool bip32derivs = request.params[4].get(true);
     bool complete = true;
     const TransactionError err = pwallet->FillPSBT(psbtx, complete, 1, false, bip32derivs);
     if (err != TransactionError::OK) {
@@ -4422,10 +4360,7 @@ static RPCHelpMan upgradewallet()
 
     EnsureWalletIsUnlocked(pwallet);
 
-    int version = 0;
-    if (!request.params[0].isNull()) {
-        version = request.params[0].get_int();
-    }
+    int version = request.params[0].get((int)0);
 
     bilingual_str error;
     std::vector<bilingual_str> warnings;

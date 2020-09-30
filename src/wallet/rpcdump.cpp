@@ -136,13 +136,10 @@ RPCHelpMan importprivkey()
         EnsureWalletIsUnlocked(pwallet);
 
         std::string strSecret = request.params[0].get_str();
-        std::string strLabel = "";
-        if (!request.params[1].isNull())
-            strLabel = request.params[1].get_str();
+        std::string strLabel = request.params[1].get("");
 
         // Whether to perform rescan after import
-        if (!request.params[2].isNull())
-            fRescan = request.params[2].get_bool();
+        fRescan = request.params[2].get(fRescan);
 
         if (fRescan && pwallet->chain().havePruned()) {
             // Exit early and print an error.
@@ -255,14 +252,10 @@ RPCHelpMan importaddress()
 
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
-    std::string strLabel;
-    if (!request.params[1].isNull())
-        strLabel = request.params[1].get_str();
+    std::string strLabel = request.params[1].get("");
 
     // Whether to perform rescan after import
-    bool fRescan = true;
-    if (!request.params[2].isNull())
-        fRescan = request.params[2].get_bool();
+    bool fRescan = request.params[2].get(true);
 
     if (fRescan && pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -277,9 +270,7 @@ RPCHelpMan importaddress()
     }
 
     // Whether to import a p2sh version, too
-    bool fP2SH = false;
-    if (!request.params[3].isNull())
-        fP2SH = request.params[3].get_bool();
+    bool fP2SH = request.params[3].get(false);
 
     {
         LOCK(pwallet->cs_wallet);
@@ -450,14 +441,10 @@ RPCHelpMan importpubkey()
 
     EnsureLegacyScriptPubKeyMan(*wallet, true);
 
-    std::string strLabel;
-    if (!request.params[1].isNull())
-        strLabel = request.params[1].get_str();
+    std::string strLabel = request.params[1].get("");
 
     // Whether to perform rescan after import
-    bool fRescan = true;
-    if (!request.params[2].isNull())
-        fRescan = request.params[2].get_bool();
+    bool fRescan = request.params[2].get(true);
 
     if (fRescan && pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -1345,15 +1332,7 @@ RPCHelpMan importmulti()
     const UniValue& requests = mainRequest.params[0];
 
     //Default options
-    bool fRescan = true;
-
-    if (!mainRequest.params[1].isNull()) {
-        const UniValue& options = mainRequest.params[1];
-
-        if (options.exists("rescan")) {
-            fRescan = options["rescan"].get_bool();
-        }
-    }
+    bool fRescan = mainRequest.params[1].get(UniValue(UniValue::VOBJ))["rescan"].get(true);
 
     WalletRescanReserver reserver(*pwallet);
     if (fRescan && !reserver.reserve()) {

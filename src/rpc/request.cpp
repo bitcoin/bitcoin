@@ -175,10 +175,8 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
 
     // Parse params
     UniValue valParams = find_value(request, "params");
-    if (valParams.isArray() || valParams.isObject())
-        params = valParams;
-    else if (valParams.isNull())
-        params = UniValue(UniValue::VARR);
+    if (valParams.isArray() || valParams.isObject() || valParams.isNull())
+        params = valParams.get(UniValue(UniValue::VARR));
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }

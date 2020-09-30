@@ -265,9 +265,7 @@ static RPCHelpMan addnode()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
+    std::string strCommand = request.params[1].get("");
     if (request.fHelp || request.params.size() != 2 ||
         (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
         throw std::runtime_error(
@@ -607,9 +605,7 @@ static RPCHelpMan setban()
                 },
         [&](const RPCHelpMan& help, const JSONRPCRequest& request) -> UniValue
 {
-    std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
+    std::string strCommand = request.params[1].get("");
     if (request.fHelp || !help.IsValidNumArgs(request.params.size()) || (strCommand != "add" && strCommand != "remove")) {
         throw std::runtime_error(help.ToString());
     }
@@ -642,13 +638,9 @@ static RPCHelpMan setban()
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
         }
 
-        int64_t banTime = 0; //use standard bantime if not specified
-        if (!request.params[2].isNull())
-            banTime = request.params[2].get_int64();
+        int64_t banTime = request.params[2].get((int64_t)0); //use standard bantime if not specified
 
-        bool absolute = false;
-        if (request.params[3].isTrue())
-            absolute = true;
+        bool absolute = request.params[3].get(false);
 
         if (isSubnet) {
             node.banman->Ban(subNet, banTime, absolute);
@@ -795,12 +787,9 @@ static RPCHelpMan getnodeaddresses()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
-    int count = 1;
-    if (!request.params[0].isNull()) {
-        count = request.params[0].get_int();
-        if (count < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
-        }
+    int count = request.params[0].get((int)1);
+    if (count < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
     }
     // returns a shuffled list of CAddress
     std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0);

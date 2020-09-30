@@ -25,12 +25,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument must be non-null");
     }
 
-    UniValue inputs;
-    if (inputs_in.isNull()) {
-        inputs = UniValue::VARR;
-    } else {
-        inputs = inputs_in.get_array();
-    }
+    UniValue inputs = inputs_in.get(UniValue(UniValue::VARR));
 
     const bool outputs_is_obj = outputs_in.isObject();
     UniValue outputs = outputs_is_obj ? outputs_in.get_obj() : outputs_in.get_array();

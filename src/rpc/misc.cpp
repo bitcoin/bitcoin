@@ -496,7 +496,7 @@ static RPCHelpMan getmemoryinfo()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::string mode = request.params[0].isNull() ? "stats" : request.params[0].get_str();
+    std::string mode = request.params[0].get("stats");
     if (mode == "stats") {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("locked", RPCLockedMemoryInfo());
@@ -677,7 +677,7 @@ static RPCHelpMan getindexinfo()
                 [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue result(UniValue::VOBJ);
-    const std::string index_name = request.params[0].isNull() ? "" : request.params[0].get_str();
+    const std::string index_name = request.params[0].get("");
 
     if (g_txindex) {
         result.pushKVs(SummaryToJSON(g_txindex->GetSummary(), index_name));

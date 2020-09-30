@@ -258,9 +258,7 @@ static RPCHelpMan waitfornewblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
-    if (!request.params[0].isNull())
-        timeout = request.params[0].get_int();
+    int timeout = request.params[0].get((int)0);
 
     CUpdatedBlock block;
     {
@@ -301,12 +299,9 @@ static RPCHelpMan waitforblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    int timeout = request.params[1].get((int)0);
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
-
-    if (!request.params[1].isNull())
-        timeout = request.params[1].get_int();
 
     CUpdatedBlock block;
     {
@@ -348,12 +343,9 @@ static RPCHelpMan waitforblockheight()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    int timeout = request.params[1].get((int)0);
 
     int height = request.params[0].get_int();
-
-    if (!request.params[1].isNull())
-        timeout = request.params[1].get_int();
 
     CUpdatedBlock block;
     {
@@ -577,15 +569,8 @@ static RPCHelpMan getrawmempool()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[0].isNull())
-        fVerbose = request.params[0].get_bool();
-
-    bool include_mempool_sequence = false;
-    if (!request.params[1].isNull()) {
-        include_mempool_sequence = request.params[1].get_bool();
-    }
-
+    bool fVerbose = request.params[0].get(false);
+    bool include_mempool_sequence = request.params[1].get(false);
     return MempoolToJSON(EnsureMemPool(request.context), fVerbose, include_mempool_sequence);
 },
     };
@@ -615,9 +600,7 @@ static RPCHelpMan getmempoolancestors()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    bool fVerbose = request.params[1].get(false);
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
@@ -679,9 +662,7 @@ static RPCHelpMan getmempooldescendants()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    bool fVerbose = request.params[1].get(false);
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
@@ -820,9 +801,7 @@ static RPCHelpMan getblockheader()
 {
     uint256 hash(ParseHashV(request.params[0], "hash"));
 
-    bool fVerbose = true;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    bool fVerbose = request.params[1].get(true);
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -939,13 +918,7 @@ static RPCHelpMan getblock()
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
-    int verbosity = 1;
-    if (!request.params[1].isNull()) {
-        if(request.params[1].isNum())
-            verbosity = request.params[1].get_int();
-        else
-            verbosity = request.params[1].get_bool() ? 1 : 0;
-    }
+    int verbosity = request.params[1].isNum() ? request.params[1].get_int() : request.params[1].get(true);
 
     CBlock block;
     const CBlockIndex* pblockindex;
@@ -1129,9 +1102,7 @@ static RPCHelpMan gettxout()
     uint256 hash(ParseHashV(request.params[0], "txid"));
     int n = request.params[1].get_int();
     COutPoint out(hash, n);
-    bool fMempool = true;
-    if (!request.params[2].isNull())
-        fMempool = request.params[2].get_bool();
+    bool fMempool = request.params[2].get(true);
 
     Coin coin;
     CCoinsViewCache* coins_view = &::ChainstateActive().CoinsTip();
@@ -1184,8 +1155,8 @@ static RPCHelpMan verifychain()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int check_level(request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].get_int());
-    const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].get_int()};
+    const int check_level(request.params[0].get((int)DEFAULT_CHECKLEVEL));
+    const int check_depth{request.params[1].get((int)DEFAULT_CHECKBLOCKS)};
 
     LOCK(cs_main);
 
@@ -2295,10 +2266,7 @@ static RPCHelpMan getblockfilter()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 block_hash = ParseHashV(request.params[0], "blockhash");
-    std::string filtertype_name = "basic";
-    if (!request.params[1].isNull()) {
-        filtertype_name = request.params[1].get_str();
-    }
+    std::string filtertype_name = request.params[1].get("basic");
 
     BlockFilterType filtertype;
     if (!BlockFilterTypeByName(filtertype_name, filtertype)) {

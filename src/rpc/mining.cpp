@@ -100,7 +100,7 @@ static RPCHelpMan getnetworkhashps()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
-    return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
+    return GetNetworkHashPS(request.params[0].get((int)120), request.params[1].get((int)-1));
 },
     };
 }
@@ -223,7 +223,7 @@ static RPCHelpMan generatetodescriptor()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const int num_blocks{request.params[0].get_int()};
-    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].get_int()};
+    const uint64_t max_tries{request.params[2].get(DEFAULT_MAX_TRIES)};
 
     CScript coinbase_script;
     std::string error;
@@ -274,7 +274,7 @@ static RPCHelpMan generatetoaddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const int num_blocks{request.params[0].get_int()};
-    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].get_int()};
+    const uint64_t max_tries{request.params[2].get(DEFAULT_MAX_TRIES)};
 
     CTxDestination destination = DecodeDestination(request.params[1].get_str());
     if (!IsValidDestination(destination)) {
@@ -468,7 +468,7 @@ static RPCHelpMan prioritisetransaction()
     uint256 hash(ParseHashV(request.params[0], "txid"));
     CAmount nAmount = request.params[2].get_int64();
 
-    if (!(request.params[1].isNull() || request.params[1].get_real() == 0)) {
+    if (request.params[1].get(0.0) != 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
     }
 
@@ -601,15 +601,7 @@ static RPCHelpMan getblocktemplate()
     if (!request.params[0].isNull())
     {
         const UniValue& oparam = request.params[0].get_obj();
-        const UniValue& modeval = find_value(oparam, "mode");
-        if (modeval.isStr())
-            strMode = modeval.get_str();
-        else if (modeval.isNull())
-        {
-            /* Do nothing */
-        }
-        else
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
+        strMode = find_value(oparam, "mode").get(strMode);
         lpval = find_value(oparam, "longpollid");
 
         if (strMode == "proposal")
@@ -1151,10 +1143,7 @@ static RPCHelpMan estimaterawfee()
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
     unsigned int max_target = ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
-    double threshold = 0.95;
-    if (!request.params[1].isNull()) {
-        threshold = request.params[1].get_real();
-    }
+    double threshold = request.params[1].get(0.95);
     if (threshold < 0 || threshold > 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid threshold");
     }

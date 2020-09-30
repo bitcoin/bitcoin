@@ -395,8 +395,8 @@ public:
 
         for (const UniValue& peer : getpeerinfo.getValues()) {
             const std::string addr{peer["addr"].get_str()};
-            const std::string addr_local{peer["addrlocal"].isNull() ? "" : peer["addrlocal"].get_str()};
-            const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
+            const std::string addr_local{peer["addrlocal"].get("")};
+            const int mapped_as{peer["mapped_as"].get((int)0)};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
             const bool is_inbound{peer["inbound"].get_bool()};
             NetType net_type{NetType::ipv4};
@@ -433,8 +433,8 @@ public:
                 const int64_t last_recv{peer["lastrecv"].get_int64()};
                 const int64_t last_send{peer["lastsend"].get_int64()};
                 const int64_t last_trxn{peer["last_transaction"].get_int64()};
-                const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
-                const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
+                const double min_ping{peer["minping"].get(-1.0)};
+                const double ping{peer["pingtime"].get(-1.0)};
                 peers.push_back({peer_id, mapped_as, version, conn_time, last_blck, last_recv, last_send, last_trxn, min_ping, ping, addr, sub_version, net_type, is_block_relay, !is_inbound});
                 max_peer_id_length = std::max(ToString(peer_id).length(), max_peer_id_length);
                 max_addr_length = std::max(addr.length() + 1, max_addr_length);
