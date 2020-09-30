@@ -38,9 +38,9 @@ static constexpr int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;
 /** Minimum time between orphan transactions expire time checks in seconds */
 static constexpr int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
 /** How long to cache transactions in mapRelay for normal relay */
-static constexpr std::chrono::seconds RELAY_TX_CACHE_TIME = std::chrono::minutes{15};
+static constexpr auto RELAY_TX_CACHE_TIME = std::chrono::minutes{15};
 /** How long a transaction has to be in the mempool before it can unconditionally be relayed (even when not in mapRelay). */
-static constexpr std::chrono::seconds UNCONDITIONAL_RELAY_DELAY = std::chrono::minutes{2};
+static constexpr auto UNCONDITIONAL_RELAY_DELAY = std::chrono::minutes{2};
 /** Headers download timeout expressed in microseconds
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = std::chrono::minutes{15};
@@ -254,7 +254,7 @@ namespace {
     typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
-    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
+    std::deque<std::pair<std::chrono::microseconds, MapRelay::iterator>> g_relay_expiration GUARDED_BY(cs_main);
 
     struct IteratorComparator
     {
@@ -4427,20 +4427,20 @@ bool PeerManager::SendMessages(CNode* pto)
                         nRelayedTransactions++;
                         {
                             // Expire old relay messages
-                            while (!vRelayExpiration.empty() && vRelayExpiration.front().first < count_microseconds(current_time))
+                            while (!g_relay_expiration.empty() && g_relay_expiration.front().first < current_time)
                             {
-                                mapRelay.erase(vRelayExpiration.front().second);
-                                vRelayExpiration.pop_front();
+                                mapRelay.erase(g_relay_expiration.front().second);
+                                g_relay_expiration.pop_front();
                             }
 
                             auto ret = mapRelay.emplace(txid, std::move(txinfo.tx));
                             if (ret.second) {
-                                vRelayExpiration.emplace_back(count_microseconds(current_time + std::chrono::microseconds{RELAY_TX_CACHE_TIME}), ret.first);
+                                g_relay_expiration.emplace_back(current_time + RELAY_TX_CACHE_TIME, ret.first);
                             }
                             // Add wtxid-based lookup into mapRelay as well, so that peers can request by wtxid
                             auto ret2 = mapRelay.emplace(wtxid, ret.first->second);
                             if (ret2.second) {
-                                vRelayExpiration.emplace_back(count_microseconds(current_time + std::chrono::microseconds{RELAY_TX_CACHE_TIME}), ret2.first);
+                                g_relay_expiration.emplace_back(current_time + RELAY_TX_CACHE_TIME, ret2.first);
                             }
                         }
                         if (vInv.size() == MAX_INV_SZ) {
