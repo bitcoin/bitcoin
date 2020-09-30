@@ -12,7 +12,7 @@ fi
 
 test/lint/git-subtree-check.sh src/crypto/ctaes
 test/lint/git-subtree-check.sh src/secp256k1
-test/lint/git-subtree-check.sh src/univalue
+# test/lint/git-subtree-check.sh src/univalue # TEMP DISABLED FOR #20045
 test/lint/git-subtree-check.sh src/leveldb
 test/lint/git-subtree-check.sh src/crc32c
 test/lint/check-doc.py
