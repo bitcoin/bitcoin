@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "vbk/p2p_sync.hpp"
 #include <veriblock/entities/atv.hpp>
 #include <veriblock/entities/vbkblock.hpp>
 #include <veriblock/entities/vtb.hpp>
-#include "vbk/p2p_sync.hpp"
 
 namespace VeriBlock {
 namespace p2p {
@@ -147,9 +147,10 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
     }
 
     altintegration::ValidationState state;
-    if (!pop_mempool.submit(std::make_shared<pop_t>(data), state, false)) {
-        LogPrint(BCLog::NET, "peer %d sent invalid pop data: %s\n", node->GetId(), state.toString());
-        Misbehaving(node->GetId(), 20, strprintf("invalid pop data getdata, reason: %s", state.toString()));
+    auto result = pop_mempool.submit(std::make_shared<pop_t>(data), state, false);
+    if (!result && result.status == altintegration::MemPool::FAILED_STATELESS) {
+        LogPrint(BCLog::NET, "peer %d sent statelessly invalid pop data: %s\n", node->GetId(), state.toString());
+        Misbehaving(node->GetId(), 20, strprintf("statelessly invalid pop data getdata, reason: %s", state.toString()));
         return false;
     }
 

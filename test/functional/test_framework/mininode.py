@@ -103,7 +103,7 @@ MESSAGEMAP = {
 }
 
 # Edit these parameters to match src/chainparams.cpp
-VBK_GAMMA = 0xb0
+VBK_GAMMA = 0xb1
 VBK_NETWORK = (VBK_GAMMA + 0x1)
 
 

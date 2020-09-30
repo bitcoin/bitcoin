@@ -285,8 +285,6 @@ jobs:
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
-      - name: install homebrew
-        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
       - name: install dependencies
         run: |
           brew install automake berkeley-db4 boost miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
