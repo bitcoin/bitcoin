@@ -25,12 +25,7 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, TxValidat
         return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
     }
 
-    static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (proTx.addr.GetPort() != mainnetDefaultPort) {
-            return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr-port", fJustCheck);
-        }
-    } else if (proTx.addr.GetPort() == mainnetDefaultPort) {
+    if (proTx.addr.GetPort() != Params().GetDefaultPort()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr-port", fJustCheck);
     }
 
