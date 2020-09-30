@@ -153,8 +153,14 @@ struct COrphanTx {
     int64_t nTimeExpire;
     size_t list_pos;
 };
+
+/** Guards orphan transactions and extra txs for compact blocks */
 RecursiveMutex g_cs_orphans;
+/** Map from txid to orphan transaction record. Limited by
+ *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
 std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
+/** Index from wtxid into the mapOrphanTransactions to lookup orphan
+ *  transactions using their witness ids. */
 std::map<uint256, std::map<uint256, COrphanTx>::iterator> g_orphans_by_wtxid GUARDED_BY(g_cs_orphans);
 
 void EraseOrphansFor(NodeId peer);
@@ -258,12 +264,19 @@ namespace {
             return &(*a) < &(*b);
         }
     };
+
+    /** Index from the parents' COutPoint into the mapOrphanTransactions. Used
+     *  to remove orphan transactions from the mapOrphanTransactions */
     std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
+    /** Orphan transactions in vector for quick random eviction */
+    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans);
 
-    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans); //! For random eviction
-
-    static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
+    /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
+     *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
+     *  these are kept in a ring buffer */
     static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
+    /** Offset into vExtraTxnForCompact to insert the next tx */
+    static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
 } // namespace
 
 namespace {
@@ -2021,13 +2034,20 @@ void PeerManager::ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHe
     return;
 }
 
-void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn)
+/**
+ * Reconsider orphan transactions after a parent has been accepted to the mempool.
+ *
+ * @param[in/out]  orphan_work_set  The set of orphan transactions to reconsider. Generally only one
+ *                                  orphan will be reconsidered on each call of this function. This set
+ *                                  may be added to if accepting an orphan causes its children to be
+ *                                  reconsidered.
+ */
+void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
-    std::set<NodeId> setMisbehaving;
-    bool done = false;
-    while (!done && !orphan_work_set.empty()) {
+
+    while (!orphan_work_set.empty()) {
         const uint256 orphanHash = *orphan_work_set.begin();
         orphan_work_set.erase(orphan_work_set.begin());
 
@@ -2035,18 +2055,13 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
         if (orphan_it == mapOrphanTransactions.end()) continue;
 
         const CTransactionRef porphanTx = orphan_it->second.tx;
-        const CTransaction& orphanTx = *porphanTx;
-        NodeId fromPeer = orphan_it->second.fromPeer;
-        // Use a new TxValidationState because orphans come from different peers (and we call
-        // MaybePunishNodeForTx based on the source peer from the orphan map, not based on the peer
-        // that relayed the previous transaction).
-        TxValidationState orphan_state;
+        TxValidationState state;
+        std::list<CTransactionRef> removed_txn;
 
-        if (setMisbehaving.count(fromPeer)) continue;
-        if (AcceptToMemoryPool(m_mempool, orphan_state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        if (AcceptToMemoryPool(m_mempool, state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), m_connman);
-            for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
+            for (unsigned int i = 0; i < porphanTx->vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(orphanHash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
@@ -2055,22 +2070,23 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
                 }
             }
             EraseOrphanTx(orphanHash);
-            done = true;
-        } else if (orphan_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
-            if (orphan_state.IsInvalid()) {
-                // Punish peer that gave us an invalid orphan tx
-                if (MaybePunishNodeForTx(fromPeer, orphan_state)) {
-                    setMisbehaving.insert(fromPeer);
-                }
+            for (const CTransactionRef& removedTx : removed_txn) {
+                AddToCompactExtraTransactions(removedTx);
+            }
+            break;
+        } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
+            if (state.IsInvalid()) {
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
                     orphanHash.ToString(),
-                    fromPeer,
-                    orphan_state.ToString());
+                    orphan_it->second.fromPeer,
+                    state.ToString());
+                // Maybe punish peer that gave us an invalid orphan tx
+                MaybePunishNodeForTx(orphan_it->second.fromPeer, state);
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
             LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
-            if (orphan_state.GetResult() != TxValidationResult::TX_WITNESS_STRIPPED) {
+            if (state.GetResult() != TxValidationResult::TX_WITNESS_STRIPPED) {
                 // We can add the wtxid of this transaction to our reject filter.
                 // Do not add txids of witness transactions or witness-stripped
                 // transactions to the filter, as they can have been malleated;
@@ -2085,7 +2101,7 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
                 // for concerns around weakening security of unupgraded nodes
                 // if we start doing this too early.
                 assert(recentRejects);
-                recentRejects->insert(orphanTx.GetWitnessHash());
+                recentRejects->insert(porphanTx->GetWitnessHash());
                 // If the transaction failed for TX_INPUTS_NOT_STANDARD,
                 // then we know that the witness was irrelevant to the policy
                 // failure, since this check depends only on the txid
@@ -2094,17 +2110,17 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set, std::list<
                 // processing of this transaction in the event that child
                 // transactions are later received (resulting in
                 // parent-fetching by txid via the orphan-handling logic).
-                if (orphan_state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && orphanTx.GetWitnessHash() != orphanTx.GetHash()) {
+                if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && porphanTx->GetWitnessHash() != porphanTx->GetHash()) {
                     // We only add the txid if it differs from the wtxid, to
                     // avoid wasting entries in the rolling bloom filter.
-                    recentRejects->insert(orphanTx.GetHash());
+                    recentRejects->insert(porphanTx->GetHash());
                 }
             }
             EraseOrphanTx(orphanHash);
-            done = true;
+            break;
         }
-        m_mempool.check(&::ChainstateActive().CoinsTip());
     }
+    m_mempool.check(&::ChainstateActive().CoinsTip());
 }
 
 /**
@@ -3017,8 +3033,12 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 tx.GetHash().ToString(),
                 m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
 
+            for (const CTransactionRef& removedTx : lRemovedTxn) {
+                AddToCompactExtraTransactions(removedTx);
+            }
+
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(pfrom.orphan_work_set, lRemovedTxn);
+            ProcessOrphanTx(pfrom.orphan_work_set);
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
@@ -3118,9 +3138,6 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 }
             }
         }
-
-        for (const CTransactionRef& removedTx : lRemovedTxn)
-            AddToCompactExtraTransactions(removedTx);
 
         // If a tx has been detected by recentRejects, we will have reached
         // this point and the tx will have been ignored. Because we haven't run
@@ -3821,12 +3838,8 @@ bool PeerManager::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgP
         ProcessGetData(*pfrom, m_chainparams, m_connman, m_mempool, interruptMsgProc);
 
     if (!pfrom->orphan_work_set.empty()) {
-        std::list<CTransactionRef> removed_txn;
         LOCK2(cs_main, g_cs_orphans);
-        ProcessOrphanTx(pfrom->orphan_work_set, removed_txn);
-        for (const CTransactionRef& removedTx : removed_txn) {
-            AddToCompactExtraTransactions(removedTx);
-        }
+        ProcessOrphanTx(pfrom->orphan_work_set);
     }
 
     if (pfrom->fDisconnect)
