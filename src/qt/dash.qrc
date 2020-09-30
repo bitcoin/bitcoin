@@ -1,21 +1,20 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
-        <file alias="bitcoin">res/icons/bitcoin.png</file>
-        <file alias="prompticon">res/icons/chevron.png</file>
+        <file alias="dash">res/icons/dash.png</file>
         <file alias="warning">res/icons/warning.png</file>
-    </qresource>
-    <qresource prefix="/icons">
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="connect_1">res/icons/connect1_16.png</file>
         <file alias="connect_2">res/icons/connect2_16.png</file>
         <file alias="connect_3">res/icons/connect3_16.png</file>
         <file alias="connect_4">res/icons/connect4_16.png</file>
         <file alias="transaction_0">res/icons/transaction0.png</file>
-        <file alias="transaction_1">res/icons/clock1.png</file>
-        <file alias="transaction_2">res/icons/clock2.png</file>
-        <file alias="transaction_3">res/icons/clock3.png</file>
-        <file alias="transaction_4">res/icons/clock4.png</file>
-        <file alias="transaction_5">res/icons/clock5.png</file>
+        <file alias="transaction_1">res/icons/transaction1.png</file>
+        <file alias="transaction_2">res/icons/transaction2.png</file>
+        <file alias="transaction_3">res/icons/transaction3.png</file>
+        <file alias="transaction_4">res/icons/transaction4.png</file>
+        <file alias="transaction_5">res/icons/transaction5.png</file>
+        <file alias="transaction_abandoned">res/icons/transaction_abandoned.png</file>
+        <file alias="transaction_locked">res/icons/transaction_locked.png</file>
         <file alias="eye">res/icons/eye.png</file>
         <file alias="eye_minus">res/icons/eye_minus.png</file>
         <file alias="eye_plus">res/icons/eye_plus.png</file>
@@ -25,11 +24,9 @@
         <file alias="remove">res/icons/remove.png</file>
         <file alias="lock_closed">res/icons/lock_closed.png</file>
         <file alias="lock_open">res/icons/lock_open.png</file>
-        <file alias="verify">res/icons/verify.png</file>
         <file alias="hd_enabled">res/icons/hd_enabled.png</file>
         <file alias="fontbigger">res/icons/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/fontsmaller.png</file>
-        <file alias="transaction_abandoned">res/icons/transaction_abandoned.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="general">res/css/general.css</file>

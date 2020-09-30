@@ -431,7 +431,7 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
 QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx) const
 {
     if (wtx->status.lockedByInstantSend) {
-        return GUIUtil::getIcon("verify", GUIUtil::ThemedColor::BLUE);
+        return GUIUtil::getIcon("transaction_locked", GUIUtil::ThemedColor::BLUE);
     }
     return QVariant();
 }

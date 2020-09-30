@@ -1604,6 +1604,9 @@ QWidget#RPCConsole QTextEdit#messagesWidget { /* Console Messages Window */
     padding: 10px;
 }
 
+QWidget#RPCConsole QLabel#promptLabel { /* Prompt Label */
+}
+
 QWidget#RPCConsole QLineEdit#lineEdit { /* Console Input */
     margin-top: 10px;
 }
@@ -1613,10 +1616,6 @@ QWidget#RPCConsole .QToolButton { /* Console buttons fontbigger/fontsmaller/clea
     margin-left: 3px;
     margin-bottom:5px;
     border: 0;
-}
-
-QWidget#RPCConsole QPushButton#promptIcon { /* Prompt Icon */
-    background-color: #00000000;
 }
 
 QWidget#RPCConsole .QGroupBox #line { /* Network In Line */

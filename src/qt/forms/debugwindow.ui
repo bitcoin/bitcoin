@@ -597,35 +597,9 @@
           <number>3</number>
          </property>
          <item>
-          <widget class="QPushButton" name="promptIcon">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16</width>
-             <height>24</height>
-            </size>
-           </property>
+          <widget class="QLabel" name="promptLabel">
            <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>:/icons/prompticon</normaloff>
-             <disabledoff>:/icons/prompticon</disabledoff>:/icons/prompticon</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>14</width>
-             <height>14</height>
-            </size>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>true</bool>
+            <string notr="true"> &gt; </string>
            </property>
           </widget>
          </item>
