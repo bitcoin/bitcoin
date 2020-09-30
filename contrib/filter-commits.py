@@ -6,8 +6,13 @@ initialCommit = "HEAD~"
 if "INITIAL_COMMIT" in os.environ:
     initialCommit = os.environ["INITIAL_COMMIT"]
 
-filterPaths = [
-    "./build_msvc",
+whitelist = [
+    "depends/packages/veriblock-pop-cpp.mk",
+    "depends/packages/packages.mk"
+]
+
+blacklist = [
+    "build_msvc",
     ".gitignore",
     ".dockerignore",
     ".github",
@@ -18,18 +23,26 @@ filterPaths = [
     "README.md",
     "SECURITY.md",
     "*.Dockerfile",
-    "contrib"
+    "contrib",
+    "Makefile.am",
+    "depends",
+    "doc"
 ]
 
 subprocess.run(["git", "reset", "--soft", initialCommit])
 subprocess.run(["git", "add", "--all", "."])
 
-for p in filterPaths:
+# first, remove blacklisted items
+for p in blacklist:
     subprocess.run(["git", "reset", p])
+
+# then add whitelisted
+for p in whitelist:
+    subprocess.run(["git", "add", p])
 
 subprocess.run(["git", "commit", "-m", "Features added since " + initialCommit])
 
-for p in filterPaths:
+for p in blacklist:
     subprocess.run(["git", "add", p])
 
-subprocess.run(["git", "commit", "-m", "Branding changes"])
+subprocess.run(["git", "commit", "-m", "Branding/Aux changes"])
