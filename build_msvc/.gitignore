@@ -24,3 +24,4 @@ libtest_util/libtest_util.vcxproj
 */Win32
 libsyscoin_qt/QtGeneratedFiles/*
 test_syscoin-qt/QtGeneratedFiles/*
+vcpkg_installed
