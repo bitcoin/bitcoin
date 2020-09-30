@@ -433,18 +433,18 @@ static RPCHelpMan sendtoaddress()
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to send to."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment used to store what the transaction is for.\n"
-            "                             This is not part of the transaction, just kept in your wallet."},
+                                         "This is not part of the transaction, just kept in your wallet."},
                     {"comment_to", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment to store the name of the person or organization\n"
-            "                             to which you're sending the transaction. This is not part of the \n"
-            "                             transaction, just kept in your wallet."},
+                                         "to which you're sending the transaction. This is not part of the \n"
+                                         "transaction, just kept in your wallet."},
                     {"subtractfeefromamount", RPCArg::Type::BOOL, /* default */ "false", "The fee will be deducted from the amount being sent.\n"
-            "                             The recipient will receive less bitcoins than you enter in the amount field."},
+                                         "The recipient will receive less bitcoins than you enter in the amount field."},
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125"},
                     {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
-            "                             dirty if they have previously been used in a transaction."},
+                                         "dirty if they have previously been used in a transaction."},
                     {"verbose", RPCArg::Type::BOOL, /* default */ "false", "If true, return extra information about the transaction."},
                 },
                 {
@@ -860,9 +860,9 @@ static RPCHelpMan sendmany()
                     {"minconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "Ignored dummy value"},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment"},
                     {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The addresses.\n"
-            "                           The fee will be equally deducted from the amount of each selected address.\n"
-            "                           Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
-            "                           If no addresses are specified here, the sender pays the fee.",
+                                       "The fee will be equally deducted from the amount of each selected address.\n"
+                                       "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                                       "If no addresses are specified here, the sender pays the fee.",
                         {
                             {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Subtract fee from this address"},
                         },
@@ -875,7 +875,7 @@ static RPCHelpMan sendmany()
                 },
                 {
                     RPCResult{"if verbose is not set or set to false",
-                        RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only  1 transaction is created regardless of\n"
+                        RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."
                     },
                     RPCResult{"if verbose is set to true",
@@ -1513,7 +1513,7 @@ static RPCHelpMan listsinceblock()
                     {"target_confirmations", RPCArg::Type::NUM, /* default */ "1", "Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value"},
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Include transactions to watch-only addresses (see 'importaddress')"},
                     {"include_removed", RPCArg::Type::BOOL, /* default */ "true", "Show transactions that were removed due to a reorg in the \"removed\" array\n"
-            "                                                           (not guaranteed to work on pruned nodes)"},
+                                                                       "(not guaranteed to work on pruned nodes)"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2832,7 +2832,7 @@ static RPCHelpMan listunspent()
                         },
                     },
                     {"include_unsafe", RPCArg::Type::BOOL, /* default */ "true", "Include outputs that are not safe to spend\n"
-            "                  See description of \"safe\" attribute below."},
+                              "See description of \"safe\" attribute below."},
                     {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
                         {
                             {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
@@ -3196,15 +3196,15 @@ static RPCHelpMan fundrawtransaction()
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                             {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The integers.\n"
-                            "                              The fee will be equally deducted from the amount of each specified output.\n"
-                            "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
-                            "                              If no outputs are specified here, the sender pays the fee.",
+                                                          "The fee will be equally deducted from the amount of each specified output.\n"
+                                                          "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                                                          "If no outputs are specified here, the sender pays the fee.",
                                 {
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
-                            "                              Allows this transaction to be replaced by a transaction with higher fees"},
+                                                          "Allows this transaction to be replaced by a transaction with higher fees"},
                             {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "       \"" + FeeModes("\"\n\"") + "\""},
@@ -3384,15 +3384,15 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                 {
                     {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
                     {"fee_rate", RPCArg::Type::NUM, /* default */ "fall back to 'conf_target'", "fee rate (NOT total fee) to pay, in " + CURRENCY_UNIT + " per kB\n"
-    "                         Specify a fee rate instead of relying on the built-in fee estimator.\n"
+                             "Specify a fee rate instead of relying on the built-in fee estimator.\n"
                              "Must be at least 0.0001 " + CURRENCY_UNIT + " per kB higher than the current transaction fee rate.\n"},
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
-    "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
-    "                         be left unchanged from the original. If false, any input sequence numbers in the\n"
-    "                         original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
-    "                         so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
-    "                         still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
-    "                         are replaceable)."},
+                             "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
+                             "be left unchanged from the original. If false, any input sequence numbers in the\n"
+                             "original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
+                             "so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
+                             "still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
+                             "are replaceable)."},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
     "         \"" + FeeModes("\"\n\"") + "\""},
                 },
@@ -3774,7 +3774,7 @@ RPCHelpMan getaddressinfo()
                         {RPCResult::Type::NUM, "witness_version", /* optional */ true, "The version number of the witness program."},
                         {RPCResult::Type::STR_HEX, "witness_program", /* optional */ true, "The hex value of the witness program."},
                         {RPCResult::Type::STR, "script", /* optional */ true, "The output script type. Only if isscript is true and the redeemscript is known. Possible\n"
-            "                                                         types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash,\n"
+                                                                     "types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash,\n"
                             "witness_v0_scripthash, witness_unknown."},
                         {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "The redeemscript for the p2sh address."},
                         {RPCResult::Type::ARR, "pubkeys", /* optional */ true, "Array of pubkeys associated with the known redeemscript (only if script is multisig).",
@@ -3993,7 +3993,7 @@ static RPCHelpMan send()
         "\nEXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
         {
-            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A JSON array with outputs (key-value pairs), where none of the keys are duplicated.\n"
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
                     "That is, each address can only appear once and there can only be one 'data' object.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
                 {
@@ -4044,7 +4044,7 @@ static RPCHelpMan send()
                         },
                     },
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
-                    "                              Allows this transaction to be replaced by a transaction with higher fees"},
+                                                  "Allows this transaction to be replaced by a transaction with higher fees"},
                 },
                 "options"},
         },
@@ -4174,11 +4174,11 @@ static RPCHelpMan sethdseed()
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"newkeypool", RPCArg::Type::BOOL, /* default */ "true", "Whether to flush old unused addresses, including change addresses, from the keypool and regenerate it.\n"
-            "                             If true, the next address from getnewaddress and change address from getrawchangeaddress will be from this new seed.\n"
-            "                             If false, addresses (including change addresses if the wallet already had HD Chain Split enabled) from the existing\n"
-            "                             keypool will be used until it has been depleted."},
+                                         "If true, the next address from getnewaddress and change address from getrawchangeaddress will be from this new seed.\n"
+                                         "If false, addresses (including change addresses if the wallet already had HD Chain Split enabled) from the existing\n"
+                                         "keypool will be used until it has been depleted."},
                     {"seed", RPCArg::Type::STR, /* default */ "random seed", "The WIF private key to use as the new HD seed.\n"
-            "                             The seed value can be retrieved using the dumpwallet command. It is the private key marked hdseed=1"},
+                                         "The seed value can be retrieved using the dumpwallet command. It is the private key marked hdseed=1"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -4323,7 +4323,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                     {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
                             "That is, each address can only appear once and there can only be one 'data' object.\n"
                             "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
-                            "                             accepted as second parameter.",
+                            "accepted as second parameter.",
                         {
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                 {
@@ -4348,15 +4348,15 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                             {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The outputs to subtract the fee from.\n"
-                            "                              The fee will be equally deducted from the amount of each specified output.\n"
-                            "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
-                            "                              If no outputs are specified here, the sender pays the fee.",
+                                                          "The fee will be equally deducted from the amount of each specified output.\n"
+                                                          "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                                                          "If no outputs are specified here, the sender pays the fee.",
                                 {
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
-                            "                              Allows this transaction to be replaced by a transaction with higher fees"},
+                                                          "Allows this transaction to be replaced by a transaction with higher fees"},
                             {"conf_target", RPCArg::Type::NUM, /* default */ "fall back to wallet's confirmation target (txconfirmtarget)", "Confirmation target (in blocks)"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "         \"" + FeeModes("\"\n\"") + "\""},
