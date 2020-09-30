@@ -65,6 +65,10 @@ class SignetBasicTest(BitcoinTestFramework):
 
         assert_equal(self.nodes[4].submitblock(signet_blocks[0]), 'bad-signet-blksig')
 
+        self.log.info("test that signet logs the network magic on node start")
+        with self.nodes[0].assert_debug_log(["Signet derived magic (message start)"]):
+            self.restart_node(0)
+
 
 if __name__ == '__main__':
     SignetBasicTest().main()
