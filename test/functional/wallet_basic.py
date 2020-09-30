@@ -231,19 +231,19 @@ class WalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
-            estimate_mode='bTc/kB')
+            estimate_mode='BTC/kB')
         # Throw if negative feerate
         assert_raises_rpc_error(-3, "Amount out of range",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
             conf_target=-1,
-            estimate_mode='bTc/kB')
+            estimate_mode='BTC/kB')
         fee_per_kb = 0.0002500
         explicit_fee_per_byte = Decimal(fee_per_kb) / 1000
         txid = self.nodes[2].sendmany(
             amounts={ address: 10 },
             conf_target=fee_per_kb,
-            estimate_mode='bTc/kB',
+            estimate_mode='BTC/kB',
         )
         self.nodes[2].generate(1)
         self.sync_all(self.nodes[0:3])
@@ -413,8 +413,8 @@ class WalletTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
 
-            # send with explicit btc/kb fee
-            self.log.info("test explicit fee (sendtoaddress as btc/kb)")
+            # send with explicit BTC/kB fee
+            self.log.info("test explicit fee (sendtoaddress as BTC/kB)")
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
             prebalance = self.nodes[2].getbalance()
@@ -425,19 +425,19 @@ class WalletTest(BitcoinTestFramework):
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
-                estimate_mode='BTc/Kb')
+                estimate_mode='BTC/kB')
             # Throw if negative feerate
             assert_raises_rpc_error(-3, "Amount out of range",
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
                 conf_target=-1,
-                estimate_mode='btc/kb')
+                estimate_mode='BTC/kB')
             txid = self.nodes[2].sendtoaddress(
                 address=address,
                 amount=1.0,
                 conf_target=0.00002500,
-                estimate_mode='btc/kb',
+                estimate_mode='BTC/kB',
             )
             tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
             self.sync_all(self.nodes[0:3])
