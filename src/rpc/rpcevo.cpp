@@ -228,7 +228,8 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePosRet = -1;
     bilingual_str error;
     CTransactionRef wtx;
-    bool fCreated = pwallet->CreateTransaction(vecSend, wtx, nFeeRequired, nChangePosRet, error, coin_control);
+    FeeCalculation fee_calc_out;
+    bool fCreated = pwallet->CreateTransaction(vecSend, wtx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
 
