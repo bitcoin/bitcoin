@@ -3,7 +3,7 @@ $(package)_version=7.72.0
 $(package)_dependencies=openssl
 $(package)_download_path=https://curl.haxx.se/download
 $(package)_file_name=curl-$($(package)_version).tar.gz
-$(package)_sha256_hash=ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef
+$(package)_sha256_hash=0ded0808c4d85f2ee0db86980ae610cc9d165e9ca9da466196cc73c346513713
 
 # default settings
 $(package)_config_env_default=LD_LIBRARY_PATH="$(PREFIX_DIR)lib" PKG_CONFIG_LIBDIR="$(PREFIX_DIR)lib/pkgconfig" CPPFLAGS="-I$(PREFIX_DIR)include" LDFLAGS="-L$(PREFIX_DIR)lib"
