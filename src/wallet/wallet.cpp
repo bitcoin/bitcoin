@@ -2387,7 +2387,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
             effective_feerate = coin_selection_params.effective_fee;
         }
 
-        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, eligibility_filter.max_ancestors, effective_feerate, long_term_feerate, eligibility_filter, true /* positive_only */);
+        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, long_term_feerate, eligibility_filter, true /* positive_only */);
 
         // Calculate cost of change
         CAmount cost_of_change = GetDiscardRate(*this).GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
@@ -2397,7 +2397,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         bnb_used = true;
         return SelectCoinsBnB(groups, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
     } else {
-        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, eligibility_filter.max_ancestors, CFeeRate(0), CFeeRate(0), eligibility_filter, false /* positive_only */);
+        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, CFeeRate(0), CFeeRate(0), eligibility_filter, false /* positive_only */);
 
         bnb_used = false;
         return KnapsackSolver(nTargetValue, groups, setCoinsRet, nValueRet);
@@ -2489,8 +2489,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
         (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
         (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, true /* include_partial_groups */), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     util::insert(setCoinsRet, setPresetCoins);
@@ -4193,7 +4193,7 @@ bool CWalletTx::IsImmatureCoinBase() const
     return GetBlocksToMaturity() > 0;
 }
 
-std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const size_t max_ancestors, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const {
+std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const {
     std::vector<OutputGroup> groups;
     std::map<CTxDestination, OutputGroup> gmap;
     std::set<CTxDestination> full_groups;
@@ -4235,9 +4235,9 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
     if (!single_coin) {
         for (auto& it : gmap) {
             auto& group = it.second;
-            if (full_groups.count(it.first) > 0) {
-                // Make this unattractive as we want coin selection to avoid it if possible
-                group.m_ancestors = max_ancestors - 1;
+            if (full_groups.count(it.first) > 0 && !filter.m_include_partial_groups) {
+                // Don't include partial groups if we don't want them
+                continue;
             }
             // If the OutputGroup is not eligible, don't add it
             if (positive_only && group.effective_value <= 0) continue;
