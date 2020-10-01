@@ -184,6 +184,10 @@
         <translation>ادخل كملة المرور القديمة وكلمة المرور الجديدة للمحفظة.</translation>
     </message>
     <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>تذكر أن تشفير محفظتك لا يحمي البيتكوين الخاصة بك بشكل كامل من السرقة من قبل البرامج الخبيثةالتي تصيب حاسوبك</translation>
+    </message>
+    <message>
         <source>Wallet to be encrypted</source>
         <translation>سوف يتم تشفير محفظتك</translation>
     </message>
@@ -756,9 +760,41 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>فشل إنشاء المحفظة</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>تحذير إنشاء محفظة</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>إنشاء محفظة</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>إسم المحفظة</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>شفر المحفظة. المحفظة سيتم تشفيرها بإستخدام كلمة مرور من إختيارك.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>تشفير محفظة</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>إيقاف المفاتيح الخاصة</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>أنشئ محفظة فارغة</translation>
+    </message>
     <message>
         <source>Create</source>
         <translation>إنشاء</translation>
@@ -801,6 +837,14 @@
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation>العنوان المدخل "%1" ليس عنوان بيت كوين صحيح.</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>العنوان "%1" موجود بالفعل كعنوان إستقبال تحت مسمى "%2" ولذلك لا يمكن إضافته كعنوان إرسال.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>العنوان المدخل  "%1" موجود بالفعل في سجل العناوين تحت مسمى " "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>

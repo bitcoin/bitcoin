@@ -70,6 +70,10 @@
         <translation>ఇవి మీరు పంపే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. నాణేలు పంపే ముందు ప్రతిసారి అందుకునే చిరునామా మరియు చెల్లింపు మొత్తం సరిచూసుకోండి.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>చెల్లింపులు స్వీకరించడానికి ఇవి మీ బిట్‌కాయిన్ చిరునామాలు. క్రొత్త చిరునామాలను సృష్టించడానికి స్వీకరించు ట్యాబ్‌లోని 'క్రొత్త స్వీకరించే చిరునామాను సృష్టించండి' బటన్‌ను ఉపయోగించండి.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>చిరునామాను కాపీ చెయ్యండి</translation>
     </message>
@@ -132,8 +136,36 @@
         <translation>క్రొత్త సంకేతపదము మరలా ఇవ్వండి</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>సంకేతపదమును చూపించు</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>వాలెట్‌ను గుప్తీకరించండి</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>ఈ ఆపరేషన్‌కు వాలెట్‌ను అన్‌లాక్ చేయడానికి మీ వాలెట్ పాస్‌ఫ్రేజ్ అవసరం.</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>వాలెట్ అన్లాక్</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>ఈ ఆపరేషన్‌కు వాలెట్‌ను డీక్రిప్ట్ చేయడానికి మీ వాలెట్ పాస్‌ఫ్రేజ్ అవసరం.</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>డీక్రిప్ట్ వాలెట్</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>పాస్‌ఫ్రేజ్‌ని మార్చండి</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>వాలెట్ గుప్తీకరణను నిర్ధారించండి</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -146,6 +178,26 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>జోలె సంకేతపరబడింది</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>వాలెట్ కోసం క్రొత్త పాస్‌ఫ్రేజ్‌ని నమోదు చేయండి.&lt;br/&gt; దయచేసి &lt;b&gt;పది లేదా అంతకంటే ఎక్కువ యాదృచ్ఛిక అక్షరాల&lt;/b&gt; పాస్‌ఫ్రేజ్‌ని లేదా &lt;b&gt;ఎనిమిది లేదా అంతకంటే ఎక్కువ పదాలను ఉపయోగించండి.&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Enter the old passphrase and new passphrase for the wallet.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>మీ వాలెట్‌ను గుప్తీకరించడం వల్ల మీ కంప్యూటర్‌కు హాని కలిగించే మాల్వేర్ దొంగిలించకుండా మీ బిట్‌కాయిన్‌లను పూర్తిగా రక్షించలేమని గుర్తుంచుకోండి.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>ఎన్క్రిప్ట్ చేయవలసిన వాలెట్</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>మీ వాలెట్ గుప్తీకరించబోతోంది.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
