@@ -60,7 +60,7 @@ class PaymentServer : public QObject
 public:
     // Parse URIs on command line
     // Returns false on error
-    static void ipcParseCommandLine(interface::Node& node, int argc, char *argv[]);
+    static void ipcParseCommandLine(interfaces::Node& node, int argc, char *argv[]);
 
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running
@@ -87,7 +87,7 @@ public:
     void setOptionsModel(OptionsModel *optionsModel);
 
     // Verify that the payment request network matches the client network
-    static bool verifyNetwork(interface::Node& node, const payments::PaymentDetails& requestDetails);
+    static bool verifyNetwork(interfaces::Node& node, const payments::PaymentDetails& requestDetails);
     // Verify if the payment request is expired
     static bool verifyExpired(const payments::PaymentDetails& requestDetails);
     // Verify the payment request size is valid as per BIP70

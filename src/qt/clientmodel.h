@@ -7,7 +7,7 @@
 #define BITCOIN_QT_CLIENTMODEL_H
 
 #include <evo/deterministicmns.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <sync.h>
 
 #include <QObject>
@@ -46,13 +46,13 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(interface::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
     ~ClientModel();
 
-    interface::Node& node() const { return m_node; }
-    interface::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
+    interfaces::Node& node() const { return m_node; }
+    interfaces::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
 #ifdef ENABLE_WALLET
-    interface::PrivateSend::Options& privateSendOptions() const { return m_node.privateSendOptions(); }
+    interfaces::PrivateSend::Options& privateSendOptions() const { return m_node.privateSendOptions(); }
 #endif
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
@@ -83,16 +83,16 @@ public:
     mutable std::atomic<int64_t> cachedBestHeaderTime;
 
 private:
-    interface::Node& m_node;
-    std::unique_ptr<interface::Handler> m_handler_show_progress;
-    std::unique_ptr<interface::Handler> m_handler_notify_num_connections_changed;
-    std::unique_ptr<interface::Handler> m_handler_notify_network_active_changed;
-    std::unique_ptr<interface::Handler> m_handler_notify_alert_changed;
-    std::unique_ptr<interface::Handler> m_handler_banned_list_changed;
-    std::unique_ptr<interface::Handler> m_handler_notify_block_tip;
-    std::unique_ptr<interface::Handler> m_handler_notify_header_tip;
-    std::unique_ptr<interface::Handler> m_handler_notify_masternodelist_changed;
-    std::unique_ptr<interface::Handler> m_handler_notify_additional_data_sync_progess_changed;
+    interfaces::Node& m_node;
+    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_num_connections_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_network_active_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_masternodelist_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_additional_data_sync_progess_changed;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;

@@ -132,7 +132,7 @@ void SendCoinsEntry::useAvailableBalanceClicked()
     Q_EMIT useAvailableBalance(this);
 }
 
-bool SendCoinsEntry::validate(interface::Node& node)
+bool SendCoinsEntry::validate(interfaces::Node& node)
 {
     if (!model)
         return false;

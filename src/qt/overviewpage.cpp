@@ -28,7 +28,7 @@
 #define NUM_ITEMS_ENABLED_NORMAL 6
 #define NUM_ITEMS_ENABLED_ADVANCED 8
 
-Q_DECLARE_METATYPE(interface::WalletBalances)
+Q_DECLARE_METATYPE(interfaces::WalletBalances)
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -181,7 +181,7 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(const interface::WalletBalances& balances)
+void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     m_balances = balances;
@@ -257,10 +257,10 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // update the display unit, to not use the default ("DASH")
         updateDisplayUnit();
         // Keep up to date with wallet
-        interface::Wallet& wallet = model->wallet();
-        interface::WalletBalances balances = wallet.getBalances();
+        interfaces::Wallet& wallet = model->wallet();
+        interfaces::WalletBalances balances = wallet.getBalances();
         setBalance(balances);
-        connect(model, SIGNAL(balanceChanged(interface::WalletBalances)), this, SLOT(setBalance(interface::WalletBalances)));
+        connect(model, SIGNAL(balanceChanged(interfaces::WalletBalances)), this, SLOT(setBalance(interfaces::WalletBalances)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateWatchOnlyLabels(wallet.haveWatchOnly() || gArgs.GetBoolArg("-debug-ui", false));

@@ -9,7 +9,7 @@
 
 #include <QAbstractListModel>
 
-namespace interface {
+namespace interfaces {
 class Node;
 }
 
@@ -31,7 +31,7 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(interface::Node& node, QObject *parent = 0, bool resetSettings = false);
+    explicit OptionsModel(interfaces::Node& node, QObject *parent = 0, bool resetSettings = false);
 
     enum OptionID {
         StartAtStartup,         // bool
@@ -96,10 +96,10 @@ public:
     bool isRestartRequired() const;
     bool resetSettingsOnShutdown{false};
 
-    interface::Node& node() const { return m_node; }
+    interfaces::Node& node() const { return m_node; }
 
 private:
-    interface::Node& m_node;
+    interfaces::Node& m_node;
     /* Qt-only settings */
     bool fHideTrayIcon;
     bool fMinimizeToTray;

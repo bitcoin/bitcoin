@@ -23,7 +23,7 @@ class QValidatedLineEdit;
 class OptionsModel;
 class SendCoinsRecipient;
 
-namespace interface
+namespace interfaces
 {
 class Node;
 }
@@ -121,7 +121,7 @@ namespace GUIUtil
     QString formatBitcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
-    bool isDust(interface::Node& node, const QString& address, const CAmount& amount);
+    bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount);
 
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);

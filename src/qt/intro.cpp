@@ -13,7 +13,7 @@
 
 #include <qt/guiutil.h>
 
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <util.h>
 
 #include <QFileDialog>
@@ -188,7 +188,7 @@ QString Intro::getDefaultDataDirectory()
     return GUIUtil::boostPathToQString(GetDefaultDataDir());
 }
 
-bool Intro::pickDataDirectory(interface::Node& node)
+bool Intro::pickDataDirectory(interfaces::Node& node)
 {
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings

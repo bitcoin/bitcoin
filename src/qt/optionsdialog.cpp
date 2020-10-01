@@ -14,8 +14,8 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
-#include <interface/node.h>
-#include <interface/wallet.h>
+#include <interfaces/node.h>
+#include <interfaces/wallet.h>
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults

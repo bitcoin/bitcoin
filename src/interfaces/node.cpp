@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <interface/node.h>
+#include <interfaces/node.h>
 
 #include <addrdb.h>
 #include <amount.h>
@@ -10,8 +10,8 @@
 #include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <init.h>
-#include <interface/handler.h>
-#include <interface/wallet.h>
+#include <interfaces/handler.h>
+#include <interfaces/wallet.h>
 #include <llmq/quorums_instantsend.h>
 #include <masternode/masternode-sync.h>
 #include <net.h>
@@ -47,7 +47,7 @@
 #include <boost/thread/thread.hpp>
 #include <univalue.h>
 
-namespace interface {
+namespace interfaces {
 namespace {
 
 class EVOImpl : public EVO
@@ -446,4 +446,4 @@ class NodeImpl : public Node
 
 std::unique_ptr<Node> MakeNode() { return MakeUnique<NodeImpl>(); }
 
-} // namespace interface
+} // namespace interfaces

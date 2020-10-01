@@ -14,7 +14,7 @@
 #include <qt/walletmodel.h>
 
 #include <wallet/coincontrol.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <validation.h> // For mempool
@@ -743,7 +743,7 @@ void CoinControlDialog::updateView()
         int nChildren = 0;
         for (const auto& outpair : coins.second) {
             const COutPoint& output = std::get<0>(outpair);
-            const interface::WalletTxOut& out = std::get<1>(outpair);
+            const interfaces::WalletTxOut& out = std::get<1>(outpair);
             bool fFullyMixed{false};
             CAmount nAmount = out.txout.nValue;
             bool fPrivateSendAmount = model->node().privateSendOptions().isDenominated(nAmount) || model->node().privateSendOptions().isCollateralAmount(nAmount);
