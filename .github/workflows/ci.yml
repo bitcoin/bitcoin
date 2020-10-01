@@ -26,7 +26,7 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
+          echo "::set-env name=COMMITS_AHEAD::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
@@ -80,8 +80,8 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}/
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
+          tar czvf vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}/
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -90,7 +90,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: make check
         timeout-minutes: 60
@@ -116,7 +116,7 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
+          echo "::set-env name=COMMITS_AHEAD::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
@@ -168,8 +168,8 @@ jobs:
         if: success()
         run: |
           mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -178,7 +178,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
   x86_64-apple-darwin16:
@@ -191,7 +191,7 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
+          echo "::set-env name=COMMITS_AHEAD::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
@@ -244,8 +244,8 @@ jobs:
         run: |
           mv ./vBitcoin-Qt.app release/
           mv ./vBitcoin-Core.dmg release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -254,7 +254,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
   macos-native:
