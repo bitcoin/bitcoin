@@ -596,6 +596,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     assert(output_headers);
     evhttp_add_header(output_headers, "Host", host.c_str());
     evhttp_add_header(output_headers, "Connection", "close");
+    evhttp_add_header(output_headers, "Content-Type", "application/json");
     evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
 
     // Attach request data
