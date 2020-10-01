@@ -251,7 +251,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 return false;
             }
             if (stack.size() >= 2) {
-                // Script path spend (2 or more stack elements are removing optional annex)
+                // Script path spend (2 or more stack elements after removing optional annex)
                 const auto& control_block = SpanPopBack(stack);
                 SpanPopBack(stack); // Ignore script
                 if (control_block.empty()) return false; // Empty control block is invalid
