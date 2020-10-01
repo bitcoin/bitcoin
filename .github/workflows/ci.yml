@@ -93,7 +93,7 @@ jobs:
           source: vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: make check
-        timeout-minutes: 20
+        timeout-minutes: 60
         run: make check
       - name: upload logs
         uses: actions/upload-artifact@v1
@@ -103,7 +103,7 @@ jobs:
           path: src/test-suite.log
       - name: run functional tests
         if: always()
-        timeout-minutes: 20
+        timeout-minutes: 60
         run: python3 test/functional/test_runner.py
 
   x86_64-w64-mingw32:
@@ -315,7 +315,7 @@ jobs:
         run: make
       - name: run functional tests
         if: always()
-        timeout-minutes: 20
+        timeout-minutes: 60
         run: python3 test/functional/test_runner.py
 
   linux-asan:
@@ -391,7 +391,7 @@ jobs:
       - name: make
         run: make -j2 deploy
       - name: make check
-        timeout-minutes: 20
+        timeout-minutes: 60
         run: make check
       - name: upload logs
         uses: actions/upload-artifact@v1

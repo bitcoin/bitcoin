@@ -158,15 +158,16 @@ class PopFr(BitcoinTestFramework):
         self.log.info("all nodes disconnected")
 
         # node[i] creates endorsed chain
+        toMine = 15
         for i, node in enumerate(self.nodes):
-            self.log.info("node[{}] started to create endorsed chain of 100 blocks".format(i))
+            self.log.info("node[{}] started to create endorsed chain of {} blocks".format(i, toMine))
             addr = node.getnewaddress()
-            create_endorsed_chain(node, self.apm, 100, addr)
+            create_endorsed_chain(node, self.apm, toMine, addr)
 
         # all nodes have different tips at height 223
         bestblocks = [self.get_best_block(x) for x in self.nodes]
         for b in bestblocks:
-            assert b['height'] == 223
+            assert b['height'] == 123 + toMine
         assert len(set([x['hash'] for x in bestblocks])) == len(bestblocks)
         self.log.info("all nodes have different tips")
 

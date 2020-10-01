@@ -96,7 +96,8 @@ BASE_SCRIPTS = [
     'wallet_dump.py',
     'wallet_listtransactions.py',
     # vv Tests less than 60s vv
-    'feature_pop_popdata_max_size.py',
+    # disabled, because it runs >15 MIN
+    # 'feature_pop_popdata_max_size.py',
     # 'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
