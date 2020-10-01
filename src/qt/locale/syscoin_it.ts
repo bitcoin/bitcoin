@@ -1790,6 +1790,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Blocchi sincronizzati</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Il Sistema Autonomo mappato utilizzato per diversificare la selezione dei peer.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>AS mappato</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>

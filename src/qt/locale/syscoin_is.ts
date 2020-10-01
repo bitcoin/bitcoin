@@ -168,6 +168,10 @@
         <translation>Veski dulkóðað</translation>
     </message>
     <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Veski sem á að dulkóða</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>MIKILVÆGT: Nýja dulkóðaða veskisskráin þarf að koma í staðinn fyrir öll fyrri afrit sem þú hefur gert af upprunalegu veskisskránni. Af öryggisástæðum munu öll fyrri afrit af ódulkóðaða veskinu verða óvirk um leið og þú byrjar að nota nýja, dulkóðaða veskið.</translation>
     </message>
