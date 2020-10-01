@@ -1089,17 +1089,18 @@ def spenders_taproot_active():
     # == Legacy tests ==
 
     # Also add a few legacy spends into the mix, so that transactions which combine taproot and pre-taproot spends get tested too.
-    eckey1 = ECKey()
-    eckey1.set(generate_privkey(), True)
-    pubkey1 = eckey1.get_pubkey().get_bytes()
-    eckey2 = ECKey()
-    eckey2.set(generate_privkey(), True)
-    for p2sh in [False, True]:
-        for witv0 in [False, True]:
-            for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:
-                standard = hashtype in VALID_SIGHASHES_ECDSA
-                add_spender(spenders, "legacy/pk-wrongkey", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, script=CScript([pubkey1, OP_CHECKSIG]), **SINGLE_SIG, key=eckey1, failure={"key": eckey2}, sigops_weight=4-3*witv0, **ERR_NO_SUCCESS)
-                add_spender(spenders, "legacy/pkh-sighashflip", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, pkh=pubkey1, key=eckey1, **SIGHASH_BITFLIP, sigops_weight=4-3*witv0, **ERR_NO_SUCCESS)
+    for compressed in [False, True]:
+        eckey1 = ECKey()
+        eckey1.set(generate_privkey(), compressed)
+        pubkey1 = eckey1.get_pubkey().get_bytes()
+        eckey2 = ECKey()
+        eckey2.set(generate_privkey(), compressed)
+        for p2sh in [False, True]:
+            for witv0 in [False, True]:
+                for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:
+                    standard = (hashtype in VALID_SIGHASHES_ECDSA) and (compressed or not witv0)
+                    add_spender(spenders, "legacy/pk-wrongkey", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, script=CScript([pubkey1, OP_CHECKSIG]), **SINGLE_SIG, key=eckey1, failure={"key": eckey2}, sigops_weight=4-3*witv0, **ERR_NO_SUCCESS)
+                    add_spender(spenders, "legacy/pkh-sighashflip", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, pkh=pubkey1, key=eckey1, **SIGHASH_BITFLIP, sigops_weight=4-3*witv0, **ERR_NO_SUCCESS)
 
     # Verify that OP_CHECKSIGADD wasn't accidentally added to pre-taproot validation logic.
     for p2sh in [False, True]:
