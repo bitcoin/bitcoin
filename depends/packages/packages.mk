@@ -10,7 +10,7 @@ qt_android_packages=qt
 qt_darwin_packages=qt
 qt_mingw32_packages=qt
 
-wallet_packages=bdb libcurl
+wallet_packages=bdb libcurl openssl
 
 zmq_packages=zeromq
 
