@@ -7,7 +7,7 @@ $(package)_sha256_hash=52af3361cf806330b88b4fe6f483b6844209d47ae196ac46da4de59bb
 
 # default settings
 $(package)_config_env_default=LD_LIBRARY_PATH="$(PREFIX_DIR)lib" PKG_CONFIG_LIBDIR="$(PREFIX_DIR)lib/pkgconfig" CPPFLAGS="-I$(PREFIX_DIR)include" LDFLAGS="-L$(PREFIX_DIR)lib"
-$(package)_config_opts_default=--disable-ftp --without-ssl --with-gnutls --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --without-ca-path --without-ca-bundle --with-ca-fallback --disable-telnet --enable-threaded-resolver
+$(package)_config_opts_default=--disable-maintainer-mode --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-gopher --enable-proxy --without-ca-path --without-ca-bundle --disable-manual --without-polarssl --without-mbedtls --without-cyassl --without-nss --without-axtls --without-libssh2 --without-librtmp --without-nghttp2 --without-ssl --with-gnutls --disable-verbose --disable-smtp --disable-libcurl-option --enable-threaded-resolver
 
 # mingw specific settings
 $(package)_config_env_mingw32=LD_LIBRARY_PATH="$(PREFIX_DIR)lib" PKG_CONFIG_LIBDIR="$(PREFIX_DIR)lib/pkgconfig" CPPFLAGS="-I$(PREFIX_DIR)include -DCURL_STATIC_LIB -static" LDFLAGS="-L$(PREFIX_DIR)lib"
@@ -24,15 +24,15 @@ endif
 
 # 32-bit linux specific settings
 $(package)_config_env_i686-pc-linux-gnu=LD_LIBRARY_PATH="$(PREFIX_DIR)lib" PKG_CONFIG_LIBDIR="$(PREFIX_DIR)lib/pkgconfig" CPPFLAGS="-I$(PREFIX_DIR)include -m32" LDFLAGS="-L$(PREFIX_DIR)lib -m32"
-$(package)_config_opts_i686-pc-linux-gnu=--disable-ftp --without-ssl --with-gnutls --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy  --disable-telnet --enable-threaded-resolver
+$(package)_config_opts_i686-pc-linux-gnu=--disable-maintainer-mode --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-gopher --enable-proxy --without-ca-path --without-ca-bundle --disable-manual --without-polarssl --without-mbedtls --without-cyassl --without-nss --without-axtls --without-libssh2 --without-librtmp --without-nghttp2 --without-ssl --with-gnutls --disable-verbose --disable-smtp --disable-libcurl-option --enable-threaded-resolver
 
 # 32 bit ARM gnueabihf settings
-$(package)_config_opts_arm=-disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt --with-ca-fallback --disable-telnet --enable-threaded-resolver
+$(package)_config_opts_arm=--disable-maintainer-mode --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-gopher --enable-proxy --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt --with-ca-fallback --disable-manual --without-polarssl --without-mbedtls --without-cyassl --without-nss --without-axtls --without-libssh2 --without-librtmp --without-nghttp2 --without-ssl --with-gnutls --disable-verbose --disable-smtp --disable-libcurl-option --enable-threaded-resolver
 $(package)_config_opts_arm-linux-gnueabihf=$($(package)_config_opts_arm)
 $(package)_config_opts_aarch64-linux-gnu=$($(package)_config_opts_arm)
 
 # darwin specific settings
-$(package)_config_opts_darwin=--with-sysroot="$(DARWIN_SDK_PATH)" --disable-ftp --without-ssl --with-gnutls --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --without-gnutls --with-darwinssl --disable-telnet --enable-threaded-resolver
+$(package)_config_opts_darwin=--with-sysroot="$(DARWIN_SDK_PATH)" --disable-maintainer-mode --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-gopher --enable-proxy --without-ca-path --without-ca-bundle --disable-manual --without-polarssl --without-mbedtls --without-cyassl --without-nss --without-axtls --without-libssh2 --without-librtmp --without-nghttp2 --without-ssl --with-gnutls --disable-verbose --disable-smtp --disable-libcurl-option --enable-threaded-resolver
 $(package)_config_opts_x86_64-apple-darwin11=$($(package)_config_opts_darwin)
 
 # set settings based on host
