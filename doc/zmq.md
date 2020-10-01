@@ -73,6 +73,7 @@ Currently, the following notifications are supported:
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
+The same notification can be specified more than once.
 
 The option to set the PUB socket's outbound message high water mark
 (SNDHWM) may be set individually for each notification:
@@ -89,6 +90,7 @@ The high water mark value must be an integer greater than or equal to 0.
 For instance:
 
     $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28370 \
+               -zmqpubhashtx=tcp://192.168.1.2:28370 \
                -zmqpubrawtx=ipc:///tmp/syscoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
