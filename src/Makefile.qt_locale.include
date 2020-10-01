@@ -27,6 +27,7 @@ QT_TS = \
   qt/locale/syscoin_fi.ts \
   qt/locale/syscoin_fil.ts \
   qt/locale/syscoin_fr.ts \
+  qt/locale/syscoin_gl_ES.ts \
   qt/locale/syscoin_he.ts \
   qt/locale/syscoin_hi.ts \
   qt/locale/syscoin_hr.ts \
@@ -71,7 +72,6 @@ QT_TS = \
   qt/locale/syscoin_ta.ts \
   qt/locale/syscoin_te.ts \
   qt/locale/syscoin_th.ts \
-  qt/locale/syscoin_tr.ts \
   qt/locale/syscoin_uk.ts \
   qt/locale/syscoin_ur.ts \
   qt/locale/syscoin_uz@Cyrl.ts \
@@ -82,4 +82,5 @@ QT_TS = \
   qt/locale/syscoin_zh.ts \
   qt/locale/syscoin_zh_CN.ts \
   qt/locale/syscoin_zh_HK.ts \
-  qt/locale/syscoin_zh_TW.ts
+  qt/locale/syscoin_zh_TW.ts \
+  qt/locale/syscoin_zu.ts
