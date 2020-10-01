@@ -404,8 +404,9 @@ def spend(tx, idx, utxos, **kwargs):
             return CScript([elem])
 
     scriptsig_list = flatten(get(ctx, "scriptsig"))
-    tx.vin[idx].scriptSig = CScript(b"".join(bytes(to_script(elem)) for elem in scriptsig_list))
-    tx.wit.vtxinwit[idx].scriptWitness.stack = flatten(get(ctx, "witness"))
+    scriptsig = CScript(b"".join(bytes(to_script(elem)) for elem in scriptsig_list))
+    witness_stack = flatten(get(ctx, "witness"))
+    return (scriptsig, witness_stack)
 
 
 # === Spender objects ===
@@ -414,7 +415,7 @@ def spend(tx, idx, utxos, **kwargs):
 # - A scriptPubKey which is to be spent from (CScript)
 # - A comment describing the test (string)
 # - Whether the spending (on itself) is expected to be standard (bool)
-# - A tx-signing lambda taking as inputs:
+# - A tx-signing lambda returning (scriptsig, witness_stack), taking as inputs:
 #   - A transaction to sign (CTransaction)
 #   - An input position (int)
 #   - The spent UTXOs by this transaction (list of CTxOut)
@@ -495,10 +496,10 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
 
     def sat_fn(tx, idx, utxos, valid):
         if valid:
-            spend(tx, idx, utxos, **conf)
+            return spend(tx, idx, utxos, **conf)
         else:
             assert failure is not None
-            spend(tx, idx, utxos, **{**conf, **failure})
+            return spend(tx, idx, utxos, **{**conf, **failure})
 
     return Spender(script=spk, comment=comment, is_standard=standard, sat_function=sat_fn, err_msg=err_msg, sigops_weight=sigops_weight, no_fail=failure is None, need_vin_vout_mismatch=need_vin_vout_mismatch)
 
@@ -1347,6 +1348,16 @@ class TaprootTest(BitcoinTestFramework):
             cb_pubkey = random.choice(host_pubkeys)
             sigops_weight += 1 * WITNESS_SCALE_FACTOR
 
+            # Precompute one satisfying and one failing scriptSig/witness for each input.
+            input_data = []
+            for i in range(len(input_utxos)):
+                fn = input_utxos[i].spender.sat_function
+                fail = None
+                success = fn(tx, i, [utxo.output for utxo in input_utxos], True)
+                if not input_utxos[i].spender.no_fail:
+                    fail = fn(tx, i, [utxo.output for utxo in input_utxos], False)
+                input_data.append((fail, success))
+
             # Sign each input incorrectly once on each complete signing pass, except the very last.
             for fail_input in list(range(len(input_utxos))) + [None]:
                 # Skip trying to fail at spending something that can't be made to fail.
@@ -1354,14 +1365,10 @@ class TaprootTest(BitcoinTestFramework):
                     continue
                 # Expected message with each input failure, may be None(which is ignored)
                 expected_fail_msg = None if fail_input is None else input_utxos[fail_input].spender.err_msg
-                # Wipe scriptSig/witness
-                for i in range(len(input_utxos)):
-                    tx.vin[i].scriptSig = CScript()
-                    tx.wit.vtxinwit[i] = CTxInWitness()
                 # Fill inputs/witnesses
                 for i in range(len(input_utxos)):
-                    fn = input_utxos[i].spender.sat_function
-                    fn(tx, i, [utxo.output for utxo in input_utxos], i != fail_input)
+                    tx.vin[i].scriptSig = input_data[i][i != fail_input][0]
+                    tx.wit.vtxinwit[i].scriptWitness.stack = input_data[i][i != fail_input][1]
                 # Submit to mempool to check standardness
                 is_standard_tx = fail_input is None and all(utxo.spender.is_standard for utxo in input_utxos) and tx.nVersion >= 1 and tx.nVersion <= 2
                 tx.rehash()
