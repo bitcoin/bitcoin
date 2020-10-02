@@ -156,7 +156,7 @@ class WalletSendTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Setup wallets...")
         # w0 is a wallet with coinbase rewards
-        w0 = self.nodes[0].get_wallet_rpc("")
+        w0 = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         # w1 is a regular wallet
         self.nodes[1].createwallet(wallet_name="w1")
         w1 = self.nodes[1].get_wallet_rpc("w1")

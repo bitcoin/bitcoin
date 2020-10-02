@@ -102,8 +102,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
         self.bind_to_localhost_only = True
-        self.set_test_params()
         self.parse_args()
+        self.default_wallet_name = ""
+        self.wallet_data_filename = "wallet.dat"
+        # Optional list of wallet names that can be set in set_test_params to
+        # create and import keys to. If unset, default is len(nodes) *
+        # [default_wallet_name]. If wallet names are None, wallet creation is
+        # skipped. If list is truncated, wallet creation is skipped and keys
+        # are not imported.
+        self.wallet_names = None
+        self.set_test_params()
         if self.options.timeout_factor == 0 :
             self.options.timeout_factor = 99999
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
@@ -362,23 +370,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def setup_nodes(self):
         """Override this method to customize test node setup"""
         extra_args = [[]] * self.num_nodes
-        wallets = [[]] * self.num_nodes
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-            wallets = [[x for x in eargs if x.startswith('-wallet=')] for eargs in extra_args]
-        extra_args = [x + ['-nowallet'] for x in extra_args]
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
-        for i, n in enumerate(self.nodes):
-            n.extra_args.pop()
-            if '-wallet=0' in n.extra_args or '-nowallet' in n.extra_args or '-disablewallet' in n.extra_args or not self.is_wallet_compiled():
-                continue
-            if '-wallet=' not in wallets[i] and not any([x.startswith('-wallet=') for x in wallets[i]]):
-                wallets[i].append('-wallet=')
-            for w in wallets[i]:
-                wallet_name = w.split('=', 1)[1]
-                n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
-        self.import_deterministic_coinbase_privkeys()
+        if self.is_wallet_compiled():
+            self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
@@ -394,13 +391,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(chain_info["initialblockdownload"], False)
 
     def import_deterministic_coinbase_privkeys(self):
-        for n in self.nodes:
-            try:
-                n.getwalletinfo()
-            except JSONRPCException as e:
-                assert str(e).startswith('Method not found')
-                continue
-
+        wallet_names = [self.default_wallet_name] * len(self.nodes) if self.wallet_names is None else self.wallet_names
+        assert len(wallet_names) <= len(self.nodes)
+        for wallet_name, n in zip(wallet_names, self.nodes):
+            if wallet_name is not None:
+                n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
             n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
 
     def run_test(self):
