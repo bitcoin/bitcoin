@@ -270,6 +270,9 @@ namespace GUIUtil
     /** Return the name of the default theme `*/
     const QString getDefaultTheme();
 
+    /** Check if the given theme name is valid or not */
+    const bool isValidTheme(const QString& strTheme);
+
     /** Updates the widgets stylesheet and adds it to the list of ui debug elements.
     Beeing on that list means the stylesheet of the widget gets updated if the
     related css files has been changed if -debug-ui mode is active. */

@@ -701,4 +701,10 @@ void OptionsModel::checkAndMigrate()
     if (settings.contains("addrSeparateProxyTor") && settings.value("addrSeparateProxyTor").toString().endsWith("%2")) {
         settings.setValue("addrSeparateProxyTor", GetDefaultProxyAddress());
     }
+
+    // Make sure there is a valid theme set in the options.
+    QString strActiveTheme = settings.value("theme", GUIUtil::getDefaultTheme()).toString();
+    if (!GUIUtil::isValidTheme(strActiveTheme)) {
+        settings.setValue("theme", GUIUtil::getDefaultTheme());
+    }
 }

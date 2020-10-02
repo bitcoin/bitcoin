@@ -1123,6 +1123,11 @@ const QString getDefaultTheme()
     return defaultTheme;
 }
 
+const bool isValidTheme(const QString& strTheme)
+{
+    return strTheme == defaultTheme || strTheme == darkThemePrefix || strTheme == traditionalTheme;
+}
+
 void loadStyleSheet(QWidget* widget, bool fForceUpdate)
 {
     AssertLockNotHeld(cs_css);
