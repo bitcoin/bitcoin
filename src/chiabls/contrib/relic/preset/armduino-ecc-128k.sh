@@ -1,0 +1,3 @@
+#!/bin/bash 
+ARDUINO=${HOME}/projects/arduino-1.5.2/hardware/
+CC="${ARDUINO}/tools/g++_arm_none_eabi/bin/arm-none-eabi-gcc" CXX=c++ LINK="-mthumb -Wl,-gc-sections" COMP="-O2 -ggdb -DF_CPU=84000000L -mcpu=cortex-m3 -mthumb -ffunction-sections -fdata-sections" cmake -DARCH=ARM -DWORD=32 -DOPSYS=DUINO -DSEED=LIBC -DSHLIB=OFF -DSTBIN=ON -DTIMER=HREAL -DWITH="DV;BN;FP;EP;EC;CP;MD" -DBENCH=20 -DTESTS=20 -DCHECK=off -DVERBS=off -DSTRIP=on -DQUIET=off -DARITH=easy -DBN_METHD="COMBA;COMBA;BASIC;BASIC;STEIN;BASIC" -DBN_PRECI=256 -DBN_MAGNI=DOUBLE -DFP_PRIME=256 -DFP_METHD="INTEG;COMBA;COMBA;QUICK;EXGCD;SLIDE" -DEP_ENDOM=on -DEP_PLAIN=off -DEP_SUPER=off -DEC_ENDOM=on -DEC_METHD="PRIME" -DMD_METHD=SH256 $1

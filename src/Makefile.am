@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-DIST_SUBDIRS = secp256k1 univalue
+DIST_SUBDIRS = secp256k1 univalue chiabls
 
 AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
 AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
@@ -20,12 +20,12 @@ else
 LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
-SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CHIABLS_CPPFLAGS)
 
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
-BLS_LIBS=-lchiabls -lgmp
+CHIABLS_LIBS=-lchiabls -lgmp
 
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
@@ -573,8 +573,8 @@ libsyscoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
-  bls/bls.cpp \
-  bls/bls.h \
+  chiabls/bls.cpp \
+  chiabls/bls.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -652,11 +652,11 @@ libsyscoin_common_a_SOURCES = \
 libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
-  bls/bls_batchverifier.h \
-  bls/bls_ies.cpp \
-  bls/bls_ies.h \
-  bls/bls_worker.cpp \
-  bls/bls_worker.h \
+  chiabls/bls_batchverifier.h \
+  chiabls/bls_ies.cpp \
+  chiabls/bls_ies.h \
+  chiabls/bls_worker.cpp \
+  chiabls/bls_worker.h \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -740,12 +740,13 @@ syscoin_bin_ldadd = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
+  $(LIBCHIABLS) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM) \
   $(LIBCURL)
 
-syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
+syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIABLS_LIBS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources)
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -775,7 +776,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(CHIABLS_LIBS)
 #
 
 # syscoin-tx binary #
@@ -796,11 +797,12 @@ syscoin_tx_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
+  $(LIBCHIABLS) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_tx_LDADD += $(BOOST_LIBS) $(BLS_LIBS)
+syscoin_tx_LDADD += $(BOOST_LIBS) $(CHIABLS_LIBS)
   
 #
 
@@ -827,7 +829,7 @@ endif
 
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libsyscoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(LEVELDB_CPPFLAGS)
+libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(LEVELDB_CPPFLAGS) $(CHIABLS_CPPFLAGS)
 libsyscoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif

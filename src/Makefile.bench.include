@@ -59,6 +59,7 @@ bench_bench_syscoin_LDADD = \
   $(LIBTEST_UTIL) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
+  $(LIBCHIABLS) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE) \
