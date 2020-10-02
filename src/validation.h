@@ -93,8 +93,6 @@ static const unsigned int DEFAULT_CHECKLEVEL = 3;
 // one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
 // Setting the target to >= 550 MiB will make it likely we can respect the target.
 static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
-/** Minimum size of a witness commitment structure. Defined in BIP 141. **/
-static constexpr size_t MINIMUM_WITNESS_COMMITMENT{38};
 
 struct BlockHasher
 {
@@ -159,7 +157,7 @@ void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
 /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
 bool LoadGenesisBlock(const CChainParams& chainparams);
 /** Unload database information */
-void UnloadBlockIndex(CTxMemPool* mempool);
+void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck(int worker_num);
 /**
@@ -199,10 +197,11 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 void PruneBlockFilesManual(int nManualPruneHeight);
 
 /** (try to) add transaction to memory pool
- * plTxnReplaced will be appended to with all transactions replaced from mempool **/
+ * plTxnReplaced will be appended to with all transactions replaced from mempool
+ * @param[out] fee_out optional argument to return tx fee to the caller **/
 bool AcceptToMemoryPool(CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
                         std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
@@ -305,9 +304,6 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
  *  Note that transaction witness validation rules are always enforced when P2SH is enforced. */
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
-/** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
-int GetWitnessCommitmentIndex(const CBlock& block);
-
 /** Update uncommitted block structures (currently: only the witness reserved value). This is safe for submitted blocks. */
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 
@@ -356,7 +352,31 @@ struct CBlockIndexWorkComparator
  * This data is used mostly in `CChainState` - information about, e.g.,
  * candidate tips is not maintained here.
  */
-class BlockManager {
+class BlockManager
+{
+    friend CChainState;
+
+private:
+    /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
+    void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height);
+
+    /**
+     * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
+     * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
+     * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
+     * (which in this case means the blockchain must be re-downloaded.)
+     *
+     * Pruning functions are called from FlushStateToDisk when the global fCheckForPruning flag has been set.
+     * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
+     * Pruning cannot take place until the longest chain is at least a certain length (100000 on mainnet, 1000 on testnet, 1000 on regtest).
+     * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
+     * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
+     * A db flag records the fact that at least some block files have been pruned.
+     *
+     * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
+     */
+    void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, bool is_ibd);
+
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
 
@@ -407,6 +427,9 @@ public:
     /** Create a new block index entry for a given block hash */
     CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    //! Mark one block file as pruned (modify associated database entries)
+    void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     /**
      * If a block header hasn't already been seen, call CheckBlockHeader on it, ensure
      * that it doesn't descend from an invalid block, and then add it to m_block_index.
@@ -416,6 +439,10 @@ public:
         BlockValidationState& state,
         const CChainParams& chainparams,
         CBlockIndex** ppindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    ~BlockManager() {
+        Unload();
+    }
 };
 
 /**
@@ -898,9 +925,6 @@ public:
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
      */
     bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
-
-    //! Mark one block file as pruned (modify associated database entries)
-    void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Load the block tree and coins database from disk, initializing state if we're running with -reindex
     bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

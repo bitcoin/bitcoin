@@ -21,8 +21,6 @@ from test_framework.util import (
     get_rpc_proxy,
 )
 
-FEATURE_LATEST = 169900
-
 got_loading_error = False
 def test_load_unload(node, name):
     global got_loading_error
@@ -43,6 +41,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.rpc_timeout = 120
+        self.extra_args = [["-wallet="], ["-wallet="]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -82,7 +81,7 @@ class MultiWalletTest(BitcoinTestFramework):
         os.rename(wallet_dir("wallet.dat"), wallet_dir("w8"))
 
         # create another dummy wallet for use in testing backups later
-        self.start_node(0, [])
+        self.start_node(0, ["-wallet="])
         self.stop_nodes()
         empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
         os.rename(wallet_dir("wallet.dat"), empty_wallet)
@@ -152,7 +151,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
         os.mkdir(competing_wallet_dir)
-        self.restart_node(0, ['-walletdir=' + competing_wallet_dir])
+        self.restart_node(0, ['-walletdir=' + competing_wallet_dir, '-wallet='])
         exp_stderr = r"Error: Error initializing wallet database environment \"\S+competing_walletdir\"!"
         self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 

@@ -1789,6 +1789,14 @@
         <translation>Blocs synchronisés</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Le système autonome mappé utilisé pour diversifier la sélection des pairs.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>SA mappé</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Agent utilisateur</translation>
     </message>

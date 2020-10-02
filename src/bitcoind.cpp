@@ -37,10 +37,6 @@ static void WaitForShutdown(NodeContext& node)
     Interrupt(node);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// Start
-//
 static bool AppInit(int argc, char* argv[])
 {
     NodeContext node;
@@ -81,7 +77,7 @@ static bool AppInit(int argc, char* argv[])
         if (!args.ReadConfigFiles(error, true)) {
             return InitError(Untranslated(strprintf("Error reading configuration file: %s\n", error)));
         }
-        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        // Check for chain settings (Params() calls are only valid after this clause)
         try {
             SelectParams(args.GetChainName());
         } catch (const std::exception& e) {

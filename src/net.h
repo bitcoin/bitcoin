@@ -10,12 +10,14 @@
 #include <addrman.h>
 #include <amount.h>
 #include <bloom.h>
+#include <chainparams.h>
 #include <compat.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
-#include <netaddress.h>
 #include <net_permissions.h>
+#include <netaddress.h>
+#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -114,6 +116,14 @@ struct CSerializedNetMsg
     std::string m_type;
 };
 
+const std::vector<std::string> CONNECTION_TYPE_DOC{
+    "outbound-full-relay (default automatic connections)",
+    "block-relay-only (does not relay transactions or addresses)",
+    "inbound (initiated by the peer)",
+    "manual (added via addnode RPC or -addnode/-connect configuration options)",
+    "addr-fetch (short-lived automatic connection for soliciting addresses)",
+    "feeler (short-lived automatic connection for testing addresses)"};
+
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
  * connection. Aside from INBOUND, all types are initiated by us. */
@@ -143,10 +153,19 @@ enum class ConnectionType {
     MANUAL,
 
     /**
-     * Feeler connections are short lived connections used to increase the
-     * number of connectable addresses in our AddrMan. Approximately every
-     * FEELER_INTERVAL, we attempt to connect to a random address from the new
-     * table. If successful, we add it to the tried table.
+     * Feeler connections are short-lived connections made to check that a node
+     * is alive. They can be useful for:
+     * - test-before-evict: if one of the peers is considered for eviction from
+     *   our AddrMan because another peer is mapped to the same slot in the tried table,
+     *   evict only if this longer-known peer is offline.
+     * - move node addresses from New to Tried table, so that we have more
+     *   connectable addresses in our AddrMan.
+     * Note that in the literature ("Eclipse Attacks on Bitcoin’s Peer-to-Peer Network")
+     * only the latter feature is referred to as "feeler connections",
+     * although in our codebase feeler connections encompass test-before-evict as well.
+     * We make these connections approximately every FEELER_INTERVAL:
+     * first we resolve previously found collisions if they exist (test-before-evict),
+     * otherwise connect to a node from the new table.
      */
     FEELER,
 
@@ -258,8 +277,8 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
+    using NodeFn = std::function<void(CNode*)>;
+    void ForEachNode(const NodeFn& func)
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
@@ -268,8 +287,7 @@ public:
         }
     };
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func) const
+    void ForEachNode(const NodeFn& func) const
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
@@ -311,7 +329,7 @@ public:
      * A non-malicious call (from RPC or a peer with addr permission) should
      * call the function without a parameter to avoid using the cache.
      */
-    std::vector<CAddress> GetAddresses(Network requestor_network, size_t max_addresses, size_t max_pct);
+    std::vector<CAddress> GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct);
 
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
     // a peer that is better than all our current peers.
@@ -484,20 +502,24 @@ private:
      */
     struct CachedAddrResponse {
         std::vector<CAddress> m_addrs_response_cache;
-        std::chrono::microseconds m_update_addr_response{0};
+        std::chrono::microseconds m_cache_entry_expiration{0};
     };
 
     /**
      * Addr responses stored in different caches
-     * per network prevent cross-network node identification.
+     * per (network, local socket) prevent cross-network node identification.
      * If a node for example is multi-homed under Tor and IPv6,
      * a single cache (or no cache at all) would let an attacker
      * to easily detect that it is the same node by comparing responses.
-     * The used memory equals to 1000 CAddress records (or around 32 bytes) per
+     * Indexing by local socket prevents leakage when a node has multiple
+     * listening addresses on the same network.
+     *
+     * The used memory equals to 1000 CAddress records (or around 40 bytes) per
      * distinct Network (up to 5) we have/had an inbound peer from,
-     * resulting in at most ~160 KB.
+     * resulting in at most ~196 KB. Every separate local socket may
+     * add up to ~196 KB extra.
      */
-    std::map<Network, CachedAddrResponse> m_addr_response_caches;
+    std::map<uint64_t, CachedAddrResponse> m_addr_response_caches;
 
     /**
      * Services this instance offers.
@@ -688,6 +710,7 @@ public:
     // Bind address of our side of the connection
     CAddress addrBind;
     uint32_t m_mapped_as;
+    std::string m_conn_type_string;
 };
 
 
@@ -700,11 +723,8 @@ class CNetMessage {
 public:
     CDataStream m_recv;                  //!< received message data
     std::chrono::microseconds m_time{0}; //!< time of message receipt
-    bool m_valid_netmagic = false;
-    bool m_valid_header = false;
-    bool m_valid_checksum = false;
-    uint32_t m_message_size{0};     //!< size of the payload
-    uint32_t m_raw_message_size{0}; //!< used wire size of the message (including header/checksum)
+    uint32_t m_message_size{0};          //!< size of the payload
+    uint32_t m_raw_message_size{0};      //!< used wire size of the message (including header/checksum)
     std::string m_command;
 
     CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
@@ -728,13 +748,15 @@ public:
     // read and deserialize data
     virtual int Read(const char *data, unsigned int bytes) = 0;
     // decomposes a message from the context
-    virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, std::chrono::microseconds time) = 0;
+    virtual Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err) = 0;
     virtual ~TransportDeserializer() {}
 };
 
 class V1TransportDeserializer final : public TransportDeserializer
 {
 private:
+    const CChainParams& m_chain_params;
+    const NodeId m_node_id; // Only for logging
     mutable CHash256 hasher;
     mutable uint256 data_hash;
     bool in_data;                   // parsing header (false) or data (true)
@@ -760,8 +782,12 @@ private:
     }
 
 public:
-
-    V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+    V1TransportDeserializer(const CChainParams& chain_params, const NodeId node_id, int nTypeIn, int nVersionIn)
+        : m_chain_params(chain_params),
+          m_node_id(node_id),
+          hdrbuf(nTypeIn, nVersionIn),
+          vRecv(nTypeIn, nVersionIn)
+    {
         Reset();
     }
 
@@ -781,7 +807,7 @@ public:
         if (ret < 0) Reset();
         return ret;
     }
-    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, std::chrono::microseconds time) override;
+    Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
 };
 
 /** The TransportSerializer prepares messages for the network transport
@@ -827,7 +853,6 @@ public:
 
     std::deque<CInv> vRecvGetData;
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
-    std::atomic<int> nRecvVersion{INIT_PROTO_VERSION};
 
     std::atomic<int64_t> nLastSend{0};
     std::atomic<int64_t> nLastRecv{0};
@@ -1014,6 +1039,7 @@ private:
     const NodeId id;
     const uint64_t nLocalHostNonce;
     const ConnectionType m_conn_type;
+    std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
     //! Services offered to this peer.
     //!
@@ -1033,7 +1059,6 @@ private:
     const ServiceFlags nLocalServices;
 
     const int nMyStartingHeight;
-    int nSendVersion{0};
     NetPermissionFlags m_permissionFlags{ PF_NONE };
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
@@ -1065,16 +1090,14 @@ public:
 
     bool ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete);
 
-    void SetRecvVersion(int nVersionIn)
+    void SetCommonVersion(int greatest_common_version)
     {
-        nRecvVersion = nVersionIn;
+        m_greatest_common_version = greatest_common_version;
     }
-    int GetRecvVersion() const
+    int GetCommonVersion() const
     {
-        return nRecvVersion;
+        return m_greatest_common_version;
     }
-    void SetSendVersion(int nVersionIn);
-    int GetSendVersion() const;
 
     CService GetAddrLocal() const;
     //! May not be called more than once
@@ -1144,6 +1167,8 @@ public:
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
+
+    std::string ConnectionTypeAsString() const;
 };
 
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */

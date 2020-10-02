@@ -22,11 +22,10 @@ from test_framework.p2p import (
     P2PInterface,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-)
+from test_framework.util import assert_equal
 
 VALID_DATA_LIMIT = MAX_PROTOCOL_MESSAGE_LENGTH - 5  # Account for the 5-byte length prefix
+
 
 class msg_unrecognized:
     """Nonsensical message. Modeled after similar types in test_framework.messages."""
@@ -64,13 +63,13 @@ class InvalidMessagesTest(BitcoinTestFramework):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         # Create valid message
         msg = conn.build_message(msg_ping(nonce=12345))
-        cut_pos = 12    # Chosen at an arbitrary position within the header
+        cut_pos = 12  # Chosen at an arbitrary position within the header
         # Send message in two pieces
-        before = int(self.nodes[0].getnettotals()['totalbytesrecv'])
+        before = self.nodes[0].getnettotals()['totalbytesrecv']
         conn.send_raw_message(msg[:cut_pos])
         # Wait until node has processed the first half of the message
-        self.wait_until(lambda: int(self.nodes[0].getnettotals()['totalbytesrecv']) != before)
-        middle = int(self.nodes[0].getnettotals()['totalbytesrecv'])
+        self.wait_until(lambda: self.nodes[0].getnettotals()['totalbytesrecv'] != before)
+        middle = self.nodes[0].getnettotals()['totalbytesrecv']
         # If this assert fails, we've hit an unlikely race
         # where the test framework sent a message in between the two halves
         assert_equal(middle, before + cut_pos)
@@ -81,7 +80,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_magic_bytes(self):
         self.log.info("Test message with invalid magic bytes disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART badmsg']):
+        with self.nodes[0].assert_debug_log(['HEADER ERROR - MESSAGESTART (badmsg, 2 bytes), received ffffffff']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
             # modify magic bytes
             msg = b'\xff' * 4 + msg[4:]
@@ -100,12 +99,14 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg = msg[:cut_len] + b'\xff' * 4 + msg[cut_len + 4:]
             conn.send_raw_message(msg)
             conn.sync_with_ping(timeout=1)
+        # Check that traffic is accounted for (24 bytes header + 2 bytes payload)
+        assert_equal(self.nodes[0].getpeerinfo()[0]['bytesrecv_per_msg']['*other*'], 26)
         self.nodes[0].disconnect_p2ps()
 
     def test_size(self):
         self.log.info("Test message with oversized payload disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['']):
+        with self.nodes[0].assert_debug_log(['HEADER ERROR - SIZE (badmsg, 4000001 bytes)']):
             msg = msg_unrecognized(str_data="d" * (VALID_DATA_LIMIT + 1))
             msg = conn.build_message(msg)
             conn.send_raw_message(msg)
@@ -115,14 +116,15 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_msgtype(self):
         self.log.info("Test message with invalid message type logs an error")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: ERRORS IN HEADER']):
+        with self.nodes[0].assert_debug_log(['HEADER ERROR - COMMAND']):
             msg = msg_unrecognized(str_data="d")
-            msg.msgtype = b'\xff' * 12
             msg = conn.build_message(msg)
             # Modify msgtype
             msg = msg[:7] + b'\x00' + msg[7 + 1:]
             conn.send_raw_message(msg)
             conn.sync_with_ping(timeout=1)
+        # Check that traffic is accounted for (24 bytes header + 2 bytes payload)
+        assert_equal(self.nodes[0].getpeerinfo()[0]['bytesrecv_per_msg']['*other*'], 26)
         self.nodes[0].disconnect_p2ps()
 
     def test_oversized_msg(self, msg, size):

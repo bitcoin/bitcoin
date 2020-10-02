@@ -297,6 +297,10 @@
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Other</source>
+        <translation>Other</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>کاما سے جدا فائلیں (*.csv)</translation>
     </message>

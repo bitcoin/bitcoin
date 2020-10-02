@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copiază adresa selectată în clipboard</translation>
+        <translation>Copiază adresa selectată curent în clipboard</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Şterge adresa selectată din listă</translation>
+        <translation>Şterge adresa selectată curent din listă</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -132,6 +132,10 @@
         <translation>Repetaţi noua frază de acces</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Arată fraza de acces</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Criptare portofel</translation>
     </message>
@@ -170,6 +174,18 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Portofel criptat</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Portofel de criptat</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Portofelul tău urmează să fie criptat.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Protofelul tău este criptat.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -292,6 +308,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Deschide &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Crează portofel...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Crează un portofel nou</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -442,6 +466,38 @@
         <translation>Actualizat</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Fereastra nodului</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Deschide consola pentru depanare şi diagnosticare a nodului</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Adresele de destinatie</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Adresele de primire</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Deschide portofel</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Deschide un portofel</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Inchide portofel...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Inchide portofel</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Arată mesajul de ajutor %1 pentru a obţine o listă cu opţiunile posibile de linii de comandă Bitcoin</translation>
     </message>
@@ -450,12 +506,24 @@
         <translation>portofel implicit</translation>
     </message>
     <message>
+        <source>No wallets available</source>
+        <translation>Niciun portofel disponibil</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Fereastră</translation>
     </message>
     <message>
         <source>Minimize</source>
         <translation>Minimizare</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Fereastra principală</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -472,6 +540,10 @@
     <message>
         <source>Error: %1</source>
         <translation>Eroare: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation> Atenționare: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -524,6 +596,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>Generarea de chei HD este &lt;b&gt;dezactivata&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Cheia privată &lt;b&gt;dezactivată&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -691,10 +767,46 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Crearea portofelului a eşuat</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Atentionare la crearea portofelului</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Crează portofel</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Numele portofelului</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Criptează portofelul. Portofelul va fi criptat cu fraza de acces aleasă.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Criptează portofelul.</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Dezactivează cheile private pentru acest portofel. Portofelele cu cheile private dezactivate nu vor avea chei private şi nu vor putea avea samanţă HD sau chei private importate. Ideal pentru portofele marcate doar pentru citire.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Dezactivează cheile private</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Creează</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1573,6 +1685,10 @@
         <translation>Agent utilizator</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Fereastra nodului</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Deschide fişierul jurnal depanare %1 din directorul curent. Aceasta poate dura cateva secunde pentru fişierele mai mari.</translation>
     </message>
@@ -2093,6 +2209,10 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
         <translation>%1(%2 blocuri)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>din portofelul '%1'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 la %2</translation>
     </message>
@@ -2556,6 +2676,10 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
         <translation>Index debit</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Certificatul nu a fost verificat)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Comerciant</translation>
     </message>
@@ -2874,6 +2998,10 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
 </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Inchide portofel</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>

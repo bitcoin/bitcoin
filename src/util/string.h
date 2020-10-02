@@ -7,6 +7,8 @@
 
 #include <attributes.h>
 
+#include <algorithm>
+#include <array>
 #include <cstring>
 #include <locale>
 #include <sstream>
@@ -72,6 +74,17 @@ std::string ToString(const T& t)
     oss.imbue(std::locale::classic());
     oss << t;
     return oss.str();
+}
+
+/**
+ * Check whether a container begins with the given prefix.
+ */
+template <typename T1, size_t PREFIX_LEN>
+NODISCARD inline bool HasPrefix(const T1& obj,
+                                const std::array<uint8_t, PREFIX_LEN>& prefix)
+{
+    return obj.size() >= PREFIX_LEN &&
+           std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
 #endif // BITCOIN_UTIL_STRENCODINGS_H

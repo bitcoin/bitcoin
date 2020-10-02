@@ -145,16 +145,16 @@ class MaxUploadTest(BitcoinTestFramework):
         self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1"])
 
         # Reconnect to self.nodes[0]
-        self.nodes[0].add_p2p_connection(TestP2PConn())
+        peer = self.nodes[0].add_p2p_connection(TestP2PConn())
 
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(MSG_BLOCK, big_new_block)]
         for i in range(20):
-            self.nodes[0].p2p.send_and_ping(getdata_request)
-            assert_equal(self.nodes[0].p2p.block_receive_map[big_new_block], i+1)
+            peer.send_and_ping(getdata_request)
+            assert_equal(peer.block_receive_map[big_new_block], i+1)
 
         getdata_request.inv = [CInv(MSG_BLOCK, big_old_block)]
-        self.nodes[0].p2p.send_and_ping(getdata_request)
+        peer.send_and_ping(getdata_request)
 
         self.log.info("Peer still connected after trying to download old block (download permission)")
         peer_info = self.nodes[0].getpeerinfo()

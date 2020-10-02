@@ -482,12 +482,24 @@
         <translation>Aktualizovaný</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Uzlové okno</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Otvor konzolu pre ladenie a diagnostiku uzlu</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Odosielajúce adresy</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>&amp;Prijímajúce adresy</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Otvoriť bitcoin: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -944,7 +956,7 @@
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>Prvá synchronizácia je veľmi náročná a môžu sa tak vďaka nej začat na Vašom počítači projavovať doteraz skryté hárdwarové problémy. Vždy, keď spustíte %1, bude sťahovanie pokračovať tam, kde skončilo.</translation>
+        <translation>Prvá synchronizácia je veľmi náročná a môžu sa tak vďaka nej začat na Vašom počítači prejavovať doteraz skryté hardwarové problémy. Vždy, keď spustíte %1, bude sťahovanie pokračovať tam, kde naposledy skončilo.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1050,12 +1062,24 @@
         <translation>Skryť</translation>
     </message>
     <message>
+        <source>Esc</source>
+        <translation>Esc - úniková klávesa</translation>
+    </message>
+    <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>%1 sa práve synchronizuje. Sťahujú sa hlavičky a bloky od partnerov. Tie sa budú sa overovať až sa kompletne overí celý reťazec blokov - blockchain.</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Neznámy. Synchronizujú sa hlavičky (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>Otvoriť bitcoin URI</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
@@ -1449,6 +1473,10 @@
         <translation>'bitcoin://' je neplatná URI. Použite 'bitcoin:'</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>Nemožno spracovať žiadosť o platbu, pretože podpora pre BIP70 nieje podporovaná.</translation>
+    </message>
+    <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
         <translation>Kvôli mnohým bezpečnostným chybám v BIP70 sa dôrazne odporúča ignorovať inštrukcie na prepínanie peňaženiek od akýchkoľvek obchodníkov.</translation>
     </message>
@@ -1762,8 +1790,20 @@
         <translation>Synchronizované bloky</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Mapovaný nezávislý - Autonómny Systém používaný na rozšírenie vzájomného výberu partnerov.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Mapovaný AS</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Aplikácia</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Uzlové okno</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1977,8 +2017,16 @@
         <translation>Voliteľná požadovaná suma. Nechajte prázdne alebo nulu ak nepožadujete určitú sumu.</translation>
     </message>
     <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>Voliteľný popis ktorý sa pridá k tejto novej prijímajúcej adrese (pre jednoduchšiu identifikáciu). Tento popis je taktiež pridaný do výzvy k platbe.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Voliteľná správa ktorá bude pridaná k tejto platobnej výzve a môže byť zobrazená odosielateľovi.</translation>
+    </message>
+    <message>
         <source>&amp;Create new receiving address</source>
-        <translation>Vytvoriť novú adresu pre prijímanie</translation>
+        <translation>&amp;Vytvoriť novú príjmaciu adresu</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2230,6 +2278,10 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Prach:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Skryť nastavenie poplatkov transakcie</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>Ak je v blokoch menej objemu transakcií ako priestoru, ťažiari ako aj vysielacie uzly, môžu uplatniť minimálny poplatok. Platiť iba minimálny poplatok je v poriadku, ale uvedomte si, že to môže mať za následok transakciu, ktorá sa nikdy nepotvrdí, akonáhle je väčší dopyt po bitcoinových transakciách, než dokáže sieť spracovať.</translation>
     </message>
@@ -2298,6 +2350,14 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>%1 (%2 blokov)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>Vytvoriť bez podpisu</translation>
+    </message>
+    <message>
+        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Vytvorí čiastočne podpísanú Bitcoin transakciu (Partially Signed Bitcoin Transaction - PSBT) na použitie napríklad s offline %1 peňaženkou alebo v hardvérovej peňaženke kompatibilnej s PSBT.</translation>
+    </message>
+    <message>
         <source> from wallet '%1'</source>
         <translation> z peňaženky '%1'</translation>
     </message>
@@ -2308,6 +2368,10 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>%1 to %2</source>
         <translation>%1 do %2</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Chcete naplánovať túto transakciu?</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2344,6 +2408,26 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Confirm send coins</source>
         <translation>Potvrďte odoslanie mincí</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Potvrdiť návrh transakcie</translation>
+    </message>
+    <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Skopírovať PSBT do schránky</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Odoslať</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT skopírovaný</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Iba sledovaný zostatok:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2439,6 +2523,10 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Remove this entry</source>
         <translation>Odstrániť túto položku</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Suma na odoslanie vo vybranej mene</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -2567,6 +2655,14 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Adresa Bitcoin, ktorou bola podpísaná správa</translation>
     </message>
     <message>
+        <source>The signed message to verify</source>
+        <translation>Podpísaná správa na overenie</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>Poskytnutý podpis pri podpísaní správy</translation>
+    </message>
+    <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Overím správy sa uistiť že bola podpísaná označenou Bitcoin adresou</translation>
     </message>
@@ -2597,6 +2693,10 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>Odomknutie peňaženky bolo zrušené.</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>Bez chyby</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3131,7 +3231,11 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     </message>
     <message>
         <source>Do you want to increase the fee?</source>
-        <translation>Chceš poplatok navýšiť?</translation>
+        <translation>Chcete navýšiť poplatok?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>Chcete naplánovať túto transakciu s navýšením poplatkov.</translation>
     </message>
     <message>
         <source>Current fee:</source>
@@ -3148,6 +3252,14 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Confirm fee bump</source>
         <translation>Potvrď navýšenie poplatku</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>Nemožno naplánovať túto transakciu.</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT skopírovaný</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -3314,6 +3426,14 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Corrupted block database detected</source>
         <translation>Zistená poškodená databáza blokov</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>Nepodarilo sa nájsť asmap súbor %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>Nepodarilo sa analyzovať asmap súbor %s</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>

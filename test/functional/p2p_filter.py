@@ -131,7 +131,7 @@ class FilterTest(BitcoinTestFramework):
         self.log.debug("Send a mempool msg after connecting and check that the tx is received")
         self.nodes[0].add_p2p_connection(filter_peer)
         filter_peer.send_and_ping(filter_peer.watch_filter_init)
-        self.nodes[0].p2p.send_message(msg_mempool())
+        filter_peer.send_message(msg_mempool())
         filter_peer.wait_for_tx(txid)
 
     def test_frelay_false(self, filter_peer):

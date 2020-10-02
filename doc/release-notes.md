@@ -102,6 +102,20 @@ will trigger BIP 125 (replace-by-fee) opt-in. (#11413)
   option `-deprecatedrpc=banscore` is used. The `banscore` field will be fully
   removed in the next major release. (#19469)
 
+- The `testmempoolaccept` RPC returns `vsize` and a `fee` object with the `base` fee
+  if the transaction passes validation. (#19940)
+
+- The `getpeerinfo` RPC now returns a `connection_type` field. This indicates
+  the type of connection established with the peer. It will return one of six
+  options. For more information, see the `getpeerinfo` help documentation.
+  (#19725)
+
+- The `getpeerinfo` RPC no longer returns the `addnode` field by default. This
+  field will be fully removed in the next major release.  It can be accessed
+  with the configuration option `-deprecatedrpc=getpeerinfo_addnode`. However,
+  it is recommended to instead use the `connection_type` field (it will return
+  `manual` when addnode is true). (#19725)
+
 - The `walletcreatefundedpsbt` RPC call will now fail with
   `Insufficient funds` when inputs are manually selected but are not enough to cover
   the outputs and fee. Additional inputs can automatically be added through the
@@ -141,7 +155,8 @@ Updated settings
 
 - Netmasks that contain 1-bits after 0-bits (the 1-bits are not contiguous on
   the left side, e.g. 255.0.255.255) are no longer accepted. They are invalid
-  according to RFC 4632.
+  according to RFC 4632. Netmasks are used in the `-rpcallowip` and `-whitelist`
+  configuration options and in the `setban` RPC. (#19628)
 
 Changes to Wallet or GUI related settings can be found in the GUI or Wallet  section below.
 
@@ -175,6 +190,9 @@ Wallet
   transactions, the mempool tracks these transactions as a part of the newly
   introduced unbroadcast set. See the "P2P and network changes" section for
   more information on the unbroadcast set. (#18038)
+
+- The `sendtoaddress` and `sendmany` RPCs accept an optional `verbose=True`
+  argument to also return the fee reason about the sent tx. (#19501)
 
 - The wallet can create a transaction without change even when the keypool is
   empty. Previously it failed. (#17219)
@@ -331,6 +349,10 @@ RPC
 
 Tests
 -----
+
+- The BIP 325 default signet can be enabled by the `-chain=signet` or `-signet`
+  setting. The settings `-signetchallenge` and `-signetseednode` allow
+  enabling a custom signet.
 
 Credits
 =======

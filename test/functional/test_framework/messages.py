@@ -22,6 +22,7 @@ from codecs import encode
 import copy
 import hashlib
 from io import BytesIO
+import math
 import random
 import socket
 import struct
@@ -66,6 +67,8 @@ MSG_TYPE_MASK = 0xffffffff >> 2
 MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG
 
 FILTER_TYPE_BASIC = 0
+
+WITNESS_SCALE_FACTOR = 4
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -536,6 +539,13 @@ class CTransaction:
             if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
                 return False
         return True
+
+    # Calculate the virtual transaction size using witness and non-witness
+    # serialization size (does NOT use sigops).
+    def get_vsize(self):
+        with_witness_size = len(self.serialize_with_witness())
+        without_witness_size = len(self.serialize_without_witness())
+        return math.ceil(((WITNESS_SCALE_FACTOR - 1) * without_witness_size + with_witness_size) / WITNESS_SCALE_FACTOR)
 
     def __repr__(self):
         return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
@@ -1462,9 +1472,9 @@ class msg_sendcmpct:
     __slots__ = ("announce", "version")
     msgtype = b"sendcmpct"
 
-    def __init__(self):
-        self.announce = False
-        self.version = 1
+    def __init__(self, announce=False, version=1):
+        self.announce = announce
+        self.version = version
 
     def deserialize(self, f):
         self.announce = struct.unpack("<?", f.read(1))[0]

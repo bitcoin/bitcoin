@@ -20,10 +20,11 @@ protected:
     static constexpr int WIDTH = BITS / 8;
     uint8_t m_data[WIDTH];
 public:
-    base_blob()
-    {
-        memset(m_data, 0, sizeof(m_data));
-    }
+    /* construct 0 value by default */
+    constexpr base_blob() : m_data() {}
+
+    /* constructor for constants between 1 and 255 */
+    constexpr explicit base_blob(uint8_t v) : m_data{v} {}
 
     explicit base_blob(const std::vector<unsigned char>& vch);
 
@@ -111,7 +112,7 @@ public:
  */
 class uint160 : public base_blob<160> {
 public:
-    uint160() {}
+    constexpr uint160() {}
     explicit uint160(const std::vector<unsigned char>& vch) : base_blob<160>(vch) {}
 };
 
@@ -122,8 +123,10 @@ public:
  */
 class uint256 : public base_blob<256> {
 public:
-    uint256() {}
+    constexpr uint256() {}
+    constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
+    static const uint256 ONE;
 };
 
 /* uint256 from const char *.
@@ -146,7 +149,5 @@ inline uint256 uint256S(const std::string& str)
     rv.SetHex(str);
     return rv;
 }
-
-uint256& UINT256_ONE();
 
 #endif // BITCOIN_UINT256_H

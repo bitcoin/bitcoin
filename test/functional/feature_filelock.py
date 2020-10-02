@@ -15,7 +15,7 @@ class FilelockTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, extra_args=None)
-        self.nodes[0].start([])
+        self.nodes[0].start(['-wallet='])
         self.nodes[0].wait_for_rpc_connection()
 
     def run_test(self):
@@ -30,7 +30,7 @@ class FilelockTest(BitcoinTestFramework):
             wallet_dir = os.path.join(datadir, 'wallets')
             self.log.info("Check that we can't start a second bitcoind instance using the same wallet")
             expected_msg = "Error: Error initializing wallet database environment"
-            self.nodes[1].assert_start_raises_init_error(extra_args=['-walletdir={}'.format(wallet_dir), '-noserver'], expected_msg=expected_msg, match=ErrorMatch.PARTIAL_REGEX)
+            self.nodes[1].assert_start_raises_init_error(extra_args=['-walletdir={}'.format(wallet_dir), '-wallet=', '-noserver'], expected_msg=expected_msg, match=ErrorMatch.PARTIAL_REGEX)
 
 if __name__ == '__main__':
     FilelockTest().main()

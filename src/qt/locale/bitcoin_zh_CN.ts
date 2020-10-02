@@ -1120,7 +1120,7 @@
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation>系统登入时启动 %1 (%S)</translation>
+        <translation>系统登入时启动 %1 (&amp;S)</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1789,6 +1789,14 @@
         <translation>已同步区块</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>映射到的自治系统，被用来多样化选择节点</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>映射到的AS</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>用户代理</translation>
     </message>
@@ -2346,7 +2354,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>创建一个“部分签名比特币交易”（PSBT），以用于像是离线%1钱包，或是兼容PSBT的硬件钱包这种用途。</translation>
+        <translation>创建一个“部分签名比特币交易”（PSBT），以用于诸如离线%1钱包，或是兼容PSBT的硬件钱包这类用途。</translation>
     </message>
     <message>
         <source> from wallet '%1'</source>

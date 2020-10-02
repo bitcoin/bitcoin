@@ -11,25 +11,19 @@ environment:
   QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
   QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
   VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
-  VCPKG_COMMIT_ID: 'f3f329a048eaff759c1992c458f2e12351486bc7'
+  VCPKG_COMMIT_ID: '13590753fec479c5b0a3d48dd553dde8d49615fc'
 install:
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
 # Powershell block below is to install the c++ dependencies via vcpkg. The pseudo code is:
 #    a. Checkout the vcpkg source (including port files) for the specific checkout and build the vcpkg binary,
-#    b. Install the missing packages.
+#    b. Install the missing packages using the vcpkg manifest.
 - ps: |
-      $env:PACKAGES = Get-Content -Path build_msvc\vcpkg-packages.txt
-      Write-Host "vcpkg installing packages: $env:PACKAGES"
       cd c:\tools\vcpkg
       $env:GIT_REDIRECT_STDERR = '2>&1' # git is writing non-errors to STDERR when doing git pull. Send to STDOUT instead.
       git pull origin master > $null
       git -c advice.detachedHead=false checkout $env:VCPKG_COMMIT_ID
       .\bootstrap-vcpkg.bat > $null
-      Add-Content "C:\tools\vcpkg\triplets\$env:PLATFORM-windows-static.cmake" "set(VCPKG_BUILD_TYPE release)"
-      .\vcpkg install --triplet $env:PLATFORM-windows-static $env:PACKAGES.split() > $null
-      Write-Host "vcpkg packages installed successfully."
-      .\vcpkg integrate install
       cd "$env:APPVEYOR_BUILD_FOLDER"
 before_build:
 # Powershell block below is to download and extract the Qt static libraries. The pseudo code is:

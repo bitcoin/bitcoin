@@ -5,13 +5,8 @@
 """Test addr response caching"""
 
 import time
-from test_framework.messages import (
-    CAddress,
-    NODE_NETWORK,
-    NODE_WITNESS,
-    msg_addr,
-    msg_getaddr,
-)
+
+from test_framework.messages import msg_getaddr
 from test_framework.p2p import (
     P2PInterface,
     p2p_lock
@@ -21,21 +16,9 @@ from test_framework.util import (
     assert_equal,
 )
 
+# As defined in net_processing.
 MAX_ADDR_TO_SEND = 1000
-
-def gen_addrs(n):
-    addrs = []
-    for i in range(n):
-        addr = CAddress()
-        addr.time = int(time.time())
-        addr.nServices = NODE_NETWORK | NODE_WITNESS
-        # Use first octets to occupy different AddrMan buckets
-        first_octet = i >> 8
-        second_octet = i % 256
-        addr.ip = "{}.{}.1.1".format(first_octet, second_octet)
-        addr.port = 8333
-        addrs.append(addr)
-    return addrs
+MAX_PCT_ADDR_TO_SEND = 23
 
 class AddrReceiver(P2PInterface):
 
@@ -62,18 +45,16 @@ class AddrTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
-        self.log.info('Create connection that sends and requests addr messages')
-        addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
-
-        msg_send_addrs = msg_addr()
         self.log.info('Fill peer AddrMan with a lot of records')
-        # Since these addrs are sent from the same source, not all of them will be stored,
-        # because we allocate a limited number of AddrMan buckets per addr source.
-        total_addrs = 10000
-        addrs = gen_addrs(total_addrs)
-        for i in range(int(total_addrs/MAX_ADDR_TO_SEND)):
-            msg_send_addrs.addrs = addrs[i * MAX_ADDR_TO_SEND:(i + 1) * MAX_ADDR_TO_SEND]
-            addr_source.send_and_ping(msg_send_addrs)
+        for i in range(10000):
+            first_octet = i >> 8
+            second_octet = i % 256
+            a = "{}.{}.1.1".format(first_octet, second_octet)
+            self.nodes[0].addpeeraddress(a, 8333)
+
+        # Need to make sure we hit MAX_ADDR_TO_SEND records in the addr response later because
+        # only a fraction of all known addresses can be cached and returned.
+        assert(len(self.nodes[0].getnodeaddresses(0)) > int(MAX_ADDR_TO_SEND / (MAX_PCT_ADDR_TO_SEND / 100)))
 
         responses = []
         self.log.info('Send many addr requests within short time to receive same response')
@@ -89,7 +70,7 @@ class AddrTest(BitcoinTestFramework):
             responses.append(addr_receiver.get_received_addrs())
         for response in responses[1:]:
             assert_equal(response, responses[0])
-        assert(len(response) < MAX_ADDR_TO_SEND)
+        assert(len(response) == MAX_ADDR_TO_SEND)
 
         cur_mock_time += 3 * 24 * 60 * 60
         self.nodes[0].setmocktime(cur_mock_time)

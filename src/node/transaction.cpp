@@ -38,8 +38,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
         TxValidationState state;
-        if (!AcceptToMemoryPool(*node.mempool, state, std::move(tx),
-                nullptr /* plTxnReplaced */, false /* bypass_limits */, max_tx_fee)) {
+        if (!AcceptToMemoryPool(*node.mempool, state, tx,
+                                nullptr /* plTxnReplaced */, false /* bypass_limits */, max_tx_fee)) {
             err_string = state.ToString();
             if (state.IsInvalid()) {
                 if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
@@ -80,7 +80,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     if (relay) {
         // the mempool tracks locally submitted transactions to make a
         // best-effort of initial broadcast
-        node.mempool->AddUnbroadcastTx(hashTx, tx->GetWitnessHash());
+        node.mempool->AddUnbroadcastTx(hashTx);
 
         LOCK(cs_main);
         RelayTransaction(hashTx, tx->GetWitnessHash(), *node.connman);
