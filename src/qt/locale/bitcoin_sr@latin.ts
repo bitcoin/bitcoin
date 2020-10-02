@@ -30,6 +30,10 @@
         <translation>Briše trenutno izabranu adresu sa liste</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Unesite adresu ili oznaku za pretragu</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Izvoz podataka iz trenutne kartice u datoteku</translation>
     </message>
@@ -64,6 +68,10 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Ovo su Vaše Bitcoin adrese na koju se vrše uplate. Uvek proverite iznos i prijemnu adresu pre slanja novčića.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Ovo su vaše Bitcoin adrese za primanje isplete. Upotrebite dugme 'Kreiraj novu adresu prijema' na kartici za prijem da biste kreirali nove adrese.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -128,6 +136,10 @@
         <translation>Ponovo unesite pristupnu frazu</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Prikaži lozinku</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Šifrujte novčanik</translation>
     </message>
@@ -166,6 +178,22 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Novčanik je šifrovan</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Unesite lozinku u novčanik. &lt;br/&gt;Molimo, koristite lozinku koja ima &lt;b&gt; deset ili više nasumičnih znakova&lt;/b&gt;, ili &lt;b&gt;osam ili više reči&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Unesite u novčanik staru lozinku i novu lozinku.</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Novčanik će vam biti šifriran.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Vaš novčanik je sada šifrovan.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -290,6 +318,10 @@
         <translation>Otvori &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Novčanik:</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Odaberite za prekid aktivnosti na mreži.</translation>
     </message>
@@ -386,6 +418,10 @@
         <translation>Informacije</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Otvori novčanik</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 klijent</translation>
     </message>
@@ -456,6 +492,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Onemogućite privatne ključeve za ovaj novčanik. Novčanici sa isključenim privatnim ključevima neće imati privatne ključeve i ne mogu imati HD seme ili uvezene privatne ključeve. Ovo je idealno za novčanike samo za gledanje.</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

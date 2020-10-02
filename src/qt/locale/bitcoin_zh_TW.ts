@@ -136,6 +136,10 @@
         <translation>重複新密碼</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>顯示密碼</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>加密錢包</translation>
     </message>
@@ -178,6 +182,18 @@
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>請記得, 即使將錢包加密, 也不能完全防止因惡意軟體入侵, 而導致位元幣被偷.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>加密錢包</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>你的錢包將被加密</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>你的錢包現已被加密</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -302,6 +318,14 @@
         <translation>開啓 &amp;URI...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>新增錢包...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>創建一個新錢包</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>錢包:</translation>
     </message>
@@ -363,7 +387,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>把錢包中的密鑰加密</translation>
+        <translation>將錢包中之密鑰加密</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -743,9 +767,21 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>創建錢包失敗&lt;br&gt;</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>新增錢包</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>錢包名稱</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -956,6 +992,10 @@
     <message>
         <source>Hide</source>
         <translation>隱藏</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>離開鍵</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
@@ -2237,6 +2277,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>確認付款金額</translation>
     </message>
     <message>
+        <source>Send</source>
+        <translation>發</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>收款位址無效。請再檢查看看。</translation>
     </message>
@@ -2488,6 +2532,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>錢包解鎖已取消。</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>沒有錯誤</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3458,7 +3506,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Unable to create the PID file '%s': %s</source>
-        <translation>无法创建PID文件'%s': %s</translation>
+        <translation>無法創建PID文件'%s': %s</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
@@ -3530,7 +3578,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation>交易必須至少要有一個收款人</translation>
+        <translation>交易必須至少有一個收款人</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

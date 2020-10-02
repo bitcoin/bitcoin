@@ -267,7 +267,7 @@
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Oglejte si splošne informacije o vaši denarnici</translation>
+        <translation>Oglejte si splošne informacije o svoji denarnici</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -1435,7 +1435,7 @@
     </message>
     <message>
         <source>Spendable:</source>
-        <translation>Na voljo:</translation>
+        <translation>Na voljo za pošiljanje:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1787,6 +1787,14 @@
     <message>
         <source>Synced Blocks</source>
         <translation>Sinhronizirani bloki</translation>
+    </message>
+    <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Mapirani Avtonomski Sistem, uporabljan za diverzificiranje izbire soležnikov.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Mapirani AS</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2350,15 +2358,15 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     </message>
     <message>
         <source> from wallet '%1'</source>
-        <translation>iz denarnice '%1'</translation>
+        <translation> iz denarnice '%1'</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
-        <translation>%1 do '%2'</translation>
+        <translation>%1 v '%2'</translation>
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation>%1 do %2</translation>
+        <translation>%1 v %2</translation>
     </message>
     <message>
         <source>Do you want to draft this transaction?</source>
@@ -2366,7 +2374,7 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation>Ali ste prepričani, da želite poslati?</translation>
+        <translation>Ali ste prepričani, da želite poslati sredstva?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -2382,7 +2390,7 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     </message>
     <message>
         <source>Please, review your transaction.</source>
-        <translation>Prosimo, preglejte vaše transakcije.</translation>
+        <translation>Prosimo, preglejte svojo transakcijo.</translation>
     </message>
     <message>
         <source>Transaction fee</source>

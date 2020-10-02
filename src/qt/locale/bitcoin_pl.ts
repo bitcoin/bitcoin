@@ -482,12 +482,24 @@
         <translation>Aktualny</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Okno węzła</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Otwórz konsolę diagnostyczną i debugowanie węzłów</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Adresy wysyłania</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>&amp;Adresy odbioru</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Otwórz URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1023,7 +1035,7 @@
     </message>
     <message>
         <source>Unknown...</source>
-        <translation>Nienznane...</translation>
+        <translation>Nieznany...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1050,12 +1062,24 @@
         <translation>Ukryj</translation>
     </message>
     <message>
+        <source>Esc</source>
+        <translation>Wyjdź</translation>
+    </message>
+    <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>%1 jest w trakcie synchronizacji. Trwa pobieranie i weryfikacja nagłówków oraz bloków z sieci w celu uzyskania aktualnego stanu łańcucha.</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Nieznane. Synchronizowanie nagłówków (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>Otwórz URI</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
@@ -1449,6 +1473,10 @@
         <translation>'bitcoin://' nie jest poprawnym URI. Użyj 'bitcoin:'.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>Nie można przetworzyć żądania zapłaty z powodu braku wsparcia BIP70.</translation>
+    </message>
+    <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
         <translation>Z powodu znanych błędów bezpieczeństwa w BIP70 zaleca się ignorować wszelkie polecenie od sprzedawcy dotyczące zmiany portfela.</translation>
     </message>
@@ -1761,8 +1789,20 @@
         <translation>Zsynchronizowane bloki</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Zmapowany autonomiczny system (ang. asmap) używany do dywersyfikacji wyboru węzłów.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Zmapowany autonomiczny system (ang. asmap)</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Aplikacja kliencka</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Okno węzła</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1974,6 +2014,14 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Opcjonalna kwota by zażądać. Zostaw puste lub zero by nie zażądać konkretnej kwoty.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>Dodatkowa etykieta powiązana z nowym adresem do odbierania płatności (używanym w celu odnalezienia faktury). Jest również powiązana z żądaniem płatności.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Dodatkowa wiadomość dołączana do żądania zapłaty, która może być odczytana przez płacącego.</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
@@ -2230,6 +2278,10 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>Pył:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Ukryj ustawienia opłat transakcyjnych</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>Gdy ilość transakcji jest mniejsza niż ilość miejsca w bloku, górnicy i węzły przekazujące wymagają minimalnej opłaty. Zapłata tylko tej wartości jest dopuszczalna, lecz może skutkować transakcją która nigdy nie zostanie potwierdzona w sytuacji, gdy ilość transakcji przekroczy przepustowość sieci.</translation>
     </message>
@@ -2298,6 +2350,14 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>%1 (%2 bloków)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>&amp;Utwórz niepodpisaną transakcję</translation>
+    </message>
+    <message>
+        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Tworzy częściowo podpisaną transakcję (ang. PSBT) używaną np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
+    </message>
+    <message>
         <source> from wallet '%1'</source>
         <translation>z portfela '%1'</translation>
     </message>
@@ -2310,8 +2370,16 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>%1 do %2</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Czy chcesz zapisać szkic tej transakcji?</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>Czy na pewno chcesz wysłać?</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Proszę przejrzeć propozycję transakcji. Zostanie utworzona częściowo podpisana transakcja (ang. PSBT), którą można skopiować, a następnie podpisać np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
     </message>
     <message>
         <source>or</source>
@@ -2344,6 +2412,26 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Confirm send coins</source>
         <translation>Potwierdź wysyłanie monet</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Potwierdź propozycję transakcji</translation>
+    </message>
+    <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Skopiuj PSBT do schowka</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Wyślij</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>Skopiowano PSBT</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Kwota na obserwowanych kontach:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2439,6 +2527,10 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Remove this entry</source>
         <translation>Usuń ten wpis</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Kwota do wysłania w wybranej jednostce</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -2568,6 +2660,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Adres Bitcoin, którym została podpisana wiadomość</translation>
     </message>
     <message>
+        <source>The signed message to verify</source>
+        <translation>Podpisana wiadomość do weryfikacji</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>Sygnatura podawana przy podpisywaniu wiadomości</translation>
+    </message>
+    <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana odpowiednim adresem Bitcoin.</translation>
     </message>
@@ -2598,6 +2698,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>Odblokowanie portfela zostało anulowane.</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>Brak błędów</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3135,6 +3239,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Czy chcesz zwiększyć prowizję?</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>Czy chcesz zapisać szkic transakcji ze zwiększoną opłatą transakcyjną?</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>Aktualna opłata:</translation>
     </message>
@@ -3149,6 +3257,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Confirm fee bump</source>
         <translation>Potwierdź zwiększenie opłaty</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>Nie można zapisać szkicu transakcji.</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>Skopiowano PSBT</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -3315,6 +3431,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Corrupted block database detected</source>
         <translation>Wykryto uszkodzoną bazę bloków</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>Nie można odnaleźć pliku asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>Nie można przetworzyć pliku asmap %s</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
