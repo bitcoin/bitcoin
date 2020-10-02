@@ -82,8 +82,11 @@ from test_framework.address import (
     hash160,
     sha256,
 )
-from collections import namedtuple
+from collections import OrderedDict, namedtuple
 from io import BytesIO
+import json
+import hashlib
+import os
 import random
 
 # === Framework for building spending transactions. ===
@@ -1142,10 +1145,52 @@ def spenders_taproot_inactive():
 
     return spenders
 
+# Consensus validation flags to use in dumps for tests with "legacy/" or "inactive/" prefix.
+LEGACY_FLAGS = "P2SH,DERSIG,CHECKLOCKTIMEVERIFY,CHECKSEQUENCEVERIFY,WITNESS,NULLDUMMY"
+# Consensus validation flags to use in dumps for all other tests.
+TAPROOT_FLAGS = "P2SH,DERSIG,CHECKLOCKTIMEVERIFY,CHECKSEQUENCEVERIFY,WITNESS,NULLDUMMY,TAPROOT"
+
+def dump_json_test(tx, input_utxos, idx, success, failure):
+    spender = input_utxos[idx].spender
+    # Determine flags to dump
+    flags = LEGACY_FLAGS if spender.comment.startswith("legacy/") or spender.comment.startswith("inactive/") else TAPROOT_FLAGS
+
+    fields = [
+        ("tx", tx.serialize().hex()),
+        ("prevouts", [x.output.serialize().hex() for x in input_utxos]),
+        ("index", idx),
+        ("flags", flags),
+        ("comment", spender.comment)
+    ]
+
+    # The "final" field indicates that a spend should be always valid, even with more validation flags enabled
+    # than the listed ones. Use standardness as a proxy for this (which gives a conservative underestimate).
+    if spender.is_standard:
+        fields.append(("final", True))
+
+    def dump_witness(wit):
+        return OrderedDict([("scriptSig", wit[0].hex()), ("witness", [x.hex() for x in wit[1]])])
+    if success is not None:
+        fields.append(("success", dump_witness(success)))
+    if failure is not None:
+        fields.append(("failure", dump_witness(failure)))
+
+    # Write the dump to $TEST_DUMP_DIR/x/xyz... where x,y,z,... are the SHA1 sum of the dump (which makes the
+    # file naming scheme compatible with fuzzing infrastructure).
+    dump = json.dumps(OrderedDict(fields)) + ",\n"
+    sha1 = hashlib.sha1(dump.encode("utf-8")).hexdigest()
+    dirname = os.environ.get("TEST_DUMP_DIR", ".") + ("/%s" % sha1[0])
+    os.makedirs(dirname, exist_ok=True)
+    with open(dirname + ("/%s" % sha1), 'w', encoding="utf8") as f:
+        f.write(dump)
+
 # Data type to keep track of UTXOs, where they were created, and how to spend them.
 UTXOData = namedtuple('UTXOData', 'outpoint,output,spender')
 
 class TaprootTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
+                            help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -1356,6 +1401,8 @@ class TaprootTest(BitcoinTestFramework):
                 if not input_utxos[i].spender.no_fail:
                     fail = fn(tx, i, [utxo.output for utxo in input_utxos], False)
                 input_data.append((fail, success))
+                if self.options.dump_tests:
+                    dump_json_test(tx, input_utxos, i, success, fail)
 
             # Sign each input incorrectly once on each complete signing pass, except the very last.
             for fail_input in list(range(len(input_utxos))) + [None]:
