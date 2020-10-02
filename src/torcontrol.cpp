@@ -84,12 +84,12 @@ public:
 
     /**
      * Connect to a Tor control port.
-     * target is address of the form host:port.
+     * tor_control_center is address of the form host:port.
      * connected is the handler that is called when connection is successfully established.
      * disconnected is a handler that is called when the connection is broken.
      * Return true on success.
      */
-    bool Connect(const std::string &target, const ConnectionCB& connected, const ConnectionCB& disconnected);
+    bool Connect(const std::string& tor_control_center, const ConnectionCB& connected, const ConnectionCB& disconnected);
 
     /**
      * Disconnect from Tor control port.
@@ -196,16 +196,16 @@ void TorControlConnection::eventcb(struct bufferevent *bev, short what, void *ct
     }
 }
 
-bool TorControlConnection::Connect(const std::string &target, const ConnectionCB& _connected, const ConnectionCB&  _disconnected)
+bool TorControlConnection::Connect(const std::string& tor_control_center, const ConnectionCB& _connected, const ConnectionCB& _disconnected)
 {
     if (b_conn)
         Disconnect();
-    // Parse target address:port
+    // Parse tor_control_center address:port
     struct sockaddr_storage connect_to_addr;
     int connect_to_addrlen = sizeof(connect_to_addr);
-    if (evutil_parse_sockaddr_port(target.c_str(),
+    if (evutil_parse_sockaddr_port(tor_control_center.c_str(),
         (struct sockaddr*)&connect_to_addr, &connect_to_addrlen)<0) {
-        LogPrintf("tor: Error parsing socket address %s\n", target);
+        LogPrintf("tor: Error parsing socket address %s\n", tor_control_center);
         return false;
     }
 
@@ -218,9 +218,9 @@ bool TorControlConnection::Connect(const std::string &target, const ConnectionCB
     this->connected = _connected;
     this->disconnected = _disconnected;
 
-    // Finally, connect to target
+    // Finally, connect to tor_control_center
     if (bufferevent_socket_connect(b_conn, (struct sockaddr*)&connect_to_addr, connect_to_addrlen) < 0) {
-        LogPrintf("tor: Error connecting to address %s\n", target);
+        LogPrintf("tor: Error connecting to address %s\n", tor_control_center);
         return false;
     }
     return true;
@@ -423,7 +423,7 @@ public:
     void Reconnect();
 private:
     struct event_base* base;
-    std::string target;
+    const std::string m_tor_control_center;
     TorControlConnection conn;
     std::string private_key;
     std::string service_id;
@@ -464,9 +464,9 @@ TorController::TorController(struct event_base* _base, const std::string& tor_co
     if (!reconnect_ev)
         LogPrintf("tor: Failed to create event for reconnection: out of memory?\n");
     // Start connection attempts immediately
-    if (!conn.Connect(_target, std::bind(&TorController::connected_cb, this, std::placeholders::_1),
+    if (!conn.Connect(m_tor_control_center, std::bind(&TorController::connected_cb, this, std::placeholders::_1),
          std::bind(&TorController::disconnected_cb, this, std::placeholders::_1) )) {
-        LogPrintf("tor: Initiating connection to Tor control port %s failed\n", _target);
+        LogPrintf("tor: Initiating connection to Tor control port %s failed\n", m_tor_control_center);
     }
     // Read service private key if cached
     std::pair<bool,std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
@@ -701,7 +701,7 @@ void TorController::disconnected_cb(TorControlConnection& _conn)
     if (!reconnect)
         return;
 
-    LogPrint(BCLog::TOR, "tor: Not connected to Tor control port %s, trying to reconnect\n", target);
+    LogPrint(BCLog::TOR, "tor: Not connected to Tor control port %s, trying to reconnect\n", m_tor_control_center);
 
     // Single-shot timer for reconnect. Use exponential backoff.
     struct timeval time = MillisToTimeval(int64_t(reconnect_timeout * 1000.0));
@@ -715,9 +715,9 @@ void TorController::Reconnect()
     /* Try to reconnect and reestablish if we get booted - for example, Tor
      * may be restarting.
      */
-    if (!conn.Connect(target, std::bind(&TorController::connected_cb, this, std::placeholders::_1),
+    if (!conn.Connect(m_tor_control_center, std::bind(&TorController::connected_cb, this, std::placeholders::_1),
          std::bind(&TorController::disconnected_cb, this, std::placeholders::_1) )) {
-        LogPrintf("tor: Re-initiating connection to Tor control port %s failed\n", target);
+        LogPrintf("tor: Re-initiating connection to Tor control port %s failed\n", m_tor_control_center);
     }
 }
 
