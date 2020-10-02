@@ -77,6 +77,23 @@ P2P and network changes
 Updated RPCs
 ------------
 
+- The `getpeerinfo` RPC now has additional `last_block` and `last_transaction`
+  fields that return the UNIX epoch time of the last block and the last valid
+  transaction received from each peer. (#19731)
+
+- `getnetworkinfo` now returns two new fields, `connections_in` and
+  `connections_out`, that provide the number of inbound and outbound peer
+  connections. These new fields are in addition to the existing `connections`
+  field, which returns the total number of peer connections. (#19405)
+
+- Exposed transaction version numbers are now treated as unsigned 32-bit
+  integers instead of signed 32-bit integers. This matches their treatment in
+  consensus logic. Versions greater than 2 continue to be non-standard
+  (matching previous behavior of smaller than 1 or greater than 2 being
+  non-standard). Note that this includes the joinpsbt command, which combines
+  partially-signed transactions by selecting the highest version number.
+  (#16525)
+
 - `getmempoolinfo` now returns an additional `unbroadcastcount` field. The
   mempool tracks locally submitted transactions until their initial broadcast
   is acknowledged by a peer. This field returns the count of transactions
@@ -139,6 +156,10 @@ Build System
 Updated settings
 ----------------
 
+- The same ZeroMQ notification (e.g. `-zmqpubhashtx=address`) can now be
+  specified multiple times to publish the same notification to different ZeroMQ
+  sockets. (#18309)
+
 - The `-banscore` configuration option, which modified the default threshold for
   disconnecting and discouraging misbehaving peers, has been removed as part of
   changes in 0.20.1 and in this release to the handling of misbehaving peers.
@@ -163,6 +184,10 @@ Changes to Wallet or GUI related settings can be found in the GUI or Wallet  sec
 Tools and Utilities
 -------------------
 
+- The `connections` field of `bitcoin-cli -getinfo` is expanded to return a JSON
+  object with `in`, `out` and `total` numbers of peer connections. It previously
+  returned a single integer value for the total number of peer connections. (#19405)
+
 - A new `bitcoin-cli -generate` command, equivalent to RPC `generatenewaddress`
   followed by `generatetoaddress`, can generate blocks for command line testing
   purposes. This is a client-side version of the
@@ -174,6 +199,10 @@ Tools and Utilities
 
 New settings
 ------------
+
+- The `startupnotify` option is used to specify a command to
+  execute when Bitcoin Core has finished with its startup
+  sequence. (#15367)
 
 Wallet
 ------
@@ -200,6 +229,47 @@ Wallet
 - The `-salvagewallet` startup option has been removed. A new `salvage` command
   has been added to the `bitcoin-wallet` tool which performs the salvage
   operations that `-salvagewallet` did. (#18918)
+
+- A new configuration flag `-maxapsfee` has been added, which sets the max
+  allowed avoid partial spends (APS) fee. It defaults to 0 (i.e. fee is the
+  same with and without APS). Setting it to -1 will disable APS, unless
+  `-avoidpartialspends` is set. (#14582)
+
+- The wallet will now avoid partial spends (APS) by default, if this does not
+  result in a difference in fees compared to the non-APS variant. The allowed
+  fee threshold can be adjusted using the new `-maxapsfee` configuration
+  option. (#14582)
+
+- The `createwallet`, `loadwallet`, and `unloadwallet` RPCs now accept
+  `load_on_startup` options to modify the settings list. Unless these options
+  are explicitly set to true or false, the list is not modified, so the RPC
+  methods remain backwards compatible. (#15937)
+
+- A new `send` RPC with similar syntax to `walletcreatefundedpsbt`, including
+  support for coin selection and a custom fee rate. The `send` RPC is
+  experimental and may change in subsequent releases. Using it is encouraged
+  once it's no longer experimental: `sendmany` and `sendtoaddress` may be
+  deprecated in a future release. (#16378)
+
+- `fundrawtransaction` and `walletcreatefundedpsbt` when used with the
+  `lockUnspents` argument now lock manually selected coins, in addition to
+  automatically selected coins. Note that locked coins are never used in
+  automatic coin selection, but can still be manually selected. (#18244)
+
+- The `-zapwallettxes` startup option has been removed and its functionality
+  removed from the wallet.  This option was originally intended to allow for
+  the fee bumping of transactions that did not signal RBF. This functionality
+  has been superseded with the abandon transaction feature. (#19671)
+
+### Default Wallet
+
+Bitcoin Core will no longer create an unnamed `""` wallet by default when no
+wallet is specified on the command line or in the configuration files. For
+backwards compatibility, if an unnamed `""` wallet already exists and would
+have been loaded previously, then it will still be loaded. Users without an
+unnamed `""` wallet and without any other wallets to be loaded on startup will
+be prompted to either choose a wallet to load, or to create a new wallet.
+(#15454)
 
 ### Experimental Descriptor Wallets
 
@@ -329,6 +399,14 @@ issue.
 
 GUI changes
 -----------
+
+- Wallets created or loaded in the GUI will now be automatically loaded on
+  startup, so they don't need to be manually reloaded next time Bitcoin Core is
+  started. The list of wallets to load on startup is stored in
+  `\<datadir\>/settings.json` and augments any command line or `bitcoin.conf`
+  `-wallet=` settings that specify more wallets to load. Wallets that are
+  unloaded in the GUI get removed from the settings list so they won't load
+  again automatically next startup. (#19754)
 
 - The GUI Peers window no longer displays a "Ban Score" field. This is part of
   changes in 0.20.1 and in this release to the handling of misbehaving
