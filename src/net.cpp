@@ -83,6 +83,11 @@ enum BindFlags {
     BF_NONE         = 0,
     BF_EXPLICIT     = (1U << 0),
     BF_REPORT_ERROR = (1U << 1),
+    /**
+     * Do not call AddLocal() for our special addresses, e.g., for incoming
+     * Tor connections, to prevent gossiping them over the network.
+     */
+    BF_DONT_ADVERTISE = (1U << 2),
 };
 
 // The set of sockets cannot be modified while waiting
@@ -2241,10 +2246,6 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     }
 
     vhListenSocket.push_back(ListenSocket(hListenSocket, permissions));
-
-    if (addrBind.IsRoutable() && fDiscover && (permissions & PF_NOBAN) == 0)
-        AddLocal(addrBind, LOCAL_BIND);
-
     return true;
 }
 
@@ -2338,10 +2339,18 @@ bool CConnman::Bind(const CService &addr, unsigned int flags, NetPermissionFlags
         }
         return false;
     }
+
+    if (addr.IsRoutable() && fDiscover && !(flags & BF_DONT_ADVERTISE) && !(permissions & PF_NOBAN)) {
+        AddLocal(addr, LOCAL_BIND);
+    }
+
     return true;
 }
 
-bool CConnman::InitBinds(const std::vector<CService>& binds, const std::vector<NetWhitebindPermissions>& whiteBinds)
+bool CConnman::InitBinds(
+    const std::vector<CService>& binds,
+    const std::vector<NetWhitebindPermissions>& whiteBinds,
+    const std::vector<CService>& onion_binds)
 {
     bool fBound = false;
     for (const auto& addrBind : binds) {
@@ -2352,11 +2361,16 @@ bool CConnman::InitBinds(const std::vector<CService>& binds, const std::vector<N
     }
     if (binds.empty() && whiteBinds.empty()) {
         struct in_addr inaddr_any;
-        inaddr_any.s_addr = INADDR_ANY;
+        inaddr_any.s_addr = htonl(INADDR_ANY);
         struct in6_addr inaddr6_any = IN6ADDR_ANY_INIT;
         fBound |= Bind(CService(inaddr6_any, GetListenPort()), BF_NONE, NetPermissionFlags::PF_NONE);
         fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE, NetPermissionFlags::PF_NONE);
     }
+
+    for (const auto& addr_bind : onion_binds) {
+        fBound |= Bind(addr_bind, BF_EXPLICIT | BF_DONT_ADVERTISE, NetPermissionFlags::PF_NONE);
+    }
+
     return fBound;
 }
 
@@ -2375,7 +2389,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         nMaxOutboundCycleStartTime = 0;
     }
 
-    if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds)) {
+    if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds, connOptions.onion_binds)) {
         if (clientInterface) {
             clientInterface->ThreadSafeMessageBox(
                 _("Failed to listen on any port. Use -listen=0 if you want this."),

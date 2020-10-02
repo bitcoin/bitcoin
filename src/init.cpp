@@ -442,7 +442,7 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-bind=<addr>", "Bind to given address and always listen on it. Use [host]:port notation for IPv6", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion)", defaultBaseParams->OnionServiceTargetPort(), testnetBaseParams->OnionServiceTargetPort(), signetBaseParams->OnionServiceTargetPort(), regtestBaseParams->OnionServiceTargetPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-connect=<ip>", "Connect only to the specified node; -noconnect disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-dns", strprintf("Allow DNS lookups for -addnode, -seednode and -connect (default: %u)", DEFAULT_NAME_LOOKUP), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1918,9 +1918,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
     LogPrintf("nBestHeight = %d\n", chain_active_height);
 
-    if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
-        StartTorControl();
-
     Discover();
 
     // Map ports with UPnP
@@ -1947,13 +1944,39 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
-    for (const std::string& strBind : args.GetArgs("-bind")) {
-        CService addrBind;
-        if (!Lookup(strBind, addrBind, GetListenPort(), false)) {
-            return InitError(ResolveErrMsg("bind", strBind));
+    for (const std::string& bind_arg : args.GetArgs("-bind")) {
+        CService bind_addr;
+        const size_t index = bind_arg.rfind('=');
+        if (index == std::string::npos) {
+            if (Lookup(bind_arg, bind_addr, GetListenPort(), false)) {
+                connOptions.vBinds.push_back(bind_addr);
+                continue;
+            }
+        } else {
+            const std::string network_type = bind_arg.substr(index + 1);
+            if (network_type == "onion") {
+                const std::string truncated_bind_arg = bind_arg.substr(0, index);
+                if (Lookup(truncated_bind_arg, bind_addr, BaseParams().OnionServiceTargetPort(), false)) {
+                    connOptions.onion_binds.push_back(bind_addr);
+                    continue;
+                }
+            }
         }
-        connOptions.vBinds.push_back(addrBind);
+        return InitError(ResolveErrMsg("bind", bind_arg));
     }
+
+    if (connOptions.onion_binds.empty()) {
+        connOptions.onion_binds.push_back(DefaultOnionServiceTarget());
+    }
+
+    if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+        const auto bind_addr = connOptions.onion_binds.front();
+        if (connOptions.onion_binds.size() > 1) {
+            InitWarning(strprintf(_("More than one onion bind address is provided. Using %s for the automatically created Tor onion service."), bind_addr.ToStringIPPort()));
+        }
+        StartTorControl(bind_addr);
+    }
+
     for (const std::string& strBind : args.GetArgs("-whitebind")) {
         NetWhitebindPermissions whitebind;
         bilingual_str error;
