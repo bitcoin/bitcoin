@@ -1,0 +1,23 @@
+language: cpp
+
+addons:
+  apt:
+    packages:
+      - cmake
+      - cmake-data
+
+compiler:
+  - clang
+  - gcc
+
+env:
+  - CONFIG="-DSEED=ZERO -DBENCH=0" TEST=""
+  - CONFIG="-DSEED=ZERO -DBENCH=0 -DFP_PRIME=255 -FP_QNRES=FALSE -DEC_METHD=PRIME -DEP_METHD='PROJC;LWNAF;LWNAF;BASIC'" TEST="-E test_bn|test_fb|test_fpx|test_eb|test_pp|test_pc"
+  - CONFIG="-DSEED=ZERO -DBENCH=0 -DFP_PRIME=255 -FP_QNRES=FALSE -DEC_METHD=EDWARD -DED_METHD='PROJC;LWNAF;LWNAF;BASIC'" TEST="-E test_bn|test_fb|test_fpx|test_ec|test_eb|test_pp|test_pc"
+  # Fail when linking; undefined reference to `ed_mul_fix_lwnaf_mixed'. TODO: Investigate
+  #- CONFIG="-DSEED=ZERO -DBENCH=0 -DFP_PRIME=255 -FP_QNRES=FALSE -DEC_METHD=EDWARD -DED_METHD='EXTND;LWNAF_MIXED;LWNAF_MIXED;BASIC'" TEST="-E test_bn|test_fb|test_fpx|test_eb|test_ec|test_pp|test_pc"
+
+script:
+  - mkdir build && cd build
+  - cmake $CONFIG  .. && make -j && ctest -V $TEST
+  - cd .. && rm -rf build

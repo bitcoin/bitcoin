@@ -1,0 +1,54 @@
+# Copyright (c) 2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+LIBCHIABLS_INT = chiabls/libchiabls.a
+
+EXTRA_LIBRARIES += $(LIBCHIABLS_INT)
+
+LIBCHIABLS += $(LIBCHIABLS_INT)
+
+CHIABLS_CPPFLAGS += -I$(srcdir)/chiabls/src -I$(srcdir)/chiabls/contrib/relic/include
+
+CHIABLS_CPPFLAGS_INT =
+CHIABLS_CPPFLAGS_INT += -I$(srcdir)/bls
+CHIABLS_CPPFLAGS_INT += -DSTLIB=ON -DSHLIB=OFF -DSTBIN=ON
+
+if TARGET_WINDOWS
+CHIABLS_CPPFLAGS_INT += -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="" -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=""
+endif
+
+if TARGET_LINUX
+CHIABLS_CPPFLAGS_INT += -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
+endif
+
+if TARGET_DARWIN
+CHIABLS_CPPFLAGS_INT += -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
+endif
+
+chiabls_libchiabls_a_CPPFLAGS = $(AM_CPPFLAGS) $(CHIABLS_CPPFLAGS_INT) $(CHIABLS_CPPFLAGS)
+chiabls_libchiabls_a_CXXFLAGS = $(filter-out -Wconditional-uninitialized -Werror=conditional-uninitialized -Wsuggest-override -Werror=suggest-override, $(AM_CXXFLAGS)) $(PIE_FLAGS)
+
+chiabls_libchiabls_a_SOURCES=
+chiabls_libchiabls_a_SOURCES += chiabls/src/aggregationinfo.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/bls.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/chaincode.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/extendedprivatekey.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/extendedpublickey.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/privatekey.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/publickey.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/signature.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/test-utils.hpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/util.hpp
+
+chiabls_libchiabls_a_SOURCES += chiabls/src/aggregationinfo.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/bls.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/chaincode.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/extendedprivatekey.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/extendedpublickey.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/privatekey.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/publickey.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/signature.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/test-bench.cpp
+chiabls_libchiabls_a_SOURCES += chiabls/src/test.cpp
+

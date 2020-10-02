@@ -25,7 +25,7 @@
 #include <evo/deterministicmns.h>
 #include <evo/simplifiedmns.h>
 
-#include <bls/bls.h>
+#include <chiabls/bls.h>
 
 #include <masternode/masternode-meta.h>
 #include <rpc/util.h>
