@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     signet_argsman.ForceSetArg("-signetchallenge", "51"); // set challenge to OP_TRUE
     const auto signet_params = CreateChainParams(signet_argsman, CBaseChainParams::SIGNET);
     CBlock block;
-    BOOST_CHECK(signet_params->GetConsensus().signet_challenge == std::vector<uint8_t>{{OP_TRUE}});
+    BOOST_CHECK(signet_params->GetConsensus().signet_challenge == std::vector<uint8_t>{OP_TRUE});
     CScript challenge{OP_TRUE};
 
     // empty block is invalid
