@@ -1647,19 +1647,7 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
-if test x$TARGET_OS = xwindows; then
-  CXXFLAGS="$CXXFLAGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''"
-fi
-
-if test x$TARGET_OS = xlinux; then
-  CXXFLAGS="$CXXFLAGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux"
-fi
-
-if test x$TARGET_OS = xdarwin; then
-  CXXFLAGS="$CXXFLAGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin"
-fi
-ac_configure_args="${ac_configure_args} CXXFLAGS='$CXXFLAGS' CFLAGS='$CFLAGS' CC='$CC' LDFLAGS='$LDFLAGS'"
-AC_CONFIG_SUBDIRS([src/chiabls])
+AC_CONFIG_SUBDIRS([src/chiabls/build])
 
 if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chiabls/bls.h>
-#include <chiabls/bls_batchverifier.h>
+#include <bls/bls.h>
+#include <bls/bls_batchverifier.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>

@@ -4,7 +4,7 @@
 
 #include <test/util/setup_common.h>
 
-#include <chiabls/bls.h>
+#include <bls/bls.h>
 #include <evo/simplifiedmns.h>
 #include <netbase.h>
 #include <tinyformat.h>
