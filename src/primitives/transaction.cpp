@@ -622,3 +622,7 @@ void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     Serialize(dsBurn);
     vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
 }
+
+bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string &errorMessage, bool bConsensus) {
+    return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
+}

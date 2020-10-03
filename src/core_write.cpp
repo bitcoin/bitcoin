@@ -146,8 +146,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE)
         entry.__pushKV("auxfee", asset.auxFeeDetails.ToJson());
     
-
-	if(asset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) 
+    if(asset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) 
 		entry.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
 
     entry.__pushKV("update_flags", asset.nUpdateMask);
