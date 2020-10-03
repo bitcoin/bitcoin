@@ -178,6 +178,7 @@ static std::tuple<std::string, uint8_t, uint32_t> BuildInversedHeightKey(uint8_t
 
 bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state)
 {
+    AssertLockHeld(cs_main);
     auto& params = Params().GetConsensus().llmqs.at(qc.llmqType);
 
     uint256 quorumHash = GetQuorumBlockHash(qc.llmqType, nHeight);
@@ -313,6 +314,7 @@ bool CQuorumBlockProcessor::IsMiningPhase(uint8_t llmqType, int nHeight)
 
 bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight)
 {
+    AssertLockHeld(cs_main);
     uint256 quorumHash = GetQuorumBlockHash(llmqType, nHeight);
 
     // perform extra check for quorumHash.IsNull as the quorum hash is unknown for the first block of a session
@@ -397,7 +399,7 @@ std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsUntilB
         }
 
         uint32_t nMinedHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<2>(curKey));
-        if (nMinedHeight > pindex->nHeight) {
+        if (nMinedHeight > (uint32_t)pindex->nHeight) {
             break;
         }
 

@@ -229,7 +229,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
     return best;
 }
 
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int nCount) const
+std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(size_t nCount) const
 {
     if (nCount > GetValidMNsCount()) {
         nCount = GetValidMNsCount();
@@ -595,7 +595,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
 bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
 {
-    int nHeight = pindex->nHeight;
     uint256 blockHash = block.GetHash();
 
     CDeterministicMNList curList;
@@ -655,7 +654,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
         // this works on the previous block, so confirmation will happen one block after mnCountThreshold
         // has been reached, but the block hash will then point to the block at mnCountThreshold
-        int nConfirmations = pindexPrev->nHeight - dmn->pdmnState->nRegisteredHeight;
+        size_t nConfirmations = pindexPrev->nHeight - dmn->pdmnState->nRegisteredHeight;
         if (nConfirmations >= mnCountThreshold) {
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
             newState->UpdateConfirmedHash(dmn->proTxHash, pindexPrev->GetBlockHash());

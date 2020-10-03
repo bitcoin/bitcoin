@@ -233,7 +233,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             auto qcHash = ::SerializeHash(commitment);
             const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
             auto& v = qcHashes[params.type];
-            if (v.size() == params.signingActiveQuorumCount) {
+            if (v.size() == (size_t)params.signingActiveQuorumCount) {
                 // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
                 // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
                 // fact that a block can only contain a single commitment for one LLMQ type
@@ -241,7 +241,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             }
             v.emplace_back(qcHash);
             hashCount++;
-            if (v.size() > params.signingActiveQuorumCount) {
+            if (v.size() > (size_t)params.signingActiveQuorumCount) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "excess-quorums-calc-cbtx-quorummerkleroot");
             }
         }

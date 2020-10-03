@@ -39,11 +39,11 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
     ret.pushKV("quorumHeight", (int)quorumHeight);
     ret.pushKV("phase", (int)phase);
 
-    ret.pushKV("sentContributions", sentContributions);
-    ret.pushKV("sentComplaint", sentComplaint);
-    ret.pushKV("sentJustification", sentJustification);
-    ret.pushKV("sentPrematureCommitment", sentPrematureCommitment);
-    ret.pushKV("aborted", aborted);
+    ret.pushKV("sentContributions", statusBits.sentContributions);
+    ret.pushKV("sentComplaint", statusBits.sentComplaint);
+    ret.pushKV("sentJustification", statusBits.sentJustification);
+    ret.pushKV("sentPrematureCommitment", statusBits.sentPrematureCommitment);
+    ret.pushKV("aborted", statusBits.aborted);
 
     struct ArrOrCount {
         int count{0};
@@ -84,12 +84,12 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
 
     for (size_t i = 0; i < members.size(); i++) {
         const auto& m = members[i];
-        add(badMembers, i, m.bad);
-        add(weComplain, i, m.weComplain);
-        add(receivedContributions, i, m.receivedContribution);
-        add(receivedComplaints, i, m.receivedComplaint);
-        add(receivedJustifications, i, m.receivedJustification);
-        add(receivedPrematureCommitments, i, m.receivedPrematureCommitment);
+        add(badMembers, i, m.statusBits.bad);
+        add(weComplain, i, m.statusBits.weComplain);
+        add(receivedContributions, i, m.statusBits.receivedContribution);
+        add(receivedComplaints, i, m.statusBits.receivedComplaint);
+        add(receivedJustifications, i, m.statusBits.receivedJustification);
+        add(receivedPrematureCommitments, i, m.statusBits.receivedPrematureCommitment);
     }
     push(badMembers, "badMembers");
     push(weComplain, "weComplain");

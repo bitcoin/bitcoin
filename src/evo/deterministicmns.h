@@ -13,6 +13,7 @@
 #include <evo/simplifiedmns.h>
 #include <saltedhasher.h>
 #include <sync.h>
+#include <threadsafety.h>
 
 #include <immer/map.hpp>
 #include <immer/map_transient.hpp>
@@ -403,7 +404,7 @@ public:
      * @param count
      * @return
      */
-    std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(int nCount) const;
+    std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(size_t nCount) const;
 
     /**
      * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
@@ -630,13 +631,13 @@ private:
 public:
     explicit CDeterministicMNManager(CEvoDB& _evoDb);
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck);
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
 
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr);
+    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
     static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
@@ -649,7 +650,7 @@ public:
     bool IsDIP3Enforced(int nHeight = -1);
 
 private:
-    void CleanupCache(int nHeight);
+    void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;

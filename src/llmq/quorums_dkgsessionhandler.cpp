@@ -18,10 +18,10 @@
 namespace llmq
 {
 
-CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
-    maxMessagesPerNode(_maxMessagesPerNode),
-    invType(_invType)
+CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType)
 {
+    maxMessagesPerNode = _maxMessagesPerNode;
+    invType = _invType;
 }
 
 void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
@@ -66,7 +66,7 @@ std::list<CDKGPendingMessages::BinaryMessage> CDKGPendingMessages::PopPendingMes
         pendingMessages.pop_front();
     }
 
-    return std::move(ret);
+    return ret;
 }
 
 bool CDKGPendingMessages::HasSeen(const uint256& hash) const
@@ -89,12 +89,12 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBL
     params(_params),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
+    connman(_connman),
     curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager, _connman)),
     pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
     pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
     pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
-    pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT),
-    connman(_connman)
+    pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
 {
     m_threadName = strprintf("q-phase-%d", params.type);
     if (params.type == Consensus::LLMQ_NONE) {
@@ -161,7 +161,6 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 {
     //AssertLockHeld(cs_main);
 
-    const auto& consensus = Params().GetConsensus();
 
     curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager, connman);
 
@@ -391,7 +390,7 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
         }
 
         // are all messages from the same node?
-        NodeId firstNodeId;
+        NodeId firstNodeId = 0;
         first = true;
         bool nodeIdsAllSame = true;
         for (auto it = messages.begin(); it != messages.end(); ++it) {
@@ -431,7 +430,7 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
 template<typename Message, int MessageType>
 bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendingMessages, size_t maxCount)
 {
-    auto msgs = pendingMessages.PopAndDeserializeMessages<Message>(maxCount);
+    const auto &msgs = pendingMessages.PopAndDeserializeMessages<Message>(maxCount);
     if (msgs.empty()) {
         return false;
     }
@@ -591,7 +590,7 @@ void CDKGSessionHandler::PhaseHandlerThread()
             HandleDKGRound();
         } catch (AbortPhaseException& e) {
             quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
-                status.aborted = true;
+                status.statusBits.aborted = true;
                 return true;
             });
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - aborted current DKG session\n", __func__, params.name);

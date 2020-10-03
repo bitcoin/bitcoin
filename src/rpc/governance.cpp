@@ -1030,11 +1030,11 @@ UniValue gobject(const JSONRPCRequest& request)
     } else if (strCommand == "getcurrentvotes") {
         // GET VOTES FOR SPECIFIC GOVERNANCE OBJECT
         return gobject_getcurrentvotes(request);
-    } else {
-        JSONRPCRequest jreq(request);
-        jreq.params = UniValue();
-        gobject_help(jreq);
     }
+    JSONRPCRequest jreq(request);
+    jreq.params = UniValue();
+    gobject_help(jreq);
+    return jreq.params;
 }
 
 UniValue voteraw(const JSONRPCRequest& request)
