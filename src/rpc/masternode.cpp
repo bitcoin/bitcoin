@@ -165,7 +165,7 @@ UniValue masternode_count(const JSONRPCRequest& request)
     throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown mode value");
 }
 
-UniValue GetNextMasternodeForPayment(int heightShift)
+UniValue GetNextMasternodeForPayment(size_t heightShift)
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto payees = mnList.GetProjectedMNPayees(heightShift);
@@ -179,7 +179,7 @@ UniValue GetNextMasternodeForPayment(int heightShift)
 
     UniValue obj(UniValue::VOBJ);
 
-    obj.pushKV("height",        mnList.GetHeight() + heightShift);
+    obj.pushKV("height",        (int)(mnList.GetHeight() + heightShift));
     obj.pushKV("IP:port",       payee->pdmnState->addr.ToString());
     obj.pushKV("proTxHash",     payee->proTxHash.ToString());
     obj.pushKV("outpoint",      payee->collateralOutpoint.ToStringShort());
@@ -402,11 +402,11 @@ UniValue masternode(const JSONRPCRequest& request)
         return masternode_status(request);
     } else if (strCommand == "winners") {
         return masternode_winners(request);
-    } else {
-        JSONRPCRequest jreq(request);
-        jreq.params = UniValue();
-        masternode_help(jreq);
     }
+    JSONRPCRequest jreq(request);
+    jreq.params = UniValue();
+    masternode_help(jreq);
+    return jreq.params;
 }
 
 UniValue masternodelist(const JSONRPCRequest& request)

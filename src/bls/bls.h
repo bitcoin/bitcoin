@@ -65,6 +65,7 @@ public:
         static NullHash nullHash;
         cachedHash = nullHash.hash;
     }
+    virtual ~CBLSWrapper() {}
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
     CBLSWrapper& operator=(const CBLSWrapper& ref) = default;
@@ -223,7 +224,7 @@ public:
     using CBLSWrapper::operator!=;
 
     CBLSId() {}
-
+    virtual ~CBLSId() {}
     void SetInt(int x);
     void SetHash(const uint256& hash);
 
@@ -243,7 +244,7 @@ public:
     using CBLSWrapper::operator!=;
 
     CBLSSecretKey() {}
-
+    virtual ~CBLSSecretKey() {}
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
 
@@ -271,7 +272,7 @@ public:
     using CBLSWrapper::operator!=;
 
     CBLSPublicKey() {}
-
+    virtual ~CBLSPublicKey() {}
     void AggregateInsecure(const CBLSPublicKey& o);
     static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks);
 
@@ -293,6 +294,7 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSSignature() {}
+    virtual ~CBLSSignature() {}
     CBLSSignature(const CBLSSignature&) = default;
     CBLSSignature& operator=(const CBLSSignature&) = default;
 

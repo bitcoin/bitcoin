@@ -492,6 +492,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     cachedInnerUsage -= it->DynamicMemoryUsage();
     // SYSCOIN deal with pro tx stuff first
     auto eraseProTxRef = [&](const uint256& proTxHash, const uint256& txHash) {
+        LOCK2(cs_main, cs);
         auto its = mapProTxRefs.equal_range(proTxHash);
         for (auto it = its.first; it != its.second;) {
             if (it->second == txHash) {
@@ -646,6 +647,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
 // SYSCOIN
 bool CTxMemPool::existsConflicts(const CTransaction &tx) const
 {
+    AssertLockHeld(cs_main);
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
         if(mapAssetAllocationConflicts.find(txin.prevout) != mapAssetAllocationConflicts.end())
@@ -657,6 +659,7 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx) const
 void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
+    AssertLockHeld(cs_main);
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
@@ -676,6 +679,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 void CTxMemPool::removeZDAGConflicts(const CTransaction &tx)
 {
     // Remove conflicting zdag transactions which depend on inputs of tx, recursively
+    AssertLockHeld(cs_main);
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
         auto it = mapAssetAllocationConflicts.find(txin.prevout);
@@ -695,6 +699,7 @@ void CTxMemPool::removeZDAGConflicts(const CTransaction &tx)
 
 // true if other tx (conflicting) was first in mempool and it was involved in asset double spend
 bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx) const {
+    AssertLockHeld(cs_main);
     AssertLockHeld(cs);
     for (const CTxIn &txin : tx.vin) {
         auto it = mapAssetAllocationConflicts.find(txin.prevout);
@@ -787,8 +792,11 @@ void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const CO
 
 void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs);
     // Remove TXs that refer to a MN for which the collateral was spent
     auto removeSpentCollateralConflict = [&](const uint256& proTxHash) {
+        LOCK2(cs_main, cs);
         // Can't use equal_range here as every call to removeRecursive might invalidate iterators
         while (true) {
             auto it = mapProTxRefs.find(proTxHash);
@@ -841,6 +849,8 @@ void CTxMemPool::removeProTxKeyChangedConflicts(const CTransaction &tx, const ui
 
 void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs);
     removeProTxSpentCollateralConflicts(tx);
 
     if (tx.nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
@@ -898,6 +908,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
  */
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
+    AssertLockHeld(cs_main);
     AssertLockHeld(cs);
     std::vector<const CTxMemPoolEntry*> entries;
     for (const auto& tx : vtx)
@@ -1198,9 +1209,11 @@ TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 // SYSCOIN
 
 bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
-    LOCK(cs);
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs);
 
     auto hasKeyChangeInMempool = [&](const uint256& proTxHash) {
+        LOCK2(cs_main, cs);
         for (auto its = mapProTxRefs.equal_range(proTxHash); its.first != its.second; ++its.first) {
             auto txit = mapTx.find(its.first->second);
             if (txit == mapTx.end()) {

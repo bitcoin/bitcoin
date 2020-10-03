@@ -8,6 +8,7 @@
 #include <dbwrapper.h>
 #include <sync.h>
 #include <uint256.h>
+#include <threadsafety.h>
 
 // "b_b" was used in the initial version of deterministic MN storage
 // "b_b2" was used after compact diffs were introduced
@@ -52,7 +53,7 @@ public:
         return std::make_unique<CEvoDBScopedCommitter>(*this);
     }
 
-    CurTransaction& GetCurTransaction()
+    CurTransaction& GetCurTransaction() EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs); // lock must be held from outside as long as the DB transaction is used
         return curDBTransaction;

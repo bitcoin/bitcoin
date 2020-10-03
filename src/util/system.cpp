@@ -1858,7 +1858,7 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
 {
     auto cond = std::make_shared<std::condition_variable>();
     auto mutex = std::make_shared<std::mutex>();
-    std::atomic<int> doneCnt(0);
+    std::atomic<size_t> doneCnt(0);
     std::map<int, std::future<void> > futures;
 
     for (int i = 0; i < tp.size(); i++) {
@@ -1876,7 +1876,7 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
         // `doneCnt` should be at least `futures.size()` if tp size was increased (for whatever reason),
         // or at least `tp.size()` if tp size was decreased and queue was cleared
         // (which can happen on `stop()` if we were not fast enough to get all jobs to their threads).
-    } while (doneCnt < futures.size() && doneCnt < tp.size());
+    } while (doneCnt < futures.size() && doneCnt < (size_t)tp.size());
 
     cond->notify_all();
 

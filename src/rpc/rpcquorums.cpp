@@ -127,8 +127,6 @@ UniValue quorum_info(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    const auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
-
     uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
     bool includeSkShare = false;
     if (!request.params[3].isNull()) {
@@ -542,11 +540,11 @@ UniValue quorum(const JSONRPCRequest& request)
         return quorum_selectquorum(request);
     } else if (command == "dkgsimerror") {
         return quorum_dkgsimerror(request);
-    } else {
-        JSONRPCRequest jreq(request);
-        jreq.params = UniValue();
-        quorum_help(jreq);
     }
+    JSONRPCRequest jreq(request);
+    jreq.params = UniValue();
+    quorum_help(jreq);
+    return jreq.params;
 }
 
 void RegisterQuorumsRPCCommands(CRPCTable &t)

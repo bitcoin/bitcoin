@@ -37,8 +37,6 @@ private:
     int64_t nTimeAssetSyncStarted;
     // ... last bumped
     int64_t nTimeLastBumped;
-    // ... or failed
-    int64_t nTimeLastFailure;
 
     /// Set to true if best header is reached in CMasternodeSync::UpdatedBlockTip
     bool fReachedBestHeader{false};

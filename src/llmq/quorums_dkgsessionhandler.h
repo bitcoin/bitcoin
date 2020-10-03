@@ -66,7 +66,7 @@ public:
     template<typename Message>
     std::vector<std::pair<NodeId, std::shared_ptr<Message>>> PopAndDeserializeMessages(size_t maxCount)
     {
-        auto binaryMessages = PopPendingMessages(maxCount);
+        const auto &binaryMessages = PopPendingMessages(maxCount);
         if (binaryMessages.empty()) {
             return {};
         }
@@ -83,7 +83,7 @@ public:
             ret.emplace_back(std::make_pair(bm.first, std::move(msg)));
         }
 
-        return std::move(ret);
+        return ret;
     }
 };
 

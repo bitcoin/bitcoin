@@ -67,7 +67,7 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
         return false;
     }
 
-    for (size_t i = members.size(); i < params.size; i++) {
+    for (size_t i = members.size(); i < (size_t)params.size; i++) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("invalid validMembers bitset. bit %d should not be set\n", i);
             return false;
@@ -121,11 +121,11 @@ bool CFinalCommitment::VerifyNull() const
 
 bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
 {
-    if (signers.size() != params.size) {
+    if (signers.size() != (size_t)params.size) {
         LogPrintfFinalCommitment("invalid signers.size=%d\n", signers.size());
         return false;
     }
-    if (validMembers.size() != params.size) {
+    if (validMembers.size() != (size_t)params.size) {
         LogPrintfFinalCommitment("invalid signers.size=%d\n", signers.size());
         return false;
     }

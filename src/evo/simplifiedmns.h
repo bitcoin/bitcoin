@@ -12,6 +12,9 @@
 #include <serialize.h>
 #include <version.h>
 #include <script/standard.h>
+#include <threadsafety.h>
+#include <sync.h>
+extern RecursiveMutex cs_main;
 class UniValue;
 class CDeterministicMNList;
 class CDeterministicMN;
@@ -120,6 +123,6 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
+bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif //SYSCOIN_EVO_SIMPLIFIEDMNS_H
