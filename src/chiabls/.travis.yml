@@ -6,7 +6,7 @@ before_install:
 install:
   - sudo apt-get install python3.6
   - sudo apt-get install python3.6-dev
-  - sudo apt-get install libgmp-dev
+  - sudo apt-get install libgmp3-dev
   - sudo apt-get install valgrind
   - wget https://bootstrap.pypa.io/get-pip.py
   - sudo python3.6 get-pip.py

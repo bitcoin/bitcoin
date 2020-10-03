@@ -1649,7 +1649,7 @@ PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
 AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes;])])
 if test x$has_gmp != xyes; then
-    AC_MSG_ERROR([[libgmp-dev not installed]])
+    AC_MSG_ERROR([[libgmp3-dev not installed]])
 fi
 
 AC_CONFIG_SUBDIRS([src/chiabls/build])
