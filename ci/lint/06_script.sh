@@ -7,7 +7,11 @@
 export LC_ALL=C
 
 if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then
-  test/lint/commit-script-check.sh $TRAVIS_COMMIT_RANGE
+  # TRAVIS_BRANCH will be present in a Travis environment. For builds triggered
+  # by a pull request this is the name of the branch targeted by the pull request.
+  # https://docs.travis-ci.com/user/environment-variables/
+  COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
+  test/lint/commit-script-check.sh $COMMIT_RANGE
 fi
 
 test/lint/git-subtree-check.sh src/crypto/ctaes
