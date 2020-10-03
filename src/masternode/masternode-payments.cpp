@@ -32,7 +32,6 @@ CMasternodePayments mnpayments;
 
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blockReward, std::string& strErrorRet)
 {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
     strErrorRet = "";

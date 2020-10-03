@@ -336,7 +336,6 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& 
     }
 
     auto signHash = CLLMQUtils::BuildSignHash(llmqType, ann.quorumHash, ann.id, ann.msgHash);
-
     LOCK(cs);
     auto& nodeState = nodeStates[pfrom->GetId()];
     auto& session = nodeState.GetOrCreateSessionFromAnn(ann);
@@ -715,7 +714,6 @@ void CSigSharesManager::ProcessPendingSigSharesFromNode(NodeId nodeId,
         const std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums,
         CConnman& connman)
 {
-    auto& nodeState = nodeStates[nodeId];
 
     cxxtimer::Timer t(true);
     for (auto& sigShare : sigShares) {
@@ -773,7 +771,7 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
         }
 
         size_t sigShareCount = sigShares.CountForSignHash(sigShare.GetSignHash());
-        if (sigShareCount >= quorum->params.threshold) {
+        if (sigShareCount >= (size_t)quorum->params.threshold) {
             canTryRecovery = true;
         }
     }
@@ -794,8 +792,6 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     {
         LOCK(cs);
 
-        auto k = std::make_pair(quorum->params.type, id);
-
         auto signHash = CLLMQUtils::BuildSignHash(quorum->params.type, quorum->qc.quorumHash, id, msgHash);
         auto sigShares = this->sigShares.GetAllForSignHash(signHash);
         if (!sigShares) {
@@ -804,14 +800,14 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
 
         sigSharesForRecovery.reserve((size_t) quorum->params.threshold);
         idsForRecovery.reserve((size_t) quorum->params.threshold);
-        for (auto it = sigShares->begin(); it != sigShares->end() && sigSharesForRecovery.size() < quorum->params.threshold; ++it) {
+        for (auto it = sigShares->begin(); it != sigShares->end() && sigSharesForRecovery.size() < (size_t)quorum->params.threshold; ++it) {
             auto& sigShare = it->second;
             sigSharesForRecovery.emplace_back(sigShare.sigShare.Get());
             idsForRecovery.emplace_back(CBLSId::FromHash(quorum->members[sigShare.quorumMember]->proTxHash));
         }
 
         // check if we can recover the final signature
-        if (sigSharesForRecovery.size() < quorum->params.threshold) {
+        if (sigSharesForRecovery.size() < (size_t)quorum->params.threshold) {
             return;
         }
     }
@@ -855,7 +851,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
 
 CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPtr& quorum, const uint256 &id, int attempt)
 {
-    assert(attempt < quorum->members.size());
+    assert((size_t)attempt < quorum->members.size());
 
     std::vector<std::pair<uint256, CDeterministicMNCPtr>> v;
     v.reserve(quorum->members.size());

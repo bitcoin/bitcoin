@@ -650,18 +650,19 @@ public:
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     // SYSCOIN
-    void removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId);
-    void removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSPublicKey &pubKey);
-    void removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint);
-    void removeProTxSpentCollateralConflicts(const CTransaction &tx);
-    void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash);
-    void removeProTxConflicts(const CTransaction &tx);
-    bool existsConflicts(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool isSyscoinConflictIsFirstSeen(const CTransaction &tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSPublicKey &pubKey) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeProTxSpentCollateralConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeProTxConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    bool existsConflicts(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    bool isSyscoinConflictIsFirstSeen(const CTransaction &tx) const EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     // SYSCOIN
-    void removeZDAGConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeZDAGConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    // SYSCOIN
+    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
@@ -677,8 +678,8 @@ public:
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
-    void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     /** Get the transaction in the pool that spends the same prevout */
     const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -787,7 +788,7 @@ public:
     TxMempoolInfo info(const GenTxid& gtxid) const;
     std::vector<TxMempoolInfo> infoAll() const;
     // SYSCOIN
-    bool existsProviderTxConflict(const CTransaction &tx) const;
+    bool existsProviderTxConflict(const CTransaction &tx) const EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     size_t DynamicMemoryUsage() const;
 
     /** Adds a transaction to the unbroadcast set */

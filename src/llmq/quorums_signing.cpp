@@ -239,8 +239,6 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
     db.WriteBatch(batch);
 
     {
-        int64_t t = GetTimeMillis();
-
         LOCK(cs);
         hasSigForIdCache.insert(std::make_pair(recSig.llmqType, recSig.id), true);
         hasSigForSessionCache.insert(signHash, true);
@@ -291,7 +289,7 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, con
 // Completely remove any traces of the recovered sig
 void CRecoveredSigsDb::RemoveRecoveredSig(uint8_t llmqType, const uint256& id)
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     CDBBatch batch(db);
     RemoveRecoveredSig(batch, llmqType, id, true, true);
     db.WriteBatch(batch);
@@ -769,8 +767,6 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
 
 bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, const uint256& msgHash, bool allowReSign)
 {
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
-
     if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
         return false;
     }

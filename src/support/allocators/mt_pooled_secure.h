@@ -63,7 +63,6 @@ struct mt_pooled_secure_allocator : public std::allocator<T> {
 private:
     size_t get_bucket()
     {
-        auto tid = std::this_thread::get_id();
         size_t x = std::hash<std::thread::id>{}(std::this_thread::get_id());
         return x % pools.size();
     }

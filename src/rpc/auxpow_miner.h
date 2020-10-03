@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 #include <util/ref.h>
-
+extern RecursiveMutex cs_main;
 namespace auxpow_tests
 {
 class AuxpowMinerForTest;
@@ -61,13 +61,13 @@ private:
    * fills in the difficulty target value.
    */
   const CBlock* getCurrentBlock (const CTxMemPool& mempool,
-                                 const CScript& scriptPubKey, uint256& target);
+                                 const CScript& scriptPubKey, uint256& target) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
   /**
    * Looks up a previously constructed block by its (hex-encoded) hash.  If the
    * block is found, it is returned.  Otherwise, a JSONRPCError is thrown.
    */
-  const CBlock* lookupSavedBlock (const std::string& hashHex) const;
+  const CBlock* lookupSavedBlock (const std::string& hashHex) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
   friend class auxpow_tests::AuxpowMinerForTest;
 

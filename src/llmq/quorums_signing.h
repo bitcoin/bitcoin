@@ -15,6 +15,7 @@
 
 #include <unordered_map>
 #include <streams.h>
+#include <threadsafety.h>
 namespace llmq
 {
 
@@ -89,7 +90,7 @@ public:
     bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret);
     bool GetRecoveredSigById(uint8_t llmqType, const uint256& id, CRecoveredSig& ret);
     void WriteRecoveredSig(const CRecoveredSig& recSig);
-    void RemoveRecoveredSig(uint8_t llmqType, const uint256& id);
+    void RemoveRecoveredSig(uint8_t llmqType, const uint256& id) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void TruncateRecoveredSig(uint8_t llmqType, const uint256& id);
 
     void CleanupOldRecoveredSigs(int64_t maxAge);
@@ -103,7 +104,7 @@ public:
 
 private:
     bool ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret);
-    void RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey);
+    void RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey)  EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 class CRecoveredSigsListener

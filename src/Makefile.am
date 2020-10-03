@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-DIST_SUBDIRS = secp256k1 univalue
+DIST_SUBDIRS = secp256k1 univalue chiabls/build
 
 AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
 AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
@@ -22,11 +22,13 @@ endif
 
 SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
+SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
-BLS_LIBS=-lchiabls -lgmp
 
+LIBCHIABLS=chiabls/build/libchiabls.a
+CHIABLS_LIBS=$(LIBCHIABLS) -lgmp
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
@@ -64,6 +66,9 @@ endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+
+$(LIBCHIABLS):
+	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -745,7 +750,7 @@ syscoin_bin_ldadd = \
   $(LIBETHEREUM) \
   $(LIBCURL)
 
-syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
+syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIABLS_LIBS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources)
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -775,7 +780,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(CHIABLS_LIBS)
 #
 
 # syscoin-tx binary #
@@ -800,7 +805,7 @@ syscoin_tx_LDADD = \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_tx_LDADD += $(BOOST_LIBS) $(BLS_LIBS)
+syscoin_tx_LDADD += $(BOOST_LIBS) $(CHIABLS_LIBS)
   
 #
 

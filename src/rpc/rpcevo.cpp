@@ -963,7 +963,7 @@ UniValue protx_list(const JSONRPCRequest& request)
     if (request.fHelp) {
         protx_list_help(request);
     }
-    CWallet* pwallet;
+    CWallet* pwallet = nullptr;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (wallet)
@@ -987,7 +987,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
         }
 #ifdef ENABLE_WALLET
-        LOCK2(cs_main, pwallet->cs_wallet);
+        LOCK(pwallet->cs_wallet);
 
         if (request.params.size() > 4) {
             protx_list_help(request);
@@ -1022,8 +1022,6 @@ UniValue protx_list(const JSONRPCRequest& request)
         if (request.params.size() > 4) {
             protx_list_help(request);
         }
-
-        LOCK(cs_main);
 
         bool detailed = !request.params[2].isNull() ? request.params[2].get_bool() : false;
 
@@ -1062,7 +1060,7 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help(request);
     }
-    CWallet* pwallet;
+    CWallet* pwallet = nullptr;
 #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (wallet)
@@ -1095,7 +1093,7 @@ void protx_diff_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static uint256 ParseBlock(const UniValue& v, std::string strName)
+static uint256 ParseBlock(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
@@ -1188,11 +1186,11 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_info(request);
     } else if (command == "diff") {
         return protx_diff(request);
-    } else {
-        JSONRPCRequest jreq(request);
-        jreq.params = UniValue();
-        protx_help(jreq);
     }
+    JSONRPCRequest jreq(request);
+    jreq.params = UniValue();
+    protx_help(jreq);
+    return jreq.params;
 }
 
 void bls_generate_help(const JSONRPCRequest& request)
@@ -1282,11 +1280,11 @@ UniValue _bls(const JSONRPCRequest& request)
         return bls_generate(request);
     } else if (command == "fromsecret") {
         return bls_fromsecret(request);
-    } else {
-        JSONRPCRequest jreq(request);
-        jreq.params = UniValue();
-        bls_help(jreq);
     }
+    JSONRPCRequest jreq(request);
+    jreq.params = UniValue();
+    bls_help(jreq);
+    return jreq.params;
 }
 
 void RegisterEvoRPCCommands(CRPCTable &t)
