@@ -766,7 +766,7 @@ public:
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
-
+bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string &errorMessage, bool bConsensus);
 bool IsSyscoinTx(const int &nVersion);
 bool IsMasternodeTx(const int &nVersion);
 bool IsAssetAllocationTx(const int &nVersion);
