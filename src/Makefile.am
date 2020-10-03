@@ -28,7 +28,6 @@ SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 
 LIBCHIABLS=chiabls/build/libchiabls.a
-CHIABLS_LIBS=$(LIBCHIABLS) -lgmp
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
@@ -750,7 +749,7 @@ syscoin_bin_ldadd = \
   $(LIBETHEREUM) \
   $(LIBCURL)
 
-syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIABLS_LIBS)
+syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBCHIABLS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources)
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -780,7 +779,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(CHIABLS_LIBS)
+syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(LIBCHIABLS)
 #
 
 # syscoin-tx binary #
@@ -805,7 +804,7 @@ syscoin_tx_LDADD = \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_tx_LDADD += $(BOOST_LIBS) $(CHIABLS_LIBS)
+syscoin_tx_LDADD += $(BOOST_LIBS) $(LIBCHIABLS)
   
 #
 
