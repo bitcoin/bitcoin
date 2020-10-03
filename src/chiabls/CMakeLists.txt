@@ -14,6 +14,7 @@ set(CMAKE_MODULE_PATH
 	${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules
 )
 
+set(sodium_USE_STATIC_LIBS TRUE)
 find_package(sodium)
 if (SODIUM_FOUND)
   message(STATUS "Found libsodium")
@@ -22,6 +23,8 @@ if (SODIUM_FOUND)
   include_directories(${sodium_INCLUDE_DIR})
 endif()
 
+set(STBIN TRUE)
+set(STLIB TRUE)
 find_package(gmp)
 if (GMP_FOUND)
   message(STATUS "Found libgmp")
@@ -52,8 +55,8 @@ ELSE()
   set(DSEED "DEV" CACHE STRING "")
   set(FP_QNRES "on" CACHE STRING "")
 ENDIF()
-set(STBIN "on" CACHE STRING "")
-set(STLIB "on" CACHE STRING "")
+set(STBIN "TRUE" CACHE STRING "")
+
 
 set(FP_METHD "INTEG;INTEG;INTEG;MONTY;LOWER;SLIDE" CACHE STRING "")
 set(COMP "-O3 -funroll-loops -fomit-frame-pointer" CACHE STRING "")
