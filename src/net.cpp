@@ -706,7 +706,8 @@ int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
     }
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
-    if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+    // SYSCOIN
+    if (hdr.nMessageSize > MAX_SIZE) {
         LogPrint(BCLog::NET, "HEADER ERROR - SIZE (%s, %u bytes), peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, m_node_id);
         return -1;
     }

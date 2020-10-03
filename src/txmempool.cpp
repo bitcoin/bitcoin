@@ -710,6 +710,7 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx) const {
         if (it != mapAssetAllocationConflicts.end()) {
             txiter thisit, conflictit;
             txiter firstit = mapTx.find(it->second.first->GetHash());
+            thisit = mapTx.end();
             if(firstit != mapTx.end()){
                 if(firstit->GetTx() == tx)
                     thisit = firstit;
@@ -722,6 +723,10 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx) const {
                 } else {
                     conflictit = secondit;
                 }
+            }
+            // if for some reason thisit is not found (it should be) we just return false
+            if(thisit == mapTx.end()) {
+                return false;
             }
             // if first tx found not second, true if first one is tx, otherwise false
             if (firstit != mapTx.end() && secondit == mapTx.end()) {
@@ -984,8 +989,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
     const int64_t spendheight = GetSpendHeight(mempoolDuplicate);
-    // SYSCOIN
-    bool IsZTxConflict = false;
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
@@ -1024,7 +1027,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                 auto itzdagconflict = mapAssetAllocationConflicts.find(txin.prevout);
                 // does dbl-spend conflict exist, we don't have enough info to check tx otherwise if no conflict
                 if(itzdagconflict != mapAssetAllocationConflicts.end()) {
-                    IsZTxConflict = true;
                     // the tx must be one of the dbl-spend conflicts
                     assert((itzdagconflict->second.first && *itzdagconflict->second.first == tx) || (itzdagconflict->second.second && *itzdagconflict->second.second == tx));
                 }

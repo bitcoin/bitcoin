@@ -269,13 +269,13 @@ CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, con
     CAmount nSubsidy = nBlockReward*0.75;
     if (nHeight > 0 && nStartHeight > 0) {
         unsigned int nDifferenceInBlocks = 0;
-        if (nHeight > nStartHeight)
+        if (nHeight > nStartHeight) {
             nDifferenceInBlocks = (nHeight - nStartHeight);
-            
-            double fSubsidyAdjustmentPercentage = 0;
-            if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight2)
+        }
+        double fSubsidyAdjustmentPercentage = 0;
+        if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight2)
             fSubsidyAdjustmentPercentage = consensusParams.nSeniorityLevel2;
-            else if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight1)
+        else if(nDifferenceInBlocks >= consensusParams.nSeniorityHeight1)
             fSubsidyAdjustmentPercentage = consensusParams.nSeniorityLevel1;
             
         if(fSubsidyAdjustmentPercentage > 0){

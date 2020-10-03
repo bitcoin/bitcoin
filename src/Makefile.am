@@ -895,6 +895,8 @@ clean-local:
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
+  -rm -f chiabls/build/*.txt chiabls/build/*.cmake chiabls/build/*.a chiabls/build/Makefile
+  -rm -rf chiabls/build/CMakeFiles chiabls/build/contrib chiabls/build/object_chiablstmp chiabls/build/object_relic_s chiabls/build/object_sodium chiabls/build/src
 
 .rc.o:
 	@test -f $(WINDRES)

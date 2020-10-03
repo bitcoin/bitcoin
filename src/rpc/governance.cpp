@@ -473,14 +473,12 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
                              vote_outcome_enum_t eVoteOutcome, CConnman& connman)
 {
-    int govObjType;
     {
         LOCK(governance.cs);
         CGovernanceObject *pGovObj = governance.FindGovernanceObject(hash);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
-        govObjType = pGovObj->GetObjectType();
     }
 
     int nSuccessful = 0;
