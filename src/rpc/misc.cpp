@@ -145,6 +145,7 @@ static RPCHelpMan spork()
             return ret;
         }
     }
+    return "failure";
 },
     };
 }

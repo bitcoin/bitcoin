@@ -8,15 +8,16 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <version.h>
-
+#include <sync.h>
+extern RecursiveMutex cs_main;
 class CBlock;
 class CBlockIndex;
 class TxValidationState;
 class BlockValidationState;
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck);
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck, bool fCheckCbTxMerleRoots);
-bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex);
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck, bool fCheckCbTxMerleRoots) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 template <typename T>
 inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)

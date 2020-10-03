@@ -343,7 +343,7 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     return true;
 }
 
-void TestTransaction(const CTransactionRef& tx, const util::Ref& context) {
+void TestTransaction(const CTransactionRef& tx, const util::Ref& context) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     if(!fAssetIndex) { 
         throw JSONRPCError(RPC_WALLET_ERROR, "missing-asset-index");
     }
@@ -452,7 +452,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();          	
@@ -575,7 +575,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
     CAmount nGas;
@@ -789,7 +789,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
     assetNewRequest.URI = request.URI;
     return assetnew(assetNewRequest);        
 }
-UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
+UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet, cs_main) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
@@ -920,7 +920,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);    
+    LOCK2(cs_main, pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strData = "";
@@ -1040,7 +1040,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);    
+    LOCK2(cs_main, pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strAddress = params[1].get_str();
@@ -1104,7 +1104,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     // gather & validate inputs
     const uint32_t &nAsset = params[0].get_uint();
@@ -1240,7 +1240,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     CCoinControl coin_control;
 	// gather & validate inputs
@@ -1417,7 +1417,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     	
@@ -1559,7 +1559,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strAddress = params[1].get_str();
@@ -1796,13 +1796,13 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
     } 	
     else	
         strLabel = "";	
+    LOCK(pwallet->cs_wallet);
     isminetype mine = pwallet->IsMine(v4Dest);	
     if(!(mine & ISMINE_SPENDABLE)){	
         throw JSONRPCError(RPC_MISC_ERROR, "The V4 Public key or redeemscript not known to wallet, or the key is uncompressed.");	
     }	
     if(!strLabel.empty())	
-    {	
-        LOCK(pwallet->cs_wallet);   	
+    {		
         CScript witprog = GetScriptForDestination(v4Dest);	
         LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();	
         if(spk_man)	

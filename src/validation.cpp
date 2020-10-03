@@ -5696,7 +5696,7 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
 
 bool CBlockIndexDB::PruneIndex() {
     AssertLockHeld(cs_main);
-    if(MAX_BLOCK_INDEX > ::ChainActive().Height())
+    if(MAX_BLOCK_INDEX > (uint32_t)::ChainActive().Height())
         return true;
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
@@ -5783,7 +5783,7 @@ void DoGethMaintenance() {
         nLastGethHeaderTime = GetSystemTimeInSeconds();
     // if not syncing chain restart geth/relayer if its been long enough since last blocks from relayer
     } else if(!ibd){
-        const uint64_t nTimeSeconds = GetSystemTimeInSeconds();
+        const int64_t nTimeSeconds = (int64_t)GetSystemTimeInSeconds();
         // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
         if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
             LogPrintf("GETH: Last header time not received in sufficient time, trying to resync...\n");

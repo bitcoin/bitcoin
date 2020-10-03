@@ -680,7 +680,7 @@ public:
 
     // Block (dis)connection on a given view:
     // SYSCOIN
-    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<uint256>& vecTXIDs);
+    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<uint256>& vecTXIDs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                     CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -979,12 +979,12 @@ public:
     bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
         return Read(txid, nHeight);
     }  
-    bool PruneIndex();
+    bool PruneIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
     bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
-bool PruneSyscoinDBs();
+bool PruneSyscoinDBs() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

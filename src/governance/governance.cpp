@@ -231,6 +231,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
 void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman)
 {
+    AssertLockHeld(cs);
     uint256 nHash = govobj.GetHash();
     std::vector<vote_time_pair_t> vecVotePairs;
     cmmapOrphanVotes.GetAll(nHash, vecVotePairs);

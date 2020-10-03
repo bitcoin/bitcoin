@@ -16,6 +16,7 @@
 #include <sync.h>
 #include <timedata.h>
 #include <util/system.h>
+#include <threadsafety.h>
 
 #include <evo/deterministicmns.h>
 
@@ -250,7 +251,7 @@ private:
         bool fPrevValue;
 
     public:
-        ScopedLockBool(RecursiveMutex& _cs, bool& _ref, bool _value) :
+        ScopedLockBool(RecursiveMutex& _cs, bool& _ref, bool _value) EXCLUSIVE_LOCKS_REQUIRED(_cs):
             ref(_ref)
         {
             AssertLockHeld(_cs);
@@ -417,7 +418,7 @@ private:
 
     static bool AcceptMessage(const uint256& nHash, hash_s_t& setHash);
 
-    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman);
+    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void RebuildIndexes();
 

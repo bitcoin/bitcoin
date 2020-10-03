@@ -50,7 +50,7 @@ const CBlock*
 AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
                               const CScript& scriptPubKey, uint256& target)
 {
-  AssertLockHeld (cs);
+  AssertLockHeld(cs);
   const CBlock* pblockCur = nullptr;
 
   {
@@ -116,7 +116,7 @@ AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
 const CBlock*
 AuxpowMiner::lookupSavedBlock (const std::string& hashHex) const
 {
-  AssertLockHeld (cs);
+  AssertLockHeld(cs);
 
   uint256 hash;
   hash.SetHex (hashHex);

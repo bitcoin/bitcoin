@@ -72,13 +72,13 @@ void CBLSWorker::Stop()
     workerPool.stop(true);
 }
 
-bool CBLSWorker::GenerateContributions(int quorumThreshold, const BLSIdVector& ids, BLSVerificationVectorPtr& vvecRet, BLSSecretKeyVector& skSharesRet)
+bool CBLSWorker::GenerateContributions(size_t quorumThreshold, const BLSIdVector& ids, BLSVerificationVectorPtr& vvecRet, BLSSecretKeyVector& skSharesRet)
 {
     BLSSecretKeyVectorPtr svec = std::make_shared<BLSSecretKeyVector>((size_t)quorumThreshold);
     vvecRet = std::make_shared<BLSVerificationVector>((size_t)quorumThreshold);
     skSharesRet.resize(ids.size());
 
-    for (int i = 0; i < quorumThreshold; i++) {
+    for (size_t i = 0; i < quorumThreshold; i++) {
         (*svec)[i].MakeNewKey();
     }
     std::list<std::future<bool> > futures;
@@ -155,8 +155,8 @@ struct Aggregator {
                bool _parallel,
                ctpl::thread_pool& _workerPool,
                DoneCallback _doneCallback) :
-            workerPool(_workerPool),
             parallel(_parallel),
+            workerPool(_workerPool),
             aggQueue(0),
             doneCallback(std::move(_doneCallback))
     {
@@ -353,12 +353,12 @@ struct VectorAggregator {
                      size_t _start, size_t _count,
                      bool _parallel, ctpl::thread_pool& _workerPool,
                      DoneCallback _doneCallback) :
+            doneCallback(std::move(_doneCallback)),
             vecs(_vecs),
-            parallel(_parallel),
             start(_start),
             count(_count),
-            workerPool(_workerPool),
-            doneCallback(std::move(_doneCallback))
+            parallel(_parallel),
+            workerPool(_workerPool)
     {
         assert(!vecs.empty());
         vecSize = vecs[0]->size();
@@ -761,7 +761,7 @@ std::future<bool> CBLSWorker::AsyncVerifyContributionShare(const CBLSId& forId,
         return std::move(p.second);
     }
 
-    auto f = [this, &forId, &vvec, &skContribution](int threadId) {
+    auto f = [&forId, &vvec, &skContribution](int threadId) {
         CBLSPublicKey pk1;
         if (!pk1.PublicKeyShare(*vvec, forId)) {
             return false;
