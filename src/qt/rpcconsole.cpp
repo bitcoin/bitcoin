@@ -1374,6 +1374,7 @@ QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
     case TabTypes::CONSOLE: return QKeySequence(Qt::CTRL + Qt::Key_T);
     case TabTypes::GRAPH: return QKeySequence(Qt::CTRL + Qt::Key_N);
     case TabTypes::PEERS: return QKeySequence(Qt::CTRL + Qt::Key_P);
+    case TabTypes::TAB_REPAIR: return QKeySequence(Qt::CTRL + Qt::Key_R);
     } // no default case, so the compiler can warn about missing cases
 
     assert(false);
