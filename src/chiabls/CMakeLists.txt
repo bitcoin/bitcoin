@@ -24,7 +24,6 @@ if (SODIUM_FOUND)
 endif()
 
 set(STBIN TRUE)
-set(STLIB TRUE)
 find_package(gmp)
 if (GMP_FOUND)
   message(STATUS "Found libgmp")
@@ -55,7 +54,7 @@ ELSE()
   set(DSEED "DEV" CACHE STRING "")
   set(FP_QNRES "on" CACHE STRING "")
 ENDIF()
-set(STBIN "TRUE" CACHE STRING "")
+set(STBIN "OFF" CACHE STRING "")
 
 
 set(FP_METHD "INTEG;INTEG;INTEG;MONTY;LOWER;SLIDE" CACHE STRING "")
