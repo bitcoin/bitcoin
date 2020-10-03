@@ -499,7 +499,6 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
 void CDKGSessionHandler::HandleDKGRound()
 {
     uint256 curQuorumHash;
-    int curQuorumHeight;
 
     WaitForNextPhase(QuorumPhase_None, QuorumPhase_Initialized, uint256(), []{return false;});
 
@@ -510,7 +509,6 @@ void CDKGSessionHandler::HandleDKGRound()
         pendingJustifications.Clear();
         pendingPrematureCommitments.Clear();
         curQuorumHash = quorumHash;
-        curQuorumHeight = quorumHeight;
     }
 
     const CBlockIndex* pindexQuorum;
