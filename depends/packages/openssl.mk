@@ -6,7 +6,7 @@ $(package)_sha256_hash=5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a
 
 define $(package)_set_vars
 $(package)_config_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$($(package)_cc)"
-$(package)_config_opts=--disable-shared --prefix=$(host_prefix) --openssldir=$(host_prefix)/etc/openssl
+$(package)_config_opts=--static -static --prefix=$(host_prefix) --openssldir=$(host_prefix)/etc/openssl
 $(package)_config_opts+=no-afalgeng
 $(package)_config_opts+=no-asm
 $(package)_config_opts+=no-async
