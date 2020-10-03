@@ -26,7 +26,7 @@ SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
-
+LIBCURL=-lcurl
 LIBCHIABLS=chiabls/build/libchiabls.a
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
