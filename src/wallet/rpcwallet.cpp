@@ -2321,7 +2321,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
 
         const int nOutput = find_value(o, "vout").get_int();
         if (nOutput < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
         }
 
         const COutPoint outpt(uint256S(txid), nOutput);
