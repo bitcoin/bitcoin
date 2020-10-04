@@ -13,6 +13,7 @@
 #include <shutdown.h>
 #include <util/translation.h>
 #include <util/system.h>
+
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
@@ -127,7 +128,8 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {
-        std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+        std::vector<CNode*> vNodesCopy;
+        connman.CopyNodeVector(vNodesCopy);
         governance.RequestGovernanceObjectVotes(vNodesCopy, connman);
         connman.ReleaseNodeVector(vNodesCopy);
         return;
@@ -138,7 +140,8 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nCurrentAsset, nTriedPeerCount, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+    std::vector<CNode*> vNodesCopy;
+    connman.CopyNodeVector(vNodesCopy);
 
     for (CNode* pnode : vNodesCopy)
     {

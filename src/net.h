@@ -130,7 +130,14 @@ struct CAllNodes {
     bool operator() (const CNode*) const {return true;}
 };
 static constexpr CAllNodes AllNodes{};
-
+// Whether the node should be passed out in ForEach* callbacks
+bool NodeFullyConnected(const CNode* pnode);
+struct CFullyConnectedOnly {
+    bool operator() (const CNode* pnode) const {
+        return NodeFullyConnected(pnode);
+    }
+};
+static constexpr CFullyConnectedOnly FullyConnectedOnly{};
 const std::vector<std::string> CONNECTION_TYPE_DOC{
     "outbound-full-relay (default automatic connections)",
     "block-relay-only (does not relay transactions or addresses)",
@@ -201,7 +208,6 @@ enum class ConnectionType {
      */
     ADDR_FETCH,
 };
-
 class NetEventsInterface;
 class CConnman
 {
@@ -295,15 +301,6 @@ public:
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
     // SYSCOIN
     bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
-
-    
-    struct CFullyConnectedOnly {
-        bool operator() (const CNode* pnode) const {
-            return NodeFullyConnected(pnode);
-        }
-    };
-
-    static constexpr CFullyConnectedOnly FullyConnectedOnly{};
 
     template<typename Callable>
     bool ForNode(const CService& addr, Callable&& func)
@@ -409,7 +406,7 @@ public:
         ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
-    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
+    void CopyNodeVector(std::vector<CNode*>& vecNodesCopy);
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
     // Addrman functions
     void SetServices(const CService &addr, ServiceFlags nServices);
@@ -570,9 +567,6 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
-
-    // Whether the node should be passed out in ForEach* callbacks
-    static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
     RecursiveMutex cs_totalBytesRecv;
