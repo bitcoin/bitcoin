@@ -18,6 +18,7 @@ from test_framework.p2p import (
     msg_block,
     msg_getdata,
     msg_getheaders,
+    p2p_lock,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -56,18 +57,6 @@ class P2PFingerprintTest(BitcoinTestFramework):
         msg = msg_getheaders()
         msg.hashstop = block_hash
         node.send_message(msg)
-
-    # Check whether last block received from node has a given hash
-    def last_block_equals(self, expected_hash, node):
-        block_msg = node.last_message.get("block")
-        return block_msg and block_msg.block.rehash() == expected_hash
-
-    # Check whether last block header received from node has a given hash
-    def last_header_equals(self, expected_hash, node):
-        headers_msg = node.last_message.get("headers")
-        return (headers_msg and
-                headers_msg.headers and
-                headers_msg.headers[0].rehash() == expected_hash)
 
     # Checks that stale blocks timestamped more than a month ago are not served
     # by the node while recent stale blocks and old active chain blocks are.
@@ -109,24 +98,23 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
         # Longest chain is extended so stale is much older than chain tip
         self.nodes[0].setmocktime(0)
-        tip = self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)[0]
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         assert_equal(self.nodes[0].getblockcount(), 14)
-
-        # Send getdata & getheaders to refresh last received getheader message
-        block_hash = int(tip, 16)
-        self.send_block_request(block_hash, node0)
-        self.send_header_request(block_hash, node0)
         node0.sync_with_ping()
 
         # Request for very old stale block should now fail
+        with p2p_lock:
+            node0.last_message.pop("block", None)
         self.send_block_request(stale_hash, node0)
-        time.sleep(3)
-        assert not self.last_block_equals(stale_hash, node0)
+        node0.sync_with_ping()
+        assert "block" not in node0.last_message
 
         # Request for very old stale block header should now fail
+        with p2p_lock:
+            node0.last_message.pop("headers", None)
         self.send_header_request(stale_hash, node0)
-        time.sleep(3)
-        assert not self.last_header_equals(stale_hash, node0)
+        node0.sync_with_ping()
+        assert "headers" not in node0.last_message
 
         # Verify we can fetch very old blocks and headers on the active chain
         block_hash = int(block_hashes[2], 16)
