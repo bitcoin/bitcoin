@@ -27,7 +27,7 @@ define $(package)_set_vars
 endef
 
 define $(package)_config_cmds
-  cd $($(package)_extract_dir) && ./bootstrap && ./configure $($(package)_config_opts)
+   ./configure $($(package)_config_opts)
 endef
 
 define $(package)_build_cmds
