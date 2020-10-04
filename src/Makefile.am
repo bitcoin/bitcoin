@@ -27,7 +27,7 @@ SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 LIBCURL=-lcurl
-LIBCHIABLS=chiabls/build/libchiabls.a
+LIBCHIABLS=chiabls/build/libchiabls.a -lgmp
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
