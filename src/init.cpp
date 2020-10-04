@@ -1474,6 +1474,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     const ArgsManager& args = *Assert(node.args);
     const CChainParams& chainparams = Params();
     // SYSCOIN
+    fRegTest = args.GetBoolArg("-regtest", false);
     std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
 	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
     CBLSSecretKey keyOperator;
@@ -1791,7 +1792,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
 
     // ********************************************************* Step 7: load block chain
-    fRegTest = args.GetBoolArg("-regtest", false);
     if(fRegTest) {
         nMNCollateralRequired = args.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
     }
