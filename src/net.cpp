@@ -3276,7 +3276,7 @@ CNode::~CNode()
     CloseSocket(hSocket);
 }
 
-bool CConnman::NodeFullyConnected(const CNode* pnode)
+bool NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
 }
@@ -3360,18 +3360,16 @@ int64_t PoissonNextSend(int64_t now, int average_interval_seconds)
     return now + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_seconds * -1000000.0 + 0.5);
 }
 // SYSCOIN
-std::vector<CNode*> CConnman::CopyNodeVector(std::function<bool(const CNode* pnode)> cond)
+void CConnman::CopyNodeVector(std::vector<CNode*>& vecNodesCopy)
 {
-    std::vector<CNode*> vecNodesCopy;
     LOCK(cs_vNodes);
     for(size_t i = 0; i < vNodes.size(); ++i) {
         CNode* pnode = vNodes[i];
-        if (!cond(pnode))
+        if (!FullyConnectedOnly(pnode))
             continue;
         pnode->AddRef();
         vecNodesCopy.push_back(pnode);
     }
-    return vecNodesCopy;
 }
 void CConnman::ReleaseNodeVector(const std::vector<CNode*>& vecNodes)
 {

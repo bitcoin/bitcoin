@@ -1143,7 +1143,8 @@ bool CSigSharesManager::SendMessages()
         return session->sendSessionId;
     };
 
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+    std::vector<CNode*> vNodesCopy;
+    connman.CopyNodeVector(vNodesCopy);
 
     {
         LOCK(cs);
