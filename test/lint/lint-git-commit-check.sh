@@ -27,6 +27,7 @@ if [ -z "${COMMIT_RANGE}" ]; then
     if [ -n "$1" ]; then
       COMMIT_RANGE="HEAD~$1...HEAD"
     else
+      # This assumes that the target branch of the pull request will be develop
       MERGE_BASE=$(git merge-base HEAD develop)
       COMMIT_RANGE="$MERGE_BASE..HEAD"
     fi
