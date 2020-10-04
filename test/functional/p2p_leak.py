@@ -5,7 +5,7 @@
 """Test message sending before handshake completion.
 
 A node should never send anything other than VERSION/VERACK until it's
-received a VERACK.
+received a VERACK, except for feature negotiation of wtxidrelay.
 
 This test connects to a node and sends it a few messages, trying to entice it
 into sending us something it shouldn't."""
@@ -91,6 +91,7 @@ class P2PVersionStore(P2PInterface):
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [['-peertimeout=4']]
 
     def run_test(self):
         # Peer that never sends a version. We will send a bunch of messages
@@ -125,6 +126,9 @@ class P2PLeakTest(BitcoinTestFramework):
 
         # Expect this peer to be disconnected for misbehavior
         assert not no_version_disconnect_peer.is_connected
+        # Expect peers to be disconnected due to timeout
+        assert not no_version_idle_peer.is_connected
+        assert not no_verack_idle_peer.is_connected
 
         self.nodes[0].disconnect_p2ps()
 
