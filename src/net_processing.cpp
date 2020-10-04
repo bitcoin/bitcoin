@@ -2477,7 +2477,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
 
     if (pfrom.nVersion == 0) {
         // Must have a version message before anything else
-        Misbehaving(pfrom.GetId(), 1, "non-version message before version handshake");
+        LogPrint(BCLog::NET, "non-version message before version handshake. Message \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
         return;
     }
 
