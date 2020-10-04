@@ -34,7 +34,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0),
+    cachedNumBlocks(-1),
     cachedNumISLocks(0),
     cachedPrivateSendRounds(0)
 {
@@ -118,6 +118,11 @@ void WalletModel::updateChainLockHeight(int chainLockHeight)
         transactionTableModel->updateChainLockHeight(chainLockHeight);
     // Number and status of confirmations might have changed (WalletModel::pollBalanceChanged handles this as well)
     fForceCheckBalanceChanged = true;
+}
+
+int WalletModel::getNumBlocks() const
+{
+    return cachedNumBlocks;
 }
 
 int WalletModel::getNumISLocks() const

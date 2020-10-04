@@ -188,7 +188,7 @@ public:
         return cachedWallet.size();
     }
 
-    TransactionRecord *index(interfaces::Wallet& wallet, int idx)
+    TransactionRecord *index(interfaces::Wallet& wallet, int numBlocks, int idx)
     {
         if(idx >= 0 && idx < cachedWallet.size())
         {
@@ -202,9 +202,8 @@ public:
             //  update the status of this transaction from the wallet. Otherwise,
             // simply re-use the cached status.
             interfaces::WalletTxStatus wtx;
-            int numBlocks;
             int64_t adjustedTime;
-            if (wallet.tryGetTxStatus(rec->hash, wtx, numBlocks, adjustedTime) && rec->statusUpdateNeeded(numBlocks, parent->getChainLockHeight())) {
+            if (rec->statusUpdateNeeded(numBlocks, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtx, adjustedTime)) {
                 rec->updateStatus(wtx, numBlocks, adjustedTime, parent->getChainLockHeight());
             }
             return rec;
@@ -232,7 +231,8 @@ TransactionTableModel::TransactionTableModel(WalletModel *parent):
         QAbstractTableModel(parent),
         walletModel(parent),
         priv(new TransactionTablePriv(this)),
-        fProcessingQueuedTransactions(false)
+        fProcessingQueuedTransactions(false),
+        cachedChainLockHeight(-1)
 {
     columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address / Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet(walletModel->wallet());
@@ -726,10 +726,10 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
 QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    TransactionRecord *data = priv->index(walletModel->wallet(), row);
+    TransactionRecord *data = priv->index(walletModel->wallet(), walletModel->getNumBlocks(), row);
     if(data)
     {
-        return createIndex(row, column, priv->index(walletModel->wallet(), row));
+        return createIndex(row, column, priv->index(walletModel->wallet(), walletModel->getNumBlocks(), row));
     }
     return QModelIndex();
 }

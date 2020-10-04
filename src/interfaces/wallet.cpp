@@ -329,7 +329,6 @@ public:
     }
     bool tryGetTxStatus(const uint256& txid,
         interfaces::WalletTxStatus& tx_status,
-        int& num_blocks,
         int64_t& adjusted_time) override
     {
         TRY_LOCK(::cs_main, locked_chain);
@@ -344,7 +343,6 @@ public:
         if (mi == m_wallet.mapWallet.end()) {
             return false;
         }
-        num_blocks = ::chainActive.Height();
         adjusted_time = GetAdjustedTime();
         tx_status = MakeWalletTxStatus(mi->second);
         return true;
