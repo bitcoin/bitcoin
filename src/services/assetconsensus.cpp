@@ -338,6 +338,22 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     return true;       
 }
 
+uint256 GetNotarySigHash(const CTransaction&tx, const CAssetOut &vecOut) const {
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    for (const auto& txin : tx.vin) {
+        ss << txin.prevout;
+    }
+    CTxDestination txDest;
+    ss << vecOut.key;
+    for (const auto& voutAsset: vecOut.values) {
+        if (ExtractDestination(tx.vout[voutAsset.n].scriptPubKey, txDest)) {
+            ss << EncodeDestination(txDest);
+            ss << voutAsset.nValue;
+        }
+    }
+    return ss.GetHash();
+}
+
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (!bSanityCheck)
@@ -355,7 +371,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         CAsset theAsset;
         // if asset has notary signature requirement set
         if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
-            if (!CHashSigner::VerifyHash(tx.GetNotarySigHash(vecOut), CKeyID(uint160(theAsset.vchNotaryKeyID)), vecOut.vchNotarySig)) {
+            if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, vecOut), CKeyID(uint160(theAsset.vchNotaryKeyID)), vecOut.vchNotarySig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
         }

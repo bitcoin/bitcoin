@@ -13,7 +13,6 @@
 #include <dbwrapper.h>
 #include <consensus/validation.h>
 #include <pubkey.h>
-#include <script/standard.h>
 #include <services/asset.h>
 #include <key_io.h>
 std::string COutPoint::ToString() const
@@ -427,21 +426,6 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, TxValidationState& 
     return true;
 }
 
-uint256 CTransaction::GetNotarySigHash(const CAssetOut &vecOut) const {
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    for (const auto& txin : vin) {
-        ss << txin.prevout;
-    }
-    CTxDestination txDest;
-    ss << vecOut.key;
-    for (const auto& voutAsset: vecOut.values) {
-        if (ExtractDestination(vout[voutAsset.n].scriptPubKey, txDest)) {
-            ss << EncodeDestination(txDest);
-            ss << voutAsset.nValue;
-        }
-    }
-    return ss.GetHash();
-}
 
 bool IsSyscoinMintTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;
