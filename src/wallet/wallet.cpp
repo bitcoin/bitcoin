@@ -5551,7 +5551,9 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
 
 bool CMerkleTx::IsLockedByInstantSend() const
 {
-    if (!fIsInstantSendLocked) {
+    if (fIsChainlocked) {
+        fIsInstantSendLocked = false;
+    } else if (!fIsInstantSendLocked) {
         fIsInstantSendLocked = llmq::quorumInstantSendManager->IsLocked(GetHash());
     }
     return fIsInstantSendLocked;
