@@ -1656,15 +1656,27 @@ fi
 
 if test x$TARGET_OS = xwindows; then
   CHIABLS_CPPFLAGS="--with-OPSYS=WINDOWS --with-CMAKE_SYSTEM_NAME=Windows --with-CMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' --with-CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''"
+  if test x$BUILD_OS != xwindows; then
+    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
+  fi
 fi
 if test x$TARGET_OS = xdarwin; then
   CHIABLS_CPPFLAGS="--with-OPSYS=MACOSX --with-CMAKE_SYSTEM_NAME=Darwin"
+    if test x$BUILD_OS != xdarwin; then
+    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
+  fi
 fi
 if test x$TARGET_OS = xlinux; then
   CHIABLS_CPPFLAGS="--with-OPSYS=LINUX --with-CMAKE_SYSTEM_NAME=Linux"
+    if test x$BUILD_OS != xlinux; then
+    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
+  fi
 fi
 if test x$TARGET_OS = xandroid; then
   CHIABLS_CPPFLAGS="--with-OPSYS=DROID"
+  if test x$BUILD_OS != xandroid; then
+    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
+  fi
 fi
 ac_configure_args="${ac_configure_args} $CHIABLS_CPPFLAGS --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery"
 AC_CONFIG_SUBDIRS([src/chiabls/build])
