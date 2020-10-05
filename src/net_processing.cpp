@@ -3688,7 +3688,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         if (!filter.IsWithinSizeConstraints())
         {
             // There is no excuse for sending a too-large filter
-            Misbehaving(pfrom.GetId(), 100, "too-large bloom filter");
+            pfrom.fDisconnect = true;
         }
         else if (pfrom.m_tx_relay != nullptr)
         {
@@ -3709,19 +3709,15 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
 
         // Nodes must NEVER send a data item > 520 bytes (the max size for a script data object,
         // and thus, the maximum size any matched object can have) in a filteradd message
-        bool bad = false;
         if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-            bad = true;
+            pfrom.fDisconnect = true;
         } else if (pfrom.m_tx_relay != nullptr) {
             LOCK(pfrom.m_tx_relay->cs_filter);
             if (pfrom.m_tx_relay->pfilter) {
                 pfrom.m_tx_relay->pfilter->insert(vData);
             } else {
-                bad = true;
+                pfrom.fDisconnect = true;
             }
-        }
-        if (bad) {
-            Misbehaving(pfrom.GetId(), 100, "bad filteradd message");
         }
         return;
     }

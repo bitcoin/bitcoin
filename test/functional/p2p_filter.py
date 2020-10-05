@@ -91,32 +91,33 @@ class FilterTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def test_size_limits(self, filter_peer):
+    def test_size_limits(self):
+        filter_peer = self.nodes[0].add_p2p_connection(P2PBloomFilter())
         self.log.info('Check that too large filter is rejected')
-        with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_peer.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE+1)))
+        with self.nodes[0].assert_debug_log(['disconnecting peer']):
+            filter_peer = self.send_and_wait_for_disconnect(filter_peer, msg_filterload(data=b'\xbb' * (MAX_BLOOM_FILTER_SIZE + 1)))
 
         self.log.info('Check that max size filter is accepted')
-        with self.nodes[0].assert_debug_log([], unexpected_msgs=['Misbehaving']):
-            filter_peer.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE)))
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=['disconnecting peer']):
+            filter_peer.send_and_ping(msg_filterload(data=b'\xbb' * (MAX_BLOOM_FILTER_SIZE)))
         filter_peer.send_and_ping(msg_filterclear())
 
         self.log.info('Check that filter with too many hash functions is rejected')
-        with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_peer.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS+1))
+        with self.nodes[0].assert_debug_log(['disconnecting peer']):
+            filter_peer = self.send_and_wait_for_disconnect(filter_peer, msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS + 1))
 
         self.log.info('Check that filter with max hash functions is accepted')
-        with self.nodes[0].assert_debug_log([], unexpected_msgs=['Misbehaving']):
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=['disconnecting peer']):
             filter_peer.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS))
         # Don't send filterclear until next two filteradd checks are done
 
         self.log.info('Check that max size data element to add to the filter is accepted')
-        with self.nodes[0].assert_debug_log([], unexpected_msgs=['Misbehaving']):
-            filter_peer.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE)))
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=['disconnecting peer']):
+            filter_peer.send_and_ping(msg_filteradd(data=b'\xcc' * (MAX_SCRIPT_ELEMENT_SIZE)))
 
         self.log.info('Check that too large data element to add to the filter is rejected')
-        with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_peer.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE+1)))
+        with self.nodes[0].assert_debug_log(['disconnecting peer']):
+            filter_peer = self.send_and_wait_for_disconnect(filter_peer, msg_filteradd(data=b'\xcc' * (MAX_SCRIPT_ELEMENT_SIZE + 1)))
 
         filter_peer.send_and_ping(msg_filterclear())
 
@@ -197,21 +198,25 @@ class FilterTest(BitcoinTestFramework):
             assert not filter_peer.tx_received
 
         self.log.info('Check that sending "filteradd" if no filter is set is treated as misbehavior')
-        with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_peer.send_and_ping(msg_filteradd(data=b'letsmisbehave'))
+        with self.nodes[0].assert_debug_log(['disconnecting peer']):
+            filter_peer = self.send_and_wait_for_disconnect(filter_peer, msg_filteradd(data=b'letsmisbehave'))
 
         self.log.info("Check that division-by-zero remote crash bug [CVE-2013-5700] is fixed")
         filter_peer.send_and_ping(msg_filterload(data=b'', nHashFuncs=1))
         filter_peer.send_and_ping(msg_filteradd(data=b'letstrytocrashthisnode'))
         self.nodes[0].disconnect_p2ps()
 
+    def send_and_wait_for_disconnect(self, filter_peer, msg):
+        filter_peer.send_message(msg)
+        filter_peer.wait_for_disconnect()
+        return self.nodes[0].add_p2p_connection(filter_peer.__class__())
+
     def run_test(self):
-        filter_peer = self.nodes[0].add_p2p_connection(P2PBloomFilter())
         self.log.info('Test filter size limits')
-        self.test_size_limits(filter_peer)
+        self.test_size_limits()
 
         self.log.info('Test BIP 37 for a node with fRelay = True (default)')
-        self.test_filter(filter_peer)
+        self.test_filter(self.nodes[0].add_p2p_connection(P2PBloomFilter()))
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('Test BIP 37 for a node with fRelay = False')
