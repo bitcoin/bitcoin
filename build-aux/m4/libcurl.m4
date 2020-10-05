@@ -173,7 +173,9 @@ AC_DEFUN([LIBCURL_CHECK_CONFIG],
 /* Try and use a few common options to force a failure if we are
    missing symbols or can't link. */
 int x;
-curl_easy_setopt(NULL,CURLOPT_URL,NULL);
+curl_global_init(CURL_GLOBAL_ALL);
+CURL *curl = curl_easy_init();
+curl_easy_setopt(curl,CURLOPT_URL,"https://example.com");
 x=CURL_ERROR_SIZE;
 x=CURLOPT_WRITEFUNCTION;
 x=CURLOPT_WRITEDATA;
