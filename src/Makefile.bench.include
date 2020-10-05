@@ -63,6 +63,7 @@ bench_bench_syscoin_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE) \
   $(LIBETHEREUM) \
+  $(LIBCURL) \
   $(EVENT_PTHREADS_LIBS) \
   $(EVENT_LIBS)
 
