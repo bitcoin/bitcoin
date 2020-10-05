@@ -7,7 +7,7 @@ $(package)_sha256_hash=0e97f243ae72b70307d684b84c7fe679385aa7a7a0e37e5be810193dc
 
 
 # default settings
-$(package)_config_opts_default=NETTLE_CFLAGS="-static" GMP_CFLAGS="-static" --disable-shared --enable-static --with-included-libtasn1 --with-included-unistring --enable-local-libopts --disable-non-suiteb-curves --disable-doc --without-p11-kit
+$(package)_config_opts=NETTLE_CFLAGS="-static" GMP_CFLAGS="-static" --disable-shared --enable-static --with-included-libtasn1 --with-included-unistring --enable-local-libopts --disable-non-suiteb-curves --disable-doc --without-p11-kit
 
 # mingw dll specific settings
 ifeq ($(BUILD_DLL), 1)
@@ -15,7 +15,7 @@ $(package)_config_opts_x86_64_mingw32=PKG_CONFIG_LIBDIR="$(PREFIX_DIR)/lib/pkgco
 endif
 
 # set settings based on host
-$(package)_config_opts = $(if $($(package)_config_opts_$(HOST)), $($(package)_config_opts_$(HOST)), $($(package)_config_opts_default))
+$(package)_config_opts = $(if $($(package)_config_opts_$(HOST)), $($(package)_config_opts_$(HOST)), $($(package)_config_opts))
 
 
 define $(package)_config_cmds
