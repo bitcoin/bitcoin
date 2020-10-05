@@ -6,7 +6,7 @@ IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "RELEASE")
 ENDIF()
 
-project(BLS NONE)
+project(BLS)
 
 # Add path for custom modules
 set(CMAKE_MODULE_PATH
