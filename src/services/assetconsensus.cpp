@@ -338,7 +338,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     return true;       
 }
 
-uint256 GetNotarySigHash(const CTransaction&tx, const CAssetOut &vecOut) const {
+uint256 GetNotarySigHash(const CTransaction&tx, const CAssetOut &vecOut) {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     for (const auto& txin : tx.vin) {
         ss << txin.prevout;
