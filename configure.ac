@@ -1174,7 +1174,7 @@ if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     SYSCOIN_FIND_BDB48
     dnl Check for libcurl
-    LIBCURL_CHECK_CONFIG([yes], [7.35.0],, [AC_MSG_ERROR([libcurl 7.35.0 or greater was not found.])])
+    AC_LIB_HAVE_LINKFLAGS([curl], [], [#include <curl/curl.h>])
 fi
 
 dnl Check for libminiupnpc (optional)
