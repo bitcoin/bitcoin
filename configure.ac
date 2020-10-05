@@ -1650,13 +1650,24 @@ if test x$has_gmp != xyes; then
     AC_MSG_ERROR([[libgmp3-dev not installed]])
 fi
 
-AC_CONFIG_SUBDIRS([src/chiabls/build])
-
 if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery"
+if test x$TARGET_OS = xwindows; then
+  CHIABLS_CPPFLAGS="--with-OPSYS=WINDOW --with-CMAKE_SYSTEM_NAME=Windows"
+fi
+if test x$TARGET_OS = xdarwin; then
+  CHIABLS_CPPFLAGS="--with-OPSYS=MACOSX --with-CMAKE_SYSTEM_NAME=Darwin"
+fi
+if test x$TARGET_OS = xlinux; then
+  CHIABLS_CPPFLAGS="--with-OPSYS=LINUX --with-CMAKE_SYSTEM_NAME=Linux"
+fi
+if test x$TARGET_OS = xandroid; then
+  CHIABLS_CPPFLAGS="--with-OPSYS=DROID"
+fi
+ac_configure_args="${ac_configure_args} $CHIABLS_CPPFLAGS --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery"
+AC_CONFIG_SUBDIRS([src/chiabls/build])
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
