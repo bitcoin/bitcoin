@@ -11,12 +11,8 @@ $(package)_config_opts=LIBS="-lnettle -lhogweed -lgmp" --without-nghttp2 --disab
 # mingw specific settings
 $(package)_config_opts_mingw32=LIBS="-lcrypt32 -lnettle -lhogweed -lgmp" --disable-shared --enable-static --disable-ftp --without-ssl --with-gnutls="$(PREFIX_DIR)" --disable-ntlm-wb --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --without-ca-path --without-ca-bundle --with-ca-fallback
 
-$(package)_config_opts_x86_64-w64-mingw32=$($(package)_config_opts_mingw32)
-$(package)_config_opts_i686-w64-mingw32=$($(package)_config_opts_mingw32)
-
 # darwin specific settings
 $(package)_config_opts_darwin=--with-sysroot="$(DARWIN_SDK_PATH)" --disable-shared --enable-static --disable-ftp --without-gnutls --with-darwinssl --without-ssl --disable-ntlm-wb --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --enable-threaded-resolver
-$(package)_config_opts_x86_64-apple-darwin11=$($(package)_config_opts_darwin)
 
 define $(package)_config_cmds
   $($(package)_autoconf)
