@@ -5080,11 +5080,11 @@ bool LoadMempool(CTxMemPool& pool)
             file >> nFeeDelta;
 
             CAmount amountdelta = nFeeDelta;
-            if (amountdelta) {
+            if (amountdelta && FeeDeltaRange(amountdelta)) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             TxValidationState state;
-            if (nTime + nExpiryTimeout > nNow) {
+            if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
                 AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
                                            nullptr /* plTxnReplaced */, false /* bypass_limits */,
@@ -5112,7 +5112,9 @@ bool LoadMempool(CTxMemPool& pool)
         file >> mapDeltas;
 
         for (const auto& i : mapDeltas) {
-            pool.PrioritiseTransaction(i.first, i.second);
+            if (FeeDeltaRange(i.second)) {
+                pool.PrioritiseTransaction(i.first, i.second);
+            }
         }
 
         // TODO: remove this try except in v0.22

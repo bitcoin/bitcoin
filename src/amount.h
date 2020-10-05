@@ -25,4 +25,12 @@ static const CAmount COIN = 100000000;
 static const CAmount MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
+/** Check if an amount is a valid fee delta.
+ *
+ * Like MoneyRange(...), but allows for negative money amounts.
+ */
+inline bool FeeDeltaRange(const CAmount fee_delta) {
+    return fee_delta >= -MAX_MONEY && fee_delta <= MAX_MONEY;
+}
+
 #endif //  BITCOIN_AMOUNT_H
