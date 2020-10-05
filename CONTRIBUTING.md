@@ -82,7 +82,7 @@ To contribute a patch, the workflow is as follows:
 
 For GUI-related issues or pull requests, the
 [https://github.com/bitcoin-core/gui](https://github.com/bitcoin-core/gui) repository should be used.
-For all other issues and pull requests, the 
+For all other issues and pull requests, the
 [https://github.com/bitcoin/bitcoin](https://github.com/bitcoin/bitcoin) node repository should be used.
 
 The master branch for all monotree repositories is identical.
