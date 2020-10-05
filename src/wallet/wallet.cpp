@@ -5551,17 +5551,22 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
 
 bool CMerkleTx::IsLockedByInstantSend() const
 {
-    return llmq::quorumInstantSendManager->IsLocked(GetHash());
+    if (!fIsInstantSendLocked) {
+        fIsInstantSendLocked = llmq::quorumInstantSendManager->IsLocked(GetHash());
+    }
+    return fIsInstantSendLocked;
 }
 
 bool CMerkleTx::IsChainLocked() const
 {
-    AssertLockHeld(cs_main);
-    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi != mapBlockIndex.end() && mi->second != nullptr) {
-        return llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+    if (!fIsChainlocked) {
+        AssertLockHeld(cs_main);
+        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi != mapBlockIndex.end() && mi->second != nullptr) {
+            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+        }
     }
-    return false;
+    return fIsChainlocked;
 }
 
 int CMerkleTx::GetBlocksToMaturity() const
