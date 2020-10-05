@@ -1655,7 +1655,7 @@ if test x$need_bundled_univalue = xyes; then
 fi
 
 if test x$TARGET_OS = xwindows; then
-  CHIABLS_CPPFLAGS="--with-OPSYS=WINDOWS --with-CMAKE_SYSTEM_NAME=Windows --with-CMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' --with-CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''"
+  CHIABLS_CPPFLAGS="--with-OPSYS=WINDOWS --with-CMAKE_SYSTEM_NAME=Generic --with-CMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' --with-CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''"
   if test x$BUILD_OS != xwindows; then
     CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
   fi
