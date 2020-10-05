@@ -204,7 +204,7 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
         CTransaction tx(mtx);
         auto itVout = std::find_if( tx.voutAssets.begin(), tx.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         if(itVout != tx.voutAssets.end()) {
-            sigHash = tx.GetNotarySigHash(*itVout);
+            sigHash = GetNotarySigHash(tx, *itVout);
         }
     }
     return sigHash.GetHex();
