@@ -1655,7 +1655,7 @@ if test x$need_bundled_univalue = xyes; then
 fi
 
 if test x$TARGET_OS = xwindows; then
-  CHIABLS_CPPFLAGS="--with-OPSYS=WINDOW --with-CMAKE_SYSTEM_NAME=Windows"
+  CHIABLS_CPPFLAGS="--with-OPSYS=WINDOW --with-CMAKE_SYSTEM_NAME=Windows --with-CMAKE_SHARED_LIBRARY_LINK_C_FLAGS="" --with-CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=""
 fi
 if test x$TARGET_OS = xdarwin; then
   CHIABLS_CPPFLAGS="--with-OPSYS=MACOSX --with-CMAKE_SYSTEM_NAME=Darwin"
