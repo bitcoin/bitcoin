@@ -1134,7 +1134,6 @@ static UniValue getblock(const JSONRPCRequest& request)
                                     {RPCResult::Type::ELISION, "", "The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result"},
                                 }},
                             }},
-                            {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
                         }},
                 },
                 RPCExamples{
