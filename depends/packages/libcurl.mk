@@ -18,9 +18,6 @@ $(package)_config_opts_i686-w64-mingw32=$($(package)_config_opts_mingw32)
 $(package)_config_opts_darwin=--with-sysroot="$(DARWIN_SDK_PATH)" --disable-shared --enable-static --disable-ftp --without-gnutls --with-darwinssl --without-ssl --disable-ntlm-wb --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --enable-threaded-resolver
 $(package)_config_opts_x86_64-apple-darwin11=$($(package)_config_opts_darwin)
 
-  # set settings based on host
-$(package)_config_opts = $(if $($(package)_config_opts_$(HOST)), $($(package)_config_opts_$(HOST)), $($(package)_config_opts))
-
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
