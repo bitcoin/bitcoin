@@ -1420,6 +1420,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
 
+    // Future devs please note: the underlying structure is default all nets are reachable
+    // So here if onlynet defined we set all routeable false and then mask in all desired nets to *true*.
+    // Use IsReachable(netname) to determine later this user settings.
+
     if (args.IsArgSet("-onlynet")) {
         std::set<enum Network> nets;
         for (const std::string& snet : args.GetArgs("-onlynet")) {
@@ -1442,7 +1446,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // -proxy sets a proxy for all outgoing network traffic
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
     std::string proxyArg = args.GetArg("-proxy", "");
-    SetReachable(NET_ONION, false);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
@@ -1453,11 +1456,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
 
-        SetProxy(NET_IPV4, addrProxy);
-        SetProxy(NET_IPV6, addrProxy);
-        SetProxy(NET_ONION, addrProxy);
+        if (IsReachable(NET_IPV4)) SetProxy(NET_IPV4, addrProxy);
+        if (IsReachable(NET_IPV6)) SetProxy(NET_IPV6, addrProxy);
+        if (IsReachable(NET_ONION)) SetProxy(NET_ONION, addrProxy);
+        // -onlynet will at least leave one allowed, so we now set the name proxy
         SetNameProxy(addrProxy);
-        SetReachable(NET_ONION, true); // by default, -proxy sets onion as reachable, unless -noonion later
+        // by default, -proxy sets also an onion proxy for the allowed nets, unless -noonion later
     }
 
     // -onion can be used to set only a proxy for .onion, or override normal proxy for .onion addresses
@@ -1475,9 +1479,14 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
             if (!addrOnion.IsValid())
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
-            SetProxy(NET_ONION, addrOnion);
-            SetReachable(NET_ONION, true);
+            if (IsReachable(NET_ONION)) {
+                SetProxy(NET_ONION, addrOnion);
+            } else return InitError(strprintf(_("Invalid request network not allowed:  '%s'"), onionArg));
         }
+    }
+    proxyType checkAddrOnion;
+    if (IsReachable(NET_ONION) && !GetProxy(NET_ONION, checkAddrOnion)) {
+        SetReachable(NET_ONION, false);
     }
 
     // see Step 2: parameter interactions for more information about these
