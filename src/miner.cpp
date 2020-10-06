@@ -39,13 +39,13 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
-void RegenerateCommitments(CBlock& block)
+void RegenerateCommitments(CBlock& block, BlockManager& blockman)
 {
     CMutableTransaction tx{*block.vtx.at(0)};
     tx.vout.erase(tx.vout.begin() + GetWitnessCommitmentIndex(block));
     block.vtx.at(0) = MakeTransactionRef(tx);
 
-    GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus());
+    GenerateCoinbaseCommitment(block, WITH_LOCK(::cs_main, assert(std::addressof(g_chainman.m_blockman) == std::addressof(blockman)); return blockman.LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus());
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
