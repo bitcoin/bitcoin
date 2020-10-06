@@ -63,7 +63,6 @@ static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& 
     stats.hashBlock = pcursor->GetBestBlock();
     {
         LOCK(cs_main);
-        assert(std::addressof(g_chainman.m_blockman) == std::addressof(blockman));
         stats.nHeight = blockman.LookupBlockIndex(stats.hashBlock)->nHeight;
     }
 

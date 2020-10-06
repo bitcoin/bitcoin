@@ -1607,7 +1607,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                assert(std::addressof(g_chainman.m_blockman) == std::addressof(chainman.m_blockman));
                 if (!chainman.BlockIndex().empty() &&
                         !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
@@ -1733,7 +1732,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                         // Only verify the DB of the active chainstate. This is fixed in later
                         // work when we allow VerifyDB to be parameterized by chainstate.
-                        assert(std::addressof(::ChainstateActive()) == std::addressof(chainman.ActiveChainstate()));
                         if (&chainman.ActiveChainstate() == chainstate &&
                             !CVerifyDB().VerifyDB(
                                 chainparams, *chainstate, &chainstate->CoinsDB(),
@@ -1840,7 +1838,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;
-    assert(std::addressof(::ChainActive()) == std::addressof(chainman.ActiveChain()));
     if (chainman.ActiveChain().Tip() == nullptr) {
         block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(std::bind(BlockNotifyGenesisWait, std::placeholders::_2));
     } else {

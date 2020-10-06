@@ -507,7 +507,6 @@ void CTxMemPool::removeForReorg(CChainState& active_chainstate, const CCoinsView
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
         LockPoints lp = it->GetLockPoints();
-        assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
         bool validLP =  TestLockPointValidity(active_chainstate.m_chain, &lp);
         if (!CheckFinalTx(active_chainstate.m_chain.Tip(), tx, flags) || !CheckSequenceLocks(active_chainstate, *this, tx, flags, &lp, validLP)) {
             // Note if CheckSequenceLocks fails the LockPoints may still be invalid
@@ -627,7 +626,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins, const int64_t spendheight)
     uint64_t innerUsage = 0;
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
-    assert(g_chainman.m_blockman.GetSpendHeight(mempoolDuplicate) == spendheight); // TODO: REVIEW-ONLY, REMOVE IN FUTURE COMMIT
 
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {

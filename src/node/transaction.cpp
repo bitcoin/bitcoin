@@ -39,7 +39,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
     { // cs_main scope
     LOCK(cs_main);
-    assert(std::addressof(::ChainstateActive()) == std::addressof(node.chainman->ActiveChainstate()));
     // If the transaction is already confirmed in the chain, don't do anything
     // and return early.
     CCoinsViewCache &view = node.chainman->ActiveChainstate().CoinsTip();
