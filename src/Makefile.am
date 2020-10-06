@@ -724,7 +724,7 @@ nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 
 # syscoind & syscoin-node binaries #
 syscoin_daemon_sources = syscoind.cpp
-syscoin_bin_cppflags = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_bin_cppflags = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LIBCURL_CPPFLAGS)
 syscoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
