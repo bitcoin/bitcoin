@@ -483,13 +483,13 @@ public:
      * software, as FillableSigningProvider automatically does this implicitly for all
      * keys now.
      */
-    void LearnRelatedScripts(const CPubKey& key, OutputType);
+    void LearnRelatedScripts(WalletBatch& batch, const CPubKey& key, OutputType);
 
     /**
      * Same as LearnRelatedScripts, but when the OutputType is not known (and could
      * be anything).
      */
-    void LearnAllRelatedScripts(const CPubKey& key);
+    void LearnAllRelatedScripts(WalletBatch& batch, const CPubKey& key);
 
     /**
      * Marks all keys in the keypool up to and including reserve_key as used.

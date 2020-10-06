@@ -37,7 +37,8 @@ bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestinat
         error = _("Error: Keypool ran out, please call keypoolrefill first").translated;
         return false;
     }
-    LearnRelatedScripts(new_key, type);
+    WalletBatch batch(m_storage.GetDatabase());
+    LearnRelatedScripts(batch, new_key, type);
     dest = GetDestinationForKey(new_key, type);
     return true;
 }
@@ -1316,7 +1317,7 @@ void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex, const OutputType& ty
     CPubKey pubkey;
     bool have_pk = GetPubKey(m_index_to_reserved_key.at(nIndex), pubkey);
     assert(have_pk);
-    LearnRelatedScripts(pubkey, type);
+    LearnRelatedScripts(batch ,pubkey, type);
     m_index_to_reserved_key.erase(nIndex);
     WalletLogPrintf("keypool keep %d\n", nIndex);
 }
@@ -1410,7 +1411,7 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
     return true;
 }
 
-void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType type)
+void LegacyScriptPubKeyMan::LearnRelatedScripts(WalletBatch& batch, const CPubKey& key, OutputType type)
 {
     assert(type != OutputType::BECH32M);
     if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
@@ -1418,14 +1419,14 @@ void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType t
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));
-        AddCScript(witprog);
+        AddCScriptWithDB(batch, witprog);
     }
 }
 
-void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
+void LegacyScriptPubKeyMan::LearnAllRelatedScripts(WalletBatch& batch, const CPubKey& key)
 {
     // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    LearnRelatedScripts(batch, key, OutputType::P2SH_SEGWIT);
 }
 
 void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
@@ -1445,7 +1446,7 @@ void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
         if (batch.ReadPool(index, keypool)) { //TODO: This should be unnecessary
             m_pool_key_to_index.erase(keypool.vchPubKey.GetID());
         }
-        LearnAllRelatedScripts(keypool.vchPubKey);
+        LearnAllRelatedScripts(batch, keypool.vchPubKey);
         batch.ErasePool(index);
         WalletLogPrintf("keypool index %d removed\n", index);
         it = setKeyPool->erase(it);
