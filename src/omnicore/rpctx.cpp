@@ -1608,23 +1608,21 @@ static UniValue omni_sendanydata(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
-        throw runtime_error(
-            RPCHelpMan{"omni_sendanydata",
-               "\nCreate and broadcast a transaction with an arbitrary payload.\nWhen no receiver is specified, the sender is also considered as receiver.\n",
-               {
-                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
-                   {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "the hex-encoded data\n"},
-                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the optional address of the receiver\n"},
-               },
-               RPCResult{
-                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
-               },
-               RPCExamples{
-                   HelpExampleCli("omni_sendanydata", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"646578782032303230\"")
-                   + HelpExampleRpc("omni_sendanydata", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"646578782032303230\"")
-               }
-            }.ToString());
+    RPCHelpMan{"omni_sendanydata",
+       "\nCreate and broadcast a transaction with an arbitrary payload.\nWhen no receiver is specified, the sender is also considered as receiver.\n",
+       {
+           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+           {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "the hex-encoded data\n"},
+           {"toaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the optional address of the receiver\n"},
+       },
+       RPCResult{
+           RPCResult::Type::STR_HEX, "hash", "the hex-encoded transaction hash"
+       },
+       RPCExamples{
+           HelpExampleCli("omni_sendanydata", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"646578782032303230\"")
+           + HelpExampleRpc("omni_sendanydata", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"646578782032303230\"")
+       }
+    }.Check(request);
 
     // obtain parameters
     std::string fromAddress = ParseAddress(request.params[0]);

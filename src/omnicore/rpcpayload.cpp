@@ -609,21 +609,19 @@ static UniValue omni_createpayload_unfreeze(const JSONRPCRequest& request)
 
 static UniValue omni_createpayload_anydata(const JSONRPCRequest& request)
 {
-   if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
-           RPCHelpMan{"omni_createpayload_anydata",
-              "\nCreates the payload to embed arbitrary data.\n",
-              {
-                  {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "the hex-encoded data\n"},
-              },
-              RPCResult{
-                  "\"payload\"             (string) the hex-encoded payload\n"
-              },
-              RPCExamples{
-                  HelpExampleCli("omni_createpayload_anydata", "\"646578782032303230\"")
-                  + HelpExampleRpc("omni_createpayload_anydata", "\"646578782032303230\"")
-              }
-           }.ToString());
+    RPCHelpMan{"omni_createpayload_anydata",
+       "\nCreates the payload to embed arbitrary data.\n",
+       {
+           {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "the hex-encoded data\n"},
+       },
+       RPCResult{
+           RPCResult::Type::STR_HEX, "payload", "the hex-encoded payload"
+       },
+       RPCExamples{
+           HelpExampleCli("omni_createpayload_anydata", "\"646578782032303230\"")
+           + HelpExampleRpc("omni_createpayload_anydata", "\"646578782032303230\"")
+       }
+    }.Check(request);
 
     std::vector<unsigned char> data = ParseHexV(request.params[0], "data");
 
