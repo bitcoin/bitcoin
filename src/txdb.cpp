@@ -405,6 +405,7 @@ bool CBlockTreeDB::UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, 
 }
 
 bool CBlockTreeDB::blockOnchainActive(const uint256 &hash) {
+    LOCK(cs_main);
     CBlockIndex* pblockindex = mapBlockIndex[hash];
 
     if (!chainActive.Contains(pblockindex)) {
