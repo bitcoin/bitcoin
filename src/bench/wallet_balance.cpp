@@ -24,8 +24,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
 
-    NodeContext node;
-    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(test_setup.m_node);
     CWallet wallet{chain.get(), "", CreateMockWalletDatabase()};
     {
         wallet.SetupLegacyScriptPubKeyMan();
