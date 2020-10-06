@@ -113,6 +113,14 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
+  chiabls/src/bls.hpp \
+  chiabls/src/privatekey.hpp \
+  chiabls/src/publickey.hpp \
+  chiabls/src/signature.hpp \
+  bls/bls.h \
+  bls/bls_batchverifier.h \
+  bls/bls_ies.h \
+  bls/bls_worker.h \
   services/asset.h \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
@@ -655,12 +663,8 @@ libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
   bls/bls.cpp \
-  bls/bls.h \
-  bls/bls_batchverifier.h \
   bls/bls_ies.cpp \
-  bls/bls_ies.h \
   bls/bls_worker.cpp \
-  bls/bls_worker.h \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -831,7 +835,7 @@ endif
 
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libsyscoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include -DBUILD_SYSCOIN_INTERNAL $(LEVELDB_CPPFLAGS)
+libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(LEVELDB_CPPFLAGS)
 libsyscoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
