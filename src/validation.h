@@ -891,10 +891,6 @@ private:
         CAutoFile& coins_file,
         const SnapshotMetadata& metadata);
 
-    // For access to m_active_chainstate.
-    friend CChainState& ChainstateActive();
-    friend CChain& ChainActive();
-
 public:
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
@@ -1024,15 +1020,6 @@ public:
         Reset();
     }
 };
-
-/** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
-extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
-
-/** Please prefer the identical ChainstateManager::ActiveChainstate */
-CChainState& ChainstateActive();
-
-/** Please prefer the identical ChainstateManager::ActiveChain */
-CChain& ChainActive();
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;

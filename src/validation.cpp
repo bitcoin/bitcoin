@@ -101,21 +101,6 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIn
     return false;
 }
 
-ChainstateManager g_chainman;
-
-CChainState& ChainstateActive()
-{
-    LOCK(::cs_main);
-    assert(g_chainman.m_active_chainstate);
-    return *g_chainman.m_active_chainstate;
-}
-
-CChain& ChainActive()
-{
-    LOCK(::cs_main);
-    return ::ChainstateActive().m_chain;
-}
-
 /**
  * Mutex to guard access to validation specific variables, such as reading
  * or changing the chainstate.
