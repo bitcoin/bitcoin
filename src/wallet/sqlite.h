@@ -79,10 +79,6 @@ public:
     /** Close the database */
     void Close() override;
 
-    /* These functions are unused */
-    void AddRef() override { assert(false); }
-    void RemoveRef() override { assert(false); }
-
     /** Rewrite the entire database on disk */
     bool Rewrite(const char* skip = nullptr) override;
 

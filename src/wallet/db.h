@@ -110,13 +110,6 @@ public:
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
 
-    //! Counts the number of active database users to be sure that the database is not closed while someone is using it
-    std::atomic<int> m_refcount{0};
-    /** Indicate the a new database user has began using the database. Increments m_refcount */
-    virtual void AddRef() = 0;
-    /** Indicate that database user has stopped using the database and that it could be flushed or closed. Decrement m_refcount */
-    virtual void RemoveRef() = 0;
-
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
      */
     virtual bool Rewrite(const char* pszSkip=nullptr) = 0;
@@ -181,8 +174,6 @@ class DummyDatabase : public WalletDatabase
 {
 public:
     void Open() override {};
-    void AddRef() override {}
-    void RemoveRef() override {}
     bool Rewrite(const char* pszSkip=nullptr) override { return true; }
     bool Backup(const std::string& strDest) const override { return true; }
     void Close() override {}
