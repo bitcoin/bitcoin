@@ -4117,14 +4117,14 @@ bool PeerManager::SendMessages(CNode* pto)
         // Address refresh broadcast
         auto current_time = GetTime<std::chrono::microseconds>();
 
-        if (pto->RelayAddrsWithConn() && !::ChainstateActive().IsInitialBlockDownload() && pto->m_next_local_addr_send < current_time) {
+        if (pto->RelayAddrsWithConn() && !::ChainstateActive().IsInitialBlockDownload() && pto->m_next_local_addr_send.load` < current_time) {
             // If we've sent before, clear the bloom filter for the peer, so that our
             // self-announcement will actually go out.
             // This might be unnecessary if the bloom filter has already rolled
             // over since our last self-announcement, but there is only a small
             // bandwidth cost that we can incur by doing this (which happens
             // once a day on average).
-            if (pto->m_next_local_addr_send != 0us) {
+            if (pto->m_next_local_addr_send.load != 0us) {
                 pto->m_addr_known->reset();
             }
             AdvertiseLocal(pto);
@@ -4134,7 +4134,7 @@ bool PeerManager::SendMessages(CNode* pto)
         //
         // Message: addr
         //
-        if (pto->RelayAddrsWithConn() && pto->m_next_addr_send < current_time) {
+        if (pto->RelayAddrsWithConn() && pto->m_next_addr_send.load() < current_time) {
             pto->m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
             std::vector<CAddress> vAddr;
             vAddr.reserve(pto->vAddrToSend.size());
