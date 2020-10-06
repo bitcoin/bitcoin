@@ -1500,7 +1500,6 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     BOOST_CHECK(!script.HasValidOps());
 }
 
-
 #if defined(HAVE_CONSENSUS_LIB)
 
 /* Test simple (successful) usage of bitcoinconsensus_verify_script */

@@ -1,5 +1,4 @@
 # Copyright (c) 2019-2020 Pieter Wuille
-
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test-only secp256k1 elliptic curve implementation
