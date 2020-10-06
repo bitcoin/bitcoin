@@ -3787,8 +3787,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     // Write block to history file
     if (fNewBlock) *fNewBlock = true;
+    assert(std::addressof(::ChainActive()) == std::addressof(m_chain));
     try {
-        FlatFilePos blockPos = SaveBlockToDisk(block, pindex->nHeight, ::ChainActive(), chainparams, dbp);
+        FlatFilePos blockPos = SaveBlockToDisk(block, pindex->nHeight, m_chain, chainparams, dbp);
         if (blockPos.IsNull()) {
             state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
             return false;
