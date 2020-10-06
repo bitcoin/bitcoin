@@ -11,7 +11,7 @@ environment:
   QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
   QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
   VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
-  VCPKG_COMMIT_ID: '13590753fec479c5b0a3d48dd553dde8d49615fc'
+  VCPKG_COMMIT_ID: '40230b8e3f6368dcb398d649331be878ca1e9007'
 install:
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
