@@ -736,11 +736,11 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
     CScript script;
     script = GetScriptForDestination(PKHash(pubkey));
     if (HaveWatchOnly(script)) {
-        RemoveWatchOnly(script);
+        RemoveWatchOnlyWithDB(batch, script);
     }
     script = GetScriptForRawPubKey(pubkey);
     if (HaveWatchOnly(script)) {
-        RemoveWatchOnly(script);
+        RemoveWatchOnlyWithDB(batch, script);
     }
 
     if (!m_storage.HasEncryptionKeys()) {
@@ -863,6 +863,12 @@ static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 
 bool LegacyScriptPubKeyMan::RemoveWatchOnly(const CScript &dest)
 {
+    WalletBatch batch(m_storage.GetDatabase());
+    return RemoveWatchOnlyWithDB(batch, dest);
+}
+
+bool LegacyScriptPubKeyMan::RemoveWatchOnlyWithDB(WalletBatch& batch, const CScript &dest)
+{
     {
         LOCK(cs_KeyStore);
         setWatchOnly.erase(dest);
@@ -876,7 +882,7 @@ bool LegacyScriptPubKeyMan::RemoveWatchOnly(const CScript &dest)
 
     if (!HaveWatchOnly())
         NotifyWatchonlyChanged(false);
-    if (!WalletBatch(m_storage.GetDatabase()).EraseWatchOnly(dest))
+    if (!batch.EraseWatchOnly(dest))
         return false;
 
     return true;
