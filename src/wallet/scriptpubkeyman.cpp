@@ -386,14 +386,13 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
     }
 }
 
-void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
+void LegacyScriptPubKeyMan::UpgradeKeyMetadata(WalletBatch& batch)
 {
     LOCK(cs_KeyStore);
     if (m_storage.IsLocked() || m_storage.IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
         return;
     }
 
-    std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(m_storage.GetDatabase());
     for (auto& meta_pair : mapKeyMetadata) {
         CKeyMetadata& meta = meta_pair.second;
         if (!meta.hd_seed_id.IsNull() && !meta.has_key_origin && meta.hdKeypath != "s") { // If the hdKeypath is "s", that's the seed and it doesn't have a key origin
@@ -415,7 +414,7 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
             // Write meta to wallet
             CPubKey pubkey;
             if (GetPubKey(meta_pair.first, pubkey)) {
-                batch->WriteKeyMetadata(meta, pubkey, true);
+                batch.WriteKeyMetadata(meta, pubkey, true);
             }
         }
     }

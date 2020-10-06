@@ -370,7 +370,7 @@ public:
     void MarkUnusedAddresses(const CScript& script) override;
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
-    void UpgradeKeyMetadata();
+    void UpgradeKeyMetadata(WalletBatch& batch);
 
     bool IsHDEnabled() const override;
 
