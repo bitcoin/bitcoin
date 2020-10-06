@@ -808,6 +808,7 @@ void BerkeleyDatabase::AddRef()
     } else {
         m_refcount++;
     }
+    assert(m_refcount <= 1);
 }
 
 void BerkeleyDatabase::RemoveRef()
