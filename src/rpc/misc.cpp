@@ -180,6 +180,9 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
             },
         }.ToString());
 
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
+    }
 
     UniValue startValue = find_value(request.params[0].get_obj(), "start");
     UniValue endValue = find_value(request.params[0].get_obj(), "end");
@@ -297,6 +300,10 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
+    }
+
     std::vector<std::pair<uint256, int> > addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
@@ -369,6 +376,10 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
             + HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"1AMHv5kQ2gG5mLUbhhpLErjuuhk1r53tJ2\"], \"chainInfo\": true}")
                 },
             }.ToString());
+
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
+    }
 
     bool includeChainInfo = false;
     if (request.params[0].isObject()) {
@@ -457,6 +468,10 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
+    }
+
     std::vector<std::pair<uint256, int> > addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
@@ -531,6 +546,10 @@ UniValue getblockhashes(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
+    }
+
     unsigned int high = request.params[0].get_int();
     unsigned int low = request.params[1].get_int();
     bool fActiveOnly = false;
@@ -601,6 +620,10 @@ UniValue getspentinfo(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
+    }
+
     UniValue txidValue = find_value(request.params[0].get_obj(), "txid");
     UniValue indexValue = find_value(request.params[0].get_obj(), "index");
 
@@ -658,6 +681,10 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
             + HelpExampleRpc("getaddresstxids", "{\"addresses\": [\"1AMHv5kQ2gG5mLUbhhpLErjuuhk1r53tJ2\"], \"start\": 5000, \"end\": 5500}")
                 },
             }.ToString());
+
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
+    }
 
     std::vector<std::pair<uint256, int> > addresses;
 
