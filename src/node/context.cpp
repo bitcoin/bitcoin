@@ -11,6 +11,7 @@
 #include <policy/fees.h>
 #include <scheduler.h>
 #include <txmempool.h>
+#include <validation.h>
 
 NodeContext::NodeContext() {}
 NodeContext::~NodeContext() {}

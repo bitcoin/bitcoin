@@ -292,7 +292,7 @@ void Shutdown(NodeContext& node)
     ECC_Stop();
     node.mempool.reset();
     node.fee_estimator.reset();
-    node.chainman = nullptr;
+    node.chainman.reset();
     node.scheduler.reset();
 
     try {
@@ -1402,8 +1402,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), check_ratio);
 
     assert(!node.chainman);
-    node.chainman = &g_chainman;
-    ChainstateManager& chainman = *Assert(node.chainman);
+    node.chainman = MakeUnique<ChainstateManager>();
+    ChainstateManager& chainman = *node.chainman;
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, node.banman.get(),
