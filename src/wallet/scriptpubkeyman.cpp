@@ -1216,20 +1216,22 @@ bool LegacyScriptPubKeyMan::NewKeyPool()
     }
     {
         LOCK(cs_KeyStore);
-        WalletBatch batch(m_storage.GetDatabase());
+        {
+            WalletBatch batch(m_storage.GetDatabase());
 
-        for (const int64_t nIndex : setInternalKeyPool) {
-            batch.ErasePool(nIndex);
-        }
-        setInternalKeyPool.clear();
+            for (const int64_t nIndex : setInternalKeyPool) {
+                batch.ErasePool(nIndex);
+            }
+            setInternalKeyPool.clear();
 
-        for (const int64_t nIndex : setExternalKeyPool) {
-            batch.ErasePool(nIndex);
-        }
-        setExternalKeyPool.clear();
+            for (const int64_t nIndex : setExternalKeyPool) {
+                batch.ErasePool(nIndex);
+            }
+            setExternalKeyPool.clear();
 
-        for (const int64_t nIndex : set_pre_split_keypool) {
-            batch.ErasePool(nIndex);
+            for (const int64_t nIndex : set_pre_split_keypool) {
+                batch.ErasePool(nIndex);
+            }
         }
         set_pre_split_keypool.clear();
 
