@@ -6,7 +6,6 @@
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.test_node import ErrorMatch
 
 class FilelockTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -30,8 +29,8 @@ class FilelockTest(BitcoinTestFramework):
             self.nodes[0].createwallet(self.default_wallet_name)
             wallet_dir = os.path.join(datadir, 'wallets')
             self.log.info("Check that we can't start a second bitcoind instance using the same wallet")
-            expected_msg = "Error: Error initializing wallet database environment"
-            self.nodes[1].assert_start_raises_init_error(extra_args=['-walletdir={}'.format(wallet_dir), '-wallet=' + self.default_wallet_name, '-noserver'], expected_msg=expected_msg, match=ErrorMatch.PARTIAL_REGEX)
+            expected_msg = "Error: Cannot obtain a lock on wallet directory {0}. {1} is probably already running.".format(wallet_dir, self.config['environment']['PACKAGE_NAME'])
+            self.nodes[1].assert_start_raises_init_error(extra_args=['-walletdir={}'.format(wallet_dir), '-wallet=' + self.default_wallet_name, '-noserver'], expected_msg=expected_msg)
 
 if __name__ == '__main__':
     FilelockTest().main()

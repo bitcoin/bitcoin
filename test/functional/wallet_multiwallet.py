@@ -168,7 +168,7 @@ class MultiWalletTest(BitcoinTestFramework):
         os.mkdir(competing_wallet_dir)
         self.restart_node(0, ['-nowallet', '-walletdir=' + competing_wallet_dir])
         self.nodes[0].createwallet(self.default_wallet_name, descriptors=False)
-        exp_stderr = r"Error: Error initializing wallet database environment \"\S+competing_walletdir\S*\"!"
+        exp_stderr = "Error: Cannot obtain a lock on wallet directory {0}. {1} is probably already running.".format(competing_wallet_dir, self.config['environment']['PACKAGE_NAME'])
         self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 
         self.restart_node(0)
@@ -373,7 +373,8 @@ class MultiWalletTest(BitcoinTestFramework):
         if self.options.descriptors:
             assert_raises_rpc_error(-4, "Unable to obtain an exclusive lock", self.nodes[1].loadwallet, wallet)
         else:
-            assert_raises_rpc_error(-4, "Error initializing wallet database environment", self.nodes[1].loadwallet, wallet)
+            expected_rpc_error = "Cannot obtain a lock on wallet directory {0}. {1} is probably already running.".format(wallet, self.config['environment']['PACKAGE_NAME'])
+            assert_raises_rpc_error(-4, expected_rpc_error, self.nodes[1].loadwallet, wallet)
         self.nodes[0].unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
 

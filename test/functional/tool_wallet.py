@@ -72,7 +72,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
         locked_dir = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets")
         self.assert_raises_tool_error(
-            'Error initializing wallet database environment "{}"!'.format(locked_dir),
+            'Cannot obtain a lock on wallet directory {0}. {1} is probably already running.'.format(locked_dir, self.config['environment']['PACKAGE_NAME']),
             '-wallet=' + self.default_wallet_name,
             'info',
         )
