@@ -26,6 +26,7 @@ SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
+LIBCURL=-lcurl
 LIBCHIABLS=chiabls/build/libchiabls.a -lgmp
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
@@ -724,7 +725,7 @@ nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 
 # syscoind & syscoin-node binaries #
 syscoin_daemon_sources = syscoind.cpp
-syscoin_bin_cppflags = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LIBCURL_CPPFLAGS)
+syscoin_bin_cppflags = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
