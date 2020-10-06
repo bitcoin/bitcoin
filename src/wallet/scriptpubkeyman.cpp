@@ -1935,18 +1935,20 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     m_wallet_descriptor = w_desc;
 
     // Store the master private key, and descriptor
-    WalletBatch batch(m_storage.GetDatabase());
-    if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
-    }
-    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    {
+        WalletBatch batch(m_storage.GetDatabase());
+        if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
+            throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
+        }
+        if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+            throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+        }
+        m_storage.UnsetBlankWalletFlag(batch);
     }
 
     // TopUp
     TopUp();
 
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 
