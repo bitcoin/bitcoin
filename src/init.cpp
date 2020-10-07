@@ -88,10 +88,10 @@
 #include <masternode/activemasternode.h>
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
-#include <masternode/masternode-meta.h>
-#include <masternode/masternode-utils.h>
+#include <masternode/masternodepayments.h>
+#include <masternode/masternodesync.h>
+#include <masternode/masternodemeta.h>
+#include <masternode/masternodeutils.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>
@@ -103,7 +103,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <util/executable_path/include/boost/executable_path.hpp>
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
-#include <flat-database.h>
+#include <flatdatabase.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
 static CDSNotificationInterface* pdsNotificationInterface = NULL;

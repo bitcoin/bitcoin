@@ -2,7 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <governance/governance-validators.h>
+#include <governance/governancevalidators.h>
 
 #include <base58.h>
 #include <timedata.h>

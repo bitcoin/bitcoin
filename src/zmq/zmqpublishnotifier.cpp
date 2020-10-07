@@ -20,8 +20,8 @@
 #include <string>
 #include <utility>
 // SYSCOIN
-#include <governance/governance-vote.h>
-#include <governance/governance-object.h>
+#include <governance/governancevote.h>
+#include <governance/governanceobject.h>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 

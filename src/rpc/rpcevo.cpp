@@ -27,7 +27,7 @@
 
 #include <bls/bls.h>
 
-#include <masternode/masternode-meta.h>
+#include <masternode/masternodemeta.h>
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
 #include <util/translation.h>

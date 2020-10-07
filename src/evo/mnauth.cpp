@@ -7,8 +7,8 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_utils.h>
 #include <masternode/activemasternode.h>
-#include <masternode/masternode-meta.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodemeta.h>
+#include <masternode/masternodesync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>

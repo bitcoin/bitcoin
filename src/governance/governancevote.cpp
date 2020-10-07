@@ -2,9 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <governance/governance-vote.h>
-#include <governance/governance-object.h>
-#include <masternode/masternode-sync.h>
+#include <governance/governancevote.h>
+#include <governance/governanceobject.h>
+#include <masternode/masternodesync.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <util/system.h>

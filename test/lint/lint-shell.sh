@@ -36,7 +36,7 @@ fi
 
 SHELLCHECK_CMD=(shellcheck --external-sources --check-sourced)
 EXCLUDE="--exclude=$(IFS=','; echo "${disabled[*]}")"
-if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|univalue)/'); then
+if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|univalue|chiabls)/'); then
     EXIT_CODE=1
 fi
 

@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_MASTERNODE_MASTERNODE_PAYMENTS_H
-#define SYSCOIN_MASTERNODE_MASTERNODE_PAYMENTS_H
+#ifndef SYSCOIN_MASTERNODE_MASTERNODEPAYMENTS_H
+#define SYSCOIN_MASTERNODE_MASTERNODEPAYMENTS_H
 
 #include <util/system.h>
 #include <core_io.h>
@@ -37,4 +37,4 @@ public:
     static bool GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee);
 };
 
-#endif // SYSCOIN_MASTERNODE_MASTERNODE_PAYMENTS_H
+#endif // SYSCOIN_MASTERNODE_MASTERNODEPAYMENTS_H

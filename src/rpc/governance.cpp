@@ -6,13 +6,13 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <governance/governance.h>
-#include <governance/governance-vote.h>
-#include <governance/governance-classes.h>
-#include <governance/governance-validators.h>
+#include <governance/governancevote.h>
+#include <governance/governanceclasses.h>
+#include <governance/governancevalidators.h>
 #include <init.h>
 #include <txmempool.h>
 #include <validation.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodesync.h>
 #include <messagesigner.h>
 #include <rpc/server.h>
 #include <util/system.h>

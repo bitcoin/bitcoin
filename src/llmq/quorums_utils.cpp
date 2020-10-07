@@ -10,7 +10,7 @@
 #include <spork.h>
 #include <validation.h>
 
-#include <masternode/masternode-meta.h>
+#include <masternode/masternodemeta.h>
 
 namespace llmq
 {

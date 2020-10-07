@@ -21,7 +21,7 @@ class DIP3Test(SyscoinTestFramework):
 
         self.extra_args = ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
         self.extra_args += ["-mncollateral=100","-wallet="]
- 
+
 
 
     def setup_network(self):

@@ -12,7 +12,7 @@
 #include <evo/specialtx.h>
 
 #include <masternode/activemasternode.h>
-#include <masternode/masternode-meta.h>
+#include <masternode/masternodemeta.h>
 #include <chainparams.h>
 #include <netmessagemaker.h>
 #include <univalue.h>

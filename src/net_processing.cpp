@@ -34,9 +34,9 @@
 // SYSCOIN
 #include <spork.h>
 #include <governance/governance.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
-#include <masternode/masternode-meta.h>
+#include <masternode/masternodepayments.h>
+#include <masternode/masternodesync.h>
+#include <masternode/masternodemeta.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <evo/simplifiedmns.h>

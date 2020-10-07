@@ -2,10 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <masternode/masternode-utils.h>
+#include <masternode/masternodeutils.h>
 
 #include <init.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodesync.h>
 #include <validation.h>
 #include <shutdown.h>
 struct CompareScoreMN

@@ -133,12 +133,12 @@ SYSCOIN_CORE_H = \
   spork.h \
   dsnotificationinterface.h \
   governance/governance.h \
-  governance/governance-classes.h \
-  governance/governance-exceptions.h \
-  governance/governance-object.h \
-  governance/governance-validators.h \
-  governance/governance-vote.h \
-  governance/governance-votedb.h \
+  governance/governanceclasses.h \
+  governance/governanceexceptions.h \
+  governance/governanceobject.h \
+  governance/governancevalidators.h \
+  governance/governancevote.h \
+  governance/governancevotedb.h \
   ctpl.h \
   cxxtimer.hpp \
   evo/cbtx.h \
@@ -149,11 +149,11 @@ SYSCOIN_CORE_H = \
   evo/simplifiedmns.h \
   evo/specialtx.h \
   masternode/activemasternode.h \
-  masternode/masternode-meta.h \
-  masternode/masternode-payments.h \
-  masternode/masternode-sync.h \
-  masternode/masternode-utils.h \
-  flat-database.h \
+  masternode/masternodemeta.h \
+  masternode/masternodepayments.h \
+  masternode/masternodesync.h \
+  masternode/masternodeutils.h \
+  flatdatabase.h \
   messagesigner.h \
   netfulfilledman.h \
   cachemap.h \
@@ -386,11 +386,11 @@ libsyscoin_server_a_SOURCES = \
   core_write.cpp \
   dsnotificationinterface.cpp \
   governance/governance.cpp \
-  governance/governance-classes.cpp \
-  governance/governance-object.cpp \
-  governance/governance-validators.cpp \
-  governance/governance-vote.cpp \
-  governance/governance-votedb.cpp \
+  governance/governanceclasses.cpp \
+  governance/governanceobject.cpp \
+  governance/governancevalidators.cpp \
+  governance/governancevote.cpp \
+  governance/governancevotedb.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -410,10 +410,10 @@ libsyscoin_server_a_SOURCES = \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
   masternode/activemasternode.cpp \
-  masternode/masternode-meta.cpp \
-  masternode/masternode-payments.cpp \
-  masternode/masternode-sync.cpp \
-  masternode/masternode-utils.cpp \
+  masternode/masternodemeta.cpp \
+  masternode/masternodepayments.cpp \
+  masternode/masternodesync.cpp \
+  masternode/masternodeutils.cpp \
   messagesigner.cpp \
   spork.cpp \
   addrdb.cpp \

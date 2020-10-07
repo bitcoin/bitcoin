@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2020 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
-#define SYSCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
+#ifndef SYSCOIN_GOVERNANCE_GOVERNANCECLASSES_H
+#define SYSCOIN_GOVERNANCE_GOVERNANCECLASSES_H
 
 #include <base58.h>
 #include <governance/governance.h>
@@ -174,4 +174,4 @@ public:
     bool IsExpired() const;
 };
 
-#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCECLASSES_H
