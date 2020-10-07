@@ -957,7 +957,7 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
                 }
                 inv.inv[k.second] = true;
 
-                // dont't request it again from this node
+                // don't request it again from this node
                 session.announced.inv[i] = false;
             }
         }
@@ -1353,7 +1353,7 @@ void CSigSharesManager::Cleanup()
     {
         LOCK(cs);
 
-        // Remove sessions which were succesfully recovered
+        // Remove sessions which were successfully recovered
         std::unordered_set<uint256, StaticSaltedHasher> doneSessions;
         sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
             if (doneSessions.count(sigShare.GetSignHash())) {

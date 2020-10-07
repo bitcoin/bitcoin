@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal
 
 class AssetAuxFeesTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -49,6 +49,6 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], self.asset)
         assetInfo = self.nodes[1].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
-  
+
 if __name__ == '__main__':
     AssetAuxFeesTest().main()

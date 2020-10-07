@@ -4168,7 +4168,7 @@ static RPCHelpMan send()
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
             CCoinControl coin_control;
             // Automatically select coins, unless at least one is manually selected. Can
-            // be overriden by options.add_inputs.
+            // be overridden by options.add_inputs.
             coin_control.m_add_inputs = rawTx.vin.size() == 0;
             FundTransaction(pwallet, rawTx, fee, change_position, options, coin_control);
 

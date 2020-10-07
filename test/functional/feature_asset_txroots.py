@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal
 
 
 class AssetTxRootsTest(SyscoinTestFramework):
@@ -23,44 +23,44 @@ class AssetTxRootsTest(SyscoinTestFramework):
         r = self.nodes[0].syscoinsetethstatus("synced", 709780)
         missing_blocks = r["missing_blocks"]
         # the - MAX_ETHEREUM_TX_ROOTS check to ensure you have at least that many roots stored from the tip
-        assert_equal(missing_blocks[0]["from"] , 649780);
-        assert_equal(missing_blocks[0]["to"] , 707769);
+        assert_equal(missing_blocks[0]["from"] , 649780)
+        assert_equal(missing_blocks[0]["to"] , 707769)
 
-        assert_equal(missing_blocks[1]["from"] , 707771);
-        assert_equal(missing_blocks[1]["to"] , 707771);
-        assert_equal(missing_blocks[2]["from"] , 707773);
-        assert_equal(missing_blocks[2]["to"] , 707773);
-        assert_equal(missing_blocks[3]["from"] , 707775);
-        assert_equal(missing_blocks[3]["to"] , 707775);
-        assert_equal(missing_blocks[4]["from"] , 707777);
-        assert_equal(missing_blocks[4]["to"] , 707777);
-        assert_equal(missing_blocks[5]["from"] , 707779);
-        assert_equal(missing_blocks[5]["to"] , 707779);
-        assert_equal(missing_blocks[6]["from"] , 707781);
-        assert_equal(missing_blocks[6]["to"] , 709779);
+        assert_equal(missing_blocks[1]["from"] , 707771)
+        assert_equal(missing_blocks[1]["to"] , 707771)
+        assert_equal(missing_blocks[2]["from"] , 707773)
+        assert_equal(missing_blocks[2]["to"] , 707773)
+        assert_equal(missing_blocks[3]["from"] , 707775)
+        assert_equal(missing_blocks[3]["to"] , 707775)
+        assert_equal(missing_blocks[4]["from"] , 707777)
+        assert_equal(missing_blocks[4]["to"] , 707777)
+        assert_equal(missing_blocks[5]["from"] , 707779)
+        assert_equal(missing_blocks[5]["to"] , 707779)
+        assert_equal(missing_blocks[6]["from"] , 707781)
+        assert_equal(missing_blocks[6]["to"] , 709779)
         self.nodes[0].syscoinsetethheaders([[707773,'707773','707772','a','a',0],[707775,'707775','707774','a','a',0],[707771,'707771','707770','a','a',0],[707777,'707777','707776','a','a',0],[707779,'707779','707778','a','a',0],[707781,'707781','707780','a','a',0]])
         r = self.nodes[0].syscoinsetethstatus("synced", 709780)
         missing_blocks = r["missing_blocks"]
-        assert_equal(missing_blocks[0]["from"] , 649780);
-        assert_equal(missing_blocks[0]["to"] , 707769);
-        assert_equal(missing_blocks[1]["from"] , 707782);
-        assert_equal(missing_blocks[1]["to"] , 709779);
+        assert_equal(missing_blocks[0]["from"] , 649780)
+        assert_equal(missing_blocks[0]["to"] , 707769)
+        assert_equal(missing_blocks[1]["from"] , 707782)
+        assert_equal(missing_blocks[1]["to"] , 709779)
         # now fork and check it revalidates chain
         # 707771 (should be 707772) -> 707773 and 707773 (should be 707774) -> 707775
         self.nodes[0].syscoinsetethheaders([[707773,'707773','707771','a','a',0],[707775,'707775','707773','a','a',0]])
         r = self.nodes[0].syscoinsetethstatus("synced", 709780)
         missing_blocks = r["missing_blocks"]
         # we should still have the missing ranges prior to the forks
-        assert_equal(missing_blocks[0]["from"] , 649780);
-        assert_equal(missing_blocks[0]["to"] , 707769);
+        assert_equal(missing_blocks[0]["from"] , 649780)
+        assert_equal(missing_blocks[0]["to"] , 707769)
         # 707773 is affected, -50 is 707723 and +50 is 707823
-        assert_equal(missing_blocks[1]["from"] , 707723);
-        assert_equal(missing_blocks[1]["to"] , 707823);
-        assert_equal(missing_blocks[2]["from"] , 707725);
-        assert_equal(missing_blocks[2]["to"] , 707825);
+        assert_equal(missing_blocks[1]["from"] , 707723)
+        assert_equal(missing_blocks[1]["to"] , 707823)
+        assert_equal(missing_blocks[2]["from"] , 707725)
+        assert_equal(missing_blocks[2]["to"] , 707825)
         # last missing range stays in the missing range list
-        assert_equal(missing_blocks[3]["from"] , 707782);
-        assert_equal(missing_blocks[3]["to"] , 709779);
+        assert_equal(missing_blocks[3]["from"] , 707782)
+        assert_equal(missing_blocks[3]["to"] , 709779)
 
     def basic_audittxroot1(self):
         roots = []
@@ -73,7 +73,6 @@ class AssetTxRootsTest(SyscoinTestFramework):
             if i == nMissingRange1 or i == nMissingRange2 or i == nMissingRange3:
                 continue
             roots.append([i,str(i),str(i-1),'a','a',0])
-            
             if (index % 400) == 0:
                 self.nodes[0].syscoinsetethheaders(roots)
                 roots = []
@@ -84,12 +83,12 @@ class AssetTxRootsTest(SyscoinTestFramework):
 
         r = self.nodes[0].syscoinsetethstatus("synced", 820000)
         missing_blocks = r["missing_blocks"]
-        assert_equal(missing_blocks[0]["from"] , 700059);
-        assert_equal(missing_blocks[0]["to"] , 700059);
-        assert_equal(missing_blocks[1]["from"] , 800022);
-        assert_equal(missing_blocks[1]["to"] , 800022);
-        assert_equal(missing_blocks[2]["from"] , 814011);
-        assert_equal(missing_blocks[2]["to"] , 814011);
+        assert_equal(missing_blocks[0]["from"] , 700059)
+        assert_equal(missing_blocks[0]["to"] , 700059)
+        assert_equal(missing_blocks[1]["from"] , 800022)
+        assert_equal(missing_blocks[1]["to"] , 800022)
+        assert_equal(missing_blocks[2]["from"] , 814011)
+        assert_equal(missing_blocks[2]["to"] , 814011)
         self.nodes[0].syscoinsetethheaders([[814011,'814011','814010','a','a',0],[700059,'700059','700058','a','a',0],[800022,'800022','800021','a','a',0]])
         r = self.nodes[0].syscoinsetethstatus("synced", 820000)
         missing_blocks = r["missing_blocks"]

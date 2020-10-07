@@ -123,4 +123,4 @@ public:
 
 extern CMasternodeMetaMan mmetaman;
 
-#endif//SYSCOIN_MASTERNODE_MASTERNODE_META_H
+#endif // SYSCOIN_MASTERNODE_MASTERNODE_META_H

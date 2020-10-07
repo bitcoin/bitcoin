@@ -12,7 +12,7 @@
 int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &path, int pathPtr) {
   std::string partialPath;
   char pathPtrInt[2] = {encodedPartialPath[0], '\0'};
-  int partialPathInt = strtol(pathPtrInt, NULL, 10);
+  int partialPathInt = std::strtol(pathPtrInt, NULL, 10);
   if(partialPathInt == 0 || partialPathInt == 2){
     partialPath = encodedPartialPath.substr(2);
   }else{
@@ -166,5 +166,5 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
 
     // witness address information starting at position 132 till the end
     witnessAddress = DecodeDestination(hexToASCII(HexStr(std::vector<unsigned char>(vchInputData.begin()+132, vchInputData.begin()+132 + dataLength))));
-    return true;
+    return false;
 }

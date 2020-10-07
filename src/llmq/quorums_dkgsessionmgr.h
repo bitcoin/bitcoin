@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_LLQM_QUORUMS_DKGSESSIONMGR_H
-#define SYSCOIN_LLQM_QUORUMS_DKGSESSIONMGR_H
+#ifndef SYSCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H
+#define SYSCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H
 
 #include <llmq/quorums_dkgsessionhandler.h>
 
@@ -76,4 +76,4 @@ extern CDKGSessionManager* quorumDKGSessionManager;
 
 } // namespace llmq
 
-#endif //SYSCOIN_LLQM_QUORUMS_DKGSESSIONMGR_H
+#endif //SYSCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H

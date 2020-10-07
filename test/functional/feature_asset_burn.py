@@ -19,7 +19,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.sync_blocks()
         self.basic_burn_asset()
         self.basic_burn_asset_multiple()
-    
+
     def basic_burn_asset(self):
         self.basic_asset(None)
         self.nodes[0].generate(1)

@@ -141,4 +141,4 @@ public:
     }
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_VOTE_H

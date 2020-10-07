@@ -9,11 +9,7 @@
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
 from test_framework.messages import CTransaction, ToHex, FromHex, CCbTx, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import *
-from test_framework.script import (
-    CScript,
-    OP_RETURN,
-)
+from test_framework.util import connect_nodes, p2p_port, Decimal, force_finish_mnsync, connect_nodes, assert_equal, hex_str_to_bytes
 class Masternode(object):
     pass
 
@@ -270,7 +266,7 @@ class DIP3Test(SyscoinTestFramework):
         # SYSCOIN add offset and add nodes individually with offset and custom args
         for idx in range(start_idx, mn.idx):
             self.add_nodes(1, offset=idx+1)
-    
+
         extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         force_finish_mnsync(self.nodes[mn.idx])
@@ -352,11 +348,11 @@ class DIP3Test(SyscoinTestFramework):
         rawtx = self.nodes[0].createrawtransaction(txins, targets)
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
-        new_txid = self.nodes[0].sendrawtransaction(rawtx)
-
         return dummy_txin
 
-    def mine_block(self, node, vtx=[], mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
+    def mine_block(self, node, vtx=None, mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
+        if vtx is None:
+            vtx = []
         bt = node.getblocktemplate({'rules': ['segwit']})
         height = bt['height']
         tip_hash = bt['previousblockhash']
@@ -395,7 +391,7 @@ class DIP3Test(SyscoinTestFramework):
         coinbase.vout.append(CTxOut(int(miner_amount), hex_str_to_bytes(miner_script)))
         coinbase.vout.append(CTxOut(int(mn_amount), hex_str_to_bytes(mn_payee)))
         coinbase.vin = create_coinbase(height).vin
- 
+
         # Recreate mn root as using one in BT would result in invalid merkle roots for masternode lists
         coinbase.nVersion = bt['version_coinbase']
         if len(bt['default_witness_commitment_extra']) != 0:

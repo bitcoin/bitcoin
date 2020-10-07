@@ -189,16 +189,16 @@ void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pi
     if (!connections.empty()) {
         if (!connman.HasMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
-            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : connections) {
                 auto dmn = mnList.GetValidMN(c);
                 if (!dmn) {
-                    debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
+                    debugMsg += strprintf("  %s (not in valid MN set anymore)", c.ToString());
                 } else {
-                    debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString());
+                    debugMsg += strprintf("  %s (%s)", c.ToString(), dmn->pdmnState->addr.ToString());
                 }
             }
-            LogPrint(BCLog::NET, debugMsg.c_str());
+            LogPrint(BCLog::NET, "%s\n", debugMsg.c_str());
         }
         connman.SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
     }
@@ -225,16 +225,16 @@ void CLLMQUtils::AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex *
     if (!probeConnections.empty()) {
         if (LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
-            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes probes for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes probes for quorum %s:", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : probeConnections) {
                 auto dmn = mnList.GetValidMN(c);
                 if (!dmn) {
-                    debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
+                    debugMsg += strprintf("  %s (not in valid MN set anymore)", c.ToString());
                 } else {
-                    debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString());
+                    debugMsg += strprintf("  %s (%s)", c.ToString(), dmn->pdmnState->addr.ToString());
                 }
             }
-            LogPrint(BCLog::NET, debugMsg.c_str());
+            LogPrint(BCLog::NET, "%s\n", debugMsg.c_str());
         }
         connman.AddPendingProbeConnections(probeConnections);
     }

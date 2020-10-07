@@ -217,7 +217,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
 /**
 *   Is Superblock Triggered
 *
-*   - Does this block have a non-executed and actived trigger?
+*   - Does this block have a non-executed and activated trigger?
 */
 
 bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)

@@ -33,7 +33,6 @@ from test_framework.util import (
 
 from test_framework.auxpow_testing import computeAuxpow
 
-import codecs
 from io import BytesIO
 
 
@@ -134,3 +133,4 @@ class AuxpowZeroHashTest (SyscoinTestFramework):
 
 if __name__ == '__main__':
   AuxpowZeroHashTest ().main ()
+  

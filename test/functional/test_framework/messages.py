@@ -233,7 +233,7 @@ def ser_dyn_bitset(l, bytes_based):
     else:
         r = ser_compact_size(n) + bytes(r)
     return r
-    
+
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
     obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))

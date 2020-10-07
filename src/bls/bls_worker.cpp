@@ -404,13 +404,13 @@ struct ContributionVerifier {
         BLSVerificationVectorPtr vvec;
         CBLSSecretKey skShare;
 
-        // starts with 0 and is incremented if either vvec or skShare aggregation finishs. If it reaches 2, we know
+        // starts with 0 and is incremented if either vvec or skShare aggregation finishes. If it reaches 2, we know
         // that aggregation for this batch is fully done. We can then start verification.
         std::unique_ptr<std::atomic<int> > aggDone;
 
         // we can't directly update a vector<bool> in parallel
         // as vector<bool> is not thread safe (uses bitsets internally)
-        // so we must use vector<char> temporarely and concatenate/convert
+        // so we must use vector<char> temporarily and concatenate/convert
         // each batch result into a final vector<bool>
         std::vector<char> verifyResults;
     };

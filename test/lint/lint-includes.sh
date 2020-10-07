@@ -87,6 +87,9 @@ EXPECTED_BOOST_INCLUDES=(
     boost/locale.hpp
     boost/filesystem/operations.hpp
     boost/filesystem/path.hpp
+    boost/lockfree/queue.hpp
+    boost/pool/pool_alloc.hpp
+    boost/thread.hpp
 )
 
 for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | cut -f2 -d: | cut -f2 -d'<' | cut -f1 -d'>' | sort -u); do

@@ -4,9 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from decimal import Decimal
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times, disconnect_nodes, connect_nodes, bump_node_times
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
-import time
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
 ZDAG_WARNING_RBF = 1
@@ -32,7 +31,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.basic_asset(guid=None)
         self.nodes[0].generate(1)
         newaddress2 = self.nodes[1].getnewaddress()
-        newaddress3 = self.nodes[1].getnewaddress()
         newaddress1 = self.nodes[0].getnewaddress()
         self.nodes[2].importprivkey(self.nodes[1].dumpprivkey(newaddress2))
         self.nodes[0].assetsend(self.asset, newaddress1, 2)
@@ -71,7 +69,7 @@ class AssetZDAGTest(SyscoinTestFramework):
             self.nodes[i].getrawtransaction(tx1)
             self.nodes[i].getrawtransaction(tx2)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_MAJOR_CONFLICT)
-            # ensure the tx2 made it to mempool, should propogate dbl-spend first time
+            # ensure the tx2 made it to mempool, should propagate dbl-spend first time
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_MAJOR_CONFLICT)
             # will conflict because its using tx2 which is in conflict state
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
@@ -126,7 +124,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':1.0},{'address': useraddress2,'amount':0.4},{'address': useraddress3,'amount':0.5}])
         self.nodes[0].generate(1)
         self.sync_blocks()
-        # create seperate output for dbl spend
+        # create separate output for dbl spend
         self.nodes[0].assetsend(self.asset, useraddress1, 0.5)
         # try to do multiple asset sends in one block
         assert_raises_rpc_error(-4, 'bad-txns-asset-inputs-missingorspent', self.nodes[0].assetsend, self.asset, useraddress1, 2)
@@ -174,7 +172,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         # SYSX guid on regtest is 123456
         self.basic_asset(123456)
         self.nodes[0].generate(1)
-        useraddress0 = self.nodes[0].getnewaddress()
         useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
@@ -208,9 +205,6 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_blocks()
         # listunspent for node0 should be have just 1 (asset ownership)
         # check that nodes have allocations in listunspent before burning
-        balanceBefore1 = self.nodes[1].getbalance(minconf=0)
-        balanceBefore2 = self.nodes[2].getbalance(minconf=0)
-        balanceBefore3 = self.nodes[3].getbalance(minconf=0)
         self.nodes[1].assetallocationburn(self.asset, 0.1, '')
         self.nodes[2].assetallocationburn(self.asset, 0.01, '')
         self.nodes[2].assetallocationburn(self.asset, 0.001, '')

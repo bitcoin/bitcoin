@@ -38,7 +38,9 @@ from .util import (
     force_finish_mnsync,
     wait_until_helper,
     bump_node_times,
+    satoshi_round,
 )
+
 
 class TestStatus(Enum):
     PASSED = 1
@@ -830,7 +832,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def bump_scheduler(self, t, nodes=None):
         bump_node_times(nodes or self.nodes, t)
-        
+
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
         self.llmq_threshold = llmq_threshold
@@ -912,7 +914,7 @@ class DashTestFramework(SyscoinTestFramework):
         # SYSCOIN add offset and add nodes individually with offset and custom args
         for idx in range(0, self.mn_count):
             self.add_nodes(1, offset=idx + start_idx, extra_args=[self.extra_args[idx + start_idx]])
-    
+
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
             connect_nodes(self.mninfo[idx].node, 0)
@@ -1231,7 +1233,7 @@ class DashTestFramework(SyscoinTestFramework):
         new_quorum = self.nodes[0].quorum("list", 1)["llmq_test"][0]
         quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
-        # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
+        # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.nodes[0].generate(8)
 
         self.sync_blocks(nodes)

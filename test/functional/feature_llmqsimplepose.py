@@ -6,7 +6,7 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
+from test_framework.util import connect_nodes, p2p_port, force_finish_mnsync
 
 '''
 llmq-simplepose.py

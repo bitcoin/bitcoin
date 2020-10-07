@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_FLATDATABASE_H
-#define SYSCOIN_FLATDATABASE_H
+#ifndef SYSCOIN_FLAT_DATABASE_H
+#define SYSCOIN_FLAT_DATABASE_H
 
 #include <chainparams.h>
 #include <clientversion.h>
@@ -225,4 +225,4 @@ public:
 };
 
 
-#endif
+#endif // SYSCOIN_FLAT_DATABASE_H

@@ -13,7 +13,6 @@
 
 #include <atomic>
 #include <memory>
-#include <sync.h>
 #include <uint256.h>
 
 class BanTableModel;

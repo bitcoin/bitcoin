@@ -18,7 +18,6 @@
 #include <threadsafety.h>
 
 #include <univalue.h>
-#include <sync.h>
 extern RecursiveMutex cs_main;
 class CGovernanceManager;
 class CGovernanceTriggerManager;
@@ -335,4 +334,4 @@ public:
 };
 
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H

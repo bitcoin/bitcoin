@@ -23,7 +23,7 @@ public:
         maxSize(_maxSize),
         truncateThreshold(_truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold)
     {
-        // either specify maxSize through template arguments or the contructor and fail otherwise
+        // either specify maxSize through template arguments or the constructor and fail otherwise
         assert(_maxSize != 0);
     }
 

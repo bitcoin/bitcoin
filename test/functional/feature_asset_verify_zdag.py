@@ -3,9 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times, disconnect_nodes, connect_nodes, bump_node_times
+from test_framework.util import assert_equal 
 
-import time
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
 ZDAG_WARNING_RBF = 1
@@ -30,7 +29,6 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.basic_asset(guid=None)
         self.nodes[0].generate(1)
         useraddress0 = self.nodes[0].getnewaddress()
-        useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
         self.nodes[0].sendtoaddress(useraddress2, 1)
@@ -113,7 +111,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             # not selected for zdag txs
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
-        
+
         self.nodes[0].generate(1)
         self.sync_blocks()
         for i in range(3):

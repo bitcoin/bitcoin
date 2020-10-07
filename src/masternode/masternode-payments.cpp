@@ -129,10 +129,10 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
     if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
-                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d", __func__, nBlockHeight);
+                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d\n", __func__, nBlockHeight);
                 // continue validation, should also pay MN
             } else {
-                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d", __func__, nBlockHeight); /* Continued */
+                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d\n", __func__, nBlockHeight); /* Continued */
                 // should NOT allow such superblocks, when superblocks are enabled
                 return false;
             }
@@ -148,11 +148,11 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
 
     // Check for correct masternode payment
     if(CMasternodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
-        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d", __func__, nBlockHeight);
+        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d\n", __func__, nBlockHeight);
         return true;
     }
 
-    LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d", __func__, nBlockHeight); /* Continued */
+    LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d\n", __func__, nBlockHeight); /* Continued */
     return false;
 }
 
@@ -186,7 +186,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
         voutMasternodeStr += txout.ToString();
     }
 
-    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutMasternodePaymentsRet \"%s\"", __func__,
+    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutMasternodePaymentsRet \"%s\"\n", __func__,
                             nBlockHeight, blockReward, voutMasternodeStr);
 }
 
