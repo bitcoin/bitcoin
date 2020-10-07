@@ -636,6 +636,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         valtype& vch = stacktop(-1);
                         // Tapscript requires minimal IF/NOTIF inputs as a consensus rule.
                         if (sigversion == SigVersion::TAPSCRIPT) {
+                            // The input argument to the OP_IF and OP_NOTIF opcodes must be either
+                            // exactly 0 (the empty vector) or exactly 1 (the one-byte vector with value 1).
                             if (vch.size() > 1 || (vch.size() == 1 && vch[0] != 1)) {
                                 return set_error(serror, SCRIPT_ERR_TAPSCRIPT_MINIMALIF);
                             }
@@ -1556,7 +1558,9 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
     if (sigversion == SigVersion::TAPSCRIPT) {
         assert(execdata.m_tapleaf_hash_init);
         ss << execdata.m_tapleaf_hash;
-        assert(key_version == 0); // key_version must be 0 for now
+        // Key_version must be 0 for now, representing the current version of
+        // public keys in the tapscript signature opcode execution.
+        assert(key_version == 0);
         ss << key_version;
         assert(execdata.m_codeseparator_pos_init);
         ss << execdata.m_codeseparator_pos;
