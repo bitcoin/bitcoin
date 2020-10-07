@@ -25,17 +25,8 @@ SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFL
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS) $(CHIABLS_CFLAGS)
 
-if EMBEDDED_CHIABLS
-LIBCHIABLS = chiabls/build/libchiabls.a
-
-$(LIBCHIABLS):
-	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
-else
-LIBCHIABLS = $(CHIABLS_LIB)
-endif
-
 LIBCURL=-lcurl
-LIBGMP=-lgmp
+LIBCHIABLS=$(CHIABLS_LIB) -lgmp
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
@@ -73,6 +64,11 @@ endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+
+if EMBEDDED_CHIABLS
+$(LIBCHIABLS):
+  $(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+endif
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -758,7 +754,7 @@ syscoin_bin_ldadd = \
   $(LIBETHEREUM) \
   $(LIBCURL)
 
-syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBCHIABLS) $(LIBGMP)
+syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBCHIABLS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources)
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -788,7 +784,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(LIBCHIABLS) $(LIBGMP)
+syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(LIBCHIABLS)
 #
 
 # syscoin-tx binary #
@@ -813,7 +809,7 @@ syscoin_tx_LDADD = \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_tx_LDADD += $(BOOST_LIBS) $(LIBCHIABLS) $(LIBGMP)
+syscoin_tx_LDADD += $(BOOST_LIBS) $(LIBCHIABLS)
   
 #
 
