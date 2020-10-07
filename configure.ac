@@ -1344,7 +1344,7 @@ dnl chiabls check
 
 need_bundled_chiabls=yes
 CHIABLS_CFLAGS='-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include'
-if test x$BUILD_OS != x$TARGET_OS; then
+if test x$cross_compiling = xyes; then
   need_bundled_chiabls=no
   CHIABLS_LIB='-lchiabls'
 fi
