@@ -349,12 +349,9 @@ void TestTransaction(const CTransactionRef& tx, const util::Ref& context) EXCLUS
     }
     AssertLockHeld(cs_main);
     CTxMemPool& mempool = EnsureMemPool(context);
-    int64_t virtual_size = GetVirtualTransactionSize(*tx);
-    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
-
     TxValidationState state;
     bool test_accept_res = AcceptToMemoryPool(mempool, state, tx,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true);
 
     if (!test_accept_res) {
         if (state.IsInvalid()) {
