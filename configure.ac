@@ -1343,14 +1343,12 @@ AC_SUBST(UNIVALUE_LIBS)
 dnl chiabls check
 
 need_bundled_chiabls=yes
-CHIABLS_CFLAGS="-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include"
 if test x$cross_compiling = xyes; then
   need_bundled_chiabls=no
   CHIABLS_LIB="-lchiabls"
 fi
 
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
-AC_SUBST(CHIABLS_CFLAGS)
 AC_SUBST(CHIABLS_LIB)
 
 dnl libmultiprocess library check

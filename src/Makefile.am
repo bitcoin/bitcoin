@@ -26,7 +26,7 @@ SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 if EMBEDDED_CHIABLS
-SYSCOIN_INCLUDES += $(CHIABLS_CFLAGS)
+SYSCOIN_INCLUDES += "-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include"
 LIBCHIABLS = chiabls/build/libchiabls.a -lgmp
 
 $(LIBCHIABLS):
