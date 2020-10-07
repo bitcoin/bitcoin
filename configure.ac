@@ -1347,6 +1347,8 @@ CHIABLS_CFLAGS='-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chia
 if test x$cross_compiling = xyes; then
   need_bundled_chiabls=no
   CHIABLS_LIB='-lchiabls'
+else
+  CHIABLS_LIB='chiabls/build/libchiabls.a'
 fi
 
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
