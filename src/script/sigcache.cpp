@@ -37,8 +37,8 @@ public:
         // this chunk, which makes later hash computations more efficient. We
         // just write our 32-byte entropy, and then pad with 'E' for ECDSA and
         // 'S' for Schnorr (followed by 0 bytes).
-        static const unsigned char PADDING_ECDSA[32] = {'E'};
-        static const unsigned char PADDING_SCHNORR[32] = {'S'};
+        static constexpr unsigned char PADDING_ECDSA[32] = {'E'};
+        static constexpr unsigned char PADDING_SCHNORR[32] = {'S'};
         m_salted_hasher_ecdsa.Write(nonce.begin(), 32);
         m_salted_hasher_ecdsa.Write(PADDING_ECDSA, 32);
         m_salted_hasher_schnorr.Write(nonce.begin(), 32);

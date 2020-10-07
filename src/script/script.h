@@ -47,7 +47,7 @@ static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
 // Tag for input annex. If there are at least two witness elements for a transaction input,
 // and the first byte of the last element is 0x50, this last element is called annex, and
 // has meanings independent of the script
-static const unsigned int ANNEX_TAG = 0x50;
+static constexpr unsigned int ANNEX_TAG = 0x50;
 
 // Validation weight per passing signature (Tapscript only, see BIP 342).
 static constexpr uint64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED = 50;
