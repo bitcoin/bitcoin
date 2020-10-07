@@ -754,11 +754,12 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
+  $(LIBCHIABLS) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM) \
   $(LIBCURL)
 
-syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBCHIABLS)
+syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources)
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -788,7 +789,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(LIBCHIABLS)
+syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
 
 # syscoin-tx binary #
@@ -810,10 +811,11 @@ syscoin_tx_LDADD = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
+  $(LIBCHIABLS) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_tx_LDADD += $(BOOST_LIBS) $(LIBCHIABLS)
+syscoin_tx_LDADD += $(BOOST_LIBS)
   
 #
 
