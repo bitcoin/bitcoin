@@ -106,7 +106,6 @@
 #include <flat-database.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
-#include <llmq/quorums_signing.h>
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 static bool fFeeEstimatesInitialized = false;
