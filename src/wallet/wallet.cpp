@@ -2487,7 +2487,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
         // if funding asset but not enough gas found in non-asset utxo's look in asset utxo's for gas
         if(bAsset && !bBaseSysSolver && nTarget > 0) {
             // remove previously selected coins setCoinsRet from utxo_pool_asset
-            // this is so we don't doublely select coins when trying to find enough gas
+            // this is so we don't doubly select coins when trying to find enough gas
             for(auto& outputGroup: utxo_pool_asset){
                 for(const auto& inputCoin: setCoinsRet) {
                     outputGroup.Discard(inputCoin);
@@ -3490,7 +3490,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 }
 // SYSCOIN
 // Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
-// This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
+// This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();

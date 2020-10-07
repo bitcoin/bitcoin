@@ -182,6 +182,7 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
     # Fix a coinbase address and construct methods for it.
     coinbaseAddr = self.nodes[0].getnewaddress ()
+
     def create ():
       return self.nodes[0].createauxblock (coinbaseAddr)
     submit = self.nodes[0].submitauxblock
@@ -205,3 +206,4 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
 if __name__ == '__main__':
   AuxpowMiningTest ().main ()
+  

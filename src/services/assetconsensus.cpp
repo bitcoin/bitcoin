@@ -72,7 +72,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         else if((nTime - txRootDB.nTimestamp) < MAINNET_MIN_MINT_AGE) {
             return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bSanityCheck);
         }
-        // must propogate by 0.5 weeks or less, otherwise shouldn't be allowed to propogate
+        // must propagate by 0.5 weeks or less, otherwise shouldn't be allowed to propagate
         else if(fJustCheck && blockhash.IsNull() && (nTime - txRootDB.nTimestamp) > MAINNET_MAX_MINT_AGE) {
             return FormatSyscoinErrorMessage(state, "mint-too-old", bSanityCheck);
         }
@@ -1093,7 +1093,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             const uint32_t &nNextKeyIndex = nKeyIndex+1;
             if (key != nNextKeyIndex && (key-1) >= nNextKeyIndex)
                 vecMissingBlockRanges.emplace_back(std::make_pair(nNextKeyIndex, key-1));
-            // if continious index we want to ensure hash chain is also continious
+            // if continuous index we want to ensure hash chain is also continuous
             else {
                 // if prevhash of prev txroot != hash of this tx root then request inconsistent roots again
                 const EthereumTxRoot &txRoot = setIt->second;

@@ -2,9 +2,9 @@
 # Copyright (c) 2015-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.p2p import *
+from test_framework.p2p import P2PInterface, msg_getmnlistd, CBlockHeader
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, force_finish_mnsync
+from test_framework.util import assert_equal
 from test_framework.messages import FromHex, CMerkleBlock, ser_uint256, hash256, CBlock, QuorumId
 
 '''
@@ -231,7 +231,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         if with_initial_quorum:
             self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.wait_for_sporks_same()
-             # Mine one quorum before dip8 is activated
+            # Mine one quorum before dip8 is activated
             self.mine_quorum()
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)

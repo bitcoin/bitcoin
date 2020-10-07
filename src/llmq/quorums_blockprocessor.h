@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_LLQM_QUORUMS_BLOCKPROCESSOR_H
-#define SYSCOIN_LLQM_QUORUMS_BLOCKPROCESSOR_H
+#ifndef SYSCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
+#define SYSCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_utils.h>
@@ -66,4 +66,4 @@ extern CQuorumBlockProcessor* quorumBlockProcessor;
 
 } // namespace llmq
 
-#endif//SYSCOIN_LLQM_QUORUMS_BLOCKPROCESSOR_H
+#endif // SYSCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H

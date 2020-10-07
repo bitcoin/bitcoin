@@ -27,7 +27,6 @@ import logging
 import struct
 import sys
 import threading
-import time
 from test_framework.messages import (
     CBlockHeader,
     MAX_HEADERS_RESULTS,

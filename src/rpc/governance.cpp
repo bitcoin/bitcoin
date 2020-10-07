@@ -178,7 +178,10 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 
     std::string strRevision = request.params[2].get_str();
     std::string strTime = request.params[3].get_str();
-    int nRevision = atoi(strRevision);
+    int nRevision;
+    if(!ParseInt32(strRevision, &nRevision)){
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
+    }
     int64_t nTime = atoi64(strTime);
     std::string strDataHex = request.params[4].get_str();
 
@@ -298,7 +301,10 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     std::string strRevision = request.params[2].get_str();
     std::string strTime = request.params[3].get_str();
-    int nRevision = atoi(strRevision);
+    int nRevision;
+    if(!ParseInt32(strRevision, &nRevision)){
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
+    }
     int64_t nTime = atoi64(strTime);
     std::string strDataHex = request.params[4].get_str();
 
@@ -920,7 +926,11 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     if (!request.params[2].isNull() && !request.params[3].isNull()) {
         uint256 txid = ParseHashV(request.params[2], "Masternode Collateral hash");
         std::string strVout = request.params[3].get_str();
-        mnCollateralOutpoint = COutPoint(txid, (uint32_t)atoi(strVout));
+        int nVout;
+        if(!ParseInt32(strVout, &nVout)){
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vout");
+        }
+        mnCollateralOutpoint = COutPoint(txid, (uint32_t)nVout);
     }
 
     // FIND OBJECT USER IS LOOKING FOR

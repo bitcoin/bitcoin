@@ -98,8 +98,8 @@ static RPCHelpMan getpeerinfo()
                                                                 "peer selection (only available if the asmap config flag is set)"},
                             {RPCResult::Type::STR_HEX, "services", "The services offered"},
                             // SYSCOIN
-                            {RPCResult::Type::STR_HEX, "verified_proregtx_hash", "Only present when the peer is a masternode and succesfully\n"
-                                                                                "autheticated via MNAUTH. In this case, this field contains the\n"
+                            {RPCResult::Type::STR_HEX, "verified_proregtx_hash", "Only present when the peer is a masternode and successfully\n"
+                                                                                "authenticated via MNAUTH. In this case, this field contains the\n"
                                                                                 "protx hash of the masternode"},
                             {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form",
                             {

@@ -44,4 +44,4 @@ private:
     bool CheckURL(const std::string& strURLIn);
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_VALIDATORS_H

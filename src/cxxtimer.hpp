@@ -60,7 +60,7 @@ public:
      * Transfer constructor.
      *
      * @param   other
-     *          The object to be transfered.
+     *          The object to be transferred.
      */
     Timer(Timer&& other) = default;
 

@@ -21,7 +21,6 @@
 #include <shutdown.h>
 #include <cxxtimer.hpp>
 #include <net.h>
-#include <shutdown.h>
 namespace llmq
 {
 
@@ -343,7 +342,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHas
         LOCK(cs_main);
         pindexQuorum = LookupBlockIndex(quorumHash);
         if (!pindexQuorum) {
-            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found", __func__, quorumHash.ToString());
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
             return nullptr;
         }
     }

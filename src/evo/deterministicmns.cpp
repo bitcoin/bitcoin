@@ -642,7 +642,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     newList.SetHeight(nHeight);
 
     auto payee = oldList.GetMNPayee();
-    // atleast 2 rounds of payments before registered MN's gets put in list
+    // at least 2 rounds of payments before registered MN's gets put in list
     const size_t &mnCountThreshold = oldList.GetValidMNsCount()*2;
     // we iterate the oldList here and update the newList
     // this is only valid as long these have not diverged at this point, which is the case as long as we don't add
@@ -680,7 +680,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 uint32_t quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
                 auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
-                    // we should actually never get into this case as validation should have catched it...but lets be sure
+                    // we should actually never get into this case as validation should have caught it...but lets be sure
                     return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
                 }
 

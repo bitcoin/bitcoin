@@ -16,6 +16,7 @@ import random
 import re
 import time
 import unittest
+import shutil
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException

@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_LLQM_QUORUMS_H
-#define SYSCOIN_LLQM_QUORUMS_H
+#ifndef SYSCOIN_LLMQ_QUORUMS_H
+#define SYSCOIN_LLMQ_QUORUMS_H
 
 #include <evo/evodb.h>
 #include <evo/deterministicmns.h>
@@ -117,4 +117,4 @@ extern CQuorumManager* quorumManager;
 
 } // namespace llmq
 
-#endif //SYSCOIN_LLQM_QUORUMS_H
+#endif //SYSCOIN_LLMQ_QUORUMS_H

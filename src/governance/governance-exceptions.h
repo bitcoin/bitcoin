@@ -97,4 +97,4 @@ public:
     }
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_EXCEPTIONS_H

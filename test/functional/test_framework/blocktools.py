@@ -256,13 +256,11 @@ def get_masternode_payment(nHeight, nBlockReward, nStartHeight):
         nDifferenceInBlocks = 0
         if (nHeight > nStartHeight):
             nDifferenceInBlocks = (nHeight - nStartHeight)
-            
             fSubsidyAdjustmentPercentage = 0
             if(nDifferenceInBlocks >= 150):
                 fSubsidyAdjustmentPercentage = 1.0
             elif(nDifferenceInBlocks >= 60):
                 fSubsidyAdjustmentPercentage = 0.35
-            
         if(fSubsidyAdjustmentPercentage > 0):
             nMNSeniorityRet = nSubsidy*fSubsidyAdjustmentPercentage
             nSubsidy += nMNSeniorityRet

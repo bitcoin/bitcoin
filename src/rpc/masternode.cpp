@@ -116,10 +116,10 @@ void masternode_count_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"masternode count",
             "  Get information about number of masternodes. Mode\n"
-            "  usage is depricated, call without mode params returns\n"
+            "  usage is deprecated, call without mode params returns\n"
             "  all values in JSON format.\n"
             "\nArguments:\n"
-            "1. \"mode\"      (string, optional, DEPRICATED) Option to get number of masternodes in different states\n"
+            "1. \"mode\"      (string, optional, DEPRECATED) Option to get number of masternodes in different states\n"
             "\nAvailable modes:\n"
             "  total         - total number of masternodes"
             "  enabled       - number of enabled masternodes"
@@ -335,7 +335,9 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     std::string strFilter = "";
 
     if (!request.params[1].isNull()) {
-        nLast = atoi(request.params[1].get_str());
+        if(!ParseInt32(request.params[1].get_str(), &nLast)){
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid filter");
+        }
     }
 
     if (!request.params[2].isNull()) {
@@ -416,8 +418,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
 
     if (!request.params[0].isNull()) strMode = request.params[0].get_str();
     if (!request.params[1].isNull()) strFilter = request.params[1].get_str();
-
-    std::transform(strMode.begin(), strMode.end(), strMode.begin(), ::tolower);
+    strMode = ToLower(strMode);
 
     if (request.fHelp || (
                 strMode != "addr" && strMode != "full" && strMode != "info" && strMode != "json" &&

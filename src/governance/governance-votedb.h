@@ -96,4 +96,4 @@ private:
     void RebuildIndex();
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H

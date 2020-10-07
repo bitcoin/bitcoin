@@ -739,7 +739,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         txRoot.vchPrevHash = ParseHex(prevHash);
         std::string txRootStr = tupleArray[3].get_str();
         boost::erase_all(txRootStr, "0x");  // strip 0x
-        // add RLP header incase it doesn't already have it
+        // add RLP header in case it doesn't already have it
         if(txRootStr.find("a0") != 0)
             txRootStr = "a0" + txRootStr;
         txRoot.vchTxRoot = ParseHex(txRootStr);

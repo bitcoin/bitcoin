@@ -379,7 +379,7 @@ Signature Signature::AggregateSigsSecure(
         std::vector<uint8_t*> const &messageHashes) {
     if (sigs.size() != pubKeys.size() || sigs.size() != messageHashes.size()
         || sigs.size() < 1) {
-        throw std::string("Must have atleast one signature, key, and message");
+        throw std::string("Must have at least one signature, key, and message");
     }
 
     // Sort the public keys and signature by message + public key
@@ -588,7 +588,7 @@ Signature Signature::AggregateSigsInternal(
 
 Signature Signature::AggregateSigsSimple(std::vector<Signature> const &sigs) {
     if (sigs.size() < 1) {
-        throw std::string("Must have atleast one signatures and key");
+        throw std::string("Must have at least one signatures and key");
     }
     if (sigs.size() == 1) {
         return sigs[0];

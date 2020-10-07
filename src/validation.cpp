@@ -2411,7 +2411,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     }
 
     if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
-        LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s",
+        LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
                      pindex->GetBlockHash().ToString(), state.ToString());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
     }
@@ -5787,7 +5787,7 @@ void DoGethMaintenance() {
         // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
         if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
             LogPrintf("GETH: Last header time not received in sufficient time, trying to resync...\n");
-            // reset timer so it will only do this check atleast once every interval (around 10 mins average) if geth seems stuck
+            // reset timer so it will only do this check at least once every interval (around 10 mins average) if geth seems stuck
             nLastGethHeaderTime = nTimeSeconds;
             // stop geth and relayer
             LogPrintf("GETH: Stopping Geth and Relayer\n"); 

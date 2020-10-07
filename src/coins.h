@@ -10,7 +10,6 @@
 #include <core_memusage.h>
 #include <crypto/siphash.h>
 #include <memusage.h>
-#include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
 

@@ -37,4 +37,4 @@ public:
     static bool GetMasternodeTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee);
 };
 
-#endif
+#endif // SYSCOIN_MASTERNODE_MASTERNODE_PAYMENTS_H

@@ -72,4 +72,4 @@ public:
     void DoMaintenance(CConnman &connman);
 };
 
-#endif
+#endif // SYSCOIN_MASTERNODE_MASTERNODE_SYNC_H
