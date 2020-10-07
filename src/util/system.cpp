@@ -88,6 +88,7 @@ std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
 int32_t DEFAULT_MN_COLLATERAL_REQUIRED = 100000;
+int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 CAmount nMNCollateralRequired = DEFAULT_MN_COLLATERAL_REQUIRED*COIN;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
 #include <typeinfo>

@@ -56,6 +56,7 @@ extern int64_t nLastGethHeaderTime;
 extern int64_t nRandomResetSec;
 extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
+extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;
 extern CAmount nMNCollateralRequired;
 extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 typedef struct {
