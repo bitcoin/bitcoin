@@ -1340,6 +1340,19 @@ AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$need_bundled_univalue = xyes])
 AC_SUBST(UNIVALUE_CFLAGS)
 AC_SUBST(UNIVALUE_LIBS)
 
+dnl chiabls check
+
+need_bundled_chiabls=yes
+CHIABLS_CFLAGS="-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include"
+if test x$cross_compiling = xyes; then
+  need_bundled_chiabls=no
+  CHIABLS_LIB="-lchiabls"
+fi
+
+AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
+AC_SUBST(CHIABLS_CFLAGS)
+AC_SUBST(CHIABLS_LIB)
+
 dnl libmultiprocess library check
 
 libmultiprocess_found=no
@@ -1654,32 +1667,11 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-if test x$TARGET_OS = xwindows; then
-  CHIABLS_CPPFLAGS="--with-OPSYS=WINDOWS --with-CMAKE_SYSTEM_NAME=Generic --with-CMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' --with-CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''"
-  if test x$BUILD_OS != xwindows; then
-    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
-  fi
+if test x$need_bundled_chiabls = xyes; then
+  AC_CONFIG_SUBDIRS([src/chiabls/build])
 fi
-if test x$TARGET_OS = xdarwin; then
-  CHIABLS_CPPFLAGS="--with-OPSYS=MACOSX --with-CMAKE_SYSTEM_NAME=Darwin"
-    if test x$BUILD_OS != xdarwin; then
-    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
-  fi
-fi
-if test x$TARGET_OS = xlinux; then
-  CHIABLS_CPPFLAGS="--with-OPSYS=LINUX --with-CMAKE_SYSTEM_NAME=Linux"
-    if test x$BUILD_OS != xlinux; then
-    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
-  fi
-fi
-if test x$TARGET_OS = xandroid; then
-  CHIABLS_CPPFLAGS="--with-OPSYS=DROID"
-  if test x$BUILD_OS != xandroid; then
-    CHIABLS_CPPFLAGS="$CHIABLS_CPPFLAGS --with-CMAKE_CROSSCOMPILING=1"
-  fi
-fi
-ac_configure_args="${ac_configure_args} $CHIABLS_CPPFLAGS --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery"
-AC_CONFIG_SUBDIRS([src/chiabls/build])
+
+ac_configure_args="${ac_configure_args}--disable-shared --with-pic --enable-benchmark=no --with-bignum=gmp --enable-module-recovery"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
