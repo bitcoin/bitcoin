@@ -115,7 +115,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
     if (it == mapParamHelp.end())
         throw std::runtime_error(strprintf("FIXME: WRONG PARAM NAME %s!", strParamName));
 
-    return strprintf(it->second, nParamNum);
+    return strprintf("%s%d", it->second, nParamNum);
 }
 
 // Allows to specify Syscoin address or priv key. In case of Syscoin address, the priv key is taken from the wallet
