@@ -60,7 +60,7 @@ public:
         : m_notifications(std::move(notifications))
     {
     }
-    virtual ~NotificationsProxy() = default;
+    ~NotificationsProxy() override = default;
     void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override
     {
         if (auto notification = m_notifications.lock())

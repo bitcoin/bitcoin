@@ -53,7 +53,7 @@ public:
         : m_on_call(std::move(on_call)), m_on_destroy(std::move(on_destroy))
     {
     }
-    virtual ~TestInterface()
+    ~TestInterface() override
     {
         if (m_on_destroy) m_on_destroy();
     }
