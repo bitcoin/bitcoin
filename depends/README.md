@@ -44,7 +44,7 @@ The paths are automatically configured and no other options are needed unless ta
 
 #### For macOS cross compilation
 
-    sudo apt-get install libcurl4-gnutls-dev librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools libtinfo5 libgmp3-dev
+    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools libtinfo5
 
 #### For Win64 cross compilation
 
@@ -54,7 +54,7 @@ The paths are automatically configured and no other options are needed unless ta
 
 Common linux dependencies:
 
-    sudo apt-get install make automake cmake libcurl4-gnutls-dev g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch libgmp3-dev
+    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch
 
 For linux ARM cross compilation:
 
