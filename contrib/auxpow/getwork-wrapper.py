@@ -122,4 +122,3 @@ if __name__ == '__main__':
   backend = jsonrpclib.Server (options.backend)
   server = GetworkWrapper (backend, 'localhost', options.port)
   server.serve ()
-  

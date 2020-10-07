@@ -98,4 +98,3 @@ class AuxpowInvalidPoWTest (SyscoinTestFramework):
 
 if __name__ == '__main__':
   AuxpowInvalidPoWTest ().main ()
-  

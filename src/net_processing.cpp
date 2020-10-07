@@ -2958,7 +2958,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         // Note: do not break the flow here
 
         if (pfrom.fMasternodeProbe && !pfrom.fFirstMessageIsMNAUTH) {
-            LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d", pfrom.GetId());
+            LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
         }
