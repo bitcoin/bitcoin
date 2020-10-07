@@ -962,7 +962,7 @@ void InitParameterInteraction(ArgsManager& args)
     // SYSCOIN
     if (args.GetArg("-prune", 0) > 0) {
         if (args.SoftSetBoolArg("-disablegovernance", true)) {
-            LogPrintf("%s: parameter interaction: -prune=%d -> setting -disablegovernance=true\n", __func__);
+            LogPrintf("%s: parameter interaction: -prune=0 -> setting -disablegovernance=true\n", __func__);
         }
     }
     if (args.GetBoolArg("-masternodeblsprivkey", false)) {

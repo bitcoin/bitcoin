@@ -183,7 +183,7 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
 template<typename SpecialTxPayload>
 static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
-    assert(pwallet != nullptr);
+    CHECK_NONFATAL(pwallet != nullptr);
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -501,7 +501,7 @@ UniValue protx_register(const JSONRPCRequest& request)
                 break;
             }
         }
-        assert(collateralIndex != (uint32_t) -1);
+        CHECK_NONFATAL(collateralIndex != (uint32_t) -1);
         ptx.collateralOutpoint.n = collateralIndex;
 
         SetTxPayload(tx, ptx);

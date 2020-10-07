@@ -106,7 +106,6 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, Bl
         int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
     } catch (const std::exception& e) {
-        LogPrintf(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-procspectxsinblock");
     }
 
