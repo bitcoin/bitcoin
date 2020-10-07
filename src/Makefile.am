@@ -32,7 +32,7 @@ LIBCHIABLS = chiabls/build/libchiabls.a -lgmp
 $(LIBCHIABLS):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 else
-LIBCHIABLS = $(CHIABLS_LIB) -lgmp
+LIBCHIABLS = -lchiabls -lgmp
 endif
 
 LIBCURL=-lcurl
