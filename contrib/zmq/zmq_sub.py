@@ -87,7 +87,7 @@ class ZMQHandler():
             print(binascii.hexlify(body).decode("utf-8"))
         elif topic == b"rawgovernanceobject":
             print('- RAW GOVERNANCE OBJECT ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))          
+            print(binascii.hexlify(body).decode("utf-8"))       
         elif topic == b"sequence":
             hash = binascii.hexlify(body[:32])
             label = chr(body[32])
