@@ -9,7 +9,7 @@
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
 from test_framework.messages import CTransaction, ToHex, FromHex, CCbTx, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import connect_nodes, p2p_port, Decimal, force_finish_mnsync, connect_nodes, assert_equal, hex_str_to_bytes
+from test_framework.util import connect_nodes, p2p_port, Decimal, force_finish_mnsync, assert_equal, hex_str_to_bytes
 class Masternode(object):
     pass
 
@@ -21,7 +21,7 @@ class DIP3Test(SyscoinTestFramework):
 
         self.extra_args = ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
         self.extra_args += ["-mncollateral=100","-wallet="]
-        
+ 
 
 
     def setup_network(self):

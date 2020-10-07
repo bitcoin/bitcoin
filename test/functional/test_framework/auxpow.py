@@ -102,4 +102,3 @@ def getworkByteswap (data):
     data[i + 1], data[i + 2] = data[i + 2], data[i + 1]
 
   return data
-  

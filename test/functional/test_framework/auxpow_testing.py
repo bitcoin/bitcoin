@@ -80,4 +80,3 @@ def mineBlock (header, target, ok):
       break
 
   return (hexData, blockhash)
-  

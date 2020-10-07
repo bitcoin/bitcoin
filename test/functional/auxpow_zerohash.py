@@ -133,4 +133,3 @@ class AuxpowZeroHashTest (SyscoinTestFramework):
 
 if __name__ == '__main__':
   AuxpowZeroHashTest ().main ()
-  
