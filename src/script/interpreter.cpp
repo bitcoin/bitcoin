@@ -1418,7 +1418,7 @@ uint256 GetSpentScriptsSHA256(const std::vector<CTxOut>& outputs_spent)
 } // namespace
 
 template <class T>
-void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut> spent_outputs)
+void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent_outputs)
 {
     assert(!m_spent_outputs_ready);
 
@@ -1476,8 +1476,8 @@ PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
 }
 
 // explicit instantiation
-template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut> spent_outputs);
-template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut> spent_outputs);
+template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs);
+template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
@@ -1487,7 +1487,7 @@ static const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
 static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
 
 template<typename T>
-bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, const uint32_t in_pos, const uint8_t hash_type, const SigVersion sigversion, const uint8_t key_version, const PrecomputedTransactionData& cache)
+bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, uint8_t key_version, const PrecomputedTransactionData& cache)
 {
     uint8_t ext_flag;
     switch (sigversion) {

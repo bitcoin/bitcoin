@@ -167,10 +167,10 @@ int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_
     return 1;
 }
 
-XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> in)
+XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> bytes)
 {
-    assert(in.size() == 32);
-    std::copy(in.begin(), in.end(), m_keydata.begin());
+    assert(bytes.size() == 32);
+    std::copy(bytes.begin(), bytes.end(), m_keydata.begin());
 }
 
 bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const {
@@ -180,7 +180,7 @@ bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> si
     return secp256k1_schnorrsig_verify(secp256k1_context_verify, sigbytes.data(), msg.begin(), &pubkey);
 }
 
-bool XOnlyPubKey::CheckPayToContract(const XOnlyPubKey& base, const uint256& hash, const bool parity) const
+bool XOnlyPubKey::CheckPayToContract(const XOnlyPubKey& base, const uint256& hash, bool parity) const
 {
     secp256k1_xonly_pubkey base_point;
     if (!secp256k1_xonly_pubkey_parse(secp256k1_context_verify, &base_point, base.data())) return false;

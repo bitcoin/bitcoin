@@ -1543,7 +1543,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const C
         spent_outputs.reserve(tx.vin.size());
 
         for (const auto& txin : tx.vin) {
-            const COutPoint &prevout = txin.prevout;
+            const COutPoint& prevout = txin.prevout;
             const Coin& coin = inputs.AccessCoin(prevout);
             assert(!coin.IsSpent());
             spent_outputs.emplace_back(coin.out);
