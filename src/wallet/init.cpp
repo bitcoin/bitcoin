@@ -97,7 +97,7 @@ bool WalletInit::ParameterInteraction() const
     }
     if (gArgs.GetArg("-prune", 0) > 0) {
         if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
-            LogPrintf("%s: parameter interaction: -prune=%d -> setting -disablegovernance=true\n", __func__);
+            LogPrintf("%s: parameter interaction: -prune=0 -> setting -disablegovernance=true\n", __func__);
         }
     }
 
