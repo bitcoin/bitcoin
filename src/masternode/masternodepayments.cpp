@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <masternode/activemasternode.h>
-#include <governance/governance-classes.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <governance/governanceclasses.h>
+#include <masternode/masternodepayments.h>
+#include <masternode/masternodesync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <spork.h>

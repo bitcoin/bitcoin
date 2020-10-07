@@ -4,13 +4,13 @@
 
 #include <governance/governance.h>
 #include <consensus/validation.h>
-#include <governance/governance-classes.h>
-#include <governance/governance-object.h>
-#include <governance/governance-validators.h>
-#include <governance/governance-vote.h>
+#include <governance/governanceclasses.h>
+#include <governance/governanceobject.h>
+#include <governance/governancevalidators.h>
+#include <governance/governancevote.h>
 #include <init.h>
-#include <masternode/masternode-meta.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodemeta.h>
+#include <masternode/masternodesync.h>
 #include <messagesigner.h>
 #include <net_processing.h>
 #include <netfulfilledman.h>

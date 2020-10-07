@@ -57,7 +57,7 @@
 #include <bech32.h>
 #include <key_io.h>
 #include <outputtype.h>
-#include <masternode/masternode-payments.h>
+#include <masternode/masternodepayments.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>

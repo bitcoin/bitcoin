@@ -5,8 +5,8 @@
 #include <chainparams.h>
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodepayments.h>
+#include <masternode/masternodesync.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>

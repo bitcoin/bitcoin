@@ -15,8 +15,8 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodepayments.h>
+#include <masternode/masternodesync.h>
 
 #include <rpc/server.h>
 

@@ -9,9 +9,9 @@
 #include <cachemap.h>
 #include <cachemultimap.h>
 #include <chain.h>
-#include <governance/governance-exceptions.h>
-#include <governance/governance-object.h>
-#include <governance/governance-vote.h>
+#include <governance/governanceexceptions.h>
+#include <governance/governanceobject.h>
+#include <governance/governancevote.h>
 #include <net.h>
 #include <sync.h>
 #include <timedata.h>

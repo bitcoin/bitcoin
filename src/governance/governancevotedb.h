@@ -2,13 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
-#define SYSCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
+#ifndef SYSCOIN_GOVERNANCE_GOVERNANCEVOTEDB_H
+#define SYSCOIN_GOVERNANCE_GOVERNANCEVOTEDB_H
 
 #include <list>
 #include <map>
 
-#include <governance/governance-vote.h>
+#include <governance/governancevote.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
@@ -96,4 +96,4 @@ private:
     void RebuildIndex();
 };
 
-#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCEVOTEDB_H

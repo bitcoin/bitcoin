@@ -42,9 +42,9 @@
 // SYSCOIN
 #include <spork.h>
 #include <boost/thread.hpp>
-#include <governance/governance-classes.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <governance/governanceclasses.h>
+#include <masternode/masternodepayments.h>
+#include <masternode/masternodesync.h>
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.

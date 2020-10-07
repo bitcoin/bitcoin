@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_MASTERNODE_MASTERNODE_META_H
-#define SYSCOIN_MASTERNODE_MASTERNODE_META_H
+#ifndef SYSCOIN_MASTERNODE_MASTERNODEMETA_H
+#define SYSCOIN_MASTERNODE_MASTERNODEMETA_H
 
 #include <serialize.h>
 
@@ -123,4 +123,4 @@ public:
 
 extern CMasternodeMetaMan mmetaman;
 
-#endif // SYSCOIN_MASTERNODE_MASTERNODE_META_H
+#endif // SYSCOIN_MASTERNODE_MASTERNODEMETA_H

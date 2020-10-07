@@ -15,7 +15,7 @@
 #include <masternode/activemasternode.h>
 #include <chainparams.h>
 #include <init.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodesync.h>
 #include <univalue.h>
 #include <validation.h>
 #include <shutdown.h>

@@ -24,8 +24,8 @@
 #include <algorithm>
 #include <utility>
 // SYSCOIN
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodepayments.h>
+#include <masternode/masternodesync.h>
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/simplifiedmns.h>

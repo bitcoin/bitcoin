@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_MASTERNODE_MASTERNODE_UTILS_H
-#define SYSCOIN_MASTERNODE_MASTERNODE_UTILS_H
+#ifndef SYSCOIN_MASTERNODE_MASTERNODEUTILS_H
+#define SYSCOIN_MASTERNODE_MASTERNODEUTILS_H
 
 #include <evo/deterministicmns.h>
 
@@ -16,4 +16,4 @@ public:
     static void DoMaintenance(CConnman &connman);
 };
 
-#endif//SYSCOIN_MASTERNODE_MASTERNODE_UTILS_H
+#endif//SYSCOIN_MASTERNODE_MASTERNODEUTILS_H

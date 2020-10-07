@@ -11,8 +11,8 @@
 #include <validation.h>
 #include <util/system.h>
 // SYSCOIN
-#include <governance/governance-vote.h>
-#include <governance/governance-object.h>
+#include <governance/governancevote.h>
+#include <governance/governanceobject.h>
 
 CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr)
 {

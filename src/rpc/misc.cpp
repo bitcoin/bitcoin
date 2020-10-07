@@ -29,7 +29,7 @@
 
 #include <univalue.h>
 // SYSCOIN
-#include <masternode/masternode-sync.h>
+#include <masternode/masternodesync.h>
 #include <spork.h>
 static RPCHelpMan mnsync()
 {
