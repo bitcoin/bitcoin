@@ -1967,7 +1967,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         return false;
     if (stack.empty())
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-    if (CastToBool(stack.back()) == false)
+    if (!CastToBool(stack.back()))
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
 
     // Bare witness programs
@@ -1983,9 +1983,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
             if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /* is_p2sh */ false)) {
                 return false;
             }
-            // Bypass the cleanstack check at the end. The actual stack is obviously not clean
-            // for witness programs.
-            stack.resize(1);
         }
     }
 
@@ -2028,9 +2025,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                 if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /* is_p2sh */ true)) {
                     return false;
                 }
-                // Bypass the cleanstack check at the end. The actual stack is obviously not clean
-                // for witness programs.
-                stack.resize(1);
             }
         }
     }
@@ -2043,7 +2037,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         // would be possible, which is not a softfork (and P2SH should be one).
         assert((flags & SCRIPT_VERIFY_P2SH) != 0);
         assert((flags & SCRIPT_VERIFY_WITNESS) != 0);
-        if (stack.size() != 1) {
+        // Bypass the cleanstack check at the end for witness programs
+        if (!hadWitness && stack.size() != 1) {
             return set_error(serror, SCRIPT_ERR_CLEANSTACK);
         }
     }
