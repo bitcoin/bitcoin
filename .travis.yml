@@ -134,6 +134,8 @@ jobs:
           - qrencode
           - ccache
           - zeromq
+          - gmp
+          - curl-openssl
       env: >-
         DANGER_RUN_CI_ON_HOST=true
         CI_USE_APT_INSTALL=no
