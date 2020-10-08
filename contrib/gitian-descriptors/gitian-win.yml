@@ -22,6 +22,8 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
+# SYSCOIN
+- "cmake"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"

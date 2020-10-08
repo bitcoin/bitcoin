@@ -20,6 +20,8 @@ packages:
 - "patch"
 - "pkg-config"
 - "python3"
+# SYSCOIN
+- "cmake"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
