@@ -64,6 +64,10 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # Transaction should be rebroadcast approximately 24 hours in the future,
         # but can range from 12-36. So bump 36 hours to be sure.
         node.setmocktime(now + 36 * 60 * 60)
+        # Tell scheduler to call MaybeResendWalletTxn now.
+        node.mockscheduler(1)
+        # Give some time for trickle to occur
+        node.setmocktime(now + 36 * 60 * 60 + 600)
         peer_second.wait_for_broadcast([txid])
 
 
