@@ -118,14 +118,6 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
-  chiabls/src/bls.hpp \
-  chiabls/src/privatekey.hpp \
-  chiabls/src/publickey.hpp \
-  chiabls/src/signature.hpp \
-  bls/bls.h \
-  bls/bls_batchverifier.h \
-  bls/bls_ies.h \
-  bls/bls_worker.h \
   services/asset.h \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
@@ -667,6 +659,14 @@ libsyscoin_common_a_SOURCES = \
 libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
+  chiabls/src/bls.hpp \
+  chiabls/src/privatekey.hpp \
+  chiabls/src/publickey.hpp \
+  chiabls/src/signature.hpp \
+  bls/bls.h \
+  bls/bls_batchverifier.h \
+  bls/bls_ies.h \
+  bls/bls_worker.h \
   bls/bls.cpp \
   bls/bls_ies.cpp \
   bls/bls_worker.cpp \
