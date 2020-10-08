@@ -18,10 +18,9 @@
 namespace llmq
 {
 
-CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType)
+CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode)
 {
     maxMessagesPerNode = _maxMessagesPerNode;
-    invType = _invType;
 }
 
 void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
@@ -91,10 +90,10 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBL
     dkgManager(_dkgManager),
     connman(_connman),
     curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager, _connman)),
-    pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-    pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
-    pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
-    pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
+    pendingContributions((size_t)_params.size * 2), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+    pendingComplaints((size_t)_params.size * 2),
+    pendingJustifications((size_t)_params.size * 2),
+    pendingPrematureCommitments((size_t)_params.size * 2)
 {
     m_threadName = strprintf("q-phase-%d", params.type);
     if (params.type == Consensus::LLMQ_NONE) {
@@ -427,7 +426,7 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
     return ret;
 }
 
-template<typename Message, int MessageType>
+template<typename Message>
 bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendingMessages, size_t maxCount)
 {
     const auto &msgs = pendingMessages.PopAndDeserializeMessages<Message>(maxCount);
@@ -543,7 +542,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->Contribute(pendingContributions);
     };
     auto fContributeWait = [this] {
-        return ProcessPendingMessageBatch<CDKGContribution, MSG_QUORUM_CONTRIB>(*curSession, pendingContributions, 8);
+        return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, 8);
     };
     HandlePhase(QuorumPhase_Contribute, QuorumPhase_Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
@@ -552,7 +551,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndComplain(pendingComplaints);
     };
     auto fComplainWait = [this] {
-        return ProcessPendingMessageBatch<CDKGComplaint, MSG_QUORUM_COMPLAINT>(*curSession, pendingComplaints, 8);
+        return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, 8);
     };
     HandlePhase(QuorumPhase_Complain, QuorumPhase_Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
@@ -561,7 +560,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndJustify(pendingJustifications);
     };
     auto fJustifyWait = [this] {
-        return ProcessPendingMessageBatch<CDKGJustification, MSG_QUORUM_JUSTIFICATION>(*curSession, pendingJustifications, 8);
+        return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, 8);
     };
     HandlePhase(QuorumPhase_Justify, QuorumPhase_Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
@@ -570,7 +569,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndCommit(pendingPrematureCommitments);
     };
     auto fCommitWait = [this] {
-        return ProcessPendingMessageBatch<CDKGPrematureCommitment, MSG_QUORUM_PREMATURE_COMMITMENT>(*curSession, pendingPrematureCommitments, 8);
+        return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, 8);
     };
     HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
 
