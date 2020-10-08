@@ -179,8 +179,9 @@ EOF
 
 while [ $# != 0 ]; do
     case "$1" in
-		"--cache-file="*);;
-		"--srcdir="*);;
+	    "--cache-file="*);;
+	    "--srcdir="*);;
+        "--host="*);;
         "--prefix="*)
             PREFIX="${1#*=}";;
         "--prefix")
