@@ -67,6 +67,14 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_getpayload](#omni_getpayload)
   - [omni_getseedblocks](#omni_getseedblocks)
   - [omni_getcurrentconsensushash](#omni_getcurrentconsensushash)
+- [Data retrieval (address index)](#data-retrieval-address-index)
+  - [getaddresstxids](#getaddresstxids)
+  - [getaddressdeltas](#getaddressdeltas)
+  - [getaddressbalance](#getaddressbalance)
+  - [getaddressutxos](#getaddressutxos)
+  - [getaddressmempool](#getaddressmempool)
+  - [getblockhashes](#getblockhashes)
+  - [getspentinfo](#getspentinfo)
 - [Raw transactions](#raw-transactions)
   - [omni_decodetransaction](#omni_decodetransaction)
   - [omni_createrawtx_opreturn](#omni_createrawtx_opreturn)
@@ -1892,6 +1900,249 @@ $ omnicore-cli "omni_getcurrentconsensushash"
 ```
 
 ---
+
+## Data retrieval (address index)
+
+The following RPCs can be used to obtain information about non-wallet balances and transactions. The address index must be enabled to use them.
+
+### getaddresstxids
+
+Returns the txids for one or more addresses (requires addressindex to be enabled).
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `addresses`         | object  | required | an object with addresses and optional start and end blocks                                   |
+
+**Result:**
+```js
+[          // (array of txids) a list of transaction hashes
+  "hash",  // (string) the transaction identifier
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli getaddresstxids '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"]}'
+```
+```bash
+$ omnicore-cli getaddresstxids '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"], "start": 380, "end": 400}'
+```
+
+---
+
+### getaddressdeltas
+
+Returns all changes for an address (requires addressindex to be enabled).
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `addresses`         | object  | required | an object with addresses and optional start and end blocks                                   |
+
+**Result:**
+```js
+[
+  {
+    "satoshis": n,              // (number) the difference of satoshis
+    "txid": "hash",             // (string) the related txid
+    "index": n,                 // (number) the related input or output index
+    "height": n,                // (number) the block height
+    "address": "base58address", // (string) the address
+  },
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli getaddressdeltas '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"]}'
+```
+```bash
+$ omnicore-cli getaddressdeltas '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"], "start": 380, "end": 400, "chainInfo": false}'
+```
+
+---
+
+### getaddressbalance
+
+Returns the balance for one or more addresses (requires addressindex to be enabled).
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `addresses`         | object  | required | an array of addresses                                                                        |
+
+**Result:**
+```js
+{
+  "balance": n,   // (number) the current balance in satoshis
+  "received": n,  // (number) the total number of satoshis received (including change)
+  "immature": n   // (number) the total number of non-spendable mining satoshis received
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli getaddressbalance '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"]}'
+```
+```bash
+$ omnicore-cli getaddressbalance '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj", "2N2Hca6QvczCnSJ1ZkFfjqDvmgPiWifFF8Q"]}'
+```
+
+---
+
+### getaddressutxos
+
+Returns all unspent outputs for an address (requires addressindex to be enabled).
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `addresses`         | object  | required | an array of addresses                                                                        |
+
+**Result:**
+```js
+{
+  "utxos": [
+    {
+      "address": "base58address", // (string) The address
+      "txid": "hash"              // (string) The output txid
+      "outputIndex": n,           // (number) The block height
+      "script": "hex",            // (string) The script hex encoded
+      "satoshis": n,              // (number) The number of satoshis of the output
+      "height": 301,              // (number) The block height
+      "coinbase": true            // (boolean) Whether it's a coinbase transaction
+    },
+    ...
+  ],
+  "hash": "hash",                 // (string) The current block hash
+  "height": n                     // (string) The current block height
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli getaddressbalance '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"]}'
+```
+```bash
+$ omnicore-cli getaddressbalance '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"], "chainInfo": true}'
+```
+
+---
+
+### getaddressmempool
+
+Returns all mempool deltas for an address (requires addressindex to be enabled).
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `addresses`         | object  | required | an array of addresses                                                                        |
+
+**Result:**
+```js
+[
+  {
+    "address": "base58address", // (string) The address
+    "txid": "hash"              // (string) The related txid
+    "index": n,                 // (number) The related input or output index
+    "satoshis": n,              // (number) The difference of satoshis
+    "timestamp": n,             // (number) The time the transaction entered the mempool (seconds)
+    "prevtxid": "hash",         // (string) The previous txid (if spending)
+    "prevout": n                // (number) The previous transaction output index (if spending)
+  },
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli getaddressmempool '{"addresses": ["2NDaa1MvFcpc2CAbFvG5g9dDxzrRyDnKnsj"]}'
+```
+
+---
+
+### getblockhashes
+
+Returns array of hashes of blocks within the timestamp range provided.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `high`              | number  | required | the newer block timestamp                                                                    |
+| `low`               | number  | required | the older block timestamp                                                                    |
+| `options`           | object  | optional | an object with options                                                                       |
+
+**Result:**
+```js
+[
+  "hash",               // (string) The block hash
+  ...
+]
+```
+```js
+[
+  {
+    "blockhash": "hash", // (string) The block hash
+    "logicalts": n       // (number) The logical timestamp
+  },
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli getblockhashes 1902163557 1602163557
+```
+```bash
+$ omnicore-cli getblockhashes 1902163557 1602163557 '{"noOrphans":false, "logicalTimes":true}'
+```
+
+---
+
+### getspentinfo
+
+Returns the txid and index where an output is spent.
+
+Returns array of hashes of blocks within the timestamp range provided.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `data`              | object  | required | Transaction data                                                                             |
+
+**Result:**
+```js
+{
+  "txid": "hash", // (string) The transaction id
+  "index": n,     // (number) The spending input index
+  "height": n     // (number) The block height
+}
+```
+
+**Example:**
+
+```bash
+getspentinfo '{"txid": "f5ea8842e96933cbb4d6f07c6dd33902bf3abb2f46cd84ff681ecd288214ea72", "index": 0}'
+```
+
+---
+
 
 ## Raw transactions
 
