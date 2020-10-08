@@ -46,9 +46,9 @@ class ChainCode {
     void Serialize(uint8_t *buffer) const;
     std::vector<uint8_t> Serialize() const;
 
- private:
     // Prevent direct construction, use static constructor
     ChainCode() {}
+private:
 
     bn_t chainCode;
 };

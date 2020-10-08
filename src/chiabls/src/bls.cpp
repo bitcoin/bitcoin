@@ -28,40 +28,47 @@ bool BLSInitResult = BLS::Init();
 Util::SecureAllocCallback Util::secureAllocCallback;
 Util::SecureFreeCallback Util::secureFreeCallback;
 
-static void relic_core_initializer(void* ptr) {
+bool BLS::Init() {
+    if (ALLOC != AUTO) {
+        std::cout << "Must have ALLOC == AUTO";
+        return false;
+    }
     core_init();
     if (err_get_code() != STS_OK) {
         std::cout << "core_init() failed";
-        // this will most likely crash the application...but there isn't much we can do
-        throw std::string("core_init() failed");
+        return false;
     }
 
     const int r = ep_param_set_any_pairf();
     if (r != STS_OK) {
         std::cout << "ep_param_set_any_pairf() failed";
-        // this will most likely crash the application...but there isn't much we can do
-        throw std::string("ep_param_set_any_pairf() failed");
-    }
-}
-
-bool BLS::Init() {
-    if (ALLOC != AUTO) {
-        std::cout << "Must have ALLOC == AUTO";
-        throw std::string("Must have ALLOC == AUTO");
+        return false;
     }
 #if BLSALLOC_SODIUM
     if (sodium_init() < 0) {
         std::cout << "libsodium init failed";
-        throw std::string("libsodium init failed");
+        return false;
     }
     SetSecureAllocator(libsodium::sodium_malloc, libsodium::sodium_free);
 #else
     SetSecureAllocator(malloc, free);
 #endif
-
-    core_set_thread_initializer(relic_core_initializer, nullptr);
-
     return true;
+}
+
+void BLS::AssertInitialized() {
+    if (!core_get()) {
+        throw std::string("Library not initialized properly. Call BLS::Init()");
+    }
+#if BLSALLOC_SODIUM
+    if (sodium_init() < 0) {
+        throw std::string("Libsodium initialization failed.");
+    }
+#endif
+}
+
+void BLS::Clean() {
+    core_clean();
 }
 
 void BLS::SetSecureAllocator(Util::SecureAllocCallback allocCb, Util::SecureFreeCallback freeCb) {
@@ -304,12 +311,7 @@ InsecureSignature BLS::RecoverSig(const std::vector<InsecureSignature>& sigs, co
 }
 
 PublicKey BLS::DHKeyExchange(const PrivateKey& privKey, const PublicKey& pubKey) {
-    if (!privKey.keydata) {
-        throw std::string("keydata not initialized");
-    }
-    PublicKey ret = pubKey.Exp(*privKey.keydata);
-    CheckRelicErrors();
-    return ret;
+    return pubKey.Exp(*privKey.keydata);
 }
 
 void BLS::CheckRelicErrors() {
@@ -317,7 +319,6 @@ void BLS::CheckRelicErrors() {
         throw std::string("Library not initialized properly. Call BLS::Init()");
     }
     if (core_get()->code != STS_OK) {
-        core_get()->code = STS_OK;
         throw std::string("Relic library error");
     }
 }

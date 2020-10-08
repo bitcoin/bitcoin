@@ -23,6 +23,7 @@
 using std::string;
 namespace bls {
 InsecureSignature InsecureSignature::FromBytes(const uint8_t *data) {
+    BLS::AssertInitialized();
     InsecureSignature sigObj = InsecureSignature();
     uint8_t uncompressed[SIGNATURE_SIZE + 1];
     std::memcpy(uncompressed + 1, data, SIGNATURE_SIZE);
@@ -33,21 +34,23 @@ InsecureSignature InsecureSignature::FromBytes(const uint8_t *data) {
         uncompressed[0] = 0x02;   // Insert extra byte for Y=0
     }
     g2_read_bin(sigObj.sig, uncompressed, SIGNATURE_SIZE + 1);
-    BLS::CheckRelicErrors();
     return sigObj;
 }
 
 InsecureSignature InsecureSignature::FromG2(const g2_t* element) {
+    BLS::AssertInitialized();
     InsecureSignature sigObj = InsecureSignature();
     g2_copy(sigObj.sig, *(g2_t*)element);
     return sigObj;
 }
 
 InsecureSignature::InsecureSignature() {
+    BLS::AssertInitialized();
     g2_set_infty(sig);
 }
 
 InsecureSignature::InsecureSignature(const InsecureSignature &signature) {
+    BLS::AssertInitialized();
     g2_copy(sig, *(g2_t*)&signature.sig);
 }
 
@@ -134,6 +137,7 @@ InsecureSignature InsecureSignature::Exp(const bn_t n) const {
 }
 
 void InsecureSignature::Serialize(uint8_t* buffer) const {
+    BLS::AssertInitialized();
     CompressPoint(buffer, &sig);
 }
 
@@ -144,6 +148,7 @@ std::vector<uint8_t> InsecureSignature::Serialize() const {
 }
 
 bool operator==(InsecureSignature const &a, InsecureSignature const &b) {
+    BLS::AssertInitialized();
     return g2_cmp(*(g2_t*)&a.sig, *(g2_t*)b.sig) == CMP_EQ;
 }
 
@@ -152,12 +157,14 @@ bool operator!=(InsecureSignature const &a, InsecureSignature const &b) {
 }
 
 std::ostream &operator<<(std::ostream &os, InsecureSignature const &s) {
+    BLS::AssertInitialized();
     uint8_t data[InsecureSignature::SIGNATURE_SIZE];
     s.Serialize(data);
     return os << Util::HexStr(data, InsecureSignature::SIGNATURE_SIZE);
 }
 
 InsecureSignature& InsecureSignature::operator=(const InsecureSignature &rhs) {
+    BLS::AssertInitialized();
     g2_copy(sig, *(g2_t*)&rhs.sig);
     return *this;
 }
@@ -233,6 +240,7 @@ InsecureSignature Signature::GetInsecureSig() const {
 }
 
 bool operator==(Signature const &a, Signature const &b) {
+    BLS::AssertInitialized();
     return a.sig == b.sig;
 }
 
@@ -241,6 +249,7 @@ bool operator!=(Signature const &a, Signature const &b) {
 }
 
 std::ostream &operator<<(std::ostream &os, Signature const &s) {
+    BLS::AssertInitialized();
     uint8_t data[InsecureSignature::SIGNATURE_SIZE];
     s.Serialize(data);
     return os << Util::HexStr(data, InsecureSignature::SIGNATURE_SIZE);
@@ -330,6 +339,7 @@ bool Signature::Verify() const {
 
 Signature Signature::AggregateSigs(
         std::vector<Signature> const &sigs) {
+    BLS::AssertInitialized();
     std::vector<std::vector<PublicKey> > pubKeys;
     std::vector<std::vector<uint8_t*> > messageHashes;
 
@@ -379,7 +389,7 @@ Signature Signature::AggregateSigsSecure(
         std::vector<uint8_t*> const &messageHashes) {
     if (sigs.size() != pubKeys.size() || sigs.size() != messageHashes.size()
         || sigs.size() < 1) {
-        throw std::string("Must have at least one signature, key, and message");
+        throw std::string("Must have atleast one signature, key, and message");
     }
 
     // Sort the public keys and signature by message + public key
@@ -434,6 +444,7 @@ Signature Signature::AggregateSigsInternal(
         std::vector<Signature> const &sigs,
         std::vector<std::vector<PublicKey> > const &pubKeys,
         std::vector<std::vector<uint8_t*> > const &messageHashes) {
+    BLS::AssertInitialized();
     if (sigs.size() != pubKeys.size()
         || pubKeys.size() != messageHashes.size()) {
         throw std::string("Lengths of std::vectors must match.");
@@ -588,7 +599,7 @@ Signature Signature::AggregateSigsInternal(
 
 Signature Signature::AggregateSigsSimple(std::vector<Signature> const &sigs) {
     if (sigs.size() < 1) {
-        throw std::string("Must have at least one signatures and key");
+        throw std::string("Must have atleast one signatures and key");
     }
     if (sigs.size() == 1) {
         return sigs[0];

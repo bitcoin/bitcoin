@@ -22,6 +22,7 @@
 
 namespace bls {
 PublicKey PublicKey::FromBytes(const uint8_t * key) {
+    BLS::AssertInitialized();
     PublicKey pk = PublicKey();
     uint8_t uncompressed[PUBLIC_KEY_SIZE + 1];
     std::memcpy(uncompressed + 1, key, PUBLIC_KEY_SIZE);
@@ -32,21 +33,23 @@ PublicKey PublicKey::FromBytes(const uint8_t * key) {
         uncompressed[0] = 0x02;   // Insert extra byte for Y=0
     }
     g1_read_bin(pk.q, uncompressed, PUBLIC_KEY_SIZE + 1);
-    BLS::CheckRelicErrors();
     return pk;
 }
 
 PublicKey PublicKey::FromG1(const g1_t* pubKey) {
+    BLS::AssertInitialized();
     PublicKey pk = PublicKey();
     g1_copy(pk.q, *pubKey);
     return pk;
 }
 
 PublicKey::PublicKey() {
+    BLS::AssertInitialized();
     g1_set_infty(q);
 }
 
 PublicKey::PublicKey(const PublicKey &pubKey) {
+    BLS::AssertInitialized();
     g1_copy(q, pubKey.q);
 }
 
@@ -117,6 +120,7 @@ PublicKey PublicKey::Exp(bn_t const n) const {
 }
 
 void PublicKey::Serialize(uint8_t *buffer) const {
+    BLS::AssertInitialized();
     CompressPoint(buffer, &q);
 }
 
@@ -128,6 +132,7 @@ std::vector<uint8_t> PublicKey::Serialize() const {
 
 // Comparator implementation.
 bool operator==(PublicKey const &a,  PublicKey const &b) {
+    BLS::AssertInitialized();
     return g1_cmp(a.q, b.q) == CMP_EQ;
 }
 
@@ -136,12 +141,14 @@ bool operator!=(PublicKey const&a,  PublicKey const&b) {
 }
 
 std::ostream &operator<<(std::ostream &os, PublicKey const &pk) {
+    BLS::AssertInitialized();
     uint8_t data[PublicKey::PUBLIC_KEY_SIZE];
     pk.Serialize(data);
     return os << Util::HexStr(data, PublicKey::PUBLIC_KEY_SIZE);
 }
 
 uint32_t PublicKey::GetFingerprint() const {
+    BLS::AssertInitialized();
     uint8_t buffer[PublicKey::PUBLIC_KEY_SIZE];
     uint8_t hash[32];
     Serialize(buffer);

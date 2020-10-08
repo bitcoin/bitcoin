@@ -14,6 +14,14 @@ set(CMAKE_MODULE_PATH
 	${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules
 )
 
+find_package(sodium)
+if (SODIUM_FOUND)
+  message(STATUS "Found libsodium")
+  message(STATUS "Sodium include dir = ${sodium_INCLUDE_DIR}")
+  set(BLSALLOC_SODIUM "1" CACHE STRING "")
+  include_directories(${sodium_INCLUDE_DIR})
+endif()
+
 find_package(gmp)
 if (GMP_FOUND)
   message(STATUS "Found libgmp")
@@ -30,7 +38,6 @@ set(CHECK "off" CACHE STRING "")
 set(VERBS "off" CACHE STRING "")
 set(ALLOC "AUTO" CACHE STRING "")
 set(SHLIB "OFF" CACHE STRING "")
-set(MULTI "PTHREAD" CACHE STRING "")
 
 set(FP_PRIME 381 CACHE INTEGER "")
 
