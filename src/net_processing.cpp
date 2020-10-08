@@ -835,7 +835,7 @@ void PeerManager::FinalizeNode(const CNode& node, bool& fUpdateConnectionTime) {
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
 
-PeerRef PeerManager::GetPeerRef(NodeId id)
+PeerRef PeerManager::GetPeerRef(NodeId id) const
 {
     LOCK(m_peer_mutex);
     auto it = m_peer_map.find(id);

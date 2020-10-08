@@ -141,7 +141,7 @@ public:
 private:
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef GetPeerRef(NodeId id);
+    PeerRef GetPeerRef(NodeId id) const;
 
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
@@ -193,7 +193,7 @@ private:
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
 
     /** Protects m_peer_map */
-    Mutex m_peer_mutex;
+    mutable Mutex m_peer_mutex;
     /**
      * Map of all Peer objects, keyed by peer id. This map is protected
      * by the m_peer_mutex. Once a shared pointer reference is
