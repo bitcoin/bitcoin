@@ -832,21 +832,6 @@ private:
 void Discover();
 uint16_t GetListenPort();
 
-struct CombinerAll
-{
-    typedef bool result_type;
-
-    template<typename I>
-    bool operator()(I first, I last) const
-    {
-        while (first != last) {
-            if (!(*first)) return false;
-            ++first;
-        }
-        return true;
-    }
-};
-
 /**
  * Interface for message handling
  */

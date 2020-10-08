@@ -8,27 +8,9 @@
 
 #include <test/util/setup_common.h>
 
-#include <boost/signals2/signal.hpp>
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
-
-static bool ReturnFalse() { return false; }
-static bool ReturnTrue() { return true; }
-
-BOOST_AUTO_TEST_CASE(test_combiner_all)
-{
-    boost::signals2::signal<bool (), CombinerAll> Test;
-    BOOST_CHECK(Test());
-    Test.connect(&ReturnFalse);
-    BOOST_CHECK(!Test());
-    Test.connect(&ReturnTrue);
-    BOOST_CHECK(!Test());
-    Test.disconnect(&ReturnFalse);
-    BOOST_CHECK(Test());
-    Test.disconnect(&ReturnTrue);
-    BOOST_CHECK(Test());
-}
 
 //! Test retrieval of valid assumeutxo values.
 BOOST_AUTO_TEST_CASE(test_assumeutxo)
