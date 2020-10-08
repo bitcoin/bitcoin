@@ -77,7 +77,7 @@ class Fq(int):
 
     def qi_power(self, i):
         return self
-    
+
     def __invert__(self):
         """
         Extended euclidian algorithm for inversion.
@@ -165,7 +165,7 @@ class Fq(int):
     @classmethod
     def from_fq(cls, Q, fq):
         return fq
-    
+
 
 class FieldExtBase(tuple):
     """
@@ -365,7 +365,8 @@ class FieldExtBase(tuple):
             raise NotImplementedError
         cls = type(self)
         i %= cls.extension
-        if i == 0: return self
+        if i == 0:
+            return self
         ret = super().__new__(cls,
                 (a.qi_power(i) * frob_coeffs[cls.extension, i, j] if j else a.qi_power(i)
                 for j, a in enumerate(self)))

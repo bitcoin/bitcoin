@@ -294,9 +294,7 @@ void ep_read_bin(ep_t a, const uint8_t *bin, int len) {
 				THROW(ERR_NO_VALID);
 				break;
 		}
-		if (!ep_upk(a, a)) {
-			THROW(ERR_NO_VALID);
-		}
+		ep_upk(a, a);
 	}
 
 	if (len == 2 * FP_BYTES + 1) {

@@ -84,7 +84,16 @@ class ExtendedPrivateKey {
 
     ~ExtendedPrivateKey();
 
- private:
+    // Blank public constructor
+    ExtendedPrivateKey()
+            : version(0),
+              depth(0),
+              parentFingerprint(0),
+              childNumber(0),
+              chainCode(ChainCode()),
+              sk(PrivateKey()) {}
+
+private:
     // Private constructor, force use of static methods
     explicit ExtendedPrivateKey(const uint32_t v, const uint8_t d,
                                 const uint32_t pfp, const uint32_t cn,
@@ -96,13 +105,13 @@ class ExtendedPrivateKey {
           chainCode(code),
           sk(key) {}
 
-    const uint32_t version;
-    const uint8_t depth;
-    const uint32_t parentFingerprint;
-    const uint32_t childNumber;
+    uint32_t version;
+    uint8_t depth;
+    uint32_t parentFingerprint;
+    uint32_t childNumber;
 
-    const ChainCode chainCode;
-    const PrivateKey sk;
+    ChainCode chainCode;
+    PrivateKey sk;
 };
 } // end namespace bls
 
