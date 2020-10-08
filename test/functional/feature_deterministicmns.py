@@ -348,6 +348,7 @@ class DIP3Test(SyscoinTestFramework):
         rawtx = self.nodes[0].createrawtransaction(txins, targets)
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
+        self.nodes[0].sendrawtransaction(rawtx)
         return dummy_txin
 
     def mine_block(self, node, vtx=None, mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
