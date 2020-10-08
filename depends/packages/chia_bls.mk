@@ -1,9 +1,9 @@
 package=chia_bls
-$(package)_version=v20201007
+$(package)_version=v20201008
 # It's actually from https://github.com/Chia-Network/bls-signatures, but we have so many patches atm that it's forked
 $(package)_download_path=https://github.com/syscoin/bls-signatures/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=e1577cdccebb28c48c5e830caa0afb5c64b08155ac7aeed645ac4042bd9854fa
+$(package)_sha256_hash=0ca3969eb354b101e14a140d8cc900c4bd0aecea1695c7637dd5635116e5196a
 $(package)_dependencies=gmp
 #$(package)_patches=...TODO (when we switch back to https://github.com/Chia-Network/bls-signatures)
 
@@ -31,13 +31,8 @@ define $(package)_set_vars
 endef
 
 define $(package)_config_cmds
-  export CC="$($(package)_cc)" && \
-  export CXX="$($(package)_cxx)" && \
-  export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
-  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
-  export LDFLAGS="$($(package)_ldflags)" && \
   mkdir -p build && cd build && \
-  cmake ../ $($(package)_config_opts)
+  $($(package)_autoconf)
 endef
 
 define $(package)_build_cmds
