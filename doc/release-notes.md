@@ -261,6 +261,10 @@ Wallet
   the fee bumping of transactions that did not signal RBF. This functionality
   has been superseded with the abandon transaction feature. (#19671)
 
+- The error code when no wallet is loaded, but a wallet RPC is called, has been
+  changed from `-32601` (method not found) to `-18` (wallet not found).
+  (#20101)
+
 ### Default Wallet
 
 Bitcoin Core will no longer create an unnamed `""` wallet by default when no
