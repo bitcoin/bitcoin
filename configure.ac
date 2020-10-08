@@ -1165,6 +1165,20 @@ if test "x$enable_fuzz" = "xyes"; then
   use_bench=no
   use_upnp=no
   use_zmq=no
+
+  AC_MSG_CHECKING([whether main function is needed])
+  AX_CHECK_LINK_FLAG(
+    [[-fsanitize=$use_sanitizers]],
+    [AC_MSG_RESULT([no])],
+    [AC_MSG_RESULT([yes])
+     CPPFLAGS="$CPPFLAGS -DPROVIDE_MAIN_FUNCTION"],
+    [],
+    [AC_LANG_PROGRAM([[
+      #include <cstdint>
+      #include <cstddef>
+      extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
+      /* unterminated comment to remove the main function ...
+    ]],[[]])])
 else
   BITCOIN_QT_INIT
 
