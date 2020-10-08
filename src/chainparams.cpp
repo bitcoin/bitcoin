@@ -238,7 +238,7 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         m_is_test_chain = true;
-        m_is_mockable_chain = false;
+        m_is_mockable_chain = true;
 
         checkpointData = {
             {
@@ -348,7 +348,7 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         m_is_test_chain = true;
-        m_is_mockable_chain = false;
+        m_is_mockable_chain = true;
     }
 };
 

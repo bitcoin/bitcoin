@@ -69,6 +69,8 @@ class SignetBasicTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(["Signet derived magic (message start)"]):
             self.restart_node(0)
 
+        self.nodes[0].setmocktime(0)  # Check that mocktime RPC is enabled for signet
+
 
 if __name__ == '__main__':
     SignetBasicTest().main()

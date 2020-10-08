@@ -360,17 +360,17 @@ static RPCHelpMan signmessagewithprivkey()
 static RPCHelpMan setmocktime()
 {
     return RPCHelpMan{"setmocktime",
-                "\nSet the local time to given timestamp (-regtest only)\n",
-                {
-                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
+        "\nSet the local time to given timestamp (for testing only)\n",
+        {
+            {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
             "   Pass 0 to go back to using the system time."},
-                },
-                RPCResult{RPCResult::Type::NONE, "", ""},
-                RPCExamples{""},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     if (!Params().IsMockableChain()) {
-        throw std::runtime_error("setmocktime is for regression testing (-regtest mode) only");
+        throw std::runtime_error("setmocktime is not enabled on current chain");
     }
 
     // For now, don't change mocktime if we're in the middle of validation, as
@@ -397,16 +397,16 @@ static RPCHelpMan setmocktime()
 static RPCHelpMan mockscheduler()
 {
     return RPCHelpMan{"mockscheduler",
-        "\nBump the scheduler into the future (-regtest only)\n",
+        "\nBump the scheduler into the future\n",
         {
-            {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
+            {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future."},
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     if (!Params().IsMockableChain()) {
-        throw std::runtime_error("mockscheduler is for regression testing (-regtest mode) only");
+        throw std::runtime_error("mockscheduler is not enabled on current chain");
     }
 
     // check params are valid values
