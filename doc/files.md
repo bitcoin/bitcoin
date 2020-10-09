@@ -30,15 +30,16 @@ Linux    | `$HOME/.dashcore/`
 macOS    | `$HOME/Library/Application Support/Dashcore/`
 Windows  | `%APPDATA%\Dashcore\` <sup>[\[1\]](#note1)</sup>
 
-2. The non-default data directory path can be specified by `-datadir` option.
+2. A custom data directory path can be specified with the `-datadir` option.
 
 3. All content of the data directory, except for `dash.conf` file, is chain-specific. This means the actual data directory paths for non-mainnet cases differ:
 
-Chain option        | Data directory path
---------------------|--------------------
-no option (mainnet) | *path_to_datadir*`/`
-`-testnet`          | *path_to_datadir*`/testnet3/`
-`-regtest`          | *path_to_datadir*`/regtest/`
+Chain option                   | Data directory path
+-------------------------------|------------------------------
+`-chain=main` (default)        | *path_to_datadir*`/`
+`-chain=test` or `-testnet`    | *path_to_datadir*`/testnet3/`
+`-chain=devnet` or `-devnet`   | *path_to_datadir*`/devnet/`
+`-chain=regtest` or `-regtest` | *path_to_datadir*`/regtest/`
 
 ## Data directory layout
 
@@ -48,11 +49,11 @@ Subdirectory       | File(s)               | Description
 `blocks/index/`    | LevelDB database      | Block index; `-blocksdir` option does not affect this path
 `blocks/`          | `blkNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Actual Dash blocks (in network format, dumped in raw on disk, 128 MiB per file)
 `blocks/`          | `revNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Block undo data (custom format)
-`chainstate/`      | LevelDB database      | Blockchain state (a compact representation of all currently unspent transaction outputs and some metadata about the transactions they are from)
+`chainstate/`      | LevelDB database      | Blockchain state (a compact representation of all currently unspent transaction outputs (UTXOs) and metadata about the transactions they are from)
 `indexes/txindex/` | LevelDB database      | Transaction index; *optional*, used if `-txindex=1`
 `indexes/blockfilter/basic/db/` | LevelDB database      | Blockfilter index LevelDB database for the basic filtertype; *optional*, used if `-blockfilterindex=basic`
 `indexes/blockfilter/basic/`    | `fltrNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Blockfilter index filters for the basic filtertype; *optional*, used if `-blockfilterindex=basic`
-`wallets/`         |                       | [Contains wallets](#multi-wallet-environment); can be specified by `-walletdir` option; if `wallets/` subdirectory does not exist, a wallet resides in the data directory
+`wallets/`         |                       | [Contains wallets](#multi-wallet-environment); can be specified by `-walletdir` option; if `wallets/` subdirectory does not exist, wallets reside in the [data directory](#data-directory-location)
 `./`               | `anchors.dat`         | Anchor IP address database, created on shutdown and deleted at startup. Anchors are last known outgoing block-relay-only peers that are tried to re-connect to on startup
 `evodb/`         |                       |special txes and quorums database
 `llmq/`          |                       |quorum signatures database
@@ -65,6 +66,7 @@ Subdirectory       | File(s)               | Description
 `./`               | `netfulfilled.dat`    | stores data about recently made network requests
 `./`               | `fee_estimates.dat`   | Stores statistics used to estimate minimum transaction fees and priorities required for confirmation
 `./`               | `guisettings.ini.bak` | Backup of former [GUI settings](#gui-settings) after `-resetguisettings` option is used
+`./`               | `ip_asn.map`          | IP addresses to Autonomous System Numbers (ASNs) mapping used for bucketing of the peers; path can be specified with the `-asmap` option
 `./`               | `mempool.dat`         | Dump of the mempool's transactions
 `./`               | `onion_v3_private_key` | Cached Tor onion service private key for `-listenonion` option
 `./`               | `i2p_private_key`     | Private key that corresponds to our I2P address. When `-i2psam=` is specified the contents of this file is used to identify ourselves for making outgoing connections to I2P peers and possibly accepting incoming ones. Automatically generated if it does not exist.
@@ -124,7 +126,6 @@ Path           | Description | Repository notes
 
 ## Notes
 
-<a name="note1">1</a>. The `/` (slash, U+002F) is used as the platform-independent path component separator in this paper.
+<a name="note1">1</a>. The `/` (slash, U+002F) is used as the platform-independent path component separator in this document.
 
 <a name="note2">2</a>. `NNNNN` matches `[0-9]{5}` regex.
-
