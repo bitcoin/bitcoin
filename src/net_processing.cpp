@@ -4488,7 +4488,13 @@ bool PeerManager::SendMessages(CNode* pto)
         //
         // Message: getdata (non-blocks)
         //
-        for (const GenTxid& gtxid : m_txrequest.GetRequestable(pto->GetId(), current_time)) {
+        std::vector<std::pair<NodeId, GenTxid>> expired;
+        auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);
+        for (const auto& entry : expired) {
+            LogPrint(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
+                entry.second.GetHash().ToString(), entry.first);
+        }
+        for (const GenTxid& gtxid : requestable) {
             if (!AlreadyHaveTx(gtxid, m_mempool)) {
                 LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
                     gtxid.GetHash().ToString(), pto->GetId());

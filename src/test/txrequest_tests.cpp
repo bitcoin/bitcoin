@@ -43,6 +43,11 @@ struct Runner
 
     /** Which txhashes have been assigned already (to prevent reuse). */
     std::set<uint256> txhashset;
+
+    /** Which (peer, gtxid) combinations are known to be expired. These need to be accumulated here instead of
+     *  checked directly in the GetRequestable return value to avoid introducing a dependency between the various
+     *  parallel tests. */
+    std::multiset<std::pair<NodeId, GenTxid>> expired;
 };
 
 std::chrono::microseconds RandomTime8s() { return std::chrono::microseconds{1 + InsecureRandBits(23)}; }
@@ -149,7 +154,9 @@ public:
         const auto now = m_now;
         assert(offset.count() <= 0);
         runner.actions.emplace_back(m_now, [=,&runner]() {
-            auto ret = runner.txrequest.GetRequestable(peer, now + offset);
+            std::vector<std::pair<NodeId, GenTxid>> expired_now;
+            auto ret = runner.txrequest.GetRequestable(peer, now + offset, &expired_now);
+            for (const auto& entry : expired_now) runner.expired.insert(entry);
             runner.txrequest.SanityCheck();
             runner.txrequest.PostGetRequestableSanityCheck(now + offset);
             size_t total = candidates + inflight + completed;
@@ -160,6 +167,21 @@ public:
             BOOST_CHECK_MESSAGE(real_inflight == inflight, strprintf("[" + comment + "] inflight %i (%i expected)", real_inflight, inflight));
             BOOST_CHECK_MESSAGE(real_candidates == candidates, strprintf("[" + comment + "] candidates %i (%i expected)", real_candidates, candidates));
             BOOST_CHECK_MESSAGE(ret == expected, "[" + comment + "] mismatching requestables");
+        });
+    }
+
+    /** Verify that an announcement for gtxid by peer has expired some time before this check is scheduled.
+     *
+     * Every expected expiration should be accounted for through exactly one call to this function.
+     */
+    void CheckExpired(NodeId peer, GenTxid gtxid)
+    {
+        const auto& testname = m_testname;
+        auto& runner = m_runner;
+        runner.actions.emplace_back(m_now, [=,&runner]() {
+            auto it = runner.expired.find(std::pair<NodeId, GenTxid>{peer, gtxid});
+            BOOST_CHECK_MESSAGE(it != runner.expired.end(), "[" + testname + "] missing expiration");
+            if (it != runner.expired.end()) runner.expired.erase(it);
         });
     }
 
@@ -256,6 +278,7 @@ void BuildSingleTest(Scenario& scenario, int config)
             scenario.Check(peer, {}, 0, 1, 0, "s7");
             scenario.AdvanceTime(MICROSECOND);
             scenario.Check(peer, {}, 0, 0, 0, "s8");
+            scenario.CheckExpired(peer, gtxid);
             return;
         } else {
             scenario.AdvanceTime(std::chrono::microseconds{InsecureRandRange(expiry.count())});
@@ -268,7 +291,6 @@ void BuildSingleTest(Scenario& scenario, int config)
         }
     }
 
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
     if (config & 4) { // The peer will go offline
         scenario.DisconnectedPeer(peer);
     } else { // The transaction is no longer needed
@@ -519,9 +541,11 @@ void BuildWtxidTest(Scenario& scenario, int config)
     if (config & 2) {
         scenario.Check(peerT, {}, 0, 0, 1, "w9");
         scenario.Check(peerW, {wtxid}, 1, 0, 0, "w10");
+        scenario.CheckExpired(peerT, txid);
     } else {
         scenario.Check(peerT, {txid}, 1, 0, 0, "w11");
         scenario.Check(peerW, {}, 0, 0, 1, "w12");
+        scenario.CheckExpired(peerW, wtxid);
     }
 
     // If a good transaction with either that hash as wtxid or txid arrives, both
@@ -567,6 +591,7 @@ void BuildTimeBackwardsTest(Scenario& scenario)
     scenario.AdvanceTime(expiry - scenario.Now());
     scenario.Check(peer1, {}, 0, 0, 1, "r9");
     scenario.Check(peer2, {gtxid}, 1, 0, 0, "r10"); // Request goes back to peer2.
+    scenario.CheckExpired(peer1, gtxid);
     scenario.Check(peer1, {}, 0, 0, 1, "r11", -MICROSECOND); // Going back does not unexpire.
     scenario.Check(peer2, {gtxid}, 1, 0, 0, "r12", -MICROSECOND);
 
@@ -623,6 +648,7 @@ void BuildWeirdRequestsTest(Scenario& scenario)
     scenario.AdvanceTime(expiryA - scenario.Now());
     scenario.Check(peer1, {}, 0, 0, 1, "q12");
     scenario.Check(peer2, {gtxid2, gtxid1}, 2, 0, 0, "q13");
+    scenario.CheckExpired(peer1, gtxid1);
 
     // Requesting it yet again from peer1 doesn't do anything, as it's already COMPLETED.
     if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
@@ -697,6 +723,7 @@ void TestInterleavedScenarios()
     }
 
     BOOST_CHECK_EQUAL(runner.txrequest.Size(), 0U);
+    BOOST_CHECK(runner.expired.empty());
 }
 
 }  // namespace

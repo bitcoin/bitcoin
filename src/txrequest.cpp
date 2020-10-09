@@ -291,6 +291,11 @@ std::map<uint256, TxHashInfo> ComputeTxHashInfo(const Index& index, const Priori
     return ret;
 }
 
+GenTxid ToGenTxid(const Announcement& ann)
+{
+    return {ann.m_is_wtxid, ann.m_txhash};
+}
+
 }  // namespace
 
 /** Actual implementation for TxRequestTracker's data structure. */
@@ -477,8 +482,10 @@ private:
     //! - REQUESTED annoucements with expiry <= now are turned into COMPLETED.
     //! - CANDIDATE_DELAYED announcements with reqtime <= now are turned into CANDIDATE_{READY,BEST}.
     //! - CANDIDATE_{READY,BEST} announcements with reqtime > now are turned into CANDIDATE_DELAYED.
-    void SetTimePoint(std::chrono::microseconds now)
+    void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired)
     {
+        if (expired) expired->clear();
+
         // Iterate over all CANDIDATE_DELAYED and REQUESTED from old to new, as long as they're in the past,
         // and convert them to CANDIDATE_READY and COMPLETED respectively.
         while (!m_index.empty()) {
@@ -486,6 +493,7 @@ private:
             if (it->m_state == State::CANDIDATE_DELAYED && it->m_time <= now) {
                 PromoteCandidateReady(m_index.project<ByTxHash>(it));
             } else if (it->m_state == State::REQUESTED && it->m_time <= now) {
+                if (expired) expired->emplace_back(it->m_peer, ToGenTxid(*it));
                 MakeCompleted(m_index.project<ByTxHash>(it));
             } else {
                 break;
@@ -578,10 +586,11 @@ public:
     }
 
     //! Find the GenTxids to request now from peer.
-    std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now)
+    std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
+        std::vector<std::pair<NodeId, GenTxid>>* expired)
     {
         // Move time.
-        SetTimePoint(now);
+        SetTimePoint(now, expired);
 
         // Find all CANDIDATE_BEST announcements for this peer.
         std::vector<const Announcement*> selected;
@@ -601,7 +610,7 @@ public:
         std::vector<GenTxid> ret;
         ret.reserve(selected.size());
         std::transform(selected.begin(), selected.end(), std::back_inserter(ret), [](const Announcement* ann) {
-            return GenTxid{ann->m_is_wtxid, ann->m_txhash};
+            return ToGenTxid(*ann);
         });
         return ret;
     }
@@ -727,9 +736,10 @@ void TxRequestTracker::ReceivedResponse(NodeId peer, const uint256& txhash)
     m_impl->ReceivedResponse(peer, txhash);
 }
 
-std::vector<GenTxid> TxRequestTracker::GetRequestable(NodeId peer, std::chrono::microseconds now)
+std::vector<GenTxid> TxRequestTracker::GetRequestable(NodeId peer, std::chrono::microseconds now,
+    std::vector<std::pair<NodeId, GenTxid>>* expired)
 {
-    return m_impl->GetRequestable(peer, now);
+    return m_impl->GetRequestable(peer, now, expired);
 }
 
 uint64_t TxRequestTracker::ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const

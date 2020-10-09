@@ -399,8 +399,8 @@ template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txI
 /** A generic txid reference (txid or wtxid). */
 class GenTxid
 {
-    const bool m_is_wtxid;
-    const uint256 m_hash;
+    bool m_is_wtxid;
+    uint256 m_hash;
 public:
     GenTxid(bool is_wtxid, const uint256& hash) : m_is_wtxid(is_wtxid), m_hash(hash) {}
     bool IsWtxid() const { return m_is_wtxid; }
