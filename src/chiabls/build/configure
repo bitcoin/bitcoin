@@ -247,6 +247,7 @@ while [ $# != 0 ]; do
         "--docdir")
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_DOCDIR=$(quote "$2")"; shift;;
 
+        "NM="*);;
         "CC="*)
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_COMPILER=$(quote "${1#*=}")";;
         "CXX="*)
