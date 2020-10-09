@@ -181,7 +181,23 @@ while [ $# != 0 ]; do
     case "$1" in
 	    "--cache-file="*);;
 	    "--srcdir="*);;
-        "--host="*);;
+        "--host="*)
+            HOST="${1#*=}"
+            case $HOST in
+                *mingw*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''"
+                    ;;
+                *darwin*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin"
+                    ;;
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android"
+                    ;;
+                *linux*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux"
+                    ;;
+            esac
+            ;;
         "--prefix="*)
             PREFIX="${1#*=}";;
         "--prefix")
@@ -247,7 +263,14 @@ while [ $# != 0 ]; do
         "--docdir")
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_DOCDIR=$(quote "$2")"; shift;;
 
-        "NM="*);;
+        "NM="*)
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_NM=$(quote "${1#*=}")";;
+        "AR="*)
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_AR=$(quote "${1#*=}")";;
+        "RANLIB="*)
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_RANLIB=$(quote "${1#*=}")";;
+        "AR="*)
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_AR=$(quote "${1#*=}")";;
         "CC="*)
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_COMPILER=$(quote "${1#*=}")";;
         "CXX="*)
