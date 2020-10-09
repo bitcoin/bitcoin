@@ -62,6 +62,7 @@ bench_bench_syscoin_LDADD = \
   $(LIBMEMENV) \
   $(LIBCURL) \
   $(LIBSYSCOIN_BLS) \
+  $(LIBCHIABLS) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE) \
   $(LIBETHEREUM) \

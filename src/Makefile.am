@@ -382,7 +382,6 @@ endif
 if GLIBC_BACK_COMPAT
   libsyscoin_bls_a_SOURCES += compat/glibc_compat.cpp
 endif
-libsyscoin_bls_a_LIBADD = $(LIBCHIABLS)
 
 # server: shared between syscoind and syscoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
@@ -763,6 +762,7 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSYSCOIN_BLS) \
+  $(LIBCHIABLS) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM) \
   $(LIBCURL)
@@ -820,6 +820,7 @@ syscoin_tx_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSYSCOIN_BLS) \
+  $(LIBCHIABLS) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
