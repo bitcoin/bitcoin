@@ -1356,13 +1356,7 @@ AC_SUBST(UNIVALUE_LIBS)
 
 dnl chiabls check
 
-need_bundled_chiabls=yes
-if test x$cross_compiling = xyes; then
-  if test x$TARGET_OS != xlinux; then
-    need_bundled_chiabls=no
-  fi
-fi
-
+AC_CHECK_LIB([chiabls],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
 
 dnl libmultiprocess library check
