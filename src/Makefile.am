@@ -45,7 +45,7 @@ LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.a
 LIBSYSCOINQT=qt/libsyscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBETHEREUM=ethereum/libethereum.a
-
+LIBSYSCOIN_BLS=libsyscoin_bls.a
 if ENABLE_ZMQ
 LIBSYSCOIN_ZMQ=libsyscoin_zmq.a
 endif
@@ -86,7 +86,8 @@ EXTRA_LIBRARIES += \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_ZMQ) \
-  $(LIBETHEREUM)
+  $(LIBETHEREUM) \
+  $(LIBSYSCOIN_BLS)
 
 lib_LTLIBRARIES = $(LIBSYSCOINCONSENSUS)
 
@@ -364,6 +365,24 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 if GLIBC_BACK_COMPAT
   ethereum_libethereum_a_SOURCES += compat/glibc_compat.cpp
 endif
+
+ # BLS
+ libsyscoin_bls_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+ libsyscoin_bls_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+ libsyscoin_bls_a_SOURCES = \
+  bls/bls.h \
+  bls/bls_batchverifier.h \
+  bls/bls_ies.h \
+  bls/bls_worker.h \
+  bls/bls.cpp \
+  bls/bls_ies.cpp \
+  bls/bls_worker.cpp \
+  $(SYSCOIN_CORE_H)
+
+if GLIBC_BACK_COMPAT
+  libsyscoin_bls_a_SOURCES += compat/glibc_compat.cpp
+endif
+libsyscoin_bls_a_LIBADD = $(LIBCHIABLS)
 
 # server: shared between syscoind and syscoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
@@ -659,17 +678,6 @@ libsyscoin_common_a_SOURCES = \
 libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
-  chiabls/src/bls.hpp \
-  chiabls/src/privatekey.hpp \
-  chiabls/src/publickey.hpp \
-  chiabls/src/signature.hpp \
-  bls/bls.h \
-  bls/bls_batchverifier.h \
-  bls/bls_ies.h \
-  bls/bls_worker.h \
-  bls/bls.cpp \
-  bls/bls_ies.cpp \
-  bls/bls_worker.cpp \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -754,7 +762,7 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBCHIABLS) \
+  $(LIBSYSCOIN_BLS) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM) \
   $(LIBCURL)
@@ -811,7 +819,7 @@ syscoin_tx_LDADD = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBCHIABLS) \
+  $(LIBSYSCOIN_BLS) \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
