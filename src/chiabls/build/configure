@@ -274,6 +274,8 @@ while [ $# != 0 ]; do
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_RANLIB=$(quote "${1#*=}")";;
         "AR="*)
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_AR=$(quote "${1#*=}")";;
+        "ARFLAGS="*)
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_STATIC_LINKER_FLAGS=$(quote "${1#*=}")";; 
         "CC="*)
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_COMPILER=$(quote "${1#*=}")";;
         "CXX="*)
