@@ -5,7 +5,8 @@ $(package)_download_path=https://ftp.gnu.org/gnu/nettle
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=d24c0d0f2abffbc8f4f34dcf114b0f131ec3774895f3555922fe2f40f3d5e3f1
 # default settings  
-$(package)_config_opts=--enable-pic --disable-shared --enable-static
+$(package)_config_opts=--disable-shared --enable-static
+$(package)_config_opts_linux=--enable-pic
 
 define $(package)_config_cmds
   $($(package)_autoconf)

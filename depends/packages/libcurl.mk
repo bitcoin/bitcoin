@@ -7,6 +7,7 @@ $(package)_sha256_hash=d4d5899a3868fbb6ae1856c3e55a32ce35913de3956d1973caccd37bd
 
 # default settings
 $(package)_config_opts=LIBS="-lnettle -lhogweed -lgnutls" --without-nghttp2 --disable-shared --enable-static --disable-ftp --without-ssl --with-gnutls --disable-ntlm-wb --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --without-ca-path --without-ca-bundle --with-ca-fallback --enable-threaded-resolver --with-zlib
+$(package)_config_opts_linux=--with-pic
 
 # mingw specific settings
 $(package)_config_opts_mingw32=LIBS="-lcrypt32 -lnettle -lhogweed -lgnutls" --without-nghttp2 CFLAGS="-DCURL_STATICLIB" --disable-shared --enable-static --disable-ftp --without-ssl --with-gnutls --disable-ntlm-wb --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --without-ca-path --without-ca-bundle --with-ca-fallback --with-zlib
