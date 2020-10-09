@@ -35,7 +35,7 @@ else
 LIBCHIABLS = -lchiabls -lgmp
 endif
 
-LIBCURL=-lcurl
+LIBCURL=-lcurl -lz
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
