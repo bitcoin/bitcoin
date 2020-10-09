@@ -391,8 +391,8 @@ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, Scr
     if (pubkey.size() == 0) {
         return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
     } else if (pubkey.size() == 32) {
-        if (success && !checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata)) {
-            return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+        if (success && !checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata, serror)) {
+            return false;
         }
     } else {
         /*
@@ -1676,7 +1676,7 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey_in, SigVersion sigversion, const ScriptExecutionData& execdata) const
+bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey_in, SigVersion sigversion, const ScriptExecutionData& execdata, ScriptError* serror) const
 {
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
     // Schnorr signatures have 32-byte public keys. The caller is responsible for enforcing this.
@@ -1685,19 +1685,22 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const uns
     // abort script execution). This is implemented in EvalChecksigTapscript, which won't invoke
     // CheckSchnorrSignature in that case. In other contexts, they are invalid like every other signature with
     // size different from 64 or 65.
-    if (sig.size() != 64 && sig.size() != 65) return false;
+    if (sig.size() != 64 && sig.size() != 65) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_SIZE);
 
     XOnlyPubKey pubkey{pubkey_in};
 
     uint8_t hashtype = SIGHASH_DEFAULT;
     if (sig.size() == 65) {
         hashtype = SpanPopBack(sig);
-        if (hashtype == SIGHASH_DEFAULT) return false;
+        if (hashtype == SIGHASH_DEFAULT) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
     }
     uint256 sighash;
     assert(this->txdata);
-    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata)) return false;
-    return VerifySchnorrSignature(sig, pubkey, sighash);
+    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata)) {
+        return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
+    }
+    if (!VerifySchnorrSignature(sig, pubkey, sighash)) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);
+    return true;
 }
 
 template <class T>
@@ -1896,8 +1899,8 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         execdata.m_annex_init = true;
         if (stack.size() == 1) {
             // Key path spending (stack size is 1 after removing optional annex)
-            if (!checker.CheckSchnorrSignature(stack.front(), program, SigVersion::TAPROOT, execdata)) {
-                return set_error(serror, SCRIPT_ERR_TAPROOT_INVALID_SIG);
+            if (!checker.CheckSchnorrSignature(stack.front(), program, SigVersion::TAPROOT, execdata, serror)) {
+                return false;
             }
             return set_success(serror);
         } else {
