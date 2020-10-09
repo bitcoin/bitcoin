@@ -5,7 +5,8 @@ $(package)_file_name=gmp-$($(package)_version).tar.gz
 $(package)_sha256_hash=cadd49052b740ccc3d8075c24ceaefbe5128d44246d91d0ecc818b2f78b0ec9c
 
 define $(package)_set_vars
-$(package)_config_opts+=--enable-cxx --enable-fat --with-pic --disable-shared
+$(package)_config_opts+=--enable-cxx --enable-fat --disable-shared
+$(package)_config_opts_linux=--with-pic
 $(package)_cflags_armv7l_linux+=-march=armv7-a
 endef
 
