@@ -1,9 +1,9 @@
 package=nettle
-$(package)_version=3.3
+$(package)_version=3.6
 $(package)_dependencies=gmp
 $(package)_download_path=https://ftp.gnu.org/gnu/nettle
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=46942627d5d0ca11720fec18d81fc38f7ef837ea4197c1f630e71ce0d470b11e
+$(package)_sha256_hash=d24c0d0f2abffbc8f4f34dcf114b0f131ec3774895f3555922fe2f40f3d5e3f1
 # default settings  
 $(package)_config_opts=--enable-pic --disable-shared --enable-static
 
