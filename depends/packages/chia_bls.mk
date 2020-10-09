@@ -16,11 +16,10 @@ define $(package)_set_vars
   $(package)_cflags_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
   $(package)_cflags_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
   $(package)_cflags_mingw32=-DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="" -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=""
-  $(package)_cflags_i686+= -DWSIZE=32
-  $(package)_cflags_x86_64+= -DWSIZE=64
-  $(package)_cflags_arm+= -DWSIZE=32
-  $(package)_cflags_armv7l+= -DWSIZE=32
-  $(package)_cflags_debug=-DDEBUG=ON -DCMAKE_BUILD_TYPE=Debug
+  $(package)_cflags_i686+=-DWSIZE=32
+  $(package)_cflags_x86_64+=-DWSIZE=64
+  $(package)_cflags_arm+=-DWSIZE=32
+  $(package)_cflags_armv7l+=-DWSIZE=32
 endef
 
 define $(package)_config_cmds
