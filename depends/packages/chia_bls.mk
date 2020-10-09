@@ -11,6 +11,16 @@ $(package)_dependencies=gmp
 #  for i in $($(package)_patches); do patch -N -p1 < $($(package)_patch_dir)/$$$$i; done
 #endef
 
+define $(package)_set_vars
+$(package)_config_opts= CC="$($(package)_cc)"
+$(package)_config_opts+=CFLAGS="$($(package)_cflags) $($(package)_cppflags)"
+$(package)_config_opts+=CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)"
+$(package)_config_opts+=RANLIB="$($(package)_ranlib)"
+$(package)_config_opts+=AR="$($(package)_ar)"
+$(package)_config_opts_darwin+=AR="$($(package)_libtool)"
+$(package)_config_opts_darwin+=ARFLAGS="-o"
+endef
+
 define $(package)_config_cmds
   mkdir -p build && cd build && \
   $($(package)_autoconf)
