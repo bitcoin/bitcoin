@@ -1,0 +1,32 @@
+name: MacOS
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+
+    jobs:
+    build:
+    
+        runs-on: macos-latest
+        
+        steps:
+    
+        - name: Checkout repository
+          uses: actions/checkout@v2
+
+        - name: Install dependencies
+          run: brew install automake berkeley-db4 libtool boost miniupnpc pkg-config python qt libevent qrencode
+    
+        - name: Run autogen
+          run: ./autogen.sh
+    
+        - name: Run configure
+          run: ./configure --without-gui
+
+        - name: Make check
+          run: make check

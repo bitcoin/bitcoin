@@ -1,0 +1,32 @@
+name: Ubuntu
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+
+    jobs:
+    build:
+    
+        runs-on: ubuntu-latest
+        
+        steps:
+    
+        - name: Checkout repository
+          uses: actions/checkout@v2
+
+        - name: Install dependencies
+          run: sudo apt install -y libboost-dev libevent-dev
+    
+        - name: Run autogen
+          run: ./autogen.sh
+    
+        - name: Run configure
+          run: ./configure
+
+        - name: Make check
+          run: make check
