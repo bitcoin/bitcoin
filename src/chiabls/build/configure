@@ -31,6 +31,9 @@ BUILD_TYPE="Debug"
 PREFIX=/usr/local
 LIBDIR=
 CMAKE_ARGS=
+CFLAGS=
+CPPFLAGS=
+CXXFLAGS=
 
 if [ -e "${TOP_SRCDIR}/.configure-custom.sh" ]; then
     . "${TOP_SRCDIR}/.configure-custom.sh"
@@ -276,9 +279,11 @@ while [ $# != 0 ]; do
         "CXX="*)
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_COMPILER=$(quote "${1#*=}")";;
         "CFLAGS="*)
-            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_FLAGS=$(quote "${1#*=}")";;
+            CFLAGS="${1#*=}";;
         "CXXFLAGS="*)
-            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_FLAGS=$(quote "${1#*=}")";;
+            CXXFLAGS="${1#*=}";;
+        "CPPFLAGS="*)
+            CPPFLAGS="${1#*=}";;
         "LDFLAGS="*)
             LDFLAGS="$LDFLAGS ${1#*=}";;
 
@@ -340,4 +345,15 @@ if [ "x${LDFLAGS}" != "x" ]; then
         CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_${varname}_LINKER_FLAGS=$(quote "$LDFLAGS")"
     done
 fi
+if [ "x${CPPFLAGS}" != "x" ]; then
+    CFLAGS="$CFLAGS $CPPFLAGS"
+    CXXFLAGS="$CXXFLAGS $CPPFLAGS"
+fi
+if [ "x${CFLAGS}" != "x" ]; then
+    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_FLAGS=$(quote "$CFLAGS")"
+fi
+if [ "x${CXXFLAGS}" != "x" ]; then
+    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_FLAGS=$(quote "$CXXFLAGS")"
+fi
+
 eval "${CMAKE_CMD}" "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_INSTALL_LIBDIR="${LIBDIR}" ${CMAKE_ARGS} ..
