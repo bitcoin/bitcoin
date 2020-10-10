@@ -23,7 +23,6 @@ jobs:
       run: |
         wsl apt-get update
         wsl apt-get install -y build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64
-        wsl sudo update-alternatives --config x86_64-w64-mingw32-g++
 
     - name: Build
       run: |

@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install dependencies
-      run: sudo apt install -y libboost-dev libevent-dev
+      run: sudo apt install -y libboost-dev libevent-dev build-essential libtool autotools-dev automake pkg-config bsdmainutils berkeley-db4 
 
     - name: Run autogen
       run: ./autogen.sh
