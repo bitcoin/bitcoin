@@ -492,6 +492,23 @@ std::vector<unsigned char> CreatePayload_MetaDExCancelEcosystem(uint8_t ecosyste
     return payload;
 }
 
+std::vector<unsigned char> CreatePayload_AnyData(const std::vector<unsigned char>& data)
+{
+    std::vector<unsigned char> payload;
+
+    uint16_t messageVer = 0;
+    uint16_t messageType = 200;
+
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    payload.insert(payload.end(), data.begin(), data.end());
+
+    return payload;
+}
+
 std::vector<unsigned char> CreatePayload_DeactivateFeature(uint16_t featureId)
 {
     std::vector<unsigned char> payload;

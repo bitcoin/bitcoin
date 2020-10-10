@@ -36,6 +36,7 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_senddisablefreezing](#omni_senddisablefreezing)
   - [omni_sendfreeze](#omni_sendfreeze)
   - [omni_sendunfreeze](#omni_sendunfreeze)
+  - [omni_sendanydata](#omni_sendanydata)
   - [omni_sendrawtx](#omni_sendrawtx)
   - [omni_funded_send](#omni_funded_send)
   - [omni_funded_sendall](#omni_funded_sendall)
@@ -93,6 +94,7 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_createpayload_disablefreezing](#omni_createpayload_disablefreezing)
   - [omni_createpayload_freeze](#omni_createpayload_freeze)
   - [omni_createpayload_unfreeze](#omni_createpayload_unfreeze)
+  - [omni_createpayload_anydata](#omni_createpayload_anydata)
 - [Fee system](#fee-system)
   - [omni_getfeecache](#omni_getfeecache)
   - [omni_getfeetrigger](#omni_getfeetrigger)
@@ -778,6 +780,37 @@ Note: Only the issuer may unfreeze tokens
 
 ```bash
 $ omnicore-cli "omni_sendunfreeze" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 2 1000
+```
+
+---
+
+### omni_sendanydata
+
+Create and broadcast a transaction with an arbitrary payload.
+
+When no receiver is specified, the sender is also considered as receiver.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `data`              | string  | required | the hex-encoded data                                                                         |
+| `toaddress`         | string  | optional | the optional address of the receiver                                                                  |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendanydata" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "646578782032303230"
+```
+
+```bash
+$ omnicore-cli "omni_sendanydata" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "646578782032303230" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs"
 ```
 
 ---
@@ -1801,7 +1834,7 @@ Get the payload for an Omni transaction.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_getactivations" "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d"
+$ omnicore-cli "omni_getpayload" "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d"
 ```
 
 ---
@@ -2631,6 +2664,29 @@ Note: if the server is not synchronized, amounts are considered as divisible, ev
 
 ```bash
 $ omnicore-cli "omni_createpayload_unfreeze" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 31 "100"
+```
+
+---
+
+### omni_createpayload_anydata
+
+Creates the payload to embed arbitrary data.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                                 |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `data`              | string  | required | the hex-encoded data                                                                         |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_anydata" "646578782032303230"
 ```
 
 ---
