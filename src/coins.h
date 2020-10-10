@@ -20,6 +20,79 @@
 #include <functional>
 #include <unordered_map>
 
+struct CSpentIndexKey {
+    uint256 txid;
+    unsigned int outputIndex;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(txid);
+        READWRITE(outputIndex);
+    }
+
+    CSpentIndexKey(uint256 t, unsigned int i) {
+        txid = t;
+        outputIndex = i;
+    }
+
+    CSpentIndexKey() {
+        SetNull();
+    }
+
+    void SetNull() {
+        txid.SetNull();
+        outputIndex = 0;
+    }
+};
+
+struct CSpentIndexValue {
+    uint256 txid;
+    unsigned int inputIndex;
+    int blockHeight;
+    CAmount satoshis;
+    int addressType;
+    uint256 addressHash;
+
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(txid);
+        READWRITE(inputIndex);
+        READWRITE(blockHeight);
+        READWRITE(satoshis);
+        READWRITE(addressType);
+        READWRITE(addressHash);
+    }
+
+    CSpentIndexValue(uint256 t, unsigned int i, int h, CAmount s, int type, uint256 a) {
+        txid = t;
+        inputIndex = i;
+        blockHeight = h;
+        satoshis = s;
+        addressType = type;
+        addressHash = a;
+    }
+
+    CSpentIndexValue() {
+        SetNull();
+    }
+
+    void SetNull() {
+        txid.SetNull();
+        inputIndex = 0;
+        blockHeight = 0;
+        satoshis = 0;
+        addressType = 0;
+        addressHash.SetNull();
+    }
+
+    bool IsNull() const {
+        return txid.IsNull();
+    }
+};
+
 /**
  * A UTXO entry.
  *
@@ -296,6 +369,8 @@ public:
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
+
+    const CTxOut &GetOutputFor(const CTxIn& input) const;
 
 private:
     /**
