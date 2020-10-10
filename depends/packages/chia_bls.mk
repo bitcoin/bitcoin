@@ -24,7 +24,7 @@ endef
 
 define $(package)_config_cmds
   mkdir -p build && cd build && \
-  $($(package)_cmake) $($(package)_cflags) ../
+  $($(package)_cmake) ../ $($(package)_cflags)
 endef
 
 define $(package)_build_cmds
@@ -32,5 +32,5 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  cd build && $(MAKE) $($(package)_build_opts) DESTDIR=$($(package)_staging_dir) install
+  cd build && $(MAKE) install
 endef
