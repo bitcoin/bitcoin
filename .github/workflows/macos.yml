@@ -10,8 +10,7 @@ on:
 
 
     jobs:
-    build:
-    
+      build:
         runs-on: macos-latest
         
         steps:

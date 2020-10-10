@@ -10,7 +10,7 @@ on:
 
 
     jobs:
-    build:
+      build:
     
         runs-on: windows-latest
         
@@ -27,11 +27,11 @@ on:
     
         - name: Build
           run: |
-          wsl PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
-          wsl sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status"
-          wsl cd depends
-          wsl make HOST=x86_64-w64-mingw32
-          wsl cd ..
-          wsl ./autogen.sh
-          wsl CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
-          wsl make check
+            wsl PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
+            wsl sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status"
+            wsl cd depends
+            wsl make HOST=x86_64-w64-mingw32
+            wsl cd ..
+            wsl ./autogen.sh
+            wsl CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+            wsl make check
