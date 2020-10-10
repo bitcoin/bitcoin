@@ -21,6 +21,10 @@ define $(package)_set_vars
   $(package)_cflags_arm+=-DWSIZE=32
   $(package)_cflags_armv7l+=-DWSIZE=32
 endef
+ifneq ($(darwin_native_toolchain),)
+  $(package)_cflags_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_ar)"
+  $(package)_cflags_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_ranlib)"
+endif
 
 define $(package)_config_cmds
   mkdir -p build && cd build && \
