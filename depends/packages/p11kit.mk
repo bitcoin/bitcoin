@@ -10,7 +10,7 @@ $(package)_sha256_hash=0361bcc55858618625a8e99e7fe9069f81514849b7b51ade51f8117d3
 $(package)_config_opts=--disable-shared --enable-static --without-libtasn1
 
 define $(package)_config_cmds
-  ./autogen.sh && $($(package)_autoconf) --disable-shared --enable-static --without-libtasn1
+  ./autogen.sh && $($(package)_autoconf)
 endef
 
 define $(package)_build_cmds
