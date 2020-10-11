@@ -10,6 +10,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
+from test_framework.wallet import MiniWallet
 
 
 class P2PNode(P2PDataStore):
@@ -21,12 +22,12 @@ class P2PLeakTxTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         gen_node = self.nodes[0]  # The block and tx generating node
-        gen_node.generate(1)
+        miniwallet = MiniWallet(gen_node)
+        # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
+        miniwallet.generate(1)
+        gen_node.generate(100)
 
         inbound_peer = self.nodes[0].add_p2p_connection(P2PNode())  # An "attacking" inbound peer
 
@@ -34,7 +35,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         self.log.info("Running test up to {} times.".format(MAX_REPEATS))
         for i in range(MAX_REPEATS):
             self.log.info('Run repeat {}'.format(i + 1))
-            txid = gen_node.sendtoaddress(gen_node.getnewaddress(), 0.01)
+            txid = miniwallet.send_self_transfer(from_node=gen_node)['wtxid']
 
             want_tx = msg_getdata()
             want_tx.inv.append(CInv(t=MSG_TX, h=int(txid, 16)))
