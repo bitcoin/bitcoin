@@ -2,7 +2,7 @@ package=p11kit
 $(package)_version=0.23.21
 $(package)_dependencies=nettle
 $(package)_download_path=https://github.com/p11-glue/p11-kit/archive/
-$(package)_file_name=$($(package)_version).tar.xz
+$(package)_file_name=$($(package)_version).tar.gz
 $(package)_sha256_hash=0361bcc55858618625a8e99e7fe9069f81514849b7b51ade51f8117d3ad31d88
 
 
