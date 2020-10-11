@@ -60,6 +60,14 @@ From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
 longer supported. Additionally, Bitcoin Core does not yet change appearance
 when macOS "dark mode" is activated.
 
+The node's known peers are persisted to disk in a file called `peers.dat`. The
+format of this file has been changed in a backwards-incompatible way in order to
+accommodate the storage of Tor v3 and other BIP155 addresses. This means that if
+the file is modified by 0.21.0 or newer then older versions will not be able to
+read it. Those old versions, in the event of a downgrade, will log an error
+message that deserialization has failed and will continue normal operation
+as if the file was missing, creating a new empty one. (#19954)
+
 Notable changes
 ===============
 
@@ -73,6 +81,17 @@ P2P and network changes
   The node will not track the broadcast status of transactions submitted to the
   node using P2P relay. This version reduces the initial broadcast guarantees
   for wallet transactions submitted via P2P to a node running the wallet. (#18038)
+
+- The Tor onion service that is automatically created by setting the
+  `-listenonion` configuration parameter will now be created as a Tor v3 service
+  instead of Tor v2. The private key that was used for Tor v2 (if any) will be
+  left untouched in the `onion_private_key` file in the data directory (see
+  `-datadir`) and can be removed if not needed. Bitcoin Core will no longer
+  attempt to read it. The private key for the Tor v3 service will be saved in a
+  file named `onion_v3_private_key`. To use the deprecated Tor v2 service (not
+  recommended), then `onion_private_key` can be copied over
+  `onion_v3_private_key`, e.g.
+  `cp -f onion_private_key onion_v3_private_key`. (#19954)
 
 Updated RPCs
 ------------

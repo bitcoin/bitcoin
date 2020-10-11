@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
 
+import struct
+import time
+
 from test_framework.messages import (
     CBlockHeader,
     CInv,
@@ -22,7 +25,10 @@ from test_framework.p2p import (
     P2PInterface,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    hex_str_to_bytes,
+)
 
 VALID_DATA_LIMIT = MAX_PROTOCOL_MESSAGE_LENGTH - 5  # Account for the 5-byte length prefix
 
@@ -42,6 +48,11 @@ class msg_unrecognized:
         return "{}(data={})".format(self.msgtype, self.str_data)
 
 
+class SenderOfAddrV2(P2PInterface):
+    def wait_for_sendaddrv2(self):
+        self.wait_until(lambda: 'sendaddrv2' in self.last_message)
+
+
 class InvalidMessagesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -53,6 +64,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_checksum()
         self.test_size()
         self.test_msgtype()
+        self.test_addrv2_empty()
+        self.test_addrv2_no_addresses()
+        self.test_addrv2_too_long_address()
+        self.test_addrv2_unrecognized_network()
         self.test_oversized_inv_msg()
         self.test_oversized_getdata_msg()
         self.test_oversized_headers_msg()
@@ -126,6 +141,84 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # Check that traffic is accounted for (24 bytes header + 2 bytes payload)
         assert_equal(self.nodes[0].getpeerinfo()[0]['bytesrecv_per_msg']['*other*'], 26)
         self.nodes[0].disconnect_p2ps()
+
+    def test_addrv2(self, label, required_log_messages, raw_addrv2):
+        node = self.nodes[0]
+        conn = node.add_p2p_connection(SenderOfAddrV2())
+
+        # Make sure bitcoind signals support for ADDRv2, otherwise this test
+        # will bombard an old node with messages it does not recognize which
+        # will produce unexpected results.
+        conn.wait_for_sendaddrv2()
+
+        self.log.info('Test addrv2: ' + label)
+
+        msg = msg_unrecognized(str_data=b'')
+        msg.msgtype = b'addrv2'
+        with node.assert_debug_log(required_log_messages):
+            # override serialize() which would include the length of the data
+            msg.serialize = lambda: raw_addrv2
+            conn.send_raw_message(conn.build_message(msg))
+            conn.sync_with_ping()
+
+        node.disconnect_p2ps()
+
+    def test_addrv2_empty(self):
+        self.test_addrv2('empty',
+            [
+                'received: addrv2 (0 bytes)',
+                'ProcessMessages(addrv2, 0 bytes): Exception',
+                'end of data',
+            ],
+            b'')
+
+    def test_addrv2_no_addresses(self):
+        self.test_addrv2('no addresses',
+            [
+                'received: addrv2 (1 bytes)',
+            ],
+            hex_str_to_bytes('00'))
+
+    def test_addrv2_too_long_address(self):
+        self.test_addrv2('too long address',
+            [
+                'received: addrv2 (525 bytes)',
+                'ProcessMessages(addrv2, 525 bytes): Exception',
+                'Address too long: 513 > 512',
+            ],
+            hex_str_to_bytes(
+                '01' +       # number of entries
+                '61bc6649' + # time, Fri Jan  9 02:54:25 UTC 2009
+                '00' +       # service flags, COMPACTSIZE(NODE_NONE)
+                '01' +       # network type (IPv4)
+                'fd0102' +   # address length (COMPACTSIZE(513))
+                'ab' * 513 + # address
+                '208d'))     # port
+
+    def test_addrv2_unrecognized_network(self):
+        now_hex = struct.pack('<I', int(time.time())).hex()
+        self.test_addrv2('unrecognized network',
+            [
+                'received: addrv2 (25 bytes)',
+                'IP 9.9.9.9 mapped',
+                'Added 1 addresses',
+            ],
+            hex_str_to_bytes(
+                '02' +     # number of entries
+                # this should be ignored without impeding acceptance of subsequent ones
+                now_hex +  # time
+                '01' +     # service flags, COMPACTSIZE(NODE_NETWORK)
+                '99' +     # network type (unrecognized)
+                '02' +     # address length (COMPACTSIZE(2))
+                'ab' * 2 + # address
+                '208d' +   # port
+                # this should be added:
+                now_hex +  # time
+                '01' +     # service flags, COMPACTSIZE(NODE_NETWORK)
+                '01' +     # network type (IPv4)
+                '04' +     # address length (COMPACTSIZE(4))
+                '09' * 4 + # address
+                '208d'))   # port
 
     def test_oversized_msg(self, msg, size):
         msg_type = msg.msgtype.decode('ascii')
