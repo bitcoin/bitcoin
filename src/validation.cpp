@@ -4321,7 +4321,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         return error("VerifyDB(): *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", ::ChainActive().Height() - pindexFailure->nHeight + 1, nGoodTransactions);
 
     // store block count as we move pindex at check level >= 4
-    int block_count = ::ChainActive().Height() - pindex->nHeight;
+    int block_count = ::ChainActive().Height() - Assert(pindex)->nHeight;
 
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {

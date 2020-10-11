@@ -4273,7 +4273,7 @@ bool PeerManager::SendMessages(CNode* pto)
                     bool fGotBlockFromCache = false;
                     {
                         LOCK(cs_most_recent_block);
-                        if (most_recent_block_hash == pBestIndex->GetBlockHash()) {
+                        if (most_recent_block_hash == Assert(pBestIndex)->GetBlockHash()) {
                             if (state.fWantsCmpctWitness || !fWitnessesPresentInMostRecentCompactBlock)
                                 m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
                             else {

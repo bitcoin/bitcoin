@@ -12,6 +12,7 @@
 #include <primitives/block.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <vector>
 
@@ -400,7 +401,7 @@ public:
 
     /** Efficiently check whether a block is present in this chain. */
     bool Contains(const CBlockIndex *pindex) const {
-        return (*this)[pindex->nHeight] == pindex;
+        return (*this)[Assert(pindex)->nHeight] == pindex;
     }
 
     /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
