@@ -7,7 +7,7 @@ $(package)_sha256_hash=0ea8c3283de8d8335d7ae338ef27c53a916f15f382753b174c18b45ff
 
 
 # default settings
-$(package)_config_opts=--disable-shared --enable-static --with-included-libtasn1 --with-included-unistring --enable-local-libopts --disable-non-suiteb-curves --disable-doc --without-p11-kit --disable-tests
+$(package)_config_opts=--disable-shared --enable-static --with-included-libtasn1 --with-included-unistring --disable-non-suiteb-curves --disable-doc --disable-tools --without-p11-kit --disable-tests
 $(package)_config_opts_linux=--with-pic
 
 define $(package)_config_cmds
