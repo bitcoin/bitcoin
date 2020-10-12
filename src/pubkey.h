@@ -207,7 +207,8 @@ public:
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
 };
 
-class XOnlyPubKey {
+class XOnlyPubKey
+{
 private:
     uint256 m_keydata;
 

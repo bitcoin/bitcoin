@@ -173,7 +173,8 @@ XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> bytes)
     std::copy(bytes.begin(), bytes.end(), m_keydata.begin());
 }
 
-bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const {
+bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const
+{
     assert(sigbytes.size() == 64);
     secp256k1_xonly_pubkey pubkey;
     if (!secp256k1_xonly_pubkey_parse(secp256k1_context_verify, &pubkey, m_keydata.data())) return false;

@@ -392,13 +392,13 @@ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, Scr
         return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
     } else if (pubkey.size() == 32) {
         if (success && !checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata, serror)) {
-            return false;
+            return false; // serror is set
         }
     } else {
         /*
          *  New public key version softforks should be defined before this `else` block.
          *  Generally, the new code should not do anything but failing the script execution. To avoid
-         *  consensus bugs, it should not modify any existing values (including success).
+         *  consensus bugs, it should not modify any existing values (including `success`).
          */
         if ((flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE) != 0) {
             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_PUBKEYTYPE);
@@ -1814,9 +1814,7 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
         }
 
         // Tapscript enforces initial stack size limits (altstack is empty here)
-        if (stack.size() > MAX_STACK_SIZE) {
-            return set_error(serror, SCRIPT_ERR_STACK_SIZE);
-        }
+        if (stack.size() > MAX_STACK_SIZE) return set_error(serror, SCRIPT_ERR_STACK_SIZE);
     }
 
     // Disallow stack item size > MAX_SCRIPT_ELEMENT_SIZE in witness stack
@@ -1900,7 +1898,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         if (stack.size() == 1) {
             // Key path spending (stack size is 1 after removing optional annex)
             if (!checker.CheckSchnorrSignature(stack.front(), program, SigVersion::TAPROOT, execdata, serror)) {
-                return false;
+                return false; // serror is set
             }
             return set_success(serror);
         } else {
