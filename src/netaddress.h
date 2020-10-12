@@ -188,7 +188,7 @@ class CNetAddr
         std::string ToStringIP() const;
         uint64_t GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
-        uint32_t GetNetClass() const;
+        Network GetNetClass() const;
 
         //! For IPv4, mapped IPv4, SIIT translated IPv4, Teredo, 6to4 tunneled addresses, return the relevant IPv4 address as a uint32.
         uint32_t GetLinkedIPv4() const;

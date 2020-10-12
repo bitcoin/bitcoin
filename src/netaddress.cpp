@@ -649,7 +649,7 @@ uint32_t CNetAddr::GetLinkedIPv4() const
     assert(false);
 }
 
-uint32_t CNetAddr::GetNetClass() const
+Network CNetAddr::GetNetClass() const
 {
     // Make sure that if we return NET_IPV6, then IsIPv6() is true. The callers expect that.
 
