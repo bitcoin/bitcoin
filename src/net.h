@@ -24,14 +24,15 @@
 #include <sync.h>
 #include <threadinterrupt.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <deque>
 #include <map>
-#include <thread>
 #include <memory>
-#include <condition_variable>
+#include <thread>
 
 class CScheduler;
 class CNode;
@@ -1131,6 +1132,7 @@ public:
 
     void SetCommonVersion(int greatest_common_version)
     {
+        Assume(m_greatest_common_version == INIT_PROTO_VERSION);
         m_greatest_common_version = greatest_common_version;
     }
     int GetCommonVersion() const
