@@ -1,5 +1,5 @@
 BIPs that are implemented by Bitcoin Core, some of them are relevant for Dash Core, some are just mentioned as a reference.
-Specified versions, PRs are relevant to Bitcoin's core.
+Versions and PRs are relevant to Bitcoin's core if not mentioned other.
 
 * [`BIP 9`](https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki): The changes allowing multiple soft-forks to be deployed in parallel have been implemented since **v0.12.1**  ([PR #7575](https://github.com/bitcoin/bitcoin/pull/7575))
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
@@ -38,7 +38,7 @@ Specified versions, PRs are relevant to Bitcoin's core.
 * [`BIP 147`](https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki): NULLDUMMY softfork as of **v0.13.1** ([PR 8636](https://github.com/bitcoin/bitcoin/pull/8636) and [PR 8937](https://github.com/bitcoin/bitcoin/pull/8937)), *buried* since **v0.19.0** ([PR #16060](https://github.com/bitcoin/bitcoin/pull/16060)).
 * [`BIP 152`](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki): Compact block transfer and related optimizations are used as of **v0.13.0** ([PR 8068](https://github.com/bitcoin/bitcoin/pull/8068)).
 * [`BIP 155`](https://github.com/bitcoin/bips/blob/master/bip-0155.mediawiki): The 'addrv2' and 'sendaddrv2' messages which enable relay of Tor V3 addresses (and other networks) are supported as of **v18.0** ([PR 19954](https://github.com/bitcoin/bitcoin/pull/19954)).
-- [`BIP 158`](https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki): Compact Block Filters for Light Clients can be indexed as of **v18.0** ([PR #14121](https://github.com/bitcoin/bitcoin/pull/14121)).
+* [`BIP 158`](https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki): Compact Block Filters for Light Clients can be indexed as of **Dash Core v18.0** ([PR dash#4314](https://github.com/dashpay/dash/pull/4314), [PR #14121](https://github.com/bitcoin/bitcoin/pull/14121)).
 * [`BIP 159`](https://github.com/bitcoin/bips/blob/master/bip-0159.mediawiki): The `NODE_NETWORK_LIMITED` service bit is signalled as of **v0.16.0** ([PR 11740](https://github.com/bitcoin/bitcoin/pull/11740)), and such nodes are connected to as of **v0.17.0** ([PR 10387](https://github.com/bitcoin/bitcoin/pull/10387)).
 * [`BIP 174`](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki): RPCs to operate on Partially Signed Bitcoin Transactions (PSBT) are present as of **v18.0** ([PR 13557](https://github.com/bitcoin/bitcoin/pull/13557)).
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
