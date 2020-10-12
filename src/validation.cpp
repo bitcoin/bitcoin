@@ -5080,8 +5080,12 @@ bool LoadMempool(CTxMemPool& pool)
             file >> nFeeDelta;
 
             CAmount amountdelta = nFeeDelta;
-            if (amountdelta && FeeDeltaRange(amountdelta)) {
-                pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
+            if (amountdelta) {
+                if (FeeDeltaRange(amountdelta)) {
+                    pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
+                } else {
+                    LogPrintf("Invalid fee delta encountered (corrupt mempool.dat file?). Skipping PrioritiseTransaction(...).\n");
+                }
             }
             TxValidationState state;
             if (nTime > nNow - nExpiryTimeout) {
@@ -5114,6 +5118,8 @@ bool LoadMempool(CTxMemPool& pool)
         for (const auto& i : mapDeltas) {
             if (FeeDeltaRange(i.second)) {
                 pool.PrioritiseTransaction(i.first, i.second);
+            } else {
+                LogPrintf("Invalid fee delta encountered (corrupt mempool.dat file?). Skipping PrioritiseTransaction(...).\n");
             }
         }
 
