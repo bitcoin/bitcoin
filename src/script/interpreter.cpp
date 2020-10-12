@@ -411,7 +411,7 @@ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, Scr
 /** Helper for OP_CHECKSIG, OP_CHECKSIGVERIFY, and (in Tapscript) OP_CHECKSIGADD.
  *
  * A return value of false means the script fails entirely. When true is returned, the
- * fuccess variable indicates whether the signature check itself succeeded.
+ * success variable indicates whether the signature check itself succeeded.
  */
 static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::const_iterator pbegincodehash, CScript::const_iterator pend, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror, bool& success)
 {
