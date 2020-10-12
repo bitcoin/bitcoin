@@ -27,14 +27,14 @@ SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 if EMBEDDED_CHIABLS
 SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
-LIBCHIABLS =-lcurl -lz -lgnutls -lhogweed -lnettle chiabls/build/libchiabls.a -lgmp
-if TARGET_WINDOWS
-LIBCHIABLS+= -lcrypt32
-endif
+LIBCHIABLS =-lcurl chiabls/build/libchiabls.a -lgmp
 $(LIBCHIABLS):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 else
-LIBCHIABLS =-lcurl -lchiabls -lgmp
+LIBCHIABLS =-lcurl -lz -lgnutls -lhogweed -lnettle -lchiabls -lgmp
+if TARGET_WINDOWS
+LIBCHIABLS+= -lcrypt32
+endif
 endif
 
 LIBSYSCOIN_SERVER=libsyscoin_server.a
