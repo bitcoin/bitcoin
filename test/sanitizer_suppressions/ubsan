@@ -40,6 +40,32 @@ unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
 
+# -fsanitize=unsigned-shift-base suppressions (clang 12+)
+# =======================================================
+# It's not undefined behavior for an unsigned left shift to overflow (i.e. to
+# shift bits out), but unintended such overflows have been a source of
+# vulnerabilities in other projects in the past. The list below contains
+# files in which we expect unsigned left shift overflows to occur.
+#
+# Uncomment when building with clang 12 or above.
+#shift-base:arith_uint256.cpp
+#shift-base:bench/nanobench.h
+#shift-base:crypto/chacha20.cpp
+#shift-base:crypto/poly1305.cpp
+#shift-base:crypto/ripemd160.cpp
+#shift-base:crypto/sha1.cpp
+#shift-base:crypto/sha256.cpp
+#shift-base:crypto/sha3.cpp
+#shift-base:crypto/sha512.cpp
+#shift-base:crypto/siphash.cpp
+#shift-base:hash.cpp
+#shift-base:leveldb/util/bloom.cc
+#shift-base:leveldb/util/crc32c.h
+#shift-base:net_processing.cpp
+#shift-base:stl_bvector.h
+#shift-base:streams.h
+#shift-base:util/bip32.cpp
+
 implicit-integer-sign-change:*/include/c++/*/bits/*.h
 implicit-integer-sign-change:*/new_allocator.h
 implicit-integer-sign-change:/usr/include/boost/date_time/format_date_parser.hpp
