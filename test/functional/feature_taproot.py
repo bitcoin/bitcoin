@@ -100,7 +100,7 @@ import random
 # - lists of values
 # - callables which, when fed the context object as argument, produce any of these
 #
-# # The DEFAULT_CONTEXT object specifies a standard signing process, with many overridable knobs.
+# The DEFAULT_CONTEXT object specifies a standard signing process, with many overridable knobs.
 #
 # The get(ctx, name) function can evaluate a name, and cache its result in the context.
 # getter(name) can be used to construct a callable that evaluates name. For example:
@@ -1070,7 +1070,7 @@ def spenders_taproot_active():
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
         add_spender(spenders, "opsuccess/bare", standard=False, tap=tap, leaf="bare_success", failure={"leaf": "bare_nop"}, **ERR_CLEANSTACK)
-        add_spender(spenders, "opsuccess/exexecif", standard=False, tap=tap, leaf="unexecif_success", failure={"leaf": "unexecif_nop"}, **ERR_CLEANSTACK)
+        add_spender(spenders, "opsuccess/unexecif", standard=False, tap=tap, leaf="unexecif_success", failure={"leaf": "unexecif_nop"}, **ERR_CLEANSTACK)
         add_spender(spenders, "opsuccess/return", standard=False, tap=tap, leaf="return_success", failure={"leaf": "return_nop"}, **ERR_OP_RETURN)
         add_spender(spenders, "opsuccess/undecodable", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_nop"}, **ERR_UNDECODABLE)
         add_spender(spenders, "opsuccess/undecodable_bypass", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_bypassed_success"}, **ERR_UNDECODABLE)
@@ -1245,9 +1245,6 @@ class TaprootTest(BitcoinTestFramework):
         of all valid inputs, except one invalid one.
         """
 
-        # Generate some coins to fund the wallet.
-        node.generate(10)
-
         # Construct a bunch of sPKs that send coins back to the host wallet
         self.log.info("- Constructing addresses for returning coins")
         host_spks = []
@@ -1284,7 +1281,7 @@ class TaprootTest(BitcoinTestFramework):
             # Add the 50 highest-value inputs
             unspents = node.listunspent()
             random.shuffle(unspents)
-            unspents.sort(key=lambda x: -int(x["amount"] * 100000000))
+            unspents.sort(key=lambda x: int(x["amount"] * 100000000), reverse=True)
             if len(unspents) > 50:
                 unspents = unspents[:50]
             random.shuffle(unspents)
