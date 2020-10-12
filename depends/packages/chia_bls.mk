@@ -27,13 +27,8 @@ ifneq ($(darwin_native_toolchain),)
 endif
 
 define $(package)_config_cmds
-  export CC="$($(package)_cc)" && \
-  export CXX="$($(package)_cxx)" && \
-  export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
-  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
-  export LDFLAGS="$($(package)_ldflags)" && \
   mkdir -p build && cd build && \
-  $($(package)_cmake) ../ $($(package)_cflags)
+  $($(package)_cmake) ../
 endef
 
 define $(package)_build_cmds
