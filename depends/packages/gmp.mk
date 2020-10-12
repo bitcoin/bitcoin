@@ -1,13 +1,14 @@
 package=gmp
-$(package)_version=6.2.0
+$(package)_version=6.1.2
 $(package)_download_path=https://gmplib.org/download/gmp
 $(package)_file_name=gmp-$($(package)_version).tar.gz
-$(package)_sha256_hash=cadd49052b740ccc3d8075c24ceaefbe5128d44246d91d0ecc818b2f78b0ec9c
+$(package)_sha256_hash=5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2
 
 define $(package)_set_vars
-$(package)_config_opts+=--enable-cxx --enable-fat --disable-shared
+$(package)_config_opts+=--enable-cxx --enable-fat --disable-shared --enable-static
 $(package)_config_opts_linux=--with-pic
 $(package)_cflags_armv7l_linux+=-march=armv7-a
+$(package)_config_opts_arm=--disable-assembly
 endef
 
 define $(package)_config_cmds
