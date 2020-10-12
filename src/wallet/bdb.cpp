@@ -305,17 +305,16 @@ BerkeleyDatabase::~BerkeleyDatabase()
     }
 }
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr), m_database(database)
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr), m_database(database)
 {
     database.AddRef();
-    database.Open(pszMode);
-    fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
+    database.Open();
+    fReadOnly = read_only;
     fFlushOnClose = fFlushOnCloseIn;
     env = database.env.get();
     pdb = database.m_db.get();
     strFile = database.strFile;
-    bool fCreate = strchr(pszMode, 'c') != nullptr;
-    if (fCreate && !Exists(std::string("version"))) {
+    if (!Exists(std::string("version"))) {
         bool fTmp = fReadOnly;
         fReadOnly = false;
         Write(std::string("version"), CLIENT_VERSION);
@@ -323,12 +322,9 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
     }
 }
 
-void BerkeleyDatabase::Open(const char* pszMode)
+void BerkeleyDatabase::Open()
 {
-    bool fCreate = strchr(pszMode, 'c') != nullptr;
-    unsigned int nFlags = DB_THREAD;
-    if (fCreate)
-        nFlags |= DB_CREATE;
+    unsigned int nFlags = DB_THREAD | DB_CREATE;
 
     {
         LOCK(cs_db);
@@ -468,7 +464,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                 LogPrintf("BerkeleyBatch::Rewrite: Rewriting %s...\n", strFile);
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
-                    BerkeleyBatch db(*this, "r");
+                    BerkeleyBatch db(*this, true);
                     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
@@ -807,9 +803,9 @@ void BerkeleyDatabase::RemoveRef()
     if (env) env->m_db_in_use.notify_all();
 }
 
-std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
+std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(bool flush_on_close)
 {
-    return MakeUnique<BerkeleyBatch>(*this, mode, flush_on_close);
+    return MakeUnique<BerkeleyBatch>(*this, false, flush_on_close);
 }
 
 bool ExistsBerkeleyDatabase(const fs::path& path)
