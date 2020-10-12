@@ -1550,6 +1550,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const C
         }
         txdata.Init(tx, std::move(spent_outputs));
     }
+    assert(txdata.m_spent_outputs.size() == tx.vin.size());
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
