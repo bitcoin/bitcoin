@@ -27,18 +27,16 @@ SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 if EMBEDDED_CHIABLS
 SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
-LIBCHIABLS = chiabls/build/libchiabls.a -lgmp
-
+LIBCHIABLS =-lcurl -lz -lgnutls -lhogweed -lnettle chiabls/build/libchiabls.a -lgmp
+if TARGET_WINDOWS
+LIBCHIABLS+= -lcrypt32
+endif
 $(LIBCHIABLS):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 else
-LIBCHIABLS = -lchiabls -lgmp
+LIBCHIABLS =-lcurl -lchiabls -lgmp
 endif
 
-LIBCURL=-lcurl -lz -lgnutls -lhogweed -lnettle
-if TARGET_WINDOWS
-LIBCURL+= -lcrypt32
-endif
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
@@ -764,7 +762,6 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBCURL) \
   $(LIBSYSCOIN_BLS) \
   $(LIBCHIABLS) \
   $(LIBSECP256K1) \

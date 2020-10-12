@@ -60,7 +60,6 @@ bench_bench_syscoin_LDADD = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBCURL) \
   $(LIBSYSCOIN_BLS) \
   $(LIBCHIABLS) \
   $(LIBSECP256K1) \
