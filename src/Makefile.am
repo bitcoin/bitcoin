@@ -35,7 +35,7 @@ else
 LIBCHIABLS = -lchiabls -lgmp
 endif
 
-LIBCURL=-lcurl -lz
+LIBCURL=-lcurl -lz -lgnutls -lhogweed -lnettle
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
@@ -761,11 +761,11 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
+  $(LIBCURL) \
   $(LIBSYSCOIN_BLS) \
   $(LIBCHIABLS) \
   $(LIBSECP256K1) \
-  $(LIBETHEREUM) \
-  $(LIBCURL)
+  $(LIBETHEREUM)
 
 syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
