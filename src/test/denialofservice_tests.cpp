@@ -88,7 +88,6 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     dummyNode1.SetCommonVersion(PROTOCOL_VERSION);
 
     peerLogic->InitializeNode(&dummyNode1);
-    dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
 
     // This test requires that we have a chain with non-zero work.
@@ -141,7 +140,6 @@ static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerManager &pee
     node.SetCommonVersion(PROTOCOL_VERSION);
 
     peerLogic.InitializeNode(&node);
-    node.nVersion = 1;
     node.fSuccessfullyConnected = true;
 
     connman->AddNode(node);
@@ -231,7 +229,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     CNode dummyNode1(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", ConnectionType::INBOUND);
     dummyNode1.SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(&dummyNode1);
-    dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
     peerLogic->Misbehaving(dummyNode1.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
     {
@@ -245,7 +242,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     CNode dummyNode2(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr2, 1, 1, CAddress(), "", ConnectionType::INBOUND);
     dummyNode2.SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(&dummyNode2);
-    dummyNode2.nVersion = 1;
     dummyNode2.fSuccessfullyConnected = true;
     peerLogic->Misbehaving(dummyNode2.GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
     {
@@ -282,7 +278,6 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     CNode dummyNode(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr, 4, 4, CAddress(), "", ConnectionType::INBOUND);
     dummyNode.SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(&dummyNode);
-    dummyNode.nVersion = 1;
     dummyNode.fSuccessfullyConnected = true;
 
     peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
