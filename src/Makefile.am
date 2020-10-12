@@ -36,6 +36,9 @@ LIBCHIABLS = -lchiabls -lgmp
 endif
 
 LIBCURL=-lcurl -lz -lgnutls -lhogweed -lnettle
+if TARGET_WINDOWS
+LIBCURL+= -lcrypt32
+endif
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
