@@ -6,7 +6,7 @@ $(package)_file_name=$(package)-$($(package)_version).tar.xz
 $(package)_sha256_hash=0e97f243ae72b70307d684b84c7fe679385aa7a7a0e37e5be810193dcc17d4ff
 
 # default settings
-$(package)_config_opts=--disable-shared --enable-static --with-included-libtasn1 --with-included-unistring --disable-non-suiteb-curves --disable-doc --disable-tools --without-p11-kit --disable-tests
+$(package)_config_opts=--disable-shared --enable-static --with-included-libtasn1 --with-included-unistring --enable-local-libopts --disable-non-suiteb-curves --disable-doc --disable-tools --without-p11-kit --disable-tests
 $(package)_config_opts_linux=--with-pic
 
 define $(package)_config_cmds
