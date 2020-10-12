@@ -1,9 +1,9 @@
 package=curl
-$(package)_version=7.52.1
+$(package)_version=7.72.0
 $(package)_dependencies=gnutls zlib
 $(package)_download_path=https://curl.haxx.se/download
 $(package)_file_name=curl-$($(package)_version).tar.gz
-$(package)_sha256_hash=a8984e8b20880b621f61a62d95ff3c0763a3152093a9f9ce4287cfd614add6ae
+$(package)_sha256_hash=d4d5899a3868fbb6ae1856c3e55a32ce35913de3956d1973caccd37bd0174fa2
 
 # default settings
 $(package)_config_env_default=LIBS="-lnettle -lhogweed -lgmp" LD_LIBRARY_PATH="$(PREFIX_DIR)lib" PKG_CONFIG_LIBDIR="$(PREFIX_DIR)lib/pkgconfig" CPPFLAGS="-I$(PREFIX_DIR)include" LDFLAGS="-L$(PREFIX_DIR)lib"
