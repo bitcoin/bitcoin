@@ -647,7 +647,12 @@ enum
     LOCAL_MAX
 };
 
+/** Is our peer's addrLocal potentially useful as an external IP source? */
 bool IsPeerAddrLocalGood(CNode& pnode);
+/**
+ * Add our "best" local address (see GetLocal) to the batch of addresses
+ * we are planning to relay to a given node as scheduled.
+ */
 void AdvertiseLocal(CNode& pnode);
 
 /**
@@ -660,10 +665,18 @@ bool IsReachable(enum Network net);
 /** @returns true if the address is in a reachable network, false otherwise */
 bool IsReachable(const CNetAddr& addr);
 
+/** Learn a new local address */
 bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
+/** Remove a local address from mapLocalHost */
 void RemoveLocal(const CService& addr);
+/** Vote for a local address */
 bool SeenLocal(const CService& addr);
+/** Check whether a given address is potentially local */
 bool IsLocal(const CService& addr);
+/** Get best local address for a particular peer as a CAddress.
+ *  Otherwise, return the unroutable 0.0.0.0 but filled in with
+ *  the normal parameters, since the IP may be changed to a useful
+ *  one by discovery. */
 CAddress GetLocalAddress(const CNetAddr& paddrPeer, ServiceFlags nLocalServices);
 
 
