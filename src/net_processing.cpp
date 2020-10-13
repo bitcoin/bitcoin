@@ -2396,7 +2396,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             //
             // We skip this for block-relay-only peers to avoid potentially leaking
             // information about our block-relay-only connections via address relay.
-            if (fListen && !::ChainstateActive().IsInitialBlockDownload())
+            if (fListen && !::ChainstateActive().IsInitialBlockDownload() && pfrom.fSuccessfullyConnected)
             {
                 CAddress addr = GetLocalAddress(pfrom.addr, pfrom.GetLocalServices());
                 FastRandomContext insecure_rand;
@@ -4117,7 +4117,8 @@ bool PeerManager::SendMessages(CNode* pto)
         // Address refresh broadcast
         auto current_time = GetTime<std::chrono::microseconds>();
 
-        if (pto->RelayAddrsWithConn() && !::ChainstateActive().IsInitialBlockDownload() && pto->m_next_local_addr_send.load() < current_time) {
+        if (pto->RelayAddrsWithConn() && !::ChainstateActive().IsInitialBlockDownload() &&
+            pto->m_next_local_addr_send.load() < current_time && fListen) {
             // If we've sent before, clear the bloom filter for the peer, so that our
             // self-announcement will actually go out.
             // This might be unnecessary if the bloom filter has already rolled
