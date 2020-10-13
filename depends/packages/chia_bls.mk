@@ -28,7 +28,7 @@ endif
 
 define $(package)_config_cmds
   mkdir -p build && cd build && \
-  $($(package)_cmake) ../
+  $($(package)_cmake) ../ $($(package)_cflags)
 endef
 
 define $(package)_build_cmds
