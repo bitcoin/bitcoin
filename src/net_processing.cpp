@@ -2398,13 +2398,13 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             // information about our block-relay-only connections via address relay.
             if (fListen && !::ChainstateActive().IsInitialBlockDownload())
             {
-                CAddress addr = GetLocalAddress(&pfrom.addr, pfrom.GetLocalServices());
+                CAddress addr = GetLocalAddress(pfrom.addr, pfrom.GetLocalServices());
                 FastRandomContext insecure_rand;
                 if (addr.IsRoutable())
                 {
                     LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToString());
                     pfrom.PushAddress(addr, insecure_rand);
-                } else if (IsPeerAddrLocalGood(&pfrom)) {
+                } else if (IsPeerAddrLocalGood(pfrom)) {
                     addr.SetIP(addrMe);
                     LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToString());
                     pfrom.PushAddress(addr, insecure_rand);
@@ -4127,7 +4127,7 @@ bool PeerManager::SendMessages(CNode* pto)
             if (pto->m_next_local_addr_send.load() != 0us) {
                 pto->m_addr_known->reset();
             }
-            AdvertiseLocal(pto);
+            AdvertiseLocal(*pto);
             pto->m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
         }
 
