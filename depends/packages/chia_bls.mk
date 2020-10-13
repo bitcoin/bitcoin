@@ -1,9 +1,9 @@
 package=chia_bls
-$(package)_version=v20201018
+$(package)_version=v20201017
 # It's actually from https://github.com/Chia-Network/bls-signatures, but we have so many patches atm that it's forked
 $(package)_download_path=https://github.com/syscoin/bls-signatures/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=c4c5dfed641c7f296b7ac5fde00e6dc56f793734c9bce7a31dc6278062a7225c
+$(package)_sha256_hash=72676c36f54290facba38c5a6c585ee0638abc955cb54c8542538968b685e715
 $(package)_dependencies=gmp
 #$(package)_patches=...TODO (when we switch back to https://github.com/Chia-Network/bls-signatures)
 
@@ -28,7 +28,7 @@ endif
 
 define $(package)_config_cmds
   mkdir -p build && cd build && \
-  $($(package)_cmake) ../ $($(package)_cflags)
+  $($(package)_autoconf)
 endef
 
 define $(package)_build_cmds
