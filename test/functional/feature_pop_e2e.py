@@ -44,7 +44,7 @@ class PopE2E(BitcoinTestFramework):
         assert len(self.nodes[1].getpeerinfo()) == 1
         assert self.nodes[1].getpeerinfo()[0]['banscore'] == 0
 
-        vbk_blocks_amount = 3000
+        vbk_blocks_amount = 200
         self.log.info("generate vbk blocks on node0, amount {}".format(vbk_blocks_amount))
         vbk_blocks = []
         for i in range(vbk_blocks_amount):
@@ -52,7 +52,7 @@ class PopE2E(BitcoinTestFramework):
 
         assert len(vbk_blocks) == vbk_blocks_amount
 
-        vtbs_amount = 1000
+        vtbs_amount = 50
         self.log.info("generate vtbs on node0, amount {}".format(vtbs_amount))
         for i in range(vtbs_amount):
             self.apm.endorseVbkBlock(self.apm.vbkTip, self.apm.btcTip.getHash(), 1)
