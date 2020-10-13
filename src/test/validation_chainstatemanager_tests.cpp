@@ -15,15 +15,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, ChainTestingSetup)
 
 //! Basic tests for ChainstateManager.
 //!
 //! First create a legacy (IBD) chainstate, then create a snapshot chainstate.
 BOOST_AUTO_TEST_CASE(chainstatemanager)
 {
-    ChainstateManager manager;
-    CTxMemPool mempool;
+    ChainstateManager& manager = *m_node.chainman;
+    CTxMemPool& mempool = *m_node.mempool;
+
     std::vector<CChainState*> chainstates;
     const CChainParams& chainparams = Params();
 
@@ -104,8 +105,9 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 //! Test rebalancing the caches associated with each chainstate.
 BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
 {
-    ChainstateManager manager;
-    CTxMemPool mempool;
+    ChainstateManager& manager = *m_node.chainman;
+    CTxMemPool& mempool = *m_node.mempool;
+
     size_t max_cache = 10000;
     manager.m_total_coinsdb_cache = max_cache;
     manager.m_total_coinstip_cache = max_cache;

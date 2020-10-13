@@ -124,10 +124,9 @@ BasicTestingSetup::~BasicTestingSetup()
     ECC_Stop();
 }
 
-TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
+ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : BasicTestingSetup(chainName, extra_args)
 {
-    const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
@@ -142,9 +141,39 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
     m_node.mempool = MakeUnique<CTxMemPool>(&::feeEstimator);
-    m_node.mempool->setSanityCheck(1.0);
 
     m_node.chainman = &::g_chainman;
+
+    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
+    constexpr int script_check_threads = 2;
+    for (int i = 0; i < script_check_threads; ++i) {
+        threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
+    }
+    g_parallel_script_checks = true;
+}
+
+ChainTestingSetup::~ChainTestingSetup() {
+    if (m_node.scheduler) m_node.scheduler->stop();
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+    GetMainSignals().FlushBackgroundCallbacks();
+    GetMainSignals().UnregisterBackgroundSignalScheduler();
+    m_node.args = nullptr;
+    UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
+    m_node.mempool.reset();
+    m_node.scheduler.reset();
+    m_node.chainman->Reset();
+    m_node.chainman = nullptr;
+    pblocktree.reset();
+}
+
+TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
+    : ChainTestingSetup(chainName, extra_args)
+{
+    const CChainParams& chainparams = Params();
+
+    m_node.mempool->setSanityCheck(1.0);
+
     m_node.chainman->InitializeChainstate(*m_node.mempool);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
@@ -160,13 +189,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 
-    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
-    constexpr int script_check_threads = 2;
-    for (int i = 0; i < script_check_threads; ++i) {
-        threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
-    }
-    g_parallel_script_checks = true;
-
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
     m_node.peerman = MakeUnique<PeerManager>(chainparams, *m_node.connman, m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
@@ -179,20 +201,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
 TestingSetup::~TestingSetup()
 {
-    if (m_node.scheduler) m_node.scheduler->stop();
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
-    GetMainSignals().FlushBackgroundCallbacks();
-    GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.connman.reset();
     m_node.banman.reset();
-    m_node.args = nullptr;
-    UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
-    m_node.mempool.reset();
-    m_node.scheduler.reset();
-    m_node.chainman->Reset();
-    m_node.chainman = nullptr;
-    pblocktree.reset();
 }
 
 TestChain100Setup::TestChain100Setup()
