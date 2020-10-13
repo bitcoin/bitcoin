@@ -84,8 +84,8 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
         },
         {"ownerAddress",
             "%d. \"ownerAddress\"             (string, required) The dash address to use for payee updates and proposal voting.\n"
-            "                              The private key belonging to this address must be known in your wallet. The address must\n"
-            "                              be unused and must differ from the collateralAddress\n"
+            "                              The corresponding private key does not have to be known by your wallet.\n"
+            "                              The address must be unused and must differ from the collateralAddress.\n"
         },
         {"payoutAddress_register",
             "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
@@ -117,32 +117,6 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
         throw std::runtime_error(strprintf("FIXME: WRONG PARAM NAME %s!", strParamName));
 
     return strprintf(it->second, nParamNum);
-}
-
-// Allows to specify Dash address or priv key. In case of Dash address, the priv key is taken from the wallet
-static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, bool allowAddresses = true) {
-    CTxDestination dest = DecodeDestination(strKeyOrAddress);
-    if (allowAddresses && IsValidDestination(dest)) {
-#ifdef ENABLE_WALLET
-        if (!pwallet) {
-            throw std::runtime_error("addresses not supported when wallet is disabled");
-        }
-        EnsureWalletIsUnlocked(pwallet);
-        const CKeyID *keyID = boost::get<CKeyID>(&dest);
-        CKey key;
-        if (!keyID || !pwallet->GetKey(*keyID, key))
-            throw std::runtime_error(strprintf("non-wallet or invalid address %s", strKeyOrAddress));
-        return key;
-#else//ENABLE_WALLET
-        throw std::runtime_error("addresses not supported in no-wallet builds");
-#endif//ENABLE_WALLET
-    }
-
-    CBitcoinSecret secret;
-    if (!secret.SetString(strKeyOrAddress) || !secret.IsValid()) {
-        throw std::runtime_error(strprintf("invalid priv-key/address %s", strKeyOrAddress));
-    }
-    return secret.GetKey();
 }
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
@@ -478,9 +452,10 @@ UniValue protx_register(const JSONRPCRequest& request)
         }
     }
 
-    CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
+    ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-    CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
+    CKeyID keyIDVoting = ptx.keyIDOwner;
+
     if (request.params[paramIdx + 3].get_str() != "") {
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
@@ -499,7 +474,6 @@ UniValue protx_register(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
     }
 
-    ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
     ptx.pubKeyOperator = pubKeyOperator;
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
