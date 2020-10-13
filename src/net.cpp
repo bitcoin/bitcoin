@@ -131,8 +131,8 @@ uint16_t GetListenPort()
     return (uint16_t)(gArgs.GetArg("-port", Params().GetDefaultPort()));
 }
 
-// find 'best' local address for a particular peer
-bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
+/** Find the 'best' local address for a particular peer. */
+static bool GetLocal(CService& addr, const CNetAddr* paddrPeer)
 {
     if (!fListen)
         return false;
@@ -262,7 +262,7 @@ bool AddLocal(const CService& addr, int nScore)
     return true;
 }
 
-bool AddLocal(const CNetAddr &addr, int nScore)
+static bool AddLocal(const CNetAddr &addr, int nScore)
 {
     return AddLocal(CService(addr, GetListenPort()), nScore);
 }
