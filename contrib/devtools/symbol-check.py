@@ -105,6 +105,7 @@ MACHO_ALLOWED_LIBRARIES = {
 PE_ALLOWED_LIBRARIES = {
 'ADVAPI32.dll', # security & registry
 'IPHLPAPI.DLL', # IP helper API
+'crypt32.dll', # MSFT crypto library (for libcurl)
 'KERNEL32.dll', # win32 base APIs
 'msvcrt.dll', # C standard library for MSVC
 'SHELL32.dll', # shell API
