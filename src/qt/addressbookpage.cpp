@@ -241,9 +241,7 @@ void AddressBookPage::on_showAddressQRCode_clicked()
 
     QString strAddress = entries.at(0).data(Qt::EditRole).toString();
     QRDialog* dialog = new QRDialog(this);
-    OptionsModel *model = new OptionsModel(nullptr, false);
 
-    dialog->setModel(model);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setInfo(tr("QR code"), "dash:"+strAddress, "", strAddress);
     dialog->show();

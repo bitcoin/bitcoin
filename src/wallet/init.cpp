@@ -351,11 +351,9 @@ bool WalletInit::Open()
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
-        if (!pwallet) {
+        if (!CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()))) {
             return false;
         }
-        AddWallet(pwallet);
     }
 
     return true;
@@ -422,7 +420,7 @@ void WalletInit::InitPrivateSendSettings()
         if (pwallet->IsLocked()) {
             privateSendClientManagers.at(pwallet->GetName())->StopMixing();
         } else if (fAutoStart) {
-            privateSendClientManagers.at(pwallet->GetName())->StartMixing(pwallet);
+            privateSendClientManagers.at(pwallet->GetName())->StartMixing();
         }
     }
     LogPrintf("PrivateSend: autostart=%d, multisession=%d," /* Continued */

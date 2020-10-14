@@ -72,6 +72,7 @@ EXPECTED_BOOST_INCLUDES=(
     boost/program_options/detail/config_file.hpp
     boost/program_options/parsers.hpp
     boost/scoped_array.hpp
+    boost/signals2/connection.hpp
     boost/signals2/last_value.hpp
     boost/signals2/signal.hpp
     boost/test/unit_test.hpp

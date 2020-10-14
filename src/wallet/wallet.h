@@ -37,6 +37,7 @@
 #include <utility>
 #include <vector>
 
+typedef CWallet* CWalletRef;
 bool AddWallet(CWallet* wallet);
 bool RemoveWallet(CWallet* wallet);
 bool HasWallets();
@@ -204,6 +205,9 @@ class CMerkleTx
 private:
   /** Constant used in hashBlock to indicate tx has been abandoned */
     static const uint256 ABANDON_HASH;
+
+    mutable bool fIsChainlocked{false};
+    mutable bool fIsInstantSendLocked{false};
 
 public:
     CTransactionRef tx;

@@ -52,8 +52,8 @@ bool AddWallet(CWallet* wallet)
     assert(wallet);
     std::vector<CWallet*>::const_iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
     if (i != vpwallets.end()) return false;
+    privateSendClientManagers.emplace(std::make_pair(wallet->GetName(), std::make_shared<CPrivateSendClientManager>(*wallet)));
     vpwallets.push_back(wallet);
-    privateSendClientManagers.emplace(std::make_pair(wallet->GetName(), new CPrivateSendClientManager()));
     return true;
 }
 
@@ -65,8 +65,6 @@ bool RemoveWallet(CWallet* wallet)
     if (i == vpwallets.end()) return false;
     vpwallets.erase(i);
     auto it = privateSendClientManagers.find(wallet->GetName());
-    delete it->second;
-    it->second = nullptr;
     privateSendClientManagers.erase(it);
     return true;
 }
@@ -5120,12 +5118,23 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     // wallet creation fails.
     auto temp_wallet = MakeUnique<CWallet>(name, WalletDatabase::Create(path));
     CWallet *walletInstance = temp_wallet.get();
-    DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
+    AddWallet(walletInstance);
+    auto error = [&](const std::string& strError) {
+        RemoveWallet(walletInstance);
+        InitError(strError);
+        return nullptr;
+    };
+    DBErrors nLoadWalletRet;
+    try {
+        nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
+    } catch (const std::exception& e) {
+        RemoveWallet(walletInstance);
+        throw;
+    }
     if (nLoadWalletRet != DBErrors::LOAD_OK)
     {
         if (nLoadWalletRet == DBErrors::CORRUPT) {
-            InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
-            return nullptr;
+            return error(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
         }
         else if (nLoadWalletRet == DBErrors::NONCRITICAL_ERROR)
         {
@@ -5134,17 +5143,14 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
                 walletFile));
         }
         else if (nLoadWalletRet == DBErrors::TOO_NEW) {
-            InitError(strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, _(PACKAGE_NAME)));
-            return nullptr;
+            return error(strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, _(PACKAGE_NAME)));
         }
         else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
         {
-            InitError(strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)));
-            return nullptr;
+            return error(strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)));
         }
         else {
-            InitError(strprintf(_("Error loading %s"), walletFile));
-            return nullptr;
+            return error(strprintf(_("Error loading %s"), walletFile));
         }
     }
 
@@ -5161,8 +5167,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
             LogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
         if (nMaxVersion < walletInstance->GetVersion())
         {
-            InitError(_("Cannot downgrade wallet"));
-            return nullptr;
+            return error(_("Cannot downgrade wallet"));
         }
         walletInstance->SetMaxVersion(nMaxVersion);
     }
@@ -5172,8 +5177,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         // Create new keyUser and set as default key
         if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
             if (gArgs.GetArg("-mnemonicpassphrase", "").size() > 256) {
-                InitError(_("Mnemonic passphrase is too long, must be at most 256 characters"));
-                return nullptr;
+                return error(_("Mnemonic passphrase is too long, must be at most 256 characters"));
             }
             // generate a new master key
             walletInstance->GenerateNewHDChain();
@@ -5184,8 +5188,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
         // Top up the keypool
         if (!walletInstance->TopUpKeyPool()) {
-            InitError(_("Unable to generate initial keys") += "\n");
-            return nullptr;
+            return error(_("Unable to generate initial keys") += "\n");
         }
 
         walletInstance->SetBestChain(chainActive.GetLocator());
@@ -5198,8 +5201,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
                 InitWarning(strBackupWarning);
             }
             if (!strBackupError.empty()) {
-                InitError(strBackupError);
-                return nullptr;
+                return error(strBackupError);
             }
         }
 
@@ -5207,14 +5209,12 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     else if (gArgs.IsArgSet("-usehd")) {
         bool useHD = gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD) {
-            InitError(strprintf(_("Error loading %s: You can't disable HD on an already existing HD wallet"),
+            return error(strprintf(_("Error loading %s: You can't disable HD on an already existing HD wallet"),
                                 walletInstance->GetName()));
-            return nullptr;
         }
         if (!walletInstance->IsHDEnabled() && useHD) {
-            InitError(strprintf(_("Error loading %s: You can't enable HD on an already existing non-HD wallet"),
+            return error(strprintf(_("Error loading %s: You can't enable HD on an already existing non-HD wallet"),
                                 walletInstance->GetName()));
-            return nullptr;
         }
     }
 
@@ -5251,8 +5251,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
                 block = block->pprev;
 
             if (pindexRescan != block) {
-                InitError(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
-                return nullptr;
+                return error(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
             }
         }
 
@@ -5269,8 +5268,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         {
             WalletRescanReserver reserver(walletInstance);
             if (!reserver.reserve()) {
-                InitError(_("Failed to rescan the wallet during initialization"));
-                return nullptr;
+                return error(_("Failed to rescan the wallet during initialization"));
             }
             uiInterface.LoadWallet(walletInstance); // TODO: move it up when backporting 13063
             walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
@@ -5553,17 +5551,24 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
 
 bool CMerkleTx::IsLockedByInstantSend() const
 {
-    return llmq::quorumInstantSendManager->IsLocked(GetHash());
+    if (fIsChainlocked) {
+        fIsInstantSendLocked = false;
+    } else if (!fIsInstantSendLocked) {
+        fIsInstantSendLocked = llmq::quorumInstantSendManager->IsLocked(GetHash());
+    }
+    return fIsInstantSendLocked;
 }
 
 bool CMerkleTx::IsChainLocked() const
 {
-    AssertLockHeld(cs_main);
-    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi != mapBlockIndex.end() && mi->second != nullptr) {
-        return llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+    if (!fIsChainlocked) {
+        AssertLockHeld(cs_main);
+        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi != mapBlockIndex.end() && mi->second != nullptr) {
+            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+        }
     }
-    return false;
+    return fIsChainlocked;
 }
 
 int CMerkleTx::GetBlocksToMaturity() const

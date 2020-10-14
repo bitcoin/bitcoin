@@ -8,7 +8,6 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
-#include <qt/optionsmodel.h>
 
 #include <QClipboard>
 #include <QDrag>
@@ -91,8 +90,7 @@ void QRGeneralImageWidget::contextMenuEvent(QContextMenuEvent *event)
 
 QRDialog::QRDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::QRDialog),
-    model(0)
+    ui(new Ui::QRDialog)
 {
     ui->setupUi(this);
 
@@ -113,17 +111,6 @@ QRDialog::~QRDialog()
     delete ui;
 }
 
-void QRDialog::setModel(OptionsModel *model)
-{
-    this->model = model;
-
-    if (model)
-        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
-
-    // update the display unit if necessary
-    update();
-}
-
 void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle)
 {
     this->strWindowtitle = strWindowtitle;
@@ -135,9 +122,6 @@ void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTex
 
 void QRDialog::update()
 {
-    if(!model)
-        return;
-
     setWindowTitle(strWindowtitle);
     ui->button_saveImage->setEnabled(false);
     if (strTextInfo.isEmpty()) {

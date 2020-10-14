@@ -55,7 +55,7 @@ nodist_qt_test_test_dash_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
 qt_test_test_dash_qt_LDADD = $(LIBBITCOINQT) $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
-qt_test_test_dash_qt_LDADD += $(LIBBITCOIN_WALLET)
+qt_test_test_dash_qt_LDADD += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
 endif
 if ENABLE_ZMQ
 qt_test_test_dash_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)

@@ -14,13 +14,11 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
+#include <interfaces/node.h>
+#include <interfaces/wallet.h>
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
-
-#ifdef ENABLE_WALLET
-#include <privatesend/privatesend-client.h>
-#endif // ENABLE_WALLET
 
 #include <QDataWidgetMapper>
 #include <QDir>
@@ -162,18 +160,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         updateWidth();
         Q_EMIT appearanceChanged();
     });
-
-    updatePrivateSendVisibility();
-
-    // Store the current PrivateSend enabled state to recover it if it gets changed but the dialog gets not accepted but declined.
-#ifdef ENABLE_WALLET
-    fPrivateSendEnabledPrev = CPrivateSendClientOptions::IsEnabled();
-    connect(this, &OptionsDialog::rejected, [=]() {
-        if (fPrivateSendEnabledPrev != CPrivateSendClientOptions::IsEnabled()) {
-            ui->privateSendEnabled->click();
-        }
-    });
-#endif
 }
 
 OptionsDialog::~OptionsDialog()
@@ -203,8 +189,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
         // If -enableprivatesend was passed in on the command line, set the checkbox
         // to the value given via commandline and disable it (make it unclickable).
         if (strLabel.contains("-enableprivatesend")) {
-            bool fEnabled = CPrivateSendClientOptions::IsEnabled();
-            ui->privateSendEnabled->setChecked(fEnabled);
+            ui->privateSendEnabled->setChecked(_model->node().privateSendOptions().isEnabled());
             ui->privateSendEnabled->setEnabled(false);
         }
 #endif
@@ -237,7 +222,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
 
     connect(ui->privateSendEnabled, &QCheckBox::clicked, [=](bool fChecked) {
 #ifdef ENABLE_WALLET
-        CPrivateSendClientOptions::SetEnabled(fChecked);
+        model->node().privateSendOptions().setEnabled(fChecked);
 #endif
         updatePrivateSendVisibility();
         if (_model != nullptr) {
@@ -245,6 +230,18 @@ void OptionsDialog::setModel(OptionsModel *_model)
         }
         updateWidth();
     });
+
+    updatePrivateSendVisibility();
+
+    // Store the current PrivateSend enabled state to recover it if it gets changed but the dialog gets not accepted but declined.
+#ifdef ENABLE_WALLET
+    fPrivateSendEnabledPrev = model->node().privateSendOptions().isEnabled();
+    connect(this, &OptionsDialog::rejected, [=]() {
+        if (fPrivateSendEnabledPrev != model->node().privateSendOptions().isEnabled()) {
+            ui->privateSendEnabled->click();
+        }
+    });
+#endif
 }
 
 void OptionsDialog::setMapper()
@@ -341,9 +338,9 @@ void OptionsDialog::on_okButton_clicked()
     mapper->submit();
     appearance->accept();
 #ifdef ENABLE_WALLET
-    for (auto& pwallet : GetWallets()) {
-        privateSendClientManagers.at(pwallet->GetName())->nCachedNumBlocks = std::numeric_limits<int>::max();
-        pwallet->MarkDirty();
+    for (auto& wallet : model->node().getWallets()) {
+        wallet->privateSend().resetCachedBlocks();
+        wallet->markDirty();
     }
 #endif // ENABLE_WALLET
     accept();
@@ -416,17 +413,17 @@ void OptionsDialog::updateDefaultProxyNets()
     std::string strProxy;
     QString strDefaultProxyGUI;
 
-    GetProxy(NET_IPV4, proxy);
+    model->node().getProxy(NET_IPV4, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true) : ui->proxyReachIPv4->setChecked(false);
 
-    GetProxy(NET_IPV6, proxy);
+    model->node().getProxy(NET_IPV6, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true) : ui->proxyReachIPv6->setChecked(false);
 
-    GetProxy(NET_ONION, proxy);
+    model->node().getProxy(NET_ONION, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
@@ -435,7 +432,7 @@ void OptionsDialog::updateDefaultProxyNets()
 void OptionsDialog::updatePrivateSendVisibility()
 {
 #ifdef ENABLE_WALLET
-    bool fEnabled = CPrivateSendClientOptions::IsEnabled();
+    bool fEnabled = model->node().privateSendOptions().isEnabled();
 #else
     bool fEnabled = false;
 #endif

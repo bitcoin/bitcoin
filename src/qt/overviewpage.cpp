@@ -16,7 +16,6 @@
 #include <qt/utilitydialog.h>
 #include <qt/walletmodel.h>
 
-#include <masternode/masternode-sync.h>
 #include <privatesend/privatesend-client.h>
 
 #include <QAbstractItemDelegate>
@@ -28,6 +27,8 @@
 #define NUM_ITEMS_DISABLED 5
 #define NUM_ITEMS_ENABLED_NORMAL 6
 #define NUM_ITEMS_ENABLED_ADVANCED 8
+
+Q_DECLARE_METATYPE(interfaces::WalletBalances)
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -114,12 +115,6 @@ OverviewPage::OverviewPage(QWidget* parent) :
     ui(new Ui::OverviewPage),
     clientModel(0),
     walletModel(0),
-    currentBalance(-1),
-    currentUnconfirmedBalance(-1),
-    currentImmatureBalance(-1),
-    currentWatchOnlyBalance(-1),
-    currentWatchUnconfBalance(-1),
-    currentWatchImmatureBalance(-1),
     cachedNumISLocks(-1),
     txdelegate(new TxViewDelegate(this))
 {
@@ -144,6 +139,8 @@ OverviewPage::OverviewPage(QWidget* parent) :
 
     GUIUtil::updateFonts();
 
+    m_balances.balance = -1;
+
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     // Note: minimum height of listTransactions will be set later in updateAdvancedPSUI() to reflect actual settings
@@ -162,12 +159,6 @@ OverviewPage::OverviewPage(QWidget* parent) :
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
-
-    // Disable privateSendClient builtin support for automatic backups while we are in GUI,
-    // we'll handle automatic backups and user warnings in privateSendStatus()
-    for (auto& pair : privateSendClientManagers) {
-        pair.second->fCreateAutoBackups = false;
-    }
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
@@ -190,30 +181,25 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
+void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 {
-    currentBalance = balance;
-    currentUnconfirmedBalance = unconfirmedBalance;
-    currentImmatureBalance = immatureBalance;
-    currentAnonymizedBalance = anonymizedBalance;
-    currentWatchOnlyBalance = watchOnlyBalance;
-    currentWatchUnconfBalance = watchUnconfBalance;
-    currentWatchImmatureBalance = watchImmatureBalance;
-    ui->labelBalance->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, balance, false, BitcoinUnits::separatorAlways));
-    ui->labelUnconfirmed->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelImmature->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelAnonymized->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, anonymizedBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelTotal->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, balance + unconfirmedBalance + immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchAvailable->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchOnlyBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchPending->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchImmature->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
+    int unit = walletModel->getOptionsModel()->getDisplayUnit();
+    m_balances = balances;
+    ui->labelBalance->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.balance, false, BitcoinUnits::separatorAlways));
+    ui->labelUnconfirmed->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.unconfirmed_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelImmature->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.immature_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelAnonymized->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.anonymized_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelTotal->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchAvailable->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.watch_only_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchPending->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchImmature->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchTotal->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
 
-    // only show immature (newly mined) balance if it's non-zero or in UI debug mode, so as not to complicate things
+    // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
     bool fDebugUI = gArgs.GetBoolArg("-debug-ui", false);
-    bool showImmature = fDebugUI || immatureBalance != 0;
-    bool showWatchOnlyImmature = fDebugUI || watchImmatureBalance != 0;
+    bool showImmature = fDebugUI || balances.immature_balance != 0;
+    bool showWatchOnlyImmature = fDebugUI || balances.immature_watch_only_balance != 0;
 
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
@@ -271,12 +257,13 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // update the display unit, to not use the default ("DASH")
         updateDisplayUnit();
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
-                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        interfaces::Wallet& wallet = model->wallet();
+        interfaces::WalletBalances balances = wallet.getBalances();
+        setBalance(balances);
+        connect(model, SIGNAL(balanceChanged(interfaces::WalletBalances)), this, SLOT(setBalance(interfaces::WalletBalances)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-        updateWatchOnlyLabels(model->haveWatchOnly() || gArgs.GetBoolArg("-debug-ui", false));
+        updateWatchOnlyLabels(wallet.haveWatchOnly() || gArgs.GetBoolArg("-debug-ui", false));
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
 
         // explicitly update PS frame and transaction list to reflect actual settings
@@ -288,6 +275,10 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model->getOptionsModel(), &OptionsModel::privateSendEnabledChanged, [=]() {
             privateSendStatus(true);
         });
+
+        // Disable privateSendClient builtin support for automatic backups while we are in GUI,
+        // we'll handle automatic backups and user warnings in privateSendStatus()
+        walletModel->privateSend().disableAutobackups();
 
         connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
 
@@ -301,9 +292,9 @@ void OverviewPage::updateDisplayUnit()
     if(walletModel && walletModel->getOptionsModel())
     {
         nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
-        if(currentBalance != -1)
-            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance, currentAnonymizedBalance,
-                       currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
+        if (m_balances.balance != -1) {
+            setBalance(m_balances);
+        }
 
         // Update txdelegate->unit with the current unit
         txdelegate->unit = nDisplayUnit;
@@ -327,41 +318,39 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updatePrivateSendProgress()
 {
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
-
-    if(!walletModel) return;
+    if (ShutdownRequested() || !walletModel || !clientModel || !clientModel->masternodeSync().isBlockchainSynced()) return;
 
     QString strAmountAndRounds;
-    QString strPrivateSendAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, CPrivateSendClientOptions::GetAmount() * COIN, false, BitcoinUnits::separatorAlways);
+    QString strPrivateSendAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, clientModel->privateSendOptions().getAmount() * COIN, false, BitcoinUnits::separatorAlways);
 
-    if(currentBalance == 0)
+    if(m_balances.balance == 0)
     {
         ui->privateSendProgress->setValue(0);
         ui->privateSendProgress->setToolTip(tr("No inputs detected"));
 
         // when balance is zero just show info from settings
         strPrivateSendAmount = strPrivateSendAmount.remove(strPrivateSendAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
-        strAmountAndRounds = strPrivateSendAmount + " / " + tr("%n Rounds", "", CPrivateSendClientOptions::GetRounds());
+        strAmountAndRounds = strPrivateSendAmount + " / " + tr("%n Rounds", "", clientModel->privateSendOptions().getRounds());
 
         ui->labelAmountRounds->setToolTip(tr("No inputs detected"));
         ui->labelAmountRounds->setText(strAmountAndRounds);
         return;
     }
 
-    CAmount nAnonymizableBalance = walletModel->getAnonymizableBalance(false, false);
+    CAmount nAnonymizableBalance = walletModel->wallet().getAnonymizableBalance(false, false);
 
-    CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance;
+    CAmount nMaxToAnonymize = nAnonymizableBalance + m_balances.anonymized_balance;
 
     // If it's more than the anon threshold, limit to that.
-    if (nMaxToAnonymize > CPrivateSendClientOptions::GetAmount() * COIN) nMaxToAnonymize = CPrivateSendClientOptions::GetAmount() * COIN;
+    if (nMaxToAnonymize > clientModel->privateSendOptions().getAmount() * COIN) nMaxToAnonymize = clientModel->privateSendOptions().getAmount() * COIN;
 
     if(nMaxToAnonymize == 0) return;
 
-    if (nMaxToAnonymize >= CPrivateSendClientOptions::GetAmount() * COIN) {
+    if (nMaxToAnonymize >= clientModel->privateSendOptions().getAmount() * COIN) {
         ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to mix %1")
                                           .arg(strPrivateSendAmount));
         strPrivateSendAmount = strPrivateSendAmount.remove(strPrivateSendAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
-        strAmountAndRounds = strPrivateSendAmount + " / " + tr("%n Rounds", "", CPrivateSendClientOptions::GetRounds());
+        strAmountAndRounds = strPrivateSendAmount + " / " + tr("%n Rounds", "", clientModel->privateSendOptions().getRounds());
     } else {
         QString strMaxToAnonymize = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nMaxToAnonymize, false, BitcoinUnits::separatorAlways);
         ui->labelAmountRounds->setToolTip(tr("Not enough compatible inputs to mix <span style='%1'>%2</span>,<br>"
@@ -372,7 +361,7 @@ void OverviewPage::updatePrivateSendProgress()
         strMaxToAnonymize = strMaxToAnonymize.remove(strMaxToAnonymize.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
         strAmountAndRounds = "<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>" +
                 QString(BitcoinUnits::factor(nDisplayUnit) == 1 ? "" : "~") + strMaxToAnonymize +
-                " / " + tr("%n Rounds", "", CPrivateSendClientOptions::GetRounds()) + "</span>";
+                " / " + tr("%n Rounds", "", clientModel->privateSendOptions().getRounds()) + "</span>";
     }
     ui->labelAmountRounds->setText(strAmountAndRounds);
 
@@ -383,10 +372,10 @@ void OverviewPage::updatePrivateSendProgress()
     CAmount nNormalizedAnonymizedBalance;
     float nAverageAnonymizedRounds;
 
-    nDenominatedConfirmedBalance = walletModel->getDenominatedBalance(false);
-    nDenominatedUnconfirmedBalance = walletModel->getDenominatedBalance(true);
-    nNormalizedAnonymizedBalance = walletModel->getNormalizedAnonymizedBalance();
-    nAverageAnonymizedRounds = walletModel->getAverageAnonymizedRounds();
+    nDenominatedConfirmedBalance = walletModel->wallet().getDenominatedBalance(false);
+    nDenominatedUnconfirmedBalance = walletModel->wallet().getDenominatedBalance(true);
+    nNormalizedAnonymizedBalance = walletModel->wallet().getNormalizedAnonymizedBalance();
+    nAverageAnonymizedRounds = walletModel->wallet().getAverageAnonymizedRounds();
 
     // calculate parts of the progress, each of them shouldn't be higher than 1
     // progress of denominating
@@ -405,13 +394,13 @@ void OverviewPage::updatePrivateSendProgress()
     anonNormPart = anonNormPart > 1 ? 1 : anonNormPart;
     anonNormPart *= 100;
 
-    anonFullPart = (float)currentAnonymizedBalance / nMaxToAnonymize;
+    anonFullPart = (float)m_balances.anonymized_balance / nMaxToAnonymize;
     anonFullPart = anonFullPart > 1 ? 1 : anonFullPart;
     anonFullPart *= 100;
 
     // apply some weights to them ...
     float denomWeight = 1;
-    float anonNormWeight = CPrivateSendClientOptions::GetRounds();
+    float anonNormWeight = clientModel->privateSendOptions().getRounds();
     float anonFullWeight = 2;
     float fullWeight = denomWeight + anonNormWeight + anonFullWeight;
     // ... and calculate the whole progress
@@ -427,22 +416,25 @@ void OverviewPage::updatePrivateSendProgress()
                           tr("Denominated") + ": %2%<br/>" +
                           tr("Partially mixed") + ": %3%<br/>" +
                           tr("Mixed") + ": %4%<br/>" +
-                          tr("Denominated inputs have %5 of %n rounds on average", "", CPrivateSendClientOptions::GetRounds()))
+                          tr("Denominated inputs have %5 of %n rounds on average", "", clientModel->privateSendOptions().getRounds()))
             .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart)
             .arg(nAverageAnonymizedRounds);
     ui->privateSendProgress->setToolTip(strToolPip);
 }
 
-void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
+void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI)
+{
+    if (!walletModel || !clientModel || !clientModel->privateSendOptions().isEnabled()) return;
+
     this->fShowAdvancedPSUI = fShowAdvancedPSUI;
     privateSendStatus(true);
 }
 
 void OverviewPage::privateSendStatus(bool fForce)
 {
-    if (!fForce && (!masternodeSync.IsBlockchainSynced() || ShutdownRequested())) return;
+    if (!walletModel || !clientModel) return;
 
-    if(!walletModel) return;
+    if (!fForce && (ShutdownRequested() || !clientModel->masternodeSync().isBlockchainSynced())) return;
 
     // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
     if (fMasternodeMode || nWalletBackups <= 0) {
@@ -453,7 +445,7 @@ void OverviewPage::privateSendStatus(bool fForce)
         return;
     }
 
-    bool fIsEnabled = CPrivateSendClientOptions::IsEnabled();
+    bool fIsEnabled = clientModel->privateSendOptions().isEnabled();
     ui->framePrivateSend->setVisible(fIsEnabled);
     if (!fIsEnabled) {
         SetupTransactionList(NUM_ITEMS_DISABLED);
@@ -500,17 +492,10 @@ void OverviewPage::privateSendStatus(bool fForce)
     };
 
     static int64_t nLastDSProgressBlockTime = 0;
-    int nBestHeight = clientModel->getNumBlocks();
-
-    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
-    if (it == privateSendClientManagers.end()) {
-        // nothing to do
-        return;
-    }
-    CPrivateSendClientManager* privateSendClientManager = it->second;
+    int nBestHeight = clientModel->node().getNumBlocks();
 
     // We are processing more than 1 block per second, we'll just leave
-    if(nBestHeight > privateSendClientManager->nCachedNumBlocks && GetTime() - nLastDSProgressBlockTime <= 1) return;
+    if (nBestHeight > walletModel->privateSend().getCachedBlocks() && GetTime() - nLastDSProgressBlockTime <= 1) return;
     nLastDSProgressBlockTime = GetTime();
 
     QString strKeysLeftText(tr("keys left: %1").arg(walletModel->getKeysLeftSinceAutoBackup()));
@@ -519,9 +504,9 @@ void OverviewPage::privateSendStatus(bool fForce)
     }
     ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
 
-    if (!privateSendClientManager->IsMixing()) {
-        if (nBestHeight != privateSendClientManager->nCachedNumBlocks) {
-            privateSendClientManager->nCachedNumBlocks = nBestHeight;
+    if (!walletModel->privateSend().isMixing()) {
+        if (nBestHeight != walletModel->privateSend().getCachedBlocks()) {
+            walletModel->privateSend().setCachedBlocks(nBestHeight);
             updatePrivateSendProgress();
         }
 
@@ -582,7 +567,7 @@ void OverviewPage::privateSendStatus(bool fForce)
         }
     }
 
-    QString strEnabled = privateSendClientManager->IsMixing() ? tr("Enabled") : tr("Disabled");
+    QString strEnabled = walletModel->privateSend().isMixing() ? tr("Enabled") : tr("Disabled");
     // Show how many keys left in advanced PS UI mode only
     if(fShowAdvancedPSUI) strEnabled += ", " + strKeysLeftText;
     ui->labelPrivateSendEnabled->setText(strEnabled);
@@ -604,15 +589,15 @@ void OverviewPage::privateSendStatus(bool fForce)
     }
 
     // check privatesend status and unlock if needed
-    if(nBestHeight != privateSendClientManager->nCachedNumBlocks) {
+    if(nBestHeight != walletModel->privateSend().getCachedBlocks()) {
         // Balance and number of transactions might have changed
-        privateSendClientManager->nCachedNumBlocks = nBestHeight;
+        walletModel->privateSend().setCachedBlocks(nBestHeight);
         updatePrivateSendProgress();
     }
 
     setWidgetsVisible(true);
 
-    ui->labelSubmittedDenom->setText(QString(privateSendClientManager->GetSessionDenoms().c_str()));
+    ui->labelSubmittedDenom->setText(QString(walletModel->privateSend().getSessionDenoms().c_str()));
 }
 
 void OverviewPage::togglePrivateSend(){
@@ -626,16 +611,10 @@ void OverviewPage::togglePrivateSend(){
         settings.setValue("hasMixed", "hasMixed");
     }
 
-    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
-    if (it == privateSendClientManagers.end()) {
-        // nothing to do
-        return;
-    }
-    CPrivateSendClientManager* privateSendClientManager = it->second;
-
-    if (!privateSendClientManager->IsMixing()) {
-        const CAmount nMinAmount = CPrivateSend::GetSmallestDenomination() + CPrivateSend::GetMaxCollateralAmount();
-        if(currentBalance < nMinAmount){
+    if (!walletModel->privateSend().isMixing()) {
+        auto& options = walletModel->node().privateSendOptions();
+        const CAmount nMinAmount = options.getSmallestDenomination() + options.getMaxCollateralAmount();
+        if(m_balances.balance < nMinAmount) {
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, nMinAmount));
             QMessageBox::warning(this, "PrivateSend",
                 tr("PrivateSend requires at least %1 to use.").arg(strMinAmount),
@@ -650,7 +629,7 @@ void OverviewPage::togglePrivateSend(){
             if(!ctx.isValid())
             {
                 //unlock was cancelled
-                privateSendClientManager->nCachedNumBlocks = std::numeric_limits<int>::max();
+                walletModel->privateSend().resetCachedBlocks();
                 QMessageBox::warning(this, "PrivateSend",
                     tr("Wallet is locked and user declined to unlock. Disabling PrivateSend."),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -661,15 +640,15 @@ void OverviewPage::togglePrivateSend(){
 
     }
 
-    privateSendClientManager->nCachedNumBlocks = std::numeric_limits<int>::max();
+    walletModel->privateSend().resetCachedBlocks();
 
-    if (privateSendClientManager->IsMixing()) {
+    if (walletModel->privateSend().isMixing()) {
         ui->togglePrivateSend->setText(tr("Start Mixing"));
-        privateSendClientManager->ResetPool();
-        privateSendClientManager->StopMixing();
+        walletModel->privateSend().resetPool();
+        walletModel->privateSend().stopMixing();
     } else {
         ui->togglePrivateSend->setText(tr("Stop Mixing"));
-        privateSendClientManager->StartMixing(walletModel->getWallet());
+        walletModel->privateSend().startMixing();
     }
 }
 
@@ -698,16 +677,16 @@ void OverviewPage::SetupTransactionList(int nNumItems)
     ui->listTransactions->setMinimumHeight(nNumItems * ITEM_HEIGHT);
 }
 
-void OverviewPage::DisablePrivateSendCompletely() {
+void OverviewPage::DisablePrivateSendCompletely()
+{
+    if (walletModel == nullptr) {
+        return;
+    }
+
     ui->togglePrivateSend->setText("(" + tr("Disabled") + ")");
     ui->framePrivateSend->setEnabled(false);
     if (nWalletBackups <= 0) {
         ui->labelPrivateSendEnabled->setText("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>(" + tr("Disabled") + ")</span>");
     }
-    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
-    if (it == privateSendClientManagers.end()) {
-        // nothing to do
-        return;
-    }
-    it->second->StopMixing();
+    walletModel->privateSend().stopMixing();
 }

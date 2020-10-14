@@ -137,7 +137,7 @@ void AskPassphraseDialog::accept()
             {
                 if(model->setWalletEncrypted(true, newpass1))
                 {
-                    if (model->hdEnabled()) {
+                    if (model->wallet().hdEnabled()) {
                         QMessageBox::warning(this, tr("Wallet encrypted"),
                                          "<qt>" +
                                          tr("%1 will close now to finish the encryption process. "

@@ -7,12 +7,14 @@
 #define BITCOIN_QT_CLIENTMODEL_H
 
 #include <evo/deterministicmns.h>
+#include <interfaces/node.h>
 #include <sync.h>
 
 #include <QObject>
 #include <QDateTime>
 
 #include <atomic>
+#include <memory>
 
 class BanTableModel;
 class OptionsModel;
@@ -44,44 +46,29 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
     ~ClientModel();
 
+    interfaces::Node& node() const { return m_node; }
+    interfaces::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
+#ifdef ENABLE_WALLET
+    interfaces::PrivateSend::Options& privateSendOptions() const { return m_node.privateSendOptions(); }
+#endif
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
-    int getNumBlocks() const;
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
-    //! Return number of transactions in the mempool
-    long getMempoolSize() const;
-    //! Return the dynamic memory usage of the mempool
-    size_t getMempoolDynamicUsage() const;
-    //! Return number of ISLOCKs
-    size_t getInstantSentLockCount() const;
 
     void setMasternodeList(const CDeterministicMNList& mnList);
     CDeterministicMNList getMasternodeList() const;
     void refreshMasternodeList();
 
-    quint64 getTotalBytesRecv() const;
-    quint64 getTotalBytesSent() const;
-
-    double getVerificationProgress(const CBlockIndex *tip) const;
-    QDateTime getLastBlockDate() const;
-    QString getLastBlockHash() const;
-
-    //! Return true if core is doing initial block download
-    bool inInitialBlockDownload() const;
     //! Returns enum BlockSource of the current importing/syncing state
     enum BlockSource getBlockSource() const;
-    //! Return true if network activity in core is enabled
-    bool getNetworkActive() const;
-    //! Toggle network activity state in core
-    void setNetworkActive(bool active);
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
@@ -96,6 +83,16 @@ public:
     mutable std::atomic<int64_t> cachedBestHeaderTime;
 
 private:
+    interfaces::Node& m_node;
+    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_num_connections_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_network_active_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_masternodelist_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_additional_data_sync_progess_changed;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;

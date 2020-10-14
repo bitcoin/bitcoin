@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <interfaces/node.h>
 #include <qt/trafficgraphwidget.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
@@ -37,7 +38,7 @@ void TrafficGraphWidget::setClientModel(ClientModel *model)
 {
     clientModel = model;
     if(model) {
-        trafficGraphData.setLastBytes(model->getTotalBytesRecv(), model->getTotalBytesSent());
+        trafficGraphData.setLastBytes(model->node().getTotalBytesRecv(), model->node().getTotalBytesSent());
     }
 }
 
@@ -228,7 +229,7 @@ void TrafficGraphWidget::updateRates()
 {
     if(!clientModel) return;
 
-    bool updated = trafficGraphData.update(clientModel->getTotalBytesRecv(),clientModel->getTotalBytesSent());
+    bool updated = trafficGraphData.update(clientModel->node().getTotalBytesRecv(),clientModel->node().getTotalBytesSent());
 
     if (updated){
         float tmax = DEFAULT_SAMPLE_HEIGHT;
@@ -252,7 +253,7 @@ void TrafficGraphWidget::clear()
     trafficGraphData.clear();
     fMax = DEFAULT_SAMPLE_HEIGHT;
     if(clientModel) {
-        trafficGraphData.setLastBytes(clientModel->getTotalBytesRecv(), clientModel->getTotalBytesSent());
+        trafficGraphData.setLastBytes(clientModel->node().getTotalBytesRecv(), clientModel->node().getTotalBytesSent());
     }
     update();
 }
