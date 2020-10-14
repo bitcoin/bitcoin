@@ -26,8 +26,6 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-env name=COMMITS_AHEAD::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
-          echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
@@ -42,7 +40,7 @@ jobs:
           restore-keys: |
             linux-ccache-
       - name: get version for veriblock-pop-cpp
-        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
+        run: echo "VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)" >> $GITHUB_ENV
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: add bitcoin ppa
@@ -80,8 +78,8 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}/
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          tar czvf vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}/
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -90,7 +88,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: make check
         timeout-minutes: 60
@@ -116,8 +114,6 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-env name=COMMITS_AHEAD::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
-          echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
@@ -168,8 +164,8 @@ jobs:
         if: success()
         run: |
           mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -178,7 +174,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
   x86_64-apple-darwin16:
@@ -191,8 +187,6 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-env name=COMMITS_AHEAD::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
-          echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
@@ -244,8 +238,8 @@ jobs:
         run: |
           mv ./vBitcoin-Qt.app release/
           mv ./vBitcoin-Core.dmg release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -254,7 +248,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}.${{ env.COMMITS_AHEAD }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
   macos-native:
@@ -267,8 +261,6 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
-          echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
@@ -282,9 +274,9 @@ jobs:
           restore-keys: |
             macos-ccache-
       - name: get version for veriblock-pop-cpp
-        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
+        run: echo "VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)" >> $GITHUB_ENV
       - name: veriblock-pop-cpp release version
-        run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
+        run: echo Using veriblock-pop-cpp version ${VERIBLOCK_POP_CPP_VERSION}
       - name: install dependencies
         run: |
           brew install automake berkeley-db4 boost miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
@@ -328,8 +320,6 @@ jobs:
         run: |
           echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
-          echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
-          echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
@@ -344,9 +334,9 @@ jobs:
           restore-keys: |
             linux-asan-ccache-
       - name: get version for veriblock-pop-cpp
-        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
+        run: echo "VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)" >> $GITHUB_ENV
       - name: veriblock-pop-cpp release version
-        run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
+        run: echo Using veriblock-pop-cpp version ${VERIBLOCK_POP_CPP_VERSION}
       - name: run apt update
         run: sudo apt-get update
       - name: install build requirements
@@ -374,10 +364,10 @@ jobs:
         run: sed -i '/^implicit-/d' "${{ github.workspace }}/test/sanitizer_suppressions/ubsan"
       - name: set sanitizer options
         run: |
-          echo "::set-env name=ASAN_OPTIONS::detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
-          echo "::set-env name=LSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan"
-          echo "::set-env name=TSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan"
-          echo "::set-env name=UBSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
+          echo "ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1" >> $GITHUB_ENV
+          echo "LSAN_OPTIONS=suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan" >> $GITHUB_ENV
+          echo "TSAN_OPTIONS=suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan" >> $GITHUB_ENV
+          echo "UBSAN_OPTIONS=suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1" >> $GITHUB_ENV
       - name: autogen
         run: ./autogen.sh
       - name: configure
