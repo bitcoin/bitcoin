@@ -759,6 +759,7 @@ if test x$use_glibc_compat != xno; then
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=__divmoddi4]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=__divmoddi4"])
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=log2f]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=log2f"])
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=getrandom]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=getrandom"])
+  AX_CHECK_LINK_FLAG([[-Wl,--wrap=fmemopen]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=fmemopen"])
 else
   AC_SEARCH_LIBS([clock_gettime],[rt])
 fi
