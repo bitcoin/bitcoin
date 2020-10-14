@@ -782,7 +782,7 @@ typedef std::unordered_map<uint32_t, CAsset > AssetMap;
 // SYSCOIN
 class GenTxid
 {
-    const bool m_is_wtxid;
+    bool m_is_wtxid;
     uint256 m_hash;
     uint32_t m_type;
 public:
