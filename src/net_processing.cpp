@@ -3119,8 +3119,9 @@ void PeerManagerImpl::ProcessMessage(
 
     bool fBlocksOnly = pfrom.IsBlockRelayOnly();
 
-    if (msg_type == NetMsgType::VERACK)
-    {
+    if (msg_type == NetMsgType::VERACK) {
+        if (pfrom.fSuccessfullyConnected) return;
+
         if (!pfrom.IsInboundConn()) {
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom.nVersion.load(), pfrom.nStartingHeight,
