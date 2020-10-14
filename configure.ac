@@ -190,6 +190,16 @@ AC_ARG_ENABLE([ccache],
   [use_ccache=$enableval],
   [use_ccache=auto])
 
+dnl Suppress warnings from external headers (e.g. Boost, Qt).
+dnl May be useful if warnings from external headers clutter the build output
+dnl too much, so that it becomes difficult to spot Bitcoin Core warnings
+dnl or if they cause a build failure with --enable-werror.
+AC_ARG_ENABLE([suppress-external-warnings],
+  [AS_HELP_STRING([--enable-suppress-external-warnings],
+                  [Suppress warnings from external headers (default is no)])],
+  [suppress_external_warnings=$enableval],
+  [suppress_external_warnings=no])
+
 AC_ARG_ENABLE([lcov],
   [AS_HELP_STRING([--enable-lcov],
   [enable lcov testing (default is no)])],
@@ -1149,6 +1159,18 @@ AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
 
+dnl SUPPRESSED_CPPFLAGS=SUPPRESS_WARNINGS([$SOME_CPPFLAGS])
+dnl Replace -I with -isystem in $SOME_CPPFLAGS to suppress warnings from
+dnl headers from its include directories and return the result.
+dnl See -isystem documentation:
+dnl https://gcc.gnu.org/onlinedocs/gcc/Directory-Options.html
+dnl https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-isystem-directory
+dnl Do not change "-I/usr/include" to "-isystem /usr/include" because that
+dnl is not necessary (/usr/include is already a system directory) and because
+dnl it would break GCC's #include_next.
+AC_DEFUN([SUPPRESS_WARNINGS],
+         [$(echo $1 |${SED} -E -e 's/(^| )-I/\1-isystem /g' -e 's;-isystem /usr/include([/ ]|$);-I/usr/include\1;g')])
+
 dnl enable-fuzz should disable all other targets
 if test "x$enable_fuzz" = "xyes"; then
   AC_MSG_WARN(enable-fuzz will disable all other targets)
@@ -1184,11 +1206,22 @@ else
 
   dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
   BITCOIN_QT_CONFIGURE([5.5.1])
+
+  dnl Keep a copy of the original $QT_INCLUDES and use it when invoking qt's moc
+  QT_INCLUDES_UNSUPPRESSED=$QT_INCLUDES
+  if test x$suppress_external_warnings != xno ; then
+    QT_INCLUDES=SUPPRESS_WARNINGS($QT_INCLUDES)
+    QT_DBUS_INCLUDES=SUPPRESS_WARNINGS($QT_DBUS_INCLUDES)
+    QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
+  fi
 fi
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     BITCOIN_FIND_BDB48
+    if test x$suppress_external_warnings != xno ; then
+        BDB_CPPFLAGS=SUPPRESS_WARNINGS($BDB_CPPFLAGS)
+    fi
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -1242,6 +1275,10 @@ AX_BOOST_THREAD
 
 dnl Opt-in to boost-process
 AS_IF([ test x$with_boost_process != x ], [ AX_BOOST_PROCESS ], [ ax_cv_boost_process=no ] )
+
+if test x$suppress_external_warnings != xno; then
+    BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
+fi
 
 dnl Boost 1.56 through 1.62 allow using std::atomic instead of its own atomic
 dnl counter implementations. In 1.63 and later the std::atomic approach is default.
