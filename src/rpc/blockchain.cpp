@@ -199,7 +199,7 @@ static RPCHelpMan getblockcount()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
-    return ::ChainActive().Height();
+    return EnsureChainman(request.context).ActiveChain().Height();
 },
     };
 }
@@ -218,7 +218,7 @@ static RPCHelpMan getbestblockhash()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
-    return ::ChainActive().Tip()->GetBlockHash().GetHex();
+    return EnsureChainman(request.context).ActiveChain().Tip()->GetBlockHash().GetHex();
 },
     };
 }
@@ -399,7 +399,7 @@ static RPCHelpMan getdifficulty()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
-    return GetDifficulty(::ChainActive().Tip());
+    return GetDifficulty(EnsureChainman(request.context).ActiveChain().Tip());
 },
     };
 }
@@ -764,12 +764,13 @@ static RPCHelpMan getblockhash()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
+    const CChain& active_chain = EnsureChainman(request.context).ActiveChain();
 
     int nHeight = request.params[0].get_int();
-    if (nHeight < 0 || nHeight > ::ChainActive().Height())
+    if (nHeight < 0 || nHeight > active_chain.Height())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
 
-    CBlockIndex* pblockindex = ::ChainActive()[nHeight];
+    CBlockIndex* pblockindex = active_chain[nHeight];
     return pblockindex->GetBlockHash().GetHex();
 },
     };
@@ -823,8 +824,9 @@ static RPCHelpMan getblockheader()
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
-        tip = ::ChainActive().Tip();
+        ChainstateManager& chainman = EnsureChainman(request.context);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+        tip = chainman.ActiveChain().Tip();
     }
 
     if (!pblockindex) {
@@ -947,8 +949,9 @@ static RPCHelpMan getblock()
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
-        tip = ::ChainActive().Tip();
+        ChainstateManager& chainman = EnsureChainman(request.context);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+        tip = chainman.ActiveChain().Tip();
 
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -989,6 +992,7 @@ static RPCHelpMan pruneblockchain()
         throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
 
     LOCK(cs_main);
+    ChainstateManager& chainman = EnsureChainman(request.context);
 
     int heightParam = request.params[0].get_int();
     if (heightParam < 0)
@@ -998,7 +1002,7 @@ static RPCHelpMan pruneblockchain()
     // too low to be a block time (corresponds to timestamp from Sep 2001).
     if (heightParam > 1000000000) {
         // Add a 2 hour buffer to include blocks which might have had old timestamps
-        CBlockIndex* pindex = ::ChainActive().FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
+        CBlockIndex* pindex = chainman.ActiveChain().FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp.");
         }
@@ -1006,7 +1010,7 @@ static RPCHelpMan pruneblockchain()
     }
 
     unsigned int height = (unsigned int) heightParam;
-    unsigned int chainHeight = (unsigned int) ::ChainActive().Height();
+    unsigned int chainHeight = (unsigned int) chainman.ActiveChain().Height();
     if (chainHeight < Params().PruneAfterHeight())
         throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning.");
     else if (height > chainHeight)
@@ -1016,8 +1020,8 @@ static RPCHelpMan pruneblockchain()
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(::ChainstateActive(), height);
-    const CBlockIndex* block = ::ChainActive().Tip();
+    PruneBlockFilesManual(chainman.ActiveChainstate(), height);
+    const CBlockIndex* block = chainman.ActiveChain().Tip();
     CHECK_NONFATAL(block);
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
         block = block->pprev;
@@ -1070,13 +1074,20 @@ static RPCHelpMan gettxoutsetinfo()
     UniValue ret(UniValue::VOBJ);
 
     CCoinsStats stats;
-    ::ChainstateActive().ForceFlushStateToDisk();
+    CChainState& active_chainstate = EnsureChainman(request.context).ActiveChainstate();
+    active_chainstate.ForceFlushStateToDisk();
 
     const CoinStatsHashType hash_type{request.params[0].isNull() ? CoinStatsHashType::HASH_SERIALIZED : ParseHashType(request.params[0].get_str())};
 
-    CCoinsView* coins_view = WITH_LOCK(::cs_main, return &::ChainstateActive().CoinsDB());
+    CCoinsView* coins_view;
+    BlockManager* blockman;
+    {
+        LOCK(::cs_main);
+        coins_view = &active_chainstate.CoinsDB();
+        blockman = &active_chainstate.m_blockman;
+    }
     NodeContext& node = EnsureNodeContext(request.context);
-    if (GetUTXOStats(coins_view, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), stats, hash_type, node.rpc_interruption_point)) {
+    if (GetUTXOStats(coins_view, *blockman, stats, hash_type, node.rpc_interruption_point)) {
         ret.pushKV("height", (int64_t)stats.nHeight);
         ret.pushKV("bestblock", stats.hashBlock.GetHex());
         ret.pushKV("transactions", (int64_t)stats.nTransactions);
@@ -1147,7 +1158,8 @@ static RPCHelpMan gettxout()
         fMempool = request.params[2].get_bool();
 
     Coin coin;
-    CCoinsViewCache* coins_view = &::ChainstateActive().CoinsTip();
+    CChainState& active_chainstate = EnsureChainman(request.context).ActiveChainstate();
+    CCoinsViewCache* coins_view = &active_chainstate.CoinsTip();
 
     if (fMempool) {
         const CTxMemPool& mempool = EnsureMemPool(request.context);
@@ -1162,7 +1174,7 @@ static RPCHelpMan gettxout()
         }
     }
 
-    const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(coins_view->GetBestBlock());
+    const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(coins_view->GetBestBlock());
     ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
     if (coin.nHeight == MEMPOOL_HEIGHT) {
         ret.pushKV("confirmations", 0);
@@ -1202,12 +1214,13 @@ static RPCHelpMan verifychain()
 
     LOCK(cs_main);
 
-    return CVerifyDB().VerifyDB(Params(), ::ChainstateActive(), &::ChainstateActive().CoinsTip(), check_level, check_depth);
+    CChainState& active_chainstate = EnsureChainman(request.context).ActiveChainstate();
+    return CVerifyDB().VerifyDB(Params(), active_chainstate, &active_chainstate.CoinsTip(), check_level, check_depth);
 },
     };
 }
 
-static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height, int active_tip_nheight) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For buried deployments.
     // A buried deployment is one where the height of the activation has been hardcoded into
@@ -1220,12 +1233,12 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
     rv.pushKV("type", "buried");
     // getblockchaininfo reports the softfork as active from when the chain height is
     // one below the activation height
-    rv.pushKV("active", ::ChainActive().Tip()->nHeight + 1 >= height);
+    rv.pushKV("active", active_tip_nheight + 1 >= height);
     rv.pushKV("height", height);
     softforks.pushKV(name, rv);
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BIP9SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For BIP9 deployments.
     // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
@@ -1234,7 +1247,7 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
 
     UniValue bip9(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
+    const ThresholdState thresholdState = VersionBitsState(active_chain_tip, consensusParams, id, versionbitscache);
     switch (thresholdState) {
     case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
@@ -1248,12 +1261,12 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     }
     bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
+    int64_t since_height = VersionBitsStateSinceHeight(active_chain_tip, consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id);
+        BIP9Stats statsStruct = VersionBitsStatistics(active_chain_tip, consensusParams, id);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
@@ -1329,17 +1342,20 @@ RPCHelpMan getblockchaininfo()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
+    ChainstateManager& chainman = EnsureChainman(request.context);
 
-    const CBlockIndex* tip = ::ChainActive().Tip();
+    const CBlockIndex* tip = chainman.ActiveChain().Tip();
+    CHECK_NONFATAL(tip);
+    const int height = tip->nHeight;
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain",                 Params().NetworkIDString());
-    obj.pushKV("blocks",                (int)::ChainActive().Height());
+    obj.pushKV("blocks",                (int)height);
     obj.pushKV("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1);
     obj.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
     obj.pushKV("difficulty",            (double)GetDifficulty(tip));
     obj.pushKV("mediantime",            (int64_t)tip->GetMedianTimePast());
     obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
-    obj.pushKV("initialblockdownload",  ::ChainstateActive().IsInitialBlockDownload());
+    obj.pushKV("initialblockdownload",  chainman.ActiveChainstate().IsInitialBlockDownload());
     obj.pushKV("chainwork",             tip->nChainWork.GetHex());
     obj.pushKV("size_on_disk",          CalculateCurrentUsage());
     obj.pushKV("pruned",                fPruneMode);
@@ -1362,13 +1378,13 @@ RPCHelpMan getblockchaininfo()
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VOBJ);
-    BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height);
-    BuriedForkDescPushBack(softforks, "bip66", consensusParams.BIP66Height);
-    BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height);
-    BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
-    BuriedForkDescPushBack(softforks, "segwit", consensusParams.SegwitHeight);
-    BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
-    BIP9SoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
+    BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height, height);
+    BuriedForkDescPushBack(softforks, "bip66", consensusParams.BIP66Height, height);
+    BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height, height);
+    BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight, height);
+    BuriedForkDescPushBack(softforks, "segwit", consensusParams.SegwitHeight, height);
+    BIP9SoftForkDescPushBack(tip, softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+    BIP9SoftForkDescPushBack(tip, softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);
@@ -1555,16 +1571,17 @@ static RPCHelpMan preciousblock()
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
     CBlockIndex* pblockindex;
 
+    ChainstateManager& chainman = EnsureChainman(request.context);
     {
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
 
     BlockValidationState state;
-    ::ChainstateActive().PreciousBlock(state, Params(), pblockindex);
+    chainman.ActiveChainstate().PreciousBlock(state, Params(), pblockindex);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1592,18 +1609,19 @@ static RPCHelpMan invalidateblock()
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
     BlockValidationState state;
 
+    ChainstateManager& chainman = EnsureChainman(request.context);
     CBlockIndex* pblockindex;
     {
         LOCK(cs_main);
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    ::ChainstateActive().InvalidateBlock(state, Params(), pblockindex);
+    chainman.ActiveChainstate().InvalidateBlock(state, Params(), pblockindex);
 
     if (state.IsValid()) {
-        ::ChainstateActive().ActivateBestChain(state, Params());
+        chainman.ActiveChainstate().ActivateBestChain(state, Params());
     }
 
     if (!state.IsValid()) {
@@ -1630,20 +1648,21 @@ static RPCHelpMan reconsiderblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    ChainstateManager& chainman = EnsureChainman(request.context);
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     {
         LOCK(cs_main);
-        CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        ::ChainstateActive().ResetBlockFailureFlags(pblockindex);
+        chainman.ActiveChainstate().ResetBlockFailureFlags(pblockindex);
     }
 
     BlockValidationState state;
-    ::ChainstateActive().ActivateBestChain(state, Params());
+    chainman.ActiveChainstate().ActivateBestChain(state, Params());
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1680,20 +1699,21 @@ static RPCHelpMan getchaintxstats()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    ChainstateManager& chainman = EnsureChainman(request.context);
     const CBlockIndex* pindex;
     int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
     if (request.params[1].isNull()) {
         LOCK(cs_main);
-        pindex = ::ChainActive().Tip();
+        pindex = chainman.ActiveChain().Tip();
     } else {
         uint256 hash(ParseHashV(request.params[1], "blockhash"));
         LOCK(cs_main);
-        pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-        if (!::ChainActive().Contains(pindex)) {
+        if (!chainman.ActiveChain().Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
         }
     }
@@ -1862,11 +1882,12 @@ static RPCHelpMan getblockstats()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
+    ChainstateManager& chainman = EnsureChainman(request.context);
 
     CBlockIndex* pindex;
     if (request.params[0].isNum()) {
         const int height = request.params[0].get_int();
-        const int current_tip = ::ChainActive().Height();
+        const int current_tip = chainman.ActiveChain().Height();
         if (height < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d is negative", height));
         }
@@ -1874,14 +1895,14 @@ static RPCHelpMan getblockstats()
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, current_tip));
         }
 
-        pindex = ::ChainActive()[height];
+        pindex = chainman.ActiveChain()[height];
     } else {
         const uint256 hash(ParseHashV(request.params[0], "hash_or_height"));
-        pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
+        pindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-        if (!::ChainActive().Contains(pindex)) {
+        if (!chainman.ActiveChain().Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Block is not in chain %s", Params().NetworkIDString()));
         }
     }
@@ -2264,10 +2285,11 @@ static RPCHelpMan scantxoutset()
         CBlockIndex* tip;
         {
             LOCK(cs_main);
-            ::ChainstateActive().ForceFlushStateToDisk();
-            pcursor = std::unique_ptr<CCoinsViewCursor>(::ChainstateActive().CoinsDB().Cursor());
+            ChainstateManager& chainman = EnsureChainman(request.context);
+            chainman.ActiveChainstate().ForceFlushStateToDisk();
+            pcursor = std::unique_ptr<CCoinsViewCursor>(chainman.ActiveChainstate().CoinsDB().Cursor());
             CHECK_NONFATAL(pcursor);
-            tip = ::ChainActive().Tip();
+            tip = chainman.ActiveChain().Tip();
             CHECK_NONFATAL(tip);
         }
         NodeContext& node = EnsureNodeContext(request.context);
@@ -2344,7 +2366,7 @@ static RPCHelpMan getblockfilter()
     bool block_was_connected;
     {
         LOCK(cs_main);
-        block_index = g_chainman.m_blockman.LookupBlockIndex(block_hash);
+        block_index = EnsureChainman(request.context).m_blockman.LookupBlockIndex(block_hash);
         if (!block_index) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -2465,7 +2487,7 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
         }
 
         pcursor = std::unique_ptr<CCoinsViewCursor>(chainstate.CoinsDB().Cursor());
-        tip = g_chainman.m_blockman.LookupBlockIndex(stats.hashBlock);
+        tip = chainstate.m_blockman.LookupBlockIndex(stats.hashBlock);
         CHECK_NONFATAL(tip);
     }
 
