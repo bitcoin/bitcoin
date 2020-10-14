@@ -39,9 +39,10 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
     { // cs_main scope
     LOCK(cs_main);
+    assert(std::addressof(::ChainstateActive()) == std::addressof(node.chainman->ActiveChainstate()));
     // If the transaction is already confirmed in the chain, don't do anything
     // and return early.
-    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
+    CCoinsViewCache &view = node.chainman->ActiveChainstate().CoinsTip();
     for (size_t o = 0; o < tx->vout.size(); o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
         // IsSpent doesn't mean the coin is spent, it means the output doesn't exist.
@@ -55,7 +56,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             // First, call ATMP with test_accept and check the fee. If ATMP
             // fails here, return error immediately.
             CAmount fee{0};
-            if (!AcceptToMemoryPool(::ChainstateActive(), *node.mempool, state, tx,
+            if (!AcceptToMemoryPool(node.chainman->ActiveChainstate(), *node.mempool, state, tx,
                 nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true, &fee)) {
                 return HandleATMPError(state, err_string);
             } else if (fee > max_tx_fee) {
@@ -63,7 +64,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             }
         }
         // Try to submit the transaction to the mempool.
-        if (!AcceptToMemoryPool(::ChainstateActive(), *node.mempool, state, tx,
+        if (!AcceptToMemoryPool(node.chainman->ActiveChainstate(), *node.mempool, state, tx,
                 nullptr /* plTxnReplaced */, false /* bypass_limits */)) {
             return HandleATMPError(state, err_string);
         }
