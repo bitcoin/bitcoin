@@ -86,7 +86,7 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
     return cmapVoteToObject.Get(nHash, pGovobj) && pGovobj->GetVoteFile().SerializeVoteToStream(nHash, ss);
 }
 
-void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
 {
     if (fDisableGovernance) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
@@ -121,10 +121,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         vRecv >> govobj;
 
         uint256 nHash = govobj.GetHash();
-
         {
             LOCK(cs_main);
-            EraseOtherRequest(pfrom->GetId(), nHash);
+            pfrom->AddKnownTx(nHash);
+            peerman.ReceivedResponse(pfrom->GetId(), nHash);
         }
 
         if (!masternodeSync.IsBlockchainSynced()) {
@@ -174,13 +174,13 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
                 LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
             } else {
                 LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
+                peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 // apply node's ban score
                 Misbehaving(pfrom->GetId(), 20, "invalid governance object");
             }
-
             return;
         }
-
+        peerman.ForgetTxHash(pfrom->GetId(), nHash);
         AddGovernanceObject(govobj, connman, pfrom);
     }
 
@@ -190,10 +190,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         vRecv >> vote;
 
         uint256 nHash = vote.GetHash();
-
         {
             LOCK(cs_main);
-            EraseOtherRequest(pfrom->GetId(), nHash);
+            pfrom->AddKnownTx(nHash);
+            peerman.ReceivedResponse(pfrom->GetId(), nHash);
         }
 
 
@@ -221,9 +221,17 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         } else {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
             if ((exception.GetNodePenalty() != 0) && masternodeSync.IsSynced()) {
+                {
+                    LOCK(cs_main);
+                    peerman.ForgetTxHash(pfrom->GetId(), nHash);
+                }
                 Misbehaving(pfrom->GetId(), exception.GetNodePenalty(), "rejected vote");
             }
             return;
+        }
+        {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), nHash);
         }
         // SEND NOTIFICATION TO SCRIPT/ZMQ
         GetMainSignals().NotifyGovernanceVote(vote);
@@ -527,29 +535,32 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
     UpdateCachesAndClean();
 }
 
-bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
+bool CGovernanceManager::ConfirmInventoryRequest(const GenTxid& gtxid)
 {
     // do not request objects until it's time to sync
     if (!masternodeSync.IsBlockchainSynced()) return false;
 
     LOCK(cs);
-
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest inv = %s\n", inv.ToString());
-
+    const uint32_t &type = gtxid.GetType();
+    const uint256  &hash = gtxid.GetHash();
+    hash_s_t* setHash = nullptr;
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest inv = %s-%d\n", hash.GetHex(), type);
     // First check if we've already recorded this object
-    switch (inv.type) {
+    switch (type) {
     case MSG_GOVERNANCE_OBJECT: {
-        if (mapObjects.count(inv.hash) == 1 || mapPostponedObjects.count(inv.hash) == 1) {
+        if (mapObjects.count(hash) == 1 || mapPostponedObjects.count(hash) == 1) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest already have governance object, returning false\n");
             return false;
         }
+        setHash = &setRequestedObjects;
         break;
     } 
     case MSG_GOVERNANCE_OBJECT_VOTE: {
-        if (cmapVoteToObject.HasKey(inv.hash)) {
+        if (cmapVoteToObject.HasKey(hash)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest already have governance vote, returning false\n");
             return false;
         }
+        setHash = &setRequestedVotes;
         break;
     } 
     default:
@@ -557,22 +568,9 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
         return false;
     }
 
-
-    hash_s_t* setHash = nullptr;
-    switch (inv.type) {
-    case MSG_GOVERNANCE_OBJECT:
-        setHash = &setRequestedObjects;
-        break;
-    case MSG_GOVERNANCE_OBJECT_VOTE:
-        setHash = &setRequestedVotes;
-        break;
-    default:
-        return false;
-    }
-
-    hash_s_cit it = setHash->find(inv.hash);
+    hash_s_cit it = setHash->find(hash);
     if (it == setHash->end()) {
-        setHash->insert(inv.hash);
+        setHash->insert(hash);
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest added inv to requested set\n");
     }
 
@@ -917,14 +915,14 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman)
+int CGovernanceManager::RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman, const PeerManager& peerman)
 {
     std::vector<CNode*> vNodesCopy;
     vNodesCopy.push_back(pnode);
-    return RequestGovernanceObjectVotes(vNodesCopy, connman);
+    return RequestGovernanceObjectVotes(vNodesCopy, connman, peerman);
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman)
+int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman, const PeerManager& peerman)
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
 
@@ -1002,7 +1000,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // stop early to prevent setAskFor overflow
             {
                 LOCK(cs_main);
-                size_t nProjectedSize = GetRequestedOtherCount(pnode->GetId()) + nProjectedVotes;
+                size_t nProjectedSize = peerman.GetRequestedCount(pnode->GetId()) + nProjectedVotes;
                 if (nProjectedSize > GetMaxInv()) continue;
                 // to early to ask the same node
                 if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;

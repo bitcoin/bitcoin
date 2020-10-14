@@ -109,7 +109,7 @@ void CSporkManager::CheckAndRemove()
     }
 }
 
-void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
 {
 
     if (strCommand == NetMsgType::SPORK) {
@@ -118,16 +118,20 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         vRecv >> spork;
 
         const uint256 &hash = spork.GetHash();
-
         std::string strLogMsg;
         {
             LOCK(cs_main);
-            EraseOtherRequest(pfrom->GetId(), hash);
+            pfrom->AddKnownTx(hash);
+            peerman.ReceivedResponse(pfrom->GetId(), hash);
             if(!::ChainActive().Tip()) return;
             strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, ::ChainActive().Height(), pfrom->GetId());
         }
 
         if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
+            {
+                LOCK(cs_main);
+                peerman.ForgetTxHash(pfrom->GetId(), hash);
+            }
             LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
             Misbehaving(pfrom->GetId(), 100, "spork too far into the future");
             return;
@@ -136,18 +140,22 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         CKeyID keyIDSigner;
 
         if (!spork.GetSignerKeyID(keyIDSigner) || !setSporkPubKeyIDs.count(keyIDSigner)) {
+            {
+                LOCK(cs_main);
+                peerman.ForgetTxHash(pfrom->GetId(), hash);
+            }
             LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
             Misbehaving(pfrom->GetId(), 100, "invalid spork signature");
             return;
         }
-
+        bool bSeen = false;
         {
             LOCK(cs); // make sure to not lock this together with cs_main
             if (mapSporksActive.count(spork.nSporkID)) {
                 if (mapSporksActive[spork.nSporkID].count(keyIDSigner)) {
                     if (mapSporksActive[spork.nSporkID][keyIDSigner].nTimeSigned >= spork.nTimeSigned) {
                         LogPrint(BCLog::SPORK, "%s seen\n", strLogMsg);
-                        return;
+                        bSeen = true;
                     } else {
                         LogPrintf("%s updated\n", strLogMsg);
                     }
@@ -158,6 +166,11 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
                 LogPrintf("%s new\n", strLogMsg);
             }
         }
+        if(bSeen) {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), hash);
+            return;
+        }
 
 
         {
@@ -166,7 +179,10 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             mapSporksActive[spork.nSporkID][keyIDSigner] = spork;
         }
         spork.Relay(connman);
-
+        {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), hash);
+        }
     } else if (strCommand == NetMsgType::GETSPORKS) {
         LOCK(cs); // make sure to not lock this together with cs_main
         for (const auto& pair : mapSporksActive) {

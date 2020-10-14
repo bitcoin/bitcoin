@@ -610,3 +610,11 @@ void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
 bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string &errorMessage, bool bConsensus) {
     return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
 }
+
+GenTxid::GenTxid(bool is_wtxid, const uint256& hash): m_is_wtxid(is_wtxid), m_hash(hash) {
+    if(m_is_wtxid) {
+        m_type = MSG_WTX;
+    } else {
+        m_type = MSG_TX;
+    }
+}

@@ -12,7 +12,7 @@
 #include <ctpl.h>
 class CConnman;
 class UniValue;
-
+class PeerManager;
 namespace llmq
 {
 
@@ -23,8 +23,6 @@ class CDKGSessionManager
 private:
     CDBWrapper& llmqDb;
     CBLSWorker& blsWorker;
-    CConnman& connman;
-
     std::map<uint8_t, CDKGSessionHandler> dkgSessionHandlers;
 
     RecursiveMutex contributionsCacheCs;
@@ -47,7 +45,9 @@ private:
     std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache;
 
 public:
-    CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &connman);
+    CConnman& connman;
+    PeerManager& peerman;
+    CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &connman, PeerManager& peerman);
     ~CDKGSessionManager();
 
     void StartThreads();

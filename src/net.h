@@ -14,7 +14,6 @@
 #include <compat.h>
 #include <crypto/siphash.h>
 #include <hash.h>
-#include <limitedmap.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <optional.h>
@@ -1109,8 +1108,6 @@ public:
     // List of block ids we still have announce.
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
-       // SYSCOIN List of non-tx/non-block inventory items
-    std::vector<CInv> vInventoryOtherToSend;
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
     Mutex cs_inventory;
 
@@ -1128,6 +1125,8 @@ public:
         // Set of transaction ids we still have to announce.
         // They are sorted by the mempool before relay, so the order is not important.
         std::set<uint256> setInventoryTxToSend;
+        // SYSCOIN
+        std::set<CInv> setInventoryTxToSendOther;
         // Used for BIP35 mempool sending
         bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
@@ -1318,10 +1317,14 @@ public:
             m_tx_relay->setInventoryTxToSend.insert(hash);
         }
     }
+    // SYSCOIN
     void PushOtherInventory(const CInv& inv)
     {
-        // SYSCOIN
-        vInventoryOtherToSend.push_back(inv);
+        if (m_tx_relay == nullptr) return;
+        LOCK(m_tx_relay->cs_tx_inventory);
+        if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+            m_tx_relay->setInventoryTxToSendOther.insert(inv);
+        }
     }
     void CloseSocketDisconnect();
 

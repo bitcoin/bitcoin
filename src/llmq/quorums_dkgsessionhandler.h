@@ -11,6 +11,7 @@
 
 #include <ctpl.h>
 class CConnman;
+class PeerManager;
 namespace llmq
 {
 
@@ -40,22 +41,22 @@ public:
 
 private:
     mutable RecursiveMutex cs;
-    int invType;
     size_t maxMessagesPerNode;
     std::list<BinaryMessage> pendingMessages;
     std::map<NodeId, size_t> messagesPerNode;
     std::set<uint256> seenMessages;
 
 public:
-    explicit CDKGPendingMessages(size_t _maxMessagesPerNode);
+    PeerManager& peerman;
+    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, PeerManager& peerman);
 
-    void PushPendingMessage(NodeId from, CDataStream& vRecv);
+    void PushPendingMessage(CNode* from, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
     bool HasSeen(const uint256& hash) const;
     void Clear();
 
     template<typename Message>
-    void PushPendingMessage(NodeId from, Message& msg)
+    void PushPendingMessage(CNode* from, Message& msg)
     {
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
         ds << msg;
@@ -105,7 +106,6 @@ private:
     const Consensus::LLMQParams& params;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
-    CConnman &connman;
 
     QuorumPhase phase{QuorumPhase_Idle};
     int currentHeight{-1};
@@ -121,11 +121,11 @@ private:
     std::string m_threadName;
 
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, CConnman& connman);
+    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
 
     void StartThread();
     void StopThread();

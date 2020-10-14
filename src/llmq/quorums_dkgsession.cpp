@@ -204,7 +204,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc);
+    pendingMessages.PushPendingMessage(nullptr, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -451,7 +451,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions()
     CDKGLogger logger(*this, __func__);
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
-    connman.ForEachNode([&](const CNode* pnode) {
+    dkgManager.connman.ForEachNode([&](const CNode* pnode) {
         if (pnode->verifiedProRegTxHash.IsNull()) {
             return;
         }
@@ -519,7 +519,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc);
+    pendingMessages.PushPendingMessage(nullptr, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -716,7 +716,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qj);
+    pendingMessages.PushPendingMessage(nullptr, qj);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -1037,7 +1037,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc);
+    pendingMessages.PushPendingMessage(nullptr, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -1307,7 +1307,7 @@ void CDKGSession::MarkBadMember(size_t idx)
 void CDKGSession::RelayOtherInvToParticipants(const CInv& inv) const
 {
     LOCK(invCs);
-    connman.ForEachNode([&](CNode* pnode) {
+    dkgManager.connman.ForEachNode([&](CNode* pnode) {
         bool relay = false;
         if (pnode->qwatch) {
             relay = true;

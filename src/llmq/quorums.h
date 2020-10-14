@@ -84,13 +84,12 @@ private:
     CEvoDB& evoDb;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
-    CConnman &connman;
     RecursiveMutex quorumsCacheCs;
     std::map<std::pair<uint8_t, uint256>, CQuorumPtr> quorumsCache;
     unordered_lru_cache<std::pair<uint8_t, uint256>, std::vector<CQuorumCPtr>, StaticSaltedHasher, 32> scanQuorumsCache;
 
 public:
-    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman &_connman);
+    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
@@ -105,7 +104,7 @@ public:
 
 private:
     // all private methods here are cs_main-free
-    void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew, CConnman& connman);
+    void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew);
 
     bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, const uint256& minedBlockHash, std::shared_ptr<CQuorum>& quorum) const;
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;

@@ -199,7 +199,6 @@ SYSCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  limitedmap.h \
   llmq/quorums.h \
   llmq/quorums_blockprocessor.h \
   llmq/quorums_commitment.h \
@@ -278,6 +277,7 @@ SYSCOIN_CORE_H = \
   timedata.h \
   torcontrol.h \
   txdb.h \
+  txrequest.h \
   txmempool.h \
   undo.h \
   unordered_lru_cache.h \
@@ -479,6 +479,7 @@ libsyscoin_server_a_SOURCES = \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
+  txrequest.cpp \
   txmempool.cpp \
   validation.cpp \
   validationinterface.cpp \

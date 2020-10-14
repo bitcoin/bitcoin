@@ -1876,7 +1876,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-                llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, fReset || fReindexChainState);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));    
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
@@ -2279,7 +2279,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
 
     node.scheduler->scheduleEvery([&] { netfulfilledman.DoMaintenance(); }, std::chrono::seconds{1});
-    node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
+    node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     if (!fDisableGovernance) {
         node.scheduler->scheduleEvery([&] { governance.DoMaintenance(*node.connman); }, std::chrono::minutes{5});

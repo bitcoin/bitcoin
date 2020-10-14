@@ -102,7 +102,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
     }
 }
 
-void CMasternodeSync::ProcessTick(CConnman& connman)
+void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 {
     static int nTick = 0;
     nTick++;
@@ -130,7 +130,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
     if(IsSynced()) {
         std::vector<CNode*> vNodesCopy;
         connman.CopyNodeVector(vNodesCopy);
-        governance.RequestGovernanceObjectVotes(vNodesCopy, connman);
+        governance.RequestGovernanceObjectVotes(vNodesCopy, connman, peerman);
         connman.ReleaseNodeVector(vNodesCopy);
         return;
     }
@@ -234,7 +234,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
                 // only request obj sync once from each peer, then request votes on per-obj basis
                 if(netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
-                    int nObjsLeftToAsk = governance.RequestGovernanceObjectVotes(pnode, connman);
+                    int nObjsLeftToAsk = governance.RequestGovernanceObjectVotes(pnode, connman, peerman);
                     static int64_t nTimeNoObjectsLeft = 0;
                     // check for data
                     if(nObjsLeftToAsk == 0) {
@@ -353,9 +353,9 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
                 pindexNew->nHeight, pindexBestHeader->nHeight, fInitialDownload, fReachedBestHeader);
 }
 
-void CMasternodeSync::DoMaintenance(CConnman &connman)
+void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman)
 {
     if (ShutdownRequested()) return;
 
-    ProcessTick(connman);
+    ProcessTick(connman, peerman);
 }
