@@ -59,6 +59,7 @@ static int secp256k1_ge_is_infinity(const secp256k1_ge *a);
 /** Check whether a group element is valid (i.e., on the curve). */
 static int secp256k1_ge_is_valid_var(const secp256k1_ge *a);
 
+/** Set r equal to the inverse of a (i.e., mirrored around the X axis) */
 static void secp256k1_ge_neg(secp256k1_ge *r, const secp256k1_ge *a);
 
 /** Set a group element equal to another which is given in jacobian coordinates */
@@ -115,10 +116,8 @@ static void secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, c
 /** Set r equal to the sum of a and b (with the inverse of b's Z coordinate passed as bzinv). */
 static void secp256k1_gej_add_zinv_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, const secp256k1_fe *bzinv);
 
-#ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */
 static void secp256k1_ge_mul_lambda(secp256k1_ge *r, const secp256k1_ge *a);
-#endif
 
 /** Clear a secp256k1_gej to prevent leaking sensitive information. */
 static void secp256k1_gej_clear(secp256k1_gej *r);
@@ -137,5 +136,16 @@ static void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_g
 
 /** Rescale a jacobian point by b which must be non-zero. Constant-time. */
 static void secp256k1_gej_rescale(secp256k1_gej *r, const secp256k1_fe *b);
+
+/** Determine if a point (which is assumed to be on the curve) is in the correct (sub)group of the curve.
+ *
+ * In normal mode, the used group is secp256k1, which has cofactor=1 meaning that every point on the curve is in the
+ * group, and this function returns always true.
+ *
+ * When compiling in exhaustive test mode, a slightly different curve equation is used, leading to a group with a
+ * (very) small subgroup, and that subgroup is what is used for all cryptographic operations. In that mode, this
+ * function checks whether a point that is on the curve is in fact also in that subgroup.
+ */
+static int secp256k1_ge_is_in_correct_subgroup(const secp256k1_ge* ge);
 
 #endif /* SECP256K1_GROUP_H */
