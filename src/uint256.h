@@ -126,6 +126,7 @@ public:
     constexpr uint256() {}
     constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
+    static const uint256 ZERO;
     static const uint256 ONE;
 };
 

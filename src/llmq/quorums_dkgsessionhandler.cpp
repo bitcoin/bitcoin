@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums_dkgsessionhandler.h>
+#include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_init.h>
@@ -18,40 +19,39 @@
 namespace llmq
 {
 
-CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode)
+CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, PeerManager& _peerman): maxMessagesPerNode(_maxMessagesPerNode), peerman(_peerman)
 {
-    maxMessagesPerNode = _maxMessagesPerNode;
 }
 
-void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
+void CDKGPendingMessages::PushPendingMessage(CNode* pfrom, CDataStream& vRecv)
 {
+    NodeId from = -1;
+    if(pfrom)
+        from = pfrom->GetId();
     // this will also consume the data, even if we bail out early
     auto pm = std::make_shared<CDataStream>(std::move(vRecv));
-
-    {
-        LOCK(cs);
-
-        if (messagesPerNode[from] >= maxMessagesPerNode) {
-            // TODO ban?
-            LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
-            return;
-        }
-        messagesPerNode[from]++;
-    }
-
     CHashWriter hw(SER_GETHASH, 0);
     hw.write(pm->data(), pm->size());
     const uint256 &hash = hw.GetHash();
-
     LOCK2(cs_main, cs);
+    peerman.ReceivedResponse(from, hash);
+    if(pfrom)
+        pfrom->AddKnownTx(hash);
 
+    if (messagesPerNode[from] >= maxMessagesPerNode) {
+        // TODO ban?
+        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
+        return;
+    }
+    messagesPerNode[from]++;
+    
     if (!seenMessages.emplace(hash).second) {
+        peerman.ForgetTxHash(pfrom->GetId(), hash);
         LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- already seen %s, peer=%d\n", __func__, hash.ToString(), from);
         return;
     }
 
-    EraseOtherRequest(from, hash);
-
+    peerman.ForgetTxHash(pfrom->GetId(), hash);
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
 }
 
@@ -84,16 +84,15 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
     params(_params),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
-    connman(_connman),
-    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager, _connman)),
-    pendingContributions((size_t)_params.size * 2), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-    pendingComplaints((size_t)_params.size * 2),
-    pendingJustifications((size_t)_params.size * 2),
-    pendingPrematureCommitments((size_t)_params.size * 2)
+    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
+    pendingContributions((size_t)_params.size * 2, _dkgManager.peerman), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+    pendingComplaints((size_t)_params.size * 2, _dkgManager.peerman),
+    pendingJustifications((size_t)_params.size * 2, _dkgManager.peerman),
+    pendingPrematureCommitments((size_t)_params.size * 2, _dkgManager.peerman)
 {
     m_threadName = strprintf("q-phase-%d", params.type);
     if (params.type == Consensus::LLMQ_NONE) {
@@ -125,17 +124,17 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
             params.name, currentHeight, quorumHeight, oldPhase, phase);
 }
 
-void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
     if (strCommand == NetMsgType::QCONTRIB) {
-        pendingContributions.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingContributions.PushPendingMessage(pfrom, vRecv);
     } else if (strCommand == NetMsgType::QCOMPLAINT) {
-        pendingComplaints.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingComplaints.PushPendingMessage(pfrom, vRecv);
     } else if (strCommand == NetMsgType::QJUSTIFICATION) {
-        pendingJustifications.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingJustifications.PushPendingMessage(pfrom, vRecv);
     } else if (strCommand == NetMsgType::QPCOMMITMENT) {
-        pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingPrematureCommitments.PushPendingMessage(pfrom, vRecv);
     }
 }
 
@@ -161,7 +160,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
     //AssertLockHeld(cs_main);
 
 
-    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager, connman);
+    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
         return false;
@@ -450,12 +449,16 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         const uint256& hash = ::SerializeHash(msg);
         {
             LOCK(cs_main);
-            EraseOtherRequest(p.first, hash);
+            pendingMessages.peerman.ReceivedResponse(p.first, hash);
         }
 
         bool ban = false;
         if (!session.PreVerifyMessage(hash, msg, ban)) {
             if (ban) {
+                {
+                    LOCK(cs_main);
+                    pendingMessages.peerman.ForgetTxHash(p.first, hash);
+                }
                 LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, p.first);
                 Misbehaving(p.first, 100, "banning node due to failed preverification");
             }
@@ -464,6 +467,10 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         }
         hashes.emplace_back(hash);
         preverifiedMessages.emplace_back(p);
+        {
+            LOCK(cs_main);
+            pendingMessages.peerman.ForgetTxHash(p.first, hash);
+        }
     }
     if (preverifiedMessages.empty()) {
         return true;
@@ -530,9 +537,9 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS), connman);
+    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS), dkgManager.connman);
     if (curSession->AreWeMember() && CLLMQUtils::IsAllMembersConnectedEnabled(params.type)) {
-        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash, connman);
+        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash, dkgManager.connman);
     }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});

@@ -426,9 +426,10 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman) :
+CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman) :
     db(llmqDb),
-    connman(_connman)
+    connman(_connman),
+    peerman(_peerman)
 {
 }
 
@@ -456,20 +457,30 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     return true;
 }
 
-void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman)
 {
     if (strCommand == NetMsgType::QSIGREC) {
         CRecoveredSig recoveredSig;
         vRecv >> recoveredSig;
-        ProcessMessageRecoveredSig(pfrom, recoveredSig, connman);
+        ProcessMessageRecoveredSig(pfrom, recoveredSig);
     }
 }
 
-void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig, CConnman& connman)
+void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig)
 {
+    const uint256& hash = ::SerializeHash(recoveredSig);
+    {
+        LOCK(cs_main);
+        pfrom->AddKnownTx(hash);
+        peerman.ReceivedResponse(pfrom->GetId(), hash);
+    }
     bool ban = false;
     if (!PreVerifyRecoveredSig(pfrom->GetId(), recoveredSig, ban)) {
         if (ban) {
+            {
+                LOCK(cs_main);
+                peerman.ForgetTxHash(pfrom->GetId(), hash);
+            }
             Misbehaving(pfrom->GetId(), 100, "error PreVerifyRecoveredSig");
         }
         return;
@@ -478,20 +489,29 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
     // It's important to only skip seen *valid* sig shares here. See comment for CBatchedSigShare
     // We don't receive recovered sigs in batches, but we do batched verification per node on these
     if (db.HasRecoveredSigForHash(recoveredSig.GetHash())) {
+        {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), hash);
+        }
         return;
     }
 
     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
             CLLMQUtils::BuildSignHash(recoveredSig).ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), pfrom->GetId());
-
-    LOCK(cs);
-    if (pendingReconstructedRecoveredSigs.count(recoveredSig.GetHash())) {
-        // no need to perform full verification
-        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- already pending reconstructed sig, signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
-                 CLLMQUtils::BuildSignHash(recoveredSig).ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), pfrom->GetId());
-        return;
+    {
+        LOCK(cs);
+        if (pendingReconstructedRecoveredSigs.count(recoveredSig.GetHash())) {
+            // no need to perform full verification
+            LogPrint(BCLog::LLMQ, "CSigningManager::%s -- already pending reconstructed sig, signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
+                    CLLMQUtils::BuildSignHash(recoveredSig).ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), pfrom->GetId());
+        } else {
+            pendingRecoveredSigs[pfrom->GetId()].emplace_back(recoveredSig);
+        }
     }
-    pendingRecoveredSigs[pfrom->GetId()].emplace_back(recoveredSig);
+    {
+        LOCK(cs_main);
+        peerman.ForgetTxHash(pfrom->GetId(), hash);
+    }
 }
 
 bool CSigningManager::PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, bool& retBan)
@@ -592,11 +612,11 @@ void CSigningManager::ProcessPendingReconstructedRecoveredSigs()
         m = std::move(pendingReconstructedRecoveredSigs);
     }
     for (auto& p : m) {
-        ProcessRecoveredSig(-1, p.second.first, p.second.second, connman);
+        ProcessRecoveredSig(-1, p.second.first, p.second.second);
     }
 }
 
-bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
+bool CSigningManager::ProcessPendingRecoveredSigs()
 {
     std::unordered_map<NodeId, std::list<CRecoveredSig>> recSigsByNode;
     std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
@@ -653,7 +673,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
             }
 
             const auto& quorum = quorums.at(std::make_pair(recSig.llmqType, recSig.quorumHash));
-            ProcessRecoveredSig(nodeId, recSig, quorum, connman);
+            ProcessRecoveredSig(nodeId, recSig, quorum);
         }
     }
 
@@ -661,23 +681,27 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 }
 
 // signature must be verified already
-void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman& connman)
+void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum)
 {
     auto llmqType = recoveredSig.llmqType;
     const uint256& hash = recoveredSig.GetHash();
     CInv inv(MSG_QUORUM_RECOVERED_SIG, hash);
     {
         LOCK(cs_main);
-        EraseOtherRequest(nodeId, hash);
+        peerman.ReceivedResponse(nodeId, hash);
     }
 
     if (db.HasRecoveredSigForHash(hash)) {
+        {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(nodeId, hash);
+        }
         return;
     }
 
     std::vector<CRecoveredSigsListener*> listeners;
     {
-        LOCK(cs);
+        LOCK2(cs_main, cs);
         listeners = recoveredSigsListeners;
 
         auto signHash = CLLMQUtils::BuildSignHash(recoveredSig);
@@ -698,12 +722,14 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
                     // Looks like we're trying to process a recSig that is already known. This might happen if the same
                     // recSig comes in through regular QRECSIG messages and at the same time through some other message
                     // which allowed to reconstruct a recSig (e.g. ISLOCK). In this case, just bail out.
+                    peerman.ForgetTxHash(nodeId, hash);
                 }
                 return;
             } else {
                 // This case is very unlikely. It can only happen when cleanup caused this specific recSig to vanish
                 // between the HasRecoveredSigForId and GetRecoveredSigById call. If that happens, treat it as if we
                 // never had that recSig
+                peerman.ForgetTxHash(nodeId, hash);
             }
         }
 
@@ -721,6 +747,10 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     for (auto& l : listeners) {
         l->HandleNewRecoveredSig(recoveredSig);
+    }
+    {
+        LOCK(cs_main);
+        peerman.ForgetTxHash(nodeId, hash);
     }
 }
 

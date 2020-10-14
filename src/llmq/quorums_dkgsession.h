@@ -219,7 +219,6 @@ private:
     CBLSWorker& blsWorker;
     CBLSWorkerCache cache;
     CDKGSessionManager& dkgManager;
-    CConnman& connman;
 
     const CBlockIndex* pindexQuorum;
 
@@ -255,8 +254,8 @@ private:
     std::set<uint256> validCommitments;
 
 public:
-    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
-        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager), connman(_connman) {}
+    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
 
     bool Init(const CBlockIndex* pindexQuorum, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
 

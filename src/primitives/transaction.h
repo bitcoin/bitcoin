@@ -779,14 +779,18 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
 typedef std::unordered_map<uint32_t, CAsset > AssetMap;
 /** A generic txid reference (txid or wtxid). */
+// SYSCOIN
 class GenTxid
 {
     const bool m_is_wtxid;
-    const uint256 m_hash;
+    uint256 m_hash;
+    uint32_t m_type;
 public:
-    GenTxid(bool is_wtxid, const uint256& hash) : m_is_wtxid(is_wtxid), m_hash(hash) {}
+    GenTxid(bool is_wtxid, const uint256& hash, const uint32_t& type) : m_is_wtxid(is_wtxid), m_hash(hash), m_type(type) {}
+    GenTxid(bool is_wtxid, const uint256& hash);
     bool IsWtxid() const { return m_is_wtxid; }
     const uint256& GetHash() const { return m_hash; }
+    const uint32_t& GetType() const { return m_type; }
     friend bool operator==(const GenTxid& a, const GenTxid& b) { return a.m_is_wtxid == b.m_is_wtxid && a.m_hash == b.m_hash; }
     friend bool operator<(const GenTxid& a, const GenTxid& b) { return std::tie(a.m_is_wtxid, a.m_hash) < std::tie(b.m_is_wtxid, b.m_hash); }
 };

@@ -27,7 +27,7 @@ static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
 static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
 
-void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
 {
     if (strCommand == NetMsgType::QFCOMMITMENT) {
         CFinalCommitment qc;
@@ -36,11 +36,16 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         const uint256& hash = ::SerializeHash(qc);
         {
             LOCK(cs_main);
-            EraseOtherRequest(pfrom->GetId(), hash);
+            pfrom->AddKnownTx(hash);
+            peerman.ReceivedResponse(pfrom->GetId(), hash);
         }
 
         if (qc.IsNull()) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, pfrom->GetId());
+            {
+                LOCK(cs_main);
+                peerman.ForgetTxHash(pfrom->GetId(), hash);
+            }
             Misbehaving(pfrom->GetId(), 100, "null commitment from peer");
             return;
         }
@@ -48,6 +53,10 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         if (!Params().GetConsensus().llmqs.count(qc.llmqType)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                     qc.llmqType, pfrom->GetId());
+            {
+                LOCK(cs_main);
+                peerman.ForgetTxHash(pfrom->GetId(), hash);
+            }
             Misbehaving(pfrom->GetId(), 100, "invalid commitment type");
             return;
         }
@@ -76,6 +85,10 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             if (quorumHeight != pquorumIndex->nHeight) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
+                {
+                    LOCK(cs_main);
+                    peerman.ForgetTxHash(pfrom->GetId(), hash);
+                }
                 Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
                 return;
             }
@@ -102,13 +115,20 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         if (!qc.Verify(members, true)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
                       qc.quorumHash.ToString(), qc.llmqType, pfrom->GetId());
+            {
+                LOCK(cs_main);
+                peerman.ForgetTxHash(pfrom->GetId(), hash);
+            }                     
             Misbehaving(pfrom->GetId(), 100, "invalid commitment for quorum");
             return;
         }
 
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
                   qc.quorumHash.ToString(), qc.llmqType, qc.CountValidMembers(), qc.CountSigners(), pfrom->GetId());
-
+        {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), hash);
+        }
         AddMinableCommitment(qc);
     }
 }

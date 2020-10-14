@@ -8,7 +8,7 @@
 #include <net.h>
 #include <util/translation.h>
 class CMasternodeSync;
-
+class PeerManager;
 static const int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static const int MASTERNODE_SYNC_GOVERNANCE      = 4;
 static const int MASTERNODE_SYNC_GOVOBJ          = 10;
@@ -63,13 +63,13 @@ public:
     void SwitchToNextAsset(CConnman& connman);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const;
-    void ProcessTick(CConnman& connman);
+    void ProcessTick(CConnman& connman, const PeerManager& peerman);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
 
-    void DoMaintenance(CConnman &connman);
+    void DoMaintenance(CConnman &connman, const PeerManager& peerman);
 };
 
 #endif // SYSCOIN_MASTERNODE_MASTERNODESYNC_H

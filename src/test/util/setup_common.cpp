@@ -190,7 +190,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
     // SYSCOIN
-    llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman);
+    llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman, *m_node.peerman);
     fRegTest = chainName == CBaseChainParams::REGTEST;
 }
 

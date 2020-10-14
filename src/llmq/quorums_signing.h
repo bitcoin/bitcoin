@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <streams.h>
 #include <threadsafety.h>
+class PeerManager;
 namespace llmq
 {
 
@@ -129,6 +130,7 @@ private:
 
     CRecoveredSigsDb db;
     CConnman& connman;
+    PeerManager& peerman;
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<CRecoveredSig>> pendingRecoveredSigs;
     std::unordered_map<uint256, std::pair<CRecoveredSig, CQuorumCPtr>, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
@@ -141,12 +143,12 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
 
 public:
-    CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman);
+    CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman);
 
     bool AlreadyHave(const uint256& hash);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
 
-    void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman);
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks
@@ -159,15 +161,15 @@ public:
     void TruncateRecoveredSig(uint8_t llmqType, const uint256& id);
 
 private:
-    void ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig, CConnman& connman);
+    void ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig);
     static bool PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, bool& retBan);
 
     void CollectPendingRecoveredSigsToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::list<CRecoveredSig>>& retSigShares,
             std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
     void ProcessPendingReconstructedRecoveredSigs();
-    bool ProcessPendingRecoveredSigs(CConnman& connman); // called from the worker thread of CSigSharesManager
-    void ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman& connman);
+    bool ProcessPendingRecoveredSigs(); // called from the worker thread of CSigSharesManager
+    void ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum);
     void Cleanup(); // called from the worker thread of CSigSharesManager
 
 public:

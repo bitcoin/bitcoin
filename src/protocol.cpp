@@ -295,5 +295,6 @@ std::vector<std::string> serviceFlagsToStr(uint64_t flags)
 GenTxid ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
-    return {inv.IsMsgWtx(), inv.hash};
+    // SYSCOIN
+    return {inv.IsMsgWtx(), inv.hash, inv.type};
 }

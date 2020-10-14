@@ -9,6 +9,7 @@
 #include <consensus/params.h>
 #include <net.h>
 #include <sync.h>
+#include <txrequest.h>
 #include <validationinterface.h>
 
 class BlockTransactionsRequest;
@@ -86,7 +87,10 @@ public:
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc);
 
-
+    // SYSCOIN
+    size_t GetRequestedCount(NodeId nodeId) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void ReceivedResponse(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void ForgetTxHash(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 private:
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
@@ -121,12 +125,18 @@ private:
 
     void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
 
+    /** Register with TxRequestTracker that an INV has been received from a
+     *  peer. The announcement parameters are decided in PeerManager and then
+     *  passed to TxRequestTracker. */
+    void AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     const CChainParams& m_chainparams;
     CConnman& m_connman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
+    TxRequestTracker m_txrequest GUARDED_BY(::cs_main);
 
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
 };
@@ -151,9 +161,6 @@ bool IsBanned(NodeId nodeid, BanMan& banman);
     * Public for unit testing.
     */
 void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
-// SYSCOIN
-void EraseOtherRequest(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-size_t GetRequestedOtherCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 unsigned int GetMaxInv();
 /** Relay transaction to every node */
 void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

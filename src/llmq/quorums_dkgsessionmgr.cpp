@@ -20,15 +20,16 @@ CDKGSessionManager* quorumDKGSessionManager;
 static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 
-CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &_connman) :
+CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &_connman, PeerManager& _peerman) :
     llmqDb(_llmqDb),
     blsWorker(_blsWorker),
-    connman(_connman)
+    connman(_connman),
+    peerman(_peerman)
 {
     for (const auto& qt : Params().GetConsensus().llmqs) {
         dkgSessionHandlers.emplace(std::piecewise_construct,
                 std::forward_as_tuple(qt.first),
-                std::forward_as_tuple(qt.second, blsWorker, *this, connman));
+                std::forward_as_tuple(qt.second, blsWorker, *this));
     }
 }
 
@@ -94,7 +95,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         return;
     }
 
-    dkgSessionHandlers.at(llmqType).ProcessMessage(pfrom, strCommand, vRecv, connman);
+    dkgSessionHandlers.at(llmqType).ProcessMessage(pfrom, strCommand, vRecv);
 }
 
 bool CDKGSessionManager::AlreadyHave(const uint256& hash) const

@@ -26,6 +26,7 @@ class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class PeerManager;
 
 extern CGovernanceManager governance;
 
@@ -278,12 +279,12 @@ public:
      * retrieval process.  Returns true if we want to retrieve the object, otherwise
      * false. (Note logic is inverted in AlreadyHave).
      */
-    bool ConfirmInventoryRequest(const CInv& inv);
+    bool ConfirmInventoryRequest(const GenTxid& gtxid);
 
     void SyncSingleObjVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
     void SyncObjects(CNode* pnode, CConnman& connman) const;
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman);
 
     void DoMaintenance(CConnman& connman);
 
@@ -397,8 +398,8 @@ public:
 
     void InitOnLoad();
 
-    int RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman);
-    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman);
+    int RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman, const PeerManager& peerman);
+    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman, const PeerManager& peerman);
 
 private:
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false);

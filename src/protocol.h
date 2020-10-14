@@ -478,18 +478,18 @@ public:
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
 
     // Combined-message helper methods
-    bool IsGenTxMsg() const
+    // SYSCOIN
+    bool IsGenTxMsg(bool bJustTx = false) const
     {
-        return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+        const bool bJustTxInternal = type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+        if(bJustTx || bJustTxInternal) {
+            return bJustTxInternal;
+        }
+        return type >= MSG_SPORK && type <= MSG_QUORUM_RECOVERED_SIG;
     }
     bool IsGenBlkMsg() const
     {
         return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
-    }
-    // SYSCOIN
-    bool IsMsgOtherTx() const
-    {
-        return type >= MSG_SPORK && type <= MSG_QUORUM_RECOVERED_SIG;
     }
 
     uint32_t type;

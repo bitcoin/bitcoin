@@ -15,7 +15,7 @@
 #include <saltedhasher.h>
 class CSporkMessage;
 class CSporkManager;
-
+class PeerManager;
 /*
     Don't ever reuse these IDs for other sporks
     - This would result in old clients getting confused about which spork is for what
@@ -206,7 +206,7 @@ public:
      * it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
-    void ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman);
 
     /**
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign

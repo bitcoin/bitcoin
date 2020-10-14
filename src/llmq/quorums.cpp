@@ -155,11 +155,10 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     });
 }
 
-CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman &_connman) :
+CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
     evoDb(_evoDb),
     blsWorker(_blsWorker),
-    dkgManager(_dkgManager),
-    connman(_connman)
+    dkgManager(_dkgManager)
 {
 }
 
@@ -170,18 +169,18 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     }
 
     for (auto& p : Params().GetConsensus().llmqs) {
-        EnsureQuorumConnections(p.first, pindexNew, connman);
+        EnsureQuorumConnections(p.first, pindexNew);
     }
 }
 
-void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexNew, CConnman &connman)
+void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexNew)
 {
     const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     auto myProTxHash = activeMasternodeInfo.proTxHash;
     auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections);
 
-    auto connmanQuorumsToDelete = connman.GetMasternodeQuorums(llmqType);
+    auto connmanQuorumsToDelete = dkgManager.connman.GetMasternodeQuorums(llmqType);
 
     // don't remove connections for the currently in-progress DKG round
     int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % params.dkgInterval);
@@ -194,14 +193,14 @@ void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex
             continue;
         }
 
-        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch, connman);
+        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch, dkgManager.connman);
 
         connmanQuorumsToDelete.erase(quorum->qc.quorumHash);
     }
 
     for (auto& qh : connmanQuorumsToDelete) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, qh.ToString());
-        connman.RemoveMasternodeQuorumNodes(llmqType, qh);
+        dkgManager.connman.RemoveMasternodeQuorumNodes(llmqType, qh);
     }
 }
 
