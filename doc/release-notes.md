@@ -138,8 +138,8 @@ will trigger BIP 125 (replace-by-fee) opt-in. (#11413)
   option `-deprecatedrpc=banscore` is used. The `banscore` field will be fully
   removed in the next major release. (#19469)
 
-- The `testmempoolaccept` RPC returns `vsize` and a `fee` object with the `base` fee
-  if the transaction passes validation. (#19940)
+- The `testmempoolaccept` RPC returns `vsize` and a `fees` object with the `base` fee
+  if the transaction would pass validation. (#19940)
 
 - The `getpeerinfo` RPC now returns a `connection_type` field. This indicates
   the type of connection established with the peer. It will return one of six
@@ -447,6 +447,16 @@ RPC
   - Insufficient funds
   - Fee estimation failed
   - Transaction has too long of a mempool chain
+
+- The `sendrawtransaction` error code for exceeding `maxfeerate` has been changed from
+  `-26` to `-25`. The error string has been changed from "absurdly-high-fee" to
+  "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)." The
+  `testmempoolaccept` RPC returns `max-fee-exceeded` rather than `absurdly-high-fee`
+  as the `reject-reason`. (#19339)
+
+- To make wallet and rawtransaction RPCs more consistent, the error message for
+  exceeding maximum feerate has been changed to "Fee exceeds maximum configured by user
+  (e.g. -maxtxfee, maxfeerate)." (#19339)
 
 Tests
 -----

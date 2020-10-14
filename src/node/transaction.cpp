@@ -13,7 +13,8 @@
 
 #include <future>
 
-static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out) {
+static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
+{
     err_string_out = state.ToString();
     if (state.IsInvalid()) {
         if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
@@ -50,10 +51,10 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool.
         TxValidationState state;
-        CAmount fee{0};
-        if (max_tx_fee) {
+        if (max_tx_fee > 0) {
             // First, call ATMP with test_accept and check the fee. If ATMP
             // fails here, return error immediately.
+            CAmount fee{0};
             if (!AcceptToMemoryPool(*node.mempool, state, tx,
                 nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true, &fee)) {
                 return HandleATMPError(state, err_string);
