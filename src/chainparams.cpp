@@ -460,11 +460,32 @@ public:
 
         strNetworkID = CBaseChainParams::SIGNET;
         consensus.signet_blocks = true;
+        // 35% increase after 1 hr, 100% increase after 2.5 hr
+        consensus.nSeniorityHeight1 = 60;
+        consensus.nSeniorityLevel1 = 0.35;
+        consensus.nSeniorityHeight2 = 60*2.5;
+        consensus.nSeniorityLevel2 = 1.0;         
+        consensus.nSuperblockStartBlock = 1;
+        consensus.nSuperblockCycle = 60;
+        consensus.nGovernanceMinQuorum = 1;
+        consensus.nGovernanceFilterElements = 500;
+        consensus.nMasternodeMinimumConfirmations = 1;
+        consensus.nSYSXAsset = 1965866356;
+        consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
+        consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
+        consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
+        consensus.nBridgeStartBlock = 1000;
+        consensus.nUTXOAssetsBlock = 0; // TODO find testnet cutoff height
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
+        consensus.DIP0003Height = 200;
+        consensus.DIP0003EnforcementHeight = 400;
+        consensus.nAuxpowStartHeight = 1;
+        consensus.nAuxpowChainId = 0x1000;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP34Height = 1;
-        consensus.BIP65Height = 1;
-        consensus.BIP66Height = 1;
+        consensus.BIP34Height = 500;
+        consensus.BIP65Height = 1351;
+        consensus.BIP66Height = 1251;
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -477,6 +498,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+
 
         // message start is defined as the first 4 bytes of the sha256d of the block script
         CHashWriter h(SER_DISK, 0);
