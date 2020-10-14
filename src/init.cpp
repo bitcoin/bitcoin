@@ -1477,6 +1477,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     const CChainParams& chainparams = Params();
     // SYSCOIN
     fRegTest = args.GetBoolArg("-regtest", false);
+    fSigNet = args.GetBoolArg("-signet", false);
     std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
 	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
     CBLSSecretKey keyOperator;

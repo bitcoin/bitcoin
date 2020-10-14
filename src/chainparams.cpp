@@ -501,7 +501,14 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "tsys";
-
+        // privey cTQmhexENtxiSVzaR1Rhx5uwX4V9H9Ajkc2CLa64LUX8BqcHohqr
+        vSporkAddresses = {"tsys1qc28aan6qkuhuj30cpx3jet3l0mrr9sfp8a9typ"};
+        nMinSporkKeys = 1;
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
+        nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
+        fAllowMultiplePorts = true;
+        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         m_is_test_chain = true;
