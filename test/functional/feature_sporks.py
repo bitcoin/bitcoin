@@ -58,7 +58,7 @@ class SporkTest(DashTestFramework):
         # connect new node and check spork propagation after restoring from cache
         connect_nodes(self.nodes[1], 2)
         time.sleep(0.1)
-        self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=12)
 
         # turn off and check
         self.bump_mocktime(1)
