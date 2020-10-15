@@ -18,8 +18,9 @@ Test plan:
     - proxy on IPv6
 
 - Create various proxies (as threads)
-- Create bitcoinds that connect to them
-- Manipulate the bitcoinds using addnode (onetry) an observe effects
+- Create nodes that connect to them
+- Manipulate the peer connections using addnode (onetry) and observe effects
+- Test the getpeerinfo `network` field for the peer
 
 addnode connect to IPv4
 addnode connect to IPv6
@@ -40,6 +41,12 @@ from test_framework.util import (
 from test_framework.netutil import test_ipv6_local
 
 RANGE_BEGIN = PORT_MIN + 2 * PORT_RANGE  # Start after p2p and rpc ports
+# From GetNetworkName() in netbase.cpp:
+NET_UNROUTABLE = ""
+NET_IPV4 = "ipv4"
+NET_IPV6 = "ipv6"
+NET_ONION = "onion"
+
 
 class ProxyTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -90,10 +97,16 @@ class ProxyTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=args)
         self.start_nodes()
 
+    def network_test(self, node, addr, network):
+        for peer in node.getpeerinfo():
+            if peer["addr"] == addr:
+                assert_equal(peer["network"], network)
+
     def node_test(self, node, proxies, auth, test_onion=True):
         rv = []
-        # Test: outgoing IPv4 connection through node
-        node.addnode("15.61.23.23:1234", "onetry")
+        addr = "15.61.23.23:1234"
+        self.log.debug("Test: outgoing IPv4 connection through node for address {}".format(addr))
+        node.addnode(addr, "onetry")
         cmd = proxies[0].queue.get()
         assert isinstance(cmd, Socks5Command)
         # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
@@ -104,10 +117,12 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(cmd.username, None)
             assert_equal(cmd.password, None)
         rv.append(cmd)
+        self.network_test(node, addr, network=NET_IPV4)
 
         if self.have_ipv6:
-            # Test: outgoing IPv6 connection through node
-            node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
+            addr = "[1233:3432:2434:2343:3234:2345:6546:4534]:5443"
+            self.log.debug("Test: outgoing IPv6 connection through node for address {}".format(addr))
+            node.addnode(addr, "onetry")
             cmd = proxies[1].queue.get()
             assert isinstance(cmd, Socks5Command)
             # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
@@ -118,10 +133,12 @@ class ProxyTest(BitcoinTestFramework):
                 assert_equal(cmd.username, None)
                 assert_equal(cmd.password, None)
             rv.append(cmd)
+            self.network_test(node, addr, network=NET_IPV6)
 
         if test_onion:
-            # Test: outgoing onion connection through node
-            node.addnode("bitcoinostk4e4re.onion:8333", "onetry")
+            addr = "bitcoinostk4e4re.onion:8333"
+            self.log.debug("Test: outgoing onion connection through node for address {}".format(addr))
+            node.addnode(addr, "onetry")
             cmd = proxies[2].queue.get()
             assert isinstance(cmd, Socks5Command)
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
@@ -131,9 +148,11 @@ class ProxyTest(BitcoinTestFramework):
                 assert_equal(cmd.username, None)
                 assert_equal(cmd.password, None)
             rv.append(cmd)
+            self.network_test(node, addr, network=NET_ONION)
 
-        # Test: outgoing DNS name connection through node
-        node.addnode("node.noumenon:8333", "onetry")
+        addr = "node.noumenon:8333"
+        self.log.debug("Test: outgoing DNS name connection through node for address {}".format(addr))
+        node.addnode(addr, "onetry")
         cmd = proxies[3].queue.get()
         assert isinstance(cmd, Socks5Command)
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
@@ -143,6 +162,7 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(cmd.username, None)
             assert_equal(cmd.password, None)
         rv.append(cmd)
+        self.network_test(node, addr, network=NET_UNROUTABLE)
 
         return rv
 
@@ -196,6 +216,7 @@ class ProxyTest(BitcoinTestFramework):
                 assert_equal(n3[net]['proxy'], '[%s]:%i' % (self.conf3.addr))
                 assert_equal(n3[net]['proxy_randomize_credentials'], False)
             assert_equal(n3['onion']['reachable'], False)
+
 
 if __name__ == '__main__':
     ProxyTest().main()

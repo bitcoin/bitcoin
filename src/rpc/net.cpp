@@ -94,6 +94,7 @@ static RPCHelpMan getpeerinfo()
                             {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
                             {RPCResult::Type::STR, "addrbind", "(ip:port) Bind address of the connection to the peer"},
                             {RPCResult::Type::STR, "addrlocal", "(ip:port) Local address as reported by the peer"},
+                            {RPCResult::Type::STR, "network", "Network (ipv4, ipv6, or onion) the peer connected through"},
                             {RPCResult::Type::NUM, "mapped_as", "The AS in the BGP route to the peer used for diversifying\n"
                                                                 "peer selection (only available if the asmap config flag is set)"},
                             {RPCResult::Type::STR_HEX, "services", "The services offered"},
@@ -167,10 +168,13 @@ static RPCHelpMan getpeerinfo()
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         obj.pushKV("id", stats.nodeid);
         obj.pushKV("addr", stats.addrName);
-        if (!(stats.addrLocal.empty()))
-            obj.pushKV("addrlocal", stats.addrLocal);
-        if (stats.addrBind.IsValid())
+        if (stats.addrBind.IsValid()) {
             obj.pushKV("addrbind", stats.addrBind.ToString());
+        }
+        if (!(stats.addrLocal.empty())) {
+            obj.pushKV("addrlocal", stats.addrLocal);
+        }
+        obj.pushKV("network", stats.m_network);
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
