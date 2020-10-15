@@ -125,7 +125,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.supports_cli = True
         self.bind_to_localhost_only = True
         self.parse_args()
-        self.default_wallet_name = "default_wallet" if self.options.is_sqlite_only else ""
+        self.default_wallet_name = "default_wallet" if self.options.descriptors else ""
         self.wallet_data_filename = "wallet.dat"
         self.extra_args_from_options = []
         # Optional list of wallet names that can be set in set_test_params to
@@ -229,9 +229,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
         self.config = config
-
-        # Passthrough SQLite-only availability check output as option
-        self.options.is_sqlite_only = self.is_sqlite_compiled() and not self.is_bdb_compiled()
 
         # Running TestShell in a Jupyter notebook causes an additional -f argument
         # To keep TestShell from failing with an "unrecognized argument" error, we add a dummy "-f" argument
