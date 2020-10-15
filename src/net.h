@@ -115,17 +115,12 @@ struct CSerializedNetMsg
     std::string m_type;
 };
 
-const std::vector<std::string> CONNECTION_TYPE_DOC{
-    "outbound-full-relay (default automatic connections)",
-    "block-relay-only (does not relay transactions or addresses)",
-    "inbound (initiated by the peer)",
-    "manual (added via addnode RPC or -addnode/-connect configuration options)",
-    "addr-fetch (short-lived automatic connection for soliciting addresses)",
-    "feeler (short-lived automatic connection for testing addresses)"};
-
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
- * connection. Aside from INBOUND, all types are initiated by us. */
+ * connection. Aside from INBOUND, all types are initiated by us.
+ *
+ * If adding or removing types, please update CONNECTION_TYPE_DOC in
+ * src/rpc/net.cpp. */
 enum class ConnectionType {
     /**
      * Inbound connections are those initiated by a peer. This is the only

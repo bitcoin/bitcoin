@@ -29,6 +29,15 @@
 
 #include <univalue.h>
 
+const std::vector<std::string> CONNECTION_TYPE_DOC{
+        "outbound-full-relay (default automatic connections)",
+        "block-relay-only (does not relay transactions or addresses)",
+        "inbound (initiated by the peer)",
+        "manual (added via addnode RPC or -addnode/-connect configuration options)",
+        "addr-fetch (short-lived automatic connection for soliciting addresses)",
+        "feeler (short-lived automatic connection for testing addresses)"
+};
+
 static RPCHelpMan getconnectioncount()
 {
     return RPCHelpMan{"getconnectioncount",
@@ -119,7 +128,9 @@ static RPCHelpMan getpeerinfo()
                             {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                             {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection\n"
                                                                "(DEPRECATED, returned only if the config option -deprecatedrpc=getpeerinfo_addnode is passed)"},
-                            {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + "."},
+                            {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
+                                                                      "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
+                                                                      "best capture connection behaviors."},
                             {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
                             {RPCResult::Type::NUM, "banscore", "The ban score (DEPRECATED, returned only if config option -deprecatedrpc=banscore is passed)"},
                             {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
