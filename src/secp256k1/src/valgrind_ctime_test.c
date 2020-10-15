@@ -9,19 +9,19 @@
 #include "assumptions.h"
 #include "util.h"
 
-#if ENABLE_MODULE_ECDH
+#ifdef ENABLE_MODULE_ECDH
 # include "include/secp256k1_ecdh.h"
 #endif
 
-#if ENABLE_MODULE_RECOVERY
+#ifdef ENABLE_MODULE_RECOVERY
 # include "include/secp256k1_recovery.h"
 #endif
 
-#if ENABLE_MODULE_EXTRAKEYS
+#ifdef ENABLE_MODULE_EXTRAKEYS
 # include "include/secp256k1_extrakeys.h"
 #endif
 
-#if ENABLE_MODULE_SCHNORRSIG
+#ifdef ENABLE_MODULE_SCHNORRSIG
 #include "include/secp256k1_schnorrsig.h"
 #endif
 
@@ -37,11 +37,11 @@ int main(void) {
     unsigned char key[32];
     unsigned char sig[74];
     unsigned char spubkey[33];
-#if ENABLE_MODULE_RECOVERY
+#ifdef ENABLE_MODULE_RECOVERY
     secp256k1_ecdsa_recoverable_signature recoverable_signature;
     int recid;
 #endif
-#if ENABLE_MODULE_EXTRAKEYS
+#ifdef ENABLE_MODULE_EXTRAKEYS
     secp256k1_keypair keypair;
 #endif
 
@@ -81,7 +81,7 @@ int main(void) {
     CHECK(ret);
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature));
 
-#if ENABLE_MODULE_ECDH
+#ifdef ENABLE_MODULE_ECDH
     /* Test ECDH. */
     VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
     ret = secp256k1_ecdh(ctx, msg, &pubkey, key, NULL, NULL);
@@ -89,7 +89,7 @@ int main(void) {
     CHECK(ret == 1);
 #endif
 
-#if ENABLE_MODULE_RECOVERY
+#ifdef ENABLE_MODULE_RECOVERY
     /* Test signing a recoverable signature. */
     VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
     ret = secp256k1_ecdsa_sign_recoverable(ctx, &recoverable_signature, msg, key, NULL, NULL);
@@ -129,7 +129,7 @@ int main(void) {
     CHECK(ret);
 
     /* Test keypair_create and keypair_xonly_tweak_add. */
-#if ENABLE_MODULE_EXTRAKEYS
+#ifdef ENABLE_MODULE_EXTRAKEYS
     VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
     ret = secp256k1_keypair_create(ctx, &keypair, key);
     VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
@@ -142,7 +142,7 @@ int main(void) {
     CHECK(ret == 1);
 #endif
 
-#if ENABLE_MODULE_SCHNORRSIG
+#ifdef ENABLE_MODULE_SCHNORRSIG
     VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
     ret = secp256k1_keypair_create(ctx, &keypair, key);
     VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));

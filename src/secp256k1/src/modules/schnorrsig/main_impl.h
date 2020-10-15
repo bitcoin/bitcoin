@@ -68,7 +68,7 @@ static int nonce_function_bip340(unsigned char *nonce32, const unsigned char *ms
     /* Tag the hash with algo16 which is important to avoid nonce reuse across
      * algorithms. If this nonce function is used in BIP-340 signing as defined
      * in the spec, an optimized tagging implementation is used. */
-    if (memcmp(algo16, bip340_algo16, 16) == 0) {
+    if (secp256k1_memcmp_var(algo16, bip340_algo16, 16) == 0) {
         secp256k1_nonce_function_bip340_sha256_tagged(&sha);
     } else {
         int algo16_len = 16;
@@ -108,6 +108,22 @@ static void secp256k1_schnorrsig_sha256_tagged(secp256k1_sha256 *sha) {
     sha->bytes = 64;
 }
 
+static void secp256k1_schnorrsig_challenge(secp256k1_scalar* e, const unsigned char *r32, const unsigned char *msg32, const unsigned char *pubkey32)
+{
+    unsigned char buf[32];
+    secp256k1_sha256 sha;
+
+    /* tagged hash(r.x, pk.x, msg32) */
+    secp256k1_schnorrsig_sha256_tagged(&sha);
+    secp256k1_sha256_write(&sha, r32, 32);
+    secp256k1_sha256_write(&sha, pubkey32, 32);
+    secp256k1_sha256_write(&sha, msg32, 32);
+    secp256k1_sha256_finalize(&sha, buf);
+    /* Set scalar e to the challenge hash modulo the curve order as per
+     * BIP340. */
+    secp256k1_scalar_set_b32(e, buf, NULL);
+}
+
 int secp256k1_schnorrsig_sign(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg32, const secp256k1_keypair *keypair, secp256k1_nonce_function_hardened noncefp, void *ndata) {
     secp256k1_scalar sk;
     secp256k1_scalar e;
@@ -115,7 +131,6 @@ int secp256k1_schnorrsig_sign(const secp256k1_context* ctx, unsigned char *sig64
     secp256k1_gej rj;
     secp256k1_ge pk;
     secp256k1_ge r;
-    secp256k1_sha256 sha;
     unsigned char buf[32] = { 0 };
     unsigned char pk_buf[32];
     unsigned char seckey[32];
@@ -159,16 +174,7 @@ int secp256k1_schnorrsig_sign(const secp256k1_context* ctx, unsigned char *sig64
     secp256k1_fe_normalize_var(&r.x);
     secp256k1_fe_get_b32(&sig64[0], &r.x);
 
-    /* tagged hash(r.x, pk.x, msg32) */
-    secp256k1_schnorrsig_sha256_tagged(&sha);
-    secp256k1_sha256_write(&sha, &sig64[0], 32);
-    secp256k1_sha256_write(&sha, pk_buf, sizeof(pk_buf));
-    secp256k1_sha256_write(&sha, msg32, 32);
-    secp256k1_sha256_finalize(&sha, buf);
-
-    /* Set scalar e to the challenge hash modulo the curve order as per
-     * BIP340. */
-    secp256k1_scalar_set_b32(&e, buf, NULL);
+    secp256k1_schnorrsig_challenge(&e, &sig64[0], msg32, pk_buf);
     secp256k1_scalar_mul(&e, &e, &sk);
     secp256k1_scalar_add(&e, &e, &k);
     secp256k1_scalar_get_b32(&sig64[32], &e);
@@ -189,7 +195,6 @@ int secp256k1_schnorrsig_verify(const secp256k1_context* ctx, const unsigned cha
     secp256k1_gej pkj;
     secp256k1_fe rx;
     secp256k1_ge r;
-    secp256k1_sha256 sha;
     unsigned char buf[32];
     int overflow;
 
@@ -212,13 +217,9 @@ int secp256k1_schnorrsig_verify(const secp256k1_context* ctx, const unsigned cha
         return 0;
     }
 
-    secp256k1_schnorrsig_sha256_tagged(&sha);
-    secp256k1_sha256_write(&sha, &sig64[0], 32);
+    /* Compute e. */
     secp256k1_fe_get_b32(buf, &pk.x);
-    secp256k1_sha256_write(&sha, buf, sizeof(buf));
-    secp256k1_sha256_write(&sha, msg32, 32);
-    secp256k1_sha256_finalize(&sha, buf);
-    secp256k1_scalar_set_b32(&e, buf, NULL);
+    secp256k1_schnorrsig_challenge(&e, &sig64[0], msg32, buf);
 
     /* Compute rj =  s*G + (-e)*pkj */
     secp256k1_scalar_negate(&e, &e);

@@ -17,33 +17,29 @@ compiler:
   - gcc
 env:
   global:
-    - WIDEMUL=auto  BIGNUM=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=yes  ECMULTGENPRECISION=auto  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=no  RECOVERY=no SCHNORRSIG=no EXPERIMENTAL=no CTIMETEST=yes BENCH=yes ITERS=2
+    - WIDEMUL=auto  BIGNUM=auto  STATICPRECOMPUTATION=yes  ECMULTGENPRECISION=auto  ASM=no  BUILD=check  WITH_VALGRIND=yes RUN_VALGRIND=no EXTRAFLAGS=  HOST=  ECDH=no  RECOVERY=no SCHNORRSIG=no EXPERIMENTAL=no CTIMETEST=yes BENCH=yes ITERS=2
   matrix:
     - WIDEMUL=int64   RECOVERY=yes
     - WIDEMUL=int64   ECDH=yes  EXPERIMENTAL=yes SCHNORRSIG=yes
-    - WIDEMUL=int64   ENDOMORPHISM=yes
     - WIDEMUL=int128
     - WIDEMUL=int128  RECOVERY=yes EXPERIMENTAL=yes SCHNORRSIG=yes
-    - WIDEMUL=int128  ENDOMORPHISM=yes
-    - WIDEMUL=int128  ENDOMORPHISM=yes  ECDH=yes EXPERIMENTAL=yes SCHNORRSIG=yes
+    - WIDEMUL=int128  ECDH=yes EXPERIMENTAL=yes SCHNORRSIG=yes
     - WIDEMUL=int128                    ASM=x86_64
-    - WIDEMUL=int128  ENDOMORPHISM=yes  ASM=x86_64
     - BIGNUM=no
-    - BIGNUM=no       ENDOMORPHISM=yes RECOVERY=yes EXPERIMENTAL=yes SCHNORRSIG=yes
+    - BIGNUM=no       RECOVERY=yes EXPERIMENTAL=yes SCHNORRSIG=yes
     - BIGNUM=no       STATICPRECOMPUTATION=no
-    - BUILD=distcheck CTIMETEST= BENCH=
+    - BUILD=distcheck WITH_VALGRIND=no CTIMETEST=no BENCH=no
     - CPPFLAGS=-DDETERMINISTIC
-    - CFLAGS=-O0 CTIMETEST=
+    - CFLAGS=-O0 CTIMETEST=no
     - ECMULTGENPRECISION=2
     - ECMULTGENPRECISION=8
-    - VALGRIND=yes ENDOMORPHISM=yes BIGNUM=no ASM=x86_64 EXPERIMENTAL=yes ECDH=yes  RECOVERY=yes EXTRAFLAGS="--disable-openssl-tests" CPPFLAGS=-DVALGRIND BUILD=
-    - VALGRIND=yes                  BIGNUM=no ASM=x86_64 EXPERIMENTAL=yes ECDH=yes  RECOVERY=yes EXTRAFLAGS="--disable-openssl-tests" CPPFLAGS=-DVALGRIND BUILD=
+    - RUN_VALGRIND=yes BIGNUM=no ASM=x86_64 EXPERIMENTAL=yes ECDH=yes  RECOVERY=yes EXTRAFLAGS="--disable-openssl-tests" BUILD=
 matrix:
   fast_finish: true
   include:
     - compiler: clang
       os: linux
-      env: HOST=i686-linux-gnu ENDOMORPHISM=yes
+      env: HOST=i686-linux-gnu
       addons:
         apt:
           packages:
@@ -63,7 +59,7 @@ matrix:
             - libtool-bin
             - libc6-dbg:i386
     - compiler: gcc
-      env: HOST=i686-linux-gnu ENDOMORPHISM=yes
+      env: HOST=i686-linux-gnu
       os: linux
       addons:
         apt:

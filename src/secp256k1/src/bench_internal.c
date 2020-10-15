@@ -117,7 +117,6 @@ void bench_scalar_mul(void* arg, int iters) {
     }
 }
 
-#ifdef USE_ENDOMORPHISM
 void bench_scalar_split(void* arg, int iters) {
     int i, j = 0;
     bench_inv *data = (bench_inv*)arg;
@@ -128,7 +127,6 @@ void bench_scalar_split(void* arg, int iters) {
     }
     CHECK(j <= iters);
 }
-#endif
 
 void bench_scalar_inverse(void* arg, int iters) {
     int i, j = 0;
@@ -397,9 +395,7 @@ int main(int argc, char **argv) {
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "negate")) run_benchmark("scalar_negate", bench_scalar_negate, bench_setup, NULL, &data, 10, iters*100);
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "sqr")) run_benchmark("scalar_sqr", bench_scalar_sqr, bench_setup, NULL, &data, 10, iters*10);
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "mul")) run_benchmark("scalar_mul", bench_scalar_mul, bench_setup, NULL, &data, 10, iters*10);
-#ifdef USE_ENDOMORPHISM
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "split")) run_benchmark("scalar_split", bench_scalar_split, bench_setup, NULL, &data, 10, iters);
-#endif
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "inverse")) run_benchmark("scalar_inverse", bench_scalar_inverse, bench_setup, NULL, &data, 10, 2000);
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "inverse")) run_benchmark("scalar_inverse_var", bench_scalar_inverse_var, bench_setup, NULL, &data, 10, 2000);
 

@@ -35,9 +35,9 @@ void test_xonly_pubkey(void) {
     secp256k1_context *sign = api_test_context(SECP256K1_CONTEXT_SIGN, &ecount);
     secp256k1_context *verify = api_test_context(SECP256K1_CONTEXT_VERIFY, &ecount);
 
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     memset(ones32, 0xFF, 32);
-    secp256k1_rand256(xy_sk);
+    secp256k1_testrand256(xy_sk);
     CHECK(secp256k1_ec_pubkey_create(sign, &pk, sk) == 1);
     CHECK(secp256k1_xonly_pubkey_from_pubkey(none, &xonly_pk, &pk_parity, &pk) == 1);
 
@@ -60,7 +60,7 @@ void test_xonly_pubkey(void) {
     sk[0] = 1;
     CHECK(secp256k1_ec_pubkey_create(ctx, &pk, sk) == 1);
     CHECK(secp256k1_xonly_pubkey_from_pubkey(ctx, &xonly_pk, &pk_parity, &pk) == 1);
-    CHECK(memcmp(&pk, &xonly_pk, sizeof(pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&pk, &xonly_pk, sizeof(pk)) == 0);
     CHECK(pk_parity == 0);
 
     /* Choose a secret key such that pubkey and xonly_pubkey are each others
@@ -68,7 +68,7 @@ void test_xonly_pubkey(void) {
     sk[0] = 2;
     CHECK(secp256k1_ec_pubkey_create(ctx, &pk, sk) == 1);
     CHECK(secp256k1_xonly_pubkey_from_pubkey(ctx, &xonly_pk, &pk_parity, &pk) == 1);
-    CHECK(memcmp(&xonly_pk, &pk, sizeof(xonly_pk)) != 0);
+    CHECK(secp256k1_memcmp_var(&xonly_pk, &pk, sizeof(xonly_pk)) != 0);
     CHECK(pk_parity == 1);
     secp256k1_pubkey_load(ctx, &pk1, &pk);
     secp256k1_pubkey_load(ctx, &pk2, (secp256k1_pubkey *) &xonly_pk);
@@ -81,7 +81,7 @@ void test_xonly_pubkey(void) {
     CHECK(secp256k1_xonly_pubkey_serialize(none, NULL, &xonly_pk) == 0);
     CHECK(ecount == 1);
     CHECK(secp256k1_xonly_pubkey_serialize(none, buf32, NULL) == 0);
-    CHECK(memcmp(buf32, zeros64, 32) == 0);
+    CHECK(secp256k1_memcmp_var(buf32, zeros64, 32) == 0);
     CHECK(ecount == 2);
     {
         /* A pubkey filled with 0s will fail to serialize due to pubkey_load
@@ -104,28 +104,28 @@ void test_xonly_pubkey(void) {
     CHECK(secp256k1_xonly_pubkey_from_pubkey(none, &xonly_pk, NULL, &pk) == 1);
     CHECK(secp256k1_xonly_pubkey_serialize(ctx, buf32, &xonly_pk) == 1);
     CHECK(secp256k1_xonly_pubkey_parse(ctx, &xonly_pk_tmp, buf32) == 1);
-    CHECK(memcmp(&xonly_pk, &xonly_pk_tmp, sizeof(xonly_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&xonly_pk, &xonly_pk_tmp, sizeof(xonly_pk)) == 0);
 
     /* Test parsing invalid field elements */
     memset(&xonly_pk, 1, sizeof(xonly_pk));
     /* Overflowing field element */
     CHECK(secp256k1_xonly_pubkey_parse(none, &xonly_pk, ones32) == 0);
-    CHECK(memcmp(&xonly_pk, zeros64, sizeof(xonly_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&xonly_pk, zeros64, sizeof(xonly_pk)) == 0);
     memset(&xonly_pk, 1, sizeof(xonly_pk));
     /* There's no point with x-coordinate 0 on secp256k1 */
     CHECK(secp256k1_xonly_pubkey_parse(none, &xonly_pk, zeros64) == 0);
-    CHECK(memcmp(&xonly_pk, zeros64, sizeof(xonly_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&xonly_pk, zeros64, sizeof(xonly_pk)) == 0);
     /* If a random 32-byte string can not be parsed with ec_pubkey_parse
      * (because interpreted as X coordinate it does not correspond to a point on
      * the curve) then xonly_pubkey_parse should fail as well. */
     for (i = 0; i < count; i++) {
         unsigned char rand33[33];
-        secp256k1_rand256(&rand33[1]);
+        secp256k1_testrand256(&rand33[1]);
         rand33[0] = SECP256K1_TAG_PUBKEY_EVEN;
         if (!secp256k1_ec_pubkey_parse(ctx, &pk, rand33, 33)) {
             memset(&xonly_pk, 1, sizeof(xonly_pk));
             CHECK(secp256k1_xonly_pubkey_parse(ctx, &xonly_pk, &rand33[1]) == 0);
-            CHECK(memcmp(&xonly_pk, zeros64, sizeof(xonly_pk)) == 0);
+            CHECK(secp256k1_memcmp_var(&xonly_pk, zeros64, sizeof(xonly_pk)) == 0);
         } else {
             CHECK(secp256k1_xonly_pubkey_parse(ctx, &xonly_pk, &rand33[1]) == 1);
         }
@@ -154,8 +154,8 @@ void test_xonly_pubkey_tweak(void) {
     secp256k1_context *verify = api_test_context(SECP256K1_CONTEXT_VERIFY, &ecount);
 
     memset(overflows, 0xff, sizeof(overflows));
-    secp256k1_rand256(tweak);
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(tweak);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_ec_pubkey_create(ctx, &internal_pk, sk) == 1);
     CHECK(secp256k1_xonly_pubkey_from_pubkey(none, &internal_xonly_pk, &pk_parity, &internal_pk) == 1);
 
@@ -170,15 +170,15 @@ void test_xonly_pubkey_tweak(void) {
     CHECK(secp256k1_xonly_pubkey_tweak_add(verify, &output_pk, NULL, tweak) == 0);
     CHECK(ecount == 4);
     /* NULL internal_xonly_pk zeroes the output_pk */
-    CHECK(memcmp(&output_pk, zeros64, sizeof(output_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&output_pk, zeros64, sizeof(output_pk)) == 0);
     CHECK(secp256k1_xonly_pubkey_tweak_add(verify, &output_pk, &internal_xonly_pk, NULL) == 0);
     CHECK(ecount == 5);
     /* NULL tweak zeroes the output_pk */
-    CHECK(memcmp(&output_pk, zeros64, sizeof(output_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&output_pk, zeros64, sizeof(output_pk)) == 0);
 
     /* Invalid tweak zeroes the output_pk */
     CHECK(secp256k1_xonly_pubkey_tweak_add(verify, &output_pk, &internal_xonly_pk, overflows) == 0);
-    CHECK(memcmp(&output_pk, zeros64, sizeof(output_pk))  == 0);
+    CHECK(secp256k1_memcmp_var(&output_pk, zeros64, sizeof(output_pk))  == 0);
 
     /* A zero tweak is fine */
     CHECK(secp256k1_xonly_pubkey_tweak_add(verify, &output_pk, &internal_xonly_pk, zeros64) == 1);
@@ -193,16 +193,16 @@ void test_xonly_pubkey_tweak(void) {
         secp256k1_scalar_get_b32(tweak, &scalar_tweak);
         CHECK((secp256k1_xonly_pubkey_tweak_add(verify, &output_pk, &internal_xonly_pk, sk) == 0)
               || (secp256k1_xonly_pubkey_tweak_add(verify, &output_pk, &internal_xonly_pk, tweak) == 0));
-        CHECK(memcmp(&output_pk, zeros64, sizeof(output_pk)) == 0);
+        CHECK(secp256k1_memcmp_var(&output_pk, zeros64, sizeof(output_pk)) == 0);
     }
 
     /* Invalid pk with a valid tweak */
     memset(&internal_xonly_pk, 0, sizeof(internal_xonly_pk));
-    secp256k1_rand256(tweak);
+    secp256k1_testrand256(tweak);
     ecount = 0;
     CHECK(secp256k1_xonly_pubkey_tweak_add(verify, &output_pk, &internal_xonly_pk, tweak) == 0);
     CHECK(ecount == 1);
-    CHECK(memcmp(&output_pk, zeros64, sizeof(output_pk))  == 0);
+    CHECK(secp256k1_memcmp_var(&output_pk, zeros64, sizeof(output_pk))  == 0);
 
     secp256k1_context_destroy(none);
     secp256k1_context_destroy(sign);
@@ -228,8 +228,8 @@ void test_xonly_pubkey_tweak_check(void) {
     secp256k1_context *verify = api_test_context(SECP256K1_CONTEXT_VERIFY, &ecount);
 
     memset(overflows, 0xff, sizeof(overflows));
-    secp256k1_rand256(tweak);
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(tweak);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_ec_pubkey_create(ctx, &internal_pk, sk) == 1);
     CHECK(secp256k1_xonly_pubkey_from_pubkey(none, &internal_xonly_pk, &pk_parity, &internal_pk) == 1);
 
@@ -268,7 +268,7 @@ void test_xonly_pubkey_tweak_check(void) {
     /* Overflowing tweak not allowed */
     CHECK(secp256k1_xonly_pubkey_tweak_add_check(ctx, output_pk32, pk_parity, &internal_xonly_pk, overflows) == 0);
     CHECK(secp256k1_xonly_pubkey_tweak_add(ctx, &output_pk, &internal_xonly_pk, overflows) == 0);
-    CHECK(memcmp(&output_pk, zeros64, sizeof(output_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&output_pk, zeros64, sizeof(output_pk)) == 0);
     CHECK(ecount == 5);
 
     secp256k1_context_destroy(none);
@@ -287,7 +287,7 @@ void test_xonly_pubkey_tweak_recursive(void) {
     unsigned char tweak[N_PUBKEYS - 1][32];
     int i;
 
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pk[0], sk) == 1);
     /* Add tweaks */
     for (i = 0; i < N_PUBKEYS - 1; i++) {
@@ -327,51 +327,51 @@ void test_keypair(void) {
 
     /* Test keypair_create */
     ecount = 0;
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_keypair_create(none, &keypair, sk) == 0);
-    CHECK(memcmp(zeros96, &keypair, sizeof(keypair)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &keypair, sizeof(keypair)) == 0);
     CHECK(ecount == 1);
     CHECK(secp256k1_keypair_create(verify, &keypair, sk) == 0);
-    CHECK(memcmp(zeros96, &keypair, sizeof(keypair)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &keypair, sizeof(keypair)) == 0);
     CHECK(ecount == 2);
     CHECK(secp256k1_keypair_create(sign, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_create(sign, NULL, sk) == 0);
     CHECK(ecount == 3);
     CHECK(secp256k1_keypair_create(sign, &keypair, NULL) == 0);
-    CHECK(memcmp(zeros96, &keypair, sizeof(keypair)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &keypair, sizeof(keypair)) == 0);
     CHECK(ecount == 4);
 
     /* Invalid secret key */
     CHECK(secp256k1_keypair_create(sign, &keypair, zeros96) == 0);
-    CHECK(memcmp(zeros96, &keypair, sizeof(keypair)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &keypair, sizeof(keypair)) == 0);
     CHECK(secp256k1_keypair_create(sign, &keypair, overflows) == 0);
-    CHECK(memcmp(zeros96, &keypair, sizeof(keypair)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &keypair, sizeof(keypair)) == 0);
 
     /* Test keypair_pub */
     ecount = 0;
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_pub(none, &pk, &keypair) == 1);
     CHECK(secp256k1_keypair_pub(none, NULL, &keypair) == 0);
     CHECK(ecount == 1);
     CHECK(secp256k1_keypair_pub(none, &pk, NULL) == 0);
     CHECK(ecount == 2);
-    CHECK(memcmp(zeros96, &pk, sizeof(pk)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &pk, sizeof(pk)) == 0);
 
     /* Using an invalid keypair is fine for keypair_pub */
     memset(&keypair, 0, sizeof(keypair));
     CHECK(secp256k1_keypair_pub(none, &pk, &keypair) == 1);
-    CHECK(memcmp(zeros96, &pk, sizeof(pk)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &pk, sizeof(pk)) == 0);
 
     /* keypair holds the same pubkey as pubkey_create */
     CHECK(secp256k1_ec_pubkey_create(sign, &pk, sk) == 1);
     CHECK(secp256k1_keypair_create(sign, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_pub(none, &pk_tmp, &keypair) == 1);
-    CHECK(memcmp(&pk, &pk_tmp, sizeof(pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&pk, &pk_tmp, sizeof(pk)) == 0);
 
     /** Test keypair_xonly_pub **/
     ecount = 0;
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_xonly_pub(none, &xonly_pk, &pk_parity, &keypair) == 1);
     CHECK(secp256k1_keypair_xonly_pub(none, NULL, &pk_parity, &keypair) == 0);
@@ -379,13 +379,13 @@ void test_keypair(void) {
     CHECK(secp256k1_keypair_xonly_pub(none, &xonly_pk, NULL, &keypair) == 1);
     CHECK(secp256k1_keypair_xonly_pub(none, &xonly_pk, &pk_parity, NULL) == 0);
     CHECK(ecount == 2);
-    CHECK(memcmp(zeros96, &xonly_pk, sizeof(xonly_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &xonly_pk, sizeof(xonly_pk)) == 0);
     /* Using an invalid keypair will set the xonly_pk to 0 (first reset
      * xonly_pk). */
     CHECK(secp256k1_keypair_xonly_pub(none, &xonly_pk, &pk_parity, &keypair) == 1);
     memset(&keypair, 0, sizeof(keypair));
     CHECK(secp256k1_keypair_xonly_pub(none, &xonly_pk, &pk_parity, &keypair) == 0);
-    CHECK(memcmp(zeros96, &xonly_pk, sizeof(xonly_pk)) == 0);
+    CHECK(secp256k1_memcmp_var(zeros96, &xonly_pk, sizeof(xonly_pk)) == 0);
     CHECK(ecount == 3);
 
     /** keypair holds the same xonly pubkey as pubkey_create **/
@@ -393,7 +393,7 @@ void test_keypair(void) {
     CHECK(secp256k1_xonly_pubkey_from_pubkey(none, &xonly_pk, &pk_parity, &pk) == 1);
     CHECK(secp256k1_keypair_create(sign, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_xonly_pub(none, &xonly_pk_tmp, &pk_parity_tmp, &keypair) == 1);
-    CHECK(memcmp(&xonly_pk, &xonly_pk_tmp, sizeof(pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&xonly_pk, &xonly_pk_tmp, sizeof(pk)) == 0);
     CHECK(pk_parity == pk_parity_tmp);
 
     secp256k1_context_destroy(none);
@@ -414,8 +414,8 @@ void test_keypair_add(void) {
     secp256k1_context *verify = api_test_context(SECP256K1_CONTEXT_VERIFY, &ecount);
 
     CHECK(sizeof(zeros96) == sizeof(keypair));
-    secp256k1_rand256(sk);
-    secp256k1_rand256(tweak);
+    secp256k1_testrand256(sk);
+    secp256k1_testrand256(tweak);
     memset(overflows, 0xFF, 32);
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
 
@@ -429,12 +429,12 @@ void test_keypair_add(void) {
     CHECK(secp256k1_keypair_xonly_tweak_add(verify, &keypair, NULL) == 0);
     CHECK(ecount == 4);
     /* This does not set the keypair to zeroes */
-    CHECK(memcmp(&keypair, zeros96, sizeof(keypair)) != 0);
+    CHECK(secp256k1_memcmp_var(&keypair, zeros96, sizeof(keypair)) != 0);
 
     /* Invalid tweak zeroes the keypair */
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_xonly_tweak_add(ctx, &keypair, overflows) == 0);
-    CHECK(memcmp(&keypair, zeros96, sizeof(keypair))  == 0);
+    CHECK(secp256k1_memcmp_var(&keypair, zeros96, sizeof(keypair))  == 0);
 
     /* A zero tweak is fine */
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
@@ -444,7 +444,7 @@ void test_keypair_add(void) {
     for (i = 0; i < count; i++) {
         secp256k1_scalar scalar_tweak;
         secp256k1_keypair keypair_tmp;
-        secp256k1_rand256(sk);
+        secp256k1_testrand256(sk);
         CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
         memcpy(&keypair_tmp, &keypair, sizeof(keypair));
         /* Because sk may be negated before adding, we need to try with tweak =
@@ -454,17 +454,17 @@ void test_keypair_add(void) {
         secp256k1_scalar_get_b32(tweak, &scalar_tweak);
         CHECK((secp256k1_keypair_xonly_tweak_add(ctx, &keypair, sk) == 0)
               || (secp256k1_keypair_xonly_tweak_add(ctx, &keypair_tmp, tweak) == 0));
-        CHECK(memcmp(&keypair, zeros96, sizeof(keypair)) == 0
-              || memcmp(&keypair_tmp, zeros96, sizeof(keypair_tmp)) == 0);
+        CHECK(secp256k1_memcmp_var(&keypair, zeros96, sizeof(keypair)) == 0
+              || secp256k1_memcmp_var(&keypair_tmp, zeros96, sizeof(keypair_tmp)) == 0);
     }
 
     /* Invalid keypair with a valid tweak */
     memset(&keypair, 0, sizeof(keypair));
-    secp256k1_rand256(tweak);
+    secp256k1_testrand256(tweak);
     ecount = 0;
     CHECK(secp256k1_keypair_xonly_tweak_add(verify, &keypair, tweak) == 0);
     CHECK(ecount == 1);
-    CHECK(memcmp(&keypair, zeros96, sizeof(keypair))  == 0);
+    CHECK(secp256k1_memcmp_var(&keypair, zeros96, sizeof(keypair))  == 0);
     /* Only seckey part of keypair invalid */
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
     memset(&keypair, 0, 32);
@@ -486,7 +486,7 @@ void test_keypair_add(void) {
         unsigned char pk32[32];
         int pk_parity;
 
-        secp256k1_rand256(tweak);
+        secp256k1_testrand256(tweak);
         CHECK(secp256k1_keypair_xonly_pub(ctx, &internal_pk, NULL, &keypair) == 1);
         CHECK(secp256k1_keypair_xonly_tweak_add(ctx, &keypair, tweak) == 1);
         CHECK(secp256k1_keypair_xonly_pub(ctx, &output_pk, &pk_parity, &keypair) == 1);
@@ -498,11 +498,11 @@ void test_keypair_add(void) {
         /* Check that the resulting pubkey matches xonly_pubkey_tweak_add */
         CHECK(secp256k1_keypair_pub(ctx, &output_pk_xy, &keypair) == 1);
         CHECK(secp256k1_xonly_pubkey_tweak_add(ctx, &output_pk_expected, &internal_pk, tweak) == 1);
-        CHECK(memcmp(&output_pk_xy, &output_pk_expected, sizeof(output_pk_xy)) == 0);
+        CHECK(secp256k1_memcmp_var(&output_pk_xy, &output_pk_expected, sizeof(output_pk_xy)) == 0);
 
         /* Check that the secret key in the keypair is tweaked correctly */
         CHECK(secp256k1_ec_pubkey_create(ctx, &output_pk_expected, &keypair.data[0]) == 1);
-        CHECK(memcmp(&output_pk_xy, &output_pk_expected, sizeof(output_pk_xy)) == 0);
+        CHECK(secp256k1_memcmp_var(&output_pk_xy, &output_pk_expected, sizeof(output_pk_xy)) == 0);
     }
     secp256k1_context_destroy(none);
     secp256k1_context_destroy(sign);

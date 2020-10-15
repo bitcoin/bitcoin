@@ -48,14 +48,17 @@ static void secp256k1_scalar_cadd_bit(secp256k1_scalar *r, unsigned int bit, int
 }
 
 static void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *b32, int *overflow) {
-    const int base = 0x100 % EXHAUSTIVE_TEST_ORDER;
     int i;
+    int over = 0;
     *r = 0;
     for (i = 0; i < 32; i++) {
-       *r = ((*r * base) + b32[i]) % EXHAUSTIVE_TEST_ORDER;
+        *r = (*r * 0x100) + b32[i];
+        if (*r >= EXHAUSTIVE_TEST_ORDER) {
+            over = 1;
+            *r %= EXHAUSTIVE_TEST_ORDER;
+        }
     }
-    /* just deny overflow, it basically always happens */
-    if (overflow) *overflow = 0;
+    if (overflow) *overflow = over;
 }
 
 static void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar* a) {
