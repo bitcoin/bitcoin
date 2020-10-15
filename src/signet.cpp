@@ -13,15 +13,18 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <hash.h>
+#include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <span.h>
 #include <script/interpreter.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <txmempool.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <uint256.h>
+#include <validation.h>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 
@@ -65,23 +68,30 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
     return ComputeMerkleRoot(std::move(leaves));
 }
 
-Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
+Optional<SignetTxs> SignetTxs::Create(const CScript& signature, const std::vector<uint8_t>& witness, const std::vector<uint8_t>& commitment, const CScript& challenge)
 {
     CMutableTransaction tx_to_spend;
     tx_to_spend.nVersion = 0;
     tx_to_spend.nLockTime = 0;
     tx_to_spend.vin.emplace_back(COutPoint(), CScript(OP_0), 0);
+    tx_to_spend.vin[0].scriptSig << commitment;
     tx_to_spend.vout.emplace_back(0, challenge);
 
     CMutableTransaction tx_spending;
     tx_spending.nVersion = 0;
     tx_spending.nLockTime = 0;
     tx_spending.vin.emplace_back(COutPoint(), CScript(), 0);
+    tx_spending.vin[0].scriptSig = signature;
+    tx_spending.vin[0].scriptWitness.stack.emplace_back(witness);
     tx_spending.vout.emplace_back(0, CScript(OP_RETURN));
 
-    // can't fill any other fields before extracting signet
-    // responses from block coinbase tx
+    tx_spending.vin[0].prevout = COutPoint(tx_to_spend.GetHash(), 0);
 
+    return SignetTxs{tx_to_spend, tx_spending};
+}
+
+Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
+{
     // find and delete signet signature
     if (block.vtx.empty()) return nullopt; // no coinbase tx in block; invalid
     CMutableTransaction modified_cb(*block.vtx.at(0));
@@ -93,14 +103,16 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
 
     CScript& witness_commitment = modified_cb.vout.at(cidx).scriptPubKey;
 
+    CScript scriptSig;
+    std::vector<uint8_t> witness;
     std::vector<uint8_t> signet_solution;
     if (!FetchAndClearCommitmentSection(SIGNET_HEADER, witness_commitment, signet_solution)) {
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
     } else {
         try {
             VectorReader v(SER_NETWORK, INIT_PROTO_VERSION, signet_solution, 0);
-            v >> tx_spending.vin[0].scriptSig;
-            v >> tx_spending.vin[0].scriptWitness.stack;
+            v >> scriptSig;
+            v >> witness;
             if (!v.empty()) return nullopt; // extraneous data encountered
         } catch (const std::exception&) {
             return nullopt; // parsing error
@@ -114,10 +126,8 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
     writer << block.hashPrevBlock;
     writer << signet_merkle;
     writer << block.nTime;
-    tx_to_spend.vin[0].scriptSig << block_data;
-    tx_spending.vin[0].prevout = COutPoint(tx_to_spend.GetHash(), 0);
 
-    return SignetTxs{tx_to_spend, tx_spending};
+    return Create(scriptSig, witness, block_data, challenge);
 }
 
 // Signet block solution checker
@@ -146,4 +156,72 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
         return false;
     }
     return true;
+}
+
+bool UpdateTransactionProof(const CTransaction& to_sign, size_t input_index, const CScript& scriptPubKey, TransactionProofResult& res)
+{
+    TransactionSignatureChecker sigcheck(&to_sign, /*nIn=*/ input_index, /*amount=*/ to_sign.vout[0].nValue);
+
+    if (!VerifyScript(to_sign.vin[input_index].scriptSig, scriptPubKey, &to_sign.vin[input_index].scriptWitness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
+        res = TransactionProofInvalid;
+        return false;
+    }
+
+    if (!(res & TransactionProofInconclusive) && !VerifyScript(to_sign.vin[input_index].scriptSig, scriptPubKey, &to_sign.vin[input_index].scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, sigcheck)) {
+        res = TransactionProofInconclusive | (res & TransactionProofInFutureFlag);
+    }
+
+    return true;
+}
+
+TransactionProofResult CheckTransactionProof(const std::vector<uint8_t>& message_hash, const CScript& challenge, const CTransaction& to_spend, const CTransaction& to_sign)
+{
+    // Construct our version of the spend/sign transactions and verify that they match
+    // The signature and witness are in the to_sign transaction's first input.
+    if (to_sign.vin.size() < 1 ||
+        to_sign.vin[0].scriptWitness.IsNull() ||
+        to_sign.vin[0].scriptWitness.stack.size() < 1) {
+        return TransactionProofInvalid;
+    }
+    const auto signet_txs = SignetTxs::Create(to_sign.vin[0].scriptSig, to_sign.vin[0].scriptWitness.stack.at(0), message_hash, challenge);
+    if (!signet_txs) return TransactionProofInvalid;
+    // the to_spend transaction should be identical
+    if (to_spend != signet_txs->m_to_spend) return TransactionProofInvalid;
+    // the to_sign transaction should have exactly 1 output
+    if (to_sign.vout.size() != 1) return TransactionProofInvalid;
+    // the to_sign transaction may have extra inputs, but the first one should be identical
+    if (to_sign.vin[0] != signet_txs->m_to_sign.vin[0]) return TransactionProofInvalid;
+
+    // Comparison check OK
+
+    // Now we do the signature check for the transaction
+    TransactionProofResult res = TransactionProofValid;
+    std::vector<CScript> scriptPubKeys;
+
+    // The first input is virtual, so we don't need to fetch anything
+    scriptPubKeys.push_back(to_spend.vout[0].scriptPubKey);
+
+    // The rest need to be fetched from the UTXO set
+    if (to_sign.vin.size() > 1) {
+        // Fetch a list of inputs
+        {
+            LOCK(cs_main);
+            CCoinsViewCache& view = ::ChainstateActive().CoinsTip();
+            for (size_t i = 1; i < to_sign.vin.size(); ++i) {
+                Coin coin;
+                if (!view.GetCoin(to_sign.vin[i].prevout, coin)) {
+                    // TODO: deal with spent transactions somehow; a proof for a spend output is also useful (perhaps let the verifier provide the transactions)
+                    return TransactionProofInvalid;
+                }
+                scriptPubKeys.push_back(coin.out.scriptPubKey);
+            }
+        }
+    }
+
+    // Validate spends
+    for (size_t i = 0; i < scriptPubKeys.size(); ++i) {
+        if (!UpdateTransactionProof(to_sign, i, scriptPubKeys.at(i), res)) return res;
+    }
+
+    return res;
 }
