@@ -105,7 +105,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             locktime=node.getblockcount() + 2000,  # Can be anything
         ))['hex']
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_final)))
-        fee_expected = int(coin['amount']) - output_amount
+        fee_expected = Decimal(str(coin['amount']) )- Decimal(str(output_amount))
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': Decimal(str(fee_expected))}}],
             rawtxs=[tx.serialize().hex()],
