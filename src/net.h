@@ -823,6 +823,8 @@ public:
     CAddress addr;
     // Bind address of our side of the connection
     CAddress addrBind;
+    // Name of the network the peer connected through
+    std::string m_network;
     uint32_t m_mapped_as;
     // SYSCOIN In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
