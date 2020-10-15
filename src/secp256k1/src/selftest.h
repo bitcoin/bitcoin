@@ -22,7 +22,7 @@ static int secp256k1_selftest_sha256(void) {
     secp256k1_sha256_initialize(&hasher);
     secp256k1_sha256_write(&hasher, (const unsigned char*)input63, 63);
     secp256k1_sha256_finalize(&hasher, out);
-    return memcmp(out, output32, 32) == 0;
+    return secp256k1_memcmp_var(out, output32, 32) == 0;
 }
 
 static int secp256k1_selftest(void) {
