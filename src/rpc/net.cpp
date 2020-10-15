@@ -127,7 +127,8 @@ static RPCHelpMan getpeerinfo()
                             {
                                 {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                             }},
-                            {RPCResult::Type::BOOL, "whitelisted", "Whether the peer is whitelisted"},
+                            {RPCResult::Type::BOOL, "whitelisted", /* optional */ true, "Whether the peer is whitelisted with default permissions\n"
+                                                                                        "(DEPRECATED, returned only if config option -deprecatedrpc=whitelisted is passed)"},
                             {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
                             {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                             {
@@ -139,7 +140,8 @@ static RPCHelpMan getpeerinfo()
                             {
                                 {RPCResult::Type::NUM, "msg", "The total bytes received aggregated by message type\n"
                                                               "When a message type is not listed in this json object, the bytes received are 0.\n"
-                                                              "Only known message types can appear as keys in the object and all bytes received of unknown message types are listed under '"+NET_MESSAGE_COMMAND_OTHER+"'."}
+                                                              "Only known message types can appear as keys in the object and all bytes received\n"
+                                                              "of unknown message types are listed under '"+NET_MESSAGE_COMMAND_OTHER+"'."}
                             }},
                         }},
                     }},
@@ -216,7 +218,10 @@ static RPCHelpMan getpeerinfo()
             }
             obj.pushKV("inflight", heights);
         }
-        obj.pushKV("whitelisted", stats.m_legacyWhitelisted);
+        if (IsDeprecatedRPCEnabled("whitelisted")) {
+            // whitelisted is deprecated in v0.21 for removal in v0.22
+            obj.pushKV("whitelisted", stats.m_legacyWhitelisted);
+        }
         UniValue permissions(UniValue::VARR);
         for (const auto& permission : NetPermissions::ToStrings(stats.m_permissionFlags)) {
             permissions.push_back(permission);
