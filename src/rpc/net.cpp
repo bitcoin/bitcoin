@@ -30,6 +30,15 @@
 
 #include <univalue.h>
 
+const std::vector<std::string> CONNECTION_TYPE_DOC{
+        "outbound-full-relay (default automatic connections)",
+        "block-relay-only (does not relay transactions or addresses)",
+        "inbound (initiated by the peer)",
+        "manual (added via addnode RPC or -addnode/-connect configuration options)",
+        "addr-fetch (short-lived automatic connection for soliciting addresses)",
+        "feeler (short-lived automatic connection for testing addresses)"
+};
+
 static UniValue getconnectioncount(const JSONRPCRequest& request)
 {
     RPCHelpMan{"getconnectioncount",
@@ -118,7 +127,9 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                     {RPCResult::Type::STR, "subver", "The string version"},
                     {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                     {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection"},
-                    {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + "."},
+                    {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
+                                                              "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
+                                                              "best capture connection behaviors."},
                     {RPCResult::Type::BOOL, "masternode", "Whether connection was due to masternode connection attempt"},
                     {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
                     {RPCResult::Type::NUM, "banscore", "The ban score"},
