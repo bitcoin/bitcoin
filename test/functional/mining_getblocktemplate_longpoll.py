@@ -33,14 +33,14 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
+        self.log.info("Test that longpollid doesn't change between successive getblocktemplate() invocations if nothing else happens")
         self.nodes[0].generate(10)
         template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         longpollid = template['longpollid']
-        # longpollid should not change between successive invocations if nothing else happens
         template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         assert template2['longpollid'] == longpollid
 
-        # Test 1: test that the longpolling wait if we do nothing
+        self.log.info("Test that longpoll waits if we do nothing")
         thr = LongpollThread(self.nodes[0])
         thr.start()
         # check that thread still lives
@@ -48,13 +48,13 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         assert thr.is_alive()
 
         miniwallets = [ MiniWallet(node) for node in self.nodes ]
-        # Test 2: test that longpoll will terminate if another node generates a block
+        self.log.info("Test that longpoll will terminate if another node generates a block")
         miniwallets[1].generate(1)  # generate a block on another node
         # check that thread will exit now that new transaction entered mempool
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
 
-        # Test 3: test that longpoll will terminate if we generate a block ourselves
+        self.log.info("Test that longpoll will terminate if we generate a block ourselves")
         thr = LongpollThread(self.nodes[0])
         thr.start()
         miniwallets[0].generate(1)  # generate a block on own node
@@ -65,7 +65,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         self.nodes[0].generate(100)
         self.sync_blocks()
 
-        # Test 4: test that introducing a new transaction into the mempool will terminate the longpoll
+        self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")
         thr = LongpollThread(self.nodes[0])
         thr.start()
         # generate a random transaction and submit it
