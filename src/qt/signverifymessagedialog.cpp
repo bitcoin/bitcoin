@@ -246,6 +246,21 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
             QString("<nobr>") + tr("Message verification failed.") + QString("</nobr>")
         );
         return;
+    case MessageVerificationResult::INCONCLUSIVE:
+        ui->statusLabel_VM->setText(
+            tr("Message inconclusive (your node may need to be upgraded to validate new upgradable rules).")
+        );
+        return;
+    case MessageVerificationResult::INCONCLUSIVE_IN_FUTURE:
+        ui->statusLabel_VM->setText(
+            tr("Message inconclusive, and encumbered by an unexpired time lock (your node may need to be upgraded to validate new upgradable rules).")
+        );
+        return;
+    case MessageVerificationResult::VALID_IN_FUTURE:
+        ui->statusLabel_VM->setText(
+            tr("Message valid, but encumbered by an unexpired time lock.")
+        );
+        return;
     }
 }
 

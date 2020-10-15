@@ -22,7 +22,9 @@ constexpr TransactionProofResult TransactionProofInconclusive  = 2;
 constexpr TransactionProofResult TransactionProofValid         = 3;
 constexpr TransactionProofResult TransactionProofInFutureFlag  = 0x80;
 
-TransactionProofResult CheckTransactionProof(const std::vector<uint8_t>& message_hash, const CScript& challenge, const CTransaction& to_spend, const CTransaction& to_sign);
+TransactionProofResult CheckTransactionProof(const std::string& message, const CScript& challenge, const CTransaction& to_spend, const CTransaction& to_sign);
+
+std::vector<uint8_t> GetMessageCommitment(const std::string& message);
 
 /**
  * Generate the signet tx corresponding to the given block
@@ -36,7 +38,7 @@ class SignetTxs {
     SignetTxs(const T1& to_spend, const T2& to_sign) : m_to_spend{to_spend}, m_to_sign{to_sign} { }
 
 public:
-    static Optional<SignetTxs> Create(const CScript& signature, const std::vector<uint8_t>& witness, const std::vector<uint8_t>& commitment, const CScript& challenge);
+    static Optional<SignetTxs> Create(const CScript& signature, const std::vector<std::vector<uint8_t>>& witnessStack, const std::vector<uint8_t>& commitment, const CScript& challenge);
     static Optional<SignetTxs> Create(const CBlock& block, const CScript& challenge);
 
     const CTransaction m_to_spend;

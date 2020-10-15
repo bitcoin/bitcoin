@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <core_io.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
@@ -276,6 +277,16 @@ static RPCHelpMan verifymessage()
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the signature."},
                     {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature provided by the signer in base 64 encoding (see signmessage)."},
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message that was signed."},
+                    {"inputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "UTXOs in a proof of funds",
+                        {
+                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                {
+                                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                                    {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                                },
+                            },
+                        },
+                    },
                 },
                 RPCResult{
                     RPCResult::Type::BOOL, "", "If the signature is verified or not."
@@ -298,15 +309,33 @@ static RPCHelpMan verifymessage()
     std::string strSign     = request.params[1].get_str();
     std::string strMessage  = request.params[2].get_str();
 
-    switch (MessageVerify(strAddress, strSign, strMessage)) {
+    std::vector<COutPoint> inputs;
+    if (!request.params[3].isNull()) {
+        for (const UniValue& univalue : request.params[3].getValues()) {
+            uint256 txid;
+            if (!ParseHashStr(univalue["txid"].get_str(), txid)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "txid must be a 32 byte hex value");
+            }
+            inputs.emplace_back(txid, univalue["vout"].get_int());
+        }
+    }
+
+    switch (MessageVerify(strAddress, strSign, strMessage, inputs)) {
     case MessageVerificationResult::ERR_INVALID_ADDRESS:
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
     case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+    case MessageVerificationResult::INCONCLUSIVE:
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Inconclusive result (node upgrade required?)");
+    case MessageVerificationResult::INCONCLUSIVE_IN_FUTURE:
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Inconclusive result with unexpired time lock");
+    case MessageVerificationResult::VALID_IN_FUTURE:
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Valid proof with unexpired time lock");
     case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
     case MessageVerificationResult::ERR_NOT_SIGNED:
+    case MessageVerificationResult::ERR_INVALID:
         return false;
     case MessageVerificationResult::OK:
         return true;
@@ -704,7 +733,7 @@ static const CRPCCommand commands[] =
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys","address_type"} },
     { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "range"} },
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
-    { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
+    { "util",               "verifymessage",          &verifymessage,          {"address","signature","message", "inputs"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
     { "util",               "getindexinfo",           &getindexinfo,           {"index_name"} },
 

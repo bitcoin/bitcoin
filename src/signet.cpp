@@ -28,6 +28,8 @@
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 
+const CHashWriter HASHER_SIGNMESSAGE = TaggedHash("BIP0322-signed-message");
+
 static constexpr unsigned int BLOCK_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_NULLDUMMY;
 
 static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
@@ -68,7 +70,7 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
     return ComputeMerkleRoot(std::move(leaves));
 }
 
-Optional<SignetTxs> SignetTxs::Create(const CScript& signature, const std::vector<uint8_t>& witness, const std::vector<uint8_t>& commitment, const CScript& challenge)
+Optional<SignetTxs> SignetTxs::Create(const CScript& signature, const std::vector<std::vector<uint8_t>>& witnessStack, const std::vector<uint8_t>& commitment, const CScript& challenge)
 {
     CMutableTransaction tx_to_spend;
     tx_to_spend.nVersion = 0;
@@ -82,7 +84,7 @@ Optional<SignetTxs> SignetTxs::Create(const CScript& signature, const std::vecto
     tx_spending.nLockTime = 0;
     tx_spending.vin.emplace_back(COutPoint(), CScript(), 0);
     tx_spending.vin[0].scriptSig = signature;
-    tx_spending.vin[0].scriptWitness.stack.emplace_back(witness);
+    tx_spending.vin[0].scriptWitness.stack = witnessStack;
     tx_spending.vout.emplace_back(0, CScript(OP_RETURN));
 
     tx_spending.vin[0].prevout = COutPoint(tx_to_spend.GetHash(), 0);
@@ -104,7 +106,7 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
     CScript& witness_commitment = modified_cb.vout.at(cidx).scriptPubKey;
 
     CScript scriptSig;
-    std::vector<uint8_t> witness;
+    std::vector<std::vector<uint8_t>> witnessStack;
     std::vector<uint8_t> signet_solution;
     if (!FetchAndClearCommitmentSection(SIGNET_HEADER, witness_commitment, signet_solution)) {
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
@@ -112,7 +114,7 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
         try {
             VectorReader v(SER_NETWORK, INIT_PROTO_VERSION, signet_solution, 0);
             v >> scriptSig;
-            v >> witness;
+            v >> witnessStack;
             if (!v.empty()) return nullopt; // extraneous data encountered
         } catch (const std::exception&) {
             return nullopt; // parsing error
@@ -127,7 +129,7 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
     writer << signet_merkle;
     writer << block.nTime;
 
-    return Create(scriptSig, witness, block_data, challenge);
+    return Create(scriptSig, witnessStack, block_data, challenge);
 }
 
 // Signet block solution checker
@@ -174,16 +176,16 @@ bool UpdateTransactionProof(const CTransaction& to_sign, size_t input_index, con
     return true;
 }
 
-TransactionProofResult CheckTransactionProof(const std::vector<uint8_t>& message_hash, const CScript& challenge, const CTransaction& to_spend, const CTransaction& to_sign)
+TransactionProofResult CheckTransactionProof(const std::string& message, const CScript& challenge, const CTransaction& to_spend, const CTransaction& to_sign)
 {
+    auto message_hash = GetMessageCommitment(message);
+
     // Construct our version of the spend/sign transactions and verify that they match
     // The signature and witness are in the to_sign transaction's first input.
-    if (to_sign.vin.size() < 1 ||
-        to_sign.vin[0].scriptWitness.IsNull() ||
-        to_sign.vin[0].scriptWitness.stack.size() < 1) {
+    if (to_sign.vin.size() < 1) {
         return TransactionProofInvalid;
     }
-    const auto signet_txs = SignetTxs::Create(to_sign.vin[0].scriptSig, to_sign.vin[0].scriptWitness.stack.at(0), message_hash, challenge);
+    const auto signet_txs = SignetTxs::Create(to_sign.vin[0].scriptSig, to_sign.vin[0].scriptWitness.stack, message_hash, challenge);
     if (!signet_txs) return TransactionProofInvalid;
     // the to_spend transaction should be identical
     if (to_spend != signet_txs->m_to_spend) return TransactionProofInvalid;
@@ -224,4 +226,15 @@ TransactionProofResult CheckTransactionProof(const std::vector<uint8_t>& message
     }
 
     return res;
+}
+
+std::vector<uint8_t> GetMessageCommitment(const std::string& message)
+{
+    CHashWriter hasher = HASHER_SIGNMESSAGE;
+    hasher << message;
+    uint256 hash = hasher.GetHash();
+    std::vector<uint8_t> commitment;
+    commitment.resize(32);
+    memcpy(commitment.data(), hash.begin(), 32);
+    return commitment;
 }

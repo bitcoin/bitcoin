@@ -36,6 +36,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
+#include <signet.h>
 
 #include <stdint.h>
 
@@ -3362,6 +3363,122 @@ RPCHelpMan signrawtransactionwithwallet()
     };
 }
 
+RPCHelpMan provefundswithwallet()
+{
+    return RPCHelpMan{"provefundswithwallet",
+        "\nProve ownership of an optional address and an optional array of UTXOs.\n" +
+        HELP_REQUIRING_PASSPHRASE,
+        {
+            {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message that should be embedded in the proof."},
+            {"address", RPCArg::Type::STR, "", "Address to prove (should be omitted when including inputs)"},
+            {"inputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "UTXOs in a proof of funds",
+                {
+                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                        },
+                    },
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::STR, "str", "The base64-encoded proof",
+        },
+        RPCExamples{
+            HelpExampleCli("provefundswithwallet", "\"hello verifier\", \"bc1q...\"")
+          + HelpExampleRpc("provefundswithwallet", "\"hello verifier\" \"bc1q...\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return NullUniValue;
+            const CWallet* const pwallet = wallet.get();
+
+            RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR}, true);
+
+            std::string message = request.params[0].get_str();
+            std::string address = request.params[1].isNull() ? "" : request.params[1].get_str();
+            UniValue inputs(UniValue::VARR);
+            if (!request.params[2].isNull()) inputs = request.params[2];
+
+            if (address.empty() == (0 == inputs.size())) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide one address and zero inputs, or no address and one or more inputs");
+            }
+
+            // Derive message hash (commitment)
+
+            auto commitment = GetMessageCommitment(message);
+
+            // Derive challenge
+
+            CScript challenge(OP_TRUE);
+
+            if (!address.empty()) {
+                CTxDestination dest = DecodeDestination(address);
+                if (!IsValidDestination(dest)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+                }
+                challenge = GetScriptForDestination(dest);
+            }
+
+            // Generate starting point for to-be-signed transactions
+
+            CScript signature;
+            std::vector<std::vector<uint8_t>> witnessStack;
+
+            Optional<SignetTxs> txs = SignetTxs::Create(signature, witnessStack, commitment, challenge);
+            // txs is Optional, but this version of Create() never fails
+            const CTransaction& to_spend = txs->m_to_spend;
+            CMutableTransaction to_sign(txs->m_to_sign);
+
+            // Append inputs, if any
+            std::map<COutPoint, Coin> coins;
+            if (inputs.size() > 0) {
+                for (const auto& univalue : inputs.getValues()) {
+                    uint256 txid;
+                    if (!ParseHashStr(univalue["txid"].get_str(), txid)) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "txid must be a 32 byte hex value");
+                    }
+                    COutPoint prevout(txid, univalue["vout"].get_int());
+                    to_sign.vin.emplace_back(prevout);
+                    coins[prevout]; // Create empty map entry keyed by prevout.
+                }
+            }
+
+            // Script verification errors
+            std::map<int, std::string> input_errors;
+            bool complete;
+
+            {
+                // Sign the transaction
+                LOCK(pwallet->cs_wallet);
+                EnsureWalletIsUnlocked(pwallet);
+
+                // Fetch previous transactions (inputs):
+                pwallet->chain().findCoins(coins);
+
+                // Insert missing to_spend coin
+                coins[COutPoint(to_spend.GetHash(), 0)] = Coin(to_spend.vout[0], 0, true);
+
+                complete = pwallet->SignTransaction(to_sign, coins, SIGHASH_ALL, input_errors);
+            }
+
+            if (!complete || input_errors.size() > 0) {
+                UniValue result(UniValue::VOBJ);
+                SignTransactionResultToJSON(to_sign, complete, coins, input_errors, result);
+                return result;
+            }
+
+            std::vector<uint8_t> proof_data;
+            CVectorWriter writer(SER_NETWORK, INIT_PROTO_VERSION, proof_data, 0);
+            writer << to_spend << to_sign;
+
+            return EncodeBase64(proof_data);
+        },
+    };
+}
+
 static RPCHelpMan bumpfee_helper(std::string method_name)
 {
     bool want_psbt = method_name == "psbtbumpfee";
@@ -4528,6 +4645,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listwallets",                      &listwallets,                   {} },
     { "wallet",             "loadwallet",                       &loadwallet,                    {"filename", "load_on_startup"} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
+    { "wallet",             "provefundswithwallet",             &provefundswithwallet,          {"message", "address", "inputs"} },
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
     { "wallet",             "send",                             &send,                          {"outputs","conf_target","estimate_mode","options"} },

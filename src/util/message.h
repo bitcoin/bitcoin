@@ -35,6 +35,18 @@ enum class MessageVerificationResult {
     //! The message was not signed with the private key of the provided address.
     ERR_NOT_SIGNED,
 
+    //! The message was invalid (BIP322)
+    ERR_INVALID,
+
+    //! The message was inconclusive, meaning it violates some upgradable rules (BIP322)
+    INCONCLUSIVE,
+
+    //! The message was valid but is encumbered by a time lock (CSV/CLTV) (BIP322)
+    VALID_IN_FUTURE,
+
+    //! The message was inconclusive and is also encumbered as above (BIP322)
+    INCONCLUSIVE_IN_FUTURE,
+
     //! The message verification was successful.
     OK
 };
@@ -49,11 +61,13 @@ enum class SigningResult {
  * @param[in] address Signer's bitcoin address, it must refer to a public key.
  * @param[in] signature The signature in base64 format.
  * @param[in] message The message that was signed.
+ * @param[in] inputs A list of inputs in a proof of funds
  * @return result code */
 MessageVerificationResult MessageVerify(
     const std::string& address,
     const std::string& signature,
-    const std::string& message);
+    const std::string& message,
+    const std::vector<COutPoint>& inputs = std::vector<COutPoint>{});
 
 /** Sign a message.
  * @param[in] privkey Private key to sign with.
