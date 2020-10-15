@@ -1109,6 +1109,17 @@ bool CSubNet::IsValid() const
     return valid;
 }
 
+bool CSubNet::SanityCheck() const
+{
+    if (!(network.IsIPv4() || network.IsIPv6())) return false;
+
+    for (size_t x = 0; x < network.m_addr.size(); ++x) {
+        if (network.m_addr[x] & ~netmask[x]) return false;
+    }
+
+    return true;
+}
+
 bool operator==(const CSubNet& a, const CSubNet& b)
 {
     return a.valid == b.valid && a.network == b.network && !memcmp(a.netmask, b.netmask, 16);
