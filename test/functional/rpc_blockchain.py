@@ -149,7 +149,19 @@ class BlockchainTest(SyscoinTestFramework):
                         'possible': False,
                     },
                 },
-                'active': False}
+                'active': False
+            },
+            'taproot': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'active',
+                    'start_time': -1,
+                    'timeout': 9223372036854775807,
+                    'since': 0
+                },
+                'height': 0,
+                'active': True
+            }
         })
 
     def _test_getchaintxstats(self):
