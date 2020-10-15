@@ -132,6 +132,7 @@ jobs:
           - berkeley-db4
           - miniupnpc
           - qrencode
+          - sqlite
           - ccache
           - zeromq
       env: >-

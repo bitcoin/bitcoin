@@ -8,6 +8,7 @@
 
 #include <clientversion.h>
 #include <fs.h>
+#include <optional.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
 #include <util/memory.h>
@@ -194,11 +195,13 @@ public:
 
 enum class DatabaseFormat {
     BERKELEY,
+    SQLITE,
 };
 
 struct DatabaseOptions {
     bool require_existing = false;
     bool require_create = false;
+    Optional<DatabaseFormat> require_format;
     uint64_t create_flags = 0;
     SecureString create_passphrase;
     bool verify = true;

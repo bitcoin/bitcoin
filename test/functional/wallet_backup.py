@@ -135,11 +135,13 @@ class WalletBackupTest(BitcoinTestFramework):
         self.log.info("Backing up")
 
         self.nodes[0].backupwallet(os.path.join(self.nodes[0].datadir, 'wallet.bak'))
-        self.nodes[0].dumpwallet(os.path.join(self.nodes[0].datadir, 'wallet.dump'))
         self.nodes[1].backupwallet(os.path.join(self.nodes[1].datadir, 'wallet.bak'))
-        self.nodes[1].dumpwallet(os.path.join(self.nodes[1].datadir, 'wallet.dump'))
         self.nodes[2].backupwallet(os.path.join(self.nodes[2].datadir, 'wallet.bak'))
-        self.nodes[2].dumpwallet(os.path.join(self.nodes[2].datadir, 'wallet.dump'))
+
+        if not self.options.descriptors:
+            self.nodes[0].dumpwallet(os.path.join(self.nodes[0].datadir, 'wallet.dump'))
+            self.nodes[1].dumpwallet(os.path.join(self.nodes[1].datadir, 'wallet.dump'))
+            self.nodes[2].dumpwallet(os.path.join(self.nodes[2].datadir, 'wallet.dump'))
 
         self.log.info("More transactions")
         for _ in range(5):
@@ -183,29 +185,30 @@ class WalletBackupTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), balance1)
         assert_equal(self.nodes[2].getbalance(), balance2)
 
-        self.log.info("Restoring using dumped wallet")
-        self.stop_three()
-        self.erase_three()
+        if not self.options.descriptors:
+            self.log.info("Restoring using dumped wallet")
+            self.stop_three()
+            self.erase_three()
 
-        #start node2 with no chain
-        shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'blocks'))
-        shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'chainstate'))
+            #start node2 with no chain
+            shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'blocks'))
+            shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'chainstate'))
 
-        self.start_three()
+            self.start_three()
 
-        assert_equal(self.nodes[0].getbalance(), 0)
-        assert_equal(self.nodes[1].getbalance(), 0)
-        assert_equal(self.nodes[2].getbalance(), 0)
+            assert_equal(self.nodes[0].getbalance(), 0)
+            assert_equal(self.nodes[1].getbalance(), 0)
+            assert_equal(self.nodes[2].getbalance(), 0)
 
-        self.nodes[0].importwallet(os.path.join(self.nodes[0].datadir, 'wallet.dump'))
-        self.nodes[1].importwallet(os.path.join(self.nodes[1].datadir, 'wallet.dump'))
-        self.nodes[2].importwallet(os.path.join(self.nodes[2].datadir, 'wallet.dump'))
+            self.nodes[0].importwallet(os.path.join(self.nodes[0].datadir, 'wallet.dump'))
+            self.nodes[1].importwallet(os.path.join(self.nodes[1].datadir, 'wallet.dump'))
+            self.nodes[2].importwallet(os.path.join(self.nodes[2].datadir, 'wallet.dump'))
 
-        self.sync_blocks()
+            self.sync_blocks()
 
-        assert_equal(self.nodes[0].getbalance(), balance0)
-        assert_equal(self.nodes[1].getbalance(), balance1)
-        assert_equal(self.nodes[2].getbalance(), balance2)
+            assert_equal(self.nodes[0].getbalance(), balance0)
+            assert_equal(self.nodes[1].getbalance(), balance1)
+            assert_equal(self.nodes[2].getbalance(), balance2)
 
         # Backup to source wallet file must fail
         sourcePaths = [

@@ -15,6 +15,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/bdb.h>
+#include <wallet/sqlite.h>
 #include <wallet/wallet.h>
 
 #include <atomic>
@@ -1011,6 +1012,14 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         if (ExistsBerkeleyDatabase(path)) {
             format = DatabaseFormat::BERKELEY;
         }
+        if (ExistsSQLiteDatabase(path)) {
+            if (format) {
+                error = Untranslated(strprintf("Failed to load database path '%s'. Data is in ambiguous format.", path.string()));
+                status = DatabaseStatus::FAILED_BAD_FORMAT;
+                return nullptr;
+            }
+            format = DatabaseFormat::SQLITE;
+        }
     } else if (options.require_existing) {
         error = Untranslated(strprintf("Failed to load database path '%s'. Path does not exist.", path.string()));
         status = DatabaseStatus::FAILED_NOT_FOUND;
@@ -1027,6 +1036,20 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", path.string()));
         status = DatabaseStatus::FAILED_ALREADY_EXISTS;
         return nullptr;
+    }
+
+    // A db already exists so format is set, but options also specifies the format, so make sure they agree
+    if (format && options.require_format && format != options.require_format) {
+        error = Untranslated(strprintf("Failed to load database path '%s'. Data is not in required format.", path.string()));
+        status = DatabaseStatus::FAILED_BAD_FORMAT;
+        return nullptr;
+    }
+
+    // Format is not set when a db doesn't already exist, so use the format specified by the options if it is set.
+    if (!format && options.require_format) format = options.require_format;
+
+    if (format && format == DatabaseFormat::SQLITE) {
+        return MakeSQLiteDatabase(path, options, status, error);
     }
 
     return MakeBerkeleyDatabase(path, options, status, error);
