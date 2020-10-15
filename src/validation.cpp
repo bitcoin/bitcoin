@@ -2149,21 +2149,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
-    CAmount PoPrewards = 0;
-    for (const auto& it : VeriBlock::getPopRewards(*pindex->pprev, chainparams.GetConsensus())) {
-        PoPrewards += it.second;
-    }
-    assert(PoPrewards >= 0);
-
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()) + PoPrewards;
     assert(pindex->pprev && "previous block ptr is nullptr");
-    if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], blockReward, *pindex->pprev, chainparams.GetConsensus(), state)) {
+    if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex->pprev, chainparams.GetConsensus(), state)) {
         return false;
-    }
-
-    if (block.vtx[0]->GetValueOut() > blockReward) {
-        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
 
     if (!control.Wait()) {

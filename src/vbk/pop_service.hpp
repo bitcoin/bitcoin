@@ -39,7 +39,7 @@ bool setState(const uint256& block, altintegration::ValidationState& state);
 
 PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams);
 void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams);
-bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state);
+bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state);
 
 std::vector<BlockBytes> getLastKnownVBKBlocks(size_t blocks);
 std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks);

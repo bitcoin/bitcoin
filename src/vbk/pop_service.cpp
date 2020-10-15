@@ -62,12 +62,12 @@ CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
     }
 
     int result = compareForks(*tip, *candidate);
-    if(result < 0) {
+    if (result < 0) {
         // candidate has higher POP score
         return candidate;
     }
 
-    if(result == 0 && tip->nChainWork < candidate->nChainWork) {
+    if (result == 0 && tip->nChainWork < candidate->nChainWork) {
         // candidate is POP equal to current tip;
         // candidate has higher chainwork
         return candidate;
@@ -214,7 +214,7 @@ void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIn
     }
 }
 
-bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     PoPRewards rewards = getPopRewards(pindexPrev, consensusParams);
@@ -265,7 +265,10 @@ bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlo
         nTotalPopReward += expectedAmount;
     }
 
-    if (tx.GetValueOut() > nTotalPopReward + PoWBlockReward) {
+    CAmount PoWBlockReward =
+        GetBlockSubsidy(pindexPrev.nHeight, consensusParams);
+
+    if (tx.GetValueOut() > nTotalPopReward + PoWBlockReward + nFees) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
             "bad-cb-pop-amount",
             strprintf("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", tx.GetValueOut(), PoWBlockReward + nTotalPopReward));
