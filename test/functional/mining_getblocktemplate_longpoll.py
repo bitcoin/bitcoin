@@ -5,11 +5,13 @@
 """Test longpolling with getblocktemplate."""
 
 from decimal import Decimal
+import random
+import threading
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_rpc_proxy, random_transaction
+from test_framework.util import get_rpc_proxy
+from test_framework.wallet import MiniWallet
 
-import threading
 
 class LongpollThread(threading.Thread):
     def __init__(self, node):
@@ -29,9 +31,6 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.supports_cli = False
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.nodes[0].generate(10)
@@ -48,8 +47,9 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         thr.join(5)  # wait 5 seconds or until thread exits
         assert thr.is_alive()
 
+        miniwallets = [ MiniWallet(node) for node in self.nodes ]
         # Test 2: test that longpoll will terminate if another node generates a block
-        self.nodes[1].generate(1)  # generate a block on another node
+        miniwallets[1].generate(1)  # generate a block on another node
         # check that thread will exit now that new transaction entered mempool
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
@@ -57,17 +57,22 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         # Test 3: test that longpoll will terminate if we generate a block ourselves
         thr = LongpollThread(self.nodes[0])
         thr.start()
-        self.nodes[0].generate(1)  # generate a block on another node
+        miniwallets[0].generate(1)  # generate a block on own node
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
+
+        # Add enough mature utxos to the wallets, so that all txs spend confirmed coins
+        self.nodes[0].generate(100)
+        self.sync_blocks()
 
         # Test 4: test that introducing a new transaction into the mempool will terminate the longpoll
         thr = LongpollThread(self.nodes[0])
         thr.start()
         # generate a random transaction and submit it
         min_relay_fee = self.nodes[0].getnetworkinfo()["relayfee"]
-        # min_relay_fee is fee per 1000 bytes, which should be more than enough.
-        (txid, txhex, fee) = random_transaction(self.nodes, Decimal("1.1"), min_relay_fee, Decimal("0.001"), 20)
+        fee_rate = min_relay_fee + Decimal('0.00000010') * random.randint(0,20)
+        miniwallets[0].send_self_transfer(from_node=random.choice(self.nodes),
+                                          fee_rate=fee_rate)
         # after one minute, every 10 seconds the mempool is probed, so in 80 seconds it should have returned
         thr.join(60 + 20)
         assert not thr.is_alive()
