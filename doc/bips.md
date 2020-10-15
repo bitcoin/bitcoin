@@ -1,6 +1,6 @@
 BIPs that are implemented by Bitcoin Core (up-to-date up to **v22.0**):
 
-* [`BIP 8`](https://github.com/bitcoin/bips/blob/master/bip-0008.mediawiki): The changes for parallel, rapid deployment based on block height miner activation have been implemented since **v0.21.1** ([PR #21392](https://github.com/bitcoin/bitcoin/pull/21392)). The UASF fallback with forced signaling (`LOT=true`) has not yet been implemented. The current implementation is the equivalent of `LOT=false`.
+* [`BIP 8`](https://github.com/bitcoin/bips/blob/master/bip-0008.mediawiki): The changes for parallel, rapid deployment based on block height miner activation with UASF failover have been implemented since **v0.21.1**  ([PR #19573](https://github.com/bitcoin/bitcoin/pull/19573)).
 * [`BIP 9`](https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki): The changes allowing multiple soft-forks to be deployed in parallel have been implemented since **v0.12.1**  ([PR #7575](https://github.com/bitcoin/bitcoin/pull/7575)) Support was removed in **v0.21.1** ([PR #21392](https://github.com/bitcoin/bitcoin/pull/21392)).
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
 * [`BIP 13`](https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki): The address format for P2SH addresses has been implemented since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
