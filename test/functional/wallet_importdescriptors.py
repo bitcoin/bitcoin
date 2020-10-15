@@ -207,6 +207,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              success=False,
                              error_code=-4,
                              error_message='Cannot import private keys to a wallet with private keys disabled')
+
+        self.log.info("Should not import a descriptor with hardened derivations when private keys are disabled")
+        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/1h/*)"),
+                              "timestamp": "now",
+                              "range": 1},
+                             success=False,
+                             error_code=-4,
+                             error_message='Cannot expand descriptor. Probably because of hardened derivations without private keys provided')
+
         for address in addresses:
             test_address(w1,
                          address,
