@@ -15,9 +15,9 @@
 void nonce_function_bip340_bitflip(unsigned char **args, size_t n_flip, size_t n_bytes) {
     unsigned char nonces[2][32];
     CHECK(nonce_function_bip340(nonces[0], args[0], args[1], args[2], args[3], args[4]) == 1);
-    secp256k1_rand_flip(args[n_flip], n_bytes);
+    secp256k1_testrand_flip(args[n_flip], n_bytes);
     CHECK(nonce_function_bip340(nonces[1], args[0], args[1], args[2], args[3], args[4]) == 1);
-    CHECK(memcmp(nonces[0], nonces[1], 32) != 0);
+    CHECK(secp256k1_memcmp_var(nonces[0], nonces[1], 32) != 0);
 }
 
 /* Tests for the equality of two sha256 structs. This function only produces a
@@ -28,7 +28,7 @@ void test_sha256_eq(const secp256k1_sha256 *sha1, const secp256k1_sha256 *sha2) 
     CHECK((sha1->bytes & 0x3F) == 0);
 
     CHECK(sha1->bytes == sha2->bytes);
-    CHECK(memcmp(sha1->s, sha2->s, sizeof(sha1->s)) == 0);
+    CHECK(secp256k1_memcmp_var(sha1->s, sha2->s, sizeof(sha1->s)) == 0);
 }
 
 void run_nonce_function_bip340_tests(void) {
@@ -59,10 +59,10 @@ void run_nonce_function_bip340_tests(void) {
     secp256k1_nonce_function_bip340_sha256_tagged_aux(&sha_optimized);
     test_sha256_eq(&sha, &sha_optimized);
 
-    secp256k1_rand256(msg);
-    secp256k1_rand256(key);
-    secp256k1_rand256(pk);
-    secp256k1_rand256(aux_rand);
+    secp256k1_testrand256(msg);
+    secp256k1_testrand256(key);
+    secp256k1_testrand256(pk);
+    secp256k1_testrand256(aux_rand);
 
     /* Check that a bitflip in an argument results in different nonces. */
     args[0] = msg;
@@ -124,10 +124,10 @@ void test_schnorrsig_api(void) {
     secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_illegal_callback(both, counting_illegal_callback_fn, &ecount);
 
-    secp256k1_rand256(sk1);
-    secp256k1_rand256(sk2);
-    secp256k1_rand256(sk3);
-    secp256k1_rand256(msg);
+    secp256k1_testrand256(sk1);
+    secp256k1_testrand256(sk2);
+    secp256k1_testrand256(sk3);
+    secp256k1_testrand256(msg);
     CHECK(secp256k1_keypair_create(ctx, &keypairs[0], sk1) == 1);
     CHECK(secp256k1_keypair_create(ctx, &keypairs[1], sk2) == 1);
     CHECK(secp256k1_keypair_create(ctx, &keypairs[2], sk3) == 1);
@@ -197,11 +197,11 @@ void test_schnorrsig_bip_vectors_check_signing(const unsigned char *sk, const un
 
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk));
     CHECK(secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, NULL, aux_rand));
-    CHECK(memcmp(sig, expected_sig, 64) == 0);
+    CHECK(secp256k1_memcmp_var(sig, expected_sig, 64) == 0);
 
     CHECK(secp256k1_xonly_pubkey_parse(ctx, &pk_expected, pk_serialized));
     CHECK(secp256k1_keypair_xonly_pub(ctx, &pk, NULL, &keypair));
-    CHECK(memcmp(&pk, &pk_expected, sizeof(pk)) == 0);
+    CHECK(secp256k1_memcmp_var(&pk, &pk_expected, sizeof(pk)) == 0);
     CHECK(secp256k1_schnorrsig_verify(ctx, sig, msg, &pk));
 }
 
@@ -675,19 +675,19 @@ void test_schnorrsig_sign(void) {
     unsigned char sig[64];
     unsigned char zeros64[64] = { 0 };
 
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk));
     CHECK(secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, NULL, NULL) == 1);
 
     /* Test different nonce functions */
     memset(sig, 1, sizeof(sig));
     CHECK(secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, nonce_function_failing, NULL) == 0);
-    CHECK(memcmp(sig, zeros64, sizeof(sig)) == 0);
+    CHECK(secp256k1_memcmp_var(sig, zeros64, sizeof(sig)) == 0);
     memset(&sig, 1, sizeof(sig));
     CHECK(secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, nonce_function_0, NULL) == 0);
-    CHECK(memcmp(sig, zeros64, sizeof(sig)) == 0);
+    CHECK(secp256k1_memcmp_var(sig, zeros64, sizeof(sig)) == 0);
     CHECK(secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, nonce_function_overflowing, NULL) == 1);
-    CHECK(memcmp(sig, zeros64, sizeof(sig)) != 0);
+    CHECK(secp256k1_memcmp_var(sig, zeros64, sizeof(sig)) != 0);
 }
 
 #define N_SIGS 3
@@ -703,12 +703,12 @@ void test_schnorrsig_sign_verify(void) {
     secp256k1_xonly_pubkey pk;
     secp256k1_scalar s;
 
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk));
     CHECK(secp256k1_keypair_xonly_pub(ctx, &pk, NULL, &keypair));
 
     for (i = 0; i < N_SIGS; i++) {
-        secp256k1_rand256(msg[i]);
+        secp256k1_testrand256(msg[i]);
         CHECK(secp256k1_schnorrsig_sign(ctx, sig[i], msg[i], &keypair, NULL, NULL));
         CHECK(secp256k1_schnorrsig_verify(ctx, sig[i], msg[i], &pk));
     }
@@ -716,19 +716,19 @@ void test_schnorrsig_sign_verify(void) {
     {
         /* Flip a few bits in the signature and in the message and check that
          * verify and verify_batch (TODO) fail */
-        size_t sig_idx = secp256k1_rand_int(N_SIGS);
-        size_t byte_idx = secp256k1_rand_int(32);
-        unsigned char xorbyte = secp256k1_rand_int(254)+1;
+        size_t sig_idx = secp256k1_testrand_int(N_SIGS);
+        size_t byte_idx = secp256k1_testrand_int(32);
+        unsigned char xorbyte = secp256k1_testrand_int(254)+1;
         sig[sig_idx][byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(ctx, sig[sig_idx], msg[sig_idx], &pk));
         sig[sig_idx][byte_idx] ^= xorbyte;
 
-        byte_idx = secp256k1_rand_int(32);
+        byte_idx = secp256k1_testrand_int(32);
         sig[sig_idx][32+byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(ctx, sig[sig_idx], msg[sig_idx], &pk));
         sig[sig_idx][32+byte_idx] ^= xorbyte;
 
-        byte_idx = secp256k1_rand_int(32);
+        byte_idx = secp256k1_testrand_int(32);
         msg[sig_idx][byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(ctx, sig[sig_idx], msg[sig_idx], &pk));
         msg[sig_idx][byte_idx] ^= xorbyte;
@@ -766,7 +766,7 @@ void test_schnorrsig_taproot(void) {
     unsigned char sig[64];
 
     /* Create output key */
-    secp256k1_rand256(sk);
+    secp256k1_testrand256(sk);
     CHECK(secp256k1_keypair_create(ctx, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_xonly_pub(ctx, &internal_pk, NULL, &keypair) == 1);
     /* In actual taproot the tweak would be hash of internal_pk */
@@ -776,7 +776,7 @@ void test_schnorrsig_taproot(void) {
     CHECK(secp256k1_xonly_pubkey_serialize(ctx, output_pk_bytes, &output_pk) == 1);
 
     /* Key spend */
-    secp256k1_rand256(msg);
+    secp256k1_testrand256(msg);
     CHECK(secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, NULL, NULL) == 1);
     /* Verify key spend */
     CHECK(secp256k1_xonly_pubkey_parse(ctx, &output_pk, output_pk_bytes) == 1);
