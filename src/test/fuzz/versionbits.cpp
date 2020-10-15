@@ -31,9 +31,10 @@ public:
     const int m_period;
     const int m_threshold;
     const int m_bit;
+    const bool m_lockinontimeout;
 
-    TestConditionChecker(int begin, int end, int min_act, int period, int threshold, int bit)
-        : m_begin{begin}, m_end{end}, m_min_activation(min_act), m_period{period}, m_threshold{threshold}, m_bit{bit}
+    TestConditionChecker(int begin, int end, int min_act, int period, int threshold, int bit, bool lockinontimeout)
+        : m_begin{begin}, m_end{end}, m_min_activation(min_act), m_period{period}, m_threshold{threshold}, m_bit{bit}, m_lockinontimeout{lockinontimeout}
     {
         assert(m_period > 0);
         assert(0 <= m_threshold && m_threshold <= m_period);
@@ -43,6 +44,7 @@ public:
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
     int StartHeight(const Consensus::Params& params) const override { return m_begin; }
     int TimeoutHeight(const Consensus::Params& params) const override { return m_end; }
+    bool LockinOnTimeout(const Consensus::Params& params) const override { return m_lockinontimeout; }
     int MinActivationHeight(const Consensus::Params& params) const override { return m_min_activation; }
     int Period(const Consensus::Params& params) const override { return m_period; }
     int Threshold(const Consensus::Params& params) const override { return m_threshold; }
@@ -132,11 +134,17 @@ FUZZ_TARGET_INIT(versionbits, initialize)
     int startheight;
     int timeoutheight;
     int min_activation = 0;
+    bool lockinontimeout = false;
     if (fuzzed_data_provider.ConsumeBool()) {
         // pick the timestamp to switch based on a block
         startheight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 2));
         timeoutheight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 2));
         min_activation = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 1));
+        if (startheight < int(period * (max_periods - 3)) && threshold < period) {
+            // LOT=True requires 3 periods (STARTED->MUST_SIGNAL->LOCKED_IN), pushing it past the deadline
+            // Furthermore, this fuzzer doesn't let us easily guarantee the signal of the first block in a period, so skip LOT=True when threshold is 100%
+            lockinontimeout = fuzzed_data_provider.ConsumeBool();
+        }
     } else {
         if (fuzzed_data_provider.ConsumeBool()) {
             startheight = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
@@ -149,7 +157,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         }
     }
 
-    TestConditionChecker checker(startheight, timeoutheight, min_activation, period, threshold, bit);
+    TestConditionChecker checker(startheight, timeoutheight, min_activation, period, threshold, bit, lockinontimeout);
 
     // Early exit if the versions don't signal sensibly for the deployment
     if (!checker.Condition(ver_signal)) return;
@@ -208,7 +216,11 @@ FUZZ_TARGET_INIT(versionbits, initialize)
 
     // mine (period-1) blocks and check state
     for (int b = 1; b < period; ++b) {
-        const bool signal = (signalling_mask >> (b % 32)) & 1;
+        bool signal = (signalling_mask >> (b % 32)) & 1;
+        if (exp_state == ThresholdState::MUST_SIGNAL && threshold - blocks_sig >= period - b) {
+            // Further blocks need to signal to be valid
+            signal = true;
+        }
         if (signal) ++blocks_sig;
 
         CBlockIndex* current_block = blocks.mine_block(signal);
@@ -222,8 +234,8 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         assert(state == exp_state);
         assert(since == exp_since);
 
-        // GetStateStatistics may crash when state is not STARTED
-        if (state != ThresholdState::STARTED) continue;
+        // GetStateStatistics may crash when state is not STARTED or MUST_SIGNAL
+        if (state != ThresholdState::STARTED && state != ThresholdState::MUST_SIGNAL) continue;
 
         // check that after mining this block stats change as expected
         const BIP9Stats stats = checker.GetStateStatisticsFor(current_block);
@@ -235,7 +247,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         last_stats = stats;
     }
 
-    if (exp_state == ThresholdState::STARTED) {
+    if (exp_state == ThresholdState::STARTED || exp_state == ThresholdState::MUST_SIGNAL) {
         // double check that stats.possible is sane
         if (blocks_sig >= threshold - 1) assert(last_stats.possible);
     }
@@ -288,11 +300,15 @@ FUZZ_TARGET_INIT(versionbits, initialize)
             assert(exp_state == ThresholdState::DEFINED);
         }
         break;
+    case ThresholdState::MUST_SIGNAL:
+        assert(height >= checker.m_end - period);
+        assert(exp_state == ThresholdState::STARTED);
+        break;
     case ThresholdState::LOCKED_IN:
         if (exp_state == ThresholdState::LOCKED_IN) {
             assert(height < checker.m_min_activation);
         } else {
-            assert(exp_state == ThresholdState::STARTED);
+            assert(exp_state == ThresholdState::STARTED || exp_state == ThresholdState::MUST_SIGNAL);
             assert(blocks_sig >= threshold);
         }
         break;

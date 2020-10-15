@@ -1234,25 +1234,27 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     switch (thresholdState) {
     case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
+    case ThresholdState::MUST_SIGNAL: bip9.pushKV("status", "must_signal"); break;
     case ThresholdState::LOCKED_IN: bip9.pushKV("status", "locked_in"); break;
     case ThresholdState::ACTIVE: bip9.pushKV("status", "active"); break;
     case ThresholdState::FAILED: bip9.pushKV("status", "failed"); break;
     }
-    if (ThresholdState::STARTED == thresholdState)
-    {
+    if (ThresholdState::STARTED == thresholdState || ThresholdState::MUST_SIGNAL == thresholdState || ThresholdState::LOCKED_IN == thresholdState) {
         bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
     bip9.pushKV("startheight", consensusParams.vDeployments[id].startheight);
     bip9.pushKV("timeoutheight", consensusParams.vDeployments[id].timeoutheight);
     bip9.pushKV("minimum_activation_height", consensusParams.vDeployments[id].m_min_activation_height);
+    bip9.pushKV("lockinontimeout", consensusParams.vDeployments[id].lockinontimeout);
     int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
-    if (ThresholdState::STARTED == thresholdState)
-    {
+    if (ThresholdState::STARTED == thresholdState || ThresholdState::MUST_SIGNAL == thresholdState || ThresholdState::LOCKED_IN == thresholdState) {
         UniValue statsUV(UniValue::VOBJ);
         BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id);
         statsUV.pushKV("period", statsStruct.period);
-        statsUV.pushKV("threshold", statsStruct.threshold);
+        if (thresholdState != ThresholdState::LOCKED_IN) {
+            statsUV.pushKV("threshold", statsStruct.threshold);
+        }
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
         statsUV.pushKV("possible", statsStruct.possible);
@@ -1299,11 +1301,12 @@ RPCHelpMan getblockchaininfo()
                                 {RPCResult::Type::STR, "type", "one of \"buried\", \"bip8\""},
                                 {RPCResult::Type::OBJ, "bip8", "status of BIP 8 softforks (only for \"bip8\" type)",
                                 {
-                                    {RPCResult::Type::STR, "status", "one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\""},
+                                    {RPCResult::Type::STR, "status", "one of \"defined\", \"started\", \"must_signal\", \"locked_in\", \"active\", \"failed\""},
                                     {RPCResult::Type::NUM, "bit", "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)"},
                                     {RPCResult::Type::NUM, "startheight", "the minimum height of a block at which the bit gains its meaning"},
                                     {RPCResult::Type::NUM, "timeoutheight", "the height of a block at which the deployment is considered failed if not yet locked in"},
                                     {RPCResult::Type::NUM, "minimum_activation_height", "the minimum block height at which activation is allowed to occur"},
+                                    {RPCResult::Type::BOOL, "lockinontimeout", "true if the period before timeoutheight transitions to must_signal"},
                                     {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
                                     {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP8 signalling for a softfork (only for \"started\" status)",
                                     {
