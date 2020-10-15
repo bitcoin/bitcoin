@@ -835,6 +835,7 @@ static RPCHelpMan getblocktemplate()
             case ThresholdState::FAILED:
                 // Not exposed to GBT at all
                 break;
+            case ThresholdState::MUST_SIGNAL:
             case ThresholdState::LOCKED_IN:
                 // Ensure bit is set in block version
                 pblock->nVersion |= VersionBitsMask(consensusParams, pos);

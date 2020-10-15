@@ -19,6 +19,7 @@ static const std::string StateName(ThresholdState state)
     switch (state) {
     case ThresholdState::DEFINED:   return "DEFINED";
     case ThresholdState::STARTED:   return "STARTED";
+    case ThresholdState::MUST_SIGNAL: return "MUST_SIGNAL";
     case ThresholdState::LOCKED_IN: return "LOCKED_IN";
     case ThresholdState::ACTIVE:    return "ACTIVE";
     case ThresholdState::FAILED:    return "FAILED";
@@ -34,8 +35,11 @@ private:
     mutable ThresholdConditionCache cache;
 
 public:
+    bool m_lockinontimeout{false};
+
     int StartHeight(const Consensus::Params& params) const override { return 100; }
     int TimeoutHeight(const Consensus::Params& params) const override { return 200; }
+    bool LockinOnTimeout(const Consensus::Params& params) const override { return m_lockinontimeout; }
     int Period(const Consensus::Params& params) const override { return 10; }
     int Threshold(const Consensus::Params& params) const override { return 9; }
     int MinActivationHeight(const Consensus::Params& params) const override { return 0; }
@@ -105,6 +109,14 @@ public:
 
     ~VersionBitsTester() {
          Reset();
+    }
+
+    VersionBitsTester& SetLockinOnTimeout(const bool lockinontimeout) {
+        for (unsigned int  i = 0; i < CHECKERS; i++) {
+            checker[i].m_lockinontimeout = lockinontimeout;
+            checker_delayed[i].m_lockinontimeout = lockinontimeout;
+        }
+        return *this;
     }
 
     VersionBitsTester& Mine(unsigned int height, int32_t nTime, int32_t nVersion) {
@@ -177,6 +189,7 @@ public:
 
     VersionBitsTester& TestDefined() { return TestState(ThresholdState::DEFINED); }
     VersionBitsTester& TestStarted() { return TestState(ThresholdState::STARTED); }
+    VersionBitsTester& TestMustSignal() { return TestState(ThresholdState::MUST_SIGNAL); }
     VersionBitsTester& TestLockedIn() { return TestState(ThresholdState::LOCKED_IN); }
     VersionBitsTester& TestActive() { return TestState(ThresholdState::ACTIVE); }
     VersionBitsTester& TestFailed() { return TestState(ThresholdState::FAILED); }
@@ -216,6 +229,22 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(200, TestTime(30003), 0).TestActiveDelayed().TestStateSinceHeight(120, 110)
                            .Mine(250, TestTime(30004), 0).TestActive().TestStateSinceHeight(120, 250)
                            .Mine(300, TestTime(40000), 0).TestActive().TestStateSinceHeight(120, 250)
+
+        // DEFINED -> STARTED -> MUST_SIGNAL -> LOCKEDIN -> ACTIVE
+                           .Reset().TestDefined()
+                           .SetLockinOnTimeout(true)
+                           .Mine(1, TestTime(1), 0).TestDefined().TestStateSinceHeight(0)
+                           .Mine(99, TestTime(10000) - 1, 0x101).TestDefined().TestStateSinceHeight(0) // One block more and it would be started
+                           .Mine(100, TestTime(10000), 0x101).TestStarted().TestStateSinceHeight(100) // So that's what happens the next period
+                           .Mine(189, TestTime(10010), 0).TestStarted().TestStateSinceHeight(100)
+                           .Mine(190, TestTime(10020), 0).TestMustSignal().TestStateSinceHeight(190)
+                           .Mine(199, TestTime(10030), 0).TestMustSignal().TestStateSinceHeight(190) // 9 new blocks
+                           .Mine(200, TestTime(29999), 0x200).TestLockedIn().TestStateSinceHeight(200) // 1 old block (so 9 out of the past 10)
+                           .Mine(209, TestTime(30001), 0).TestLockedIn().TestStateSinceHeight(200)
+                           .Mine(210, TestTime(30002), 0).TestActiveDelayed().TestStateSinceHeight(210, 200)
+                           .Mine(290, TestTime(30003), 0).TestActive().TestStateSinceHeight(210, 250)
+                           .Mine(390, TestTime(40000), 0).TestActive().TestStateSinceHeight(210, 250)
+                           .SetLockinOnTimeout(false)
 
         // DEFINED multiple periods -> STARTED multiple periods -> FAILED
                            .Reset().TestDefined().TestStateSinceHeight(0)

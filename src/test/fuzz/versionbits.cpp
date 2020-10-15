@@ -43,6 +43,7 @@ public:
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
     int StartHeight(const Consensus::Params& params) const override { return m_begin; }
     int TimeoutHeight(const Consensus::Params& params) const override { return m_end; }
+    bool LockinOnTimeout(const Consensus::Params& params) const override { return false; }
     int MinActivationHeight(const Consensus::Params& params) const override { return m_min_activation; }
     int Period(const Consensus::Params& params) const override { return m_period; }
     int Threshold(const Consensus::Params& params) const override { return m_threshold; }
