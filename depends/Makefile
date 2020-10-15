@@ -134,7 +134,10 @@ qrencode_packages_$(NO_QR) = $(qrencode_packages)
 
 qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages) $(qrencode_packages_)
 
-wallet_packages_$(NO_WALLET) = $(wallet_packages)
+bdb_packages_$(NO_BDB) = $(bdb_packages)
+sqlite_packages_$(NO_SQLITE) = $(sqlite_packages)
+wallet_packages_$(NO_WALLET) = $(bdb_packages_) $(sqlite_packages_)
+
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
 zmq_packages_$(NO_ZMQ) = $(zmq_packages)
 multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
