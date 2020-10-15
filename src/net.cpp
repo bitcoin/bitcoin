@@ -66,9 +66,6 @@ static constexpr std::chrono::seconds DNSSEEDS_DELAY_FEW_PEERS{11};
 static constexpr std::chrono::minutes DNSSEEDS_DELAY_MANY_PEERS{5};
 static constexpr int DNSSEEDS_DELAY_PEER_THRESHOLD = 1000; // "many" vs "few" peers
 
-// We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
-#define FEELER_SLEEP_WINDOW 1
-
 // MSG_NOSIGNAL is not available on some platforms, if it doesn't exist define it as 0
 #if !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
@@ -1866,11 +1863,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
     }
 
-    // Initiate network connections
-    int64_t nStart = GetTime();
+    auto start_time = GetTime<std::chrono::microseconds>();
+    // Minimum time before next feeler connection.
+    auto next_feeler_time = PoissonNextSend(start_time, FEELER_ATTEMPT_INTERVAL);
 
-    // Minimum time before next feeler connection (in microseconds).
-    int64_t nNextFeeler = PoissonNextSend(nStart*1000*1000, FEELER_INTERVAL);
+    // Initiate network connections
     while (!interruptNet)
     {
         ProcessAddrFetch();
@@ -1886,7 +1883,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // Note that we only do this if we started with an empty peers.dat,
         // (in which case we will query DNS seeds immediately) *and* the DNS
         // seeds have not returned any results.
-        if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
+        if (addrman.size() == 0 && (GetTime<std::chrono::microseconds>() - start_time > std::chrono::seconds(60))) {
             static bool done = false;
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
@@ -1932,7 +1929,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
 
         ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
-        int64_t nTime = GetTimeMicros();
+        auto current_time = GetTime<std::chrono::microseconds>();
         bool fFeeler = false;
 
         // Determine what type of connection to open. Opening
@@ -1950,8 +1947,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             conn_type = ConnectionType::BLOCK_RELAY;
         } else if (GetTryNewOutboundPeer()) {
             // OUTBOUND_FULL_RELAY
-        } else if (nTime > nNextFeeler) {
-            nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
+        } else if (current_time > next_feeler_time) {
+            // We don't know whether feeler connection will be attempted in this iteration,
+            // or we will skip this candidate due to one of the pre-validation rules.
+            // Thus, we schedule the next feeler connection with a shorter interval now,
+            // but we will reschedule if for later if current candidate will be actually
+            // attempted to connect to.
+            next_feeler_time = PoissonNextSend(current_time, FEELER_SKIP_INTERVAL);
             conn_type = ConnectionType::FEELER;
             fFeeler = true;
         } else {
@@ -2016,10 +2018,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         if (addrConnect.IsValid()) {
 
             if (fFeeler) {
-                // Add small amount of random noise before connection to avoid synchronization.
-                int randsleep = GetRandInt(FEELER_SLEEP_WINDOW * 1000);
-                if (!interruptNet.sleep_for(std::chrono::milliseconds(randsleep)))
-                    return;
+                next_feeler_time = PoissonNextSend(current_time, FEELER_ATTEMPT_INTERVAL);
                 LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
             }
 
