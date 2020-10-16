@@ -70,7 +70,7 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
     return ComputeMerkleRoot(std::move(leaves));
 }
 
-Optional<SignetTxs> SignetTxs::Create(const CScript& signature, const std::vector<std::vector<uint8_t>>& witnessStack, const std::vector<uint8_t>& commitment, const CScript& challenge)
+Optional<SignetTxs> SignetTxs::Create(const CScript& signature, const std::vector<std::vector<uint8_t>>& witnessStack, const std::vector<uint8_t>& commitment, const CScript& challenge, uint32_t locktime, uint32_t sequence)
 {
     CMutableTransaction tx_to_spend;
     tx_to_spend.nVersion = 0;
@@ -81,8 +81,8 @@ Optional<SignetTxs> SignetTxs::Create(const CScript& signature, const std::vecto
 
     CMutableTransaction tx_spending;
     tx_spending.nVersion = 0;
-    tx_spending.nLockTime = 0;
-    tx_spending.vin.emplace_back(COutPoint(), CScript(), 0);
+    tx_spending.nLockTime = locktime;
+    tx_spending.vin.emplace_back(COutPoint(), CScript(), sequence);
     tx_spending.vin[0].scriptSig = signature;
     tx_spending.vin[0].scriptWitness.stack = witnessStack;
     tx_spending.vout.emplace_back(0, CScript(OP_RETURN));
@@ -186,7 +186,7 @@ TransactionProofResult CheckTransactionProof(const std::string& message, const C
     if (to_sign.vin.size() < 1) {
         return TransactionProofInvalid;
     }
-    const auto signet_txs = SignetTxs::Create(to_sign.vin[0].scriptSig, to_sign.vin[0].scriptWitness.stack, message_hash, challenge);
+    const auto signet_txs = SignetTxs::Create(to_sign.vin[0].scriptSig, to_sign.vin[0].scriptWitness.stack, message_hash, challenge, to_sign.nLockTime, to_sign.vin[0].nSequence);
     if (!signet_txs) return TransactionProofInvalid;
     // the to_spend transaction should be identical
     if (to_spend != signet_txs->m_to_spend) return TransactionProofInvalid;
@@ -197,8 +197,15 @@ TransactionProofResult CheckTransactionProof(const std::string& message, const C
 
     // Comparison check OK
 
-    // Now we do the signature check for the transaction
+    // Lock time check
     TransactionProofResult res = TransactionProofValid;
+    if (to_sign.nLockTime < LOCKTIME_THRESHOLD
+            ? to_sign.nLockTime > ChainActive().Tip()->nHeight
+            : to_sign.nLockTime > GetTime()) {
+        res |= TransactionProofInFutureFlag;
+    }
+
+    // Now we do the signature check for the transaction
     std::map<COutPoint, Coin> coins;
 
     // The first input is virtual, so we don't need to fetch anything

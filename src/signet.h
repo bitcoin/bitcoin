@@ -38,7 +38,7 @@ class SignetTxs {
     SignetTxs(const T1& to_spend, const T2& to_sign) : m_to_spend{to_spend}, m_to_sign{to_sign} { }
 
 public:
-    static Optional<SignetTxs> Create(const CScript& signature, const std::vector<std::vector<uint8_t>>& witnessStack, const std::vector<uint8_t>& commitment, const CScript& challenge);
+    static Optional<SignetTxs> Create(const CScript& signature, const std::vector<std::vector<uint8_t>>& witnessStack, const std::vector<uint8_t>& commitment, const CScript& challenge, uint32_t locktime = 0, uint32_t sequence = 0);
     static Optional<SignetTxs> Create(const CBlock& block, const CScript& challenge);
 
     const CTransaction m_to_spend;
