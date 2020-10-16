@@ -47,6 +47,7 @@ class LLMQSigningTest(DashTestFramework):
             while time.time() - t < timeout:
                 if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
                     return
+                self.bump_mocktime(1)
                 time.sleep(0.1)
             raise AssertionError("wait_for_sigs timed out")
 

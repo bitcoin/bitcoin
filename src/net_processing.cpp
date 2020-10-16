@@ -2963,6 +2963,15 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                     return;
                 } else if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
+                // SYSCOIN
+                } else if(!fAlreadyHave) {
+                    static std::set<int> allowWhileInIBDObjs = {
+                        MSG_SPORK
+                    };
+                    bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
+                    if (allowWhileInIBD) {
+                        AddTxAnnouncement(pfrom, gtxid, current_time);
+                    }
                 }
             } else {
                 LogPrint(BCLog::NET, "Unknown inv type \"%s\" received from peer=%d\n", inv.ToString(), pfrom.GetId());
@@ -4049,48 +4058,47 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         }
         return;
     }
-    bool found = false;
-    const std::vector<std::string> &allMessages = getAllNetMessageTypes();
-    for(const auto &msg: allMessages) {
-        if(msg == msg_type) {
-            found = true;
-            break;
-        }
-    }
+   LogPrintf("check OTHER messag type %s\n", msg_type);
 
-    if (found)
-    {
-
-        //probably one the extensions
-        if(msg_type == NetMsgType::SPORK || NetMsgType::GETSPORKS) {
-            sporkManager.ProcessSpork(&pfrom, msg_type, vRecv, m_connman, *this);
-        } else if(msg_type == NetMsgType::SYNCSTATUSCOUNT) {
-            masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);
-        } else if(msg_type == NetMsgType::MNGOVERNANCESYNC || 
-            msg_type == NetMsgType::MNGOVERNANCEOBJECT || 
-            msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
-            governance.ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
-        } else if(msg_type == NetMsgType::MNAUTH) {
-            CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
-        } else if(msg_type == NetMsgType::QFCOMMITMENT) {
-            llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
-        } else if(msg_type == NetMsgType::QSIGREC) {
-            llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, *this);
-        } else if(msg_type == NetMsgType::QCONTRIB || 
-                msg_type == NetMsgType::QCOMPLAINT ||
-                msg_type == NetMsgType::QJUSTIFICATION || 
-                msg_type == NetMsgType::QPCOMMITMENT ||
-                msg_type == NetMsgType::QWATCH) {
-            llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
-        } else if(msg_type == NetMsgType::QSIGSHARE || 
-                msg_type == NetMsgType::QSIGSESANN ||
-                msg_type == NetMsgType::QSIGSHARESINV || 
-                msg_type == NetMsgType::QGETSIGSHARES ||
-                msg_type == NetMsgType::QBSIGSHARES) {
-            llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv);
-        }
+    //probably one the extensions
+    if(msg_type == NetMsgType::SPORK || msg_type == NetMsgType::GETSPORKS) {
+        sporkManager.ProcessSpork(&pfrom, msg_type, vRecv, m_connman, *this);
+        return;
+    } else if(msg_type == NetMsgType::SYNCSTATUSCOUNT) {
+        masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);
+        return;
+    } else if(msg_type == NetMsgType::MNGOVERNANCESYNC || 
+        msg_type == NetMsgType::MNGOVERNANCEOBJECT || 
+        msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
+        governance.ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
+        return;
+    } else if(msg_type == NetMsgType::MNAUTH) {
+        LogPrintf("found mnauth\n");
+        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        return;
+    } else if(msg_type == NetMsgType::QFCOMMITMENT) {
+        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
+        return;
+    } else if(msg_type == NetMsgType::QSIGREC) {
+        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, *this);
+        return;
+    } else if(msg_type == NetMsgType::QCONTRIB || 
+            msg_type == NetMsgType::QCOMPLAINT ||
+            msg_type == NetMsgType::QJUSTIFICATION || 
+            msg_type == NetMsgType::QPCOMMITMENT ||
+            msg_type == NetMsgType::QWATCH) {
+        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        return;
+    } else if(msg_type == NetMsgType::QSIGSHARE || 
+            msg_type == NetMsgType::QSIGSESANN ||
+            msg_type == NetMsgType::QSIGSHARESINV || 
+            msg_type == NetMsgType::QGETSIGSHARES ||
+            msg_type == NetMsgType::QBSIGSHARES) {
+        llmq::quorumSigSharesManager->ProcessMessage(&pfrom, msg_type, vRecv);
         return;
     }
+     
+    
         
     // Ignore unknown commands for extensibility
     LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
@@ -4611,7 +4619,7 @@ bool PeerManager::SendMessages(CNode* pto)
             }
             pto->vBlockHashesToAnnounce.clear();
         }
- 		// SYSCOIN
+        
         //
         // Message: inventory
         //
@@ -4641,12 +4649,13 @@ bool PeerManager::SendMessages(CNode* pto)
                     } else {
                         // Use half the delay for regular outbound peers, as there is less privacy concern for them.
                         // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
-                        pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> !pto->verifiedProRegTxHash.IsNull()});
+                        pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> (!pto->verifiedProRegTxHash.IsNull(): 1: 0)});
                     }
                 }
 
                 // Time to send but the peer has requested we not relay transactions.
                 if (fSendTrickle) {
+                    
                     LOCK(pto->m_tx_relay->cs_filter);
                     // SYSCOIN
                     if (!pto->m_tx_relay->fRelayTxes) { pto->m_tx_relay->setInventoryTxToSend.clear(); pto->m_tx_relay->setInventoryTxToSendOther.clear();}
@@ -4792,8 +4801,9 @@ bool PeerManager::SendMessages(CNode* pto)
             }
         }
 
-        if (!vInv.empty())
+        if (!vInv.empty()) {
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+        }
 
         // Detect whether we're stalling
         current_time = GetTime<std::chrono::microseconds>();

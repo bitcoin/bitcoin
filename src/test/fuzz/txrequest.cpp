@@ -252,7 +252,8 @@ public:
             for (int peer2 = 0; peer2 < MAX_PEERS; ++peer2) {
                 Announcement& ann2 = m_announcements[txhash][peer2];
                 if (ann2.m_state == State::REQUESTED && ann2.m_time <= m_now) {
-                    expected_expired.emplace_back(peer2, GenTxid{ann2.m_is_wtxid, TXHASHES[txhash]});
+                    // SYSCOIN
+                    expected_expired.emplace_back(peer2, GenTxid{ann2.m_is_wtxid, TXHASHES[txhash], ann.m_type});
                     ann2.m_state = State::COMPLETED;
                     break;
                 }

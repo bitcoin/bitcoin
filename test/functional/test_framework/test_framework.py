@@ -1039,6 +1039,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
+            self.bump_mocktime(1)
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
         time.sleep(0.5)
@@ -1077,7 +1078,6 @@ class DashTestFramework(SyscoinTestFramework):
                 if wait_proc is not None:
                     wait_proc()
                 return False
-
             for mn in mninfos:
                 s = mn.node.quorum('dkgstatus')
                 if s["session"] == {}:
@@ -1112,6 +1112,7 @@ class DashTestFramework(SyscoinTestFramework):
         def check_dkg_session():
             all_ok = True
             member_count = 0
+            self.bump_mocktime(1)
             for mn in mninfos:
                 s = mn.node.quorum("dkgstatus")["session"]
                 if "llmq_test" not in s:
@@ -1140,6 +1141,7 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15):
         def check_dkg_comitments():
             all_ok = True
+            self.bump_mocktime(1)
             for node in nodes:
                 s = node.quorum("dkgstatus")
                 if "minableCommitments" not in s:
