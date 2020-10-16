@@ -1251,7 +1251,7 @@ class FullBlockTest(BitcoinTestFramework):
         blocks = []
         spend = out[32]
         for i in range(89, LARGE_REORG_SIZE + 89):
-            b = self.next_block(i, spend, version=4)
+            b = self.next_block(i, spend)
             tx = CTransaction()
             script_length = MAX_BLOCK_BASE_SIZE - len(b.serialize()) - 69
             script_output = CScript([b'\x00' * script_length])
@@ -1270,18 +1270,18 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(88)
         blocks2 = []
         for i in range(89, LARGE_REORG_SIZE + 89):
-            blocks2.append(self.next_block("alt" + str(i), version=4))
+            blocks2.append(self.next_block("alt" + str(i)))
         self.send_blocks(blocks2, False, force_send=True)
 
         # extend alt chain to trigger re-org
-        block = self.next_block("alt" + str(chain1_tip + 1), version=4)
+        block = self.next_block("alt" + str(chain1_tip + 1))
         self.send_blocks([block], True, timeout=2440)
 
         # ... and re-org back to the first chain
         self.move_tip(chain1_tip)
-        block = self.next_block(chain1_tip + 1, version=4)
+        block = self.next_block(chain1_tip + 1)
         self.send_blocks([block], False, force_send=True)
-        block = self.next_block(chain1_tip + 2, version=4)
+        block = self.next_block(chain1_tip + 2)
         self.send_blocks([block], True, timeout=2440)
 
         self.log.info("Reject a block with an invalid block header version")
@@ -1289,7 +1289,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b_v1], success=False, force_send=True, reject_reason='bad-version(0x00000001)', reconnect=True)
 
         self.move_tip(chain1_tip + 2)
-        b_cb34 = self.next_block('b_cb34', version=4)
+        b_cb34 = self.next_block('b_cb34')
         b_cb34.vtx[0].vin[0].scriptSig = b_cb34.vtx[0].vin[0].scriptSig[:-1]
         b_cb34.vtx[0].rehash()
         b_cb34.hashMerkleRoot = b_cb34.calc_merkle_root()
@@ -1323,7 +1323,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx.rehash()
         return tx
 
-    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=1):
+    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=4):
         if self.tip is None:
             base_block_hash = self.genesis_hash
             block_time = int(time.time()) + 1
