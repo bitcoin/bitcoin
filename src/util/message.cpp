@@ -39,6 +39,17 @@ MessageVerificationResult MessageVerifyBIP0322(
     if (!v.empty()) return MessageVerificationResult::ERR_INVALID;
     auto challenge = GetScriptForDestination(destination);
     if (challenge.empty()) challenge = CScript(OP_TRUE);
+    // All inputs must be present in to_sign, exactly one time
+    std::set<COutPoint> outpoints;
+    outpoints.emplace(to_spend.GetHash(), 0);
+    for (const auto& o : inputs) {
+        if (!outpoints.insert(o).second) return MessageVerificationResult::ERR_INVALID;
+    }
+    for (const auto& o : to_sign.vin) {
+        if (!outpoints.count(o.prevout)) return MessageVerificationResult::ERR_INVALID;
+        outpoints.erase(o.prevout);
+    }
+    if (outpoints.size() > 0) return MessageVerificationResult::ERR_INVALID;
 
     TransactionProofResult res = CheckTransactionProof(message, challenge, CTransaction(to_spend), CTransaction(to_sign));
     switch (res) {
