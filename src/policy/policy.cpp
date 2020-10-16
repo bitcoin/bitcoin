@@ -155,7 +155,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
  *
  * Note that only the non-witness portion of the transaction is checked here.
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -183,6 +183,9 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
                 return false;
             }
+        } else if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
+            // Don't allow Taproot spends unless Taproot is active.
+            if (!taproot_active) return false;
         }
     }
 
