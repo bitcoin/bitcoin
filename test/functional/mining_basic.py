@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     create_coinbase,
+    NORMAL_GBT_REQUEST_PARAMS,
     TIME_GENESIS_BLOCK,
 )
 from test_framework.messages import (
@@ -25,8 +26,10 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes,
 )
+
+VERSIONBITS_TOP_BITS = 0x20000000
+VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT = 28
 
 
 def assert_template(node, block, expect, rehash=True):
@@ -55,8 +58,16 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['blocks'], 200)
         assert_equal(mining_info['currentblocktx'], 0)
         assert_equal(mining_info['currentblockweight'], 4000)
+
+        self.log.info('test blockversion')
+        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=1337'])
+        self.connect_nodes(0, 1)
+        assert_equal(1337, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
+        self.restart_node(0, extra_args=['-mocktime={}'.format(t)])
+        self.connect_nodes(0, 1)
+        assert_equal(VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT), self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0)
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
 
     def run_test(self):
         self.mine_chain()
@@ -80,7 +91,7 @@ class MiningTest(BitcoinTestFramework):
 
         # Mine a block to leave initial block download
         node.generatetoaddress(1, node.get_deterministic_priv_key().address)
-        tmpl = node.getblocktemplate({'rules': ['segwit']})
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         self.log.info("getblocktemplate: Test capability advertised")
         assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl
