@@ -85,10 +85,8 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             if (quorumHeight != pquorumIndex->nHeight) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
-                {
-                    LOCK(cs_main);
-                    peerman.ForgetTxHash(pfrom->GetId(), hash);
-                }
+                
+                peerman.ForgetTxHash(pfrom->GetId(), hash);
                 Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
                 return;
             }
