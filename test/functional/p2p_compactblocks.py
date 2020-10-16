@@ -94,7 +94,6 @@ class TestP2PConn(P2PInterface):
 class CompactBlocksTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.extra_args = [["-addresstype=bech32"]]
         self.num_nodes = 1
         self.extra_args = [[
             "-acceptnonstdtxn=1",
@@ -106,7 +105,6 @@ class CompactBlocksTest(SyscoinTestFramework):
 
     def build_block_on_tip(self, node, segwit=False):
         block = create_block(tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
-        block.set_base_version(4)
         if segwit:
             add_witness_commitment(block)
         block.solve()
