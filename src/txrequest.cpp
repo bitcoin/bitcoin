@@ -96,9 +96,9 @@ struct Announcement {
     /** Construct a new announcement from scratch, initially in CANDIDATE_DELAYED state. */
     Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
         SequenceNumber sequence) :
-        m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
         // SYSCOIN
-        m_is_wtxid(gtxid.IsWtxid()), m_type(gtxid.GetType(), m_state(State::CANDIDATE_DELAYED)) {}
+        m_txhash(gtxid.GetHash()), m_type(gtxid.GetType()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
+        m_is_wtxid(gtxid.IsWtxid()), m_state(State::CANDIDATE_DELAYED) {}
 };
 
 //! Type alias for priorities.
