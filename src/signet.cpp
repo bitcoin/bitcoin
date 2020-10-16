@@ -160,16 +160,17 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     return true;
 }
 
-bool UpdateTransactionProof(const CTransaction& to_sign, size_t input_index, const CScript& scriptPubKey, TransactionProofResult& res)
+bool UpdateTransactionProof(const CTransaction& to_sign, size_t input_index, const std::map<COutPoint, Coin>& coins, TransactionProofResult& res)
 {
-    TransactionSignatureChecker sigcheck(&to_sign, /*nIn=*/ input_index, /*amount=*/ to_sign.vout[0].nValue);
+    const CTxOut& out = coins.at(to_sign.vin[input_index].prevout).out;
+    TransactionSignatureChecker sigcheck(&to_sign, /*nIn=*/ input_index, /*amount=*/ out.nValue);
 
-    if (!VerifyScript(to_sign.vin[input_index].scriptSig, scriptPubKey, &to_sign.vin[input_index].scriptWitness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
+    if (!VerifyScript(to_sign.vin[input_index].scriptSig, out.scriptPubKey, &to_sign.vin[input_index].scriptWitness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
         res = TransactionProofInvalid;
         return false;
     }
 
-    if (!(res & TransactionProofInconclusive) && !VerifyScript(to_sign.vin[input_index].scriptSig, scriptPubKey, &to_sign.vin[input_index].scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, sigcheck)) {
+    if (!(res & TransactionProofInconclusive) && !VerifyScript(to_sign.vin[input_index].scriptSig, out.scriptPubKey, &to_sign.vin[input_index].scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, sigcheck)) {
         res = TransactionProofInconclusive | (res & TransactionProofInFutureFlag);
     }
 
@@ -198,10 +199,10 @@ TransactionProofResult CheckTransactionProof(const std::string& message, const C
 
     // Now we do the signature check for the transaction
     TransactionProofResult res = TransactionProofValid;
-    std::vector<CScript> scriptPubKeys;
+    std::map<COutPoint, Coin> coins;
 
     // The first input is virtual, so we don't need to fetch anything
-    scriptPubKeys.push_back(to_spend.vout[0].scriptPubKey);
+    coins[COutPoint(to_spend.GetHash(), 0)] = Coin(to_spend.vout[0], 0, true);
 
     // The rest need to be fetched from the UTXO set
     if (to_sign.vin.size() > 1) {
@@ -210,19 +211,17 @@ TransactionProofResult CheckTransactionProof(const std::string& message, const C
             LOCK(cs_main);
             CCoinsViewCache& view = ::ChainstateActive().CoinsTip();
             for (size_t i = 1; i < to_sign.vin.size(); ++i) {
-                Coin coin;
-                if (!view.GetCoin(to_sign.vin[i].prevout, coin)) {
+                if (!view.GetCoin(to_sign.vin[i].prevout, coins[to_sign.vin[i].prevout])) {
                     // TODO: deal with spent transactions somehow; a proof for a spend output is also useful (perhaps let the verifier provide the transactions)
                     return TransactionProofInvalid;
                 }
-                scriptPubKeys.push_back(coin.out.scriptPubKey);
             }
         }
     }
 
     // Validate spends
-    for (size_t i = 0; i < scriptPubKeys.size(); ++i) {
-        if (!UpdateTransactionProof(to_sign, i, scriptPubKeys.at(i), res)) return res;
+    for (size_t i = 0; i < to_sign.vin.size(); ++i) {
+        if (!UpdateTransactionProof(to_sign, i, coins, res)) return res;
     }
 
     return res;
