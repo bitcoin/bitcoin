@@ -352,7 +352,7 @@ static RPCHelpMan generateblock()
             txs.push_back(MakeTransactionRef(std::move(mtx)));
 
         } else {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s", str));
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s. Make sure the tx has at least one input.", str));
         }
     }
 
