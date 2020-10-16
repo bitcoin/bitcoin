@@ -385,7 +385,7 @@ void Shutdown(NodeContext& node)
     globalVerifyHandle.reset();
     ECC_Stop();
     // SYSCOIN
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if(!fRegTest && !fSigNet) {
         StopRelayerNode(relayerPID);
         StopGethNode(gethPID);
     }
