@@ -240,8 +240,8 @@ class ECPubKey():
             x = int.from_bytes(data[1:33], 'big')
             if SECP256K1.is_x_coord(x):
                 p = SECP256K1.lift_x(x)
-                # if the oddness of the y co-ord isn't correct, find the other
-                # valid y
+                # Make the Y coordinate odd if required (lift_x always produces
+                # a point with an even Y coordinate).
                 if data[0] & 1:
                     p = SECP256K1.negate(p)
                 self.p = p
@@ -542,7 +542,7 @@ class TestFrameworkKey(unittest.TestCase):
                         sig_actual = sign_schnorr(seckey, msg, aux_rand)
                         self.assertEqual(sig.hex(), sig_actual.hex(), "BIP340 test vector %i (%s): sig mismatch" % (i, comment))
                     except RuntimeError as e:
-                        self.assertFalse("BIP340 test vector %i (%s): signing raised exception %s" % (i, comment, e))
+                        self.fail("BIP340 test vector %i (%s): signing raised exception %s" % (i, comment, e))
                 result_actual = verify_schnorr(pubkey, sig, msg)
                 if result:
                     self.assertEqual(result, result_actual, "BIP340 test vector %i (%s): verification failed" % (i, comment))
