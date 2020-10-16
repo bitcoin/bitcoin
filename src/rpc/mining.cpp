@@ -690,7 +690,7 @@ static RPCHelpMan getblocktemplate()
     mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
 
     // next bock is a superblock and we need governance info to correctly construct it
-    if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
+    if (!fRegTest && !fSigNet && sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
         && !masternodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Syscoin Core is syncing with network...");
