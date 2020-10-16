@@ -79,10 +79,11 @@ NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=1, tmpl=None, txlist=None):
     """Create a block (with regtest difficulty)."""
     block = CBlock()
-    block.set_base_version(version)
     if tmpl is None:
         tmpl = {}
-    block.nVersion = version or tmpl.get('version') or 1
+    # block.nVersion = version or tmpl.get('version') or 1
+    # SYSCOIN
+    block.set_base_version(version or tmpl.get('version') or 1)
     block.nTime = ntime or tmpl.get('curtime') or int(time.time() + 60)
     block.hashPrevBlock = hashprev or int(tmpl['previousblockhash'], 0x10)
     if tmpl and not tmpl.get('bits') is None:
