@@ -83,6 +83,7 @@ class MultiKeySporkTest(DashTestFramework):
 
     def get_test_spork_value(self, node):
         info = node.spork('show')
+        self.bump_mocktime(5)
         # use SB spork for tests
         return info['SPORK_TEST']
 
@@ -117,8 +118,8 @@ class MultiKeySporkTest(DashTestFramework):
         self.set_test_spork_value(self.nodes[2], 2)
         self.set_test_spork_value(self.nodes[3], 2)
         self.set_test_spork_value(self.nodes[4], 2)
+        time.sleep(0.1)
         for node in self.nodes:
-            time.sleep(0.1)
             self.wait_until(lambda: self.get_test_spork_value(node) == 2, timeout=10)
 
 

@@ -58,6 +58,9 @@ using SequenceNumber = uint64_t;
 struct Announcement {
     /** Txid or wtxid that was announced. */
     const uint256 m_txhash;
+    // SYSCOIN
+    /* The inventory type to track TX vs Other (MN inv) */
+    const uint32_t m_type;
     /** For CANDIDATE_{DELAYED,BEST,READY} the reqtime; for REQUESTED the expiry. */
     std::chrono::microseconds m_time;
     /** What peer the request was from. */
@@ -94,7 +97,8 @@ struct Announcement {
     Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
         SequenceNumber sequence) :
         m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
-        m_is_wtxid(gtxid.IsWtxid()), m_state(State::CANDIDATE_DELAYED) {}
+        // SYSCOIN
+        m_is_wtxid(gtxid.IsWtxid()), m_state(State::CANDIDATE_DELAYED), m_type(gtxid.GetType()) {}
 };
 
 //! Type alias for priorities.
@@ -293,7 +297,8 @@ std::map<uint256, TxHashInfo> ComputeTxHashInfo(const Index& index, const Priori
 
 GenTxid ToGenTxid(const Announcement& ann)
 {
-    return {ann.m_is_wtxid, ann.m_txhash};
+    // SYSCOIN
+    return {ann.m_is_wtxid, ann.m_txhash, ann.m_type};
 }
 
 }  // namespace

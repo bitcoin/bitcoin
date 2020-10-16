@@ -107,7 +107,7 @@ class LLMQConnections(DashTestFramework):
                 peerMap[p['verified_proregtx_hash']] = p
         for mn in self.get_quorum_masternodes(q):
             pi = mnMap[mn.proTxHash]
-            if pi['metaInfo']['lastOutboundSuccessElapsed'] < 60:
+            if pi['metaInfo']['lastOutboundSuccessElapsed'] <= 80:
                 count += 1
             elif check_peers and mn.proTxHash in peerMap:
                 count += 1

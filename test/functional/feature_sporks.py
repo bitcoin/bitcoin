@@ -20,6 +20,7 @@ class SporkTest(DashTestFramework):
 
     def get_test_spork_state(self, node):
         info = node.spork('active')
+        self.bump_mocktime(5)
         # use SB spork for tests
         return info['SPORK_TEST']
 
@@ -65,6 +66,7 @@ class SporkTest(DashTestFramework):
         force_finish_mnsync(self.nodes[0])
         force_finish_mnsync(self.nodes[1])
         self.set_test_spork_state(self.nodes[0], False)
+        
         time.sleep(0.1)
         self.wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)
         self.wait_until(lambda: not self.get_test_spork_state(self.nodes[2]), timeout=10)
