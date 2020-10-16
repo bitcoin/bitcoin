@@ -4910,6 +4910,9 @@ bool PeerManager::SendMessages(CNode* pto)
                 m_txrequest.ForgetTxHash(gtxid.GetHash());
             }
         }
+        
+        if (!vGetData.empty())
+            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
         //
         // Message: feefilter
         //
