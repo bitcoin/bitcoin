@@ -157,6 +157,7 @@ BASE_SCRIPTS= [
     'p2p_unrequested_blocks.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
+    'feature_blocksdir.py',
     'feature_config_args.py',
     'feature_help.py',
     # Don't append tests at the end to avoid merge conflicts
@@ -411,7 +412,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
 def print_results(test_results, max_len_name, runtime):
     results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS   ", "DURATION") + BOLD[0]
 
-    test_results.sort(key=lambda result: result.name.lower())
+    test_results.sort(key=TestResult.sort_key)
     all_passed = True
     time_sum = 0
 
@@ -422,7 +423,11 @@ def print_results(test_results, max_len_name, runtime):
         results += str(test_result)
 
     status = TICK + "Passed" if all_passed else CROSS + "Failed"
+    if not all_passed:
+        results += RED[1]
     results += BOLD[1] + "\n%s | %s | %s s (accumulated) \n" % ("ALL".ljust(max_len_name), status.ljust(9), time_sum) + BOLD[0]
+    if not all_passed:
+        results += RED[0]
     results += "Runtime: %s s\n" % (runtime)
     print(results)
 
@@ -510,6 +515,14 @@ class TestResult():
         self.status = status
         self.time = time
         self.padding = 0
+
+    def sort_key(self):
+        if self.status == "Passed":
+            return 0, self.name.lower()
+        elif self.status == "Failed":
+            return 2, self.name.lower()
+        elif self.status == "Skipped":
+            return 1, self.name.lower()
 
     def __repr__(self):
         if self.status == "Passed":

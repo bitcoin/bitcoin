@@ -8,21 +8,32 @@
 
 #include <script/interpreter.h>
 
+class CKey;
 class CKeyID;
-class CKeyStore;
 class CScript;
+class CScriptID;
 class CTransaction;
 
 struct CMutableTransaction;
 
+/** An interface to be implemented by keystores that support signing. */
+class SigningProvider
+{
+public:
+    virtual ~SigningProvider() {}
+    virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const =0;
+    virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const =0;
+    virtual bool GetKey(const CKeyID &address, CKey& key) const =0;
+};
+
 /** Virtual base class for signature creators. */
 class BaseSignatureCreator {
 protected:
-    const CKeyStore* keystore;
+    const SigningProvider* m_provider;
 
 public:
-    explicit BaseSignatureCreator(const CKeyStore* keystoreIn) : keystore(keystoreIn) {}
-    const CKeyStore& KeyStore() const { return *keystore; };
+    explicit BaseSignatureCreator(const SigningProvider* provider) : m_provider(provider) {}
+    const SigningProvider& Provider() const { return *m_provider; }
     virtual ~BaseSignatureCreator() {}
     virtual const BaseSignatureChecker& Checker() const =0;
 
@@ -39,7 +50,7 @@ class TransactionSignatureCreator : public BaseSignatureCreator {
     const TransactionSignatureChecker checker;
 
 public:
-    TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn=SIGHASH_ALL);
+    TransactionSignatureCreator(const SigningProvider* provider, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn=SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const  override{ return checker; }
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 };
@@ -48,13 +59,13 @@ class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
     CTransaction tx;
 
 public:
-    MutableTransactionSignatureCreator(const CKeyStore* keystoreIn, const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amount, int nHashTypeIn) : TransactionSignatureCreator(keystoreIn, &tx, nInIn, amount, nHashTypeIn), tx(*txToIn) {}
+    MutableTransactionSignatureCreator(const SigningProvider* provider, const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amount, int nHashTypeIn) : TransactionSignatureCreator(provider, &tx, nInIn, amount, nHashTypeIn), tx(*txToIn) {}
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */
 class DummySignatureCreator : public BaseSignatureCreator {
 public:
-    explicit DummySignatureCreator(const CKeyStore* keystoreIn) : BaseSignatureCreator(keystoreIn) {}
+    explicit DummySignatureCreator(const SigningProvider* provider) : BaseSignatureCreator(provider) {}
     const BaseSignatureChecker& Checker() const override;
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 };
@@ -70,8 +81,8 @@ struct SignatureData {
 bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata);
 
 /** Produce a script signature for a transaction. */
-bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
-bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
+bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
+bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
 
 /** Combine two script signatures using a generic signature checker, intelligently, possibly with OP_0 placeholders. */
 SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecker& checker, const SignatureData& scriptSig1, const SignatureData& scriptSig2);
