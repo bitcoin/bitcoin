@@ -75,7 +75,7 @@ from test_framework.script import (
     is_op_success,
     taproot_construct,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_raises_rpc_error, assert_equal
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
@@ -1187,7 +1187,7 @@ def dump_json_test(tx, input_utxos, idx, success, failure):
 # Data type to keep track of UTXOs, where they were created, and how to spend them.
 UTXOData = namedtuple('UTXOData', 'outpoint,output,spender')
 
-class TaprootTest(BitcoinTestFramework):
+class TaprootTest(SyscoinTestFramework):
     def add_options(self, parser):
         parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
                             help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")
@@ -1199,7 +1199,7 @@ class TaprootTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         # Node 0 has Taproot inactive, Node 1 active.
-        self.extra_args = [["-whitelist=127.0.0.1", "-par=1", "-vbparams=taproot:1:1"], ["-whitelist=127.0.0.1", "-par=1"]]
+        self.extra_args = [["-dip3params=2000:2000", "-whitelist=127.0.0.1", "-par=1", "-vbparams=taproot:1:1"], ["-dip3params=2000:2000", "-whitelist=127.0.0.1", "-par=1"]]
 
     def block_submit(self, node, txs, msg, err_msg, cb_pubkey=None, fees=0, sigops_weight=0, witness=False, accept=False):
 
@@ -1210,7 +1210,8 @@ class TaprootTest(BitcoinTestFramework):
         extra_output_script = CScript([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR))
 
         block = create_block(self.tip, create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees), self.lastblocktime + 1)
-        block.nVersion = 4
+        # SYSCOIN
+        block.set_base_version(4)
         for tx in txs:
             tx.rehash()
             block.vtx.append(tx)
