@@ -1180,6 +1180,9 @@ void BitcoinGUI::updateWidth()
     if (walletFrame == nullptr) {
         return;
     }
+    if (windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen)) {
+        return;
+    }
     int nWidthWidestButton{0};
     int nButtonsVisible{0};
     for (QAbstractButton* button : tabGroup->buttons()) {
