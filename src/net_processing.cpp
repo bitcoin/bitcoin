@@ -4158,8 +4158,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                     CInv islockInv(MSG_ISLOCK, islockHash);
                     pto->filterInventoryKnown.insert(islockHash);
 
-                    LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", inv.ToString(), vInv.size(), pto->GetId());
-                    vInv.push_back(inv);
+                    LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", islockInv.ToString(), vInv.size(), pto->GetId());
+                    vInv.push_back(islockInv);
                     if (vInv.size() == MAX_INV_SZ) {
                         LogPrint(BCLog::NET, "SendMessages -- pushing inv's: count=%d peer=%d\n", vInv.size(), pto->GetId());
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
