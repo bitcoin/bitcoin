@@ -19,7 +19,7 @@ Developer Notes
     - [Threads](#threads)
     - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
 - [Development guidelines](#development-guidelines)
-    - [General Bitcoin Core](#general-bitcoin-core)
+    - [General Dash Core](#general-dash-core)
     - [Wallet](#wallet)
     - [General C++](#general-c)
     - [C++ data structures](#c-data-structures)
@@ -248,7 +248,7 @@ make cov
 
 **Sanitizers**
 
-Bitcoin can be compiled with various "sanitizers" enabled, which add
+Dash Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
 conditions, or undefined behavior. This is controlled with the
 `--with-sanitizers` configure flag, which should be a comma separated list of
@@ -742,7 +742,7 @@ In addition to reviewing the upstream changes in `env_posix.cc`, you can use `ls
 check this. For example, on Linux this command will show open `.ldb` file counts:
 
 ```bash
-$ lsof -p $(pidof bitcoind) |\
+$ lsof -p $(pidof dashd) |\
     awk 'BEGIN { fd=0; mem=0; } /ldb$/ { if ($4 == "mem") mem++; else fd++ } END { printf "mem = %s, fd = %s\n", mem, fd}'
 mem = 119, fd = 0
 ```
