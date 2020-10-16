@@ -143,7 +143,7 @@ class ProxyTest(SyscoinTestFramework):
             assert isinstance(cmd, Socks5Command)
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
             assert_equal(cmd.addr, b"bitcoinostk4e4re.onion")
-            assert_equal(cmd.port, 8369)
+            assert_equal(cmd.port, 8333)
             if not auth:
                 assert_equal(cmd.username, None)
                 assert_equal(cmd.password, None)
@@ -157,7 +157,7 @@ class ProxyTest(SyscoinTestFramework):
         assert isinstance(cmd, Socks5Command)
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
         assert_equal(cmd.addr, b"node.noumenon")
-        assert_equal(cmd.port, 8369)
+        assert_equal(cmd.port, 8333)
         if not auth:
             assert_equal(cmd.username, None)
             assert_equal(cmd.password, None)
