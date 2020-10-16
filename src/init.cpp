@@ -2407,7 +2407,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
 
-    if(!fRegTest) {
+    if(!fRegTest && !fSigNet) {
         // SYSCOIN
         node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
     } 

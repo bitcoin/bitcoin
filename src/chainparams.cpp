@@ -490,6 +490,7 @@ public:
         consensus.DIP0003EnforcementHeight = 400;
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 0x1000;
+        consensus.fStrictChainId = false;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP16Exception = uint256{};
