@@ -4650,7 +4650,7 @@ bool PeerManager::SendMessages(CNode* pto)
                     } else {
                         // Use half the delay for regular outbound peers, as there is less privacy concern for them.
                         // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
-                        pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> (!pto->verifiedProRegTxHash.IsNull(): 1: 0)});
+                        pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> !pto->verifiedProRegTxHash.IsNull(): 1: 0});
                     }
                 }
 
