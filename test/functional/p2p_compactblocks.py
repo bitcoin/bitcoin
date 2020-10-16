@@ -106,7 +106,7 @@ class CompactBlocksTest(SyscoinTestFramework):
 
     def build_block_on_tip(self, node, segwit=False):
         block = create_block(tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
-        lock.set_base_version(4)
+        block.set_base_version(4)
         if segwit:
             add_witness_commitment(block)
         block.solve()
