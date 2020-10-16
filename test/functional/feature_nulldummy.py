@@ -105,8 +105,7 @@ class NULLDUMMYTest(SyscoinTestFramework):
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         assert_equal(tmpl['previousblockhash'], self.lastblockhash)
         assert_equal(tmpl['height'], self.lastblockheight + 1)
-        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1, witness=witness)
-        block.set_base_version(4)
+        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1)
         for tx in txs:
             tx.rehash()
             block.vtx.append(tx)
