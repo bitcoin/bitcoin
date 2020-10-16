@@ -451,6 +451,8 @@ public:
             }
             bin = ParseHex(signet_challenge[0]);
 
+            consensus.nMinimumChainWork = uint256{};
+            consensus.defaultAssumeValid = uint256{};
             m_assumed_blockchain_size = 0;
             m_assumed_chain_state_size = 0;
             chainTxData = ChainTxData{
@@ -490,7 +492,9 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
         consensus.nSubsidyHalvingInterval = 210000;
+        consensus.BIP16Exception = uint256{};
         consensus.BIP34Height = 500;
+        consensus.BIP34Hash = uint256{};
         consensus.BIP65Height = 1351;
         consensus.BIP66Height = 1251;
         consensus.CSVHeight = 1;
@@ -501,6 +505,7 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916;
         consensus.nMinerConfirmationWindow = 2016;
+        consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("00000377ae000000000000000000000000000000000000000000000000000000");
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
@@ -590,10 +595,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00");
+        consensus.nMinimumChainWork = uint256{};
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00");
+        consensus.defaultAssumeValid = uint256{};
         consensus.nAuxpowStartHeight = 0;
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
