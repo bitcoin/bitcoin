@@ -142,7 +142,7 @@ class ProxyTest(SyscoinTestFramework):
             cmd = proxies[2].queue.get()
             assert isinstance(cmd, Socks5Command)
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-            assert_equal(cmd.addr, b"syscoinostk4e4re.onion")
+            assert_equal(cmd.addr, b"bitcoinostk4e4re.onion")
             assert_equal(cmd.port, 8369)
             if not auth:
                 assert_equal(cmd.username, None)
