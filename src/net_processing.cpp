@@ -4059,7 +4059,6 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         }
         return;
     }
-   LogPrintf("check OTHER messag type %s\n", msg_type);
 
     //probably one the extensions
     if(msg_type == NetMsgType::SPORK || msg_type == NetMsgType::GETSPORKS) {
@@ -4074,7 +4073,6 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         governance.ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::MNAUTH) {
-        LogPrintf("found mnauth\n");
         CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
         return;
     } else if(msg_type == NetMsgType::QFCOMMITMENT) {

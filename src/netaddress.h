@@ -483,7 +483,7 @@ class CSubNet
             READWRITE(obj.network);
             if (obj.network.IsIPv4()) {
                 // Before commit 102867c587f5f7954232fb8ed8e85cda78bb4d32, CSubNet used the last 4 bytes of netmask
-                // to store the relevant bytes for an IPv4 mask. For compatiblity reasons, keep doing so in
+                // to store the relevant bytes for an IPv4 mask. For compatibility reasons, keep doing so in
                 // serialized form.
                 unsigned char dummy[12] = {0};
                 READWRITE(dummy);
