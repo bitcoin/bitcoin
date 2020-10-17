@@ -7,7 +7,7 @@
 
 import configparser
 import copy
-from _decimal import Decimal
+from _decimal import Decimal, ROUND_DOWN
 from enum import Enum
 import argparse
 import logging
@@ -48,7 +48,6 @@ from .util import (
     get_datadir_path,
     hex_str_to_bytes,
     initialize_datadir,
-    make_change,
     p2p_port,
     set_node_times,
     satoshi_round,
@@ -1468,6 +1467,26 @@ class DashTestFramework(BitcoinTestFramework):
             assert status == 'ENABLED'
 
     def create_raw_tx(self, node_from, node_to, amount, min_inputs, max_inputs):
+
+        # helper which has been supposed to be removed with bitcoin#20159 but we use it
+        def make_change(from_node, amount_in, amount_out, fee):
+            """
+            Create change output(s), return them
+            """
+            outputs = {}
+            amount = amount_out + fee
+            change = amount_in - amount
+            if change > amount * 2:
+                # Create an extra change output to break up big inputs
+                change_address = from_node.getnewaddress()
+                # Split change in two, being careful of rounding:
+                outputs[change_address] = Decimal(change / 2).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+                change = amount_in - amount - outputs[change_address]
+            if change > 0:
+                outputs[from_node.getnewaddress()] = change
+            return outputs
+
+
         assert min_inputs <= max_inputs
         # fill inputs
         fee = 0.001
