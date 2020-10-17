@@ -12,7 +12,6 @@ import inspect
 import json
 import logging
 import os
-import random
 import re
 import time
 import unittest
@@ -467,62 +466,6 @@ def find_output(node, txid, amount, *, blockhash=None):
         if txdata["vout"][i]["value"] == amount:
             return i
     raise RuntimeError("find_output txid %s : %s not found" % (txid, str(amount)))
-
-
-def gather_inputs(from_node, amount_needed, confirmations_required=1):
-    """
-    Return a random set of unspent txouts that are enough to pay amount_needed
-    """
-    assert confirmations_required >= 0
-    utxo = from_node.listunspent(confirmations_required)
-    random.shuffle(utxo)
-    inputs = []
-    total_in = Decimal("0.00000000")
-    while total_in < amount_needed and len(utxo) > 0:
-        t = utxo.pop()
-        total_in += t["amount"]
-        inputs.append({"txid": t["txid"], "vout": t["vout"], "address": t["address"]})
-    if total_in < amount_needed:
-        raise RuntimeError("Insufficient funds: need %d, have %d" % (amount_needed, total_in))
-    return (total_in, inputs)
-
-
-def make_change(from_node, amount_in, amount_out, fee):
-    """
-    Create change output(s), return them
-    """
-    outputs = {}
-    amount = amount_out + fee
-    change = amount_in - amount
-    if change > amount * 2:
-        # Create an extra change output to break up big inputs
-        change_address = from_node.getnewaddress()
-        # Split change in two, being careful of rounding:
-        outputs[change_address] = Decimal(change / 2).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
-        change = amount_in - amount - outputs[change_address]
-    if change > 0:
-        outputs[from_node.getnewaddress()] = change
-    return outputs
-
-
-def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
-    """
-    Create a random transaction.
-    Returns (txid, hex-encoded-transaction-data, fee)
-    """
-    from_node = random.choice(nodes)
-    to_node = random.choice(nodes)
-    fee = min_fee + fee_increment * random.randint(0, fee_variants)
-
-    (total_in, inputs) = gather_inputs(from_node, amount + fee)
-    outputs = make_change(from_node, total_in, amount, fee)
-    outputs[to_node.getnewaddress()] = float(amount)
-
-    rawtx = from_node.createrawtransaction(inputs, outputs)
-    signresult = from_node.signrawtransactionwithwallet(rawtx)
-    txid = from_node.sendrawtransaction(signresult["hex"], 0)
-
-    return (txid, signresult["hex"], fee)
 
 
 # Helper to create at least "count" utxos
