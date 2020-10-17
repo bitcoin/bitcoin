@@ -30,8 +30,8 @@ import time
 
 
 class TestP2PConn(P2PInterface):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, wtxidrelay=True):
+        super().__init__(wtxidrelay=wtxidrelay)
         self.tx_getdata_count = 0
 
     def on_getdata(self, message):
