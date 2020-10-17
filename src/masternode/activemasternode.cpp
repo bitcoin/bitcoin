@@ -59,8 +59,7 @@ std::string CActiveMasternodeManager::GetStatus() const
 
 void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 {
-    LOCK(cs_main);
-
+    AssertLockHeld(cs_main);
     if (!fMasternodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) return;
@@ -132,7 +131,6 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     LOCK(cs_main);
-
     if (!fMasternodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;

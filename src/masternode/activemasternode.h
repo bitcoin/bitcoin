@@ -52,7 +52,7 @@ public:
     virtual ~CActiveMasternodeManager() {}
     virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
 
-    void Init(const CBlockIndex* pindex);
+    void Init(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     std::string GetStateString() const;
     std::string GetStatus() const;
