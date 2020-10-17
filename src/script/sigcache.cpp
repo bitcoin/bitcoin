@@ -46,14 +46,14 @@ public:
     }
 
     void
-    ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey)
+    ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const
     {
         CSHA256 hasher = m_salted_hasher_ecdsa;
         hasher.Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(&vchSig[0], vchSig.size()).Finalize(entry.begin());
     }
 
     void
-    ComputeEntrySchnorr(uint256& entry, const uint256 &hash, Span<const unsigned char> sig, const XOnlyPubKey& pubkey)
+    ComputeEntrySchnorr(uint256& entry, const uint256 &hash, Span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
     {
         CSHA256 hasher = m_salted_hasher_schnorr;
         hasher.Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(sig.data(), sig.size()).Finalize(entry.begin());
