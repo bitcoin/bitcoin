@@ -216,6 +216,25 @@ class TxDownloadTest(BitcoinTestFramework):
         with p2p_lock:
             assert_equal(peer.tx_getdata_count, 1)
 
+    def test_txid_inv_delay(self, glob_wtxid=False):
+        self.log.info('Check that inv from a txid-relay peers are delayed by {} s, with a wtxid peer {}'.format(TXID_RELAY_DELAY, glob_wtxid))
+        self.restart_node(0, extra_args=['-whitelist=noban@127.0.0.1'])
+        mock_time = int(time.time() + 1)
+        self.nodes[0].setmocktime(mock_time)
+        peer = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=False))
+        if glob_wtxid:
+            # Add a second wtxid-relay connection otherwise TXID_RELAY_DELAY is waived in
+            # lack of wtxid-relay peers
+            self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=True))
+        peer.send_message(msg_inv([CInv(t=MSG_TX, h=0xff11ff11)]))
+        peer.sync_with_ping()
+        with p2p_lock:
+            assert_equal(peer.tx_getdata_count, 0 if glob_wtxid else 1)
+        self.nodes[0].setmocktime(mock_time + TXID_RELAY_DELAY)
+        peer.wait_until(lambda: peer.tx_getdata_count >= 1, timeout=1)
+        with p2p_lock:
+            assert_equal(peer.tx_getdata_count, 1)
+
     def test_large_inv_batch(self):
         self.log.info('Test how large inv batches are handled with relay permission')
         self.restart_node(0, extra_args=['-whitelist=relay@127.0.0.1'])
@@ -242,6 +261,8 @@ class TxDownloadTest(BitcoinTestFramework):
         self.test_disconnect_fallback()
         self.test_notfound_fallback()
         self.test_preferred_inv()
+        self.test_txid_inv_delay()
+        self.test_txid_inv_delay(True)
         self.test_large_inv_batch()
         self.test_spurious_notfound()
 
