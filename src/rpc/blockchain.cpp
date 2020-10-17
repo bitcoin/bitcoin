@@ -10,8 +10,10 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
+#include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <deploymentinfo.h>
 #include <deploymentstatus.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
@@ -37,6 +39,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <versionbits.h>
 #include <warnings.h>
 
 #include <stdint.h>
@@ -1206,25 +1209,25 @@ static RPCHelpMan verifychain()
     };
 }
 
-static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void SoftForkDescPushBack(UniValue& softforks, const Consensus::Params& params, Consensus::BuriedDeployment dep) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For buried deployments.
     // A buried deployment is one where the height of the activation has been hardcoded into
     // the client implementation long after the consensus change has activated. See BIP 90.
     // Buried deployments with activation height value of
     // std::numeric_limits<int>::max() are disabled and thus hidden.
-    if (height == std::numeric_limits<int>::max()) return;
+    if (!DeploymentEnabled(params, dep)) return;
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "buried");
     // getblockchaininfo reports the softfork as active from when the chain height is
     // one below the activation height
-    rv.pushKV("active", ::ChainActive().Tip()->nHeight + 1 >= height);
-    rv.pushKV("height", height);
-    softforks.pushKV(name, rv);
+    rv.pushKV("active", DeploymentActiveAfter(::ChainActive().Tip(), params, dep));
+    rv.pushKV("height", params.DeploymentHeight(dep));
+    softforks.pushKV(DeploymentName(dep), rv);
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+static void SoftForkDescPushBack(UniValue& softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     // For BIP9 deployments.
     // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
@@ -1269,7 +1272,7 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     }
     rv.pushKV("active", ThresholdState::ACTIVE == thresholdState);
 
-    softforks.pushKV(name, rv);
+    softforks.pushKV(DeploymentName(id), rv);
 }
 
 RPCHelpMan getblockchaininfo()
@@ -1361,13 +1364,13 @@ RPCHelpMan getblockchaininfo()
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VOBJ);
-    BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height);
-    BuriedForkDescPushBack(softforks, "bip66", consensusParams.BIP66Height);
-    BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height);
-    BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
-    BuriedForkDescPushBack(softforks, "segwit", consensusParams.SegwitHeight);
-    BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
-    BIP9SoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
+    SoftForkDescPushBack(softforks, consensusParams, Consensus::DEPLOYMENT_HEIGHTINCB);
+    SoftForkDescPushBack(softforks, consensusParams, Consensus::DEPLOYMENT_DERSIG);
+    SoftForkDescPushBack(softforks, consensusParams, Consensus::DEPLOYMENT_CLTV);
+    SoftForkDescPushBack(softforks, consensusParams, Consensus::DEPLOYMENT_CSV);
+    SoftForkDescPushBack(softforks, consensusParams, Consensus::DEPLOYMENT_SEGWIT);
+    SoftForkDescPushBack(softforks, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+    SoftForkDescPushBack(softforks, consensusParams, Consensus::DEPLOYMENT_TAPROOT);
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);
