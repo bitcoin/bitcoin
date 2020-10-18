@@ -11,7 +11,6 @@
 #include <net_processing.h>
 #include <spork.h>
 #include <validation.h>
-
 namespace llmq
 {
 
@@ -51,6 +50,7 @@ void CDKGSessionManager::StopThreads()
 
 void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
+    AssertLockHeld(cs_main);
     CleanupCache();
 
     if (fInitialDownload)
@@ -195,19 +195,20 @@ bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematu
     return false;
 }
 
-void CDKGSessionManager::WriteVerifiedVvecContribution(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec)
+void CDKGSessionManager::WriteVerifiedVvecContribution(uint8_t llmqType, const uint256& hashQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec)
 {
-    llmqDb.Write(std::make_tuple(DB_VVEC, llmqType, pindexQuorum->GetBlockHash(), proTxHash), *vvec);
+    llmqDb.Write(std::make_tuple(DB_VVEC, llmqType, hashQuorum, proTxHash), *vvec);
 }
 
-void CDKGSessionManager::WriteVerifiedSkContribution(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution)
+void CDKGSessionManager::WriteVerifiedSkContribution(uint8_t llmqType, const uint256& hashQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution)
 {
-    llmqDb.Write(std::make_tuple(DB_SKCONTRIB, llmqType, pindexQuorum->GetBlockHash(), proTxHash), skContribution);
+    llmqDb.Write(std::make_tuple(DB_SKCONTRIB, llmqType, hashQuorum, proTxHash), skContribution);
 }
 
-bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet)
+bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const uint32_t& nHeight, const uint256& hashQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet)
 {
-    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pindexQuorum);
+    std::vector<CDeterministicMNCPtr> members;
+    CLLMQUtils::GetAllQuorumMembers(llmqType, nHeight, members);
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -219,7 +220,7 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlock
         if (validMembers[i]) {
             BLSVerificationVectorPtr vvec;
             CBLSSecretKey skContribution;
-            if (!GetVerifiedContribution(llmqType, pindexQuorum, members[i]->proTxHash, vvec, skContribution)) {
+            if (!GetVerifiedContribution(llmqType, hashQuorum, members[i]->proTxHash, vvec, skContribution)) {
                 return false;
             }
 
@@ -231,10 +232,10 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlock
     return true;
 }
 
-bool CDKGSessionManager::GetVerifiedContribution(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, BLSVerificationVectorPtr& vvecRet, CBLSSecretKey& skContributionRet)
+bool CDKGSessionManager::GetVerifiedContribution(uint8_t llmqType, const uint256& hashQuorum, const uint256& proTxHash, BLSVerificationVectorPtr& vvecRet, CBLSSecretKey& skContributionRet)
 {
     LOCK(contributionsCacheCs);
-    ContributionsCacheKey cacheKey = {llmqType, pindexQuorum->GetBlockHash(), proTxHash};
+    ContributionsCacheKey cacheKey = {llmqType, hashQuorum, proTxHash};
     auto it = contributionsCache.find(cacheKey);
     if (it != contributionsCache.end()) {
         vvecRet = it->second.vvec;
@@ -245,10 +246,10 @@ bool CDKGSessionManager::GetVerifiedContribution(uint8_t llmqType, const CBlockI
     BLSVerificationVector vvec;
     BLSVerificationVectorPtr vvecPtr;
     CBLSSecretKey skContribution;
-    if (llmqDb.Read(std::make_tuple(DB_VVEC, llmqType, pindexQuorum->GetBlockHash(), proTxHash), vvec)) {
+    if (llmqDb.Read(std::make_tuple(DB_VVEC, llmqType, hashQuorum, proTxHash), vvec)) {
         vvecPtr = std::make_shared<BLSVerificationVector>(std::move(vvec));
     }
-    llmqDb.Read(std::make_tuple(DB_SKCONTRIB, llmqType, pindexQuorum->GetBlockHash(), proTxHash), skContribution);
+    llmqDb.Read(std::make_tuple(DB_SKCONTRIB, llmqType, hashQuorum, proTxHash), skContribution);
 
     it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr, skContribution}).first;
 

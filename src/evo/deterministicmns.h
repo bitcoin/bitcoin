@@ -322,6 +322,14 @@ public:
             AddMN(std::make_shared<CDeterministicMN>(deserialize, s), false);
         }
     }
+    void clear() {
+        mnMap = MnMap();
+        mnUniquePropertyMap = MnUniquePropertyMap();
+        mnInternalIdMap = MnInternalIdMap();
+        blockHash.SetNull();
+        nHeight = -1;
+        nTotalRegisteredCount = 0;
+    }
 
 public:
     size_t GetAllMNsCount() const
@@ -404,7 +412,7 @@ public:
      * @param count
      * @return
      */
-    std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(size_t nCount) const;
+    void GetProjectedMNPayees(size_t nCount, std::vector<CDeterministicMNCPtr>& result) const;
 
     /**
      * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
@@ -412,8 +420,8 @@ public:
      * @param modifier
      * @return
      */
-    std::vector<CDeterministicMNCPtr> CalculateQuorum(size_t maxSize, const uint256& modifier) const;
-    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier) const;
+    void CalculateQuorum(size_t maxSize, const uint256& modifier, std::vector<CDeterministicMNCPtr> &members) const;
+    void CalculateScores(const uint256& modifier, std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> &scores) const;
 
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
@@ -448,9 +456,9 @@ public:
      */
     void PoSeDecrease(const uint256& proTxHash);
 
-    CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
+    void BuildDiff(const CDeterministicMNList& to, CDeterministicMNListDiff& ret) const;
     CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to) const;
-    CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
+    CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
     void UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateCPtr& pdmnState);
@@ -626,23 +634,25 @@ private:
 
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache;
     std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache;
-    const CBlockIndex* tipIndex{nullptr};
+    uint256 tipIndexHash{};
+    int tipIndexHeight;
+    uint256 tipIndexHashPrev{};
 
 public:
     explicit CDeterministicMNManager(CEvoDB& _evoDb);
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    void UpdatedBlockTip(const CBlockIndex* pindex);
+    void UpdatedBlockTip(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
+    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main, cs);
+    static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
-    CDeterministicMNList GetListForBlock(const CBlockIndex* pindex);
-    CDeterministicMNList GetListAtChainTip();
+    void GetListForBlock(const CBlockIndex* pindex, CDeterministicMNList& result) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void GetListAtChainTip(CDeterministicMNList& result);
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);

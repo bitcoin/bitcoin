@@ -908,8 +908,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint
 {
     auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
     size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
-
-    CBlockIndex* pindexStart;
+    std::vector<CQuorumCPtr> quorums;
     {
         LOCK(cs_main);
         if (signHeight == -1) {
@@ -919,12 +918,14 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint
         if (startBlockHeight > ::ChainActive().Height()) {
             return {};
         }
-        pindexStart = ::ChainActive()[startBlockHeight];
-    }
-
-    auto quorums =  quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
-    if (quorums.empty()) {
-        return nullptr;
+        const CBlockIndex* pindexStart = ::ChainActive()[startBlockHeight];
+        if(!pindexStart) {
+            return nullptr;
+        }
+        quorumManager->ScanQuorums(llmqType, pindexStart, poolSize, quorums);
+        if (quorums.empty()) {
+            return nullptr;
+        }
     }
 
     std::vector<std::pair<uint256, size_t>> scores;

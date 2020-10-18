@@ -124,7 +124,7 @@ public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
     ~CDKGSessionHandler();
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
 
     void StartThread();
@@ -132,7 +132,7 @@ public:
     const char* GetName() {return m_threadName.c_str();}
 
 private:
-    bool InitNewQuorum(const CBlockIndex* pindexQuorum);
+    bool InitNewQuorum(const CBlockIndex* pindexQuorum) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const;
 

@@ -175,6 +175,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
 bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
+    AssertLockHeld(cs_main);
     static int64_t nTimeMinedAndActive = 0;
     static int64_t nTimeMined = 0;
     static int64_t nTimeLoop = 0;
@@ -186,7 +187,8 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     static std::map<uint8_t, std::vector<uint256>> qcHashesCached;
 
     // The returned quorums are in reversed order, so the most recent one is at index 0
-    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
+    std::map<uint8_t, std::vector<const CBlockIndex*>> quorums;
+    llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev, quorums);
     std::map<uint8_t, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
 

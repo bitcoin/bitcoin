@@ -28,9 +28,9 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
         {
             LOCK(cs_main);
             pindex = LookupBlockIndex(quorumHash);
-        }
-        if (pindex != nullptr) {
-            dmnMembers = CLLMQUtils::GetAllQuorumMembers(llmqType, pindex);
+            if (pindex != nullptr) {
+                CLLMQUtils::GetAllQuorumMembers(llmqType, pindex, dmnMembers);
+            }
         }
     }
 
@@ -151,7 +151,7 @@ void CDKGDebugManager::ResetLocalSessionStatus(uint8_t llmqType)
     localStatus.nTime = GetAdjustedTime();
 }
 
-void CDKGDebugManager::InitLocalSessionStatus(uint8_t llmqType, const uint256& quorumHash, int quorumHeight)
+void CDKGDebugManager::InitLocalSessionStatus(uint8_t llmqType, const uint256& quorumHash, uint32_t quorumHeight)
 {
     LOCK(cs);
 
@@ -164,7 +164,7 @@ void CDKGDebugManager::InitLocalSessionStatus(uint8_t llmqType, const uint256& q
     auto& session = it->second;
     session.llmqType = llmqType;
     session.quorumHash = quorumHash;
-    session.quorumHeight = (uint32_t)quorumHeight;
+    session.quorumHeight = quorumHeight;
     session.phase = 0;
     session.statusBitset = 0;
     session.members.clear();

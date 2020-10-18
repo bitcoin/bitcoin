@@ -93,8 +93,10 @@ CSimplifiedMNListDiff::~CSimplifiedMNListDiff() = default;
 
 bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex)
 {
-    auto baseQuorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex);
-    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(blockIndex);
+    AssertLockHeld(cs_main);
+    std::map<uint8_t, std::vector<const CBlockIndex*>> baseQuorums, quorums;
+    llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex, baseQuorums);
+    llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(blockIndex, quorums);
 
     std::set<std::pair<uint8_t, uint256>> baseQuorumHashes;
     std::set<std::pair<uint8_t, uint256>> quorumHashes;
@@ -198,9 +200,9 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
         return false;
     }
     LOCK(deterministicMNManager->cs);
-
-    auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockIndex);
-    auto dmnList = deterministicMNManager->GetListForBlock(blockIndex);
+    CDeterministicMNList baseDmnList, dmnList;
+    deterministicMNManager->GetListForBlock(baseBlockIndex, baseDmnList);
+    deterministicMNManager->GetListForBlock(blockIndex, dmnList);
     mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList);
     // We need to return the value that was provided by the other peer as it otherwise won't be able to recognize the
     // response. This will usually be identical to the block found in baseBlockIndex. The only difference is when a

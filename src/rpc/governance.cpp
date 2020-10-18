@@ -275,8 +275,8 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
     bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
@@ -424,8 +424,9 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
 
     UniValue statusObj(UniValue::VOBJ);
     UniValue returnObj(UniValue::VOBJ);
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeMasternodeInfo.outpoint);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint);
 
     if (!dmn) {
         nFailed++;
@@ -489,8 +490,8 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
 
     int nSuccessful = 0;
     int nFailed = 0;
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
 
     UniValue resultsObj(UniValue::VOBJ);
 
@@ -591,7 +592,8 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
     mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
         LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
@@ -657,7 +659,9 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     uint256 proTxHash = ParseHashV(request.params[4], "protx-hash");
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(proTxHash);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetValidMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
     }
@@ -1100,8 +1104,9 @@ UniValue voteraw(const JSONRPCRequest& request)
     if (fInvalid) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(outpoint);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetValidMNByCollateral(outpoint);
 
     if (!dmn) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + outpoint.ToStringShort());

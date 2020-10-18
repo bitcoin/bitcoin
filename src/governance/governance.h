@@ -350,7 +350,7 @@ public:
         s >> lastMNListForVotingKeys;
     }
 
-    void UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman);
+    void UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     int64_t GetLastDiffTime() const { return nTimeLastDiff; }
     void UpdateLastDiffTime(int64_t nTimeIn) { nTimeLastDiff = nTimeIn; }
 

@@ -113,8 +113,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
         return false;
     }
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMNByCollateral(vote.GetMasternodeOutpoint());
 
     if (!dmn) {
@@ -219,8 +219,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
 void CGovernanceObject::ClearMasternodeVotes()
 {
     LOCK(cs);
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
 
     vote_m_it it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
@@ -467,8 +467,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
             // nothing else we can check here (yet?)
             return true;
         }
-
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListAtChainTip(mnList);
 
         std::string strOutpoint = masternodeOutpoint.ToStringShort();
         auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
@@ -660,8 +660,9 @@ void CGovernanceObject::Relay(CConnman& connman)
 void CGovernanceObject::UpdateSentinelVariables()
 {
     // CALCULATE MINIMUM SUPPORT LEVELS REQUIRED
-
-    int nMnCount = (int)deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    int nMnCount = (int)mnList.GetValidMNsCount();
     if (nMnCount == 0) return;
 
     // CALCULATE THE MINIMUM VOTE COUNT REQUIRED FOR FULL SIGNAL

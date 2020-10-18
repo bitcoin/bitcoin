@@ -315,11 +315,12 @@ void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitia
 
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman)
 {
+    AssertLockHeld(cs_main);
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
     nTimeLastUpdateBlockTip = GetAdjustedTime();
 
-    if (IsSynced() || !pindexBestHeader)
+    if (IsSynced() || !pindexBestHeader || !pindexNew)
         return;
 
     if (!IsBlockchainSynced()) {

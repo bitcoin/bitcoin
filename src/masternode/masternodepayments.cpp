@@ -219,7 +219,9 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
     bool doProjection = false;
     for(int h = nStartHeight; h < nEndHeight; h++) {
         if (h <= nChainTipHeight) {
-            auto payee = deterministicMNManager->GetListForBlock(::ChainActive()[h - 1]).GetMNPayee();
+            CDeterministicMNList payeeList;
+            deterministicMNManager->GetListForBlock(::ChainActive()[h - 1], payeeList);
+            CDeterministicMNCPtr payee = payeeList.GetMNPayee();
             mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
         } else {
             doProjection = true;
@@ -227,7 +229,10 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
         }
     }
     if (doProjection) {
-        auto projection = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(nEndHeight - nChainTipHeight);
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListAtChainTip(mnList);
+        std::vector<CDeterministicMNCPtr> projection;
+        mnList.GetProjectedMNPayees(nEndHeight - nChainTipHeight, projection);
         for (size_t i = 0; i < projection.size(); i++) {
             auto payee = projection[i];
             size_t h = nChainTipHeight + 1 + i;
@@ -288,16 +293,18 @@ CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, con
 bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, const CAmount &nHalfFee, CAmount& nMNSeniorityRet, int& nCollateralHeightRet)
 {
     voutMasternodePaymentsRet.clear();
-
-
-    const CBlockIndex* pindex;
+    CDeterministicMNCPtr dmnPayee;
     {
         LOCK(cs_main);
-        pindex = ::ChainActive()[nBlockHeight - 1];
-    }
-    auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
-    if (!dmnPayee) {
-        return false;
+        const CBlockIndex* pindex = ::ChainActive()[nBlockHeight - 1];
+        if(!pindex)
+            return false;
+        CDeterministicMNList dmnPayeeList;
+        deterministicMNManager->GetListForBlock(pindex, dmnPayeeList);
+        dmnPayee = dmnPayeeList.GetMNPayee();
+        if (!dmnPayee) {
+            return false;
+        }
     }
     nCollateralHeightRet = dmnPayee->pdmnState->nCollateralHeight;
     CAmount masternodeReward = GetBlockMNSubsidy(blockReward, nBlockHeight, Params().GetConsensus(), nCollateralHeightRet, nMNSeniorityRet) + nHalfFee;

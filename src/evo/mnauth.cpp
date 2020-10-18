@@ -88,8 +88,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             Misbehaving(pnode->GetId(), 100, "invalid mnauth signature");
             return;
         }
-
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListAtChainTip(mnList);
         auto dmn = mnList.GetMN(mnauth.proRegTxHash);
         if (!dmn) {
             // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it

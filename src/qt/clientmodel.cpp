@@ -102,7 +102,9 @@ CDeterministicMNList ClientModel::getMasternodeList() const
 void ClientModel::refreshMasternodeList()
 {
     LOCK(cs_mnlinst);
-    setMasternodeList(deterministicMNManager->GetListAtChainTip());
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    setMasternodeList(mnList);
 }
 int ClientModel::getHeaderTipHeight() const
 {

@@ -81,6 +81,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, TxValida
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
+    AssertLockHeld(cs_main);
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_REGISTER) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
     }
@@ -179,7 +180,8 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     }
 
     if (pindexPrev) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
 
         // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
         if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->collateralOutpoint != collateralOutpoint) {
@@ -234,7 +236,8 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
     }
 
     if (pindexPrev) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
         auto mn = mnList.GetMN(ptx.proTxHash);
         if (!mn) {
             return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);
@@ -305,7 +308,8 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
     }
 
     if (pindexPrev) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
         auto dmn = mnList.GetMN(ptx.proTxHash);
         if (!dmn) {
             return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);
@@ -373,7 +377,8 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
     }
 
     if (pindexPrev) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
         auto dmn = mnList.GetMN(ptx.proTxHash);
         if (!dmn)
             return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);

@@ -119,8 +119,8 @@ void CGovernanceVote::Relay(CConnman& connman) const
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::Relay -- won't relay until fully synced\n");
         return;
     }
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         return;
@@ -224,8 +224,9 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
     }
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(masternodeOutpoint);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;
