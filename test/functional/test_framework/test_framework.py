@@ -923,6 +923,7 @@ class DashTestFramework(SyscoinTestFramework):
         # start up nodes in parallel
         for idx in range(0, self.mn_count):
             self.mninfo[idx].nodeIdx = idx + start_idx
+            time.sleep(0.5)
             self.start_masternode(self.mninfo[idx])
 
 
