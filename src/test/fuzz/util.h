@@ -11,6 +11,7 @@
 #include <chainparamsbase.h>
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <optional.h>
@@ -207,6 +208,32 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
 CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
+}
+
+CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
+}
+
+CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {ConsumeService(fuzzed_data_provider), static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()), fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+}
+
+CNode ConsumeNode(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const NodeId node_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
+    const ServiceFlags local_services = static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+    const int my_starting_height = fuzzed_data_provider.ConsumeIntegral<int>();
+    const SOCKET socket = INVALID_SOCKET;
+    const CAddress address = ConsumeAddress(fuzzed_data_provider);
+    const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+    const uint64_t local_host_nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+    const CAddress addr_bind = ConsumeAddress(fuzzed_data_provider);
+    const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
+    const bool inbound = fuzzed_data_provider.ConsumeBool();
+    const bool block_relay_only = fuzzed_data_provider.ConsumeBool();
+    return {node_id, local_services, my_starting_height, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, inbound, block_relay_only};
 }
 
 void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
