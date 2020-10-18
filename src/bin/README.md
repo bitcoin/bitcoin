@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Paragade (v1.9.20)
+The current version is Tupari (v1.9.23)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`e276d96d1c41686998a6cb3de7982e96`
+`4817ce02025ba3f876f7055e1e456555`
 
 MacOS
-`e5188e3f4c287e4c57b5138580b018c2`
+`c5462dea3afb857b70a40eb4cd28a929`
 
 Windows (64-bit)
-`1a9025ba23e3537e5ce3f242be192c4d`
+`a212d9a0f9c78acb7e73e9da99fce3b9`
 
 
 Relayer
