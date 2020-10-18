@@ -999,6 +999,9 @@ void CDeterministicMNManager::GetListAtChainTip(CDeterministicMNList& result)
     if(!tipIndex) {
         return;
     }
+    if(tipIndex->GetBlockHash() != tipIndexHash) {
+        return;
+    }
     GetListForBlock(tipIndex, result);
 }
 
