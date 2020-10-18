@@ -6,6 +6,7 @@
 
 import socket
 import threading
+import time
 import queue
 import logging
 
@@ -116,6 +117,8 @@ class Socks5Connection():
             cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
             self.serv.queue.put(cmdin)
             logger.info('Proxy: %s', cmdin)
+            # Some tests, e.g., feature_onion.py, require prolonged lifetime of a connection.
+            time.sleep(0.25)
             # Fall through to disconnect
         except Exception as e:
             logger.exception("socks5 request handling failed.")
