@@ -1347,36 +1347,6 @@ static CScript ScriptFromHex(const std::string& str)
     return CScript(data.begin(), data.end());
 }
 
-static CMutableTransaction TxFromHex(const std::string& str)
-{
-    CMutableTransaction tx;
-    VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, ParseHex(str), 0) >> tx;
-    return tx;
-}
-
-static std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
-{
-    assert(univalue.isArray());
-    std::vector<CTxOut> prevouts;
-    for (size_t i = 0; i < univalue.size(); ++i) {
-        CTxOut txout;
-        VectorReader(SER_DISK, 0, ParseHex(univalue[i].get_str()), 0) >> txout;
-        prevouts.push_back(std::move(txout));
-    }
-    return prevouts;
-}
-
-static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
-{
-    assert(univalue.isArray());
-    CScriptWitness scriptwitness;
-    for (size_t i = 0; i < univalue.size(); ++i) {
-        auto bytes = ParseHex(univalue[i].get_str());
-        scriptwitness.stack.push_back(std::move(bytes));
-    }
-    return scriptwitness;
-}
-
 BOOST_AUTO_TEST_CASE(script_FindAndDelete)
 {
     // Exercise the FindAndDelete functionality
@@ -1501,6 +1471,36 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
 }
 
 #if defined(HAVE_CONSENSUS_LIB)
+
+static CMutableTransaction TxFromHex(const std::string& str)
+{
+    CMutableTransaction tx;
+    VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, ParseHex(str), 0) >> tx;
+    return tx;
+}
+
+static std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
+{
+    assert(univalue.isArray());
+    std::vector<CTxOut> prevouts;
+    for (size_t i = 0; i < univalue.size(); ++i) {
+        CTxOut txout;
+        VectorReader(SER_DISK, 0, ParseHex(univalue[i].get_str()), 0) >> txout;
+        prevouts.push_back(std::move(txout));
+    }
+    return prevouts;
+}
+
+static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
+{
+    assert(univalue.isArray());
+    CScriptWitness scriptwitness;
+    for (size_t i = 0; i < univalue.size(); ++i) {
+        auto bytes = ParseHex(univalue[i].get_str());
+        scriptwitness.stack.push_back(std::move(bytes));
+    }
+    return scriptwitness;
+}
 
 /* Test simple (successful) usage of bitcoinconsensus_verify_script */
 BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_returns_true)
