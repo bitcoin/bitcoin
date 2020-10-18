@@ -343,7 +343,7 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     return true;
 }
 
-void TestTransaction(const CTransactionRef& tx, const util::Ref& context) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+void TestTransaction(const CTransactionRef& tx, const util::Ref& context) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
     if(!fAssetIndex) { 
         throw JSONRPCError(RPC_WALLET_ERROR, "missing-asset-index");
     }

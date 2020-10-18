@@ -134,6 +134,7 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
 
 bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
+    AssertLockHeld(cs_main);
     if (!tx.IsCoinBase()) {
         return FormatSyscoinErrorMessage(state, "bad-qctx-invalid", fJustCheck);
     }
@@ -166,8 +167,8 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
             }
             return true;
         }
-
-        auto members = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
+        std::vector<CDeterministicMNCPtr> members;
+        CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum, members);
         if (!commitment.Verify(members, false)) {
             return FormatSyscoinErrorMessage(state, "bad-qc-invalid", fJustCheck);
         }

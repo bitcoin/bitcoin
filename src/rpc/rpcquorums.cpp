@@ -51,8 +51,8 @@ UniValue quorum_list(const JSONRPCRequest& request)
 
     for (auto& p : Params().GetConsensus().llmqs) {
         UniValue v(UniValue::VARR);
-
-        auto quorums = llmq::quorumManager->ScanQuorums(p.first, ::ChainActive().Tip(), count > -1 ? count : p.second.signingActiveQuorumCount);
+        std::vector<llmq::CQuorumCPtr> quorums;
+        llmq::quorumManager->ScanQuorums(p.first, ::ChainActive().Tip(), count > -1 ? count : p.second.signingActiveQuorumCount, quorums);
         for (auto& q : quorums) {
             v.push_back(q->qc.quorumHash.ToString());
         }
@@ -83,7 +83,7 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
 {
     UniValue ret(UniValue::VOBJ);
 
-    ret.pushKV("height", quorum->pindexQuorum->nHeight);
+    ret.pushKV("height", quorum->heightQuorum);
     ret.pushKV("type", quorum->params.name);
     ret.pushKV("quorumHash", quorum->qc.quorumHash.ToString());
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
@@ -120,7 +120,6 @@ UniValue quorum_info(const JSONRPCRequest& request)
     if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4))
         quorum_info_help(request);
 
-    LOCK(cs_main);
 
     uint8_t llmqType = (uint8_t)request.params[1].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
@@ -189,6 +188,8 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
         if (fMasternodeMode) {
             const CBlockIndex* pindexQuorum = ::ChainActive()[tipHeight - (tipHeight % params.dkgInterval)];
+            if(!pindexQuorum)
+                continue;
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
@@ -257,16 +258,16 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
         }
     }
 
-    const CBlockIndex* pindexTip;
+    CDeterministicMNCPtr dmn;
     {
         LOCK(cs_main);
-        pindexTip = ::ChainActive().Tip();
-    }
-
-    auto mnList = deterministicMNManager->GetListForBlock(pindexTip);
-    auto dmn = mnList.GetMN(protxHash);
-    if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");
+        const CBlockIndex* pindexTip = ::ChainActive().Tip();
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListForBlock(pindexTip, mnList);
+        dmn = mnList.GetMN(protxHash);
+        if (!dmn) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");
+        }
     }
 
     UniValue result(UniValue::VARR);
@@ -277,7 +278,8 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
         if (scanQuorumsCount != -1) {
             count = (size_t)scanQuorumsCount;
         }
-        auto quorums = llmq::quorumManager->ScanQuorums(params.type, count);
+        std::vector<llmq::CQuorumCPtr> quorums;
+        llmq::quorumManager->ScanQuorums(params.type, count, quorums);
         for (auto& quorum : quorums) {
             if (quorum->IsMember(dmn->proTxHash)) {
                 auto json = BuildQuorumInfo(quorum, false, false);

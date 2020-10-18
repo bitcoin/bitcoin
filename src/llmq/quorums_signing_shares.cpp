@@ -612,26 +612,23 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
         }
     }
 
-    {
-        LOCK(cs_main);
+    // For the convenience of the caller, also build a map of quorumHash -> quorum
 
-        // For the convenience of the caller, also build a map of quorumHash -> quorum
+    for (auto& p : retSigShares) {
+        for (auto& sigShare : p.second) {
+            auto llmqType = sigShare.llmqType;
 
-        for (auto& p : retSigShares) {
-            for (auto& sigShare : p.second) {
-                auto llmqType = sigShare.llmqType;
-
-                auto k = std::make_pair(llmqType, sigShare.quorumHash);
-                if (retQuorums.count(k)) {
-                    continue;
-                }
-
-                CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
-                assert(quorum != nullptr);
-                retQuorums.emplace(k, quorum);
+            auto k = std::make_pair(llmqType, sigShare.quorumHash);
+            if (retQuorums.count(k)) {
+                continue;
             }
+
+            CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
+            assert(quorum != nullptr);
+            retQuorums.emplace(k, quorum);
         }
     }
+    
 }
 
 bool CSigSharesManager::ProcessPendingSigShares()
@@ -735,7 +732,7 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
     std::set<NodeId> quorumNodes;
     if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
         if (sigShare.quorumMember == quorum->GetMemberIndex(activeMasternodeInfo.proTxHash)) {
-            quorumNodes = connman.GetMasternodeQuorumNodes(sigShare.llmqType, sigShare.quorumHash);
+            connman.GetMasternodeQuorumNodes(sigShare.llmqType, sigShare.quorumHash, quorumNodes);
         }
     }
 
@@ -1080,7 +1077,8 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
         auto quorumKey = std::make_pair(sigShare->llmqType, sigShare->quorumHash);
         auto it = quorumNodesMap.find(quorumKey);
         if (it == quorumNodesMap.end()) {
-            auto nodeIds = connman.GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second);
+            std::set<NodeId> nodeIds;
+            connman.GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second, nodeIds);
             it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
         }
 

@@ -136,8 +136,8 @@ UniValue masternode_count(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
         masternode_count_help(request);
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
     int total = mnList.GetAllMNsCount();
     int enabled = mnList.GetValidMNsCount();
 
@@ -167,8 +167,10 @@ UniValue masternode_count(const JSONRPCRequest& request)
 
 UniValue GetNextMasternodeForPayment(size_t heightShift)
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto payees = mnList.GetProjectedMNPayees(heightShift);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    std::vector<CDeterministicMNCPtr> payees;
+    mnList.GetProjectedMNPayees(heightShift, payees);
     if (payees.empty())
         return "unknown";
     auto payee = payees.back();
@@ -287,8 +289,9 @@ UniValue masternode_status(const JSONRPCRequest& request)
     // keep compatibility with legacy status for now (might get deprecated/removed later)
     mnObj.pushKV("outpoint", activeMasternodeInfo.outpoint.ToStringShort());
     mnObj.pushKV("service", activeMasternodeInfo.service.ToString());
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeMasternodeInfo.proTxHash);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetMN(activeMasternodeInfo.proTxHash);
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
@@ -431,8 +434,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
     }
 
     UniValue obj(UniValue::VOBJ);
-
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
     auto dmnToStatus = [&](const CDeterministicMNCPtr& dmn) {
         if (mnList.IsMNValid(dmn)) {
             return "ENABLED";

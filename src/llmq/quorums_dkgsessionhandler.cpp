@@ -105,8 +105,8 @@ CDKGSessionHandler::~CDKGSessionHandler() = default;
 
 void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
+    AssertLockHeld(cs_main);
     LOCK(cs);
-
     int quorumStageInt = pindexNew->nHeight % params.dkgInterval;
     const CBlockIndex* pindexQuorum = pindexNew->GetAncestor(pindexNew->nHeight - quorumStageInt);
 
@@ -158,16 +158,14 @@ void CDKGSessionHandler::StopThread()
 
 bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 {
-    //AssertLockHeld(cs_main);
-
-
+    AssertLockHeld(cs_main);
     curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
         return false;
     }
-
-    auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
+    std::vector<CDeterministicMNCPtr> mns;
+    CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum, mns);
 
     if (!curSession->Init(pindexQuorum, mns, activeMasternodeInfo.proTxHash)) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialization failed for %s\n", __func__, curSession->params.name);
@@ -517,19 +515,21 @@ void CDKGSessionHandler::HandleDKGRound()
         pendingPrematureCommitments.Clear();
         curQuorumHash = quorumHash;
     }
-
-    const CBlockIndex* pindexQuorum;
     {
         LOCK(cs_main);
-        pindexQuorum = LookupBlockIndex(curQuorumHash);
-    }
-    if(!pindexQuorum) {
-        throw AbortPhaseException();
-    }
-    if (!InitNewQuorum(pindexQuorum)) {
-        // should actually never happen
-        WaitForNewQuorum(curQuorumHash);
-        throw AbortPhaseException();
+        const CBlockIndex* pindexQuorum = LookupBlockIndex(curQuorumHash);
+        if(!pindexQuorum) {
+            throw AbortPhaseException();
+        }
+        if (!InitNewQuorum(pindexQuorum)) {
+            // should actually never happen
+            WaitForNewQuorum(curQuorumHash);
+            throw AbortPhaseException();
+        }
+        CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS), dkgManager.connman);
+        if (curSession->AreWeMember() && CLLMQUtils::IsAllMembersConnectedEnabled(params.type)) {
+            CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash, dkgManager.connman);
+        }
     }
 
     quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
@@ -537,11 +537,6 @@ void CDKGSessionHandler::HandleDKGRound()
         status.phase = (uint8_t) QuorumPhase_Initialized;
         return changed;
     });
-
-    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS), dkgManager.connman);
-    if (curSession->AreWeMember() && CLLMQUtils::IsAllMembersConnectedEnabled(params.type)) {
-        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash, dkgManager.connman);
-    }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});
 

@@ -8,7 +8,6 @@
 #include <protocol.h>
 #include <validation.h>
 #include <warnings.h>
-
 // Keep track of the active Masternode
 CActiveMasternodeInfo activeMasternodeInfo;
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
@@ -77,8 +76,8 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         state = MASTERNODE_ERROR;
         return;
     }
-
-    CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(pindex);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListForBlock(pindex, mnList);
 
     CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeMasternodeInfo.blsPubKeyOperator);
     if (!dmn) {
@@ -130,14 +129,15 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
     if (!fMasternodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 
     if (state == MASTERNODE_READY) {
-        auto oldMNList = deterministicMNManager->GetListForBlock(pindexNew->pprev);
-        auto newMNList = deterministicMNManager->GetListForBlock(pindexNew);
+        CDeterministicMNList oldMNList, newMNList;
+        deterministicMNManager->GetListForBlock(pindexNew->pprev, oldMNList);
+        deterministicMNManager->GetListForBlock(pindexNew, newMNList);
         if (!newMNList.IsMNValid(activeMasternodeInfo.proTxHash)) {
             // MN disappeared from MN list
             state = MASTERNODE_REMOVED;

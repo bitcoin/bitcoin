@@ -14,7 +14,7 @@
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_dkgsessionmgr.h>
-
+#include <shutdown.h>
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
     LOCK(cs_main);
@@ -24,38 +24,48 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
+    LOCK(cs_main);
+    if(ShutdownRequested())
+        return;
     masternodeSync.AcceptedBlockHeader(pindexNew);
 }
 
 void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
+    if(ShutdownRequested())
+        return;
     masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
 }
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    if (pindexNew == pindexFork) // blocks were disconnected without any new ones
+    LOCK(cs_main);
+    if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones
         return;
 
     deterministicMNManager->UpdatedBlockTip(pindexNew);
 }
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    if (pindexNew == pindexFork) // blocks were disconnected without any new ones
+    LOCK(cs_main);
+    if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones
         return;
 
     masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 
     if (fInitialDownload)
         return;
-
-    llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
-    llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
+    if(llmq::quorumManager)
+        llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
+    if(llmq::quorumDKGSessionManager)
+        llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
 
     if (!fDisableGovernance) governance.UpdatedBlockTip(pindexNew, connman);
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
+    if(ShutdownRequested())
+        return;
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
     governance.UpdateCachesAndClean();
 }

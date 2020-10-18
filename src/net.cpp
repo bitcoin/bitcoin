@@ -2049,7 +2049,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         addrman.ResolveCollisions();
         // SYSCOIN
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListAtChainTip(mnList);
 
         int64_t nANow = GetAdjustedTime();
         int nTries = 0;
@@ -2168,8 +2169,8 @@ void CConnman::ThreadOpenMasternodeConnections()
                 connectedProRegTxHashes.emplace(pnode->verifiedProRegTxHash, pnode->IsInboundConn());
             }
         });
-
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListAtChainTip(mnList);
 
         if (interruptNet)
             return;
@@ -3026,29 +3027,28 @@ bool CConnman::HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumH
     return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
 }
 
-std::set<uint256> CConnman::GetMasternodeQuorums(uint8_t llmqType)
+void CConnman::GetMasternodeQuorums(uint8_t llmqType, std::set<uint256> &result)
 {
     LOCK(cs_vPendingMasternodes);
-    std::set<uint256> result;
+    result.clear();
     for (const auto& p : masternodeQuorumNodes) {
         if (p.first.first != llmqType) {
             continue;
         }
         result.emplace(p.first.second);
     }
-    return result;
 }
 
-std::set<NodeId> CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash) const
+void CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, std::set<NodeId>& nodes) const
 {
     LOCK2(cs_vNodes, cs_vPendingMasternodes);
+    nodes.clear();
     auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
     if (it == masternodeQuorumNodes.end()) {
-        return {};
+        return;
     }
     const auto& proRegTxHashes = it->second;
 
-    std::set<NodeId> nodes;
     for (const auto pnode : vNodes) {
         if (pnode->fDisconnect) {
             continue;
@@ -3058,7 +3058,6 @@ std::set<NodeId> CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint
         }
         nodes.emplace(pnode->GetId());
     }
-    return nodes;
 }
 
 void CConnman::RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
@@ -3073,7 +3072,8 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
     if (pnode->verifiedProRegTxHash.IsNull() && !pnode->IsInboundConn()) {
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListAtChainTip(mnList);
         auto dmn = mnList.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
             // This is definitely not a masternode

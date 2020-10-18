@@ -627,8 +627,9 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     }
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[3].get_str(), "operatorKey");
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetMN(ptx.proTxHash);
     if (!dmn) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
@@ -717,8 +718,9 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     CProUpRegTx ptx;
     ptx.nVersion = CProUpRegTx::CURRENT_VERSION;
     ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
@@ -819,8 +821,9 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         }
         ptx.nReason = (uint16_t)nReason;
     }
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    auto dmn = mnList.GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
@@ -1002,8 +1005,8 @@ UniValue protx_list(const JSONRPCRequest& request)
         for (const auto& outpt : vOutpts) {
             setOutpts.emplace(outpt);
         }
-
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListForBlock(::ChainActive()[height], mnList);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             if (setOutpts.count(dmn->collateralOutpoint) ||
                 CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
@@ -1025,8 +1028,8 @@ UniValue protx_list(const JSONRPCRequest& request)
         if (height < 1 || height > ::ChainActive().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
-
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListForBlock(::ChainActive()[height], mnList);
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
             ret.push_back(BuildDMNListEntry(node, pwallet, dmn, detailed));
@@ -1066,7 +1069,8 @@ UniValue protx_info(const JSONRPCRequest& request)
 #endif
     const NodeContext& node = EnsureNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
@@ -1089,7 +1093,7 @@ void protx_diff_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static uint256 ParseBlock(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static uint256 ParseBlock(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     AssertLockHeld(cs_main);
 

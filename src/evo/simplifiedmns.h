@@ -118,11 +118,11 @@ public:
     CSimplifiedMNListDiff();
     ~CSimplifiedMNListDiff();
 
-    bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex);
+    bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void ToJson(UniValue& obj) const;
 };
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 #endif //SYSCOIN_EVO_SIMPLIFIEDMNS_H

@@ -50,7 +50,7 @@ private:
 public:
     CActiveMasternodeManager(CConnman& _connman): connman(_connman) {}
     virtual ~CActiveMasternodeManager() {}
-    virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void Init(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
