@@ -1689,6 +1689,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
+    // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
+    const uint16_t default_bind_port =
+        static_cast<uint16_t>(args.GetIntArg("-port", Params().GetDefaultPort()));
+
     const auto BadPortWarning = [](const char* prefix, uint16_t port) {
         return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
                            "thus it is unlikely that any Bitcoin Core peers connect to it. See "
@@ -1701,7 +1705,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         CService bind_addr;
         const size_t index = bind_arg.rfind('=');
         if (index == std::string::npos) {
-            if (Lookup(bind_arg, bind_addr, GetListenPort(), false)) {
+            if (Lookup(bind_arg, bind_addr, default_bind_port, /*fAllowLookup=*/false)) {
                 connOptions.vBinds.push_back(bind_addr);
                 if (IsBadPort(bind_addr.GetPort())) {
                     InitWarning(BadPortWarning("-bind", bind_addr.GetPort()));
