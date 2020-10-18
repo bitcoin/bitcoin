@@ -327,6 +327,7 @@ bool CQuorumBlockProcessor::IsMiningPhase(uint8_t llmqType, int nHeight)
 
 bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight)
 {
+    AssertLockHeld(cs_main);
     uint256 quorumHash = GetQuorumBlockHash(llmqType, nHeight);
 
     // perform extra check for quorumHash.IsNull as the quorum hash is unknown for the first block of a session
@@ -342,6 +343,7 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight)
 // WARNING: This method returns uint256() on the first block of the DKG interval (because the block hash is not known yet)
 uint256 CQuorumBlockProcessor::GetQuorumBlockHash(uint8_t llmqType, int nHeight)
 {
+    AssertLockHeld(cs_main);
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     int quorumStartHeight = nHeight - (nHeight % params.dkgInterval);
@@ -490,7 +492,7 @@ bool CQuorumBlockProcessor::GetMinableCommitmentByHash(const uint256& commitment
 // Will return true and a null commitment if no minable commitment is known and none was mined yet
 bool CQuorumBlockProcessor::GetMinableCommitment(uint8_t llmqType, int nHeight, CFinalCommitment& ret)
 {
-
+    AssertLockHeld(cs_main);
     if (!IsCommitmentRequired(llmqType, nHeight)) {
         // no commitment required
         return false;
