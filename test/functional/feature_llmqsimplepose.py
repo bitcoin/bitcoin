@@ -88,8 +88,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 if expect_contribution_to_fail:
                     expected_contributors -= 1
                 # Make sure we do fresh probes
-                self.bump_scheduler(60 * 60)
-                self.bump_mocktime(60 * 60)
+                self.bump_scheduler(5)
+                self.bump_mocktime(90 * 60)
                 self.mine_quorum(expected_connections=1, expected_members=len(online_mninfos), expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos=online_mninfos)
 
             assert(self.check_punished(mn) and self.check_banned(mn))
