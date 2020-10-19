@@ -41,6 +41,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.rpc_timeout = 120
+        self.extra_args = [["-nowallet"], []]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -80,7 +81,9 @@ class MultiWalletTest(BitcoinTestFramework):
         # rename wallet.dat to make sure plain wallet file paths (as opposed to
         # directory paths) can be loaded
         # create another dummy wallet for use in testing backups later
-        self.start_node(0, ["-nowallet", "-wallet=empty", "-wallet=plain"])
+        self.start_node(0)
+        node.createwallet("empty", descriptors=False)
+        node.createwallet("plain", descriptors=False)
         node.createwallet("created")
         self.stop_nodes()
         empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
@@ -101,20 +104,22 @@ class MultiWalletTest(BitcoinTestFramework):
         #   w8         - to verify existing wallet file is loaded correctly
         #   ''         - to verify default wallet file is created correctly
         wallet_names = ['w1', 'w2', 'w3', 'w', 'sub/w5', os.path.join(self.options.tmpdir, 'extern/w6'), 'w7_symlink', 'w8', self.default_wallet_name]
-        extra_args = ['-nowallet'] + ['-wallet={}'.format(n) for n in wallet_names]
-        self.start_node(0, extra_args)
+        self.start_node(0)
+        for wallet_name in wallet_names[:-2]:
+            self.nodes[0].createwallet(wallet_name, descriptors=False)
+        for wallet_name in wallet_names[-2:]:
+            self.nodes[0].loadwallet(wallet_name)
         assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), [self.default_wallet_name, os.path.join('sub', 'w5'), 'w', 'w1', 'w2', 'w3', 'w7', 'w7_symlink', 'w8'])
 
         assert_equal(set(node.listwallets()), set(wallet_names))
+
+        # should raise rpc error if wallet path can't be created
+        assert_raises_rpc_error(-1, "boost::filesystem::create_directory:", self.nodes[0].createwallet, "w8/bad", descriptors=False)
 
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
             assert_equal(os.path.isfile(wallet_file(wallet_name)), True)
-
-        # should not initialize if wallet path can't be created
-        exp_stderr = "boost::filesystem::create_directory:"
-        self.nodes[0].assert_start_raises_init_error(['-wallet=w8/bad'], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 
         self.nodes[0].assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
         self.nodes[0].assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
@@ -142,14 +147,18 @@ class MultiWalletTest(BitcoinTestFramework):
         # if wallets/ doesn't exist, datadir should be the default wallet dir
         wallet_dir2 = data_dir('walletdir')
         os.rename(wallet_dir(), wallet_dir2)
-        self.start_node(0, ['-nowallet', '-wallet=w4', '-wallet=w5'])
+        self.start_node(0)
+        self.nodes[0].createwallet("w4")
+        self.nodes[0].createwallet("w5")
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
         node.generatetoaddress(nblocks=1, address=w5.getnewaddress())
 
         # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
         os.rename(wallet_dir2, wallet_dir())
-        self.restart_node(0, ['-nowallet', '-wallet=w4', '-wallet=w5', '-walletdir=' + data_dir()])
+        self.restart_node(0, ['-nowallet', '-walletdir=' + data_dir()])
+        self.nodes[0].loadwallet("w4")
+        self.nodes[0].loadwallet("w5")
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
         w5_info = w5.getwalletinfo()
@@ -157,11 +166,14 @@ class MultiWalletTest(BitcoinTestFramework):
 
         competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
         os.mkdir(competing_wallet_dir)
-        self.restart_node(0, ['-walletdir=' + competing_wallet_dir])
+        self.restart_node(0, ['-nowallet', '-walletdir=' + competing_wallet_dir])
+        self.nodes[0].createwallet(self.default_wallet_name, descriptors=False)
         exp_stderr = r"Error: Error initializing wallet database environment \"\S+competing_walletdir\S*\"!"
         self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 
-        self.restart_node(0, extra_args)
+        self.restart_node(0)
+        for wallet_name in wallet_names:
+            self.nodes[0].loadwallet(wallet_name)
 
         assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), [self.default_wallet_name, os.path.join('sub', 'w5'), 'w', 'w1', 'w2', 'w3', 'w7', 'w7_symlink', 'w8', 'w8_copy'])
 
