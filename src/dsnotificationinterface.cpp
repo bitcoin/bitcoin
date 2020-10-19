@@ -24,7 +24,6 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    LOCK(cs_main);
     if(ShutdownRequested())
         return;
     masternodeSync.AcceptedBlockHeader(pindexNew);
