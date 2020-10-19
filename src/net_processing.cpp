@@ -1983,10 +1983,10 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
         if (orphan_it == mapOrphanTransactions.end()) continue;
 
         const CTransactionRef porphanTx = orphan_it->second.tx;
-        TxValidationState state;
-        std::list<CTransactionRef> removed_txn;
+        const MempoolAcceptResult result = AcceptToMemoryPool(m_mempool, porphanTx, false /* bypass_limits */);
+        TxValidationState state = result.m_state;
 
-        if (AcceptToMemoryPool(m_mempool, state, porphanTx, &removed_txn, false /* bypass_limits */)) {
+        if (result.m_accepted) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), m_connman);
             for (unsigned int i = 0; i < porphanTx->vout.size(); i++) {
@@ -1998,7 +1998,7 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
                 }
             }
             EraseOrphanTx(orphanHash);
-            for (const CTransactionRef& removedTx : removed_txn) {
+            for (const CTransactionRef& removedTx : result.m_replaced_transactions) {
                 AddToCompactExtraTransactions(removedTx);
             }
             break;
@@ -2989,10 +2989,10 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             return;
         }
 
-        TxValidationState state;
-        std::list<CTransactionRef> lRemovedTxn;
+        const MempoolAcceptResult result = AcceptToMemoryPool(m_mempool, ptx, false /* bypass_limits */);
+        TxValidationState state = result.m_state;
 
-        if (AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */)) {
+        if (result.m_accepted) {
             m_mempool.check(&::ChainstateActive().CoinsTip());
             // As this version of the transaction was acceptable, we can forget about any
             // requests for it.
@@ -3015,7 +3015,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 tx.GetHash().ToString(),
                 m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
 
-            for (const CTransactionRef& removedTx : lRemovedTxn) {
+            for (const CTransactionRef& removedTx : result.m_replaced_transactions) {
                 AddToCompactExtraTransactions(removedTx);
             }
 

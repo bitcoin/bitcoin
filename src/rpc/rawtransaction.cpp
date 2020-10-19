@@ -944,14 +944,15 @@ static RPCHelpMan testmempoolaccept()
     UniValue result_0(UniValue::VOBJ);
     result_0.pushKV("txid", tx_hash.GetHex());
 
-    TxValidationState state;
-    bool test_accept_res;
-    CAmount fee{0};
+    MempoolAcceptResult accept_result(std::move(tx));
     {
         LOCK(cs_main);
-        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true, &fee);
+        accept_result = AcceptToMemoryPool(mempool, std::move(tx),
+            false /* bypass_limits */, true /* test_accept */);
     }
+    const bool test_accept_res = accept_result.m_accepted;
+    const TxValidationState state = accept_result.m_state;
+    const CAmount fee = accept_result.m_fee;
 
     // Check that fee does not exceed maximum fee
     if (test_accept_res && max_raw_tx_fee && fee > max_raw_tx_fee) {
