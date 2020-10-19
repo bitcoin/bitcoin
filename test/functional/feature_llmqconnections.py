@@ -47,16 +47,19 @@ class LLMQConnections(DashTestFramework):
         q = self.mine_quorum(expected_connections=4)
 
         self.log.info("checking that all MNs got probed")
+        self.bump_scheduler(5)
         for mn in self.get_quorum_masternodes(q):
             self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 4)
 
         self.log.info("checking that probes age")
         self.bump_mocktime(60)
+        self.bump_scheduler(5)
         for mn in self.get_quorum_masternodes(q):
             self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 0)
 
         self.log.info("mine a new quorum and re-check probes")
         q = self.mine_quorum(expected_connections=4)
+        self.bump_scheduler(5)
         for mn in self.get_quorum_masternodes(q):
             self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, True) == 4)
 
