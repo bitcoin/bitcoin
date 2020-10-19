@@ -146,6 +146,7 @@ public:
     /** Return path to main database filename */
     std::string Filename() override { return (env->Directory() / strFile).string(); }
 
+    std::string Format() override { return "bdb"; }
     /**
      * Pointer to shared database environment.
      *
