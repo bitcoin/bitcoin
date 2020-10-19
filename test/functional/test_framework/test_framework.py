@@ -1113,7 +1113,7 @@ class DashTestFramework(SyscoinTestFramework):
         def check_dkg_session():
             all_ok = True
             member_count = 0
-            #self.bump_mocktime(1)
+            self.bump_mocktime(1)
             for mn in mninfos:
                 s = mn.node.quorum("dkgstatus")["session"]
                 if "llmq_test" not in s:
@@ -1142,7 +1142,7 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15):
         def check_dkg_comitments():
             all_ok = True
-            #self.bump_mocktime(1)
+            self.bump_mocktime(1)
             for node in nodes:
                 s = node.quorum("dkgstatus")
                 if "minableCommitments" not in s:
@@ -1187,6 +1187,7 @@ class DashTestFramework(SyscoinTestFramework):
         q = self.nodes[0].getbestblockhash()
 
         self.log.info("Waiting for phase 1 (init)")
+        self.bump_scheduler(5, nodes=nodes)
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
         if self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] == 0:
@@ -1196,36 +1197,43 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 2 (contribute)")
+        self.bump_scheduler(5, nodes=nodes)
         self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 3 (complain)")
+        self.bump_scheduler(5, nodes=nodes)
         self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 4 (justify)")
+        self.bump_scheduler(5, nodes=nodes)
         self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 5 (commit)")
+        self.bump_scheduler(5, nodes=nodes)
         self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 6 (mining)")
+        self.bump_scheduler(5, nodes=nodes)
         self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos)
 
         self.log.info("Waiting final commitment")
+        self.bump_scheduler(5, nodes=nodes)
         self.wait_for_quorum_commitment(q, nodes)
 
         self.log.info("Mining final commitment")
+        self.bump_scheduler(5, nodes=nodes)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(1)
         while quorums == self.nodes[0].quorum("list"):
