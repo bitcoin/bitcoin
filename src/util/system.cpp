@@ -427,6 +427,14 @@ bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
         SaveErrors(read_errors, errors);
         return false;
     }
+    for (const auto& setting : m_settings.rw_settings) {
+        std::string section;
+        std::string key = setting.first;
+        (void)InterpretOption(section, key, /* value */ {}); // Split setting key into section and argname
+        if (!GetArgFlags('-' + key)) {
+            LogPrintf("Ignoring unknown rw_settings value %s\n", setting.first);
+        }
+    }
     return true;
 }
 

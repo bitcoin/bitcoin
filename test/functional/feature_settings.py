@@ -31,19 +31,25 @@ class SettingsTest(BitcoinTestFramework):
 
         # Assert settings are parsed and logged
         with settings.open("w") as fp:
-            json.dump({"string": "string", "num": 5, "bool": True, "null": None, "list": [6,7]}, fp)
+            json.dump({"string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7]}, fp)
         with node.assert_debug_log(expected_msgs=[
+                'Ignoring unknown rw_settings value bool',
+                'Ignoring unknown rw_settings value list',
+                'Ignoring unknown rw_settings value null',
+                'Ignoring unknown rw_settings value num',
+                'Ignoring unknown rw_settings value string',
                 'Setting file arg: string = "string"',
                 'Setting file arg: num = 5',
                 'Setting file arg: bool = true',
                 'Setting file arg: null = null',
-                'Setting file arg: list = [6,7]']):
+                'Setting file arg: list = [6,7]',
+        ]):
             self.start_node(0)
             self.stop_node(0)
 
         # Assert settings are unchanged after shutdown
         with settings.open() as fp:
-            assert_equal(json.load(fp), {"string": "string", "num": 5, "bool": True, "null": None, "list": [6,7]})
+            assert_equal(json.load(fp), {"string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7]})
 
         # Test invalid json
         with settings.open("w") as fp:
