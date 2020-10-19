@@ -1222,6 +1222,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         self.log.info("Waiting for phase 5 (commit)")
         self.bump_scheduler(5, nodes=nodes)
+        self.bump_mocktime(2, nodes=nodes)
         self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
