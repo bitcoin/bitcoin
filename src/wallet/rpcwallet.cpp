@@ -2489,6 +2489,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
                         {
                             {RPCResult::Type::STR, "walletname", "the wallet name"},
                             {RPCResult::Type::NUM, "walletversion", "the wallet version"},
+                            {RPCResult::Type::STR, "format", "the database format (bdb or sqlite)"},
                             {RPCResult::Type::NUM, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
                             {RPCResult::Type::NUM, "coinjoin_balance", "DEPRECATED. Identical to getbalances().mine.coinjoin"},
                             {RPCResult::Type::NUM, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
@@ -2545,6 +2546,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     const auto bal = pwallet->GetBalance();
     obj.pushKV("walletname", pwallet->GetName());
     obj.pushKV("walletversion", pwallet->GetVersion());
+    obj.pushKV("format", pwallet->GetDatabase().Format());
     obj.pushKV("balance", ValueFromAmount(bal.m_mine_trusted));
     obj.pushKV("coinjoin_balance",       ValueFromAmount(bal.m_anonymized));
     obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
