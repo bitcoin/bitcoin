@@ -21,6 +21,9 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        wallet_info = self.nodes[0].getwalletinfo()
+        assert_equal(wallet_info['format'], 'bdb')
+
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
         self.nodes[0].createwallet(wallet_name="desc1", descriptors=True)
@@ -29,6 +32,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         # A descriptor wallet should have 100 addresses * 3 types = 300 keys
         self.log.info("Checking wallet info")
         wallet_info = self.nodes[0].getwalletinfo()
+        assert_equal(wallet_info['format'], 'sqlite')
         assert_equal(wallet_info['keypoolsize'], 300)
         assert_equal(wallet_info['keypoolsize_hd_internal'], 300)
         assert 'keypoololdest' not in wallet_info

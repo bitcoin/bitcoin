@@ -739,7 +739,7 @@ public:
     {
         return *database;
     }
-    WalletDatabase& GetDatabase() override { return *database; }
+    WalletDatabase& GetDatabase() const override { return *database; }
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least

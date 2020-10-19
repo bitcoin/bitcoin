@@ -144,6 +144,8 @@ public:
     /** Return path to main database file for logs and error messages. */
     virtual std::string Filename() = 0;
 
+    virtual std::string Format() = 0;
+
     std::atomic<unsigned int> nUpdateCounter;
     unsigned int nLastSeen;
     unsigned int nLastFlushed;
@@ -190,6 +192,7 @@ public:
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
     void ReloadDbEnv() override {}
     std::string Filename() override { return "dummy"; }
+    std::string Format() override { return "dummy"; }
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return MakeUnique<DummyBatch>(); }
 };
 

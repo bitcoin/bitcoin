@@ -105,6 +105,7 @@ public:
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
 
     std::string Filename() override { return m_file_path; }
+    std::string Format() override { return "sqlite"; }
 
     /** Make a SQLiteBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
