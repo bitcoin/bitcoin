@@ -4034,7 +4034,7 @@ static RPCHelpMan send()
                     {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                     {"psbt", RPCArg::Type::BOOL,  /* default */ "automatic", "Always return a PSBT, implies add_to_wallet=false."},
-                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, /* default */ "empty array", "A JSON array of integers.\n"
+                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, /* default */ "empty array", "Outputs to subtract the fee from, specified as integer indices.\n"
                     "The fee will be equally deducted from the amount of each specified output.\n"
                     "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                     "If no outputs are specified here, the sender pays the fee.",
