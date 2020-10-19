@@ -39,7 +39,7 @@
 /doc/build-freebsd.md                       @fanquake
 /doc/build-netbsd.md                        @fanquake
 /doc/build-openbsd.md                       @laanwj
-/doc/build-osx.md                           @fanquake
+/doc/build-osx.md                           @fanquake @RandyMcMillan
 /doc/build-unix.md                          @laanwj
 /doc/build-windows.md                       @sipsorcery
 /doc/dependencies.md                        @fanquake
@@ -86,7 +86,7 @@
 /src/compat/glibc_*                         @fanquake
 
 # GUI
-/src/qt/forms/                              @hebasto
+/src/qt/forms/                              @hebasto @RandyMcMillan
 
 # Wallet
 /src/wallet/                                @achow101
@@ -134,3 +134,10 @@
 /src/script/interpreter.*                   @sipa
 /src/validation.*                           @sipa
 /src/consensus/                             @sipa
+
+# Seeds
+/contrib/seeds/                             @RandyMcMillan
+/src/chainparamsseeds.h                     @RandyMcMillan
+
+# MacDeploy
+/contrib/macdeploy/                         @RandyMcMillan
