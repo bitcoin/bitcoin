@@ -1180,6 +1180,7 @@ class DashTestFramework(SyscoinTestFramework):
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
+            self.bump_scheduler(5, nodes=nodes)
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
         self.sync_blocks(nodes)
@@ -1238,6 +1239,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.nodes[0].generate(1)
         while quorums == self.nodes[0].quorum("list"):
             time.sleep(2)
+            self.bump_scheduler(5, nodes=nodes)
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(1)
             self.sync_blocks(nodes)
