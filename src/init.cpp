@@ -1978,7 +1978,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                         assert(chainstate->m_chain.Tip() != nullptr);
                     }
                     // SYSCOIN
-                    if (is_coinsview_empty && !evoDb->IsEmpty()) {
+                    else if (!evoDb->IsEmpty()) {
                         // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
                         strLoadError = _("Error initializing block database");
                         break;
