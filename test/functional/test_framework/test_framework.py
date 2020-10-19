@@ -1113,6 +1113,7 @@ class DashTestFramework(SyscoinTestFramework):
         def check_dkg_session():
             all_ok = True
             member_count = 0
+            self.bump_scheduler(5)
             self.bump_mocktime(1)
             for mn in mninfos:
                 s = mn.node.quorum("dkgstatus")["session"]
@@ -1142,6 +1143,7 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15):
         def check_dkg_comitments():
             all_ok = True
+            self.bump_scheduler(5)
             self.bump_mocktime(1)
             for node in nodes:
                 s = node.quorum("dkgstatus")
