@@ -14,6 +14,18 @@
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
 static int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
 
+static const std::string StateName(ThresholdState state)
+{
+    switch (state) {
+    case ThresholdState::DEFINED:   return "DEFINED";
+    case ThresholdState::STARTED:   return "STARTED";
+    case ThresholdState::LOCKED_IN: return "LOCKED_IN";
+    case ThresholdState::ACTIVE:    return "ACTIVE";
+    case ThresholdState::FAILED:    return "FAILED";
+    } // no default case, so the compiler can warn about missing cases
+    return "";
+}
+
 static const Consensus::Params paramsDummy = Consensus::Params();
 
 class TestConditionChecker : public AbstractThresholdConditionChecker
@@ -98,60 +110,28 @@ public:
         return *this;
     }
 
-    VersionBitsTester& TestDefined() {
+    VersionBitsTester& TestState(ThresholdState exp) {
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::DEFINED, strprintf("Test %i for DEFINED", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
+                const CBlockIndex* pindex = vpblock.empty() ? nullptr : vpblock.back();
+                ThresholdState got = checker[i].GetStateFor(pindex);
+                ThresholdState got_always = checker_always[i].GetStateFor(pindex);
+                // nHeight of the next block. If vpblock is empty, the next (ie first)
+                // block should be the genesis block with nHeight == 0.
+                int height = pindex == nullptr ? 0 : pindex->nHeight + 1;
+                BOOST_CHECK_MESSAGE(got == exp, strprintf("Test %i for %s height %d (got %s)", num, StateName(exp), height, StateName(got)));
+                BOOST_CHECK_MESSAGE(got_always == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE height %d (got %s; always active case)", num, height, StateName(got_always)));
             }
         }
         num++;
         return *this;
     }
 
-    VersionBitsTester& TestStarted() {
-        for (int i = 0; i < CHECKERS; i++) {
-            if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::STARTED, strprintf("Test %i for STARTED", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
-            }
-        }
-        num++;
-        return *this;
-    }
-
-    VersionBitsTester& TestLockedIn() {
-        for (int i = 0; i < CHECKERS; i++) {
-            if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::LOCKED_IN, strprintf("Test %i for LOCKED_IN", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
-            }
-        }
-        num++;
-        return *this;
-    }
-
-    VersionBitsTester& TestActive() {
-        for (int i = 0; i < CHECKERS; i++) {
-            if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
-            }
-        }
-        num++;
-        return *this;
-    }
-
-    VersionBitsTester& TestFailed() {
-        for (int i = 0; i < CHECKERS; i++) {
-            if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::FAILED, strprintf("Test %i for FAILED", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
-            }
-        }
-        num++;
-        return *this;
-    }
+    VersionBitsTester& TestDefined() { return TestState(ThresholdState::DEFINED); }
+    VersionBitsTester& TestStarted() { return TestState(ThresholdState::STARTED); }
+    VersionBitsTester& TestLockedIn() { return TestState(ThresholdState::LOCKED_IN); }
+    VersionBitsTester& TestActive() { return TestState(ThresholdState::ACTIVE); }
+    VersionBitsTester& TestFailed() { return TestState(ThresholdState::FAILED); }
 
     CBlockIndex * Tip() { return vpblock.size() ? vpblock.back() : nullptr; }
 };
