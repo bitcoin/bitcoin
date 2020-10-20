@@ -10,10 +10,10 @@ Bitcoin is an experimental digital currency that enables instant payments to
 anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+software that enables the use of this currency.
 
 For more information, as well as an immediately usable, binary version of
-the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
+the Bitcoin Core software, see https://bitcoincore.org/en/download/ or read the
 [original whitepaper](https://bitcoincore.org/bitcoin.pdf).
 
 License
@@ -47,7 +47,7 @@ lots of money.
 
 ### Automated Testing
 
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
+Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code and to
 submit new unit tests for old code. Unit tests can be compiled and run
 (assuming they weren't disabled in configure) with: `make check`. Further details on running
 and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
