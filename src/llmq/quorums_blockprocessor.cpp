@@ -62,21 +62,6 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         }
         auto type = qc.llmqType;
         const auto& params = Params().GetConsensus().llmqs.at(type);
-        {
-            // Check if we already got a better one locally
-            // We do this before verifying the commitment to avoid DoS
-            LOCK(minableCommitmentsCs);
-            auto k = std::make_pair(type, qc.quorumHash);
-            auto it = minableCommitmentsByQuorum.find(k);
-            if (it != minableCommitmentsByQuorum.end()) {
-                auto jt = minableCommitments.find(it->second);
-                if (jt != minableCommitments.end()) {
-                    if (jt->second.CountSigners() <= qc.CountSigners()) {
-                        return;
-                    }
-                }
-            }
-        }
         // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
         std::vector<CDeterministicMNCPtr> members;
         {
@@ -104,8 +89,29 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
                 return;
             }
+        }
+
+        {
+            // Check if we already got a better one locally
+            // We do this before verifying the commitment to avoid DoS
+            LOCK(minableCommitmentsCs);
+            auto k = std::make_pair(type, qc.quorumHash);
+            auto it = minableCommitmentsByQuorum.find(k);
+            if (it != minableCommitmentsByQuorum.end()) {
+                auto jt = minableCommitments.find(it->second);
+                if (jt != minableCommitments.end()) {
+                    if (jt->second.CountSigners() <= qc.CountSigners()) {
+                        return;
+                    }
+                }
+            }
+        }
+        
+        {
+            LOCK(cs_main);
             CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex, members);
         }
+
         if (!qc.Verify(members, true)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
                     qc.quorumHash.ToString(), qc.llmqType, pfrom->GetId());
