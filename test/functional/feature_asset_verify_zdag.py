@@ -107,7 +107,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
-            # update won't be used as input, tx4 will us tx2 as input because asset update uses different UTXO for ownership which is
+            # update won't be used as input, tx4 will use tx2 as input because asset update uses different UTXO for ownership which is
             # not selected for zdag txs
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
