@@ -4582,3 +4582,32 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
 
     return ret;
 }
+
+void CWallet::LoadWalletID(const uint160& id)
+{
+    assert(wallet_id.IsNull());
+    wallet_id = id;
+}
+
+const uint160& CWallet::GetWalletID() const
+{
+    assert(!wallet_id.IsNull());
+    return wallet_id;
+}
+
+void CWallet::EnsureWalletIDWithDB(WalletBatch& batch)
+{
+    if (!wallet_id.IsNull()) return;
+
+    // No ID, so add one
+    auto bdb_db = dynamic_cast<BerkeleyDatabase*>(database.get());
+    if (bdb_db) {
+        // For BDB, use the BDB unique ID
+        assert(wallet_id.size() == sizeof(bdb_db->env->m_fileids[bdb_db->strFile].value));
+        memcpy(wallet_id.data(), bdb_db->env->m_fileids[bdb_db->strFile].value, wallet_id.size());
+    } else {
+        // For everything else, generate a random ID
+        GetStrongRandBytes(wallet_id.data(), wallet_id.size());
+    }
+    batch.WriteWalletID(wallet_id);
+}
