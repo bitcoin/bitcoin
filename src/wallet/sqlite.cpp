@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <crypto/common.h>
 #include <logging.h>
+#include <random.h>
 #include <sync.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
@@ -22,6 +23,10 @@ static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
 static Mutex g_sqlite_mutex;
 static int g_sqlite_count GUARDED_BY(g_sqlite_mutex) = 0;
+
+namespace DBKeys {
+const std::string UUID{"uuid"};
+}
 
 static void ErrorLogCallback(void* arg, int code, const char* msg)
 {
@@ -280,6 +285,16 @@ void SQLiteDatabase::Open()
         if (ret != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set the wallet schema version: %s\n", sqlite3_errstr(ret)));
         }
+    }
+
+    auto batch = MakeBatch();
+    if (!batch->Exists(DBKeys::UUID)) {
+        // UUID is missing (probably a new wallet)
+        std::vector<unsigned char> new_uuid_buf(32);
+        // We might not need strong random, but better safe than sorry
+        // Can't make weak random stronger later
+        GetStrongRandBytes(&new_uuid_buf[0], new_uuid_buf.size());
+        batch->Write(DBKeys::UUID, new_uuid_buf);
     }
 }
 
