@@ -64,9 +64,10 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         const auto& params = Params().GetConsensus().llmqs.at(type);
         // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
         std::vector<CDeterministicMNCPtr> members;
+        const CBlockIndex* pquorumIndex;
         {
             LOCK(cs_main);
-            const CBlockIndex* pquorumIndex = LookupBlockIndex(qc.quorumHash);
+            pquorumIndex = LookupBlockIndex(qc.quorumHash);
             if (!pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
                         qc.quorumHash.ToString(), pfrom->GetId());
@@ -106,7 +107,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 }
             }
         }
-        
+
         {
             LOCK(cs_main);
             CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex, members);
