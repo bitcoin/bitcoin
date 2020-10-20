@@ -136,7 +136,9 @@ template <typename pop_t>
 bool parsePayloads(const UniValue& array, std::vector<pop_t>& out, altintegration::ValidationState& state)
 {
     std::vector<pop_t> payloads;
-    LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with %s, amount %d \n", pop_t::name(), array.size());
+    if(array.size() > 0) {
+        LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with %s, amount %d \n", pop_t::name(), array.size());
+    }
     for (uint32_t idx = 0u, size = array.size(); idx < size; ++idx) {
         auto& payloads_hex = array[idx];
 
