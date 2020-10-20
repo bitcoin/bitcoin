@@ -526,17 +526,19 @@ void CDKGSessionHandler::HandleDKGRound()
             WaitForNewQuorum(curQuorumHash);
             throw AbortPhaseException();
         }
+
+        quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
+            bool changed = status.phase != (uint8_t) QuorumPhase_Initialized;
+            status.phase = (uint8_t) QuorumPhase_Initialized;
+            return changed;
+        });
+
         CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS), dkgManager.connman);
         if (curSession->AreWeMember() && CLLMQUtils::IsAllMembersConnectedEnabled(params.type)) {
             CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash, dkgManager.connman);
         }
     }
 
-    quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
-        bool changed = status.phase != (uint8_t) QuorumPhase_Initialized;
-        status.phase = (uint8_t) QuorumPhase_Initialized;
-        return changed;
-    });
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});
 
