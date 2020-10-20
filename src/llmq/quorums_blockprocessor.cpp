@@ -84,32 +84,31 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             int quorumHeight = pquorumIndex->nHeight - (pquorumIndex->nHeight % params.dkgInterval);
             if (quorumHeight != pquorumIndex->nHeight) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
-                          qc.quorumHash.ToString(), pfrom->GetId());
-                
+                            qc.quorumHash.ToString(), pfrom->GetId());
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
                 Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
                 return;
             }
+        }
 
-            {
-                // Check if we already got a better one locally
-                // We do this before verifying the commitment to avoid DoS
-                LOCK(minableCommitmentsCs);
-                auto k = std::make_pair(type, qc.quorumHash);
-                auto it = minableCommitmentsByQuorum.find(k);
-                if (it != minableCommitmentsByQuorum.end()) {
-                    auto jt = minableCommitments.find(it->second);
-                    if (jt != minableCommitments.end()) {
-                        if (jt->second.CountSigners() <= qc.CountSigners()) {
-                            return;
-                        }
+        {
+            // Check if we already got a better one locally
+            // We do this before verifying the commitment to avoid DoS
+            LOCK(minableCommitmentsCs);
+            auto k = std::make_pair(type, qc.quorumHash);
+            auto it = minableCommitmentsByQuorum.find(k);
+            if (it != minableCommitmentsByQuorum.end()) {
+                auto jt = minableCommitments.find(it->second);
+                if (jt != minableCommitments.end()) {
+                    if (jt->second.CountSigners() <= qc.CountSigners()) {
+                        return;
                     }
                 }
             }
-
-            LOCK(cs_main);
-            CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex, members);
         }
+
+        CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex, members);
+        
 
         if (!qc.Verify(members, true)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
@@ -394,7 +393,6 @@ bool CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, const uint256& 
 // The returned quorums are in reversed order, so the most recent one is at index 0
 void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount, std::vector<const CBlockIndex*> &ret)
 {
-    AssertLockHeld(cs_main);
     LOCK(evoDb.cs);
     ret.clear();
     auto dbIt = evoDb.GetCurTransaction().NewIteratorUniquePtr();
@@ -431,7 +429,6 @@ void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, cons
 // The returned quorums are in reversed order, so the most recent one is at index 0
 void CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex, std::map<uint8_t, std::vector<const CBlockIndex*>>& ret)
 {
-    AssertLockHeld(cs_main);
     ret.clear();
     for (const auto& p : Params().GetConsensus().llmqs) {
         auto& v = ret[p.second.type];

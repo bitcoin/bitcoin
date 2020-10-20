@@ -105,7 +105,6 @@ CDKGSessionHandler::~CDKGSessionHandler() = default;
 
 void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
-    AssertLockHeld(cs_main);
     LOCK(cs);
     int quorumStageInt = pindexNew->nHeight % params.dkgInterval;
     const CBlockIndex* pindexQuorum = pindexNew->GetAncestor(pindexNew->nHeight - quorumStageInt);

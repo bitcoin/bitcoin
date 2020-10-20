@@ -15,22 +15,9 @@
 namespace llmq
 {
 
-void CLLMQUtils::GetAllQuorumMembers(uint8_t llmqType, const uint32_t& nHeight, std::vector<CDeterministicMNCPtr> &members)
-{
-    LOCK(cs_main);
-    const CBlockIndex* pindexQuorum = ChainActive()[nHeight];
-    if(!pindexQuorum)
-        return;
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
-    CDeterministicMNList allMns;
-    deterministicMNManager->GetListForBlock(pindexQuorum, allMns);
-    auto modifier = ::SerializeHash(std::make_pair(llmqType, pindexQuorum->GetBlockHash()));
-    allMns.CalculateQuorum(params.size, modifier, members);
-}
 
 void CLLMQUtils::GetAllQuorumMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, std::vector<CDeterministicMNCPtr> &members)
 {
-    AssertLockHeld(cs_main);
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
     CDeterministicMNList allMns;
     deterministicMNManager->GetListForBlock(pindexQuorum, allMns);
@@ -95,7 +82,6 @@ uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, c
 
 std::set<uint256> CLLMQUtils::GetQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound)
 {
-    AssertLockHeld(cs_main);
     if (IsAllMembersConnectedEnabled(llmqType)) {
         std::vector<CDeterministicMNCPtr> mns;
         GetAllQuorumMembers(llmqType, pindexQuorum, mns);
@@ -121,7 +107,6 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(uint8_t llmqType, const CBloc
 
 std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256 &forMember, bool onlyOutbound)
 {
-    AssertLockHeld(cs_main);
     std::vector<CDeterministicMNCPtr> mns;
     GetAllQuorumMembers(llmqType, pindexQuorum, mns);
     std::set<uint256> result;
@@ -167,7 +152,6 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(uint8_t llmqType, const CBlo
 
 std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, size_t memberCount, size_t connectionCount)
 {
-    AssertLockHeld(cs_main);
     static uint256 qwatchConnectionSeed;
     static std::atomic<bool> qwatchConnectionSeedGenerated{false};
     static RecursiveMutex qwatchConnectionSeedCs;
@@ -190,7 +174,6 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(uint8_t llmqType,
 
 void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, const uint256& myProTxHash, bool allowWatch, CConnman& connman)
 {
-    AssertLockHeld(cs_main);
     std::vector<CDeterministicMNCPtr> members;
     GetAllQuorumMembers(llmqType, pindexQuorum, members);
     bool isMember = std::find_if(members.begin(), members.end(), [&](const CDeterministicMNCPtr& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();

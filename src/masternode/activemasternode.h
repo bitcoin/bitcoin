@@ -50,9 +50,9 @@ private:
 public:
     CActiveMasternodeManager(CConnman& _connman): connman(_connman) {}
     virtual ~CActiveMasternodeManager() {}
-    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
 
-    void Init(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void Init(const CBlockIndex* pindex);
 
     std::string GetStateString() const;
     std::string GetStatus() const;

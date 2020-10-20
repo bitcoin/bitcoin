@@ -141,7 +141,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        LOCK2(cs_main, cs);
+        LOCK(cs);
 
         if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
@@ -173,6 +173,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
                 AddPostponedObject(govobj);
                 LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
             } else {
+                LOCK(cs_main);
                 LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
                 peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 // apply node's ban score
@@ -180,7 +181,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             }
             return;
         }
-        peerman.ForgetTxHash(pfrom->GetId(), nHash);
+        {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), nHash);
+        }
         AddGovernanceObject(govobj, connman, pfrom);
     }
 
@@ -273,7 +277,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     govobj.UpdateSentinelVariables(); //this sets local vars in object
 
-    LOCK2(cs_main, cs);
+    LOCK(cs);
     std::string strError = "";
 
     // MAKE SURE THIS OBJECT IS OK
@@ -335,7 +339,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     std::vector<uint256> vecDirtyHashes = mmetaman.GetAndClearDirtyGovernanceObjectHashes();
 
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     for (const uint256& nHash : vecDirtyHashes) {
         object_m_it it = mapObjects.find(nHash);
@@ -589,7 +593,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing single object to peer=%d, nProp = %s\n", __func__, pnode->GetId(), nProp.ToString());
 
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     // single valid object and its valid votes
     object_m_it it = mapObjects.find(nProp);
@@ -646,7 +650,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing all objects to peer=%d\n", __func__, pnode->GetId());
 
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     // all valid objects, no votes
     for (const auto& objPair : mapObjects) {
@@ -823,7 +827,7 @@ void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
 {
     if (!masternodeSync.IsSynced()) return;
 
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     // Check postponed proposals
     for (object_m_it it = mapPostponedObjects.begin(); it != mapPostponedObjects.end();) {
@@ -949,7 +953,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     }
 
     {
-        LOCK2(cs_main, cs);
+        LOCK(cs);
 
         if (mapObjects.empty()) return -2;
 
@@ -1000,13 +1004,11 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // initiated from another node, so skip it too.
             if (pnode->fMasternode || (fMasternodeMode && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
-            {
-                LOCK(cs_main);
-                size_t nProjectedSize = peerman.GetRequestedCount(pnode->GetId()) + nProjectedVotes;
-                if (nProjectedSize > GetMaxInv()) continue;
-                // to early to ask the same node
-                if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
-            }
+            size_t nProjectedSize = peerman.GetRequestedCount(pnode->GetId()) + nProjectedVotes;
+            if (nProjectedSize > GetMaxInv()) continue;
+            // to early to ask the same node
+            if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
+            
 
             RequestGovernanceObject(pnode, nHashGovobj, connman, true);
             mapAskedRecently[nHashGovobj][pnode->addr] = nNow + nTimeout;

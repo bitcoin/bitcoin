@@ -124,7 +124,7 @@ public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
     ~CDKGSessionHandler();
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew);
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
 
     void StartThread();

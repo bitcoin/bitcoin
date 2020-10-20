@@ -1447,8 +1447,7 @@ void CSigSharesManager::RemoveBannedNodeStates()
 {
     // Called regularly to cleanup local node states for banned nodes
 
-    LOCK2(cs_main, cs);
-    std::unordered_set<NodeId> toRemove;
+    LOCK(cs);
     for (auto it = nodeStates.begin(); it != nodeStates.end();) {
         if (IsBanned(it->first, banman)) {
             // re-request sigshares from other nodes

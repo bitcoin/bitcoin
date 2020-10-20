@@ -37,8 +37,7 @@ class CQuorum
 public:
     const Consensus::LLMQParams& params;
     CFinalCommitment qc;
-    uint256 hashQuorum;
-    uint32_t heightQuorum;
+    const CBlockIndex* pindexQuorum;
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
 
@@ -56,7 +55,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) : params(_params), blsCache(_blsWorker), stopCachePopulatorThread(false) {}
     ~CQuorum();
-    void Init(const CFinalCommitment& _qc, const CBlockIndex* pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void Init(const CFinalCommitment& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
@@ -92,23 +91,23 @@ private:
 public:
     CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
     static bool HasQuorum(uint8_t llmqType, const uint256& quorumHash);
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash);
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum);
     void ScanQuorums(uint8_t llmqType, size_t maxCount, std::vector<CQuorumCPtr>& quorums);
 
     // this one is cs_main-free
-    void ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexQuorum, size_t maxCount, std::vector<CQuorumCPtr>& quorums) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexQuorum, size_t maxCount, std::vector<CQuorumCPtr>& quorums);
 
 private:
     // all private methods here are cs_main-free
-    void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew);
 
-    bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, const uint256& minedBlockHash, std::shared_ptr<CQuorum>& quorum) const  EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, const uint256& minedBlockHash, std::shared_ptr<CQuorum>& quorum) const;
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
 };
 

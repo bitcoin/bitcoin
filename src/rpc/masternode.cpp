@@ -251,7 +251,7 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     {
-        LOCK2(cs_main, pwallet->cs_wallet);
+        LOCK(pwallet->cs_wallet);
         pwallet->AvailableCoins(vPossibleCoins, true, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, true);
     }
 

@@ -93,7 +93,6 @@ CSimplifiedMNListDiff::~CSimplifiedMNListDiff() = default;
 
 bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex)
 {
-    AssertLockHeld(cs_main);
     std::map<uint8_t, std::vector<const CBlockIndex*>> baseQuorums, quorums;
     llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex, baseQuorums);
     llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(blockIndex, quorums);
@@ -176,7 +175,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet)
 {
-    AssertLockHeld(cs_main);
+    LOCK(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
     const CBlockIndex* baseBlockIndex = ::ChainActive().Genesis();
     if (!baseBlockHash.IsNull()) {
@@ -186,6 +185,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
             return false;
         }
     }
+    
     const CBlockIndex* blockIndex = LookupBlockIndex(blockHash);
     if (!blockIndex) {
         errorRet = strprintf("block %s not found", blockHash.ToString());
@@ -199,6 +199,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
         errorRet = strprintf("base block %s is higher then block %s", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }
+    
     LOCK(deterministicMNManager->cs);
     CDeterministicMNList baseDmnList, dmnList;
     deterministicMNManager->GetListForBlock(baseBlockIndex, baseDmnList);

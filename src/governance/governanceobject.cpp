@@ -421,7 +421,6 @@ std::string CGovernanceObject::GetDataAsPlainString() const
 
 void CGovernanceObject::UpdateLocalValidity()
 {
-    LOCK(cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
     fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
 };
@@ -453,13 +452,11 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
             strError = strprintf("Invalid proposal data, error messages: %s", validator.GetErrorMessages());
             return false;
         }
-        {
-            LOCK(cs_main);
-            if (fCheckCollateral && !IsCollateralValid(strError, fMissingConfirmations)) {
-                strError = "Invalid proposal collateral";
-                return false;
-            }
+        if (fCheckCollateral && !IsCollateralValid(strError, fMissingConfirmations)) {
+            strError = "Invalid proposal collateral";
+            return false;
         }
+        
         return true;
     }
     case GOVERNANCE_OBJECT_TRIGGER: {
@@ -507,7 +504,7 @@ CAmount CGovernanceObject::GetMinCollateralFee() const
 
 bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const
 {
-    AssertLockHeld(cs_main);
+    LOCK(cs_main);
     strError = "";
     fMissingConfirmations = false;
     CAmount nMinFee = GetMinCollateralFee();

@@ -19,8 +19,7 @@ class CLLMQUtils
 {
 public:
     // includes members which failed DKG
-    static void GetAllQuorumMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, std::vector<CDeterministicMNCPtr> &members) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    static void GetAllQuorumMembers(uint8_t llmqType, const uint32_t& nHeight, std::vector<CDeterministicMNCPtr> &members);
+    static void GetAllQuorumMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, std::vector<CDeterministicMNCPtr> &members);
     static uint256 BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
     static uint256 BuildSignHash(uint8_t llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
 
@@ -33,12 +32,12 @@ public:
 
     static bool IsAllMembersConnectedEnabled(uint8_t llmqType);
     static uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
-    static std::set<uint256> GetQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    static std::set<uint256> GetQuorumRelayMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    static std::set<size_t> CalcDeterministicWatchConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, size_t memberCount, size_t connectionCount) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    static std::set<uint256> GetQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);
+    static std::set<uint256> GetQuorumRelayMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);
+    static std::set<size_t> CalcDeterministicWatchConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, size_t memberCount, size_t connectionCount);
 
-    static void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, bool allowWatch, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    static void AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    static void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, bool allowWatch, CConnman& connman);
+    static void AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, CConnman& connman);
 
     static bool IsQuorumActive(uint8_t llmqType, const uint256& quorumHash);
 
