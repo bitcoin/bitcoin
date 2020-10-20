@@ -8,12 +8,12 @@
 #include <util/system.h>
 
 #ifdef USE_BDB
-bool ExistsBerkeleyDatabase(const fs::path& path);
+#include <wallet/bdb.h>
 #else
 #   define ExistsBerkeleyDatabase(path)  (false)
 #endif
 #ifdef USE_SQLITE
-bool ExistsSQLiteDatabase(const fs::path& path);
+#include <wallet/sqlite.h>
 #else
 #   define ExistsSQLiteDatabase(path)  (false)
 #endif
