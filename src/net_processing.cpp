@@ -1131,13 +1131,13 @@ void Misbehaving(const NodeId pnode, const int howmuch, const std::string& messa
         LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d)%s\n", pnode, peer->m_misbehavior_score - howmuch, peer->m_misbehavior_score, message_prefixed);
     }
 }
-void PeerManager::ReceivedResponse(const NodeId pnode, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManager::ReceivedResponse(const NodeId pnode, const uint256& hash)
 {
     PeerRef peer = GetPeerRef(pnode);
     if (peer == nullptr) return;
     m_txrequest.ReceivedResponse(pnode, hash);
 }
-void PeerManager::ForgetTxHash(const NodeId pnode, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManager::ForgetTxHash(const NodeId pnode, const uint256& hash)
 {
     PeerRef peer = GetPeerRef(pnode);
     if (peer == nullptr) return;
@@ -4040,14 +4040,11 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
     if (msg_type == NetMsgType::GETMNLISTDIFF) {
         CGetSimplifiedMNListDiff cmd;
         vRecv >> cmd;
-        LOCK(cs_main);
-
         CSimplifiedMNListDiff mnListDiff;
         std::string strError;
         if (BuildSimplifiedMNListDiff(cmd.baseBlockHash, cmd.blockHash, mnListDiff, strError)) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
         } else {
-           
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
             Misbehaving(pfrom.GetId(), 1, strError);
         }

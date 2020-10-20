@@ -37,7 +37,6 @@ void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, boo
 }
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    LOCK(cs_main);
     if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones
         return;
 
@@ -45,7 +44,6 @@ void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pin
 }
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    LOCK(cs_main);
     if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones
         return;
 

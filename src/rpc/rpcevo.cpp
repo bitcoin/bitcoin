@@ -920,26 +920,25 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
 
     int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.pushKV("confirmations", confirmations);
-
-    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
-    bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
-    bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
-
-    bool ownsCollateral = false;
-    CTransactionRef collateralTx;
-    uint256 tmpHashBlock;
-    uint32_t nBlockHeight;
-    CBlockIndex* blockindex = nullptr;
-    if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
-        blockindex = ::ChainActive()[nBlockHeight];
-    } 
-    collateralTx = GetTransaction(blockindex, node.mempool.get(), dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
-    if(collateralTx)
-        ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
-    
-
 #ifdef ENABLE_WALLET
     if (pwallet) {
+        LOCK2(pwallet->cs_wallet, cs_main);
+        bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
+        bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
+        bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
+
+        bool ownsCollateral = false;
+        CTransactionRef collateralTx;
+        uint256 tmpHashBlock;
+        uint32_t nBlockHeight;
+        CBlockIndex* blockindex = nullptr;
+        if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
+            blockindex = ::ChainActive()[nBlockHeight];
+        } 
+        collateralTx = GetTransaction(blockindex, node.mempool.get(), dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+        if(collateralTx)
+            ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
+    
         UniValue walletObj(UniValue::VOBJ);
         walletObj.pushKV("hasOwnerKey", hasOwnerKey);
         walletObj.pushKV("hasOperatorKey", hasOperatorKey);
@@ -979,15 +978,12 @@ UniValue protx_list(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VARR);
 
-    LOCK(cs_main);
-
+#ifdef ENABLE_WALLET
     if (type == "wallet") {
         if (!pwallet) {
-            throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
+            throw std::runtime_error("\"protx list\" not supported when wallet is disabled");
         }
-#ifdef ENABLE_WALLET
-        LOCK(pwallet->cs_wallet);
-
+        LOCK2(pwallet->cs_wallet, cs_main);
         if (request.params.size() > 4) {
             protx_list_help(request);
         }
@@ -1021,22 +1017,25 @@ UniValue protx_list(const JSONRPCRequest& request)
         if (request.params.size() > 4) {
             protx_list_help(request);
         }
-
-        bool detailed = !request.params[2].isNull() ? request.params[2].get_bool() : false;
-
-        int height = !request.params[3].isNull() ? request.params[3].get_int() : ::ChainActive().Height();
-        if (height < 1 || height > ::ChainActive().Height()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
-        }
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListForBlock(::ChainActive()[height], mnList);
+        bool detailed = !request.params[2].isNull() ? request.params[2].get_bool() : false;
+        {
+            LOCK(cs_main);
+            int height = !request.params[3].isNull() ? request.params[3].get_int() : ::ChainActive().Height();
+            if (height < 1 || height > ::ChainActive().Height()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
+            }
+            deterministicMNManager->GetListForBlock(::ChainActive()[height], mnList);
+        }
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
             ret.push_back(BuildDMNListEntry(node, pwallet, dmn, detailed));
         });
+
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type specified");
     }
+    
 
     return ret;
 }
@@ -1075,8 +1074,9 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    LOCK(cs_main);
+    
     return BuildDMNListEntry(node, pwallet, dmn, true);
+    
 }
 
 void protx_diff_help(const JSONRPCRequest& request)
@@ -1093,13 +1093,12 @@ void protx_diff_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static uint256 ParseBlock(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+static uint256 ParseBlock(const UniValue& v, std::string strName)
 {
-    AssertLockHeld(cs_main);
-
     try {
         return ParseHashV(v, strName);
     } catch (...) {
+        LOCK(cs_main);
         int h = v.get_int();
         if (h < 1 || h > ::ChainActive().Height())
             throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
@@ -1112,8 +1111,6 @@ UniValue protx_diff(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 3) {
         protx_diff_help(request);
     }
-
-    LOCK(cs_main);
     uint256 baseBlockHash = ParseBlock(request.params[1], "baseBlock");
     uint256 blockHash = ParseBlock(request.params[2], "block");
 

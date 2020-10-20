@@ -123,6 +123,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
+        self.bump_scheduler(5)
         self.bump_mocktime(60 * 60 + 1)
         self.sync_all()
 

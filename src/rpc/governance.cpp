@@ -338,13 +338,12 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     std::string strError = "";
     bool fMissingConfirmations;
-    {
-        LOCK(cs_main);
-        if (!govobj.IsValidLocally(strError, fMissingConfirmations, true) && !fMissingConfirmations) {
-            LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
-        }
+    
+    if (!govobj.IsValidLocally(strError, fMissingConfirmations, true) && !fMissingConfirmations) {
+        LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
     }
+    
 
     // RELAY THIS OBJECT
     // Reject if rate check fails but don't update buffer
@@ -692,7 +691,7 @@ UniValue ListObjects(const std::string& strCachedSignal, const std::string& strT
 
     // GET MATCHING GOVERNANCE OBJECTS
 
-    LOCK2(cs_main, governance.cs);
+    LOCK(governance.cs);
 
     std::vector<const CGovernanceObject*> objs = governance.GetAllNewerThan(nStartTime);
     governance.UpdateLastDiffTime(GetTime());
@@ -834,7 +833,7 @@ UniValue gobject_get(const JSONRPCRequest& request)
     // COLLECT VARIABLES FROM OUR USER
     uint256 hash = ParseHashV(request.params[1], "GovObj hash");
 
-    LOCK2(cs_main, governance.cs);
+    LOCK(governance.cs);
 
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
     CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);

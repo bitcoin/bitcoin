@@ -50,7 +50,6 @@ void CDKGSessionManager::StopThreads()
 
 void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
-    AssertLockHeld(cs_main);
     CleanupCache();
 
     if (fInitialDownload)
@@ -205,10 +204,10 @@ void CDKGSessionManager::WriteVerifiedSkContribution(uint8_t llmqType, const uin
     llmqDb.Write(std::make_tuple(DB_SKCONTRIB, llmqType, hashQuorum, proTxHash), skContribution);
 }
 
-bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const uint32_t& nHeight, const uint256& hashQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet)
+bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet)
 {
     std::vector<CDeterministicMNCPtr> members;
-    CLLMQUtils::GetAllQuorumMembers(llmqType, nHeight, members);
+    CLLMQUtils::GetAllQuorumMembers(llmqType, pindexQuorum, members);
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -220,7 +219,7 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const uint32
         if (validMembers[i]) {
             BLSVerificationVectorPtr vvec;
             CBLSSecretKey skContribution;
-            if (!GetVerifiedContribution(llmqType, hashQuorum, members[i]->proTxHash, vvec, skContribution)) {
+            if (!GetVerifiedContribution(llmqType, pindexQuorum->GetBlockHash(), members[i]->proTxHash, vvec, skContribution)) {
                 return false;
             }
 

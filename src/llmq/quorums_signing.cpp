@@ -701,7 +701,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     std::vector<CRecoveredSigsListener*> listeners;
     {
-        LOCK2(cs_main, cs);
+        LOCK(cs);
         listeners = recoveredSigsListeners;
 
         auto signHash = CLLMQUtils::BuildSignHash(recoveredSig);
@@ -719,6 +719,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
                     LogPrintf("CSigningManager::%s -- conflicting recoveredSig for signHash=%s, id=%s, msgHash=%s, otherSignHash=%s\n", __func__,
                               signHash.ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), otherSignHash.ToString());
                 } else {
+                    LOCK(cs_main);
                     // Looks like we're trying to process a recSig that is already known. This might happen if the same
                     // recSig comes in through regular QRECSIG messages and at the same time through some other message
                     // which allowed to reconstruct a recSig (e.g. ISLOCK). In this case, just bail out.
@@ -726,6 +727,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
                 }
                 return;
             } else {
+                LOCK(cs_main);
                 // This case is very unlikely. It can only happen when cleanup caused this specific recSig to vanish
                 // between the HasRecoveredSigForId and GetRecoveredSigById call. If that happens, treat it as if we
                 // never had that recSig

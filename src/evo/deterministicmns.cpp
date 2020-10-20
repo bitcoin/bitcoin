@@ -622,14 +622,8 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
 
 void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
 {
-    AssertLockHeld(cs_main);
     LOCK(cs);
-
-    tipIndexHash = pindex->GetBlockHash();
-    tipIndexHeight = pindex->nHeight;
-    if(pindex->pprev) {
-        tipIndexHashPrev = pindex->pprev->GetBlockHash();
-    }
+    tipIndex = pindex;
 }
 
 bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn)
@@ -886,7 +880,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
 void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs)
 {
-    AssertLockHeld(cs_main);
     // The commitment has already been validated at this point so it's safe to use members of it
     std::vector<CDeterministicMNCPtr> members;
     llmq::CLLMQUtils::GetAllQuorumMembers(qc.llmqType, pindexQuorum, members);
@@ -924,7 +917,6 @@ void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList
 
 void CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex, CDeterministicMNList &snapshot)
 {
-    AssertLockHeld(cs_main);
     LOCK(cs);
     snapshot.clear();
     std::list<const CBlockIndex*> listDiffIndexes;
@@ -973,14 +965,14 @@ void CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex, CDeterm
         }
     }
 
-    if (!tipIndexHash.IsNull()) {
+    if (tipIndex) {
         // always keep a snapshot for the tip
-        if (snapshot.GetBlockHash() == tipIndexHash) {
+        if (snapshot.GetBlockHash() == tipIndex->GetBlockHash()) {
             mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
         } else {
             // keep snapshots for yet alive quorums
             for (auto& p_llmq : Params().GetConsensus().llmqs) {
-                if ((snapshot.GetHeight() % p_llmq.second.dkgInterval == 0) && (snapshot.GetHeight() + p_llmq.second.dkgInterval * (p_llmq.second.keepOldConnections + 1) >= tipIndexHeight)) {
+                if ((snapshot.GetHeight() % p_llmq.second.dkgInterval == 0) && (snapshot.GetHeight() + p_llmq.second.dkgInterval * (p_llmq.second.keepOldConnections + 1) >= tipIndex->nHeight)) {
                     mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
                     break;
                 }
@@ -991,15 +983,9 @@ void CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex, CDeterm
 
 void CDeterministicMNManager::GetListAtChainTip(CDeterministicMNList& result)
 {
-    LOCK2(cs_main, cs);
-    if(tipIndexHeight == 0) {
-        return;
-    }
-    auto tipIndex = ::ChainActive()[tipIndexHeight];
+    LOCK(cs);
     if(!tipIndex) {
-        return;
-    }
-    if(tipIndex->GetBlockHash() != tipIndexHash) {
+        result.clear();
         return;
     }
     GetListForBlock(tipIndex, result);
@@ -1055,7 +1041,7 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
             continue;
         }
         // no alive quorums using it, see if it was a cache for the tip or for a now outdated quorum
-        if (!tipIndexHashPrev.IsNull() && p.first == tipIndexHashPrev) {
+        if (tipIndex && tipIndex->pprev && p.first == tipIndex->pprev->GetBlockHash()) {
             toDeleteLists.emplace_back(p.first);
         } else {
             for (auto& p_llmq : Params().GetConsensus().llmqs) {

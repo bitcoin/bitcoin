@@ -343,28 +343,7 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     return true;
 }
 
-void TestTransaction(const CTransactionRef& tx, const util::Ref& context) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-    if(!fAssetIndex) { 
-        throw JSONRPCError(RPC_WALLET_ERROR, "missing-asset-index");
-    }
-    AssertLockHeld(cs_main);
-    CTxMemPool& mempool = EnsureMemPool(context);
-    TxValidationState state;
-    bool test_accept_res = AcceptToMemoryPool(mempool, state, tx,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true);
 
-    if (!test_accept_res) {
-        if (state.IsInvalid()) {
-            if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "missing-inputs");
-            } else {
-                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("%s", state.ToString()));
-            }
-        } else {
-            throw JSONRPCError(RPC_WALLET_ERROR, state.ToString());
-        }
-    }
-}
 UniValue signhash(const JSONRPCRequest& request)
 {
         RPCHelpMan{"signhash",
@@ -449,7 +428,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();          	
@@ -511,9 +490,13 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
     }
-    TestTransaction(tx, request.context);
-    mapValue_t mapValue;
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
@@ -572,7 +555,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
     CAmount nGas;
@@ -725,9 +708,13 @@ UniValue assetnew(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    TestTransaction(tx, request.context);
-    mapValue_t mapValue;
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     res.__pushKV("asset_guid", nAsset);
@@ -786,7 +773,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
     assetNewRequest.URI = request.URI;
     return assetnew(assetNewRequest);        
 }
-UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet, cs_main) {
+UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
@@ -863,9 +850,13 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
     }
-    TestTransaction(tx, context);
-    mapValue_t mapValue;
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
@@ -917,7 +908,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);    
+    LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strData = "";
@@ -1037,7 +1028,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);    
+    LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strAddress = params[1].get_str();
@@ -1101,7 +1092,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     // gather & validate inputs
     const uint32_t &nAsset = params[0].get_uint();
@@ -1237,7 +1228,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     CCoinControl coin_control;
 	// gather & validate inputs
@@ -1382,8 +1373,13 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    TestTransaction(tx, request.context);
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
@@ -1414,7 +1410,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     	
@@ -1505,9 +1501,14 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    TestTransaction(tx, request.context);
-    mapValue_t mapValue;
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
+
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
@@ -1556,7 +1557,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strAddress = params[1].get_str();
@@ -1673,9 +1674,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         return res;
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    TestTransaction(tx, request.context);
-    mapValue_t mapValue;
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;  
