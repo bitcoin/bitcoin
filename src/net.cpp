@@ -861,7 +861,7 @@ struct NodeEvictionCandidate
     CAddress addr;
     uint64_t nKeyedNetGroup;
     bool prefer_evict;
-    bool m_is_local;
+    bool m_is_onion;
 };
 
 static bool ReverseCompareNodeMinPingTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
@@ -874,9 +874,9 @@ static bool ReverseCompareNodeTimeConnected(const NodeEvictionCandidate &a, cons
     return a.nTimeConnected > b.nTimeConnected;
 }
 
-static bool CompareLocalHostTimeConnected(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
+static bool CompareOnionTimeConnected(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
-    if (a.m_is_local != b.m_is_local) return b.m_is_local;
+    if (a.m_is_onion != b.m_is_onion) return b.m_is_onion;
     return a.nTimeConnected > b.nTimeConnected;
 }
 
@@ -978,16 +978,15 @@ bool CConnman::AttemptToEvictConnection()
 
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
-    // Reserve half of these protected spots for localhost peers, even if
-    // they're not longest-uptime overall. This helps protect tor peers, which
-    // tend to be otherwise disadvantaged under our eviction criteria.
+    // Reserve half of these protected spots for tor onion peers, even if they do not have the longest
+    // uptime overall, as they tend to be otherwise disadvantaged under our eviction criteria.
     size_t initial_size = vEvictionCandidates.size();
     size_t total_protect_size = initial_size / 2;
 
-    // Pick out up to 1/4 peers that are localhost, sorted by longest uptime.
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareLocalHostTimeConnected);
-    size_t local_erase_size = total_protect_size / 2;
-    vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.end() - local_erase_size, vEvictionCandidates.end(), [](NodeEvictionCandidate const &n) { return n.m_is_local; }), vEvictionCandidates.end());
+    // Pick out up to 1/4 peers that are connected via our tor onion service, sorted by longest uptime.
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareOnionTimeConnected);
+    size_t onion_erase_size = total_protect_size / 2;
+    vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.end() - onion_erase_size, vEvictionCandidates.end(), [](NodeEvictionCandidate const &n) { return n.m_is_onion; }), vEvictionCandidates.end());
     // Calculate how many we removed, and update our total number of peers that
     // we want to protect based on uptime accordingly.
     total_protect_size -= initial_size - vEvictionCandidates.size();
