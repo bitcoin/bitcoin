@@ -90,25 +90,23 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
                 return;
             }
-        }
 
-        {
-            // Check if we already got a better one locally
-            // We do this before verifying the commitment to avoid DoS
-            LOCK(minableCommitmentsCs);
-            auto k = std::make_pair(type, qc.quorumHash);
-            auto it = minableCommitmentsByQuorum.find(k);
-            if (it != minableCommitmentsByQuorum.end()) {
-                auto jt = minableCommitments.find(it->second);
-                if (jt != minableCommitments.end()) {
-                    if (jt->second.CountSigners() <= qc.CountSigners()) {
-                        return;
+            {
+                // Check if we already got a better one locally
+                // We do this before verifying the commitment to avoid DoS
+                LOCK(minableCommitmentsCs);
+                auto k = std::make_pair(type, qc.quorumHash);
+                auto it = minableCommitmentsByQuorum.find(k);
+                if (it != minableCommitmentsByQuorum.end()) {
+                    auto jt = minableCommitments.find(it->second);
+                    if (jt != minableCommitments.end()) {
+                        if (jt->second.CountSigners() <= qc.CountSigners()) {
+                            return;
+                        }
                     }
                 }
             }
-        }
 
-        {
             LOCK(cs_main);
             CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex, members);
         }
@@ -374,9 +372,10 @@ bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& 
 
     auto key = std::make_pair(DB_MINED_COMMITMENT, std::make_pair(llmqType, quorumHash));
     bool ret = evoDb.Exists(key);
-
-    LOCK(minableCommitmentsCs);
-    hasMinedCommitmentCache.emplace(cacheKey, ret);
+    {
+        LOCK(minableCommitmentsCs);
+        hasMinedCommitmentCache.emplace(cacheKey, ret);
+    }
     return ret;
 }
 
