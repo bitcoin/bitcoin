@@ -10,6 +10,7 @@
 #include <fs.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
+#include <uint256.h>
 
 #include <atomic>
 #include <memory>
@@ -154,6 +155,9 @@ public:
 
     /** Make a DatabaseBatch connected to this database */
     virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
+
+    /** Make a new unique ID for this wallet database. For most wallets, this will be a random 20 byte id. */
+    virtual uint160 MakeNewWalletID() const;
 };
 
 /** RAII class that provides access to a DummyDatabase. Never fails. */

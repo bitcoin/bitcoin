@@ -83,6 +83,7 @@ extern const std::string VERSION;
 extern const std::string WALLETDESCRIPTOR;
 extern const std::string WALLETDESCRIPTORCKEY;
 extern const std::string WALLETDESCRIPTORKEY;
+extern const std::string WALLETID;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
 
@@ -282,6 +283,8 @@ public:
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);
+
+    bool WriteWalletID(const uint160& id);
 
     bool WriteWalletFlags(const uint64_t flags);
     //! Begin a new transaction

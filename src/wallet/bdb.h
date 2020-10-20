@@ -163,6 +163,10 @@ public:
 
     /** Make a BerkeleyBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
+
+    /** Get the database ID.
+     * For BDB, this is not a random ID, but rather the BDB Unique ID */
+    uint160 MakeNewWalletID() const override;
 };
 
 /** RAII class that provides access to a Berkeley database */

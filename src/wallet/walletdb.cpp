@@ -57,6 +57,7 @@ const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
 const std::string WALLETDESCRIPTORLHCACHE{"walletdescriptorlhcache"};
 const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
+const std::string WALLETID{"walletid"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
@@ -733,6 +734,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> hash;
             ssKey >> n;
             pwallet->LockCoin(COutPoint(hash, n));
+        } else if (strType == DBKeys::WALLETID) {
+            uint160 wallet_id;
+            ssValue >> wallet_id;
+            pwallet->LoadWalletID(wallet_id);
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS &&
@@ -959,6 +964,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
     }
 
+    // Make sure there is a wallet id
+    pwallet->EnsureWalletIDWithDB(*this);
+
     return result;
 }
 
@@ -1136,6 +1144,11 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
     }
     m_batch->CloseCursor();
     return true;
+}
+
+bool WalletBatch::WriteWalletID(const uint160& id)
+{
+    return WriteIC(DBKeys::WALLETID, id);
 }
 
 bool WalletBatch::TxnBegin()

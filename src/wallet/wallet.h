@@ -341,6 +341,8 @@ private:
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
     std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
 
+    uint160 wallet_id;
+
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
      * block locator and m_last_block_processed, and registering for
@@ -933,6 +935,13 @@ public:
     //! Adds the ScriptPubKeyMans given in MigrationData to this wallet, removes LegacyScriptPubKeyMan,
     //! and where needed, moves tx and address book entries to watchonly_wallet or solvable_wallet
     bool ApplyMigrationData(MigrationData& data, bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Set the wallet ID
+    void LoadWalletID(const uint160& id);
+    //! Get the wallet iD
+    const uint160& GetWalletID() const;
+    //! Ensure that a wallet ID already exists. If one does not, add it.
+    void EnsureWalletIDWithDB(WalletBatch& batch);
 };
 
 /**

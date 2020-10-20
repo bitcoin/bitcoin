@@ -4131,4 +4131,24 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     }
     return res;
 }
+
+void CWallet::LoadWalletID(const uint160& id)
+{
+    assert(wallet_id.IsNull());
+    wallet_id = id;
+}
+
+const uint160& CWallet::GetWalletID() const
+{
+    assert(!wallet_id.IsNull());
+    return wallet_id;
+}
+
+void CWallet::EnsureWalletIDWithDB(WalletBatch& batch)
+{
+    if (!wallet_id.IsNull()) return;
+
+    wallet_id = GetDatabase().MakeNewWalletID();
+    batch.WriteWalletID(wallet_id);
+}
 } // namespace wallet

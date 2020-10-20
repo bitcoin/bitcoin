@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <fs.h>
 #include <logging.h>
+#include <random.h>
 #include <util/system.h>
 #include <wallet/db.h>
 
@@ -147,4 +148,12 @@ void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)
     options.max_log_mb = args.GetIntArg("-dblogsize", options.max_log_mb);
 }
 
+
+uint160 WalletDatabase::MakeNewWalletID() const
+{
+    // Generate a random ID
+    uint160 id;
+    GetStrongRandBytes(id);
+    return id;
+}
 } // namespace wallet
