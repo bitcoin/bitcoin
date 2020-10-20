@@ -332,7 +332,7 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
 }
 
 CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator, int check_ratio)
-    : m_check_ratio(check_ratio), nTransactionsUpdated(0), minerPolicyEstimator(estimator), m_epoch(0), m_has_epoch_guard(false)
+    : m_check_ratio(check_ratio), minerPolicyEstimator(estimator)
 {
     _clear(); //lock free clear
 }
