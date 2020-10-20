@@ -26,7 +26,7 @@ information or see https://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The `Bitcoin opensouce` branch is regularly built and tested, but is not guaranteed to be
+The `Bitcoin opensouce`  on the AnniMaster branch is regularly built and tested, but is not guaranteed to be
 completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
 regularly to indicate new official, stable release versions of Bitcoin Core.
 
