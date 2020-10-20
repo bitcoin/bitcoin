@@ -488,7 +488,7 @@ public:
 class CTxMemPool
 {
 private:
-    uint32_t m_check_ratio GUARDED_BY(cs); //!< Value n means that 1 times in n we check.
+    const int m_check_ratio; //!< Value n means that 1 times in n we check.
     std::atomic<unsigned int> nTransactionsUpdated; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator;
 
@@ -601,8 +601,14 @@ public:
     std::map<uint256, CAmount> mapDeltas;
 
     /** Create a new CTxMemPool.
+     * Sanity checks will be off by default for performance, because otherwise
+     * accepting transactions becomes O(N^2) where N is the number of transactions
+     * in the pool.
+     *
+     * @param[in] estimator is used to estimate appropriate transaction fees.
+     * @param[in] check_ratio is the ratio used to determine how often sanity checks will run.
      */
-    explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
+    explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr, int check_ratio = 0);
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -611,7 +617,6 @@ public:
      * check does nothing.
      */
     void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(int check_ratio = 0) { LOCK(cs); m_check_ratio = check_ratio; }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
