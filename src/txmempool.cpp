@@ -339,7 +339,7 @@ CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator)
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
     // of transactions in the pool
-    nCheckFrequency = 0;
+    m_check_ratio = 0;
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -523,7 +523,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
                 if (it2 != mapTx.end())
                     continue;
                 const Coin &coin = pcoins->AccessCoin(txin.prevout);
-                if (nCheckFrequency != 0) assert(!coin.IsSpent());
+                if (m_check_ratio != 0) assert(!coin.IsSpent());
                 if (coin.IsSpent() || (coin.IsCoinBase() && ((signed long)nMemPoolHeight) - coin.nHeight < COINBASE_MATURITY)) {
                     txToRemove.insert(it);
                     break;
@@ -620,11 +620,9 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 {
     LOCK(cs);
-    if (nCheckFrequency == 0)
-        return;
+    if (m_check_ratio == 0) return;
 
-    if (GetRand(std::numeric_limits<uint32_t>::max()) >= nCheckFrequency)
-        return;
+    if (GetRand(m_check_ratio) >= 1) return;
 
     LogPrint(BCLog::MEMPOOL, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 

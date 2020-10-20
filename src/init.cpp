@@ -1394,10 +1394,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     assert(!node.mempool);
     node.mempool = MakeUnique<CTxMemPool>(&::feeEstimator);
     if (node.mempool) {
-        int ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
-        if (ratio != 0) {
-            node.mempool->setSanityCheck(1.0 / ratio);
-        }
+        int check_ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+        node.mempool->setSanityCheck(check_ratio);
     }
 
     assert(!node.chainman);
