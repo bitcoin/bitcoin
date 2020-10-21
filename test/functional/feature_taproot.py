@@ -1200,7 +1200,7 @@ class TaprootTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         # Node 0 has Taproot inactive, Node 1 active.
-        self.extra_args = [["-whitelist=127.0.0.1", "-par=1", "-vbparams=taproot:1:1"], ["-whitelist=127.0.0.1", "-par=1"]]
+        self.extra_args = [["-par=1", "-vbparams=taproot:1:1"], ["-par=1"]]
 
     def block_submit(self, node, txs, msg, err_msg, cb_pubkey=None, fees=0, sigops_weight=0, witness=False, accept=False):
 
@@ -1437,8 +1437,6 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("  - Done")
 
     def run_test(self):
-        self.connect_nodes(0, 1)
-
         # Post-taproot activation tests go first (pre-taproot tests' blocks are invalid post-taproot).
         self.log.info("Post-activation tests...")
         self.nodes[1].generate(101)

@@ -10,7 +10,6 @@ import csv
 import hashlib
 import os
 import random
-import sys
 import unittest
 
 from .util import modinv
@@ -22,6 +21,7 @@ def TaggedHash(tag, data):
     return hashlib.sha256(ss).digest()
 
 def xor_bytes(b0, b1):
+    assert len(b0) == len(b1)
     return bytes(x ^ y for (x, y) in zip(b0, b1))
 
 def jacobi_symbol(n, k):
@@ -523,7 +523,8 @@ class TestFrameworkKey(unittest.TestCase):
     def test_schnorr_testvectors(self):
         """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
         num_tests = 0
-        with open(os.path.join(sys.path[0], 'test_framework', 'bip340_test_vectors.csv'), newline='', encoding='utf8') as csvfile:
+        vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bip340_test_vectors.csv')
+        with open(vectors_file, newline='', encoding='utf8') as csvfile:
             reader = csv.reader(csvfile)
             next(reader)
             for row in reader:
