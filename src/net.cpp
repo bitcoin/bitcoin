@@ -555,7 +555,7 @@ void CNode::SetAddrLocal(const CService& addrLocalIn) {
 
 Network CNode::ConnectedThroughNetwork() const
 {
-    return IsInboundConn() && m_inbound_onion ? NET_ONION : addr.GetNetClass();
+    return m_inbound_onion ? NET_ONION : addr.GetNetClass();
 }
 
 #undef X
@@ -2954,6 +2954,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
       nMyStartingHeight(nMyStartingHeightIn),
       m_inbound_onion(inbound_onion)
 {
+    if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     hashContinue = uint256();
