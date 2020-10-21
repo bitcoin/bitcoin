@@ -1161,7 +1161,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     }
 }
 
-void CWallet::blockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted, int height)
+void CWallet::blockConnected(const CBlock& block, int height)
 {
     const uint256& block_hash = block.GetHash();
     auto locked_chain = chain().lock();
@@ -1172,9 +1172,6 @@ void CWallet::blockConnected(const CBlock& block, const std::vector<CTransaction
     for (size_t index = 0; index < block.vtx.size(); index++) {
         SyncTransaction(block.vtx[index], {CWalletTx::Status::CONFIRMED, height, block_hash, (int)index});
         transactionRemovedFromMempool(block.vtx[index], MemPoolRemovalReason::BLOCK);
-    }
-    for (const CTransactionRef& ptx : vtxConflicted) {
-        transactionRemovedFromMempool(ptx);
     }
 }
 

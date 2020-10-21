@@ -889,7 +889,7 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     void LoadToWallet(CWalletTx& wtxIn) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
-    void blockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted, int height) override;
+    void blockConnected(const CBlock& block, int height) override;
     void blockDisconnected(const CBlock& block, int height) override;
     void updatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);

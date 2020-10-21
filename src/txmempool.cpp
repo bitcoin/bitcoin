@@ -20,6 +20,8 @@
 #include <validationinterface.h>
 #include <script/sign.h>
 
+#include <omnicore/omnicore.h> // RemoveFromMarkerCache
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -406,14 +408,17 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
-    CTransactionRef ptx = it->GetSharedTx();
-    NotifyEntryRemoved(ptx, reason);
     if (reason != MemPoolRemovalReason::BLOCK) {
         // Notify clients that a transaction has been removed from the mempool
         // for any reason except being included in a block. Clients interested
         // in transactions included in blocks can subscribe to the BlockConnected
         // notification.
         GetMainSignals().TransactionRemovedFromMempool(it->GetSharedTx(), reason);
+
+        if (reason == MemPoolRemovalReason::CONFLICT) {
+            // Remove TXs that conflict with TX added in new block from marker cache
+            RemoveFromMarkerCache(it->GetSharedTx()->GetHash());
+        }
     }
 
     const uint256 hash = it->GetTx().GetHash();
