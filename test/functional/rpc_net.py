@@ -59,6 +59,7 @@ class NetTest(DashTestFramework):
         self.log.info('Connect nodes both way')
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
+        self.sync_all()
 
         self._test_connection_count()
         self._test_getnettotals()
