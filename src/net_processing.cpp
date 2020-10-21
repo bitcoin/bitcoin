@@ -4933,8 +4933,8 @@ bool PeerManager::SendMessages(CNode* pto)
         }
         for (const GenTxid& gtxid : requestable) {
             if (!AlreadyHaveTx(gtxid, m_mempool)) {
-                LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
-                    gtxid.GetHash().ToString(), pto->GetId());
+                LogPrint(BCLog::NET, "Requesting %s %s peer=%d, type=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
+                    gtxid.GetHash().ToString(), pto->GetId(), gtxid.GetType());
                 // SYSCOIN
                 uint32_t nType = gtxid.GetType();
                 if(nType == MSG_TX) {

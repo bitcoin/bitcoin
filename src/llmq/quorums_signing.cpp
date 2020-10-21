@@ -468,7 +468,7 @@ void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand
 
 void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig)
 {
-    const uint256& hash = ::SerializeHash(recoveredSig);
+    const uint256& hash = recoveredSig.GetHash();
     {
         LOCK(cs_main);
         pfrom->AddKnownTx(hash);
@@ -488,7 +488,7 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
 
     // It's important to only skip seen *valid* sig shares here. See comment for CBatchedSigShare
     // We don't receive recovered sigs in batches, but we do batched verification per node on these
-    if (db.HasRecoveredSigForHash(recoveredSig.GetHash())) {
+    if (db.HasRecoveredSigForHash(hash)) {
         {
             LOCK(cs_main);
             peerman.ForgetTxHash(pfrom->GetId(), hash);

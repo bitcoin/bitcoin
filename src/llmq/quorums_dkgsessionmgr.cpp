@@ -90,7 +90,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     // peek into the message and see which uint8_t it is. First byte of all messages is always the uint8_t
     uint8_t llmqType = *vRecv.begin();
     if (!dkgSessionHandlers.count(llmqType)) {
-        Misbehaving(pfrom->GetId(), 100, "DKG session invalid LLMQ typ");
+        Misbehaving(pfrom->GetId(), 100, "DKG session invalid LLMQ type");
         return;
     }
 
