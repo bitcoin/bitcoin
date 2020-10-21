@@ -1167,7 +1167,7 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_comitments, timeout=timeout)
 
-    def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None):
+    def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None, bumptime=1):
         if expected_members is None:
             expected_members = self.llmq_size
         if expected_contributions is None:
@@ -1186,7 +1186,7 @@ class DashTestFramework(SyscoinTestFramework):
         quorums = self.nodes[0].quorum("list")
         def timeout_func():
             self.bump_scheduler(5)
-            self.bump_mocktime(15)
+            self.bump_mocktime(bumptime)
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
