@@ -17,7 +17,7 @@ only succeeds past a given node once its nMinimumChainWork has been exceeded.
 
 import time
 
-from test_framework.test_framework import SYscoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
 # 2 hashes required per regtest block (with no difficulty adjustment)
