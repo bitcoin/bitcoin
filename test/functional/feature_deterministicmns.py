@@ -9,7 +9,7 @@
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
 from test_framework.messages import CTransaction, ToHex, FromHex, CCbTx, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import connect_nodes, p2p_port, Decimal, force_finish_mnsync, assert_equal, hex_str_to_bytes
+from test_framework.util import p2p_port, Decimal, force_finish_mnsync, assert_equal, hex_str_to_bytes
 class Masternode(object):
     pass
 
@@ -33,7 +33,7 @@ class DIP3Test(SyscoinTestFramework):
         self.start_node(0, extra_args=self.extra_args)
         for i in range(1, self.num_nodes):
             if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None:
-                connect_nodes(self.nodes[i], 0)
+                self.connect_nodes(self.nodes[i], 0)
 
     def stop_controller_node(self):
         self.log.info("stopping controller node")
@@ -271,7 +271,7 @@ class DIP3Test(SyscoinTestFramework):
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         force_finish_mnsync(self.nodes[mn.idx])
         mn.node = self.nodes[mn.idx]
-        connect_nodes(mn.node, 0)
+        self.connect_nodes(mn.node, 0)
         self.sync_all()
 
     def spend_mn_collateral(self, mn, with_dummy_input_output=False):

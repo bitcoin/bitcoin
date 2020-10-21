@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, disconnect_nodes, connect_nodes
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class AssetReOrgTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -17,8 +17,8 @@ class AssetReOrgTest(SyscoinTestFramework):
         self.sync_blocks()
         self.nodes[2].generate(200)
         self.sync_blocks()
-        disconnect_nodes(self.nodes[0], 1)
-        disconnect_nodes(self.nodes[0], 2)
+        self.disconnect_nodes(self.nodes[0], 1)
+        self.disconnect_nodes(self.nodes[0], 2)
         self.basic_asset()
         # create fork
         self.nodes[0].generate(11)
@@ -30,8 +30,8 @@ class AssetReOrgTest(SyscoinTestFramework):
         # still won't exist on node 0 yet
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
         # connect and sync to longest chain now which does not include the asset
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(self.nodes[0], 2)
         self.sync_blocks()
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[1].assetinfo, self.asset)

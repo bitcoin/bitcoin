@@ -6,7 +6,6 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import connect_nodes
 
 '''
 llmq-signing.py
@@ -111,7 +110,7 @@ class LLMQSigningTest(DashTestFramework):
         assert_sigs_nochange(False, False, False, 3)
         # Need to re-connect so that it later gets the recovered sig
         mn.node.setnetworkactive(True)
-        connect_nodes(mn.node, 0)
+        self.connect_nodes(mn.node, 0)
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
