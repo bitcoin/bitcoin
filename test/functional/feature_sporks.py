@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import connect_nodes, force_finish_mnsync
+from test_framework.util import force_finish_mnsync
 
 '''
 '''
@@ -16,7 +16,7 @@ class SporkTest(DashTestFramework):
     def setup_network(self):
         self.setup_nodes()
         # connect only 2 first nodes at start
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(self.nodes[0], 1)
 
     def get_test_spork_state(self, node):
         info = node.spork('active')
@@ -49,7 +49,7 @@ class SporkTest(DashTestFramework):
         self.stop_node(1)
         self.start_node(0)
         self.start_node(1)
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(self.nodes[0], 1)
         assert(self.get_test_spork_state(self.nodes[0]))
         assert(self.get_test_spork_state(self.nodes[1]))
 
@@ -57,7 +57,7 @@ class SporkTest(DashTestFramework):
         self.nodes[1].generate(1)
 
         # connect new node and check spork propagation after restoring from cache
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(self.nodes[1], 2)
         time.sleep(0.1)
         self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=12)
 

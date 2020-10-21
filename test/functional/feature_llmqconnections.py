@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_greater_than_or_equal, connect_nodes, time
+from test_framework.util import assert_greater_than_or_equal, time
 
 '''
 llmq-connections.py
@@ -82,7 +82,7 @@ class LLMQConnections(DashTestFramework):
 
         # Also re-connect non-masternode connections
         for i in range(1, len(self.nodes)):
-            connect_nodes(self.nodes[i], 0)
+            self.connect_nodes(self.nodes[i], 0)
             self.nodes[i].ping()
         # wait for ping/pong so that we can be sure that spork propagation works
         time.sleep(1) # needed to make sure we don't check before the ping is actually sent (fPingQueued might be true but SendMessages still not called)
