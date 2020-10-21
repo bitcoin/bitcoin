@@ -16,19 +16,22 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [['-keypool=100']]
+        self.wallet_names = []
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
         self.skip_if_no_sqlite()
 
     def run_test(self):
+        # Make a legacy wallet and check it is BDB
+        self.nodes[0].createwallet(wallet_name="legacy1", descriptors=False)
         wallet_info = self.nodes[0].getwalletinfo()
         assert_equal(wallet_info['format'], 'bdb')
+        self.nodes[0].unloadwallet("legacy1")
 
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
         self.nodes[0].createwallet(wallet_name="desc1", descriptors=True)
-        self.nodes[0].unloadwallet(self.default_wallet_name)
 
         # A descriptor wallet should have 100 addresses * 3 types = 300 keys
         self.log.info("Checking wallet info")
