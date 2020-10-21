@@ -53,7 +53,7 @@ submit new unit tests for old code. Unit tests can be compiled and run
 and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
 
 There are also [regression and integration tests](/test), written
-in Python, that are run automatically on the build server.
+in Python.
 These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
 
 The [Travis CI system](https://travis-ci.org/) makes sure that every pull request is built for Windows, Linux, and macOS, and that unit/sanity tests are run automatically.
