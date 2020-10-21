@@ -151,7 +151,12 @@ class CNetAddr
 
         bool SetInternal(const std::string& name);
 
-        bool SetSpecial(const std::string &strName); // for Tor addresses
+        /**
+         * Parse a Tor or I2P address and set this object to it.
+         * @returns whether or not the operation was successful.
+         * @see CNetAddr::IsTor(), CNetAddr::IsI2P()
+         */
+        bool SetSpecial(const std::string& name);
         bool IsBindAny() const; // INADDR_ANY equivalent
         bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
         bool IsIPv6() const;    // IPv6 address (not mapped IPv4, not Tor)
@@ -248,6 +253,20 @@ class CNetAddr
         friend class CSubNet;
 
     private:
+        /**
+         * Parse a Tor address and set this object to it.
+         * @returns Whether or not the operation was successful.
+         * @see CNetAddr::IsTor()
+         */
+        bool SetTor(const std::string& name);
+
+        /**
+         * Parse an I2P address and set this object to it.
+         * @returns Whether or not the operation was successful.
+         * @see CNetAddr::IsI2P()
+         */
+        bool SetI2P(const std::string& name);
+
         /**
          * BIP155 network ids recognized by this software.
          */

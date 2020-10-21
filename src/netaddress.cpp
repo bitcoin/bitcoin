@@ -221,14 +221,18 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
 }; // namespace torv3
 
-/**
- * Parse a TOR address and set this object to it.
- *
- * @returns Whether or not the operation was successful.
- *
- * @see CNetAddr::IsTor()
- */
-bool CNetAddr::SetSpecial(const std::string& str)
+bool CNetAddr::SetSpecial(const std::string& name)
+{
+    if (SetTor(name)) {
+        return true;
+    }
+    if (SetI2P(name)) {
+        return true;
+    }
+    return false;
+}
+
+bool CNetAddr::SetTor(const std::string& str)
 {
     static const char* suffix{".onion"};
     static constexpr size_t suffix_len{6};
@@ -269,6 +273,30 @@ bool CNetAddr::SetSpecial(const std::string& str)
     }
 
     return false;
+}
+
+bool CNetAddr::SetI2P(const std::string& str)
+{
+    static const char* suffix{".b32.i2p"};
+    static constexpr size_t suffix_len{8};
+
+    if (!ValidAsCString(str) || str.size() <= suffix_len ||
+        str.substr(str.size() - suffix_len) != suffix) {
+        return false;
+    }
+
+    bool invalid;
+    const auto& input =
+        DecodeBase32(str.substr(0, str.size() - suffix_len).c_str(), &invalid, false);
+
+    if (invalid || input.size() != ADDR_I2P_SIZE) {
+        return false;
+    }
+
+    m_net = NET_I2P;
+    m_addr.assign(input.begin(), input.end());
+
+    return true;
 }
 
 CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
