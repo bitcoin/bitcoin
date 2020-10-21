@@ -118,14 +118,10 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     }
     SOCKET hSocket = CreateSocket(activeMasternodeInfo.service);
     if (hSocket == INVALID_SOCKET) {
-        UninterruptibleSleep(std::chrono::milliseconds{1000});
-        hSocket = CreateSocket(activeMasternodeInfo.service);
-        if (hSocket == INVALID_SOCKET) {
-            state = MASTERNODE_ERROR;
-            strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
-            LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
-            return;
-        }
+        state = MASTERNODE_ERROR;
+        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+        return;
     }
     bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
