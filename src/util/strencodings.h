@@ -50,8 +50,26 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid = nullpt
 std::string DecodeBase64(const std::string& str, bool* pf_invalid = nullptr);
 std::string EncodeBase64(Span<const unsigned char> input);
 std::string EncodeBase64(const std::string& str);
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid = nullptr);
-std::string DecodeBase32(const std::string& str, bool* pf_invalid = nullptr);
+
+/**
+ * Base32 decode.
+ * If `allow_nopad` is true, then the input is allowed to have length that is not
+ * a multiple of 8 and is assumed to have been padded with `=` up to a multiple
+ * of 8.
+ */
+std::vector<unsigned char> DecodeBase32(const char* p,
+                                        bool* pf_invalid = nullptr,
+                                        bool require_padding = true);
+
+/**
+ * Base32 decode.
+ * If `allow_nopad` is true, then the input is allowed to have length that is not
+ * a multiple of 8 and is assumed to have been padded with `=` up to a multiple
+ * of 8.
+ */
+std::string DecodeBase32(const std::string& str,
+                         bool* pf_invalid = nullptr,
+                         bool require_padding = true);
 
 /**
  * Base32 encode.

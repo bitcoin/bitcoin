@@ -221,7 +221,7 @@ std::string EncodeBase32(const std::string& str, bool pad)
     return EncodeBase32(MakeUCharSpan(str), pad);
 }
 
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid, bool require_padding)
 {
     static const int decode32_table[256] =
     {
@@ -262,13 +262,14 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
         }
         ++p;
     }
-    valid = valid && (p - e) % 8 == 0 && p - q < 8;
+    const bool pad_ok = (p - e) % 8 == 0 || !require_padding;
+    valid = valid && pad_ok && p - q < 8;
     if (pf_invalid) *pf_invalid = !valid;
 
     return ret;
 }
 
-std::string DecodeBase32(const std::string& str, bool* pf_invalid)
+std::string DecodeBase32(const std::string& str, bool* pf_invalid, bool require_padding)
 {
     if (!ValidAsCString(str)) {
         if (pf_invalid) {
@@ -276,7 +277,7 @@ std::string DecodeBase32(const std::string& str, bool* pf_invalid)
         }
         return {};
     }
-    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
+    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid, require_padding);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
