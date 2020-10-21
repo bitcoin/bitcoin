@@ -42,7 +42,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
     // define text to place
     QString titleText       = PACKAGE_NAME;
-    QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
+    QString versionText     = QString("%1").arg(QString::fromStdString(OmniCoreVersion()));
     QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
             copyrightText  += QString::fromUtf8("\n\xc2\xA9 2013-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Omni Core developers"));
     QString titleAddText    = networkStyle->getTitleAddText();
