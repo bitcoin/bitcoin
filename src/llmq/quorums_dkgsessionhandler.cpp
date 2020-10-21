@@ -47,12 +47,12 @@ void CDKGPendingMessages::PushPendingMessage(CNode* pfrom, CDataStream& vRecv)
     
     if (!seenMessages.emplace(hash).second) {
         if(pfrom)
-            peerman.ForgetTxHash(pfrom->GetId(), hash);
+            peerman.ForgetTxHash(from, hash);
         LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- already seen %s, peer=%d\n", __func__, hash.ToString(), from);
         return;
     }
     if(pfrom)
-        peerman.ForgetTxHash(pfrom->GetId(), hash);
+        peerman.ForgetTxHash(from, hash);
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
 }
 
