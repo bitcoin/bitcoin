@@ -50,11 +50,11 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.stop_node(mn.node.index)
             time.sleep(0.5)
             self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-listen=0"])
-            self.connect_nodes(mn.node, 0)
+            self.connect_nodes(mn.node.index, 0)
             # Make sure the to-be-banned node is still connected well via outbound connections
             for mn2 in self.mninfo:
                 if mn2 is not mn:
-                    self.connect_nodes(mn.node, mn2.node.index)
+                    self.connect_nodes(mn.node.index, mn2.node.index)
             self.reset_probe_timeouts()
         self.test_banning(close_mn_port, False)
 
@@ -65,7 +65,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.stop_node(mn.node.index)
             time.sleep(0.5)
             self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
-            self.connect_nodes(mn.node, 0)
+            self.connect_nodes(mn.node.index, 0)
             self.reset_probe_timeouts()
         self.test_banning(force_old_mn_proto, False)
 
@@ -110,7 +110,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime)])
                 else:
                     mn.node.setnetworkactive(True)
-            self.connect_nodes(mn.node, 0)
+            self.connect_nodes(mn.node.index, 0)
         self.sync_all()
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
@@ -119,7 +119,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
-            self.connect_nodes(mn.node, 0)
+            self.connect_nodes(mn.node.index, 0)
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
