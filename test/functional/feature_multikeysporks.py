@@ -78,7 +78,7 @@ class MultiKeySporkTest(DashTestFramework):
         # connect nodes at start
         for i in range(0, 5):
             for j in range(i, 5):
-                self.connect_nodes(self.nodes[i], j)
+                self.connect_nodes(i, j)
 
     def get_test_spork_value(self, node):
         info = node.spork('show')

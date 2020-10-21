@@ -881,7 +881,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.add_nodes(1, extra_args=[self.extra_args[idx]])
         self.start_node(idx)
         for i in range(0, idx):
-            self.connect_nodes(self.nodes[i], idx)
+            self.connect_nodes(i, idx)
 
     def prepare_masternodes(self):
         self.log.info("Preparing %d masternodes" % self.mn_count)
@@ -954,7 +954,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
-            self.connect_nodes(self.mninfo[idx].node, 0)
+            self.connect_nodes(self.mninfo[idx].node.index, 0)
 
 
         # start up nodes in parallel
@@ -1005,7 +1005,7 @@ class DashTestFramework(SyscoinTestFramework):
         # non-masternodes where disconnected from the control node during prepare_datadirs,
         # let's reconnect them back to make sure they receive updates
         for i in range(0, num_simple_nodes):
-            self.connect_nodes(self.nodes[i+1], 0)
+            self.connect_nodes(i+1, 0)
 
         self.bump_mocktime(1)
         self.nodes[0].generate(1)
