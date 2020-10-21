@@ -322,6 +322,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsTor());
 
+    BOOST_CHECK(!addr.IsI2P());
     BOOST_CHECK(!addr.IsBindAny());
     BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
@@ -332,6 +333,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsTor());
 
+    BOOST_CHECK(!addr.IsI2P());
     BOOST_CHECK(!addr.IsBindAny());
     BOOST_CHECK(!addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), torv3_addr);
@@ -351,6 +353,35 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
 
     // TOR, invalid base32
     BOOST_CHECK(!addr.SetSpecial(std::string{"mf*g zak.onion"}));
+
+    // I2P
+    const char* i2p_addr = "UDHDrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.I2P";
+    BOOST_REQUIRE(addr.SetSpecial(i2p_addr));
+    BOOST_REQUIRE(addr.IsValid());
+    BOOST_REQUIRE(addr.IsI2P());
+
+    BOOST_CHECK(!addr.IsTor());
+    BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), ToLower(i2p_addr));
+
+    // I2P, correct length, but decodes to less than the expected number of bytes.
+    BOOST_CHECK(!addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jn=.b32.i2p"));
+
+    // I2P, extra unnecessary padding
+    BOOST_CHECK(!addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna=.b32.i2p"));
+
+    // I2P, malicious
+    BOOST_CHECK(!addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v\0wtf.b32.i2p"s));
+
+    // I2P, valid but unsupported (56 Base32 characters)
+    // See "Encrypted LS with Base 32 Addresses" in
+    // https://geti2p.net/spec/encryptedleaseset.txt
+    BOOST_CHECK(
+        !addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscsad.b32.i2p"));
+
+    // I2P, invalid base32
+    BOOST_CHECK(!addr.SetSpecial(std::string{"tp*szydbh4dp.b32.i2p"}));
 
     // Internal
     addr.SetInternal("esffpp");
