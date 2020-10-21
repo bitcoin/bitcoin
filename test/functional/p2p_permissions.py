@@ -22,7 +22,6 @@ from test_framework.test_node import ErrorMatch
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    connect_nodes,
     p2p_port,
 )
 
@@ -146,7 +145,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
 
         self.log.debug("Check that node[1] will send the tx to node[0] even though it is already in the mempool")
-        connect_nodes(self.nodes[1], 0)
+        self.connect_nodes(1, 0)
         with self.nodes[1].assert_debug_log(["Force relaying tx {} from peer=0".format(txid)]):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
             self.wait_until(lambda: txid in self.nodes[0].getrawmempool())
@@ -165,7 +164,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         if whitelisted is not None:
             args = [*args, '-deprecatedrpc=whitelisted']
         self.restart_node(1, args)
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
         if whitelisted is None:
             assert 'whitelisted' not in peerinfo

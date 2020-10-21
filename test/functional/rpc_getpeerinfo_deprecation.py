@@ -5,7 +5,6 @@
 """Test deprecation of getpeerinfo RPC fields."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import connect_nodes
 
 
 class GetpeerinfoDeprecationTest(BitcoinTestFramework):
@@ -26,7 +25,7 @@ class GetpeerinfoDeprecationTest(BitcoinTestFramework):
 
     def test_addnode_deprecation(self):
         self.restart_node(1, ["-deprecatedrpc=getpeerinfo_addnode"])
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
 
         self.log.info("Test getpeerinfo by default no longer returns an addnode field")
         assert "addnode" not in self.nodes[0].getpeerinfo()[0].keys()
