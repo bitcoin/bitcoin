@@ -457,12 +457,13 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-maxtimeadjustment", strprintf("Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)", DEFAULT_MAX_TIME_ADJUSTMENT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxuploadtarget=<n>", strprintf("Tries to keep outbound traffic under the given target (in MiB per 24h). Limit does not apply to peers with 'download' permission. 0 = no limit (default: %d)", DEFAULT_MAX_UPLOAD_TARGET), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-onion=<ip:port>", "Use separate SOCKS5 proxy to reach peers via Tor onion services, set -noonion to disable (default: -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-i2pproxy=<ip:port>", "SOCKS5 proxy to reach I2P peers (default: none, I2P peers are not reachable)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-onlynet=<net>", "Make outgoing connections only through network <net> (ipv4, ipv6 or onion). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerbloomfilters", strprintf("Support filtering of blocks and transaction with bloom filters (default: %u)", DEFAULT_PEERBLOOMFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerblockfilters", strprintf("Serve compact block filters to peers per BIP 157 (default: %u)", DEFAULT_PEERBLOCKFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-permitbaremultisig", strprintf("Relay non-P2SH multisig (default: %u)", DEFAULT_PERMIT_BAREMULTISIG), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-port=<port>", strprintf("Listen for connections on <port> (default: %u, testnet: %u signet: %u, regtest: %u)", defaultChainParams->GetDefaultPort(), testnetChainParams->GetDefaultPort(), signetChainParams->GetDefaultPort(), regtestChainParams->GetDefaultPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-proxy=<ip:port>", "Connect through SOCKS5 proxy, set -noproxy to disable (default: disabled)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-proxy=<ip:port>", "Make outbound connections to IPv4, IPv6 and Tor networks through SOCKS5 proxy, set -noproxy to disable (default: disabled)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-proxyrandomize", strprintf("Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)", DEFAULT_PROXYRANDOMIZE), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-seednode=<ip>", "Connect to a node to retrieve peer addresses, and disconnect. This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-networkactive", "Enable all P2P network activity (default: 1). Can be changed by the setnetworkactive RPC command", ArgsManager::ALLOW_BOOL, OptionsCategory::CONNECTION);
@@ -1478,6 +1479,26 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
             SetProxy(NET_ONION, addrOnion);
             SetReachable(NET_ONION, true);
         }
+    }
+
+    const std::string& i2p_proxy_arg = args.GetArg("-i2pproxy", "");
+    if (!i2p_proxy_arg.empty()) {
+        CService i2p_proxy;
+        constexpr uint16_t dummy_port{0};
+        if (!Lookup(i2p_proxy_arg, i2p_proxy, dummy_port, fNameLookup)) {
+            return InitError(strprintf(_("Invalid -i2pproxy=%s: lookup failure"), i2p_proxy_arg));
+        }
+        if (!i2p_proxy.IsValid()) {
+            return InitError(
+                strprintf(_("Invalid -i2pproxy=%s: lookup returned invalid address: %s"),
+                          i2p_proxy_arg, i2p_proxy.ToString()));
+        }
+        if (i2p_proxy.GetPort() == dummy_port) {
+            return InitError(
+                strprintf(_("Invalid -i2pproxy=%s: must contain a port"), i2p_proxy_arg));
+        }
+        SetProxy(NET_I2P, proxyType{i2p_proxy, proxyRandomize});
+        SetReachable(NET_I2P, true);
     }
 
     // see Step 2: parameter interactions for more information about these
