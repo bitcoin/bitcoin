@@ -107,6 +107,22 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK_EQUAL(solutions.size(), 1U);
     BOOST_CHECK(solutions[0] == ToByteVector(scriptHash));
 
+    // TxoutType::WITNESS_V1_TAPROOT
+    s.clear();
+    s << OP_1 << ToByteVector(uint256::ZERO);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_V1_TAPROOT);
+    BOOST_CHECK_EQUAL(solutions.size(), 2U);
+    BOOST_CHECK(solutions[0] == std::vector<unsigned char>{1});
+    BOOST_CHECK(solutions[1] == ToByteVector(uint256::ZERO));
+
+    // TxoutType::WITNESS_UNKNOWN
+    s.clear();
+    s << OP_16 << ToByteVector(uint256::ONE);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+    BOOST_CHECK_EQUAL(solutions.size(), 2U);
+    BOOST_CHECK(solutions[0] == std::vector<unsigned char>{16});
+    BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
+
     // TxoutType::NONSTANDARD
     s.clear();
     s << OP_9 << OP_ADD << OP_11 << OP_EQUAL;
