@@ -46,6 +46,8 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "omnicore/dbtxlist -> omnicore/dex -> omnicore/rules -> omnicore/dbtxlist"
     "omnicore/dex -> omnicore/omnicore -> omnicore/persistence -> omnicore/dex"
     "omnicore/omnicore -> omnicore/tx -> omnicore/sto -> omnicore/omnicore"
+    "init -> txmempool -> omnicore/omnicore -> init"
+    "omnicore/omnicore -> omnicore/pending -> txmempool -> omnicore/omnicore"
     "txdb -> validation -> txdb"
 )
 
