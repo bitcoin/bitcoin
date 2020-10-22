@@ -5,6 +5,7 @@ $(package)_download_path=https://github.com/syscoin/bls-signatures/archive
 $(package)_file_name=$($(package)_version).tar.gz
 $(package)_sha256_hash=162a2ba80aa61fbcdd0709240e41e19027881843ee581ced8908658ab68f5b6a
 $(package)_dependencies=gmp
+$(package)_build_subdir=build
 #$(package)_patches=...TODO (when we switch back to https://github.com/Chia-Network/bls-signatures)
 
 #define $(package)_preprocess_cmds
@@ -21,20 +22,19 @@ define $(package)_set_vars
   $(package)_cflags_arm+= -DWSIZE=32
   $(package)_cflags_armv7l+= -DWSIZE=32
 endef
-ifneq ($(darwin_native_toolchain),)
-  $(package)_cflags_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_ar)"
-  $(package)_cflags_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_ranlib)"
-endif
+
+define $(package)_preprocess_cmds
+  mkdir -p build
+endef
 
 define $(package)_config_cmds
-  mkdir -p build && cd build && \
-  $($(package)_cmake) ../ -DCMAKE_C_FLAGS="$$($(1)_cflags)"
+  $($(package)_cmake) -DCMAKE_C_FLAGS="$$($(1)_cflags)" ..
 endef
 
 define $(package)_build_cmds
-  cd build && $(MAKE) $($(package)_build_opts)
+  $(MAKE) $($(package)_build_opts)
 endef
 
 define $(package)_stage_cmds
-  cd build && $(MAKE) DESTDIR=$($(package)_staging_dir) install
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
 endef
