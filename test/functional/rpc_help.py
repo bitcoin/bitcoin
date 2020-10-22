@@ -43,9 +43,9 @@ class HelpRpcTest(SyscoinTestFramework):
             components.append('Syscoinwallet')
             components.append('Util')
             components.append('Wallet')
-        else
+        else:
             components.append('Util')
-            
+
         if self.is_zmq_compiled():
             components.append('Zmq')
 
