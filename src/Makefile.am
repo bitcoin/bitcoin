@@ -31,7 +31,7 @@ LIBCHIABLS =-lcurl chiabls/build/libchiabls.a -lgmp
 $(LIBCHIABLS):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 else
-LIBCHIABLS =-lcurl -lz -lgnutls -lhogweed -lnettle -lchiabls -lgmp
+LIBCHIABLS =-lcurl -lgnutls -lz -lhogweed -lnettle -lchiabls -lgmp
 if TARGET_WINDOWS
 LIBCHIABLS+= -lcrypt32
 endif
