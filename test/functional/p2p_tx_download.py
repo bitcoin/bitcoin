@@ -169,8 +169,6 @@ class TxDownloadTest(BitcoinTestFramework):
             assert_equal(peer_fallback.tx_getdata_count, 0)
         self.nodes[0].setmocktime(int(time.time()) + GETDATA_TX_INTERVAL + 1)  # Wait for request to peer_expiry to expire
         peer_fallback.wait_until(lambda: peer_fallback.tx_getdata_count >= 1, timeout=1)
-        with p2p_lock:
-            assert_equal(peer_fallback.tx_getdata_count, 1)
         self.restart_node(0)  # reset mocktime
 
     def test_disconnect_fallback(self):
@@ -188,8 +186,6 @@ class TxDownloadTest(BitcoinTestFramework):
         peer_disconnect.peer_disconnect()
         peer_disconnect.wait_for_disconnect()
         peer_fallback.wait_until(lambda: peer_fallback.tx_getdata_count >= 1, timeout=1)
-        with p2p_lock:
-            assert_equal(peer_fallback.tx_getdata_count, 1)
 
     def test_notfound_fallback(self):
         self.log.info('Check that notfounds will select another peer for download immediately')
@@ -205,8 +201,6 @@ class TxDownloadTest(BitcoinTestFramework):
             assert_equal(peer_fallback.tx_getdata_count, 0)
         peer_notfound.send_and_ping(msg_notfound(vec=[CInv(MSG_WTX, WTXID)]))  # Send notfound, so that fallback peer is selected
         peer_fallback.wait_until(lambda: peer_fallback.tx_getdata_count >= 1, timeout=1)
-        with p2p_lock:
-            assert_equal(peer_fallback.tx_getdata_count, 1)
 
     def test_preferred_inv(self, preferred=False):
         if preferred:
@@ -243,8 +237,6 @@ class TxDownloadTest(BitcoinTestFramework):
             assert_equal(peer.tx_getdata_count, 0 if glob_wtxid else 1)
         self.nodes[0].setmocktime(mock_time + TXID_RELAY_DELAY)
         peer.wait_until(lambda: peer.tx_getdata_count >= 1, timeout=1)
-        with p2p_lock:
-            assert_equal(peer.tx_getdata_count, 1)
 
     def test_large_inv_batch(self):
         self.log.info('Test how large inv batches are handled with relay permission')
@@ -259,8 +251,6 @@ class TxDownloadTest(BitcoinTestFramework):
         peer.send_message(msg_inv([CInv(t=MSG_WTX, h=wtxid) for wtxid in range(MAX_PEER_TX_ANNOUNCEMENTS + 1)]))
         peer.wait_until(lambda: peer.tx_getdata_count == MAX_PEER_TX_ANNOUNCEMENTS)
         peer.sync_with_ping()
-        with p2p_lock:
-            assert_equal(peer.tx_getdata_count, MAX_PEER_TX_ANNOUNCEMENTS)
 
     def test_spurious_notfound(self):
         self.log.info('Check that spurious notfound is ignored')
