@@ -5,13 +5,15 @@
 #ifndef SYSCOIN_SERVICES_RPC_WALLET_ASSETWALLETRPC_H
 #define SYSCOIN_SERVICES_RPC_WALLET_ASSETWALLETRPC_H
 #include <string>
-#include <script/standard.h>
-#include <wallet/wallet.h>
+#include <amount.h>
+class CAssetCoinInfo;
+class UniValue;
+class CWalletTx;
 class CAuxFeeDetails;
 bool SysWtxToJSON(const CWalletTx& wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue& output);
 bool ListTransactionSyscoinInfo(const CWalletTx& wtx, const CAssetCoinInfo assetInfo, const std::string strCategory, UniValue& output);
 bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry); 
-CAmount getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount);
+void getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount, CAmount& nValue);
 bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry);
 bool AssetAllocationWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry);
 bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry);

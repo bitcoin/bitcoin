@@ -27,6 +27,9 @@ from decimal import Decimal
 
 class AuxpowMiningTest (SyscoinTestFramework):
 
+  def skip_test_if_missing_module(self):
+    self.skip_if_no_wallet()
+
   def set_test_params (self):
     self.num_nodes = 2
     # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only

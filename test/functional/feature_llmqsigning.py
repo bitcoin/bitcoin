@@ -19,6 +19,9 @@ class LLMQSigningTest(DashTestFramework):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)

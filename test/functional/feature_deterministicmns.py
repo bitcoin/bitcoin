@@ -22,7 +22,8 @@ class DIP3Test(SyscoinTestFramework):
         self.extra_args = ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
         self.extra_args += ["-mncollateral=100","-wallet="]
 
-
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def setup_network(self):
         self.add_nodes(1)

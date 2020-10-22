@@ -27,7 +27,7 @@
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
-CAmount getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount) {
+void getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount, CAmount &nValue) {
     CAmount nAccumulatedFee = 0;
     CAmount nBoundAmount = 0;
     CAmount nNextBoundAmount = 0;
@@ -46,11 +46,12 @@ CAmount getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount) {
         nBoundAmount = nNextBoundAmount - nBoundAmount;
         // must be last bound
         if(nBoundAmount <= 0){
-            return (nAmount - nNextBoundAmount) * nRate + nAccumulatedFee;
+            nValue = (nAmount - nNextBoundAmount) * nRate + nAccumulatedFee;
+            return;
         }
         nAccumulatedFee += (nBoundAmount * nRate);
     }
-    return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+    nValue = (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
 }
 struct MemoryStruct {
   char *memory;
@@ -1309,7 +1310,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-        const CAmount &nAuxFee = getAuxFee(theAsset.auxFeeDetails, it.second);
+        CAmount nAuxFee;
+        getAuxFee(theAsset.auxFeeDetails, it.second, nAuxFee);
         if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
@@ -1630,7 +1632,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-        const CAmount &nAuxFee = getAuxFee(theAsset.auxFeeDetails, nAmount);
+        CAmount nAuxFee;
+        getAuxFee(theAsset.auxFeeDetails, nAmount, nAuxFee);
         if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
             auto itVout = std::find_if( mintSyscoin.voutAssets.begin(), mintSyscoin.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == mintSyscoin.voutAssets.end()) {

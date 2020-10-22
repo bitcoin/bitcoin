@@ -1004,7 +1004,11 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // initiated from another node, so skip it too.
             if (pnode->fMasternode || (fMasternodeMode && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
-            size_t nProjectedSize = peerman.GetRequestedCount(pnode->GetId()) + nProjectedVotes;
+            size_t nProjectedSize;
+            {
+                LOCK(cs_main);
+                nProjectedSize = peerman.GetRequestedCount(pnode->GetId()) + nProjectedVotes;
+            }
             if (nProjectedSize > GetMaxInv()) continue;
             // to early to ask the same node
             if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
