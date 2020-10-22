@@ -28,7 +28,7 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_config_cmds
-  $($(package)_cmake) -DCMAKE_C_FLAGS="$$($(1)_cflags)" ..
+  $($(package)_cmake) -DCMAKE_C_FLAGS="$$($(1)_cflags)" $($(package)_cflags) ..
 endef
 
 define $(package)_build_cmds
