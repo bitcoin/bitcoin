@@ -22,7 +22,7 @@ class BlocksdirTest(BitcoinTestFramework):
         initialize_datadir(self.options.tmpdir, 0)
         self.log.info("Starting with non exiting blocksdir ...")
         blocksdir_path = os.path.join(self.options.tmpdir, 'blocksdir')
-        self.assert_start_raises_init_error(0, ["-blocksdir=" + blocksdir_path], 'Error: Specified blocks directory "' +
+        self.nodes[0].assert_start_raises_init_error(["-blocksdir=" + blocksdir_path], 'Error: Specified blocks directory "' +
                                             blocksdir_path + '" does not exist.')
         os.mkdir(blocksdir_path)
         self.log.info("Starting with exiting blocksdir ...")
