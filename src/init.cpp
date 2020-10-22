@@ -877,24 +877,19 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     }
     // SYSCOIN
     pdsNotificationInterface->InitializeCurrentBlockTip();
-    {
-        LOCK(cs_main);
-        // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
-        // and reduce further locking overhead for cs_main in other parts of code including GUI
-        LogPrintf("Filling coin cache with masternode UTXOs...\n");
-        int64_t nStart = GetTimeMillis();
-        CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
-        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
-            Coin coin;
-            GetUTXOCoin(dmn->collateralOutpoint, coin);
-        });
-        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
+    // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
+    // and reduce further locking overhead for cs_main in other parts of code including GUI
+    LogPrintf("Filling coin cache with masternode UTXOs...\n");
+    int64_t nStart = GetTimeMillis();
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        Coin coin;
+        GetUTXOCoin(dmn->collateralOutpoint, coin);
+    });
+    LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
 
-        if (fMasternodeMode) {
-            activeMasternodeManager->Init(::ChainActive().Tip());
-        }
-    }
+    
     g_wallet_init_interface.AutoLockMasternodeCollaterals();
 
     if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
@@ -2220,10 +2215,14 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
         LogPrintf("MASTERNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
-        // Create and register activeMasternodeManager, will init later in ThreadImport
+        // Create register and init activeMasternodeManager
         activeMasternodeManager.reset();
         activeMasternodeManager.reset(new CActiveMasternodeManager(*node.connman));
         RegisterValidationInterface(activeMasternodeManager.get());
+        {
+            LOCK(cs_main);
+            activeMasternodeManager->Init(::ChainActive().Tip());
+        }
     } else {
         activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey());
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
