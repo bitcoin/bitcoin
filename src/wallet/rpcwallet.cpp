@@ -440,7 +440,8 @@ static RPCHelpMan sendtoaddress()
                     {"subtractfeefromamount", RPCArg::Type::BOOL, /* default */ "false", "The fee will be deducted from the amount being sent.\n"
                                          "The recipient will receive less bitcoins than you enter in the amount field."},
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125"},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                         "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
@@ -868,7 +869,8 @@ static RPCHelpMan sendmany()
                         },
                     },
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125"},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                       "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"verbose", RPCArg::Type::BOOL, /* default */ "false", "If true, return extra infomration about the transaction."},
@@ -3205,7 +3207,8 @@ static RPCHelpMan fundrawtransaction()
                             },
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
                                                           "Allows this transaction to be replaced by a transaction with higher fees"},
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                                          "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "       \"" + FeeModes("\"\n\"") + "\""},
                         },
@@ -3382,10 +3385,11 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid to be bumped"},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                 {
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
-                    {"fee_rate", RPCArg::Type::NUM, /* default */ "fall back to 'conf_target'", "fee rate (NOT total fee) to pay, in " + CURRENCY_UNIT + " per kB\n"
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                             "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"fee_rate", RPCArg::Type::NUM, /* default */ "fall back to 'conf_target'", "fee rate (NOT total fee) to pay, in " + CURRENCY_UNIT + "/kB.\n"
                              "Specify a fee rate instead of relying on the built-in fee estimator.\n"
-                             "Must be at least 0.0001 " + CURRENCY_UNIT + " per kB higher than the current transaction fee rate.\n"},
+                             "Must be at least 0.0001 " + CURRENCY_UNIT + "/kB higher than the current transaction fee rate.\n"},
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
                              "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
                              "be left unchanged from the original. If false, any input sequence numbers in the\n"
@@ -4008,7 +4012,8 @@ static RPCHelpMan send()
                     },
                 },
             },
-            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                    "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
@@ -4018,7 +4023,8 @@ static RPCHelpMan send()
                     {"change_address", RPCArg::Type::STR_HEX, /* default */ "pool address", "The bitcoin address to receive the change"},
                     {"change_position", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
                     {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if change_address is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                            "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"include_watching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only.\n"
@@ -4356,7 +4362,8 @@ static RPCHelpMan walletcreatefundedpsbt()
                             },
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
                                                           "Allows this transaction to be replaced by a transaction with higher fees"},
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "fall back to wallet's confirmation target (txconfirmtarget)", "Confirmation target (in blocks)"},
+                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                                          "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "         \"" + FeeModes("\"\n\"") + "\""},
                         },
