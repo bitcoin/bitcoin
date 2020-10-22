@@ -17,7 +17,7 @@ from decimal import Decimal
 import io
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
-from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
+from test_framework.messages import BIP125_SEQUENCE_NUMBER, COIN, CTransaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -36,6 +36,8 @@ NORMAL       = 0.00100000
 HIGH         = 0.00500000
 TOO_HIGH     = 1.00000000
 
+BTC_MODE = "BTC/kB"
+SAT_MODE = "sat/B"
 
 class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -77,8 +79,8 @@ class BumpFeeTest(BitcoinTestFramework):
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
         self.test_invalid_parameters(rbf_node, dest_address)
-        test_simple_bumpfee_succeeds(self, "default", rbf_node, peer_node, dest_address)
-        test_simple_bumpfee_succeeds(self, "fee_rate", rbf_node, peer_node, dest_address)
+        for mode in ["default", "fee_rate", BTC_MODE, SAT_MODE]:
+            test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address)
         test_feerate_args(self, rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
@@ -132,6 +134,13 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     if mode == "fee_rate":
         bumped_psbt = rbf_node.psbtbumpfee(rbfid, {"fee_rate": NORMAL})
         bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": NORMAL})
+    elif mode == BTC_MODE:
+        bumped_psbt = rbf_node.psbtbumpfee(rbfid, {"conf_target": NORMAL, "estimate_mode": BTC_MODE})
+        bumped_tx = rbf_node.bumpfee(rbfid, {"conf_target": NORMAL, "estimate_mode": BTC_MODE})
+    elif mode == SAT_MODE:
+        sat_fee = NORMAL * COIN / 1000  # convert NORMAL from BTC/kB to sat/B
+        bumped_psbt = rbf_node.psbtbumpfee(rbfid, {"conf_target": sat_fee, "estimate_mode": SAT_MODE})
+        bumped_tx = rbf_node.bumpfee(rbfid, {"conf_target": sat_fee, "estimate_mode": SAT_MODE})
     else:
         bumped_psbt = rbf_node.psbtbumpfee(rbfid)
         bumped_tx = rbf_node.bumpfee(rbfid)
