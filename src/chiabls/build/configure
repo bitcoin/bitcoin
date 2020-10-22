@@ -331,7 +331,7 @@ while [ $# != 0 ]; do
         "--disable-"*)
             set_config_var "$1"
             ;;
-
+        "--without-"*);;
         "--with-"*)
             name=$(echo "${1#--with-}" | awk '{split($1,v,"="); print v[1]}')
             case "${1}" in
