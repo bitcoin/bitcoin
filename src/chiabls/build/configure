@@ -45,7 +45,7 @@ quote() {
 
 extract_var_string() {
     VAR_NAME=$1
-    VAR_NAME=$(echo $1 | sed -e 's/[ \t]*$//')
+    VAR_NAME=$(echo $1 | sed -e 's/[ ]*$//')
     if [ "x$2" != "x" ]; then
         VAR_VALUE=$2
     else
