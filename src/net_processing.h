@@ -76,7 +76,8 @@ using PeerRef = std::shared_ptr<Peer>;
 class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
     PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
+                CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
+                bool ignore_incoming_txs);
 
     /**
      * Overridden from CValidationInterface.
@@ -139,7 +140,7 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats);
 
     /** Whether this node ignores txs received over p2p. */
-    bool IgnoresIncomingTxs() {return !::g_relay_txes;};
+    bool IgnoresIncomingTxs() {return m_ignore_incoming_txs;};
 
 private:
     /** Get a shared pointer to the Peer object.
@@ -201,6 +202,9 @@ private:
     TxRequestTracker m_txrequest GUARDED_BY(::cs_main);
 
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
+
+    //* Whether this node is running in blocks only mode */
+    const bool m_ignore_incoming_txs;
 
     /** Protects m_peer_map */
     mutable Mutex m_peer_mutex;
