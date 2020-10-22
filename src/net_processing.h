@@ -186,6 +186,9 @@ private:
     void AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    /** Send a version message to a peer */
+    void PushNodeVersion(CNode& pnode, int64_t nTime);
+
     const CChainParams& m_chainparams;
     CConnman& m_connman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */

@@ -432,32 +432,6 @@ static void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUS
     nPreferredDownload += state->fPreferredDownload;
 }
 
-static void PushNodeVersion(CNode& pnode, CConnman& connman, int64_t nTime)
-{
-    // Note that pnode->GetLocalServices() is a reflection of the local
-    // services we were offering when the CNode object was created for this
-    // peer.
-    ServiceFlags nLocalNodeServices = pnode.GetLocalServices();
-    uint64_t nonce = pnode.GetLocalNonce();
-    int nNodeStartingHeight = pnode.GetMyStartingHeight();
-    NodeId nodeid = pnode.GetId();
-    CAddress addr = pnode.addr;
-
-    CAddress addrYou = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ?
-                           addr :
-                           CAddress(CService(), addr.nServices);
-    CAddress addrMe = CAddress(CService(), nLocalNodeServices);
-
-    connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode.m_tx_relay != nullptr));
-
-    if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
-    } else {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), nodeid);
-    }
-}
-
 // Returns a bool indicating whether we requested this block.
 // Also used if a block was /not/ received and timed out or started with another peer
 static bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
@@ -708,6 +682,32 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
 
 } // namespace
 
+void PeerManager::PushNodeVersion(CNode& pnode, int64_t nTime)
+{
+    // Note that pnode->GetLocalServices() is a reflection of the local
+    // services we were offering when the CNode object was created for this
+    // peer.
+    ServiceFlags nLocalNodeServices = pnode.GetLocalServices();
+    uint64_t nonce = pnode.GetLocalNonce();
+    int nNodeStartingHeight = pnode.GetMyStartingHeight();
+    NodeId nodeid = pnode.GetId();
+    CAddress addr = pnode.addr;
+
+    CAddress addrYou = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ?
+                           addr :
+                           CAddress(CService(), addr.nServices);
+    CAddress addrMe = CAddress(CService(), nLocalNodeServices);
+
+    m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
+            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode.m_tx_relay != nullptr));
+
+    if (fLogIPs) {
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
+    } else {
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), nodeid);
+    }
+}
+
 void PeerManager::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
 {
     AssertLockHeld(::cs_main); // For m_txrequest
@@ -759,7 +759,7 @@ void PeerManager::InitializeNode(CNode *pnode) {
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, std::move(peer));
     }
     if (!pnode->IsInboundConn()) {
-        PushNodeVersion(*pnode, m_connman, GetTime());
+        PushNodeVersion(*pnode, GetTime());
     }
 }
 
@@ -2312,9 +2312,9 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             SeenLocal(addrMe);
         }
 
-        // Be shy and don't send version until we hear
-        if (pfrom.IsInboundConn())
-            PushNodeVersion(pfrom, m_connman, GetAdjustedTime());
+        // Inbound peers send us their version message when they connect.
+        // We send our version message in response.
+        if (pfrom.IsInboundConn()) PushNodeVersion(pfrom, GetAdjustedTime());
 
         // Change version
         const int greatest_common_version = std::min(nVersion, PROTOCOL_VERSION);
