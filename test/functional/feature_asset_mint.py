@@ -12,6 +12,9 @@ class AssetMintTest(SyscoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [['-assetindex=1','-mocktime=1594359054'],['-assetindex=1','-mocktime=1594359054']]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+ 
     def run_test(self):
         self.nodes[0].generate(200)
         self.sync_blocks()

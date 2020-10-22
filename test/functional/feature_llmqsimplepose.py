@@ -21,6 +21,9 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.set_dash_llmq_test_params(5, 3)
         self.bind_to_localhost_only = False
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)

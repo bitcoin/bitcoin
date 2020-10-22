@@ -117,10 +117,9 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
 
     return strprintf("%s%d", it->second, nParamNum);
 }
-
+#ifdef ENABLE_WALLET
 // Allows to specify Syscoin address or priv key. In case of Syscoin address, the priv key is taken from the wallet
 static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, bool allowAddresses = true) {
-#ifdef ENABLE_WALLET
     if (!pwallet) {
         throw std::runtime_error("addresses not supported when wallet is disabled");
     }
@@ -140,15 +139,13 @@ static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, b
             throw std::runtime_error(strprintf("non-wallet or invalid address %s", strKeyOrAddress));
         return key;
     }
-#else//ENABLE_WALLET
-        throw std::runtime_error("addresses not supported in no-wallet builds");
-#endif//ENABLE_WALLET
     CKey key = DecodeSecret(strKeyOrAddress);
     if (!key.IsValid()) {
         throw std::runtime_error(strprintf("invalid priv-key/address %s", strKeyOrAddress));
     }
     return key;
 }
+#endif
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
@@ -297,7 +294,6 @@ static std::string SignAndSendSpecialTx(const util::Ref& context, const CMutable
     sendRequest.params.push_back(signResult["hex"].get_str());
     return sendrawtransaction(sendRequest).get_str();
 }
-
 void protx_register_fund_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx register_fund",
@@ -556,15 +552,9 @@ UniValue protx_register(const JSONRPCRequest& request)
 
 UniValue protx_register_submit(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
     if (request.fHelp || request.params.size() != 3) {
         protx_register_submit_help(request);
     }
-
-
-    EnsureWalletIsUnlocked(pwallet);
 
     CMutableTransaction tx;
     if (!DecodeHexTx(tx, request.params[1].get_str())) {
@@ -882,33 +872,24 @@ void protx_list_help(const JSONRPCRequest& request)
     RPCExamples{""},
     }.Check(request);
 }
-
+#ifdef ENABLE_WALLET
 static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
-#ifndef ENABLE_WALLET
-    return false;
-#else
     if (!pwallet) {
         return false;
     }
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
     return spk_man.IsMine(GetScriptForDestination(CTxDestination(WitnessV0KeyHash(keyID))));
-#endif
 }
 
 static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
-#ifndef ENABLE_WALLET
-    return false;
-#else
     if (!pwallet) {
         return false;
     }
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
     return spk_man.IsMine(script);
-#endif
 }
-
 UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
 {
     if (!detailed) {
@@ -920,7 +901,6 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
 
     int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.pushKV("confirmations", confirmations);
-#ifdef ENABLE_WALLET
     if (pwallet) {
         LOCK2(pwallet->cs_wallet, cs_main);
         bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
@@ -948,26 +928,39 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
         walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout));
         o.pushKV("wallet", walletObj);
     }
-#endif
 
     auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());
 
     return o;
 }
+#endif
+UniValue BuildDMNListEntry(const NodeContext& node, const CDeterministicMNCPtr& dmn, bool detailed)
+{
+    if (!detailed) {
+        return dmn->proTxHash.ToString();
+    }
+    UniValue o(UniValue::VOBJ);
 
+    dmn->ToJson(o);
+
+    int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
+    o.pushKV("confirmations", confirmations);
+    auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
+    o.pushKV("metaInfo", metaInfo->ToJson());
+
+    return o;
+}
 UniValue protx_list(const JSONRPCRequest& request)
 {
     if (request.fHelp) {
         protx_list_help(request);
     }
-    CWallet* pwallet = nullptr;
 #ifdef ENABLE_WALLET
+    CWallet* pwallet = nullptr;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (wallet)
         pwallet = wallet.get();
-#else
-    pwallet = nullptr;
 #endif
 
     const NodeContext& node = EnsureNodeContext(request.context);
@@ -978,8 +971,8 @@ UniValue protx_list(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VARR);
 
-#ifdef ENABLE_WALLET
     if (type == "wallet") {
+#ifdef ENABLE_WALLET
         if (!pwallet) {
             throw std::runtime_error("\"protx list\" not supported when wallet is disabled");
         }
@@ -1029,7 +1022,11 @@ UniValue protx_list(const JSONRPCRequest& request)
         }
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
-            ret.push_back(BuildDMNListEntry(node, pwallet, dmn, detailed));
+            #ifdef ENABLE_WALLET
+                ret.push_back(BuildDMNListEntry(node, pwallet, dmn, detailed));
+            #else
+                ret.push_back(BuildDMNListEntry(node, dmn, detailed));
+            #endif
         });
 
     } else {
@@ -1058,13 +1055,11 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help(request);
     }
-    CWallet* pwallet = nullptr;
 #ifdef ENABLE_WALLET
+    CWallet* pwallet = nullptr;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (wallet)
         pwallet = wallet.get();
-#else
-    pwallet = nullptr;
 #endif
     const NodeContext& node = EnsureNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
@@ -1074,9 +1069,11 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    
-    return BuildDMNListEntry(node, pwallet, dmn, true);
-    
+    #ifdef ENABLE_WALLET
+        return BuildDMNListEntry(node, pwallet, dmn, true);
+    #else
+        return BuildDMNListEntry(node, dmn, true);
+    #endif
 }
 
 void protx_diff_help(const JSONRPCRequest& request)

@@ -39,6 +39,9 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         self.nodes[0].p2ps[0].wait_for_verack()
