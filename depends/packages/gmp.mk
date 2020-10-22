@@ -7,6 +7,7 @@ $(package)_sha256_hash=cadd49052b740ccc3d8075c24ceaefbe5128d44246d91d0ecc818b2f7
 define $(package)_set_vars
 $(package)_config_opts+=--enable-cxx --enable-fat --disable-shared --enable-static
 $(package)_config_opts_linux=--with-pic
+$(package)_config_opts_darwin=--with-pic
 $(package)_cflags_armv7l_linux+=-march=armv7-a
 $(package)_config_opts_arm=--disable-assembly
 endef
