@@ -9,6 +9,7 @@
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/wallet.h>
 #include <wallet/fees.h>
 #include <policy/policy.h>
 #include <consensus/validation.h>
