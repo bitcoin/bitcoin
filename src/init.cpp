@@ -1396,7 +1396,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    node.peerman.reset(new PeerManager(chainparams, *node.connman, node.banman.get(), *node.scheduler, chainman, *node.mempool));
+    assert(!node.peerman);
+    node.peerman = MakeUnique<PeerManager>(chainparams, *node.connman, node.banman.get(), *node.scheduler, chainman, *node.mempool);
     RegisterValidationInterface(node.peerman.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
