@@ -665,7 +665,6 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 
 extern bool fDiscover;
 extern bool fListen;
-extern bool g_relay_txes;
 
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
