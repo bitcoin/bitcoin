@@ -138,6 +138,9 @@ public:
     /** Get statistics from node state */
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats);
 
+    /** Whether this node ignores txs received over p2p. */
+    bool IgnoresIncomingTxs() {return !::g_relay_txes;};
+
 private:
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
