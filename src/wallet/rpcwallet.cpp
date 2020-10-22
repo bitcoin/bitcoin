@@ -3461,7 +3461,6 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             if (options.exists("fee_rate")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "conf_target can't be set with fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
             }
-            coin_control.m_confirm_target = ParseConfirmTarget(conf_target, pwallet->chain().estimateMaxBlocks());
         } else if (options.exists("fee_rate")) {
             CFeeRate fee_rate(AmountFromValue(options["fee_rate"]));
             if (fee_rate <= CFeeRate(0)) {
