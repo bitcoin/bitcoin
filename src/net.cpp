@@ -2351,8 +2351,8 @@ void CConnman::SetNetworkActive(bool active)
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, bool network_active)
-    : nSeed0(nSeed0In), nSeed1(nSeed1In)
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, bool network_active)
+    : addrman(addrman_in), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 

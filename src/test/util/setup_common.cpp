@@ -4,6 +4,7 @@
 
 #include <test/util/setup_common.h>
 
+#include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
@@ -155,6 +156,7 @@ ChainTestingSetup::~ChainTestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.connman.reset();
     m_node.banman.reset();
+    m_node.addrman.reset();
     m_node.args = nullptr;
     UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
     m_node.mempool.reset();
@@ -187,8 +189,9 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 
+    m_node.addrman = std::make_unique<CAddrMan>();
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, m_node.banman.get(),
                                        *m_node.scheduler, *m_node.chainman, *m_node.mempool,
                                        false);

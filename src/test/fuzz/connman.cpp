@@ -25,7 +25,8 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeBool()};
+    CAddrMan addrman;
+    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, fuzzed_data_provider.ConsumeBool()};
     CAddress random_address;
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
