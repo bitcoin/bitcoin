@@ -41,7 +41,7 @@ UniValue quorum_list(const JSONRPCRequest& request)
 
     int count = -1;
     if (!request.params[1].isNull()) {
-        count = ParseInt32V(request.params[1], "count");
+        count = request.params[1].get_int();
         if (count < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
         }
@@ -121,7 +121,7 @@ UniValue quorum_info(const JSONRPCRequest& request)
         quorum_info_help(request);
 
 
-    uint8_t llmqType = (uint8_t)ParseInt32V(request.params[1], "llmqType");
+    uint8_t llmqType = (uint8_t)request.params[1].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
@@ -129,7 +129,7 @@ UniValue quorum_info(const JSONRPCRequest& request)
     uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
     bool includeSkShare = false;
     if (!request.params[3].isNull()) {
-        includeSkShare = ParseBoolV(request.params[3], "includeSkShare");
+        includeSkShare = request.params[3].get_bool();
     }
 
     auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
@@ -163,7 +163,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
     int detailLevel = 0;
     if (!request.params[1].isNull()) {
-        detailLevel = ParseInt32V(request.params[1], "detail_level");
+        detailLevel = request.params[1].get_int();
         if (detailLevel < 0 || detailLevel > 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid detail_level");
         }
@@ -252,7 +252,7 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
     uint256 protxHash = ParseHashV(request.params[1], "proTxHash");
     int scanQuorumsCount = -1;
     if (!request.params[2].isNull()) {
-        scanQuorumsCount = ParseInt32V(request.params[2], "scanQuorumsCount");
+        scanQuorumsCount = request.params[2].get_int();
         if (scanQuorumsCount <= 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid scanQuorumsCount parameter");
         }
@@ -374,7 +374,7 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
         }
     }
 
-    uint8_t llmqType = (uint8_t)ParseInt32V(request.params[1], "llmqType");
+    uint8_t llmqType = (uint8_t)request.params[1].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
@@ -433,7 +433,7 @@ UniValue quorum_selectquorum(const JSONRPCRequest& request)
         quorum_selectquorum_help(request);
     }
 
-    uint8_t llmqType = (uint8_t)ParseInt32V(request.params[1], "llmqType");
+    uint8_t llmqType = (uint8_t)request.params[1].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
@@ -481,7 +481,7 @@ UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
     }
 
     std::string type = request.params[1].get_str();
-    double rate = ParseDoubleV(request.params[2], "rate");
+    double rate = request.params[2].get_real();
 
     if (rate < 0 || rate > 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid rate. Must be between 0 and 1");

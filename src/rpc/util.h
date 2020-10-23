@@ -82,9 +82,6 @@ CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType d
 
 extern CAmount AmountFromValue(const UniValue& value);
 // SYSCOIN
-extern int32_t ParseInt32V(const UniValue& v, const std::string &strName);
-extern double ParseDoubleV(const UniValue& v, const std::string &strName);
-extern bool ParseBoolV(const UniValue& v, const std::string &strName);
 extern CAmount AssetAmountFromValue(const UniValue& value, int precision);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
