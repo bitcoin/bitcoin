@@ -30,7 +30,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
     CAddress random_address;
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
-    CService random_service;
     CSubNet random_subnet;
     std::string random_string;
     while (fuzzed_data_provider.ConsumeBool()) {
@@ -41,9 +40,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 random_netaddr = ConsumeNetAddr(fuzzed_data_provider);
-            },
-            [&] {
-                random_service = ConsumeService(fuzzed_data_provider);
             },
             [&] {
                 random_subnet = ConsumeSubNet(fuzzed_data_provider);
@@ -127,9 +123,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
-            },
-            [&] {
-                connman.SetServices(random_service, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());

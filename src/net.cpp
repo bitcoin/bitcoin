@@ -2635,11 +2635,6 @@ CConnman::~CConnman()
     Stop();
 }
 
-void CConnman::SetServices(const CService &addr, ServiceFlags nServices)
-{
-    addrman.SetServices(addr, nServices);
-}
-
 void CConnman::MarkAddressGood(const CAddress& addr)
 {
     addrman.Good(addr);
