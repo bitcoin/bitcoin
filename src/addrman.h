@@ -26,6 +26,9 @@
 #include <unordered_map>
 #include <vector>
 
+/** Default for -checkaddrman */
+static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
+
 /**
  * Extended statistics about a CAddress
  */
@@ -124,8 +127,8 @@ public:
  *        attempt was unsuccessful.
  *    * Bucket selection is based on cryptographic hashing, using a randomly-generated 256-bit key, which should not
  *      be observable by adversaries.
- *    * Several indexes are kept for high performance. Defining DEBUG_ADDRMAN will introduce frequent (and expensive)
- *      consistency checks for the entire data structure.
+ *    * Several indexes are kept for high performance. Setting m_consistency_check_ratio with the -checkaddrman
+ *      configuration option will introduce (expensive) consistency checks for the entire data structure.
  */
 
 //! total number of buckets for tried addresses
@@ -493,8 +496,9 @@ public:
         mapAddr.clear();
     }
 
-    explicit CAddrMan(bool deterministic)
-        : insecure_rand{deterministic}
+    explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio)
+        : insecure_rand{deterministic},
+          m_consistency_check_ratio{consistency_check_ratio}
     {
         Clear();
         if (deterministic) nKey = uint256{1};
@@ -700,6 +704,9 @@ private:
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
 
+    /** Perform consistency checks every m_consistency_check_ratio operations (if non-zero). */
+    const int32_t m_consistency_check_ratio;
+
     //! Find an entry.
     CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -737,13 +744,14 @@ private:
     CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check
-    void Check() const
-        EXCLUSIVE_LOCKS_REQUIRED(cs)
+    void Check() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);
+
         const int err = Check_();
         if (err) {
             LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+            assert(false);
         }
     }
 

@@ -433,8 +433,11 @@ CAddrInfo CAddrMan::Select_(bool newOnly) const
 
 int CAddrMan::Check_() const
 {
-#ifdef DEBUG_ADDRMAN
     AssertLockHeld(cs);
+
+    // Run consistency checks 1 in m_consistency_check_ratio times if enabled
+    if (m_consistency_check_ratio == 0) return 0;
+    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return 0;
 
     std::unordered_set<int> setTried;
     std::unordered_map<int, int> mapNew;
@@ -514,7 +517,6 @@ int CAddrMan::Check_() const
     if (nKey.IsNull())
         return -16;
 
-#endif // DEBUG_ADDRMAN
     return 0;
 }
 

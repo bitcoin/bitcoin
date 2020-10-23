@@ -22,7 +22,7 @@ private:
 public:
     explicit CAddrManTest(bool makeDeterministic = true,
                           std::vector<bool> asmap = std::vector<bool>())
-        : CAddrMan(makeDeterministic)
+        : CAddrMan(makeDeterministic, /* consistency_check_ratio */ 100)
     {
         deterministic = makeDeterministic;
         m_asmap = asmap;
