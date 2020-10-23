@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDrag>
+#include <QFontDatabase>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
@@ -67,33 +68,34 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
     QRcode_free(code);
 
     // Create the image with respect to the device pixel ratio
-    int qrAddrImageWidth = QR_IMAGE_SIZE;
-    int qrAddrImageHeight = QR_IMAGE_SIZE + 20;
+    int qr_addr_image_width = QR_IMAGE_SIZE;
+    int qr_addr_image_height = QR_IMAGE_SIZE + 20;
     qreal scale = qApp->devicePixelRatio();
-    QImage qrAddrImage = QImage(qrAddrImageWidth * scale, qrAddrImageHeight * scale, QImage::Format_RGB32);
+    QImage qrAddrImage = QImage(qr_addr_image_width * scale, qr_addr_image_height * scale, QImage::Format_RGB32);
     qrAddrImage.setDevicePixelRatio(scale);
-    QPainter painter(&qrAddrImage);
+    {
+        QPainter painter(&qrAddrImage);
 
-    // Fill the whole image with border color
-    qrAddrImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
+        // Fill the whole image with border color
+        qrAddrImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
 
-    // Create a 2px/2px smaller rect and fill it with background color to keep the 1px border with the border color
-    QRect paddedRect = QRect(1, 1, qrAddrImageWidth - 2, qrAddrImageHeight - 2);
-    painter.fillRect(paddedRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
-    painter.drawImage(2, 2, qrImage.scaled(QR_IMAGE_SIZE - 4, QR_IMAGE_SIZE - 4));
+        // Create a 2px/2px smaller rect and fill it with background color to keep the 1px border with the border color
+        QRect paddedRect = QRect(1, 1, qr_addr_image_width - 2, qr_addr_image_height - 2);
+        painter.fillRect(paddedRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
+        painter.drawImage(2, 2, qrImage.scaled(QR_IMAGE_SIZE - 4, QR_IMAGE_SIZE - 4));
 
-    // calculate ideal font size
-    QFont font = GUIUtil::getFontNormal();
-    qreal font_size = GUIUtil::calculateIdealFontSize((paddedRect.width() - 20), text, font);
-    font.setPointSizeF(font_size);
+        // calculate ideal font size
+        QFont font = GUIUtil::getFontNormal();
+        qreal font_size = GUIUtil::calculateIdealFontSize((paddedRect.width() - 20), text, font);
+        font.setPointSizeF(font_size);
 
-    // paint the address
-    painter.setFont(font);
-    painter.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL));
-    paddedRect.setHeight(QR_IMAGE_SIZE + 3);
-    painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
-    painter.end();
-
+        // paint the address
+        painter.setFont(font);
+        painter.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL));
+        paddedRect.setHeight(QR_IMAGE_SIZE + 3);
+        painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
+        painter.end();
+    }
     setPixmap(QPixmap::fromImage(qrAddrImage));
 
     return true;
