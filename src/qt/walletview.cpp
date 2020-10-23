@@ -258,7 +258,7 @@ void WalletView::updateEncryptionStatus()
     Q_EMIT encryptionStatusChanged();
 }
 
-void WalletView::encryptWallet(bool status)
+void WalletView::encryptWallet()
 {
     if(!walletModel)
         return;
