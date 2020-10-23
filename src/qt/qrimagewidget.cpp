@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDrag>
+#include <QFontDatabase>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
@@ -64,26 +65,28 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
     }
     QRcode_free(code);
 
-    QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 20), QImage::Format_RGB32);
+    const int qr_image_size = QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 2 * QR_IMAGE_MARGIN);
+    QImage qrAddrImage(qr_image_size, qr_image_size, QImage::Format_RGB32);
     qrAddrImage.fill(0xffffff);
-    QPainter painter(&qrAddrImage);
-    painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
+    {
+        QPainter painter(&qrAddrImage);
+        painter.drawImage(QR_IMAGE_MARGIN, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
 
-    if (!text.isEmpty()) {
-        QFont font = GUIUtil::fixedPitchFont();
-        font.setStyleStrategy(QFont::NoAntialias);
-        QRect paddedRect = qrAddrImage.rect();
+        if (!text.isEmpty()) {
+            QRect paddedRect = qrAddrImage.rect();
+            paddedRect.setHeight(QR_IMAGE_SIZE + QR_IMAGE_TEXT_MARGIN);
 
-        // calculate ideal font size
-        qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 20, text, font);
-        font.setPointSizeF(font_size);
+            QFont font = GUIUtil::fixedPitchFont();
+            font.setStretch(QFont::SemiCondensed);
+            font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
+            const qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 2 * QR_IMAGE_TEXT_MARGIN, text, font);
+            font.setPointSizeF(font_size);
 
-        painter.setFont(font);
-        paddedRect.setHeight(QR_IMAGE_SIZE+12);
-        painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
+            painter.setFont(font);
+            painter.drawText(paddedRect, Qt::AlignBottom | Qt::AlignCenter, text);
+        }
     }
 
-    painter.end();
     setPixmap(QPixmap::fromImage(qrAddrImage));
 
     return true;
