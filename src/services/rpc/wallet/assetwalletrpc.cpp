@@ -405,6 +405,66 @@ UniValue signhash(const JSONRPCRequest& request)
     }
     return EncodeBase64(vchSig);
 }
+
+UniValue signmessagewithkey(const JSONRPCRequest& request)
+{
+        RPCHelpMan{"signmessagewithkey",
+                "\nSign a message with the private key of an address (p2pkh or p2wpkh)" +
+        HELP_REQUIRING_PASSPHRASE,
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to use for the private key."},
+                    {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "Message to sign."},
+                },
+                RPCResult{
+                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
+                },
+                RPCExamples{
+            "\nUnlock the wallet for 30 seconds\n"
+            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessagewithkey", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"message\"") +
+            "\nAs a JSON-RPC signmessagewithkey\n"
+            + HelpExampleRpc("signmessagewithkey", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"message\"")
+                },
+            }.Check(request);
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    const CWallet* const pwallet = wallet.get();
+
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
+
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    std::string strAddress = request.params[0].get_str();
+    std::string strMessage = request.params[1].get_str();
+
+    CTxDestination dest = DecodeDestination(strAddress);
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+    }
+
+    auto keyid = GetKeyForDestination(spk_man, dest);
+    if (keyid.IsNull()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    }
+    CKey vchSecret;
+    if (!spk_man.GetKey(keyid, vchSecret)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+    }
+    std::vector<unsigned char> vchSig;
+    if(!CMessageSigner::SignMessage(strMessage, vchSecret, vchSig)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "SignMessage failed");
+    }
+   
+    if (!CMessageSigner::VerifyMessage(strMessage, vchSecret.GetPubKey(), vchSig)) {
+        LogPrintf("Sign -- VerifyMessage() failed\n");
+        return false;
+    }
+    return EncodeBase64(vchSig);
+}
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"syscoinburntoassetallocation",
@@ -2075,6 +2135,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable","comment","conf_target","estimate_mode"}},
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
     { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},
+    { "syscoinwallet",            "signmessagewithkey",               &signmessagewithkey,            {"address","message"}},
     
     /** Auxpow wallet functions */
     { "syscoinwallet",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
