@@ -145,7 +145,6 @@ static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, b
     }
     return key;
 }
-#endif
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
@@ -174,8 +173,6 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
     }
     return secKey;
 }
-
-#ifdef ENABLE_WALLET
 
 template<typename SpecialTxPayload>
 static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
