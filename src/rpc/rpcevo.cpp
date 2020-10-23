@@ -427,13 +427,11 @@ UniValue protx_register(const JSONRPCRequest& request)
         paramIdx++;
     } else {
         uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
-        int32_t collateralIndex;
-        if(!ParseInt32(request.params[paramIdx + 1].get_str(), &collateralIndex)){
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
-        }
+        int32_t collateralIndex = request.params[paramIdx + 1].get_int();
         if (collateralHash.IsNull() || collateralIndex < 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }
+
         ptx.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
         paramIdx += 2;
         // TODO unlock on failure
