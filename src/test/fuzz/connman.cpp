@@ -44,14 +44,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 random_string = fuzzed_data_provider.ConsumeRandomLengthString(64);
             },
             [&] {
-                std::vector<CAddress> addresses;
-                while (fuzzed_data_provider.ConsumeBool()) {
-                    addresses.push_back(ConsumeAddress(fuzzed_data_provider));
-                }
-                // Limit nTimePenalty to int32_t to avoid signed integer overflow
-                (void)connman.AddNewAddresses(addresses, ConsumeAddress(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int32_t>());
-            },
-            [&] {
                 connman.AddNode(random_string);
             },
             [&] {

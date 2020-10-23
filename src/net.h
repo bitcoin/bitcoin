@@ -921,7 +921,6 @@ public:
     };
 
     // Addrman functions
-    bool AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
     std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct);
     /**
      * Cache is used to minimize topology leaks, so it should
