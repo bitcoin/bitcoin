@@ -889,7 +889,7 @@ class DashTestFramework(SyscoinTestFramework):
             self.prepare_masternode(idx)
 
     def prepare_masternode(self, idx):
-        bls = self.nodes[0].bls('generate')
+        bls = self.nodes[0].bls_generate()
         address = self.nodes[0].getnewaddress()
         txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
 
@@ -911,10 +911,10 @@ class DashTestFramework(SyscoinTestFramework):
         port = p2p_port(len(self.nodes) + idx)
         if (idx % 2) == 0:
             self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
-            proTxHash = self.nodes[0].protx('register_fund', address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            proTxHash = self.nodes[0].protx_register_fund(address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
         else:
             self.nodes[0].generate(1)
-            proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            proTxHash = self.nodes[0].protx_register(txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
         self.nodes[0].generate(1)
 
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
@@ -1132,7 +1132,7 @@ class DashTestFramework(SyscoinTestFramework):
                     if c["proTxHash"] == mn.proTxHash:
                         continue
                     if not c["outbound"]:
-                        mn2 = mn.node.protx('info', c["proTxHash"])
+                        mn2 = mn.node.protx_info(c["proTxHash"])
                         if [m for m in mninfos if c["proTxHash"] == m.proTxHash]:
                             # MN is expected to be online and functioning, so let's verify that the last successful
                             # probe is not too old. Probes are retried after 50 minutes, while DKGs consider a probe

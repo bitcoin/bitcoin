@@ -199,7 +199,7 @@ class DIP3Test(SyscoinTestFramework):
         assert(old_voting_address != new_voting_address)
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
-        node.protx('update_registrar', mn.protx_hash, "", new_voting_address, "")
+        node.protx_update_registrar(mn.protx_hash, "", new_voting_address, "")
         node.generate(1)
         self.sync_all()
         new_dmnState = mn.node.masternode("status")["dmnState"]
@@ -215,7 +215,7 @@ class DIP3Test(SyscoinTestFramework):
         mn.is_protx = True
         mn.p2p_port = p2p_port(mn.idx)
 
-        blsKey = node.bls('generate')
+        blsKey = node.bls_generate()
         mn.fundsAddr = node.getnewaddress()
         mn.ownerAddr = node.getnewaddress()
         mn.operatorAddr = blsKey['public']
@@ -243,7 +243,7 @@ class DIP3Test(SyscoinTestFramework):
         mn.collateral_address = node.getnewaddress()
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
+        mn.protx_hash = node.protx_register_fund( mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
         mn.collateral_txid = mn.protx_hash
         mn.collateral_vout = -1
 
@@ -259,7 +259,7 @@ class DIP3Test(SyscoinTestFramework):
         node.sendtoaddress(mn.fundsAddr, 0.001)
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
+        mn.protx_hash = node.protx_register(mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
         node.generate(1)
 
     def start_mn(self, mn):
@@ -280,25 +280,25 @@ class DIP3Test(SyscoinTestFramework):
 
     def update_mn_payee(self, mn, payee):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
-        self.nodes[0].protx('update_registrar', mn.protx_hash, '', '', payee, mn.fundsAddr)
+        self.nodes[0].protx_update_registrar(mn.protx_hash, '', '', payee, mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
-        info = self.nodes[0].protx('info', mn.protx_hash)
+        info = self.nodes[0].protx_info(mn.protx_hash)
         assert(info['state']['payoutAddress'] == payee)
 
     def test_protx_update_service(self, mn):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
+        self.nodes[0].protx_update_service( mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
         for node in self.nodes:
-            protx_info = node.protx('info', mn.protx_hash)
+            protx_info = node.protx_info( mn.protx_hash)
             mn_list = node.masternode('list')
             assert_equal(protx_info['state']['service'], '127.0.0.2:%d' % mn.p2p_port)
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
         # undo
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
+        self.nodes[0].protx_update_service(mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
 
     def assert_mnlists(self, mns):

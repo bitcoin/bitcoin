@@ -103,7 +103,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             if self.check_banned(mn) or self.check_punished(mn):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].sendtoaddress(addr, 0.1)
-                self.nodes[0].protx('update_service', mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
+                self.nodes[0].protx_update_service(mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
                 self.nodes[0].generate(1)
                 assert(not self.check_banned(mn))
 
@@ -131,13 +131,13 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.sync_all()
 
     def check_punished(self, mn):
-        info = self.nodes[0].protx('info', mn.proTxHash)
+        info = self.nodes[0].protx_info(mn.proTxHash)
         if info['state']['PoSePenalty'] > 0:
             return True
         return False
 
     def check_banned(self, mn):
-        info = self.nodes[0].protx('info', mn.proTxHash)
+        info = self.nodes[0].protx_info(mn.proTxHash)
         if info['state']['PoSeBanHeight'] != -1:
             return True
         return False

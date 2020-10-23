@@ -238,6 +238,16 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listassets", 2, "options" },
     { "syscoinsetethstatus", 1, "highestBlock" },
     { "syscoinsetethheaders", 0, "headers" },
+    { "protx_list_wallet", 0, "detailed" },
+    { "protx_list_wallet", 1, "height" },
+    { "protx_list", 1, "detailed" },
+    { "protx_list", 2, "height" },
+    { "protx_register", 1, "collateralIndex" },
+    { "protx_register", 6, "operatorReward" },
+    { "protx_register_fund", 5, "operatorReward" },
+    { "protx_register_prepare", 1, "collateralIndex" },
+    { "protx_register_prepare", 6, "operatorReward" },
+    { "protx_revoke", 2, "reason" },
 };
 // clang-format on
 

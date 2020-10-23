@@ -3324,10 +3324,10 @@ static RPCHelpMan fundrawtransaction()
 },
     };
 }
-// SYSCOIN
-UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
+
+RPCHelpMan signrawtransactionwithwallet()
 {
-    RPCHelpMan{"signrawtransactionwithwallet",
+    return RPCHelpMan{"signrawtransactionwithwallet",
                 "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
                 "The second optional argument (may be null) is an array of previous transaction outputs that\n"
                 "this transaction depends on but may not yet be in the block chain." +
@@ -3378,8 +3378,8 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
                     HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"")
             + HelpExampleRpc("signrawtransactionwithwallet", "\"myhex\"")
                 },
-        }.Check(request);
-
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     const CWallet* const pwallet = wallet.get();
@@ -3414,6 +3414,8 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
     return result;
+},
+    };
 }
 
 static RPCHelpMan bumpfee_helper(std::string method_name)
