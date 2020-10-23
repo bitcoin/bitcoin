@@ -427,10 +427,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         paramIdx++;
     } else {
         uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
-        int32_t collateralIndex;
-        if(!ParseInt32(request.params[paramIdx + 1].get_str(), &collateralIndex)){
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
-        }
+        int32_t collateralIndex = ParseInt32V(request.params[paramIdx + 1], "collateralIndex");
         if (collateralHash.IsNull() || collateralIndex < 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }
@@ -804,7 +801,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
 
     if (!request.params[3].isNull()) {
-        int32_t nReason = request.params[3].get_int();
+        int32_t nReason = ParseInt32V(request.params[3], "reason");
         if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
         }
@@ -980,9 +977,9 @@ UniValue protx_list(const JSONRPCRequest& request)
             protx_list_help(request);
         }
 
-        bool detailed = !request.params[2].isNull() ? request.params[2].get_bool() : false;
+        bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = !request.params[3].isNull() ? request.params[3].get_int() : ::ChainActive().Height();
+        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : ::ChainActive().Height();
         if (height < 1 || height > ::ChainActive().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
@@ -1010,10 +1007,10 @@ UniValue protx_list(const JSONRPCRequest& request)
             protx_list_help(request);
         }
         CDeterministicMNList mnList;
-        bool detailed = !request.params[2].isNull() ? request.params[2].get_bool() : false;
+        bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
         {
             LOCK(cs_main);
-            int height = !request.params[3].isNull() ? request.params[3].get_int() : ::ChainActive().Height();
+            int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : ::ChainActive().Height();
             if (height < 1 || height > ::ChainActive().Height()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
             }
@@ -1095,7 +1092,7 @@ static uint256 ParseBlock(const UniValue& v, std::string strName)
         return ParseHashV(v, strName);
     } catch (...) {
         LOCK(cs_main);
-        int h = v.get_int();
+        int h = ParseInt32V(v, strName);
         if (h < 1 || h > ::ChainActive().Height())
             throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
         return *::ChainActive()[h]->phashBlock;
