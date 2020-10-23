@@ -225,9 +225,9 @@ using PeerRef = std::shared_ptr<Peer>;
 class PeerManagerImpl final : public PeerManager
 {
 public:
-    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                    CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                    bool ignore_incoming_txs);
+    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                    BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                    CTxMemPool& pool, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -322,6 +322,7 @@ private:
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
+    CAddrMan& m_addrman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
@@ -1201,18 +1202,19 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                               CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                               bool ignore_incoming_txs)
+std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                                               BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                               CTxMemPool& pool, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, banman, scheduler, chainman, pool, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, ignore_incoming_txs);
 }
 
-PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                 CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 bool ignore_incoming_txs)
+PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                                 BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                 CTxMemPool& pool, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
+      m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
