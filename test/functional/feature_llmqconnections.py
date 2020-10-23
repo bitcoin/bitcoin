@@ -103,7 +103,7 @@ class LLMQConnections(DashTestFramework):
     def get_mn_probe_count(self, node, q, check_peers):
         count = 0
         self.bump_mocktime(1)
-        mnList = node.protx('list', 'registered', True)
+        mnList = node.protx_list('registered', True)
         peerList = node.getpeerinfo()
         mnMap = {}
         peerMap = {}

@@ -24,6 +24,7 @@ Span<const CRPCCommand> GetWalletRPCCommands();
 // SYSCOIN
 UniValue listunspent(const JSONRPCRequest& request);
 Span<const CRPCCommand> GetAssetWalletRPCCommands();
+Span<const CRPCCommand> GetEvoWalletRPCCommands();
 /**
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
  *
@@ -37,6 +38,6 @@ WalletContext& EnsureWalletContext(const util::Ref& context);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 
 RPCHelpMan getaddressinfo();
-UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
-UniValue sendrawtransaction(const JSONRPCRequest& request);
+RPCHelpMan signrawtransactionwithwallet();
+RPCHelpMan sendrawtransaction();
 #endif //SYSCOIN_WALLET_RPCWALLET_H

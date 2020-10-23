@@ -219,7 +219,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         assert_equal(self.nodes[0].verifytxoutproof(proof), [format(d.merkleProof.vHash[0], '064x')])
 
         # Check if P2P messages match with RPCs
-        d2 = self.nodes[0].protx("diff", baseBlockHash, blockHash)
+        d2 = self.nodes[0].protx_diff(baseBlockHash, blockHash)
         assert_equal(d2["baseBlockHash"], baseBlockHash)
         assert_equal(d2["blockHash"], blockHash)
         assert_equal(d2["cbTxMerkleTree"], d.merkleProof.serialize().hex())
@@ -270,7 +270,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
     def confirm_mns(self):
         while True:
-            diff = self.nodes[0].protx("diff", 1, self.nodes[0].getblockcount())
+            diff = self.nodes[0].protx_diff(1, self.nodes[0].getblockcount())
             found_unconfirmed = False
             for mn in diff["mnList"]:
                 if int(mn["confirmedHash"], 16) == 0:

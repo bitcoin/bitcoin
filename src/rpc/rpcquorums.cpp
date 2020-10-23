@@ -555,7 +555,17 @@ void RegisterQuorumsRPCCommands(CRPCTable &t)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
-    { "evo",                "quorum",                 &quorum,                 {}  },
+  { "evo",                "quorum",                 &quorum,                 {}  },
+    /*{ "evo",                "quorum_list",                 &quorum_list,                        {}  },
+    { "evo",                "quorum_info",                 &quorum_info,                        {}  },
+    { "evo",                "quorum_dkgstatus",            &quorum_dkgstatus,                   {}  },
+    { "evo",                "quorum_memberof",             &quorum_memberof,                    {}  },
+    { "evo",                "quorum_selectquorum",         &quorum_selectquorum,                {}  },
+    { "evo",                "quorum_dkgsimerror",          &quorum_dkgsimerror,                 {}  },
+    { "evo",                "quorum_hasrecsig",            &quorum_hasrecsig,                   {}  },
+    { "evo",                "quorum_getrecsig",            &quorum_getrecsig,                   {}  },
+    { "evo",                "quorum_isconflicting",        &quorum_isconflicting,               {}  },
+    { "evo",                "quorum_sign",                 &quorum_sign,                        {}  },*/
 };
 // clang-format on
     for (const auto& c : commands) {

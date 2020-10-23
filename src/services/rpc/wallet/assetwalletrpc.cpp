@@ -455,11 +455,11 @@ UniValue signmessagebech32(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     }
     std::vector<unsigned char> vchSig;
-    if(!CMessageSigner::SignMessage(strMessage, vchSecret, vchSig)) {
+    if(!CMessageSigner::SignMessage(strMessage, vchSig, vchSecret)) {
         throw JSONRPCError(RPC_TYPE_ERROR, "SignMessage failed");
     }
    
-    if (!CMessageSigner::VerifyMessage(strMessage, vchSecret.GetPubKey(), vchSig)) {
+    if (!CMessageSigner::VerifyMessage(vchSecret.GetPubKey(), vchSig, strMessage)) {
         LogPrintf("Sign -- VerifyMessage() failed\n");
         return false;
     }
