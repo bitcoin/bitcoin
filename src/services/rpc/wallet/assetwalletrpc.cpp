@@ -406,9 +406,9 @@ UniValue signhash(const JSONRPCRequest& request)
     return EncodeBase64(vchSig);
 }
 
-UniValue signmessagewithkey(const JSONRPCRequest& request)
+UniValue signmessagebech32(const JSONRPCRequest& request)
 {
-        RPCHelpMan{"signmessagewithkey",
+        RPCHelpMan{"signmessagebech32",
                 "\nSign a message with the private key of an address (p2pkh or p2wpkh)" +
         HELP_REQUIRING_PASSPHRASE,
                 {
@@ -422,9 +422,9 @@ UniValue signmessagewithkey(const JSONRPCRequest& request)
             "\nUnlock the wallet for 30 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
             "\nCreate the signature\n"
-            + HelpExampleCli("signmessagewithkey", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"message\"") +
-            "\nAs a JSON-RPC signmessagewithkey\n"
-            + HelpExampleRpc("signmessagewithkey", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"message\"")
+            + HelpExampleCli("signmessagebech32", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"message\"") +
+            "\nAs a JSON-RPC signmessagebech32\n"
+            + HelpExampleRpc("signmessagebech32", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"message\"")
                 },
             }.Check(request);
 
@@ -2135,7 +2135,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable","comment","conf_target","estimate_mode"}},
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
     { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},
-    { "syscoinwallet",            "signmessagewithkey",               &signmessagewithkey,            {"address","message"}},
+    { "syscoinwallet",            "signmessagebech32",                &signmessagebech32,             {"address","message"}},
     
     /** Auxpow wallet functions */
     { "syscoinwallet",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
