@@ -27,7 +27,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     CAddrMan addrman;
     CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, fuzzed_data_provider.ConsumeBool()};
-    CAddress random_address;
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
@@ -35,9 +34,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
-            [&] {
-                random_address = ConsumeAddress(fuzzed_data_provider);
-            },
             [&] {
                 random_netaddr = ConsumeNetAddr(fuzzed_data_provider);
             },
@@ -93,9 +89,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 (void)connman.GetNodeCount(fuzzed_data_provider.PickValueInArray({ConnectionDirection::None, ConnectionDirection::In, ConnectionDirection::Out, ConnectionDirection::Both}));
-            },
-            [&] {
-                connman.MarkAddressGood(random_address);
             },
             [&] {
                 (void)connman.OutboundTargetReached(fuzzed_data_provider.ConsumeBool());

@@ -2635,11 +2635,6 @@ CConnman::~CConnman()
     Stop();
 }
 
-void CConnman::MarkAddressGood(const CAddress& addr)
-{
-    addrman.Good(addr);
-}
-
 bool CConnman::AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty)
 {
     return addrman.Add(vAddr, addrFrom, nTimePenalty);
