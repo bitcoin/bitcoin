@@ -259,6 +259,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "quorum_getrecsig", 0, "llmqType" },
     { "quorum_isconflicting", 0, "llmqType" },
     { "quorum_sign", 0, "llmqType" },
+    { "gobject_prepare", 1, "revision" },
+    { "gobject_prepare", 2, "time" },
+    { "gobject_prepare", 5, "outputIndex" },
 };
 // clang-format on
 
