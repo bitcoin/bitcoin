@@ -70,6 +70,10 @@
         <translation>ఇవి మీరు పంపే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. నాణేలు పంపే ముందు ప్రతిసారి అందుకునే చిరునామా మరియు చెల్లింపు మొత్తం సరిచూసుకోండి.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>చెల్లింపులు స్వీకరించడానికి ఇవి మీ బిట్‌కాయిన్ చిరునామాలు. క్రొత్త చిరునామాలను సృష్టించడానికి స్వీకరించు ట్యాబ్‌లోని 'క్రొత్త స్వీకరించే చిరునామాను సృష్టించండి' బటన్‌ను ఉపయోగించండి.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>చిరునామాను కాపీ చెయ్యండి</translation>
     </message>
@@ -130,6 +134,14 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>క్రొత్త సంకేతపదము మరలా ఇవ్వండి</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation>సంకేతపదమును చూపించు</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>వాలెట్‌ను గుప్తీకరించండి</translation>
     </message>
     <message>
         <source>Unlock wallet</source>

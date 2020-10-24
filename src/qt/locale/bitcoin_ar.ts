@@ -184,6 +184,10 @@
         <translation>ادخل كملة المرور القديمة وكلمة المرور الجديدة للمحفظة.</translation>
     </message>
     <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>تذكر أن تشفير محفظتك لا يحمي البيتكوين الخاصة بك بشكل كامل من السرقة من قبل البرامج الخبيثةالتي تصيب حاسوبك</translation>
+    </message>
+    <message>
         <source>Wallet to be encrypted</source>
         <translation>سوف يتم تشفير محفظتك</translation>
     </message>

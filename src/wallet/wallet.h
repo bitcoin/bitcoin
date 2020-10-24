@@ -889,7 +889,7 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     void LoadToWallet(CWalletTx& wtxIn) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
-    void blockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted, int height) override;
+    void blockConnected(const CBlock& block, int height) override;
     void blockDisconnected(const CBlock& block, int height) override;
     void updatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
@@ -910,7 +910,7 @@ public:
         uint256 last_failed_block;
     };
     ScanResult ScanForWalletTransactions(const uint256& first_block, const uint256& last_block, const WalletRescanReserver& reserver, bool fUpdate);
-    void transactionRemovedFromMempool(const CTransactionRef &ptx) override;
+    void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
     void ReacceptWalletTransactions() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ResendWalletTransactions();
     struct Balance {

@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 20)
-define(_CLIENT_VERSION_REVISION, 0)
+define(_CLIENT_VERSION_REVISION, 1)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
@@ -1145,7 +1145,7 @@ fi
 if test x$use_boost = xyes; then
 
 dnl Minimum required Boost version
-define(MINIMUM_REQUIRED_BOOST, 1.47.0)
+define(MINIMUM_REQUIRED_BOOST, 1.48.0)
 
 dnl Check for boost libs
 AX_BOOST_BASE([MINIMUM_REQUIRED_BOOST])
@@ -1683,7 +1683,7 @@ echo "  gprof enabled = $enable_gprof"
 echo "  werror        = $enable_werror"
 echo
 echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
+echo "  build os      = $build_os"
 echo
 echo "  CC            = $CC"
 echo "  CFLAGS        = $CFLAGS"

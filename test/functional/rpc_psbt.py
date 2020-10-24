@@ -37,6 +37,7 @@ class PSBTTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    # TODO: Re-enable this test with segwit v1
     def test_utxo_conversion(self):
         mining_node = self.nodes[2]
         offline_node = self.nodes[0]
@@ -133,6 +134,10 @@ class PSBTTest(BitcoinTestFramework):
         # spend single key from node 1
         rawtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99})['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(rawtx)
+        # Make sure it has both types of UTXOs
+        decoded = self.nodes[1].decodepsbt(walletprocesspsbt_out['psbt'])
+        assert 'non_witness_utxo' in decoded['inputs'][0]
+        assert 'witness_utxo' in decoded['inputs'][0]
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
@@ -326,7 +331,8 @@ class PSBTTest(BitcoinTestFramework):
         for i, signer in enumerate(signers):
             self.nodes[2].unloadwallet("wallet{}".format(i))
 
-        self.test_utxo_conversion()
+        # TODO: Re-enable this for segwit v1
+        # self.test_utxo_conversion()
 
         # Test that psbts with p2pkh outputs are created properly
         p2pkh = self.nodes[0].getnewaddress(address_type='legacy')

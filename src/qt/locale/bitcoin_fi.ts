@@ -2345,6 +2345,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>%1 to %2</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Haluatko laatia tämän siirron?</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>Oletko varma, että haluat lähettää?</translation>
     </message>
@@ -2492,6 +2496,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Poista tämä alkio</translation>
     </message>
     <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Lähetettävä summa valitussa yksikössä</translation>
+    </message>
+    <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>Kulu vähennetään lähetettävästä määrästä. Saaja vastaanottaa vähemmän bitcoineja kuin merkitset Määrä-kenttään. Jos saajia on monia, kulu jaetaan tasan.</translation>
     </message>
@@ -2616,6 +2624,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>Bitcoin-osoite jolla viesti on allekirjoitettu</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>Allekirjoitettu viesti vahvistettavaksi</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -2822,6 +2834,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Transaction virtual size</source>
         <translation>Tapahtuman näennäiskoko</translation>
+    </message>
+    <message>
+        <source>Output index</source>
+        <translation>Ulostulon indeksi</translation>
     </message>
     <message>
         <source> (Certificate was not verified)</source>
@@ -3181,6 +3197,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Haluatko nostaa siirtomaksua?</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>Haluatko nostaa siirtomaksua siirtoon?</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>Nykyinen palkkio:</translation>
     </message>
@@ -3349,6 +3369,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>-%s -osoitteen '%s' selvittäminen epäonnistui</translation>
+    </message>
+    <message>
+        <source>Change index out of range</source>
+        <translation>Vaihda hakemisto alueen ulkopuolelle</translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>

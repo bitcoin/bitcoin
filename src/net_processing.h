@@ -28,7 +28,7 @@ private:
     BanMan* const m_banman;
     CTxMemPool& m_mempool;
 
-    bool CheckIfBanned(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool MaybeDiscourageAndDisconnect(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 public:
     PeerLogicValidation(CConnman* connman, BanMan* banman, CScheduler& scheduler, CTxMemPool& pool);
@@ -36,7 +36,7 @@ public:
     /**
      * Overridden from CValidationInterface.
      */
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override;
     /**
      * Overridden from CValidationInterface.
