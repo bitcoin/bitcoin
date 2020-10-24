@@ -295,7 +295,7 @@ static RPCHelpMan quorum_sign()
             {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"}, 
-            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The quorum identifier.\n"},                   
+            {"quorumHash", RPCArg::Type::STR_HEX, "", "The quorum identifier.\n"},                   
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
