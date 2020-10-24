@@ -22,6 +22,8 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
     ChainstateManager manager;
     CTxMemPool mempool;
 
+    util::g_low_memory_threshold = 0;  // disable to get deterministic flushing
+
     //! Create and add a Coin with DynamicMemoryUsage of 80 bytes to the given view.
     auto add_coin = [](CCoinsViewCache& coins_view) -> COutPoint {
         Coin newcoin;
