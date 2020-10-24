@@ -338,9 +338,7 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     std::string strFilter = "";
 
     if (!request.params[1].isNull()) {
-        if(!ParseInt32(request.params[1].get_str(), &nLast)){
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid filter");
-        }
+        nLast = request.params[1].get_int();
     }
 
     if (!request.params[2].isNull()) {
