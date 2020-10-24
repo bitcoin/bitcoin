@@ -248,6 +248,17 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "protx_register_prepare", 1, "collateralIndex" },
     { "protx_register_prepare", 6, "operatorReward" },
     { "protx_revoke", 2, "reason" },
+    { "quorum_list", 0, "count" },
+    { "quorum_info", 0, "llmqType" },
+    { "quorum_info", 2, "includeSkShare" },
+    { "quorum_dkgstatus", 0, "detail_level" },
+    { "quorum_memberof", 1, "scanQuorumsCount" },
+    { "quorum_selectquorum", 0, "llmqType" },
+    { "quorum_dkgsimerror", 1, "rate" },
+    { "quorum_hasrecsig", 0, "llmqType" },
+    { "quorum_getrecsig", 0, "llmqType" },
+    { "quorum_isconflicting", 0, "llmqType" },
+    { "quorum_sign", 0, "llmqType" },
 };
 // clang-format on
 

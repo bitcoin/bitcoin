@@ -36,11 +36,11 @@ class LLMQSigningTest(DashTestFramework):
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
             for node in self.nodes:
-                if node.quorum("hasrecsig", 100, id, msgHash) != hasrecsigs:
+                if node.quorum_hasrecsig(100, id, msgHash) != hasrecsigs:
                     return False
-                if node.quorum("isconflicting", 100, id, msgHash) != isconflicting1:
+                if node.quorum_isconflicting(100, id, msgHash) != isconflicting1:
                     return False
-                if node.quorum("isconflicting", 100, id, msgHashConflict) != isconflicting2:
+                if node.quorum_isconflicting(100, id, msgHashConflict) != isconflicting2:
                     return False
             return True
 
@@ -64,11 +64,11 @@ class LLMQSigningTest(DashTestFramework):
 
         # Sign 2 shares, should not result in recovered sig
         for i in range(2):
-            self.mninfo[i].node.quorum("sign", 100, id, msgHash)
+            self.mninfo[i].node.quorum_sign(100, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
-        self.mninfo[2].node.quorum("sign", 100, id, msgHash)
+        self.mninfo[2].node.quorum_sign(100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 
         recsig_time = self.mocktime
@@ -94,9 +94,9 @@ class LLMQSigningTest(DashTestFramework):
         wait_for_sigs(False, False, False, 15)
 
         for i in range(2):
-            self.mninfo[i].node.quorum("sign", 100, id, msgHashConflict)
+            self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
-            self.mninfo[i].node.quorum("sign", 100, id, msgHash)
+            self.mninfo[i].node.quorum_sign(100, id, msgHash)
         self.bump_scheduler(5)
         wait_for_sigs(True, False, True, 15)
 
@@ -104,12 +104,12 @@ class LLMQSigningTest(DashTestFramework):
         id = "0000000000000000000000000000000000000000000000000000000000000002"
 
         # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
-        q = self.nodes[0].quorum('selectquorum', 100, id)
+        q = self.nodes[0].quorum_selectquorum(100, id)
         mn = self.get_mninfo(q['recoveryMembers'][0])
         mn.node.setnetworkactive(False)
         self.wait_until(lambda: mn.node.getconnectioncount() == 0)
         for i in range(4):
-            self.mninfo[i].node.quorum("sign", 100, id, msgHash)
+            self.mninfo[i].node.quorum_sign(100, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
         # Need to re-connect so that it later gets the recovered sig
         mn.node.setnetworkactive(True)

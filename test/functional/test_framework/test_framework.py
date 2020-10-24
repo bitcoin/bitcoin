@@ -1087,7 +1087,7 @@ class DashTestFramework(SyscoinTestFramework):
         def check_quorum_connections():
             all_ok = True
             for node in nodes:
-                s = node.quorum("dkgstatus")
+                s = node.quorum_dkgstatus()
                 if s["session"] == {}:
                     continue
                 if "quorumConnections" not in s:
@@ -1119,7 +1119,7 @@ class DashTestFramework(SyscoinTestFramework):
                     wait_proc()
                 return False
             for mn in mninfos:
-                s = mn.node.quorum('dkgstatus')
+                s = mn.node.quorum_dkgstatus()
                 if s["session"] == {}:
                     continue
                 if "quorumConnections" not in s:
@@ -1155,7 +1155,7 @@ class DashTestFramework(SyscoinTestFramework):
             if wait_proc is not None:
                 wait_proc()
             for mn in mninfos:
-                s = mn.node.quorum("dkgstatus")["session"]
+                s = mn.node.quorum_dkgstatus()["session"]
                 if "llmq_test" not in s:
                     continue
                 member_count += 1
@@ -1187,7 +1187,7 @@ class DashTestFramework(SyscoinTestFramework):
             if wait_proc is not None:
                 wait_proc()
             for node in nodes:
-                s = node.quorum("dkgstatus")
+                s = node.quorum_dkgstatus()
                 if "minableCommitments" not in s:
                     all_ok = False
                     break
@@ -1220,7 +1220,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos]
 
-        quorums = self.nodes[0].quorum("list")
+        quorums = self.nodes[0].quorum_list()
         def timeout_func():
             self.bump_scheduler(5)
             self.bump_mocktime(bumptime)
@@ -1279,15 +1279,15 @@ class DashTestFramework(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks(nodes)
         i = 0
-        while quorums == self.nodes[0].quorum("list"):
+        while quorums == self.nodes[0].quorum_list():
             time.sleep(2)
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(1)
             self.sync_blocks(nodes)
             i+=1
             assert(i < 300)
-        new_quorum = self.nodes[0].quorum("list", 1)["llmq_test"][0]
-        quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
+        new_quorum = self.nodes[0].quorum_list(1)["llmq_test"][0]
+        quorum_info = self.nodes[0].quorum_info(100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.nodes[0].generate(8)
@@ -1299,7 +1299,7 @@ class DashTestFramework(SyscoinTestFramework):
         return new_quorum
 
     def get_quorum_masternodes(self, q):
-        qi = self.nodes[0].quorum('info', 100, q)
+        qi = self.nodes[0].quorum_info(100, q)
         result = []
         for m in qi['members']:
             result.append(self.get_mninfo(m['proTxHash']))
