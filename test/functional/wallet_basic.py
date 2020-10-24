@@ -228,7 +228,7 @@ class WalletTest(BitcoinTestFramework):
 
         # Sendmany with explicit fee (BTC/kB)
         # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+        assert_raises_rpc_error(-8, "Selected estimate_mode bTc/kB requires a fee rate to be specified in conf_target",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
             estimate_mode='bTc/kB')
@@ -254,7 +254,7 @@ class WalletTest(BitcoinTestFramework):
 
         # Sendmany with explicit fee (SAT/B)
         # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+        assert_raises_rpc_error(-8, "Selected estimate_mode sat/b requires a fee rate to be specified in conf_target",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
             estimate_mode='sat/b')
@@ -421,7 +421,7 @@ class WalletTest(BitcoinTestFramework):
             assert prebalance > 2
             address = self.nodes[1].getnewaddress()
             # Throw if no conf_target provided
-            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+            assert_raises_rpc_error(-8, "Selected estimate_mode BTc/Kb requires a fee rate to be specified in conf_target",
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
@@ -455,7 +455,7 @@ class WalletTest(BitcoinTestFramework):
             assert prebalance > 2
             address = self.nodes[1].getnewaddress()
             # Throw if no conf_target provided
-            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+            assert_raises_rpc_error(-8, "Selected estimate_mode SAT/b requires a fee rate to be specified in conf_target",
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,

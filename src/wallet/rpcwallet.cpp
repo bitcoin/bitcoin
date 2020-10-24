@@ -214,7 +214,7 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
 
     if (cc.m_fee_mode == FeeEstimateMode::BTC_KB || cc.m_fee_mode == FeeEstimateMode::SAT_B) {
         if (estimate_param.isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Selected estimate_mode requires a fee rate");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Selected estimate_mode %s requires a fee rate to be specified in conf_target", estimate_mode.get_str()));
         }
 
         CAmount fee_rate = AmountFromValue(estimate_param);
