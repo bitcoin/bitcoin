@@ -75,7 +75,7 @@ static const bool DEFAULT_UPNP = false;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
-static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
+static constexpr uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
