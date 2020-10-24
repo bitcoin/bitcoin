@@ -124,7 +124,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # Now verify that diffs are correct around the block that mined the third quorum.
         # This tests the logic in CalcCbTxMerkleRootQuorums, which has to manually add the commitment from the current
         # block
-        mined_in_block = self.nodes[0].quorum("info", 100, third_quorum)["minedBlock"]
+        mined_in_block = self.nodes[0].quorum_info(100, third_quorum)["minedBlock"]
         prev_block = self.nodes[0].getblock(mined_in_block)["previousblockhash"]
         prev_block2 = self.nodes[0].getblock(prev_block)["previousblockhash"]
         next_block = self.nodes[0].getblock(mined_in_block)["nextblockhash"]
