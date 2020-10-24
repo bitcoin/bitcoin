@@ -5,7 +5,6 @@
 #include <masternode/activemasternode.h>
 #include <core_io.h>
 #include <governance/governance.h>
-#include <governance/governancevote.h>
 #include <governance/governanceclasses.h>
 #include <governance/governancevalidators.h>
 #include <validation.h>
@@ -335,69 +334,6 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
 
     resultsObj.pushKV("syscoin.conf", statusObj);
 
-    returnObj.pushKV("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed));
-    returnObj.pushKV("detail", resultsObj);
-
-    return returnObj;
-}
-
-UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
-                             const uint256& hash, vote_signal_enum_t eVoteSignal,
-                             vote_outcome_enum_t eVoteOutcome, CConnman& connman)
-{
-    {
-        LOCK(governance.cs);
-        CGovernanceObject *pGovObj = governance.FindGovernanceObject(hash);
-        if (!pGovObj) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
-        }
-    }
-
-    int nSuccessful = 0;
-    int nFailed = 0;
-    CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
-
-    UniValue resultsObj(UniValue::VOBJ);
-
-    for (const auto& p : keys) {
-        const auto& proTxHash = p.first;
-        const auto& key = p.second;
-
-        UniValue statusObj(UniValue::VOBJ);
-
-        auto dmn = mnList.GetValidMN(proTxHash);
-        if (!dmn) {
-            nFailed++;
-            statusObj.pushKV("result", "failed");
-            statusObj.pushKV("errorMessage", "Can't find masternode by proTxHash");
-            resultsObj.pushKV(proTxHash.ToString(), statusObj);
-            continue;
-        }
-
-        CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
-        if (!vote.Sign(key, key.GetPubKey().GetID())) {
-            nFailed++;
-            statusObj.pushKV("result", "failed");
-            statusObj.pushKV("errorMessage", "Failure to sign.");
-            resultsObj.pushKV(proTxHash.ToString(), statusObj);
-            continue;
-        }
-
-        CGovernanceException exception;
-        if (governance.ProcessVoteAndRelay(vote, exception, connman)) {
-            nSuccessful++;
-            statusObj.pushKV("result", "success");
-        } else {
-            nFailed++;
-            statusObj.pushKV("result", "failed");
-            statusObj.pushKV("errorMessage", exception.GetMessage());
-        }
-
-        resultsObj.pushKV(proTxHash.ToString(), statusObj);
-    }
-
-    UniValue returnObj(UniValue::VOBJ);
     returnObj.pushKV("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed));
     returnObj.pushKV("detail", resultsObj);
 

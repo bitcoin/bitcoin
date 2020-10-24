@@ -2,57 +2,102 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <masternode/activemasternode.h>
-#include <consensus/validation.h>
-#include <core_io.h>
-#include <governance/governance.h>
-#include <governance/governancevote.h>
+
 #include <governance/governanceclasses.h>
 #include <governance/governancevalidators.h>
-#include <init.h>
-#include <txmempool.h>
 #include <validation.h>
-#include <masternode/masternodesync.h>
-#include <messagesigner.h>
 #include <rpc/server.h>
-#include <util/system.h>
-#include <util/moneystr.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
-#include <rpc/util.h>
-#include <net.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
 
 
-void gobject_prepare_help(const JSONRPCRequest& request)
+UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
+                             const uint256& hash, vote_signal_enum_t eVoteSignal,
+                             vote_outcome_enum_t eVoteOutcome, CConnman& connman)
 {
-    RPCHelpMan{"gobject prepare",
-               "Prepare governance object by signing and creating tx\n"
-                + HELP_REQUIRING_PASSPHRASE +
-                "\nArguments:\n"
-                "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
-                "2. revision      (numeric, required) object revision in the system\n"
-                "3. time          (numeric, required) time this object was created\n"
-                "4. data-hex      (string, required)  data in hex string form\n"
-                "5. use-IS        (boolean, optional, default=false) Deprecated and ignored\n"
-                "6. outputHash    (string, optional) the single output to submit the proposal fee from\n"
-                "7. outputIndex   (numeric, optional) The output index.\n",
     {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);
+        LOCK(governance.cs);
+        CGovernanceObject *pGovObj = governance.FindGovernanceObject(hash);
+        if (!pGovObj) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
+        }
+    }
+
+    int nSuccessful = 0;
+    int nFailed = 0;
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+
+    UniValue resultsObj(UniValue::VOBJ);
+
+    for (const auto& p : keys) {
+        const auto& proTxHash = p.first;
+        const auto& key = p.second;
+
+        UniValue statusObj(UniValue::VOBJ);
+
+        auto dmn = mnList.GetValidMN(proTxHash);
+        if (!dmn) {
+            nFailed++;
+            statusObj.pushKV("result", "failed");
+            statusObj.pushKV("errorMessage", "Can't find masternode by proTxHash");
+            resultsObj.pushKV(proTxHash.ToString(), statusObj);
+            continue;
+        }
+
+        CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
+        if (!vote.Sign(key, key.GetPubKey().GetID())) {
+            nFailed++;
+            statusObj.pushKV("result", "failed");
+            statusObj.pushKV("errorMessage", "Failure to sign.");
+            resultsObj.pushKV(proTxHash.ToString(), statusObj);
+            continue;
+        }
+
+        CGovernanceException exception;
+        if (governance.ProcessVoteAndRelay(vote, exception, connman)) {
+            nSuccessful++;
+            statusObj.pushKV("result", "success");
+        } else {
+            nFailed++;
+            statusObj.pushKV("result", "failed");
+            statusObj.pushKV("errorMessage", exception.GetMessage());
+        }
+
+        resultsObj.pushKV(proTxHash.ToString(), statusObj);
+    }
+
+    UniValue returnObj(UniValue::VOBJ);
+    returnObj.pushKV("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed));
+    returnObj.pushKV("detail", resultsObj);
+
+    return returnObj;
 }
 
-UniValue gobject_prepare(const JSONRPCRequest& request)
+static RPCHelpMan gobject_prepare()
+{
+    return RPCHelpMan{"gobject_prepare",
+        "\nPrepare governance object by signing and creating tx.\n",
+        {      
+            {"parentHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Hash of the parent object, \"0\" is root."},
+            {"revision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Object revision in the system."},   
+            {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time this object was created."},
+            {"dataHex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Data in hex string form."},
+            {"outputHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The single output to submit the proposal fee from."},    
+            {"outputIndex", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The output index."},                                        
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "hash", "txid"},
+        RPCExamples{
+                HelpExampleCli("gobject_prepare", "")
+            + HelpExampleRpc("gobject_prepare", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
-        gobject_prepare_help(request);
-
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -64,20 +109,20 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     uint256 hashParent;
 
     // -- attach to root node (root node doesn't really exist, but has a hash of zero)
-    if (request.params[1].get_str() == "0") {
+    if (request.params[0].get_str() == "0") {
         hashParent = uint256();
     } else {
-        hashParent = ParseHashV(request.params[1], "fee-txid, parameter 1");
+        hashParent = ParseHashV(request.params[0], "fee-txid, parameter 1");
     }
 
-    std::string strRevision = request.params[2].get_str();
-    std::string strTime = request.params[3].get_str();
+    std::string strRevision = request.params[1].get_str();
+    std::string strTime = request.params[2].get_str();
     int nRevision;
     if(!ParseInt32(strRevision, &nRevision)){
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
     }
     int64_t nTime = atoi64(strTime);
-    std::string strDataHex = request.params[4].get_str();
+    std::string strDataHex = request.params[3].get_str();
 
     // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
 
@@ -88,8 +133,8 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     // users ignore all instructions on syshub etc. and do not save them...
     // Let's log them here and hope users do not mess with debug.log
     LogPrintf("gobject_prepare -- params: %s %s %s %s, data: %s, hash: %s\n",
-                request.params[1].get_str(), request.params[2].get_str(),
-                request.params[3].get_str(), request.params[4].get_str(),
+                request.params[0].get_str(), request.params[1].get_str(),
+                request.params[2].get_str(), request.params[3].get_str(),
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
@@ -112,9 +157,9 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     // If specified, spend this outpoint as the proposal fee
     COutPoint outpoint;
     outpoint.SetNull();
-    if (!request.params[6].isNull() && !request.params[7].isNull()) {
-        uint256 collateralHash = ParseHashV(request.params[6], "outputHash");
-        int32_t collateralIndex = request.params[7].get_int();
+    if (!request.params[4].isNull() && !request.params[5].isNull()) {
+        uint256 collateralHash = ParseHashV(request.params[4], "outputHash");
+        int32_t collateralIndex = request.params[5].get_int();
         if (collateralHash.IsNull() || collateralIndex < 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }
@@ -124,7 +169,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     CTransactionRef tx;
     if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
-        if (!request.params[6].isNull() && !request.params[7].isNull()) {
+        if (!request.params[5].isNull() && !request.params[6].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
         }
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
@@ -138,42 +183,39 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());
 
     return tx->GetHash().ToString();
-}
+},
+    };
+} 
 
 
-void gobject_vote_many_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_vote_many()
 {
-    RPCHelpMan{"gobject vote-many",
-            "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
-            + HELP_REQUIRING_PASSPHRASE +
-            "\nArguments:\n"
-            "1. governance-hash   (string, required) hash of the governance object\n"
-            "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-            "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_vote_many(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_vote_many",
+        "\nVote on a governance object by all masternodes for which the voting key is present in the local wallet.\n",
+        {      
+            {"governanceHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Hash of the governance object."},
+            {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote, possible values: [funding|valid|delete|endorsed]."},   
+            {"voteOutome", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote outcome, possible values: [yes|no|abstain]."},                                  
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_vote_many", "")
+            + HelpExampleRpc("gobject_vote_many", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (request.fHelp || request.params.size() != 4)
-        gobject_vote_many_help(request);
-
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
 
-    uint256 hash = ParseHashV(request.params[1], "Object hash");
-    std::string strVoteSignal = request.params[2].get_str();
-    std::string strVoteOutcome = request.params[3].get_str();
+    uint256 hash = ParseHashV(request.params[0], "Object hash");
+    std::string strVoteSignal = request.params[1].get_str();
+    std::string strVoteOutcome = request.params[2].get_str();
 
     vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
     if (eVoteSignal == VOTE_SIGNAL_NONE) {
@@ -208,42 +250,39 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     });
 
     return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
-}
+},
+    };
+} 
 
-void gobject_vote_alias_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_vote_alias()
 {
-     RPCHelpMan{"gobject vote-alias",
-            "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
-            + HELP_REQUIRING_PASSPHRASE +
-            "\nArguments:\n"
-            "1. governance-hash   (string, required) hash of the governance object\n"
-            "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-            "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-            "4. protx-hash        (string, required) masternode's proTxHash",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);     
-}
-
-UniValue gobject_vote_alias(const JSONRPCRequest& request)
-{
+    return RPCHelpMan{"gobject_vote_alias",
+        "\nVote on a governance object by masternode's voting key (if present in local wallet).\n",
+        {      
+            {"governanceHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Hash of the governance object."},
+            {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote, possible values: [funding|valid|delete|endorsed]."},   
+            {"voteOutome", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote outcome, possible values: [yes|no|abstain]."},   
+            {"protxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Masternode's proTxHash."},                                                                 
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_vote_alias", "")
+            + HelpExampleRpc("gobject_vote_alias", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{   
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (request.fHelp || request.params.size() != 5)
-        gobject_vote_alias_help(request);
-
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
 
-    uint256 hash = ParseHashV(request.params[1], "Object hash");
-    std::string strVoteSignal = request.params[2].get_str();
-    std::string strVoteOutcome = request.params[3].get_str();
+    uint256 hash = ParseHashV(request.params[0], "Object hash");
+    std::string strVoteSignal = request.params[1].get_str();
+    std::string strVoteOutcome = request.params[2].get_str();
 
     vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
     if (eVoteSignal == VOTE_SIGNAL_NONE) {
@@ -259,7 +298,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    uint256 proTxHash = ParseHashV(request.params[4], "protx-hash");
+    uint256 proTxHash = ParseHashV(request.params[3], "protxHash");
     CDeterministicMNList mnList;
     deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetValidMN(proTxHash);
@@ -284,7 +323,9 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     votingKeys.emplace(proTxHash, key);
 
     return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
-}
+},
+    };
+} 
 
 Span<const CRPCCommand> GetGovernanceWalletRPCCommands()
 {
@@ -292,9 +333,9 @@ Span<const CRPCCommand> GetGovernanceWalletRPCCommands()
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
 //  --------------------- ------------------------  -----------------------  ----------
-    { "governancewallet",               "gobject_vote_alias",     &gobject_vote_alias,      {} },
-    { "governancewallet",               "gobject_vote_many",      &gobject_vote_many,    {"index"} },
-    { "governancewallet",               "gobject_prepare",        &gobject_prepare,          {"mode"} },
+    { "governancewallet",               "gobject_vote_alias",     &gobject_vote_alias,      {"governanceHash","vote","voteOutome","protxHash"} },
+    { "governancewallet",               "gobject_vote_many",      &gobject_vote_many,       {"governanceHash","vote","voteOutome"} },
+    { "governancewallet",               "gobject_prepare",        &gobject_prepare,         {"parentHash","revision","time","dataHex","outputHash","outputIndex"} },
 
 };
 // clang-format on
