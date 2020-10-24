@@ -130,8 +130,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->proxyPortTor, &QLineEdit::textChanged, this, &OptionsDialog::updateProxyValidationState);
 
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
-        ui->hideTrayIcon->setChecked(true);
-        ui->hideTrayIcon->setEnabled(false);
+        ui->showTrayIcon->setChecked(false);
+        ui->showTrayIcon->setEnabled(false);
         ui->minimizeToTray->setChecked(false);
         ui->minimizeToTray->setEnabled(false);
     }
@@ -227,7 +227,7 @@ void OptionsDialog::setMapper()
     /* Window */
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
-        mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
+        mapper->addMapping(ui->showTrayIcon, OptionsModel::ShowTrayIcon);
         mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
     }
     mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
@@ -286,16 +286,13 @@ void OptionsDialog::on_cancelButton_clicked()
     reject();
 }
 
-void OptionsDialog::on_hideTrayIcon_stateChanged(int fState)
+void OptionsDialog::on_showTrayIcon_stateChanged(int state)
 {
-    if(fState)
-    {
+    if (state == Qt::Checked) {
+        ui->minimizeToTray->setEnabled(true);
+    } else {
         ui->minimizeToTray->setChecked(false);
         ui->minimizeToTray->setEnabled(false);
-    }
-    else
-    {
-        ui->minimizeToTray->setEnabled(true);
     }
 }
 
