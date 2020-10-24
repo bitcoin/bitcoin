@@ -112,16 +112,11 @@ static RPCHelpMan gobject_prepare()
     if (request.params[0].get_str() == "0") {
         hashParent = uint256();
     } else {
-        hashParent = ParseHashV(request.params[0], "fee-txid, parameter 1");
+        hashParent = ParseHashV(request.params[0], "feeTxid");
     }
 
-    std::string strRevision = request.params[1].get_str();
-    std::string strTime = request.params[2].get_str();
-    int nRevision;
-    if(!ParseInt32(strRevision, &nRevision)){
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
-    }
-    int64_t nTime = atoi64(strTime);
+    int nRevision = request.params[1].get_int();
+    int64_t nTime = request.params[2].get_int64();
     std::string strDataHex = request.params[3].get_str();
 
     // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT

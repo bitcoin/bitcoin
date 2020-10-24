@@ -112,28 +112,24 @@ static RPCHelpMan gobject_check()
     };
 } 
 
-void gobject_submit_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_submit()
 {
-    RPCHelpMan{"gobject submit",
-            "Submit governance object to network\n"
-            "\nArguments:\n"
-            "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
-            "2. revision      (numeric, required) object revision in the system\n"
-            "3. time          (numeric, required) time this object was created\n"
-            "4. data-hex      (string, required) data in hex string form\n"
-            "5. fee-txid      (string, optional) fee-tx id, required for all objects except triggers",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_submit(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_submit",
+        "\nSubmit governance object to network\n",
+        {      
+            {"parentHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Hash of the parent object, \"0\" is root."},
+            {"revision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Object revision in the system."},   
+            {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time this object was created."},
+            {"dataHex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Data in hex string form."},
+            {"feeTxid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Fee-tx id, required for all objects except triggers."},                                         
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_submit", "")
+            + HelpExampleRpc("gobject_submit", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp || ((request.params.size() < 5) || (request.params.size() > 6)))
-        gobject_submit_help(request);
-
     if(!masternodeSync.IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
@@ -152,26 +148,21 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     uint256 txidFee;
 
-    if (!request.params[5].isNull()) {
-        txidFee = ParseHashV(request.params[5], "fee-txid, parameter 6");
+    if (!request.params[4].isNull()) {
+        txidFee = ParseHashV(request.params[4], "feeTxid");
     }
     uint256 hashParent;
-    if (request.params[1].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
+    if (request.params[0].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
         hashParent = uint256();
     } else {
-        hashParent = ParseHashV(request.params[1], "parent object hash, parameter 2");
+        hashParent = ParseHashV(request.params[0], "parentHash");
     }
 
     // GET THE PARAMETERS FROM USER
 
-    std::string strRevision = request.params[2].get_str();
-    std::string strTime = request.params[3].get_str();
-    int nRevision;
-    if(!ParseInt32(strRevision, &nRevision)){
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
-    }
-    int64_t nTime = atoi64(strTime);
-    std::string strDataHex = request.params[4].get_str();
+    int nRevision = request.params[1].get_int();
+    int64_t nTime = request.params[2].get_int64();
+    std::string strDataHex = request.params[3].get_str();
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
 
@@ -194,7 +185,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
             LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
         }
-    } else if (request.params.size() != 6) {
+    } else if (request.params.size() != 5) {
         LogPrintf("gobject(submit) -- Object submission rejected because fee tx not provided\n");
         throw JSONRPCError(RPC_INVALID_PARAMETER, "The fee-txid parameter must be included to submit this type of object");
     }
@@ -227,37 +218,35 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     return govobj.GetHash().ToString();
-}
+},
+    };
+} 
 
-void gobject_vote_conf_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_vote_conf()
 {
-    RPCHelpMan{"gobject vote-conf",
-                "Vote on a governance object by masternode configured in syscoin.conf\n"
-                "\nArguments:\n"
-                "1. governance-hash   (string, required) hash of the governance object\n"
-                "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-                "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_vote_conf(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_vote_conf",
+        "\nVote on a governance object by masternode configured in syscoin.conf\n",
+        {      
+            {"governanceHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Hash of the governance object."},
+            {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote, possible values: [funding|valid|delete|endorsed]."},   
+            {"voteOutome", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote outcome, possible values: [yes|no|abstain]."},                                  
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_vote_conf", "")
+            + HelpExampleRpc("gobject_vote_conf", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp || request.params.size() != 4)
-        gobject_vote_conf_help(request);
-
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     uint256 hash;
 
-    hash = ParseHashV(request.params[1], "Object hash");
-    std::string strVoteSignal = request.params[2].get_str();
-    std::string strVoteOutcome = request.params[3].get_str();
+    hash = ParseHashV(request.params[0], "Object hash");
+    std::string strVoteSignal = request.params[1].get_str();
+    std::string strVoteOutcome = request.params[2].get_str();
 
     vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
     if (eVoteSignal == VOTE_SIGNAL_NONE) {
@@ -338,7 +327,9 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     returnObj.pushKV("detail", resultsObj);
 
     return returnObj;
-}
+},
+    };
+} 
 
 
 UniValue ListObjects(const std::string& strCachedSignal, const std::string& strType, int nStartTime)
@@ -396,98 +387,90 @@ UniValue ListObjects(const std::string& strCachedSignal, const std::string& strT
     return objResult;
 }
 
-void gobject_list_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_list()
 {
-    RPCHelpMan{"gobject list",
-            "List governance objects (can be filtered by signal and/or object type)\n"
-            "\nArguments:\n"
-            "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
-            "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_list(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_list",
+        "\nList governance objects (can be filtered by signal and/or object type)\n",
+        {      
+            {"signal", RPCArg::Type::STR, "valid", "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
+            {"type", RPCArg::Type::STR, "all", "Object type, possible values: [proposals|triggers|all]."},                                    
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_list", "")
+            + HelpExampleRpc("gobject_list", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp || request.params.size() > 3)
-        gobject_list_help(request);
-
     std::string strCachedSignal = "valid";
-    if (!request.params[1].isNull()) {
-        strCachedSignal = request.params[1].get_str();
+    if (!request.params[0].isNull()) {
+        strCachedSignal = request.params[0].get_str();
     }
     if (strCachedSignal != "valid" && strCachedSignal != "funding" && strCachedSignal != "delete" && strCachedSignal != "endorsed" && strCachedSignal != "all")
         return "Invalid signal, should be 'valid', 'funding', 'delete', 'endorsed' or 'all'";
 
     std::string strType = "all";
-    if (!request.params[2].isNull()) {
-        strType = request.params[2].get_str();
+    if (!request.params[1].isNull()) {
+        strType = request.params[1].get_str();
     }
     if (strType != "proposals" && strType != "triggers" && strType != "all")
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
     return ListObjects(strCachedSignal, strType, 0);
-}
+},
+    };
+} 
 
-void gobject_diff_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_diff()
 {
-    RPCHelpMan{"gobject diff",
-            "List differences since last diff or list\n"
-            "\nArguments:\n"
-            "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
-            "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_diff(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_diff",
+        "\nList differences since last diff or list\n",
+        {      
+            {"signal", RPCArg::Type::STR, "valid", "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
+            {"type", RPCArg::Type::STR, "all", "Object type, possible values: [proposals|triggers|all]."},                                    
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_diff", "")
+            + HelpExampleRpc("gobject_diff", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp || request.params.size() > 3)
-        gobject_diff_help(request);
-
     std::string strCachedSignal = "valid";
-    if (!request.params[1].isNull()) {
-        strCachedSignal = request.params[1].get_str();
+    if (!request.params[0].isNull()) {
+        strCachedSignal = request.params[0].get_str();
     }
     if (strCachedSignal != "valid" && strCachedSignal != "funding" && strCachedSignal != "delete" && strCachedSignal != "endorsed" && strCachedSignal != "all")
         return "Invalid signal, should be 'valid', 'funding', 'delete', 'endorsed' or 'all'";
 
     std::string strType = "all";
-    if (!request.params[2].isNull()) {
-        strType = request.params[2].get_str();
+    if (!request.params[1].isNull()) {
+        strType = request.params[1].get_str();
     }
     if (strType != "proposals" && strType != "triggers" && strType != "all")
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
     return ListObjects(strCachedSignal, strType, governance.GetLastDiffTime());
-}
+},
+    };
+} 
 
-void gobject_get_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_get()
 {
-    RPCHelpMan{"gobject get",
-            "Get governance object by hash\n"
-            "\nArguments:\n"
-            "1. governance-hash   (string, required) object id\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_get(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_get",
+        "\nGet governance object by hash\n",
+        {      
+            {"governanceHash", RPCArg::Type::STR_HEX,  RPCArg::Optional::NO, "Object id."},                                   
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_get", "")
+            + HelpExampleRpc("gobject_get", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp || request.params.size() != 2)
-        gobject_get_help(request);
-
     // COLLECT VARIABLES FROM OUR USER
-    uint256 hash = ParseHashV(request.params[1], "GovObj hash");
+    uint256 hash = ParseHashV(request.params[0], "GovObj hash");
 
     LOCK(governance.cs);
 
@@ -555,40 +538,34 @@ UniValue gobject_get(const JSONRPCRequest& request)
     objResult.pushKV("fCachedDelete",  pGovObj->IsSetCachedDelete());
     objResult.pushKV("fCachedEndorsed",  pGovObj->IsSetCachedEndorsed());
     return objResult;
-}
+},
+    };
+} 
 
-void gobject_getcurrentvotes_help(const JSONRPCRequest& request)
+static RPCHelpMan gobject_getcurrentvotes()
 {
-    RPCHelpMan{"gobject getcurrentvotes",
-            "Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
-            "\nArguments:\n"
-            "1. governance-hash   (string, required) object id\n"
-            "2. txid              (string, optional) masternode collateral txid\n"
-            "3. vout              (string, optional) masternode collateral output index, required if <txid> presents\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_getcurrentvotes",
+        "\nGet only current (tallying) votes for a governance object hash (does not include old votes)\n",
+        {      
+            {"governanceHash", RPCArg::Type::STR_HEX,  RPCArg::Optional::NO, "Object id."},
+            {"txid", RPCArg::Type::STR_HEX,  RPCArg::Optional::OMITTED, "Masternode collateral txid."}, 
+            {"vout", RPCArg::Type::NUM,  RPCArg::Optional::OMITTED, "Masternode collateral output index, required if <txid> presents."},                                   
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_getcurrentvotes", "")
+            + HelpExampleRpc("gobject_getcurrentvotes", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp || (request.params.size() != 2 && request.params.size() != 4))
-        gobject_getcurrentvotes_help(request);
-
     // COLLECT PARAMETERS FROM USER
 
-    uint256 hash = ParseHashV(request.params[1], "Governance hash");
+    uint256 hash = ParseHashV(request.params[0], "Governance hash");
 
     COutPoint mnCollateralOutpoint;
-    if (!request.params[2].isNull() && !request.params[3].isNull()) {
-        uint256 txid = ParseHashV(request.params[2], "Masternode Collateral hash");
-        std::string strVout = request.params[3].get_str();
-        int nVout;
-        if(!ParseInt32(strVout, &nVout)){
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vout");
-        }
+    if (!request.params[1].isNull() && !request.params[2].isNull()) {
+        uint256 txid = ParseHashV(request.params[1], "Masternode Collateral hash");
+        int nVout = request.params[2].get_int();
         mnCollateralOutpoint = COutPoint(txid, (uint32_t)nVout);
     }
 
@@ -614,7 +591,9 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     }
 
     return bResult;
-}
+},
+    };
+} 
 
 static RPCHelpMan voteraw()
 {
@@ -790,6 +769,12 @@ static const CRPCCommand commands[] =
     { "governance",               "gobject_count",          &gobject_count,          {"mode"} },
     { "governance",               "gobject_deserialize",    &gobject_deserialize,    {"hex_data"} },
     { "governance",               "gobject_check",          &gobject_check,          {"hex_data"} },
+    { "governance",               "gobject_getcurrentvotes",          &gobject_getcurrentvotes,          {"governanceHash","txid","vout"} },
+    { "governance",               "gobject_get",            &gobject_get,            {"governanceHash"} },
+    { "governance",               "gobject_submit",         &gobject_submit,         {"parentHash","revision","time","dataHex","feeTxid"} },
+    { "governance",               "gobject_vote_conf",      &gobject_vote_conf,      {"governanceHash","vote","voteOutome"} },
+    { "governance",               "gobject_list",           &gobject_list,           {"signal","type"} },
+    { "governance",               "gobject_diff",           &gobject_diff,           {"signal","type"} },
     { "governance",               "voteraw",                &voteraw,                {"collateralTxHash","collateralTxIndex","governanceHash","voteSignal","voteOutcome","time","voteSig"} },
 
 };

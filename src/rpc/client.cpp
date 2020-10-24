@@ -262,6 +262,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gobject_prepare", 1, "revision" },
     { "gobject_prepare", 2, "time" },
     { "gobject_prepare", 5, "outputIndex" },
+    { "gobject_getcurrentvotes", 2, "vout" },
+    { "gobject_submit", 1, "revision" },
+    { "gobject_submit", 2, "time" },
+
 };
 // clang-format on
 
