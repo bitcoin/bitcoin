@@ -41,9 +41,13 @@ class HelpRpcTest(SyscoinTestFramework):
         components = [ 'Blockchain', 'Control', 'Evo' ]
         if self.is_wallet_compiled():
              components.append('Evowallet')
-             
-        components.extend(['Generating', 'Governance', 'Masternode', 'Mining', 'Network', 'Rawtransactions', 'Syscoin'])
+        
+        components.extend(['Generating','Governance'])
+        if self.is_wallet_compiled():
+             components.append('Governancewallet')
 
+        components.extend(['Masternode', 'Mining', 'Network', 'Rawtransactions', 'Syscoin'])
+        
         if self.is_wallet_compiled():
             components.append('Syscoinwallet')
             components.append('Util')
