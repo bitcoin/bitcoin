@@ -563,12 +563,9 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
-UniValue assetnew(const JSONRPCRequest& request) {
-    uint32_t nCustomGuid = nCustomAssetGuid;
-    if(nCustomAssetGuid > 0)
-        nCustomAssetGuid = 0;
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetnew",
+RPCHelpMan assetnew()
+{
+    return RPCHelpMan{"assetnew",
     "\nCreate a new asset\n",
     {
         {"funding_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Fund resulting UTXO owning the asset by this much SYS for gas."},
@@ -608,8 +605,14 @@ UniValue assetnew(const JSONRPCRequest& request) {
     RPCExamples{
     HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
     + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
-    }
-    }.Check(request);
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    uint32_t nCustomGuid = nCustomAssetGuid;
+    if(nCustomAssetGuid > 0)
+        nCustomAssetGuid = 0;
+    const UniValue &params = request.params;
+    
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();  
@@ -781,11 +784,14 @@ UniValue assetnew(const JSONRPCRequest& request) {
     res.__pushKV("txid", tx->GetHash().GetHex());
     res.__pushKV("asset_guid", nAsset);
     return res;
-}
-UniValue assetnewtest(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetnewtest",
-    "\nCreate a new asset with a specific GUID. Useful for testing purposes.\n",
+},
+    };
+} 
+
+static RPCHelpMan assetnewtest()
+{
+    return RPCHelpMan{"assetnewtest",
+    "\nCreate a new asset for testing purposes with a specific asset_guid. Used by functional tests.\n",
     {
         {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
         {"funding_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Fund resulting UTXO owning the asset by this much SYS for gas."},
@@ -793,7 +799,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-        {"max_supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
+        {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee details, 64 for ability to update the capability flags (this field). 127 for all. 0 for none (not updatable)."},
         {"notary_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Notary address"},
         {"notary_details", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Notary details structure (if notary_address is set)",
@@ -814,6 +820,7 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
                 }
             }
         }
+
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -822,10 +829,12 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
             {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnewtest", "1234 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
-    + HelpExampleRpc("assetnewtest", "1234 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
-    }
-    }.Check(request);
+    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
+    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     UniValue paramsFund(UniValue::VARR);
     nCustomAssetGuid = params[0].get_uint();
     for(int i = 1;i<=10;i++)
@@ -833,7 +842,9 @@ UniValue assetnewtest(const JSONRPCRequest& request) {
     JSONRPCRequest assetNewRequest(request.context);
     assetNewRequest.params = paramsFund;
     assetNewRequest.URI = request.URI;
-    return assetnew(assetNewRequest);        
+    return assetnew().HandleRequest(assetNewRequest);        
+},
+    };
 }
 UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
     AssertLockHeld(pwallet->cs_wallet);
