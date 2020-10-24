@@ -3,33 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <masternode/activemasternode.h>
-#include <base58.h>
-#include <clientversion.h>
-#include <init.h>
 #include <netbase.h>
 #include <validation.h>
-#include <util/system.h>
-#include <util/moneystr.h>
-#include <txmempool.h>
-
-#include <evo/specialtx.h>
-#include <evo/deterministicmns.h>
-
 #include <masternode/masternodepayments.h>
-#include <masternode/masternodesync.h>
-
 #include <rpc/server.h>
-
-#include <wallet/coincontrol.h>
-#include <wallet/rpcwallet.h>
-#ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
-#endif // ENABLE_WALLET
-
-#include <fstream>
-#include <iomanip>
-#include <univalue.h>
-#include <rpc/util.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
 RPCHelpMan masternodelist();
@@ -195,45 +172,6 @@ static RPCHelpMan masternode_current()
     };
 } 
 
-#ifdef ENABLE_WALLET
-static RPCHelpMan masternode_outputs()
-{
-    return RPCHelpMan{"masternode_outputs",
-        "\nPrint masternode compatible outputs\n",
-        {              
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-                HelpExampleCli("masternode_outputs", "")
-            + HelpExampleRpc("masternode_outputs", "")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
-
-    // Find possible candidates
-    std::vector<COutput> vPossibleCoins;
-    {
-        LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, true);
-    }
-
-    UniValue obj(UniValue::VOBJ);
-    for (const auto& out : vPossibleCoins) {
-        obj.pushKV(out.tx->GetHash().ToString(), strprintf("%d", out.i));
-    }
-
-    return obj;
-},
-    };
-} 
-
-
-#endif // ENABLE_WALLET
-
 static RPCHelpMan masternode_status()
 {
     return RPCHelpMan{"masternode_status",
@@ -313,7 +251,8 @@ static RPCHelpMan masternode_winners()
 },
     };
 } 
-static RPCHelpMan masternodelist()
+
+RPCHelpMan masternodelist()
 {
     return RPCHelpMan{"masternodelist",
         "\nPrint list of masternode list\n",
@@ -339,7 +278,7 @@ static RPCHelpMan masternodelist()
                 strMode != "owneraddress" && strMode != "votingaddress" &&
                 strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
                 strMode != "payee" && strMode != "pubkeyoperator" &&
-                strMode != "status"))
+                strMode != "status")
     {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
     }

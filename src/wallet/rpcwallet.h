@@ -26,6 +26,7 @@ UniValue listunspent(const JSONRPCRequest& request);
 Span<const CRPCCommand> GetAssetWalletRPCCommands();
 Span<const CRPCCommand> GetEvoWalletRPCCommands();
 Span<const CRPCCommand> GetGovernanceWalletRPCCommands();
+Span<const CRPCCommand> GetMasternodeWalletRPCCommands();
 /**
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
  *
