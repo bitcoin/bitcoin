@@ -1415,9 +1415,12 @@ bool SystemNeedsMemoryReleased()
     MEMORYSTATUSEX mem_status;
     mem_status.dwLength = sizeof(mem_status);
     if (GlobalMemoryStatusEx(&mem_status)) {
-        if (mem_status.dwMemoryLoad >= 99) return true;
-        if (mem_status.ullAvailPhys < low_memory_threshold) return true;
-        if (mem_status.ullAvailVirtual < low_memory_threshold) return true;
+        if (mem_status.dwMemoryLoad >= 99 ||
+            mem_status.ullAvailPhys < low_memory_threshold ||
+            mem_status.ullAvailVirtual < low_memory_threshold) {
+            LogPrintf("%s: YES: %s%% memory load; %s available physical memory; %s available virtual memory\n", __func__, int(mem_status.dwMemoryLoad), size_t(mem_status.ullAvailPhys), size_t(mem_status.ullAvailVirtual));
+            return true;
+        }
     }
 #endif
 #ifdef HAVE_LINUX_SYSINFO
@@ -1426,7 +1429,10 @@ bool SystemNeedsMemoryReleased()
         // Explicitly 64-bit in case of 32-bit userspace on 64-bit kernel
         const uint64_t free_ram = uint64_t(sys_info.freeram) * sys_info.mem_unit;
         const uint64_t buffer_ram = uint64_t(sys_info.bufferram) * sys_info.mem_unit;
-        if (free_ram + buffer_ram < low_memory_threshold) return true;
+        if (free_ram + buffer_ram < low_memory_threshold) {
+            LogPrintf("%s: YES: %s free RAM + %s buffer RAM\n", __func__, free_ram, buffer_ram);
+            return true;
+        }
     }
 #endif
     // NOTE: sysconf(_SC_AVPHYS_PAGES) doesn't account for caches on at least Linux, so not safe to use here
