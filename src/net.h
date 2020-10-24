@@ -76,8 +76,6 @@ static const bool DEFAULT_UPNP = false;
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
-/** The default timeframe for -maxuploadtarget. 1 day. */
-static const uint64_t MAX_UPLOAD_TIMEFRAME = 60 * 60 * 24;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
@@ -207,7 +205,6 @@ public:
         BanMan* m_banman = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
-        uint64_t nMaxOutboundTimeframe = 0;
         uint64_t nMaxOutboundLimit = 0;
         int64_t m_peer_connect_timeout = DEFAULT_PEER_CONNECT_TIMEOUT;
         std::vector<std::string> vSeedNodes;
@@ -239,7 +236,6 @@ public:
         m_peer_connect_timeout = connOptions.m_peer_connect_timeout;
         {
             LOCK(cs_totalBytesSent);
-            nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
@@ -481,7 +477,6 @@ private:
     uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent) {0};
     uint64_t nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent) {0};
     uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
-    uint64_t nMaxOutboundTimeframe GUARDED_BY(cs_totalBytesSent);
 
     // P2P timeout in seconds
     int64_t m_peer_connect_timeout;

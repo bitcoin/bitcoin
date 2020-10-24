@@ -72,6 +72,9 @@ static constexpr std::chrono::seconds DNSSEEDS_DELAY_FEW_PEERS{11};
 static constexpr std::chrono::minutes DNSSEEDS_DELAY_MANY_PEERS{5};
 static constexpr int DNSSEEDS_DELAY_PEER_THRESHOLD = 1000; // "many" vs "few" peers
 
+/** The default timeframe for -maxuploadtarget. 1 day. */
+static constexpr uint64_t MAX_UPLOAD_TIMEFRAME = 60 * 60 * 24;
+
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
 
@@ -2848,7 +2851,7 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     nTotalBytesSent += bytes;
 
     uint64_t now = GetTime();
-    if (nMaxOutboundCycleStartTime + nMaxOutboundTimeframe < now)
+    if (nMaxOutboundCycleStartTime + MAX_UPLOAD_TIMEFRAME < now)
     {
         // timeframe expired, reset cycle
         nMaxOutboundCycleStartTime = now;
@@ -2867,8 +2870,7 @@ uint64_t CConnman::GetMaxOutboundTarget()
 
 uint64_t CConnman::GetMaxOutboundTimeframe()
 {
-    LOCK(cs_totalBytesSent);
-    return nMaxOutboundTimeframe;
+    return MAX_UPLOAD_TIMEFRAME;
 }
 
 uint64_t CConnman::GetMaxOutboundTimeLeftInCycle()
@@ -2878,9 +2880,9 @@ uint64_t CConnman::GetMaxOutboundTimeLeftInCycle()
         return 0;
 
     if (nMaxOutboundCycleStartTime == 0)
-        return nMaxOutboundTimeframe;
+        return MAX_UPLOAD_TIMEFRAME;
 
-    uint64_t cycleEndTime = nMaxOutboundCycleStartTime + nMaxOutboundTimeframe;
+    uint64_t cycleEndTime = nMaxOutboundCycleStartTime + MAX_UPLOAD_TIMEFRAME;
     uint64_t now = GetTime();
     return (cycleEndTime < now) ? 0 : cycleEndTime - GetTime();
 }
