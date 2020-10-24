@@ -187,7 +187,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "stop", 0, "wait" },
     { "getsuperblockbudget", 0, "index" },
     { "spork", 1, "value" },
-    { "voteraw", 1, "tx_index" },
+    { "voteraw", 1, "collateralTxIndex" },
     { "voteraw", 5, "time" },
     { "convertaddresswallet", 2, "rescan" },
     { "assetallocationsend", 0, "asset_guid" },

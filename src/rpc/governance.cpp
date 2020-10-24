@@ -3,78 +3,59 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <masternode/activemasternode.h>
-#include <consensus/validation.h>
 #include <core_io.h>
 #include <governance/governance.h>
 #include <governance/governancevote.h>
 #include <governance/governanceclasses.h>
 #include <governance/governancevalidators.h>
-#include <init.h>
-#include <txmempool.h>
 #include <validation.h>
 #include <masternode/masternodesync.h>
-#include <messagesigner.h>
 #include <rpc/server.h>
-#include <util/system.h>
-#include <util/moneystr.h>
-#include <wallet/rpcwallet.h>
-#ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
-#endif // ENABLE_WALLET
-#include <rpc/util.h>
-#include <net.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-void gobject_count_help(const JSONRPCRequest& request)
-{
-    RPCHelpMan{"gobject count",
-    "Count governance objects and votes\n"
-    "\nArguments:\n"
-    "1. \"mode\"   (string, optional, default: \"json\") Output format: json (\"json\") or string in free form (\"all\")\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);
 
-}
-
-UniValue gobject_count(const JSONRPCRequest& request)
+static RPCHelpMan gobject_count()
 {
-    if (request.fHelp || request.params.size() > 2)
-        gobject_count_help(request);
+    return RPCHelpMan{"gobject_count",
+        "\nCount governance objects and votes\n",
+        {
+            {"mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Output format: json (\"json\") or string in free form (\"all\")."},                
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_count", "json")
+            + HelpExampleRpc("gobject_count", "json")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     std::string strMode{"json"};
 
-    if (!request.params[1].isNull()) {
-        strMode = request.params[1].get_str();
+    if (!request.params[0].isNull()) {
+        strMode = request.params[0].get_str();
     }
 
-    if (strMode != "json" && strMode != "all")
-        gobject_count_help(request);
-
     return strMode == "json" ? governance.ToJson() : governance.ToString();
-}
+},
+    };
+} 
 
-void gobject_deserialize_help(const JSONRPCRequest& request)
+
+static RPCHelpMan gobject_deserialize()
 {
-    RPCHelpMan{"gobject deserialize",
-    "Deserialize governance object from hex string to JSON\n"
-    "\nArguments:\n"
-    "1. \"hex_data\"   (string, required) data in hex string form\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);
-}
-
-UniValue gobject_deserialize(const JSONRPCRequest& request)
+    return RPCHelpMan{"gobject_deserialize",
+        "\nDeserialize governance object from hex string to JSON\n",
+        {
+            {"hex_data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Data in hex string form."},                
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_deserialize", "")
+            + HelpExampleRpc("gobject_deserialize", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp || request.params.size() != 2)
-        gobject_deserialize_help(request);
-
-    std::string strHex = request.params[1].get_str();
+    std::string strHex = request.params[0].get_str();
 
     std::vector<unsigned char> v = ParseHex(strHex);
     std::string s(v.begin(), v.end());
@@ -83,25 +64,25 @@ UniValue gobject_deserialize(const JSONRPCRequest& request)
     u.read(s);
 
     return u.write().c_str();
-}
+},
+    };
+} 
 
-void gobject_check_help(const JSONRPCRequest& request)
-{
-    RPCHelpMan{"gobject check",
-        "Validate governance object data (proposal only)\n"
-        "\nArguments:\n"
-        "1. \"hex_data\"   (string, required) data in hex string form\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);
-}
 
-UniValue gobject_check(const JSONRPCRequest& request)
+static RPCHelpMan gobject_check()
 {
-    if (request.fHelp || request.params.size() != 2)
-        gobject_check_help(request);
+    return RPCHelpMan{"gobject_check",
+        "\nValidate governance object data (proposal only)\n",
+        {
+            {"hex_data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Data in hex string form."},                
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_check", "")
+            + HelpExampleRpc("gobject_check", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -110,7 +91,7 @@ UniValue gobject_check(const JSONRPCRequest& request)
     int nRevision = 1;
 
     int64_t nTime = GetAdjustedTime();
-    std::string strDataHex = request.params[1].get_str();
+    std::string strDataHex = request.params[0].get_str();
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
 
@@ -128,124 +109,9 @@ UniValue gobject_check(const JSONRPCRequest& request)
     objResult.pushKV("Object status", "OK");
 
     return objResult;
-}
-
-#ifdef ENABLE_WALLET
-void gobject_prepare_help(const JSONRPCRequest& request)
-{
-    RPCHelpMan{"gobject prepare",
-               "Prepare governance object by signing and creating tx\n"
-                + HELP_REQUIRING_PASSPHRASE +
-                "\nArguments:\n"
-                "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
-                "2. revision      (numeric, required) object revision in the system\n"
-                "3. time          (numeric, required) time this object was created\n"
-                "4. data-hex      (string, required)  data in hex string form\n"
-                "5. use-IS        (boolean, optional, default=false) Deprecated and ignored\n"
-                "6. outputHash    (string, optional) the single output to submit the proposal fee from\n"
-                "7. outputIndex   (numeric, optional) The output index.\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);
-}
-
-UniValue gobject_prepare(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-    if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
-        gobject_prepare_help(request);
-
-    NodeContext& node = EnsureNodeContext(request.context);
-    if(!node.connman)
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
-
-    uint256 hashParent;
-
-    // -- attach to root node (root node doesn't really exist, but has a hash of zero)
-    if (request.params[1].get_str() == "0") {
-        hashParent = uint256();
-    } else {
-        hashParent = ParseHashV(request.params[1], "fee-txid, parameter 1");
-    }
-
-    std::string strRevision = request.params[2].get_str();
-    std::string strTime = request.params[3].get_str();
-    int nRevision;
-    if(!ParseInt32(strRevision, &nRevision)){
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid revision");
-    }
-    int64_t nTime = atoi64(strTime);
-    std::string strDataHex = request.params[4].get_str();
-
-    // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
-
-    CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
-
-    // This command is dangerous because it consumes 150 SYS irreversibly.
-    // If params are lost, it's very hard to bruteforce them and yet
-    // users ignore all instructions on syshub etc. and do not save them...
-    // Let's log them here and hope users do not mess with debug.log
-    LogPrintf("gobject_prepare -- params: %s %s %s %s, data: %s, hash: %s\n",
-                request.params[1].get_str(), request.params[2].get_str(),
-                request.params[3].get_str(), request.params[4].get_str(),
-                govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
-
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-        CProposalValidator validator(strDataHex, false);
-        if (!validator.Validate()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
-        }
-    }
-
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
-    }
-
-    LOCK(pwallet->cs_wallet);
-
-    std::string strError = "";
-    if (!govobj.IsValidLocally(strError, false))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
-
-    // If specified, spend this outpoint as the proposal fee
-    COutPoint outpoint;
-    outpoint.SetNull();
-    if (!request.params[6].isNull() && !request.params[7].isNull()) {
-        uint256 collateralHash = ParseHashV(request.params[6], "outputHash");
-        int32_t collateralIndex = request.params[7].get_int();
-        if (collateralHash.IsNull() || collateralIndex < 0) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
-        }
-        outpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
-    }
-
-    CTransactionRef tx;
-    if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
-        std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
-        if (!request.params[6].isNull() && !request.params[7].isNull()) {
-            err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
-        }
-        throw JSONRPCError(RPC_INTERNAL_ERROR, err);
-    }
-
-    // -- send the tx to the network
-    mapValue_t mapValue;
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
-
-    LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
-                govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());
-
-    return tx->GetHash().ToString();
-}
-#endif // ENABLE_WALLET
+},
+    };
+} 
 
 void gobject_submit_help(const JSONRPCRequest& request)
 {
@@ -538,152 +404,6 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
     return returnObj;
 }
 
-#ifdef ENABLE_WALLET
-void gobject_vote_many_help(const JSONRPCRequest& request)
-{
-    RPCHelpMan{"gobject vote-many",
-            "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
-            + HELP_REQUIRING_PASSPHRASE +
-            "\nArguments:\n"
-            "1. governance-hash   (string, required) hash of the governance object\n"
-            "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-            "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);  
-}
-
-UniValue gobject_vote_many(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-    if (request.fHelp || request.params.size() != 4)
-        gobject_vote_many_help(request);
-
-
-    NodeContext& node = EnsureNodeContext(request.context);
-    if(!node.connman)
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-
-    uint256 hash = ParseHashV(request.params[1], "Object hash");
-    std::string strVoteSignal = request.params[2].get_str();
-    std::string strVoteOutcome = request.params[3].get_str();
-
-    vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
-    if (eVoteSignal == VOTE_SIGNAL_NONE) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER,
-                           "Invalid vote signal. Please using one of the following: "
-                           "(funding|valid|delete|endorsed)");
-    }
-
-    vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
-    if (eVoteOutcome == VOTE_OUTCOME_NONE) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
-    }
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    std::map<uint256, CKey> votingKeys;
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
-    CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
-    mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
-        LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
-        EnsureWalletIsUnlocked(pwallet);
-
-        CKey key;
-        if (spk_man.GetKey(dmn->pdmnState->keyIDVoting, key)) {
-            votingKeys.emplace(dmn->proTxHash, key);
-        }
-    });
-
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
-}
-
-void gobject_vote_alias_help(const JSONRPCRequest& request)
-{
-     RPCHelpMan{"gobject vote-alias",
-            "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
-            + HELP_REQUIRING_PASSPHRASE +
-            "\nArguments:\n"
-            "1. governance-hash   (string, required) hash of the governance object\n"
-            "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-            "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-            "4. protx-hash        (string, required) masternode's proTxHash",
-    {
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request);     
-}
-
-UniValue gobject_vote_alias(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-    if (request.fHelp || request.params.size() != 5)
-        gobject_vote_alias_help(request);
-
-
-    NodeContext& node = EnsureNodeContext(request.context);
-    if(!node.connman)
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-
-    uint256 hash = ParseHashV(request.params[1], "Object hash");
-    std::string strVoteSignal = request.params[2].get_str();
-    std::string strVoteOutcome = request.params[3].get_str();
-
-    vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
-    if (eVoteSignal == VOTE_SIGNAL_NONE) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER,
-                           "Invalid vote signal. Please using one of the following: "
-                           "(funding|valid|delete|endorsed)");
-    }
-
-    vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
-    if (eVoteOutcome == VOTE_OUTCOME_NONE) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
-    }
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    uint256 proTxHash = ParseHashV(request.params[4], "protx-hash");
-    CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
-    auto dmn = mnList.GetValidMN(proTxHash);
-    if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
-    }
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
-    CKey key;
-    {
-        LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
-        
-        if (!spk_man.GetKey(dmn->pdmnState->keyIDVoting, key)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting))));
-        }
-    }
-
-    std::map<uint256, CKey> votingKeys;
-    votingKeys.emplace(proTxHash, key);
-
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
-}
-#endif
 
 UniValue ListObjects(const std::string& strCachedSignal, const std::string& strType, int nStartTime)
 {
@@ -960,106 +680,26 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     return bResult;
 }
 
-void gobject_help(const JSONRPCRequest& request)
+static RPCHelpMan voteraw()
 {
-    RPCHelpMan{"gobject",
-            "Set of commands to manage governance objects.\n"
-            "\nAvailable commands:\n"
-            "  check              - Validate governance object data (proposal only)\n"
-#ifdef ENABLE_WALLET
-            "  prepare            - Prepare governance object by signing and creating tx\n"
-#endif // ENABLE_WALLET
-            "  submit             - Submit governance object to network\n"
-            "  deserialize        - Deserialize governance object from hex string to JSON\n"
-            "  count              - Count governance objects and votes (additional param: 'json' or 'all', default: 'json')\n"
-            "  get                - Get governance object by hash\n"
-            "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
-            "  list               - List governance objects (can be filtered by signal and/or object type)\n"
-            "  diff               - List differences since last diff\n"
-#ifdef ENABLE_WALLET
-            "  vote-alias         - Vote on a governance object by masternode proTxHash\n"
-#endif // ENABLE_WALLET
-            "  vote-conf          - Vote on a governance object by masternode configured in syscoin.conf\n"
-#ifdef ENABLE_WALLET
-            "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
-#endif // ENABLE_WALLET
-    ,{
-        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"}
-    },
-    RPCResult{RPCResult::Type::NONE, "", ""},
-    RPCExamples{""},
-    }.Check(request); 
-}
-
-UniValue gobject(const JSONRPCRequest& request)
-{
-    std::string strCommand;
-    if (!request.params[0].isNull())
-        strCommand = request.params[0].get_str();
-
-    if (request.fHelp && strCommand.empty()) {
-        gobject_help(request);
-    }
-
-    if (strCommand == "count") {
-        return gobject_count(request);
-    } else if (strCommand == "deserialize") {
-        // DEBUG : TEST DESERIALIZATION OF GOVERNANCE META DATA
-        return gobject_deserialize(request);
-    } else if (strCommand == "check") {
-        // VALIDATE A GOVERNANCE OBJECT PRIOR TO SUBMISSION
-        return gobject_check(request);
-#ifdef ENABLE_WALLET
-    } else if (strCommand == "prepare") {
-        // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
-        return gobject_prepare(request);
-#endif // ENABLE_WALLET
-    } else if (strCommand == "submit") {
-        // AFTER COLLATERAL TRANSACTION HAS MATURED USER CAN SUBMIT GOVERNANCE OBJECT TO PROPAGATE NETWORK
-        /*
-            ------ Example Governance Item ------
-
-            gobject submit 6e622bb41bad1fb18e7f23ae96770aeb33129e18bd9efe790522488e580a0a03 0 1 1464292854 "beer-reimbursement" 5b5b22636f6e7472616374222c207b2270726f6a6563745f6e616d65223a20225c22626565722d7265696d62757273656d656e745c22222c20227061796d656e745f61646472657373223a20225c225879324c4b4a4a64655178657948726e34744744514238626a6876464564615576375c22222c2022656e645f64617465223a202231343936333030343030222c20226465736372697074696f6e5f75726c223a20225c227777772e646173687768616c652e6f72672f702f626565722d7265696d62757273656d656e745c22222c2022636f6e74726163745f75726c223a20225c22626565722d7265696d62757273656d656e742e636f6d2f3030312e7064665c22222c20227061796d656e745f616d6f756e74223a20223233342e323334323232222c2022676f7665726e616e63655f6f626a6563745f6964223a2037342c202273746172745f64617465223a202231343833323534303030227d5d5d1
-        */
-        return gobject_submit(request);
-    } else if (strCommand == "vote-conf") {
-        return gobject_vote_conf(request);
-#ifdef ENABLE_WALLET
-    } else if (strCommand == "vote-many") {
-        return gobject_vote_many(request);
-    } else if (strCommand == "vote-alias") {
-        return gobject_vote_alias(request);
-#endif
-    } else if (strCommand == "list") {
-        // USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
-        return gobject_list(request);
-    } else if (strCommand == "diff") {
-        return gobject_diff(request);
-    } else if (strCommand == "get") {
-        // GET SPECIFIC GOVERNANCE ENTRY
-        return gobject_get(request);
-    } else if (strCommand == "getcurrentvotes") {
-        // GET VOTES FOR SPECIFIC GOVERNANCE OBJECT
-        return gobject_getcurrentvotes(request);
-    }
-    JSONRPCRequest jreq(request);
-    jreq.params = UniValue();
-    gobject_help(jreq);
-    return jreq.params;
-}
-
-UniValue voteraw(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 7){
-        RPCHelpMan{"voteraw",
-                "voteraw <mn-collateral-tx-hash> <mn-collateral-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
-                "Compile and relay a governance vote with provided external signature instead of signing vote internally\n",
+    return RPCHelpMan{"voteraw",
+        "\nCompile and relay a governance vote with provided external signature instead of signing vote internally\n",
         {
+            {"collateralTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Masternode collateral txid."}, 
+            {"collateralTxIndex", RPCArg::Type::NUM, RPCArg::Optional::NO, "Masternode collateral output index."}, 
+            {"governanceHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Governance proposal hash."},    
+            {"voteSignal", RPCArg::Type::STR, RPCArg::Optional::NO, "One of following (funding|valid|delete|endorsed)."}, 
+            {"voteOutcome", RPCArg::Type::STR, RPCArg::Optional::NO, "One of following (yes|no|abstain)."},
+            {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time of vote."},
+            {"voteSig", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Vote signature. Must be encoded in base64."},                 
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{""},
-        }.Check(request);  
-    }
+        RPCExamples{
+                HelpExampleCli("voteraw", "")
+            + HelpExampleRpc("voteraw", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -1127,27 +767,36 @@ UniValue voteraw(const JSONRPCRequest& request)
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
     }
-}
+},
+    };
+} 
 
-UniValue getgovernanceinfo(const JSONRPCRequest& request)
+static RPCHelpMan getgovernanceinfo()
 {
-    if (request.fHelp || request.params.size() != 0) {
-        RPCHelpMan{"getgovernanceinfo",
-            "Returns an object containing governance parameters.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"governanceminquorum\": xxxxx,           (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
-            "  \"proposalfee\": xxx.xx,                  (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
-            "  \"superblockcycle\": xxxxx,               (numeric) the number of blocks between superblocks\n"
-            "  \"lastsuperblock\": xxxxx,                (numeric) the block number of the last superblock\n"
-            "  \"nextsuperblock\": xxxxx,                (numeric) the block number of the next superblock\n"
-            "}\n",
-        {
+    return RPCHelpMan{"getgovernanceinfo",
+        "\nReturns an object containing governance parameters.\n",
+        {                
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{""},
-        }.Check(request);
-    }
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                {
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "governanceminquorum", "The absolute minimum number of votes needed to trigger a governance action"},
+                        {RPCResult::Type::NUM, "proposalfee", "The collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT},
+                        {RPCResult::Type::NUM, "superblockcycle", "The number of blocks between superblocks"},
+                        {RPCResult::Type::NUM, "lastsuperblock", "The block number of the last superblock"},
+                        {RPCResult::Type::NUM, "nextsuperblock", "The block number of the next superblock"},
+                    }
+                },
+            },
+        },
+        RPCExamples{
+                HelpExampleCli("getgovernanceinfo", "")
+            + HelpExampleRpc("getgovernanceinfo", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     LOCK(cs_main);
 
@@ -1164,31 +813,34 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
     obj.pushKV("nextsuperblock", nNextSuperblock);
 
     return obj;
-}
+},
+    };
+} 
 
-UniValue getsuperblockbudget(const JSONRPCRequest& request)
+
+static RPCHelpMan getsuperblockbudget()
 {
-    if (request.fHelp || request.params.size() != 1) {
-        RPCHelpMan{"getsuperblockbudget",
-            "\nReturns the absolute maximum sum of superblock payments allowed.\n"
-            "\nArguments:\n"
-            "1. index         (numeric, required) The block index\n"
-            "\nResult:\n"
-            "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n",
-        {
+    return RPCHelpMan{"getsuperblockbudget",
+        "\nReturns the absolute maximum sum of superblock payments allowed.\n",
+        {      
+            {"index", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block index."},           
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{""},
-        }.Check(request);
-    }
-
+        RPCResult{RPCResult::Type::NUM, "n", "The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT},
+        RPCExamples{
+                HelpExampleCli("getsuperblockbudget", "")
+            + HelpExampleRpc("getsuperblockbudget", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     int nBlockHeight = request.params[0].get_int();
     if (nBlockHeight < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
     }
 
     return ValueFromAmount(CSuperblock::GetPaymentsLimit(nBlockHeight));
-}
+},
+    };
+} 
 
 
 void RegisterGovernanceRPCCommands(CRPCTable &t)
@@ -1199,8 +851,10 @@ static const CRPCCommand commands[] =
 //  --------------------- ------------------------  -----------------------  ----------
     { "governance",               "getgovernanceinfo",      &getgovernanceinfo,      {} },
     { "governance",               "getsuperblockbudget",    &getsuperblockbudget,    {"index"} },
-    { "governance",               "gobject",                &gobject,                {} },
-    { "governance",               "voteraw",                &voteraw,                {"tx_hash","tx_index","gov_hash","signal","outcome","time","sig"} },
+    { "governance",               "gobject_count",          &gobject_count,          {"mode"} },
+    { "governance",               "gobject_deserialize",    &gobject_deserialize,    {"hex_data"} },
+    { "governance",               "gobject_check",          &gobject_check,          {"hex_data"} },
+    { "governance",               "voteraw",                &voteraw,                {"collateralTxHash","collateralTxIndex","governanceHash","voteSignal","voteOutcome","time","voteSig"} },
 
 };
 // clang-format on
