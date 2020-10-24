@@ -292,12 +292,9 @@ Span<const CRPCCommand> GetGovernanceWalletRPCCommands()
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
 //  --------------------- ------------------------  -----------------------  ----------
-    { "governancewallet",               "getgovernanceinfo",      &getgovernanceinfo,      {} },
-    { "governancewallet",               "getsuperblockbudget",    &getsuperblockbudget,    {"index"} },
-    { "governancewallet",               "gobject_count",          &gobject_count,          {"mode"} },
-    { "governancewallet",               "gobject_deserialize",    &gobject_deserialize,    {"hex_data"} },
-    { "governancewallet",               "gobject_check",          &gobject_check,          {"hex_data"} },
-    { "governancewallet",               "voteraw",                &voteraw,                {"collateralTxHash","collateralTxIndex","governanceHash","voteSignal","voteOutcome","time","voteSig"} },
+    { "governancewallet",               "gobject_vote_alias",     &gobject_vote_alias,      {} },
+    { "governancewallet",               "gobject_vote_many",      &gobject_vote_many,    {"index"} },
+    { "governancewallet",               "gobject_prepare",        &gobject_prepare,          {"mode"} },
 
 };
 // clang-format on
