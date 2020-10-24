@@ -363,7 +363,7 @@ public:
     ServiceFlags GetLocalServices() const;
 
     uint64_t GetMaxOutboundTarget();
-    uint64_t GetMaxOutboundTimeframe();
+    std::chrono::seconds GetMaxOutboundTimeframe();
 
     //! check if the outbound target is reached
     //! if param historicalBlockServingLimit is set true, the function will
@@ -374,9 +374,9 @@ public:
     //! in case of no limit, it will always response 0
     uint64_t GetOutboundTargetBytesLeft();
 
-    //! response the time in second left in the current max outbound cycle
-    //! in case of no limit, it will always response 0
-    uint64_t GetMaxOutboundTimeLeftInCycle();
+    //! returns the time left in the current max outbound cycle
+    //! in case of no limit, it will always return 0
+    std::chrono::seconds GetMaxOutboundTimeLeftInCycle();
 
     uint64_t GetTotalBytesRecv();
     uint64_t GetTotalBytesSent();
@@ -475,7 +475,7 @@ private:
 
     // outbound limit & stats
     uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent) {0};
-    uint64_t nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent) {0};
+    std::chrono::seconds nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent) {0};
     uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
 
     // P2P timeout in seconds
