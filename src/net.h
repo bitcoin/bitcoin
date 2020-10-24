@@ -367,9 +367,6 @@ public:
     ServiceFlags GetLocalServices() const;
 
     uint64_t GetMaxOutboundTarget();
-
-    //!set the timeframe for the max outbound target
-    void SetMaxOutboundTimeframe(uint64_t timeframe);
     uint64_t GetMaxOutboundTimeframe();
 
     //! check if the outbound target is reached
