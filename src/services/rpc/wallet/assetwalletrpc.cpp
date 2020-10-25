@@ -621,7 +621,7 @@ RPCHelpMan assetnew()
                     {
                         {"", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::NUM, RPCArg::Optional::NO, "The percentage in %% to share with the operator. The value must be\n"
-                                        "between 0.00 and 65.535."},
+                                        "between 0.00(0%%) and 0.65535(65.535%%)."},
                     },
                 }
             }
@@ -854,7 +854,7 @@ static RPCHelpMan assetnewtest()
                     {
                         {"", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Bound (in amount) for for the fee level based on total transaction amount"},
                         {"", RPCArg::Type::NUM, RPCArg::Optional::NO, "The percentage in %% to share with the operator. The value must be\n"
-                                        "between 0.00 and 65.535."},
+                                        "between 0.00(0%%) and 0.65535(65.535%%)."},
                     },
                 }
             }
@@ -998,7 +998,7 @@ static RPCHelpMan assetupdate()
                         {
                             {"", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Bound (in amount) for for the fee level based on total transaction amount"},
                             {"", RPCArg::Type::NUM, RPCArg::Optional::NO, "The percentage in %% to share with the operator. The value must be\n"
-                                        "between 0.00 and 65.535."},
+                                        "between 0.00(0%%) and 0.65535(65.535%%)."},
                         },
                     }
                 }
