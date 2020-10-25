@@ -193,7 +193,7 @@ class DIP3Test(SyscoinTestFramework):
         # change voting address and see if changes are reflected in `masternode status` rpc output
         mn = mns[0]
         node = self.nodes[0]
-        old_dmnState = mn.node.masternode("status")["dmnState"]
+        old_dmnState = mn.node.masternode_status()["dmnState"]
         old_voting_address = old_dmnState["votingAddress"]
         new_voting_address = node.getnewaddress()
         assert(old_voting_address != new_voting_address)
@@ -202,7 +202,7 @@ class DIP3Test(SyscoinTestFramework):
         node.protx_update_registrar(mn.protx_hash, "", new_voting_address, "")
         node.generate(1)
         self.sync_all()
-        new_dmnState = mn.node.masternode("status")["dmnState"]
+        new_dmnState = mn.node.masternode_status()["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
         assert(new_voting_address_from_rpc == new_voting_address)
         # make sure payoutAddress is the same as before
@@ -293,7 +293,7 @@ class DIP3Test(SyscoinTestFramework):
         self.sync_all()
         for node in self.nodes:
             protx_info = node.protx_info( mn.protx_hash)
-            mn_list = node.masternode('list')
+            mn_list = node.masternode_list()
             assert_equal(protx_info['state']['service'], '127.0.0.2:%d' % mn.p2p_port)
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
@@ -310,12 +310,12 @@ class DIP3Test(SyscoinTestFramework):
             expected = []
             for mn in mns:
                 expected.append('%s-%d' % (mn.collateral_txid, mn.collateral_vout))
-            self.log.error('mnlist: ' + str(node.masternode('list', 'status')))
+            self.log.error('mnlist: ' + str(node.masternode_list('status')))
             self.log.error('expected: ' + str(expected))
             raise AssertionError("mnlists does not match provided mns")
 
     def compare_mnlist(self, node, mns):
-        mnlist = node.masternode('list', 'status')
+        mnlist = node.masternode_list('status')
         for mn in mns:
             s = '%s-%d' % (mn.collateral_txid, mn.collateral_vout)
             in_list = s in mnlist
