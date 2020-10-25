@@ -22,7 +22,6 @@ struct WalletContext;
 
 Span<const CRPCCommand> GetWalletRPCCommands();
 // SYSCOIN
-UniValue listunspent(const JSONRPCRequest& request);
 Span<const CRPCCommand> GetAssetWalletRPCCommands();
 Span<const CRPCCommand> GetEvoWalletRPCCommands();
 Span<const CRPCCommand> GetGovernanceWalletRPCCommands();
@@ -39,6 +38,7 @@ void EnsureWalletIsUnlocked(const CWallet*);
 WalletContext& EnsureWalletContext(const util::Ref& context);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 
+RPCHelpMan listunspent();
 RPCHelpMan getaddressinfo();
 RPCHelpMan signrawtransactionwithwallet();
 RPCHelpMan sendrawtransaction();

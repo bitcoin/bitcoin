@@ -345,8 +345,27 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     return true;
 }
 
-
-UniValue signhash(const JSONRPCRequest& request)
+static RPCHelpMan signhash()
+{   
+    return RPCHelpMan{"signhash",
+            "\nSign a hash with the private key of an address" +
+    HELP_REQUIRING_PASSPHRASE,
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to use for the private key."},
+                {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash to create a signature of."},
+            },
+            RPCResult{
+                RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
+            },
+            RPCExamples{
+        "\nUnlock the wallet for 30 seconds\n"
+        + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
+        "\nCreate the signature\n"
+        + HelpExampleCli("signhash", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"hash\"") +
+        "\nAs a JSON-RPC call\n"
+        + HelpExampleRpc("signhash", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"hash\"")
+            },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
         RPCHelpMan{"signhash",
                 "\nSign a hash with the private key of an address" +
@@ -404,11 +423,13 @@ UniValue signhash(const JSONRPCRequest& request)
         return false;
     }
     return EncodeBase64(vchSig);
-}
+},
+    };
+} 
 
-UniValue signmessagebech32(const JSONRPCRequest& request)
+static RPCHelpMan signmessagebech32()
 {
-        RPCHelpMan{"signmessagebech32",
+    return RPCHelpMan{"signmessagebech32",
                 "\nSign a message with the private key of an address (p2pkh or p2wpkh)" +
         HELP_REQUIRING_PASSPHRASE,
                 {
@@ -426,7 +447,8 @@ UniValue signmessagebech32(const JSONRPCRequest& request)
             "\nAs a JSON-RPC signmessagebech32\n"
             + HelpExampleRpc("signmessagebech32", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"message\"")
                 },
-            }.Check(request);
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -464,10 +486,13 @@ UniValue signmessagebech32(const JSONRPCRequest& request)
         return false;
     }
     return EncodeBase64(vchSig);
-}
-UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"syscoinburntoassetallocation",
+},
+    };
+} 
+
+static RPCHelpMan syscoinburntoassetallocation()
+{
+    return RPCHelpMan{"syscoinburntoassetallocation",
         "\nBurns Syscoin to the SYSX asset\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid of SYSX"},
@@ -481,8 +506,10 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("syscoinburntoassetallocation", "\"asset_guid\" \"amount\"")
             + HelpExampleRpc("syscoinburntoassetallocation", "\"asset_guid\", \"amount\"")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -562,7 +589,11 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
-}
+},
+    };
+} 
+
+
 RPCHelpMan assetnew()
 {
     return RPCHelpMan{"assetnew",
@@ -935,9 +966,9 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     return res;
 }
 
-UniValue assetupdate(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetupdate",
+static RPCHelpMan assetupdate()
+{
+    return RPCHelpMan{"assetupdate",
         "\nPerform an update on an asset you control.\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
@@ -972,8 +1003,10 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"updatecapability_flags\" \"notary_address\" {} {}")
             + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"updatecapability_flags\", \"notary_address\", {}, {}")
-        }
-        }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -1074,11 +1107,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
     return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient);
-}
+},
+    };
+} 
 
-UniValue assettransfer(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assettransfer",
+static RPCHelpMan assettransfer()
+{
+    return RPCHelpMan{"assettransfer",
         "\nPerform a transfer of ownership on an asset you control.\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
@@ -1092,8 +1127,10 @@ UniValue assettransfer(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("assettransfer", "\"asset_guid\" \"address\"")
             + HelpExampleRpc("assettransfer", "\"asset_guid\", \"address\"")
-        }
-        }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -1126,11 +1163,13 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
     return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient, &recp);
+},
+    };
 }
 
-UniValue assetsendmany(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetsendmany",
+static RPCHelpMan assetsendmany()
+{
+    return RPCHelpMan{"assetsendmany",
     "\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
     {
         {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid."},
@@ -1156,8 +1195,10 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         + HelpExampleCli("assetsendmany", "\"asset_guid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
         + HelpExampleRpc("assetsendmany", "\"asset_guid\",\'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\'")
         + HelpExampleRpc("assetsendmany", "\"asset_guid\",\"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
-    }
-    }.Check(request);
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -1220,11 +1261,13 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_SEND, nAsset, pwallet, vecSend, opreturnRecipient);
+},
+    };
 }
 
-UniValue assetsend(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetsend",
+static RPCHelpMan assetsend()
+{
+    return RPCHelpMan{"assetsend",
     "\nSend an asset you own to another address.\n",
     {
         {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
@@ -1239,9 +1282,10 @@ UniValue assetsend(const JSONRPCRequest& request) {
     RPCExamples{
         HelpExampleCli("assetsend", "\"asset_guid\" \"address\" \"amount\"")
         + HelpExampleRpc("assetsend", "\"asset_guid\", \"address\", \"amount\"")
-        }
-
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     const uint32_t &nAsset = params[0].get_uint();          
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
@@ -1254,12 +1298,14 @@ UniValue assetsend(const JSONRPCRequest& request) {
     JSONRPCRequest requestMany(request.context);
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
-    return assetsendmany(requestMany);          
+    return assetsendmany().HandleRequest(requestMany);          
+},
+    };
 }
 
-UniValue assetallocationsendmany(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationsendmany",
+static RPCHelpMan assetallocationsendmany()
+{
+    return RPCHelpMan{"assetallocationsendmany",
         "\nSend an asset allocation you own to another address. Maximum recipients is 250.\n",
         {
             {"amounts", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of assetallocationsend objects",
@@ -1292,8 +1338,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             + HelpExampleCli("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"true\"")
             + HelpExampleRpc("assetallocationsendmany", "\'[{\"asset_guid\":1045909988,\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":1045909988,\"address\":\"sysaddress2\",\"amount\":200}]\',\"false\"")
             + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\",\"true\"")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+	const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -1457,10 +1505,13 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
+},
+    };
 }
-UniValue assetallocationburn(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationburn",
+
+static RPCHelpMan assetallocationburn()
+{
+    return RPCHelpMan{"assetallocationburn",
         "\nBurn an asset allocation in order to use the bridge or move back to Syscoin\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
@@ -1475,8 +1526,10 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("assetallocationburn", "\"asset_guid\" \"amount\" \"ethereum_destination_address\"")
             + HelpExampleRpc("assetallocationburn", "\"asset_guid\", \"amount\", \"ethereum_destination_address\"")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+	const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -1586,6 +1639,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
+},
+    };
 }
 
 std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
@@ -1595,9 +1650,9 @@ std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
      return arrayOfByte;
 }
 
-UniValue assetallocationmint(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationmint",
+static RPCHelpMan assetallocationmint()
+{
+    return RPCHelpMan{"assetallocationmint",
         "\nMint assetallocation to come back from the bridge\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
@@ -1622,8 +1677,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blocknumber\" \"bridge_transfer_id\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
             + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"bridge_transfer_id\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -1759,11 +1816,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;  
+},
+    };
 }
 
-UniValue assetallocationsend(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationsend",
+static RPCHelpMan assetallocationsend()
+{
+    return RPCHelpMan{"assetallocationsend",
         "\nSend an asset allocation you own to another address.\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
@@ -1779,8 +1838,10 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"false\"")
             + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\" \"false\"")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     const uint32_t &nAsset = params[0].get_uint();          
     bool m_signal_bip125_rbf = false;
     if (!request.params[3].isNull()) {
@@ -1809,12 +1870,14 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     JSONRPCRequest requestMany(request.context);
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
-    return assetallocationsendmany(requestMany);          
+    return assetallocationsendmany().HandleRequest(requestMany);          
+},
+    };
 }
 
-UniValue convertaddresswallet(const JSONRPCRequest& request) {	
-
-    RPCHelpMan{"convertaddresswallet",
+static RPCHelpMan convertaddresswallet()
+{
+    return RPCHelpMan{"convertaddresswallet",
     "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.",   
     {	
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},	
@@ -1831,7 +1894,9 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
     RPCExamples{	
         HelpExampleCli("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
         + HelpExampleRpc("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
-    }}.Check(request);	
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -1899,11 +1964,15 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
     ret.pushKV("v3address", currentV3Address);	
     ret.pushKV("v4address", currentV4Address); 	
     return ret;	
+},
+    };
 }
 
 
-UniValue listunspentasset(const JSONRPCRequest& request) {	
-    RPCHelpMan{"listunspentasset",
+	
+static RPCHelpMan listunspentasset()
+{
+    return RPCHelpMan{"listunspentasset",
     "\nHelper function which just calls listunspent to find unspent UTXO's for an asset.",   
     {	
         {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},	
@@ -1915,7 +1984,9 @@ UniValue listunspentasset(const JSONRPCRequest& request) {
     RPCExamples{	
         HelpExampleCli("listunspentasset", "2328882 0")	
         + HelpExampleRpc("listunspentasset", "2328882 0")	
-    }}.Check(request);	
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     uint32_t nAsset = request.params[0].get_uint();
     int nMinDepth = 1;
@@ -1939,7 +2010,9 @@ UniValue listunspentasset(const JSONRPCRequest& request) {
     JSONRPCRequest requestSpent(request.context);
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
-    return listunspent(requestSpent);  
+    return listunspent().HandleRequest(requestSpent);  
+},
+    };
 }
 namespace
 {
