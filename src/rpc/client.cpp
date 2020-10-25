@@ -238,6 +238,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listassets", 2, "options" },
     { "syscoinsetethstatus", 1, "highest_block" },
     { "syscoinsetethheaders", 0, "headers" },
+    { "syscoincheckmint", 0, "bridge_transfer_id" },
     { "protx_list_wallet", 0, "detailed" },
     { "protx_list_wallet", 1, "height" },
     { "protx_list", 1, "detailed" },
@@ -265,6 +266,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gobject_getcurrentvotes", 2, "vout" },
     { "gobject_submit", 1, "revision" },
     { "gobject_submit", 2, "time" },
+    { "masternode_winners", 0, "count" },
 
 };
 // clang-format on
