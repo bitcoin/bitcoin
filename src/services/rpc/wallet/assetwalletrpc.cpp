@@ -2128,15 +2128,9 @@ ReservedKeysForMining g_mining_keys;
 
 } // anonymous namespace
 
-UniValue getauxblock(const JSONRPCRequest& request)
+static RPCHelpMan getauxblock()
 {
-
-    /* RPCHelpMan::Check is not applicable here since we have the
-       custom check for exactly zero or two arguments.  */
-    if (request.fHelp
-          || (request.params.size() != 0 && request.params.size() != 2))
-        throw std::runtime_error(
-            RPCHelpMan{"getauxblock",
+    return RPCHelpMan{"getauxblock",
                 "\nCreates or submits a merge-mined block.\n"
                 "\nWithout arguments, creates a new block and returns information\n"
                 "required to merge-mine it.  With arguments, submits a solved\n"
@@ -2167,7 +2161,10 @@ UniValue getauxblock(const JSONRPCRequest& request)
                     + HelpExampleCli("getauxblock", "\"hash\" \"serialised auxpow\"")
                     + HelpExampleRpc("getauxblock", "")
                 },
-            }.ToString());
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    /* RPCHelpMan::Check is not applicable here since we have the
+       custom check for exactly zero or two arguments.  */
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -2193,6 +2190,8 @@ UniValue getauxblock(const JSONRPCRequest& request)
         g_mining_keys.MarkBlockSubmitted(pwallet, hash);
 
     return fAccepted;
+},
+    };
 }
 
 Span<const CRPCCommand> GetAssetWalletRPCCommands()
