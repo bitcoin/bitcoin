@@ -32,7 +32,8 @@ enum {
     ASSET_UPDATE_NOTARY_DETAILS=16, // can you update notary details?
     ASSET_UPDATE_AUXFEE=32, // can you update aux fees?
     ASSET_UPDATE_CAPABILITYFLAGS=64, // can you update capability flags?
-    ASSET_INIT=128 // set when creating an asset
+    ASSET_INIT=128, // set when creating an asset
+    ASSET_CAPABILITY_ALL=255
 };
 class CAuxFee {
 public:
