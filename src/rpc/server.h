@@ -14,7 +14,7 @@
 #include <map>
 #include <stdint.h>
 #include <string>
-
+#include <logging.h>
 #include <univalue.h>
 
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
@@ -113,6 +113,9 @@ public:
               intptr_t(fn))
     {
         CHECK_NONFATAL(fn().m_name == name_in);
+        for(auto arg: args_in){
+            LogPrintf("arg %s\n", arg);
+        }
         CHECK_NONFATAL(fn().GetArgNames() == args_in);
     }
 
