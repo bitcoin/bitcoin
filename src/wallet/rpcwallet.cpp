@@ -2840,9 +2840,9 @@ static RPCHelpMan unloadwallet()
     };
 }
 // SYSCOIN
-UniValue listunspent(const JSONRPCRequest& request)
+RPCHelpMan listunspent()
 {
-    RPCHelpMan{
+    return RPCHelpMan{
                 "listunspent",
                 "\nReturns array of unspent transaction outputs\n"
                 "with between minconf and maxconf (inclusive) confirmations.\n"
@@ -2902,7 +2902,8 @@ UniValue listunspent(const JSONRPCRequest& request)
             + HelpExampleCli("listunspent", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
             + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
                 },
-        }.Check(request);
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{    
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -3093,6 +3094,8 @@ UniValue listunspent(const JSONRPCRequest& request)
     }
 
     return results;
+},
+    };
 }
 
 void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl)

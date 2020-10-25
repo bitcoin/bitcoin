@@ -135,10 +135,10 @@ bool UpdateNotarySignature(CMutableTransaction& mtx, const uint32_t& nAsset, con
         }
     }
     return false;
-}
-UniValue assettransactionnotarize(const JSONRPCRequest& request) {	
-
-    RPCHelpMan{"assettransactionnotarize",	
+}	
+static RPCHelpMan assettransactionnotarize()
+{
+    return RPCHelpMan{"assettransactionnotarize",	
         "\nUpdate notary signature on an asset transaction. Will require re-signing transaction before submitting to network.\n",	
         {	
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to notarize."},
@@ -153,8 +153,9 @@ UniValue assettransactionnotarize(const JSONRPCRequest& request) {
         RPCExamples{	
             HelpExampleCli("assettransactionnotarize", "\"hex\" 12121 \"signature\"")	
             + HelpExampleRpc("assettransactionnotarize", "\"hex\",12121,\"signature\"")	
-        }	
-    }.Check(request);	
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     const std::string &hexstring = request.params[0].get_str();
     const uint32_t &nAsset = request.params[1].get_uint();
@@ -169,10 +170,13 @@ UniValue assettransactionnotarize(const JSONRPCRequest& request) {
     UniValue ret(UniValue::VOBJ);	
     ret.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
     return ret;
+},
+    };
 }
-UniValue getnotarysighash(const JSONRPCRequest& request) {	
 
-    RPCHelpMan{"getnotarysighash",	
+static RPCHelpMan getnotarysighash()
+{
+    return RPCHelpMan{"getnotarysighash",	
         "\nGet sighash for notary to sign off on, use assettransactionnotarize to update the transaction after re-singing once sighash is used to create a notarized signature.\n",	
         {	
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to get sighash for."},
@@ -186,8 +190,9 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
         RPCExamples{	
             HelpExampleCli("getnotarysighash", "\"hex\" 12121")
             + HelpExampleRpc("getnotarysighash", "\"hex\",12121")	
-        }	
-    }.Check(request);	
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{	
     const std::string &hexstring = request.params[0].get_str();
     const uint32_t &nAsset = request.params[1].get_uint();
     CMutableTransaction mtx;
@@ -208,10 +213,13 @@ UniValue getnotarysighash(const JSONRPCRequest& request) {
         }
     }
     return sigHash.GetHex();
+},
+    };
 }
-UniValue convertaddress(const JSONRPCRequest& request)	 {	
 
-    RPCHelpMan{"convertaddress",	
+static RPCHelpMan convertaddress()
+{
+    return RPCHelpMan{"convertaddress",	
         "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3.\n",	
         {	
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}	
@@ -225,8 +233,9 @@ UniValue convertaddress(const JSONRPCRequest& request)	 {
         RPCExamples{	
             HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
             + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
-        }	
-    }.Check(request);	
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{	
 
     UniValue ret(UniValue::VOBJ);	
     CTxDestination dest = DecodeDestination(request.params[0].get_str());	
@@ -262,6 +271,8 @@ UniValue convertaddress(const JSONRPCRequest& request)	 {
     ret.pushKV("v3address", currentV3Address);	
     ret.pushKV("v4address", currentV4Address); 	
     return ret;	
+},
+    };
 }
 
 int CheckActorsInTransactionGraph(const CTxMemPool& mempool, const uint256& lookForTxHash) {
@@ -310,9 +321,9 @@ int VerifyTransactionGraph(const CTxMemPool& mempool, const uint256& lookForTxHa
 	return ZDAG_STATUS_OK;
 }
 
-UniValue assetallocationverifyzdag(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationverifyzdag",
+static RPCHelpMan assetallocationverifyzdag()
+{
+    return RPCHelpMan{"assetallocationverifyzdag",
         "\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a ZDAG transaction.\n"
         "Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
         "Level -1 means not found, not a ZDAG transaction, perhaps it is already confirmed.\n"
@@ -330,19 +341,23 @@ UniValue assetallocationverifyzdag(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("assetallocationverifyzdag", "\"txid\"")
             + HelpExampleRpc("assetallocationverifyzdag", "\"txid\"")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+	const UniValue &params = request.params;
     const CTxMemPool& mempool = EnsureMemPool(request.context);
 	uint256 txid;
 	txid.SetHex(params[0].get_str());
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
     oAssetAllocationStatus.__pushKV("status", VerifyTransactionGraph(mempool, txid));
 	return oAssetAllocationStatus;
+},
+    };
 }
 
-UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"syscoindecoderawtransaction",
+static RPCHelpMan syscoindecoderawtransaction()
+{
+    return RPCHelpMan{"syscoindecoderawtransaction",
     "\nDecode raw syscoin transaction (serialized, hex-encoded) and display information pertaining to the service that is included in the transactiion data output(OP_RETURN)\n",
     {
         {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction hex string."}
@@ -368,9 +383,10 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     RPCExamples{
         HelpExampleCli("syscoindecoderawtransaction", "\"hexstring\"")
         + HelpExampleRpc("syscoindecoderawtransaction", "\"hexstring\"")
-    }
-    }.Check(request);
-
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     const NodeContext& node = EnsureNodeContext(request.context);
 
     std::string hexstring = params[0].get_str();
@@ -396,11 +412,13 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     if(rawTx && !DecodeSyscoinRawtransaction(*rawTx, hashBlock, output))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
     return output;
+},
+    };
 }
 
-UniValue assetinfo(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetinfo",
+static RPCHelpMan assetinfo()
+{
+    return RPCHelpMan{"assetinfo",
         "\nShow stored values of a single asset and its.\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"}
@@ -422,9 +440,10 @@ UniValue assetinfo(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("assetinfo", "\"assetguid\"")
             + HelpExampleRpc("assetinfo", "\"assetguid\"")
-        }
-    }.Check(request);
-
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     const int &nAsset = params[0].get_uint();
     UniValue oAsset(UniValue::VOBJ);
 
@@ -435,11 +454,13 @@ UniValue assetinfo(const JSONRPCRequest& request) {
     if(!BuildAssetJson(txPos, nAsset, oAsset))
         oAsset.clear();
     return oAsset;
+},
+    };
 }
 
-UniValue listassets(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"listassets",
+static RPCHelpMan listassets()
+{
+    return RPCHelpMan{"listassets",
         "\nScan through all assets.\n",
         {
             {"count", RPCArg::Type::NUM, "10", "The number of results to return."},
@@ -472,8 +493,10 @@ UniValue listassets(const JSONRPCRequest& request) {
             + HelpExampleCli("listassets", "10 10")
             + HelpExampleCli("listassets", "0 0 '{\"asset_guid\":3473733}'")
             + HelpExampleRpc("listassets", "0, 0, '{\"asset_guid\":3473733}'")
-            }
-    }.Check(request);
+            },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     UniValue options;
     uint32_t count = 10;
     uint32_t from = 0;
@@ -493,10 +516,13 @@ UniValue listassets(const JSONRPCRequest& request) {
     if (!ScanAssets(*passetdb, count, from, options, oRes))
         throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
     return oRes;
+},
+    };
 }
 
-UniValue syscoingetspvproof(const JSONRPCRequest& request) {
-    RPCHelpMan{"syscoingetspvproof",
+static RPCHelpMan syscoingetspvproof()
+{
+    return RPCHelpMan{"syscoingetspvproof",
     "\nReturns SPV proof for use with inter-chain transfers.\n",
     {
         {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"},
@@ -505,7 +531,8 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     RPCResult{
         RPCResult::Type::STR, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
     RPCExamples{""},
-    }.Check(request);
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     LOCK(cs_main);
     UniValue res(UniValue::VOBJ);
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
@@ -572,10 +599,13 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     res.__pushKV("siblings", siblings);
     res.__pushKV("index", nIndex);    
     return res;
+},
+    };
 }
 
-UniValue syscoinstopgeth(const JSONRPCRequest& request) {
-    RPCHelpMan{"syscoinstopgeth",
+static RPCHelpMan syscoinstopgeth()
+{
+    return RPCHelpMan{"syscoinstopgeth",
     "\nStops Geth and the relayer from running.\n",
     {},       
     RPCResult{
@@ -586,8 +616,9 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     RPCExamples{
         HelpExampleCli("syscoinstopgeth", "")
         + HelpExampleRpc("syscoinstopgeth", "")
-    }
-    }.Check(request);
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     if(!StopRelayerNode(relayerPID))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
     if(!StopGethNode(gethPID))
@@ -595,10 +626,13 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;
+},
+    };
 }
 
-UniValue syscoinstartgeth(const JSONRPCRequest& request) {
-    RPCHelpMan{"syscoinstartgeth",
+static RPCHelpMan syscoinstartgeth()
+{
+    return RPCHelpMan{"syscoinstartgeth",
     "\nStarts Geth and the relayer.\n",
     {},
     RPCResult{
@@ -609,9 +643,9 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     RPCExamples{
         HelpExampleCli("syscoinstartgeth", "")
         + HelpExampleRpc("syscoinstartgeth", "")
-    }
-    }.Check(request);
-    
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
@@ -626,11 +660,13 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;
+},
+    };
 }
 
-UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"syscoinsetethstatus",
+static RPCHelpMan syscoinsetethstatus()
+{
+    return RPCHelpMan{"syscoinsetethstatus",
         "\nSets ethereum syncing and network status for indication status of network sync.\n",
         {
             {"syncing_status", RPCArg::Type::STR, RPCArg::Optional::NO, "Syncing status ether 'syncing' or 'synced'"},
@@ -646,8 +682,10 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
             + HelpExampleCli("syscoinsetethstatus", "\"synced\" 0")
             + HelpExampleRpc("syscoinsetethstatus", "\"syncing\", 7000000")
             + HelpExampleRpc("syscoinsetethstatus", "\"synced\", 0")
-        }
-        }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     UniValue ret(UniValue::VOBJ);
     UniValue retArray(UniValue::VARR);
     static uint64_t nLastExecTime = GetSystemTimeInSeconds();
@@ -686,11 +724,13 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     ret.__pushKV("missing_blocks", retArray);
     nLastExecTime = GetSystemTimeInSeconds();
     return ret;
+},
+    };
 }
 
-UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"syscoinsetethheaders",
+static RPCHelpMan syscoinsetethheaders()
+{
+    return RPCHelpMan{"syscoinsetethheaders",
         "\nSets Ethereum headers in Syscoin to validate transactions through the SYSX bridge.\n",
         {
             {"headers", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of arrays (block number, tx root) from Ethereum blockchain", 
@@ -717,8 +757,10 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
             + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
     LOCK(cs_setethstatus);
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
@@ -756,10 +798,13 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", res? "success": "fail");
     return ret;
+},
+    };
 }
 
-UniValue syscoinclearethheaders(const JSONRPCRequest& request) {
-    RPCHelpMan{"syscoinclearethheaders",
+static RPCHelpMan syscoinclearethheaders()
+{
+    return RPCHelpMan{"syscoinclearethheaders",
         "\nClears Ethereum headers in Syscoin.\n",
         {},
         RPCResult{
@@ -770,16 +815,21 @@ UniValue syscoinclearethheaders(const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("syscoinclearethheaders", "")
             + HelpExampleRpc("syscoinclearethheaders", "")
-        }
-    }.Check(request);
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     bool res = pethereumtxrootsdb->Clear();
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", res? "success": "fail");
     return ret;
+},
+    };
 }
 
-UniValue syscoingettxroots(const JSONRPCRequest& request) {
-    RPCHelpMan{"syscoingettxroot",
+
+static RPCHelpMan syscoingettxroots()
+{
+    return RPCHelpMan{"syscoingettxroot",
     "\nGet Ethereum transaction and receipt roots based on block height.\n",
     {
         {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to lookup."}
@@ -793,8 +843,9 @@ UniValue syscoingettxroots(const JSONRPCRequest& request) {
     RPCExamples{
         HelpExampleCli("syscoingettxroots", "23232322")
         + HelpExampleRpc("syscoingettxroots", "23232322")
-    }
-    }.Check(request);
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     LOCK(cs_setethstatus);
     uint32_t nHeight = request.params[0].get_uint();
     std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
@@ -811,10 +862,13 @@ UniValue syscoingettxroots(const JSONRPCRequest& request) {
     ret.pushKV("timestamp", txRootDB.nTimestamp);
     
     return ret;
-} 
+},
+    };
+}
 
-UniValue syscoincheckmint(const JSONRPCRequest& request) {
-    RPCHelpMan{"syscoincheckmint",
+static RPCHelpMan syscoincheckmint()
+{
+    return RPCHelpMan{"syscoincheckmint",
     "\nGet the Syscoin mint transaction by looking up using Bridge Transfer ID.\n",
     {
         {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ethereum Bridge Transfer ID used to burn funds to move to Syscoin."}
@@ -827,8 +881,9 @@ UniValue syscoincheckmint(const JSONRPCRequest& request) {
     RPCExamples{
         HelpExampleCli("syscoincheckmint", "1221")
         + HelpExampleRpc("syscoincheckmint", "1221")
-    }
-    }.Check(request);
+    },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     const uint32_t nBridgeTransferID = request.params[0].get_uint();
     uint256 sysTxid;
     if(!pethereumtxmintdb || !pethereumtxmintdb->Read(nBridgeTransferID, sysTxid)){
@@ -837,7 +892,9 @@ UniValue syscoincheckmint(const JSONRPCRequest& request) {
     UniValue output(UniValue::VOBJ);
     output.pushKV("txid", sysTxid.GetHex());
     return output;
-} 
+},
+    };
+}
 
 // clang-format on
 void RegisterAssetRPCCommands(CRPCTable &t)
