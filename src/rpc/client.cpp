@@ -236,7 +236,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listassets", 0, "count" },
     { "listassets", 1, "from" },
     { "listassets", 2, "options" },
-    { "syscoinsetethstatus", 1, "highestBlock" },
+    { "syscoinsetethstatus", 1, "highest_block" },
     { "syscoinsetethheaders", 0, "headers" },
     { "protx_list_wallet", 0, "detailed" },
     { "protx_list_wallet", 1, "height" },

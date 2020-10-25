@@ -417,7 +417,7 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
 //  --------------------- ------------------------  -----------------------  ----------
     { "masternode",               "masternode_connect",         &masternode_connect,      {"address"} },
-    { "masternode",               "masternode_list",            &masternode_list,         {"mode"} },
+    { "masternode",               "masternode_list",            &masternode_list,         {"mode","filter"} },
     { "masternode",               "masternode_winners",         &masternode_winners,      {"count"} },
     { "masternode",               "masternode_count",           &masternode_count,        {} },
     { "masternode",               "masternode_winner",          &masternode_winner,       {} },

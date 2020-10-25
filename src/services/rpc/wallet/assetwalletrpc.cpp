@@ -1651,7 +1651,7 @@ std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
 }
 
 static RPCHelpMan assetallocationmint()
-{
+{ 
     return RPCHelpMan{"assetallocationmint",
         "\nMint assetallocation to come back from the bridge\n",
         {
@@ -1819,7 +1819,6 @@ static RPCHelpMan assetallocationmint()
 },
     };
 }
-
 static RPCHelpMan assetallocationsend()
 {
     return RPCHelpMan{"assetallocationsend",
@@ -2208,14 +2207,14 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"asset_guid","amount"} }, 
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
-    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","auxfee_test"} },     
+    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txroot_hex","txmerkleproof_hex","merklerootpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof_hex","auxfee_test"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","max_supply","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","max_supply","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
-    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_receiver","amount","replaceable"}},
+    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address","amount","replaceable"}},
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable","comment","conf_target","estimate_mode"}},
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
     { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},

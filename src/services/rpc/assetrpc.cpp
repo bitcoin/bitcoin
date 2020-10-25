@@ -829,7 +829,7 @@ static RPCHelpMan syscoinclearethheaders()
 
 static RPCHelpMan syscoingettxroots()
 {
-    return RPCHelpMan{"syscoingettxroot",
+    return RPCHelpMan{"syscoingettxroots",
     "\nGet Ethereum transaction and receipt roots based on block height.\n",
     {
         {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to lookup."}
@@ -904,18 +904,18 @@ static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
     { "syscoin",            "syscoingettxroots",                &syscoingettxroots,             {"height"} },
-    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid"} },
+    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid","blockhash"} },
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
-    { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
+    { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {"hexstring"}},
     { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
     { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"txid"} },
-    { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highestBlock"} },
+    { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highest_block"} },
     { "syscoin",            "syscoinsetethheaders",             &syscoinsetethheaders,          {"headers"} },
     { "syscoin",            "syscoinclearethheaders",           &syscoinclearethheaders,        {} },
     { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
     { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
-    { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"ethtxid"} },
+    { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"bridge_transfer_id"} },
     { "syscoin",            "assettransactionnotarize",         &assettransactionnotarize,      {"hex","asset_guid","signature"} },
     { "syscoin",            "getnotarysighash",                 &getnotarysighash,              {"hex","asset_guid"} },
 };
