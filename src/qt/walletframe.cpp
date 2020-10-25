@@ -2,12 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/createwalletdialog.h>
-#include <qt/walletcontroller.h>
 #include <qt/walletframe.h>
-#include <qt/walletmodel.h>
 
 #include <qt/bitcoingui.h>
+#include <qt/createwalletdialog.h>
+#include <qt/overviewpage.h>
+#include <qt/walletcontroller.h>
+#include <qt/walletmodel.h>
 #include <qt/walletview.h>
 
 #include <cassert>
@@ -18,10 +19,11 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcoinGUI *_gui) :
-    QFrame(_gui),
-    gui(_gui),
-    platformStyle(_platformStyle)
+WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, BitcoinGUI* _gui)
+    : QFrame(_gui),
+      gui(_gui),
+      platformStyle(_platformStyle),
+      m_size_hint(OverviewPage{platformStyle, nullptr}.sizeHint())
 {
     // Leave HBox hook for adding a list view later
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
