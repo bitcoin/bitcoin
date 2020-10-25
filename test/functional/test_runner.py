@@ -39,7 +39,17 @@ except UnicodeDecodeError:
     CROSS = "x "
     CIRCLE = "o "
 
-if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
+def set_ansi_formatting():
+    """Set primitive formatting on supported terminals via ANSI escape sequences."""
+    global BOLD, GREEN, RED, GREY
+    BOLD = ('\033[0m', '\033[1m')
+    GREEN = ('\033[0m', '\033[0;32m')
+    RED = ('\033[0m', '\033[0;31m')
+    GREY = ('\033[0m', '\033[1;30m')
+
+if sys.platform != "win32":
+    set_ansi_formatting()
+elif os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
     if os.name == 'nt':
         import ctypes
         kernel32 = ctypes.windll.kernel32  # type: ignore
@@ -56,12 +66,7 @@ if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
         stderr_mode = ctypes.c_int32()
         kernel32.GetConsoleMode(stderr, ctypes.byref(stderr_mode))
         kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-    # primitive formatting on supported
-    # terminal via ANSI escape sequences:
-    BOLD = ('\033[0m', '\033[1m')
-    GREEN = ('\033[0m', '\033[0;32m')
-    RED = ('\033[0m', '\033[0;31m')
-    GREY = ('\033[0m', '\033[1;30m')
+    set_ansi_formatting()
 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
