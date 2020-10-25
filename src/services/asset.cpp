@@ -162,18 +162,15 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
             return;
         }
         const UniValue& auxFeeArr = auxFeeObj.get_array();
-        if(auxFeeArr.size() != 2 || (!auxFeeArr[0].isNum() && !auxFeeArr[0].isStr()) || !auxFeeArr[1].isStr()) {
+        if(auxFeeArr.size() != 2 || (!auxFeeArr[0].isNum() && !auxFeeArr[0].isStr()) || !auxFeeArr[1].isNum()) {
             SetNull();
             return;
         }
-        double fPct;
-        if(ParseDouble(auxFeeArr[1].get_str(), &fPct) && fPct <= 65.535){
-            const uint16_t& nPercent = (uint16_t)(fPct*1000);
-            vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), nPercent));
-        } else {
-            SetNull();
-            return;
+        int64_t iPct = (int64_t)(auxFeeArr[1].get_real()*100000.0);
+        if (iPct < 0 || iPct > 65535) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "percentage must be between 0.00 and 65.535");
         }
+        vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), (uint16_t)iPct));
     }
 }
 
