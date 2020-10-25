@@ -1013,7 +1013,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_all()
         self.bump_mocktime(1)
 
-        mn_info = self.nodes[0].masternodelist("status")
+        mn_info = self.nodes[0].masternode_list("status")
         assert (len(mn_info) == self.mn_count)
         for status in mn_info.values():
             assert (status == 'ENABLED')
