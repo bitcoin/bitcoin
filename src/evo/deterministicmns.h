@@ -19,6 +19,7 @@
 #include <immer/map_transient.hpp>
 
 #include <unordered_map>
+#include <unordered_set>
 #include <script/standard.h>
 class CBlock;
 class CBlockIndex;
@@ -202,12 +203,6 @@ public:
         // only non-initial values
         assert(_internalId != std::numeric_limits<uint64_t>::max());
     }
-    // TODO: can be removed in a future version
-    CDeterministicMN(const CDeterministicMN& mn, uint64_t _internalId) : CDeterministicMN(mn) {
-        // only non-initial values
-        assert(_internalId != std::numeric_limits<uint64_t>::max());
-        internalId = _internalId;
-    }
 
     template <typename Stream>
     CDeterministicMN(deserialize_type, Stream& s)
@@ -233,42 +228,6 @@ public:
 typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
 class CDeterministicMNListDiff;
-
-template <typename Stream, typename K, typename T, typename Hash, typename Equal>
-void SerializeImmerMap(Stream& os, const immer::map<K, T, Hash, Equal>& m)
-{
-    WriteCompactSize(os, m.size());
-    for (typename immer::map<K, T, Hash, Equal>::const_iterator mi = m.begin(); mi != m.end(); ++mi)
-        Serialize(os, (*mi));
-}
-
-template <typename Stream, typename K, typename T, typename Hash, typename Equal>
-void UnserializeImmerMap(Stream& is, immer::map<K, T, Hash, Equal>& m)
-{
-    m = immer::map<K, T, Hash, Equal>();
-    unsigned int nSize = ReadCompactSize(is);
-    for (unsigned int i = 0; i < nSize; i++) {
-        std::pair<K, T> item;
-        Unserialize(is, item);
-        m = m.set(item.first, item.second);
-    }
-}
-
-// For some reason the compiler is not able to choose the correct Serialize/Deserialize methods without a specialized
-// version of SerReadWrite. It otherwise always chooses the version that calls a.Serialize()
-template<typename Stream, typename K, typename T, typename Hash, typename Equal>
-inline void SerReadWrite(Stream& s, const immer::map<K, T, Hash, Equal>& m, CSerActionSerialize ser_action)
-{
-    ::SerializeImmerMap(s, m);
-}
-
-template<typename Stream, typename K, typename T, typename Hash, typename Equal>
-inline void SerReadWrite(Stream& s, immer::map<K, T, Hash, Equal>& obj, CSerActionUnserialize ser_action)
-{
-    ::UnserializeImmerMap(s, obj);
-}
-
-
 class CDeterministicMNList
 {
 public:
@@ -537,8 +496,8 @@ public:
 
     std::vector<CDeterministicMNCPtr> addedMNs;
     // keys are all relating to the internalId of MNs
-    std::map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
-    std::set<uint64_t> removedMns;
+    std::unordered_map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
+    std::unordered_set<uint64_t> removedMns;
 
 public:
     template<typename Stream>
@@ -583,40 +542,6 @@ public:
     bool HasChanges() const
     {
         return !addedMNs.empty() || !updatedMNs.empty() || !removedMns.empty();
-    }
-};
-
-// TODO can be removed in a future version
-class CDeterministicMNListDiff_OldFormat
-{
-public:
-    uint256 prevBlockHash;
-    uint256 blockHash;
-    int nHeight{-1};
-    std::map<uint256, CDeterministicMNCPtr> addedMNs;
-    std::map<uint256, CDeterministicMNStateCPtr> updatedMNs;
-    std::set<uint256> removedMns;
-
-public:
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        addedMNs.clear();
-        s >> prevBlockHash;
-        s >> blockHash;
-        s >> nHeight;
-        size_t cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
-            uint256 proTxHash;
-            // NOTE: This is a hack and "0" is just a dummy id. The actual internalId is assigned to a copy
-            // of this dmn via corresponding ctor when we convert the diff format to a new one in UpgradeDiff
-            // thus the logic that we must set internalId before dmn is used in any meaningful way is preserved.
-            auto dmn = std::make_shared<CDeterministicMN>(0);
-            s >> proTxHash;
-            dmn->Unserialize(s, true);
-            addedMNs.emplace(proTxHash, dmn);
-        }
-        s >> updatedMNs;
-        s >> removedMns;
     }
 };
 
