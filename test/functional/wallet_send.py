@@ -227,7 +227,7 @@ class WalletSendTest(BitcoinTestFramework):
                      self.nodes[1].decodepsbt(res2["psbt"])["fee"])
         # but not at the same time
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=1, arg_estimate_mode="economical",
-                       conf_target=1, estimate_mode="economical", add_to_wallet=False, expect_error=(-8,"Use either conf_target and estimate_mode or the options dictionary to control fee rate"))
+                       conf_target=1, estimate_mode="economical", add_to_wallet=False, expect_error=(-8,"Use either conf_target and estimate_mode params or the options dictionary to control fee rate"))
 
         self.log.info("Create PSBT from watch-only wallet w3, sign with w2...")
         res = self.test_send(from_wallet=w3, to_wallet=w1, amount=1)
