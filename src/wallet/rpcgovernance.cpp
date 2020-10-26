@@ -2,7 +2,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <governance/governanceexceptions.h>
 #include <governance/governanceclasses.h>
 #include <governance/governancevalidators.h>
 #include <validation.h>
@@ -63,7 +62,7 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         } else {
             nFailed++;
             statusObj.pushKV("result", "failed");
-            statusObj.pushKV("errorMessage", exception.GetMessage());
+            statusObj.pushKV("errorMessage", exception.GetMessageStr());
         }
 
         resultsObj.pushKV(proTxHash.ToString(), statusObj);

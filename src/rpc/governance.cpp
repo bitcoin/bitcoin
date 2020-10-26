@@ -318,7 +318,7 @@ static RPCHelpMan gobject_vote_conf()
     } else {
         nFailed++;
         statusObj.pushKV("result", "failed");
-        statusObj.pushKV("errorMessage", exception.GetMessage());
+        statusObj.pushKV("errorMessage", exception.GetMessageStr());
     }
 
     resultsObj.pushKV("syscoin.conf", statusObj);
@@ -680,7 +680,7 @@ static RPCHelpMan voteraw()
     if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
         return "Voted successfully";
     } else {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessageStr());
     }
 },
     };
