@@ -284,7 +284,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain()
         LOCK(cs_main);
         const CBlockIndex* chain_tip = ::ChainActive().Tip();
         const CBlockIndex* best_block_index = m_best_block_index.load();
-        if (best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
+        if (!best_block_index || best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
             return true;
         }
     }
