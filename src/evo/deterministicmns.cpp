@@ -435,12 +435,12 @@ CDeterministicMNList CDeterministicMNList::ApplyDiff(const CBlockIndex* pindex, 
 void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount)
 {
     assert(dmn != nullptr);
-    auto mapIt = mnMap.find(dmn->proTxHash);
-    auto mapIdIt = mnInternalIdMap.find(dmn->GetInternalId());
-    if (mapIt != mnMap.end()) {
+    auto resMap = mnMap.emplace(dmn->proTxHash, dmn);
+    auto resID = mnInternalIdMap.emplace(dmn->GetInternalId(), dmn->proTxHash);
+    if (!resMap.second) {
         throw(std::runtime_error(strprintf("%s: can't add a duplicate masternode with the same proTxHash=%s", __func__, dmn->proTxHash.ToString())));
     }
-    if (mapIdIt != mnInternalIdMap.end()) {
+    if (!resID.second) {
         throw(std::runtime_error(strprintf("%s: can't add a duplicate masternode with the same internalId=%d", __func__, dmn->GetInternalId())));
     }
     if (HasUniqueProperty(dmn->pdmnState->addr)) {
@@ -449,8 +449,6 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
     if (HasUniqueProperty(dmn->pdmnState->keyIDOwner) || HasUniqueProperty(dmn->pdmnState->pubKeyOperator)) {
         throw(std::runtime_error(strprintf("%s: can't add a masternode with a duplicate key (%s or %s)", __func__, EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner)), dmn->pdmnState->pubKeyOperator.Get().ToString())));
     }
-    mapIt->second = dmn;
-    mapIdIt->second = dmn->proTxHash;
     AddUniqueProperty(dmn, dmn->collateralOutpoint);
     if (dmn->pdmnState->addr != CService()) {
         AddUniqueProperty(dmn, dmn->pdmnState->addr);
@@ -467,21 +465,36 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
 
 void CDeterministicMNList::UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateCPtr& pdmnState)
 {
+    LogPrintf("UpdateMN\n");
     assert(oldDmn != nullptr);
-
-    if (HasUniqueProperty(oldDmn->pdmnState->addr) && GetUniquePropertyMN(oldDmn->pdmnState->addr)->proTxHash != oldDmn->proTxHash) {
+LogPrintf("UpdateMN1\n");
+auto hasp = HasUniqueProperty(oldDmn->pdmnState->addr);
+LogPrintf("UpdateMN1a\n");
+auto getp = GetUniquePropertyMN(oldDmn->pdmnState->addr);
+LogPrintf("UpdateMN1b\n");
+auto prohash = getp->proTxHash;
+LogPrintf("UpdateMN1c %s\n", oldDmn->proTxHash.ToString());
+    if (hasp && prohash != oldDmn->proTxHash) {
         throw(std::runtime_error(strprintf("%s: can't update a masternode with a duplicate address %s", __func__, oldDmn->pdmnState->addr.ToStringIPPort())));
     }
-
+LogPrintf("UpdateMN2\n");
     auto dmn = std::make_shared<CDeterministicMN>(*oldDmn);
     auto oldState = dmn->pdmnState;
     dmn->pdmnState = pdmnState;
-    auto mapIt = mnMap.find(oldDmn->proTxHash);
-    mapIt->second = dmn;
-
+    LogPrintf("UpdateMN3\n");
+    auto res = mnMap.emplace(oldDmn->proTxHash, dmn);
+    LogPrintf("UpdateMN4\n");
+    // if existing, update
+    if(!res.second) {
+        LogPrintf("UpdateMN5\n");
+        res.first->second = dmn;
+        LogPrintf("UpdateMN6\n");
+    }
+LogPrintf("UpdateMN7\n");
     UpdateUniqueProperty(dmn, oldState->addr, pdmnState->addr);
     UpdateUniqueProperty(dmn, oldState->keyIDOwner, pdmnState->keyIDOwner);
     UpdateUniqueProperty(dmn, oldState->pubKeyOperator, pdmnState->pubKeyOperator);
+    LogPrintf("UpdateMN8\n");
 }
 
 void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState)
