@@ -266,7 +266,7 @@ SYSCOIN_CORE_H = \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
-  support/allocators/pooled_secure.h.h \
+  support/allocators/pooled_secure.h \
   support/allocators/mt_pooled_secure.h \
   support/cleanse.h \
   support/events.h \
