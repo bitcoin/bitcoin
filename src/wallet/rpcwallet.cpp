@@ -204,7 +204,7 @@ static std::string LabelFromValue(const UniValue& value)
  * @param[in]     estimate_param Parameter (blocks to confirm, explicit fee rate, etc)
  * @throws a JSONRPCError if estimate_mode is unknown, or if estimate_param is missing when required
  */
-static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const UniValue& estimate_mode, const UniValue& estimate_param)
+static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const UniValue& estimate_mode, const UniValue& conf_target_param, const UniValue& fee_rate_param)
 {
     if (!estimate_mode.isNull()) {
         if (!FeeModeFromString(estimate_mode.get_str(), cc.m_fee_mode)) {
@@ -213,11 +213,14 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
     }
 
     if (cc.m_fee_mode == FeeEstimateMode::BTC_KB || cc.m_fee_mode == FeeEstimateMode::SAT_B) {
-        if (estimate_param.isNull()) {
+        if (fee_rate_param.isNull()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Selected estimate_mode requires a fee rate");
         }
+        if (&conf_target_param != &fee_rate_param && !conf_target_param.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "conf_target can't be set with fee_rate");
+        }
 
-        CAmount fee_rate = AmountFromValue(estimate_param);
+        CAmount fee_rate = AmountFromValue(fee_rate_param);
         if (cc.m_fee_mode == FeeEstimateMode::SAT_B) {
             fee_rate /= WALLET_BTC_KB_TO_SAT_B;
         }
@@ -229,8 +232,13 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
 
         // default RBF to true for explicit fee rate modes
         if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
-    } else if (!estimate_param.isNull()) {
-        cc.m_confirm_target = ParseConfirmTarget(estimate_param, pwallet->chain().estimateMaxBlocks());
+    } else {
+        if (&conf_target_param != &fee_rate_param && !fee_rate_param.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Must specify an explicit-fee estimate_mode to set fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee mode.");
+        }
+        if (!conf_target_param.isNull()) {
+            cc.m_confirm_target = ParseConfirmTarget(conf_target_param, pwallet->chain().estimateMaxBlocks());
+        }
     }
 }
 
@@ -503,7 +511,8 @@ static RPCHelpMan sendtoaddress()
     // We also enable partial spend avoidance if reuse avoidance is set.
     coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
 
-    SetFeeEstimateMode(pwallet, coin_control, request.params[7], request.params[6]);
+    // TODO: reject the wrong named param
+    SetFeeEstimateMode(pwallet, coin_control, request.params[7], request.params[6], request.params[6]);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -930,7 +939,8 @@ static RPCHelpMan sendmany()
         coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
 
-    SetFeeEstimateMode(pwallet, coin_control, request.params[7], request.params[6]);
+    // TODO: reject the wrong named param
+    SetFeeEstimateMode(pwallet, coin_control, request.params[7], request.params[6], request.params[6]);
 
     std::vector<CRecipient> recipients;
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
@@ -3044,7 +3054,7 @@ static RPCHelpMan listunspent()
     };
 }
 
-void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl)
+void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl, bool check_min_fee_rate=false)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -3126,14 +3136,9 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
 
         if (options.exists("feeRate"))
         {
-            if (options.exists("conf_target")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
-            }
-            if (options.exists("estimate_mode")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
-            }
-            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
-            coinControl.fOverrideFeeRate = true;
+            // For backward compatibility with feeRate and no estimate_mode prior to 0.21:
+            if (options["estimate_mode"].isNull()) options.pushKV("estimate_mode", CURRENCY_UNIT + "/kB");
+            if (!check_min_fee_rate) coinControl.fOverrideFeeRate = true;
         }
 
         if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") )
@@ -3142,7 +3147,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
-        SetFeeEstimateMode(pwallet, coinControl, options["estimate_mode"], options["conf_target"]);
+        SetFeeEstimateMode(pwallet, coinControl, options["estimate_mode"], options["conf_target"], options["feeRate"]);
       }
     } else {
         // if options is null and not a bool
@@ -3210,7 +3215,7 @@ static RPCHelpMan fundrawtransaction()
                             },
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
                                                           "Allows this transaction to be replaced by a transaction with higher fees"},
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "       \"" + FeeModes("\"\n\"") + "\""},
                         },
@@ -3461,21 +3466,15 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         }
 
         auto conf_target = options.exists("confTarget") ? options["confTarget"] : options["conf_target"];
-
-        if (!conf_target.isNull()) {
-            if (options.exists("fee_rate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "conf_target can't be set with fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
-            }
-            coin_control.m_confirm_target = ParseConfirmTarget(conf_target, pwallet->chain().estimateMaxBlocks());
-        } else if (options.exists("fee_rate")) {
-            CFeeRate fee_rate(AmountFromValue(options["fee_rate"]));
-            coin_control.m_feerate = fee_rate;
+        // For backward compatibility with feeRate and no estimate_mode prior to 0.21:
+        if (options["estimate_mode"].isNull() && !options["fee_rate"].isNull()) {
+            options.pushKV("estimate_mode", CURRENCY_UNIT + "/kB");
         }
 
         if (options.exists("replaceable")) {
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
-        SetFeeEstimateMode(pwallet, coin_control, options["estimate_mode"], conf_target);
+        SetFeeEstimateMode(pwallet, coin_control, options["estimate_mode"], conf_target, options["fee_rate"]);
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -4120,7 +4119,7 @@ static RPCHelpMan send()
             // Automatically select coins, unless at least one is manually selected. Can
             // be overriden by options.add_inputs.
             coin_control.m_add_inputs = rawTx.vin.size() == 0;
-            FundTransaction(pwallet, rawTx, fee, change_position, options, coin_control);
+            FundTransaction(pwallet, rawTx, fee, change_position, options, coin_control, /* check_min_fee_rate */ true);
 
             bool add_to_wallet = true;
             if (options.exists("add_to_wallet")) {

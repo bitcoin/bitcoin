@@ -29,7 +29,7 @@ class WalletSendTest(BitcoinTestFramework):
 
     def test_send(self, from_wallet, to_wallet=None, amount=None, data=None,
                   arg_conf_target=None, arg_estimate_mode=None,
-                  conf_target=None, estimate_mode=None, add_to_wallet=None, psbt=None,
+                  conf_target=None, fee_rate=None, estimate_mode=None, add_to_wallet=None, psbt=None,
                   inputs=None, add_inputs=None, change_address=None, change_position=None, change_type=None,
                   include_watching=None, locktime=None, lock_unspents=None, replaceable=None, subtract_fee_from_outputs=None,
                   expect_error=None):
@@ -60,6 +60,8 @@ class WalletSendTest(BitcoinTestFramework):
             options["psbt"] = psbt
         if conf_target is not None:
             options["conf_target"] = conf_target
+        if fee_rate is not None:
+            options["feeRate"] = fee_rate
         if estimate_mode is not None:
             options["estimate_mode"] = estimate_mode
         if inputs is not None:
@@ -247,21 +249,21 @@ class WalletSendTest(BitcoinTestFramework):
         assert res["complete"]
 
         self.log.info("Set fee rate...")
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=2, estimate_mode="sat/b", add_to_wallet=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=2, estimate_mode="sat/b", add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00002"))
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=-1, estimate_mode="sat/b",
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=-1, estimate_mode="sat/b",
                        expect_error=(-3, "Amount out of range"))
         # Fee rate of 0.1 satoshi per byte should throw an error
         # TODO: error should use sat/b
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b",
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=0.1, estimate_mode="sat/b",
                        expect_error=(-4, "Fee rate (0.00000100 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
 
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.000001, estimate_mode="BTC/KB",
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=0.000001, estimate_mode="BTC/KB",
                        expect_error=(-4, "Fee rate (0.00000100 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
 
         # TODO: Return hex if fee rate is below -maxmempool
-        # res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b", add_to_wallet=False)
+        # res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=0.1, estimate_mode="sat/b", add_to_wallet=False)
         # assert res["hex"]
         # hex = res["hex"]
         # res = self.nodes[0].testmempoolaccept([hex])
