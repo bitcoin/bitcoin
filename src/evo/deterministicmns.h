@@ -15,6 +15,8 @@
 #include <sync.h>
 #include <threadsafety.h>
 
+#include <immer/map.hpp>
+#include <immer/map_transient.hpp>
 
 #include <unordered_map>
 #include <script/standard.h>
@@ -232,12 +234,47 @@ typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
 class CDeterministicMNListDiff;
 
+template <typename Stream, typename K, typename T, typename Hash, typename Equal>
+void SerializeImmerMap(Stream& os, const immer::map<K, T, Hash, Equal>& m)
+{
+    WriteCompactSize(os, m.size());
+    for (typename immer::map<K, T, Hash, Equal>::const_iterator mi = m.begin(); mi != m.end(); ++mi)
+        Serialize(os, (*mi));
+}
+
+template <typename Stream, typename K, typename T, typename Hash, typename Equal>
+void UnserializeImmerMap(Stream& is, immer::map<K, T, Hash, Equal>& m)
+{
+    m = immer::map<K, T, Hash, Equal>();
+    unsigned int nSize = ReadCompactSize(is);
+    for (unsigned int i = 0; i < nSize; i++) {
+        std::pair<K, T> item;
+        Unserialize(is, item);
+        m = m.set(item.first, item.second);
+    }
+}
+
+// For some reason the compiler is not able to choose the correct Serialize/Deserialize methods without a specialized
+// version of SerReadWrite. It otherwise always chooses the version that calls a.Serialize()
+template<typename Stream, typename K, typename T, typename Hash, typename Equal>
+inline void SerReadWrite(Stream& s, const immer::map<K, T, Hash, Equal>& m, CSerActionSerialize ser_action)
+{
+    ::SerializeImmerMap(s, m);
+}
+
+template<typename Stream, typename K, typename T, typename Hash, typename Equal>
+inline void SerReadWrite(Stream& s, immer::map<K, T, Hash, Equal>& obj, CSerActionUnserialize ser_action)
+{
+    ::UnserializeImmerMap(s, obj);
+}
+
+
 class CDeterministicMNList
 {
 public:
-    typedef std::unordered_map<uint256, CDeterministicMNCPtr> MnMap;
-    typedef std::unordered_map<uint64_t, uint256> MnInternalIdMap;
-    typedef std::unordered_map<uint256, std::pair<uint256, uint32_t> > MnUniquePropertyMap;
+    typedef immer::map<uint256, CDeterministicMNCPtr> MnMap;
+    typedef immer::map<uint64_t, uint256> MnInternalIdMap;
+    typedef immer::map<uint256, std::pair<uint256, uint32_t> > MnUniquePropertyMap;
 
 private:
     uint256 blockHash;
@@ -258,10 +295,32 @@ public:
         nTotalRegisteredCount(_totalRegisteredCount)
     {
     }
-    SERIALIZE_METHODS(CDeterministicMNList, obj)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
-         READWRITE(obj.blockHash, obj.nHeight, obj.nTotalRegisteredCount, obj.mnMap, obj.mnUniquePropertyMap,
-         obj.mnInternalIdMap);
+        s << blockHash;
+        s << nHeight;
+        s << nTotalRegisteredCount;
+        // Serialize the map as a vector
+        WriteCompactSize(s, mnMap.size());
+        for (const auto& p : mnMap) {
+            s << *p.second;
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        mnMap = MnMap();
+        mnUniquePropertyMap = MnUniquePropertyMap();
+        mnInternalIdMap = MnInternalIdMap();
+        s >> blockHash;
+        s >> nHeight;
+        s >> nTotalRegisteredCount;
+
+        size_t cnt = ReadCompactSize(s);
+        for (size_t i = 0; i < cnt; i++) {
+            AddMN(std::make_shared<CDeterministicMN>(deserialize, s), false);
+        }
     }
     void clear() {
         mnMap = MnMap();
@@ -416,7 +475,7 @@ public:
     CDeterministicMNCPtr GetUniquePropertyMN(const T& v) const
     {
         auto p = mnUniquePropertyMap.find(::SerializeHash(v));
-        if (p == mnUniquePropertyMap.end()) {
+        if (!p) {
             return nullptr;
         }
         return GetMN(p->first);
@@ -428,12 +487,15 @@ private:
     {
         static const T nullValue;
         assert(v != nullValue);
-        std::pair<uint256, uint32_t> newEntry(dmn->proTxHash, 1);
+
         auto hash = ::SerializeHash(v);
-        auto res = mnUniquePropertyMap.emplace(hash, newEntry);
-        if (!res.second) {
-            res.first->second.second++;
+        auto oldEntry = mnUniquePropertyMap.find(hash);
+        assert(!oldEntry || oldEntry->first == dmn->proTxHash);
+        std::pair<uint256, uint32_t> newEntry(dmn->proTxHash, 1);
+        if (oldEntry) {
+            newEntry.second = oldEntry->second + 1;
         }
+        mnUniquePropertyMap = mnUniquePropertyMap.set(hash, newEntry);
     }
     template <typename T>
     void DeleteUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue)
@@ -443,11 +505,11 @@ private:
 
         auto oldHash = ::SerializeHash(oldValue);
         auto p = mnUniquePropertyMap.find(oldHash);
-        assert(p != mnUniquePropertyMap.end() && p->first == dmn->proTxHash);
-        if (p->second.second == 1) {
-            mnUniquePropertyMap.erase(oldHash);
+        assert(p && p->first == dmn->proTxHash);
+        if (p->second == 1) {
+            mnUniquePropertyMap = mnUniquePropertyMap.erase(oldHash);
         } else {
-            p->second.second--;
+            mnUniquePropertyMap = mnUniquePropertyMap.set(oldHash, std::make_pair(dmn->proTxHash, p->second - 1));
         }
     }
     template <typename T>
@@ -479,15 +541,82 @@ public:
     std::set<uint64_t> removedMns;
 
 public:
-    SERIALIZE_METHODS(CDeterministicMNList, obj)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
-         READWRITE(obj.addedMNs, obj.updatedMNs, obj.removedMns);
+        s << addedMNs;
+        WriteCompactSize(s, updatedMNs.size());
+        for (const auto& p : updatedMNs) {
+            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, p.first);
+            s << p.second;
+        }
+        WriteCompactSize(s, removedMns.size());
+        for (const auto& p : removedMns) {
+            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, p);
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        updatedMNs.clear();
+        removedMns.clear();
+
+        size_t tmp;
+        uint64_t tmp2;
+        s >> addedMNs;
+        tmp = ReadCompactSize(s);
+        for (size_t i = 0; i < tmp; i++) {
+            CDeterministicMNStateDiff diff;
+            tmp2 = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
+            s >> diff;
+            updatedMNs.emplace(tmp2, std::move(diff));
+        }
+        tmp = ReadCompactSize(s);
+        for (size_t i = 0; i < tmp; i++) {
+            tmp2 = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
+            removedMns.emplace(tmp2);
+        }
     }
 
 public:
     bool HasChanges() const
     {
         return !addedMNs.empty() || !updatedMNs.empty() || !removedMns.empty();
+    }
+};
+
+// TODO can be removed in a future version
+class CDeterministicMNListDiff_OldFormat
+{
+public:
+    uint256 prevBlockHash;
+    uint256 blockHash;
+    int nHeight{-1};
+    std::map<uint256, CDeterministicMNCPtr> addedMNs;
+    std::map<uint256, CDeterministicMNStateCPtr> updatedMNs;
+    std::set<uint256> removedMns;
+
+public:
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        addedMNs.clear();
+        s >> prevBlockHash;
+        s >> blockHash;
+        s >> nHeight;
+        size_t cnt = ReadCompactSize(s);
+        for (size_t i = 0; i < cnt; i++) {
+            uint256 proTxHash;
+            // NOTE: This is a hack and "0" is just a dummy id. The actual internalId is assigned to a copy
+            // of this dmn via corresponding ctor when we convert the diff format to a new one in UpgradeDiff
+            // thus the logic that we must set internalId before dmn is used in any meaningful way is preserved.
+            auto dmn = std::make_shared<CDeterministicMN>(0);
+            s >> proTxHash;
+            dmn->Unserialize(s, true);
+            addedMNs.emplace(proTxHash, dmn);
+        }
+        s >> updatedMNs;
+        s >> removedMns;
     }
 };
 
