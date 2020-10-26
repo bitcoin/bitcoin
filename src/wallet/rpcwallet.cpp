@@ -443,7 +443,7 @@ static RPCHelpMan sendtoaddress()
                     {"subtractfeefromamount", RPCArg::Type::BOOL, /* default */ "false", "The fee will be deducted from the amount being sent.\n"
                                          "The recipient will receive less bitcoins than you enter in the amount field."},
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125"},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"conf_target|fee_rate", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
@@ -871,7 +871,7 @@ static RPCHelpMan sendmany()
                         },
                     },
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125"},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"conf_target|fee_rate", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"verbose", RPCArg::Type::BOOL, /* default */ "false", "If true, return extra infomration about the transaction."},
@@ -4533,8 +4533,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
     { "wallet",             "send",                             &send,                          {"outputs","conf_target","estimate_mode","options"} },
-    { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode","verbose"} },
-    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode","avoid_reuse","verbose"} },
+    { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target|fee_rate","estimate_mode","verbose"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target|fee_rate","estimate_mode","avoid_reuse","verbose"} },
     { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
