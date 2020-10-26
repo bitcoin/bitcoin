@@ -1,4 +1,4 @@
-package=curl
+package=libcurl
 $(package)_version=7.72.0
 $(package)_dependencies=gnutls zlib
 $(package)_download_path=https://curl.haxx.se/download
