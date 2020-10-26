@@ -479,7 +479,7 @@ public:
     std::set<uint64_t> removedMns;
 
 public:
-    SERIALIZE_METHODS(CDeterministicMNListDiff, obj)
+    SERIALIZE_METHODS(CDeterministicMNList, obj)
     {
          READWRITE(obj.addedMNs, obj.updatedMNs, obj.removedMns);
     }
