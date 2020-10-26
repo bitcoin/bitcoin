@@ -14,13 +14,13 @@
 /* Version is release */
 #define CLIENT_VERSION_IS_RELEASE false
 
-/* Major version */
-#define CLIENT_VERSION_MAJOR 0
+/* Major version (new features) */
+#define CLIENT_VERSION_MAJOR 20
 
-/* Minor version */
-#define CLIENT_VERSION_MINOR 20
+/* Minor version (consensus changes) */
+#define CLIENT_VERSION_MINOR 0
 
-/* Build revision */
+/* Build revision (bugfixes only) */
 #define CLIENT_VERSION_REVISION 99
 
 /* Copyright holder(s) before %s replacement */
@@ -253,7 +253,7 @@
 #define PACKAGE_NAME "Bitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Bitcoin Core 0.19.99"
+#define PACKAGE_STRING "Bitcoin Core 20.0.99"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "bitcoin"
@@ -262,7 +262,7 @@
 #define PACKAGE_URL "https://bitcoincore.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.19.99"
+#define PACKAGE_VERSION "20.0.99"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
