@@ -13,6 +13,7 @@
 #include <key.h>
 #include <merkleblock.h>
 #include <net.h>
+#include <netbase.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <psbt.h>
@@ -42,9 +43,9 @@ struct invalid_fuzzing_input_exception : public std::exception {
 };
 
 template <typename T>
-CDataStream Serialize(const T& obj)
+CDataStream Serialize(const T& obj, const int version = INIT_PROTO_VERSION)
 {
-    CDataStream ds(SER_NETWORK, INIT_PROTO_VERSION);
+    CDataStream ds(SER_NETWORK, version);
     ds << obj;
     return ds;
 }
@@ -77,9 +78,9 @@ void DeserializeFromFuzzingInput(const std::vector<uint8_t>& buffer, T& obj)
 }
 
 template <typename T>
-void AssertEqualAfterSerializeDeserialize(const T& obj)
+void AssertEqualAfterSerializeDeserialize(const T& obj, const int version = INIT_PROTO_VERSION)
 {
-    assert(Deserialize<T>(Serialize(obj)) == obj);
+    assert(Deserialize<T>(Serialize(obj, version)) == obj);
 }
 
 } // namespace
@@ -181,7 +182,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 #elif NETADDR_DESERIALIZE
         CNetAddr na;
         DeserializeFromFuzzingInput(buffer, na);
-        AssertEqualAfterSerializeDeserialize(na);
+        if (na.IsAddrV1Compatible()) {
+            AssertEqualAfterSerializeDeserialize(na);
+        }
+        AssertEqualAfterSerializeDeserialize(na, INIT_PROTO_VERSION | ADDRV2_FORMAT);
 #elif SERVICE_DESERIALIZE
         CService s;
         DeserializeFromFuzzingInput(buffer, s);
