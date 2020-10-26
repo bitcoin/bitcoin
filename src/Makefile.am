@@ -420,6 +420,8 @@ libsyscoin_server_a_SOURCES = \
   governance/governancevalidators.cpp \
   governance/governancevote.cpp \
   governance/governancevotedb.cpp \
+  immer/map.hpp \
+  immer/map_transient.hpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
