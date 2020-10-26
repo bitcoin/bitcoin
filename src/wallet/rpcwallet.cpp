@@ -223,6 +223,9 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
         }
 
         cc.m_feerate = CFeeRate(fee_rate);
+        if (*cc.m_feerate <= CFeeRate(0)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid fee_rate %s (must be greater than 0)", cc.m_feerate->ToString()));
+        }
 
         // default RBF to true for explicit fee rate modes
         if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
@@ -3466,9 +3469,6 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             coin_control.m_confirm_target = ParseConfirmTarget(conf_target, pwallet->chain().estimateMaxBlocks());
         } else if (options.exists("fee_rate")) {
             CFeeRate fee_rate(AmountFromValue(options["fee_rate"]));
-            if (fee_rate <= CFeeRate(0)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid fee_rate %s (must be greater than 0)", fee_rate.ToString()));
-            }
             coin_control.m_feerate = fee_rate;
         }
 
