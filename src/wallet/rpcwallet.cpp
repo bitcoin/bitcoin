@@ -3088,6 +3088,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
                 {"lock_unspents", UniValueType(UniValue::VBOOL)},
                 {"locktime", UniValueType(UniValue::VNUM)},
                 {"feeRate", UniValueType()}, // will be checked below
+                {"fee_rate", UniValueType()}, // will be checked below
                 {"psbt", UniValueType(UniValue::VBOOL)},
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
@@ -3134,8 +3135,11 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
         }
 
-        if (options.exists("feeRate"))
-        {
+        if (options.exists("feeRate") && options.exists("fee_rate")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "feeRate and fee_rate options should not both be set. Use fee_rate (feeRate is deprecated).");
+        }
+        auto fee_rate = options.exists("feeRate") ? options["feeRate"] : options["fee_rate"];
+        if (!fee_rate.isNull()) {
             // For backward compatibility with feeRate and no estimate_mode prior to 0.21:
             if (options["estimate_mode"].isNull()) options.pushKV("estimate_mode", CURRENCY_UNIT + "/kB");
             if (!check_min_fee_rate) coinControl.fOverrideFeeRate = true;
@@ -3147,7 +3151,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
-        SetFeeEstimateMode(pwallet, coinControl, options["estimate_mode"], options["conf_target"], options["feeRate"]);
+        SetFeeEstimateMode(pwallet, coinControl, options["estimate_mode"], options["conf_target"], fee_rate);
       }
     } else {
         // if options is null and not a bool
@@ -3204,7 +3208,7 @@ static RPCHelpMan fundrawtransaction()
                                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
-                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
+                            {"fee_rate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The integers.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
                                                           "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
@@ -4347,7 +4351,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                             {"includeWatching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only"},
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
-                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
+                            {"fee_rate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The outputs to subtract the fee from.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
                                                           "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
