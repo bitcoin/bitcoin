@@ -379,6 +379,23 @@ endif
   bls/bls.cpp \
   bls/bls_ies.cpp \
   bls/bls_worker.cpp \
+  chiabls/src/bls.hpp \
+  chiabls/src/bls.cpp \
+  chiabls/src/privatekey.hpp \
+  chiabls/src/privatekey.cpp \
+  chiabls/src/publickey.hpp \
+  chiabls/src/publickey.cpp \
+  chiabls/src/signature.hpp \
+  chiabls/src/signature.cpp \
+  chiabls/src/aggregationinfo.hpp \
+  chiabls/src/aggregationinfo.cpp \
+  chiabls/src/chaincode.hpp \
+  chiabls/src/chaincode.cpp \
+  chiabls/src/extendedprivatekey.hpp \
+  chiabls/src/extendedprivatekey.cpp \
+  chiabls/src/extendedpublickey.hpp \
+  chiabls/src/extendedpublickey.cpp \
+  chiabls/src/util.hpp \
   $(SYSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
