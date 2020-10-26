@@ -81,7 +81,7 @@ public:
         return strMessage.c_str();
     }
 
-    const std::string& GetMessage() const
+    const std::string& GetMessageStr() const
     {
         return strMessage;
     }
