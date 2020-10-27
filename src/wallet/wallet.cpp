@@ -32,6 +32,7 @@
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
+#include <wallet/sqlite.h>
 
 #include <univalue.h>
 
@@ -3795,7 +3796,8 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
     fs::file_type path_type = fs::symlink_status(wallet_path).type();
     if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
           (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
-          (path_type == fs::regular_file && fs::path(name).filename() == name))) {
+          (path_type == fs::regular_file && fs::path(name).filename() == name) ||
+          (path_type == fs::regular_file && ExistsSQLiteDatabase(wallet_path)))) {
         error_string = Untranslated(strprintf(
               "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
               "database/log.?????????? files can be stored, a location where such a directory could be created, "

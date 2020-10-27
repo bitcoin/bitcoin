@@ -568,15 +568,21 @@ bool SQLiteBatch::TxnAbort()
 
 bool ExistsSQLiteDatabase(const fs::path& path)
 {
-    const fs::path file = path / DATABASE_FILENAME;
+    fs::path dir;
+    std::string filename;
+    SplitWalletPath(path, dir, filename, DATABASE_FILENAME);
+    const fs::path file = dir / filename;
     return fs::symlink_status(file).type() == fs::regular_file && IsSQLiteFile(file);
 }
 
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
 {
-    const fs::path file = path / DATABASE_FILENAME;
+    fs::path dir;
+    std::string filename;
+    SplitWalletPath(path, dir, filename, DATABASE_FILENAME);
+    const fs::path file = dir / filename;
     try {
-        auto db = MakeUnique<SQLiteDatabase>(path, file);
+        auto db = MakeUnique<SQLiteDatabase>(dir, file);
         if (options.verify && !db->Verify(error)) {
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;

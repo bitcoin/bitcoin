@@ -62,7 +62,7 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
 std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
 {
     fs::path env_directory;
-    SplitWalletPath(wallet_path, env_directory, database_filename);
+    SplitWalletPath(wallet_path, env_directory, database_filename, "wallet.dat");
     LOCK(cs_db);
     auto inserted = g_dbenvs.emplace(env_directory.string(), std::weak_ptr<BerkeleyEnvironment>());
     if (inserted.second) {
@@ -812,7 +812,7 @@ bool ExistsBerkeleyDatabase(const fs::path& path)
 {
     fs::path env_directory;
     std::string data_filename;
-    SplitWalletPath(path, env_directory, data_filename);
+    SplitWalletPath(path, env_directory, data_filename, "wallet.dat");
     return IsBDBFile(env_directory / data_filename);
 }
 

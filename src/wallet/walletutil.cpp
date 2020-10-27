@@ -10,6 +10,11 @@
 bool ExistsBerkeleyDatabase(const fs::path& path);
 bool ExistsSQLiteDatabase(const fs::path& path);
 
+static bool ExistsDatabase(const fs::path& path)
+{
+    return ExistsBerkeleyDatabase(path) || ExistsSQLiteDatabase(path);
+}
+
 fs::path GetWalletDir()
 {
     fs::path path;
@@ -49,11 +54,10 @@ std::vector<fs::path> ListWalletDir()
         // This can be replaced by boost::filesystem::lexically_relative once boost is bumped to 1.60.
         const fs::path path = it->path().string().substr(offset);
 
-        if (it->status().type() == fs::directory_file &&
-            (ExistsBerkeleyDatabase(it->path()) || ExistsSQLiteDatabase(it->path()))) {
+        if (it->status().type() == fs::directory_file && ExistsDatabase(it->path())) {
             // Found a directory which contains wallet.dat btree file, add it as a wallet.
             paths.emplace_back(path);
-        } else if (it.level() == 0 && it->symlink_status().type() == fs::regular_file && ExistsBerkeleyDatabase(it->path())) {
+        } else if (it.level() == 0 && it->symlink_status().type() == fs::regular_file && ExistsDatabase(it->path())) {
             if (it->path().filename() == "wallet.dat") {
                 // Found top-level wallet.dat btree file, add top level directory ""
                 // as a wallet.
@@ -65,6 +69,13 @@ std::vector<fs::path> ListWalletDir()
                 // Add it to the list of available wallets.
                 paths.emplace_back(path);
             }
+        } else if (it->symlink_status().type() == fs::regular_file && ExistsSQLiteDatabase(it->path())) {
+            // Only SQLite wallets will be created nested inside of directories
+            if (it->path().filename() == "wallet.dat") {
+                // SQLite wallets can also be in the traditional wallet dir structure, so if see one that is like that, ignore it here
+                continue;
+            }
+            paths.emplace_back(path);
         }
     }
 
