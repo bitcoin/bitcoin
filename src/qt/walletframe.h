@@ -47,6 +47,8 @@ public:
 
     void showOutOfSyncWarning(bool fShow);
 
+    QSize sizeHint() const override { return m_size_hint; }
+
 Q_SIGNALS:
     /** Notify that the user has requested more information about the out-of-sync warning */
     void requestedSyncWarningInfo();
@@ -61,6 +63,8 @@ private:
     GovernanceList* governanceListPage;
 
     bool bOutOfSync;
+
+    const QSize m_size_hint;
 
 public:
     WalletView* currentWalletView() const;
