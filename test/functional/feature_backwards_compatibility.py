@@ -27,6 +27,7 @@ from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
 )
 
 
@@ -82,7 +83,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # w1: regular wallet, created on master: update this test when default
         #     wallets can no longer be opened by older versions.
-        node_master.rpc.createwallet(wallet_name="w1")
+        node_master.createwallet(wallet_name="w1")
         wallet = node_master.get_wallet_rpc("w1")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled']
@@ -127,7 +128,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # w2: wallet with private keys disabled, created on master: update this
         #     test when default wallets private keys disabled can no longer be
         #     opened by older versions.
-        node_master.rpc.createwallet(wallet_name="w2", disable_private_keys=True)
+        node_master.createwallet(wallet_name="w2", disable_private_keys=True)
         wallet = node_master.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled'] == False
@@ -149,7 +150,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # w3: blank wallet, created on master: update this
         #     test when default blank wallets can no longer be opened by older versions.
-        node_master.rpc.createwallet(wallet_name="w3", blank=True)
+        node_master.createwallet(wallet_name="w3", blank=True)
         wallet = node_master.get_wallet_rpc("w3")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled']
@@ -215,67 +216,89 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 os.path.join(node_v19_wallets_dir, wallet)
             )
 
-        # Open the wallets in v0.19
-        node_v19.loadwallet("w1")
-        wallet = node_v19.get_wallet_rpc("w1")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-        txs = wallet.listtransactions()
-        assert_equal(len(txs), 5)
-        assert_equal(txs[1]["txid"], tx1_id)
-        assert_equal(txs[2]["walletconflicts"], [tx1_id])
-        assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-        assert not(txs[1]["abandoned"])
-        assert_equal(txs[1]["confirmations"], -1)
-        assert_equal(txs[2]["blockindex"], 1)
-        assert txs[3]["abandoned"]
-        assert_equal(txs[4]["walletconflicts"], [tx3_id])
-        assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-        assert not(hasattr(txs[3], "blockindex"))
+        if not self.options.descriptors:
+            # Descriptor wallets break compatibility, only run this test for legacy wallet
+            # Open the wallets in v0.19
+            node_v19.loadwallet("w1")
+            wallet = node_v19.get_wallet_rpc("w1")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] > 0
+            txs = wallet.listtransactions()
+            assert_equal(len(txs), 5)
+            assert_equal(txs[1]["txid"], tx1_id)
+            assert_equal(txs[2]["walletconflicts"], [tx1_id])
+            assert_equal(txs[1]["replaced_by_txid"], tx2_id)
+            assert not(txs[1]["abandoned"])
+            assert_equal(txs[1]["confirmations"], -1)
+            assert_equal(txs[2]["blockindex"], 1)
+            assert txs[3]["abandoned"]
+            assert_equal(txs[4]["walletconflicts"], [tx3_id])
+            assert_equal(txs[3]["replaced_by_txid"], tx4_id)
+            assert not(hasattr(txs[3], "blockindex"))
 
-        node_v19.loadwallet("w2")
-        wallet = node_v19.get_wallet_rpc("w2")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled'] == False
-        assert info['keypoolsize'] == 0
+            node_v19.loadwallet("w2")
+            wallet = node_v19.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled'] == False
+            assert info['keypoolsize'] == 0
 
-        node_v19.loadwallet("w3")
-        wallet = node_v19.get_wallet_rpc("w3")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] == 0
+            node_v19.loadwallet("w3")
+            wallet = node_v19.get_wallet_rpc("w3")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] == 0
 
-        # Open the wallets in v0.18
-        node_v18.loadwallet("w1")
-        wallet = node_v18.get_wallet_rpc("w1")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-        txs = wallet.listtransactions()
-        assert_equal(len(txs), 5)
-        assert_equal(txs[1]["txid"], tx1_id)
-        assert_equal(txs[2]["walletconflicts"], [tx1_id])
-        assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-        assert not(txs[1]["abandoned"])
-        assert_equal(txs[1]["confirmations"], -1)
-        assert_equal(txs[2]["blockindex"], 1)
-        assert txs[3]["abandoned"]
-        assert_equal(txs[4]["walletconflicts"], [tx3_id])
-        assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-        assert not(hasattr(txs[3], "blockindex"))
+            # Open the wallets in v0.18
+            node_v18.loadwallet("w1")
+            wallet = node_v18.get_wallet_rpc("w1")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] > 0
+            txs = wallet.listtransactions()
+            assert_equal(len(txs), 5)
+            assert_equal(txs[1]["txid"], tx1_id)
+            assert_equal(txs[2]["walletconflicts"], [tx1_id])
+            assert_equal(txs[1]["replaced_by_txid"], tx2_id)
+            assert not(txs[1]["abandoned"])
+            assert_equal(txs[1]["confirmations"], -1)
+            assert_equal(txs[2]["blockindex"], 1)
+            assert txs[3]["abandoned"]
+            assert_equal(txs[4]["walletconflicts"], [tx3_id])
+            assert_equal(txs[3]["replaced_by_txid"], tx4_id)
+            assert not(hasattr(txs[3], "blockindex"))
 
-        node_v18.loadwallet("w2")
-        wallet = node_v18.get_wallet_rpc("w2")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled'] == False
-        assert info['keypoolsize'] == 0
+            node_v18.loadwallet("w2")
+            wallet = node_v18.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled'] == False
+            assert info['keypoolsize'] == 0
 
-        node_v18.loadwallet("w3")
-        wallet = node_v18.get_wallet_rpc("w3")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] == 0
+            node_v18.loadwallet("w3")
+            wallet = node_v18.get_wallet_rpc("w3")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] == 0
+
+            node_v17.loadwallet("w1")
+            wallet = node_v17.get_wallet_rpc("w1")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] > 0
+
+            node_v17.loadwallet("w2")
+            wallet = node_v17.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled'] == False
+            assert info['keypoolsize'] == 0
+        else:
+            # Descriptor wallets appear to be corrupted wallets to old software
+            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v19.loadwallet, "w1")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v19.loadwallet, "w2")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v19.loadwallet, "w3")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v18.loadwallet, "w1")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v18.loadwallet, "w2")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v18.loadwallet, "w3")
 
         # Open the wallets in v0.17
         node_v17.loadwallet("w1_v18")
@@ -284,20 +307,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['private_keys_enabled']
         assert info['keypoolsize'] > 0
 
-        node_v17.loadwallet("w1")
-        wallet = node_v17.get_wallet_rpc("w1")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-
         node_v17.loadwallet("w2_v18")
         wallet = node_v17.get_wallet_rpc("w2_v18")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled'] == False
-        assert info['keypoolsize'] == 0
-
-        node_v17.loadwallet("w2")
-        wallet = node_v17.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled'] == False
         assert info['keypoolsize'] == 0
@@ -309,14 +320,22 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Instead, we stop node and try to launch it with the wallet:
         self.stop_node(4)
         node_v17.assert_start_raises_init_error(["-wallet=w3_v18"], "Error: Error loading w3_v18: Wallet requires newer version of Bitcoin Core")
-        node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
+        if self.options.descriptors:
+            # Descriptor wallets appear to be corrupted wallets to old software
+            node_v17.assert_start_raises_init_error(["-wallet=w1"], "Error: wallet.dat corrupt, salvage failed")
+            node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
+            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
+        else:
+            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
         self.start_node(4)
 
-        # Open most recent wallet in v0.16 (no loadwallet RPC)
-        self.restart_node(5, extra_args=["-wallet=w2"])
-        wallet = node_v16.get_wallet_rpc("w2")
-        info = wallet.getwalletinfo()
-        assert info['keypoolsize'] == 1
+        if not self.options.descriptors:
+            # Descriptor wallets break compatibility, only run this test for legacy wallets
+            # Open most recent wallet in v0.16 (no loadwallet RPC)
+            self.restart_node(5, extra_args=["-wallet=w2"])
+            wallet = node_v16.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            assert info['keypoolsize'] == 1
 
         # Create upgrade wallet in v0.16
         self.restart_node(-1, extra_args=["-wallet=u1_v16"])
