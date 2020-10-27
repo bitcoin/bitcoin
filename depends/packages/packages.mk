@@ -1,6 +1,6 @@
-packages:=boost libevent chia_bls gmp
+packages:=boost libevent chia_bls gmp zlib
 
-qt_packages = zlib
+qt_packages =
 
 qrencode_packages = qrencode
 
@@ -10,7 +10,7 @@ qt_android_packages=qt
 qt_darwin_packages=qt
 qt_mingw32_packages=qt
 
-bdb_packages=bdb libcurl gmp gnutls nettle zlib
+bdb_packages=bdb libcurl gnutls nettle
 sqlite_packages=sqlite
 
 zmq_packages=zeromq
