@@ -197,6 +197,7 @@ BASE_SCRIPTS = [
     'wallet_txn_doublespend.py',
     'wallet_txn_doublespend.py --descriptors',
     'feature_backwards_compatibility.py',
+    'feature_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
     'rpc_getblockfilter.py',
