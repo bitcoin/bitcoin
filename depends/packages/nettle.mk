@@ -22,5 +22,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  cp $(host_prefix)/lib64/* $(host_prefix)/lib
+  cp $(host_prefix)/lib64/* $(host_prefix)/lib 2>/dev/null || :
 endef
