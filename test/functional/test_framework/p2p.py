@@ -120,6 +120,9 @@ MAGIC_BYTES = {
     "signet": b"\x0a\x03\xcf\x40",    # signet
 }
 
+# Constants from net_processing
+NONPREF_PEER_TX_DELAY = 2  # seconds
+TXID_RELAY_DELAY = 2 # seconds
 
 class P2PConnection(asyncio.Protocol):
     """A low-level connection object to a node's P2P interface.
@@ -324,6 +327,9 @@ class P2PInterface(P2PConnection):
         # If the peer supports wtxid-relay
         self.wtxidrelay = wtxidrelay
 
+        # Getdata counter for tx-relay related tests
+        self.tx_getdata_count = 0
+
     def peer_connect_send_version(self, services):
         # Send a version msg
         vt = msg_version()
@@ -389,7 +395,6 @@ class P2PInterface(P2PConnection):
     def on_getaddr(self, message): pass
     def on_getblocks(self, message): pass
     def on_getblocktxn(self, message): pass
-    def on_getdata(self, message): pass
     def on_getheaders(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
@@ -424,6 +429,11 @@ class P2PInterface(P2PConnection):
             self.send_message(msg_sendaddrv2())
         self.send_message(msg_verack())
         self.nServices = message.nServices
+
+    def on_getdata(self, message):
+        for i in message.inv:
+            if (i.type & MSG_TYPE_MASK) in {MSG_TX, MSG_WTX}:
+                self.tx_getdata_count += 1
 
     # Connection helper methods
 
