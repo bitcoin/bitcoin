@@ -8,6 +8,10 @@
 
 - [Multi-wallet environment](#multi-wallet-environment)
 
+  - [Berkeley DB database based wallets](#berkeley-db-database-based-wallets)
+
+  - [SQLite database based wallets](#sqlite-database-based-wallets)
+
 - [GUI settings](#gui-settings)
 
 - [Legacy subdirectories and files](#legacy-subdirectories-and-files)
@@ -67,25 +71,35 @@ Subdirectory       | File(s)               | Description
 
 ## Multi-wallet environment
 
-Wallets are Berkeley DB (BDB) databases:
+Wallets are Berkeley DB (BDB) or SQLite databases.
 
-Subdirectory | File(s)           | Description
--------------|-------------------|------------
-`database/`  | BDB logging files | Part of BDB environment; created at start and deleted on shutdown; a user *must keep it as safe* as personal wallet `wallet.dat`
-`./`         | `db.log`          | BDB error file
-`./`         | `wallet.dat`      | Personal wallet with keys and transactions. May be either a Berkeley DB or SQLite database file.
-`./`         | `.walletlock`     | Wallet lock file
-`./`         | `wallet.dat-journal` | SQLite Rollback Journal file for `wallet.dat`. Usually created at start and deleted on shutdown. A user *must keep it as safe* as the `wallet.dat` file.
-
-1. Each user-defined wallet named "wallet_name" resides in `wallets/wallet_name/` subdirectory.
+1. Each user-defined wallet named "wallet_name" resides in the `wallets/wallet_name/` subdirectory.
 
 2. The default (unnamed) wallet resides in `wallets/` subdirectory; if the latter does not exist, the wallet resides in the data directory.
 
-3. A wallet database path can be specified by `-wallet` option.
+3. A wallet database path can be specified with the `-wallet` option.
 
 4. `wallet.dat` files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.
 
 5. Any copy or backup of the wallet should be done through a `backupwallet` call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.
+
+
+### Berkeley DB database based wallets
+
+Subdirectory | File(s)           | Description
+-------------|-------------------|-------------
+`database/`  | BDB logging files | Part of BDB environment; created at start and deleted on shutdown; a user *must keep it as safe* as personal wallet `wallet.dat`
+`./`         | `db.log`          | BDB error file
+`./`         | `wallet.dat`      | Personal wallet (a BDB database) with keys and transactions
+`./`         | `.walletlock`     | BDB wallet lock file
+
+### SQLite database based wallets
+
+Subdirectory | File                 | Description
+-------------|----------------------|-------------
+`./`         | `wallet.dat`         | Personal wallet (a SQLite database) with keys and transactions
+`./`         | `wallet.dat-journal` | SQLite Rollback Journal file for `wallet.dat`. Usually created at start and deleted on shutdown. A user *must keep it as safe* as the `wallet.dat` file.
+
 
 ## GUI settings
 
