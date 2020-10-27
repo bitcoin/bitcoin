@@ -70,10 +70,6 @@
         <translation>Toto sú Vaše Bitcoin adresy pre posielanie platieb. Vždy skontrolujte sumu a prijímaciu adresu pred poslaním mincí.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Toto sú vaše Bitcoin adresy pre prijímanie platieb. Pre vytvorenie nových adries použite tlačidlo 'Vytvoriť novú prijímajúcu adresu' na karte Prijať.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopírovať adresu</translation>
     </message>
@@ -629,11 +625,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálne &lt;b&gt;zamknutá&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Vyskytla sa kritická chyba. Bitcoin nemôže ďalej bezpečne pokračovať a ukončí sa.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1139,10 +1131,6 @@
         <translation>Ukazuje, či se zadaná východzia SOCKS5 proxy používá k pripojovaniu k peerom v rámci tohoto typu siete.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Použiť samostatný SOCKS&amp;5 proxy server na dosiahnutie počítačov cez skryté služby Tor:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Skryť ikonu zo systémovej lišty.</translation>
     </message>
@@ -1273,10 +1261,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Pripojiť k Bitcoinovej sieti cez separované SOCKS5 proxy pre skrytú službu Tor.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1453,7 +1437,26 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Aktuálny celkový zostatok pre adries ktoré sa iba sledujú</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialóg</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Uložiť...</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Celková suma</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>alebo</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1717,10 +1720,6 @@
         <translation>Reťazec blokov</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Aktuálny počet blokov</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Pamäť Poolu</translation>
     </message>
@@ -1763,10 +1762,6 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Vyberte počítač pre zobrazenie podrobností.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>Povolené</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1820,10 +1815,6 @@
     <message>
         <source>Services</source>
         <translation>Služby</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Skóre zákazu</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1974,14 +1965,6 @@
         <translation>Odchádzajúce</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Áno</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nie</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>neznámy</translation>
     </message>
@@ -2080,12 +2063,28 @@
         <source>Copy amount</source>
         <translation>Kopírovať sumu</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nepodarilo sa odomknúť peňaženku.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR kód</translation>
+        <source>Amount:</source>
+        <translation>Suma:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Popis:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Správa:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Peňaženka:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2106,30 +2105,6 @@
     <message>
         <source>Payment information</source>
         <translation>Informácia o platbe</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Suma</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Popis</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Správa</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Peňaženka</translation>
     </message>
 </context>
 <context>
@@ -2414,16 +2389,8 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Potvrdiť návrh transakcie</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Skopírovať PSBT do schránky</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Odoslať</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT skopírovaný</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3207,12 +3174,12 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Zatvorenie peňaženky na príliš dlhú dobu môže mať za následok potrebu znova synchronizovať celý reťazec blokov (blockchain) v prípade, že je aktivované redukovanie blokov.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Nie je načítaná peňaženka.</translation>
+        <source>Create a new wallet</source>
+        <translation>Vytvoriť novú peňaženku</translation>
     </message>
 </context>
 <context>
@@ -3285,6 +3252,10 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Exportovať dáta v aktuálnej karte do súboru</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Chyba</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Zálohovanie peňaženky</translation>
     </message>
@@ -3328,10 +3299,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Redukovanie: posledná synchronizácia peňaženky prebehla pred časmi blokov v redukovaných dátach. Je potrebné vykonať -reindex (v prípade redukovaného režimu stiahne znovu celý reťazec blokov)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Chyba: Vyskytla sa interná chyba, pre viac informácií zobrazte debug.log</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Redukovanie blockstore...</translation>
     </message>
@@ -3342,10 +3309,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>The %s developers</source>
         <translation>Vývojári %s</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Nie je možné vygenerovať kľúč na zmenu adresy. Nie sú dostupné žiadne kľúče a nie je možné ich ani generovať.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3394,14 +3357,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Varovanie: Zjavne sa úplne nezhodujeme s našimi peer-mi! Možno potrebujete prejsť na novšiu verziu alebo ostatné uzly potrebujú vyššiu verziu.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d z posledných 100 blokov má neočakávanú verziu</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s je poškodený, záchrana zlyhala</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3526,10 +3481,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Načítavam P2P adresy…</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Chyba: Príliš málo miesta na disku!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3714,10 +3665,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Upozornenie: aktivovaná neznáme nové pravidlá (verzový bit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Zmazať všetky transakcie z peňaženky...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee je nastavené veľmi vysoko! Takto vysoký poplatok môže byť zaplatebý v jednej transakcii.</translation>
     </message>
@@ -3728,10 +3675,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Celková dĺžka verzie sieťového reťazca (%i) prekračuje maximálnu dĺžku (%i). Znížte počet a veľkosť komentárov.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varovanie: Peňaženka poškodená, dáta boli zachránené! Originálna %s ako %s v %s; ak váš zostatok alebo transakcie sú nesprávne, mali by ste obnoviť zálohu.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3776,10 +3719,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Insufficient funds</source>
         <translation>Nedostatok prostriedkov</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Nie je možné vylepšiť peňaženku bez HD bez aktualizácie, ktorá podporuje delenie keypoolu. Použite prosím -upgradewallet=169900 alebo -upgradewallet bez špecifikovania verzie.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

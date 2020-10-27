@@ -70,10 +70,6 @@
         <translation>Nämä ovat Bitcoin-osoitteesi maksujen lähettämistä varten. Tarkista aina määrä ja vastaanotto-osoite ennen kolikoiden lähettämistä.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Nämä ovat sinun Bitcoin osoitteesi maksujen vastaanottamista varten. Käytä 'Luo uusi vastaanotto-osoite' painiketta vastaantto tabissä luodaksesi uuden osoitteen.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopioi osoite</translation>
     </message>
@@ -629,11 +625,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittuna&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Peruuttamaton virhe on tapahtunut. Bitcoin ei voi enää jatkaa turvallisesti ja sammutetaan.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1139,10 +1131,6 @@
         <translation>Ilmoittaa, mikäli oletetettua SOCKS5-välityspalvelinta käytetään vertaisten tavoittamiseen tämän verkkotyypin kautta.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Käytä SOCKS&amp;5-välityspalvelinta tavoittamaan Tor-verkon piilotetut palvelut:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Piilota kuvake järjestelmäpalkista.</translation>
     </message>
@@ -1273,10 +1261,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Yhdistä Bitcoin-verkkoon erillisen SOCKS5-välityspalvelimen kautta piilotettuja Tor-palveluja varten.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1453,7 +1437,22 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Nykyinen tase seurattavassa osoitetteissa</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialogi</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Yhteensä</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>tai</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1717,10 +1716,6 @@
         <translation>Lohkoketju</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Nykyinen Lohkojen määrä</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Muistiallas</translation>
     </message>
@@ -1763,10 +1758,6 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Valitse vertainen eriteltyjä tietoja varten.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>Sallittu</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1819,10 +1810,6 @@
     <message>
         <source>Services</source>
         <translation>Palvelut</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Panna-pisteytys</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1973,14 +1960,6 @@
         <translation>Ulosmenevä</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Kyllä</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Ei</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Tuntematon</translation>
     </message>
@@ -2079,12 +2058,28 @@
         <source>Copy amount</source>
         <translation>Kopioi määrä</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Lompakkoa ei voitu avata.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR-koodi</translation>
+        <source>Amount:</source>
+        <translation>Määrä:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Tunniste:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Viesti:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Lompakko:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2105,30 +2100,6 @@
     <message>
         <source>Payment information</source>
         <translation>Maksutiedot</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Osoite</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Määrä</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nimike</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Viesti</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Lompakko</translation>
     </message>
 </context>
 <context>
@@ -2373,10 +2344,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Oletko varma, että haluat lähettää?</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Ole hyvä ja katso siirtotapahtuma ehdotuksesi. Tämä tuottaa osittain allekirjoitetun bitcoin-siirtotapahtuman (PSBT), jonka voit kopioida ja sitten allekirjoittaa esimerkiksi offline %1 lompakko tai PSBT-yhteensopiva hardware-lompakko.</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>tai</translation>
     </message>
@@ -2413,16 +2380,8 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Vahvista siirtoehdotus</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Kopioi PSBT leikepöydälle</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Lähetä</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT kopioitu</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3202,12 +3161,12 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Lompakon sulkeminen liian pitkäksi aikaa saattaa johtaa tarpeeseen synkronoida koko ketju uudelleen, mikäli karsinta on käytössä.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Lomakkoa ei ole ladattu.</translation>
+        <source>Create a new wallet</source>
+        <translation>Luo uusi lompakko</translation>
     </message>
 </context>
 <context>
@@ -3280,6 +3239,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Vie auki olevan välilehden tiedot tiedostoon</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Virhe</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Varmuuskopioi lompakko</translation>
     </message>
@@ -3323,10 +3286,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Karsinta: viime lompakon synkronisointi menee karsitun datan taakse. Sinun tarvitsee ajaa -reindex (lataa koko lohkoketju uudelleen tapauksessa jossa karsiva noodi)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Virhe: Kriittinen sisäinen virhe kohdattiin, katso debug.log lisätietoja varten</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Karsitaan lohkovarastoa...</translation>
     </message>
@@ -3337,10 +3296,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>The %s developers</source>
         <translation>%s kehittäjät</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Vaihtorahaosoitetta ei voida luoda. Sisäisessä varannossa ei ole avaimia, eikä uusia avaimia voida luoda.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3389,14 +3344,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Varoitus: Olemme ristiriidassa vertaisten kanssa! Sinun tulee päivittää tai toisten solmujen tulee päivitää.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d viimeisestä 100 lohkosta sisälsi odottamattoman versiotiedon</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s vioittunut, korjaaminen epäonnistui</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3517,10 +3464,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Ladataan P2P-vertaisten osoitteita...</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Virhe: Liian vähän levytilaa!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3701,10 +3644,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Varoitus: tuntemattomia uusia sääntöjä aktivoitu (versiobitti %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Tyhjennetään kaikki rahansiirrot lompakosta....</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee on asetettu erittäin suureksi! Tämänkokoisia kuluja saatetaan maksaa yhdessä rahansiirrossa.</translation>
     </message>
@@ -3715,10 +3654,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Verkon versiokenttä (%i) ylittää sallitun pituuden (%i). Vähennä uacomments:in arvoa tai kokoa.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varoitus: Lompakkotiedosto on vioittunut, tiedot on korjattu. Alkuperäinen %s talletettu nimellä %s kohteeseen %s; mikäli taseesi tai siirtotapahtumat ovat virheellisiä, on suositeltavaa palauttaa lompakko varmuuskopioista.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3763,10 +3698,6 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Insufficient funds</source>
         <translation>Lompakon saldo ei riitä</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Muuta kuin HD-jaettua lompakkoa ei voi päivittää ilman päivitystä tukemaan esijaettua avainvarastoa. Käytä -upgradewallet = 169900 tai -upgradewallet ilman määritettyä versiota.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

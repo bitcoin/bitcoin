@@ -70,10 +70,6 @@
         <translation>Tai yra jūsų Bitcoin adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Tai jūsų Bitcoin mokėjimų gavimo adresai. Naudokite 'Sukurti naują gavimo adresą' migtuką gavimų skirtuke kad sukurtumėt nauja adresą.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopijuoti adresą</translation>
     </message>
@@ -597,11 +593,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Piniginė &lt;b&gt;užšifruota&lt;/b&gt; ir šiuo metu &lt;b&gt;užrakinta&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Kritinė klaida. Bitcoin nebegali tęsti saugiai ir bus išjungtas.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1079,10 +1071,6 @@
         <translation>Rodo, ar pridedamas numatytasis SOCKS5 proxy naudojamas pasiekti Peers per šį tinklo tipą.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Naudokite atskirą SOCKS&amp;5 tarpinius serverius, kad pasiektumėte Peers per „Tor“ paslėptas paslaugas:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Slėpti piktogramą</translation>
     </message>
@@ -1213,10 +1201,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Prisijunkite prie „Bitcoin“ tinklo per atskirą „SOCKS5“ proxy „Tor“ paslėptas paslaugas.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1393,7 +1377,22 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Dabartinis visas balansas tik stebimų adresų</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialogas</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Visas kiekis</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>ar</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1645,10 +1644,6 @@
         <translation>Blokų grandinė</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Dabartinis blokų skaičius</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Memory Pool</translation>
     </message>
@@ -1693,10 +1688,6 @@
         <translation>Pasirinkite peer, kad galėtumėte peržiūrėti išsamią informaciją.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Baltasis sąrašas</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Kryptis</translation>
     </message>
@@ -1735,10 +1726,6 @@
     <message>
         <source>Services</source>
         <translation>Paslaugos</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Uždraudimo balas</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1889,14 +1876,6 @@
         <translation>Išsiunčiamas</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Taip</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Ne</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Nežinomas</translation>
     </message>
@@ -1983,12 +1962,28 @@
         <source>Copy amount</source>
         <translation>Kopijuoti sumą</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nepavyko atrakinti piniginės.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR kodas</translation>
+        <source>Amount:</source>
+        <translation>Suma:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Žymė:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Žinutė:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Piniginė</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2009,30 +2004,6 @@
     <message>
         <source>Payment information</source>
         <translation>Mokėjimo informacija</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresas</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Suma</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Žymė</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Žinutė</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Piniginė</translation>
     </message>
 </context>
 <context>
@@ -3014,8 +2985,8 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Piniginė nebuvo įkelta.</translation>
+        <source>Create a new wallet</source>
+        <translation>Sukurti naują piniginę</translation>
     </message>
 </context>
 <context>
@@ -3076,6 +3047,10 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>Eksportuokite duomenis iš dabartinio skirtuko į failą</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Klaida</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Sukurti Piniginės atsarginę kopiją</translation>
     </message>
@@ -3109,14 +3084,6 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
     <message>
         <source>The %s developers</source>
         <translation>%s kūrėjai</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d iš paskutinių 100 blokų turi nenumatyą versiją</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s sugadintas, išgelbėjimas nepavyko</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3195,10 +3162,6 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>Užkraunami P2P adresai...</translation>
     </message>
     <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Klaida: Diske mažai vietos!</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Įkeliamas draudžiamas sąrašas...</translation>
     </message>
@@ -3249,10 +3212,6 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Tikrinama piniginė(s)...</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Visų operacijų sulaikymas iš piniginės...</translation>
     </message>
     <message>
         <source>%s is set very high!</source>

@@ -70,10 +70,6 @@
         <translation>Dette er dine Bitcoin adresser for å sende  å sende betalinger. Husk å sjekke beløp og mottager adresser før du sender mynter.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Dette er dine Bitcoin adresse for å betalinger. Det er anbefalt å bruke en my mottager adresse for hver transakjon.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopier adresse</translation>
     </message>
@@ -629,11 +625,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>En fatal feil har inntruffet. Bitcoin kan ikke lenger trygt fortsette, og må derfor avslutte.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1135,10 +1127,6 @@
         <translation>Viser hvorvidt angitt SOCKS5-mellomtjener blir brukt for å nå noder via denne nettverkstypen.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Bruk egen SOCKS&amp;5-proxy for å nå noder via Tor hidden services:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Skjul ikonet fra systemkurven.</translation>
     </message>
@@ -1269,10 +1257,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Koble til Bitcoin-nettverket gjennom en separat SOCKS5 mellomtjener for Tor skjulte tjenester.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1449,7 +1433,22 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Nåværende totale balanse i kun observerbare adresser</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialog</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Totalbeløp</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>eller</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1701,10 +1700,6 @@
         <translation>Blokkjeden</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Nåværende antall blokker</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Hukommelsespulje</translation>
     </message>
@@ -1747,10 +1742,6 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Velg en node for å vise detaljert informasjon.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>Hvitelistet</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1803,10 +1794,6 @@
     <message>
         <source>Services</source>
         <translation>Tjenester</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Ban Poengsum</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1957,14 +1944,6 @@
         <translation>Utgående</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nei</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Ukjent</translation>
     </message>
@@ -2063,12 +2042,28 @@
         <source>Copy amount</source>
         <translation>Kopier beløp</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunne ikke låse opp lommebok.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR-kode</translation>
+        <source>Amount:</source>
+        <translation>Beløp:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Merkelapp:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Melding:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Lommebok:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2089,30 +2084,6 @@
     <message>
         <source>Payment information</source>
         <translation>Betalingsinformasjon</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresse</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Beløp</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Beskrivelse</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Melding</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Lommebok</translation>
     </message>
 </context>
 <context>
@@ -2385,16 +2356,8 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Bekreft transaksjonsforslaget</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Kopier PSBT til utklippstavlen</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Send</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT kopiert</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3174,12 +3137,12 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Å lukke lommeboken for lenge kan føre til at du må synkronisere hele kjeden hvis beskjæring er aktivert.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Ingen lommebok har blitt lastet inn.</translation>
+        <source>Create a new wallet</source>
+        <translation>Lag en ny lommebok</translation>
     </message>
 </context>
 <context>
@@ -3252,6 +3215,10 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Eksporter data i den valgte fliken til en fil</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Feilmelding</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Sikkerhetskopier lommebok</translation>
     </message>
@@ -3295,10 +3262,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Beskjæring: siste lommeboksynkronisering går utenfor beskjærte data. Du må bruke -reindex (laster ned hele blokkjeden igjen for beskjærte noder)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Beskjærer blokklageret...</translation>
     </message>
@@ -3309,10 +3272,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>The %s developers</source>
         <translation>%s-utviklerne</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Kan ikke generere en ledelse-nøkkel. Ingen taster i den interne tasten og kan ikke generere noen nøkler.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3361,14 +3320,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Advarsel: Vi ser ikke ut til å være i full overenstemmelse med våre likemenn! Du kan trenge å oppgradere, eller andre noder kan trenge å oppgradere.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d av minst 100 blokker har uventet versjon</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s skadet, berging mislyktes</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3469,10 +3420,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Laster maskin-til-maskin -adresser…</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Feil: For lite diskplass!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3645,10 +3592,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Advarsel: Ukjente nye regler aktivert (versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Zapper alle transaksjoner fra lommeboken...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee er satt veldig høyt! Så stort gebyr kan bli betalt ved en enkelt transaksjon.</translation>
     </message>
@@ -3659,10 +3602,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Total lengde av nettverks-versionstreng (%i) er over maks lengde (%i). Reduser tallet eller størrelsen av uacomments.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Advarsel: Lommeboksfil skadet, data berget! Original %s lagret som %s i %s; hvis din saldo eller transaksjoner er uriktige, bør du gjenopprette fra sikkerhetskopi.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3707,10 +3646,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>Insufficient funds</source>
         <translation>Utilstrekkelige midler</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Kan ikke oppgradere en delt lommebok uten HD uten å oppgradere til støtte for forhåndsdelt tastatur. Bruk -upgradewallet = 169900 eller -upgradewallet uten versjon spesifisert.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

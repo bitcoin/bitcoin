@@ -46,10 +46,6 @@
         <translation>Lawa amakheli akho e-Bitcoin okuthumela izinkokhelo. Njalo hlola inani nekheli elitholwayo ngaphambi kokuthumela izinhlamvu zemali.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Lawa amakheli akho e-Bitcoin athola izinkokhelo. Sebenzisa inkinobho ethi 'Dala ikheli elisha lokuthola' kuthebhu yokwamukela ukudala amakheli amasha.</translation>
-    </message>
-    <message>
         <source>Export Address List</source>
         <translation>Thumela Ikheli Langaphandle</translation>
     </message>
@@ -184,6 +180,9 @@ Lahla YONKE IBITCOIN YAKHO!</translation>
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -203,14 +202,6 @@ Lahla YONKE IBITCOIN YAKHO!</translation>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>Ikheli</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Ilebuli</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>

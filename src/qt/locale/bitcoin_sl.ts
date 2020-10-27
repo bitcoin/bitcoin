@@ -70,8 +70,10 @@
         <translation>To so vaši bitcoin-naslovi za pošiljanje. Pred pošiljanjem vedno preverite količino in prejemnikov naslov.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>To so vaši naslovi za prejemanje bitcoinov. Če želite ustvariti nov prejemni naslov, uporabite gumb za ustvarjanje novih naslovov v zavihku "prejemanje".</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>To so vaši bitcoin-naslovi, ki jih uporabljate za prejemanje plačil. Za tvorbo novega naslova uporabite gumb "Ustvari nov prejemni naslov" v zavihku Prejmi.
+Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -482,6 +484,22 @@
         <translation>Ažurno</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>Na&amp;loži DPBT iz datoteke...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>Naloži delno podpisano bitcoin-transakcijo</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Naloži DPBT z odložišča...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Naloži delno podpisano bitcoin-transakcijo z odložišča</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Okno vozlišča</translation>
     </message>
@@ -518,8 +536,24 @@
         <translation>Zapri denarnico</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>Zapri vse denarnice...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Zapri vse denarnice</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Pokaži %1 sporočilo za pomoč s seznamom vseh možnosti v ukazni vrstici</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>Za&amp;maskiraj vrednosti</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Zamaskiraj vrednosti v zavihku Pregled</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -630,8 +664,12 @@
         <translation>Denarnica je &lt;b&gt;šifrirana&lt;/b&gt; in trenutno &lt;b&gt;zaklenjena&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Prišlo je do usodne napake. Bitcoin ne more več varno nadaljevati in se bo zaprl.</translation>
+        <source>Original message:</source>
+        <translation>Izvorno sporočilo:</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Prišlo je do usodne napake. %1 ne more več varno nadaljevati s tekom in se bo ustavil.</translation>
     </message>
 </context>
 <context>
@@ -833,6 +871,14 @@
     <message>
         <source>Make Blank Wallet</source>
         <translation>Ustvari prazno denarnico</translation>
+    </message>
+    <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>Uporabi deskriptorje za upravljanje s scriptPubKey</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Datoteka z deskriptorji</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1139,10 +1185,6 @@
         <translation>Prikaže, če je priloženi privzeti proxy SOCKS5 uporabljen za doseganje soležnikov prek te vrste omrežja.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Za dostop do soležnikov preko skritih storitev Tor uporabi drug posredniški strežnik SOCKS&amp;5:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Skrij ikono na sistemskem pladnju.</translation>
     </message>
@@ -1275,10 +1317,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Poveži se v omrežje Bitcoin preko posredniškega strežnika SOCKS5 za skrite storitve Tor.</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>O&amp;kno</translation>
     </message>
@@ -1317,6 +1355,14 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Omogoči dodatno možnost podrobnega nadzora nad posameznimi kovanci v transakcijah.</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Poveži se v omrežje Bitcoin prek ločenega posredniškega strežnika SOCKS5 za storitve onion (Tor).</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Uporabi ločen posredniški strežik SOCKS5 za povezavo s soležniki prek storitev onion (Tor):</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1452,6 +1498,133 @@
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>Trenutno skupno stanje sredstev na opazovanih naslovih</translation>
+    </message>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>V zavihku Pregled je vklopljen zasebni način. Za prikaz vrednosti odstranite kljukico na mestu Nastavitve &gt; Zamaskiraj vrednosti.</translation>
+    </message>
+</context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Pogovorno okno</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Podpiši transakcijo</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Oddaj transakcijo v omrežje</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Skopiraj v odložišče</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Shrani...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Zapri</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Nalaganje transakcije je spodletelo: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Podpisovanje transakcije je spodletelo: %1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Ne morem podpisati več vhodov.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>%1 vhodov podpisanih, a potrebnih je več podpisov.</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>Transakcija je uspešno podpisana in pripravljena na oddajo v omrežje.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Neznana napaka pri obdelavi transakcije.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Transakcija uspešno oddana v omrežje. ID transakcije: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Oddaja transakcije v omrežje je spodletela: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>DPBT kopirana v odložišče.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Shrani podatke transakcije</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Delno podpisana bitcoin-transakcija (binarno) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>DPBT shranjena na disk.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>* Pošlje %1 na %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Ne morem izračunati transakcijske provizije ali skupnega zneska transakcije.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Vsebuje transakcijsko provizijo:</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Skupni znesek</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>ali</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>Transakcija ima toliko nepodpisanih vhodov: %1.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>Transakciji manjkajo nekateri podatki o vhodih.</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>Transakcija potrebuje nadaljnje podpise.</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Ta denarnica pa ne more podpisovati transakcij.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Ta denarnica pa nima pravih ključev.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Transakcija je v celoti podpisana in pripravljena za oddajo v omrežje.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Status transakcije ni znan.</translation>
     </message>
 </context>
 <context>
@@ -1619,6 +1792,10 @@
         <translation>Napaka: %1</translation>
     </message>
     <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Napaka pri inicializaciji nastavitev: %1</translation>
+    </message>
+    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 se še ni varno zaprl ...</translation>
     </message>
@@ -1717,10 +1894,6 @@
         <translation>Veriga blokov</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Trenutno število blokov</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Čakalna vrsta transakcij</translation>
     </message>
@@ -1765,10 +1938,6 @@
         <translation>Izberite soležnika, o katerem si želite ogledati podrobnejše informacije.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Na seznamu dovoljenih</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Smer povezave</translation>
     </message>
@@ -1805,6 +1974,10 @@
         <translation>Okno vozlišča</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>Višina trenutnega bloka</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Odpre %1 razhroščevalni dnevnik debug.log, ki se nahaja v trenutni podatkovni mapi. Če je datoteka velika, lahko postopek traja nekaj sekund.</translation>
     </message>
@@ -1817,12 +1990,12 @@
         <translation>Povečaj velikost pisave</translation>
     </message>
     <message>
-        <source>Services</source>
-        <translation>Storitve</translation>
+        <source>Permissions</source>
+        <translation>Dovoljenja</translation>
     </message>
     <message>
-        <source>Ban Score</source>
-        <translation>Kazenske točke</translation>
+        <source>Services</source>
+        <translation>Storitve</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1973,14 +2146,6 @@
         <translation>Odhodna</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Da</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Ne</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Neznano</translation>
     </message>
@@ -2079,12 +2244,40 @@
         <source>Copy amount</source>
         <translation>Kopiraj znesek</translation>
     </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Denarnice ni bilo mogoče odkleniti.</translation>
+    </message>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Ne morem ustvariti novega %1 naslova</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR Koda</translation>
+        <source>Request payment to ...</source>
+        <translation>Zahtevaj plačilo na ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Naslov:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Znesek:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Oznaka:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Sporočilo:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Denarnica:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2105,30 +2298,6 @@
     <message>
         <source>Payment information</source>
         <translation>Informacije o plačilu</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Naslov</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Znesek</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Oznaka</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Sporočilo</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Denarnica</translation>
     </message>
 </context>
 <context>
@@ -2377,8 +2546,20 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Ali ste prepričani, da želite poslati sredstva?</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Prosimo, preglejte svoj predlog transakcije. Ustvarjena bo delno podpisana bitcoin-transakcija (DPBT, angl. PSBT), ki jo lahko skopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
+        <source>Create Unsigned</source>
+        <translation>Ustvari nepodpisano</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Shrani podatke transakcije</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Delno podpisana bitcoin-transakcija (binarno) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>DPBT shranjena</translation>
     </message>
     <message>
         <source>or</source>
@@ -2387,6 +2568,10 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Provizijo lahko zvišate kasneje (signali Replace-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Prosimo, preglejte predlog za transakcijo. Ustvarjena bo delno podpisana bitcoin-transakcija (DPBT), ki jo lahko shranite ali skopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2417,16 +2602,8 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Potrdi predlog transakcije</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Kopiraj DPBT v odložišče</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Pošlji</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>DPBT skopirana</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3210,12 +3387,28 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Predolgo zapiranje denarnice lahko povzroči ponovno sinhronizacijo celotne verige, če je obrezovanje omogočeno.</translation>
     </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Zapri vse denarnice</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Ste prepričani, da želite zapreti vse denarnice?</translation>
+    </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Nobena denarnica ni bila naložena.</translation>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>Odprta ni nobena denarnica.
+Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
+- ali pa -</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Ustvari novo denarnico</translation>
     </message>
 </context>
 <context>
@@ -3288,6 +3481,30 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Izvozi podatke v trenutnem zavihku v datoteko</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Napaka</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Ne morem dekodirati DPBT z odložišča (neveljaven format base64)</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>Naloži podatke transakcije</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Delno podpisana transakcija (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>Velikost DPBT ne sme presegati 100 MiB.</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Ne morem dekodirati DPBT</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Izdelava varnostne kopije denarnice</translation>
     </message>
@@ -3331,10 +3548,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Obrezovanje: zadnja sinhronizacija denarnice presega obrezane podatke. Izvesti morate -reindex (v primeru obrezanega načina delovanja bo potrebno znova prenesti celotno verigo blokov).</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Napaka: Med izvajanjem je prišlo do nepopravljive napake. Podrobnosti so v datoteki debug.log</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Obrezujem ...</translation>
     </message>
@@ -3345,10 +3558,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     <message>
         <source>The %s developers</source>
         <translation>%s razvijalci</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Ne morem ustvariti ključa za naslov za vračilo. Interna zaloga ključev je prazna, novih pa ni mogoče ustvariti.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3397,14 +3606,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Opozorilo: Trenutno se s soležniki ne strinjamo v popolnosti! Mogoče bi morali vi ali drugi udeleženci posodobiti odjemalce.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d od zadnjih 100 blokov imajo nepričakovano verzijo</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s poškodovana, obnova neuspešna</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3531,10 +3732,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Nalagam P2P naslove ...</translation>
     </message>
     <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Napaka: premalo prostora na disku!</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Nalaganje liste blokiranih ...</translation>
     </message>
@@ -3599,6 +3796,10 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Napaka: Ni mogoče sprejemati dohodnih povezav (vrnjena napaka: %s)</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s je okvarjena. Lahko jo poskusite popraviti z orodjem bitcoin-wallet ali pa jo obnovite iz varnostne kopije.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Neveljaven znesek za -maxtxfee=&lt;amount&gt;: '%s' (mora biti najmanj provizija za %s, da se prepreči zataknjene transakcije)</translation>
     </message>
@@ -3607,8 +3808,28 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Znesek transakcije je premajhen za pošiljanje po odbitku provizije</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Ta napaka se lahko pojavi, če denarnica ni bila pravilno zaprta in je bila nazadnje naložena s programsko opremo z novejšo verzijo Berkely DB. Če je temu tako, prosimo uporabite programsko opremo, s katero je bila ta denarnica nazadnje naložena.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>Transakcija potrebuje naslov za vračilo, ki pa ga ni moč ustvariti. Prosimo, najprej pokličite keypoolrefill.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Za vrnitev v neobrezan način morate obnoviti bazo z uporabo -reindex. To zahteva ponoven prenos celotne verige blokov.</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Prišlo je do usodne notranje napake. Za podrobnosti glejte datoteko debug.log.</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Nastavitev -peerblockfilters ni veljavna brez nastavitve -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>Prostora na disku je premalo!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3621,6 +3842,10 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Opozorilo: premalo prostora na disku za %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Napaka: bazen ključev je prazen, najprej pokličite keypoolrefill</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3641,6 +3866,10 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Pri opciji -whitebind morate navesti vrata: %s</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>Posredniški strežnik (proxy) ni nastavljen. Uporabite -proxy=&lt;ip&gt; ali -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
@@ -3717,10 +3946,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Opozorilo: neznana nova pravila aktivirana (versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Brišem vse transakcije iz denarnice ...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee je nastavljen zelo visoko!</translation>
     </message>
@@ -3731,10 +3956,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Skupna dolžina niza različice omrežja (%i) presega največjo dolžino (%i). Zmanjšajte število ali velikost ur.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Opozorilo: Datoteka denarnice je poškodovana, podatki so shranjeni! Izvirnik %s je bil shranjen kot %s v %s; če je prikazano stanje ali transakcije napačno, ga morate obnoviti iz varnostne kopije.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3779,10 +4000,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
     <message>
         <source>Insufficient funds</source>
         <translation>Premalo sredstev</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Ne morete nadgraditi denarnice, ki ni ločena z HD, brez nadgradnje na podporo pred razdeljenim ključem. Uporabite -upgradewallet=169900 ali -upgradewallet brez določene različice.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

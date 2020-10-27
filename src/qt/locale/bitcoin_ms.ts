@@ -498,6 +498,9 @@ Alihkan fail data ke dalam tab semasa</translation>
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -522,26 +525,14 @@ Alihkan fail data ke dalam tab semasa</translation>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Wallet:</source>
+        <translation>dompet</translation>
+    </message>
+    <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Salin Alamat</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Alamat</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Amount</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>dompet</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -647,6 +638,10 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>Export the data in the current tab to a file</source>
         <translation>
 Alihkan fail data ke dalam tab semasa</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
     </message>
     </context>
 <context>

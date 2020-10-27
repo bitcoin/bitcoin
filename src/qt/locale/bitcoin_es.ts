@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Haga clic con el botón derecho para editar una dirección o etiqueta</translation>
+        <translation>Haz click con el botón derecho para editar una dirección o etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crear una nueva dirección</translation>
+        <translation>Crear una dirección nueva</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Introduzca la dirección, ID de transacción o etiqueta a buscar.</translation>
+        <translation>Introduce la dirección o etiqueta que quieres buscar</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -43,11 +43,11 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>Eliminar</translation>
+        <translation>&amp;Borrar</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Escoja la dirección a la que se enviarán monedas</translation>
+        <translation>Elige la dirección a la que se enviarán las monedas</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -70,12 +70,8 @@
         <translation>Estas son sus direcciones Bitcoin para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Estas son sus direcciones Bitcoin para la recepción de pagos. Use el botón 'Crear una nueva dirección para recepción' en la pestaña Recibir para crear nuevas direcciones</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
-        <translation>Copiar dirección</translation>
+        <translation>&amp;Copiar dirección</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -95,7 +91,7 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>La exportación falló</translation>
+        <translation>La exportación ha fallado</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -125,7 +121,7 @@
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Introducir contraseña</translation>
+        <translation>Introduce la contraseña</translation>
     </message>
     <message>
         <source>New passphrase</source>
@@ -141,23 +137,23 @@
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Cifrar monedero</translation>
+        <translation>Cifrar cartera</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Esta operación requiere su contraseña para desbloquear el monedero.</translation>
+        <translation>Esta operación necesita la contraseña para desbloquear la cartera</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Desbloquear monedero</translation>
+        <translation>Desbloquear cartera</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Esta operación requiere su contraseña para descifrar el monedero.</translation>
+        <translation>Esta operación necesita la contraseña para desbloquear la cartera.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Descifrar monedero</translation>
+        <translation>Descifrar cartera</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -165,7 +161,7 @@
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Confirmar el cifrado del monedero</translation>
+        <translation>Confirma el cifrado de esta cartera</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -173,47 +169,47 @@
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>¿Seguro que desea cifrar su monedero?</translation>
+        <translation>¿Seguro que quieres cifrar tu cartera?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Monedero cifrado</translation>
+        <translation>Cartera encriptada</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Introduzca la nueva contraseña del monedero. &lt;br/&gt;Por favor utilice una contraseña de &lt;b&gt;diez o más caracteres aleatorios&lt;/b&gt;, u &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
+        <translation>Introduce la contraseña nueva para la cartera. &lt;br/&gt;Por favor utiliza una contraseña de &lt;b&gt;diez o más caracteres aleatorios&lt;/b&gt;, u &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation>Introduzca la contraseña antigua y la nueva para el monedero.</translation>
+        <translation>Introduce la contraseña antigua y la nueva para la cartera.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Recuerde que cifrar su monedero no garantiza mantener a salvo sus bitcoins en caso de tener virus en el computador.</translation>
+        <translation>Recuerda que cifrar tu cartera no garantiza la protección de tus bitcoin si tu ordenador es infectado con malware.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation>Monedero para cifrar</translation>
+        <translation>Cartera a cifrar</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation>Su monedero va a ser cifrado</translation>
+        <translation>Tu cartera va a ser cifrada</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation>Su monedero está ahora cifrado</translation>
+        <translation>Tu cartera ya está cifrada</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANTE: Cualquier copia de seguridad anterior que haya hecho de su archivo del monedero debe ser reemplazada por el archivo del monedero cifrado y recién generado. Por razones de seguridad, las copias de seguridad anteriores del archivo del monedero sin cifrar serán inútiles tan pronto como empiece a usar el nuevo monedero cifrado.</translation>
+        <translation>IMPORTANTE: Cualquier copia de seguridad que hayas hecho del archivo de tu cartera debe ser reemplazada por el archivo cifrado de la cartera recién generado. Por razones de seguridad, las copias de seguridad anteriores del archivo de la cartera sin cifrar serán inútiles cuando empiece a usar la nueva cartera cifrada.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Cifrado del monedero fallido</translation>
+        <translation>El cifrado de la cartera ha fallado</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>El cifrado del monedero falló debido a un error interno. Su monedero no fue cifrado.</translation>
+        <translation>El cifrado de la cartera ha fallado debido a un error interno. Tu cartera no ha sido cifrada.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
@@ -221,19 +217,19 @@
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Desbloquear el monedero falló.</translation>
+        <translation>El desbloqueo de la cartera ha fallado</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La contraseña ingresada para el descifrado del monedero es incorrecta.</translation>
+        <translation>La contraseña introducida descifrar la cartera es incorrecta.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>El descifrado del monedero falló</translation>
+        <translation>El descifrado de la cartera ha fallado</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>La contraseña del monedero ha sido cambiada con éxito.</translation>
+        <translation>La contraseña de la cartera ha sido cambiada.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -248,7 +244,7 @@
     </message>
     <message>
         <source>Banned Until</source>
-        <translation>Prohibido Hasta</translation>
+        <translation>Prohibido hasta</translation>
     </message>
 </context>
 <context>
@@ -267,7 +263,7 @@
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Mostrar vista general del monedero</translation>
+        <translation>Mostrar vista general de la cartera</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -311,11 +307,11 @@
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Cifrar monedero…</translation>
+        <translation>&amp;Cifrar cartera…</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Copia de respaldo del monedero...</translation>
+        <translation>&amp;Copia de seguridad de la cartera...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
@@ -327,15 +323,15 @@
     </message>
     <message>
         <source>Create Wallet...</source>
-        <translation>Crear monedero...</translation>
+        <translation>Crear cartera...</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation>Crear monedero nuevo</translation>
+        <translation>Crear nueva cartera</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation>Monedero:</translation>
+        <translation>Cartera:</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -395,7 +391,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Encriptar las claves privadas que pertenecen a su billetera</translation>
+        <translation>Cifrar las claves privadas que pertenecen a tu cartera</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -503,19 +499,27 @@
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation>Abrir Monedero</translation>
+        <translation>Abrir cartera</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation>Abrir un monedero</translation>
+        <translation>Abrir una cartera</translation>
     </message>
     <message>
         <source>Close Wallet...</source>
-        <translation>Cerrar Monedero...</translation>
+        <translation>Cerrar cartera...</translation>
     </message>
     <message>
         <source>Close wallet</source>
-        <translation>Cerrar monedero</translation>
+        <translation>Cerrar cartera</translation>
+    </message>
+    <message>
+        <source>Close All Wallets...</source>
+        <translation>Cerrar todas las carteras...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Cerrar todas las carteras</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -523,11 +527,11 @@
     </message>
     <message>
         <source>default wallet</source>
-        <translation>Monedero predeterminado</translation>
+        <translation>Cartera predeterminada</translation>
     </message>
     <message>
         <source>No wallets available</source>
-        <translation>No hay monederos disponibles.</translation>
+        <translation>No hay carteras disponibles</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -580,7 +584,7 @@
     <message>
         <source>Wallet: %1
 </source>
-        <translation>Monedero: %1
+        <translation>Cartera: %1
 </translation>
     </message>
     <message>
@@ -627,13 +631,13 @@
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>El monedero está &lt;b&gt;cifrado&lt;/b&gt; y actualmente &lt;b&gt;bloqueado&lt;/b&gt;</translation>
+        <translation>La cartera está &lt;b&gt;cifrada&lt;/b&gt; y &lt;b&gt;bloqueada&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Se produjo un error fatal. Bitcoin ya no puede continuar de manera segura y se cerrará</translation>
+        <source>Original message:</source>
+        <translation>Mensaje original:</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -793,7 +797,7 @@
     </message>
     <message>
         <source>Create wallet failed</source>
-        <translation>Crear monedero falló</translation>
+        <translation>Error al crear cartera</translation>
     </message>
     <message>
         <source>Create wallet warning</source>
@@ -992,7 +996,7 @@
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation>El monedero también se almacenará en este directorio.</translation>
+        <translation>La cartera también se almacenará en este directorio.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1039,11 +1043,11 @@
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Hora del último bloque.</translation>
+        <translation>Hora del último bloque</translation>
     </message>
     <message>
         <source>Progress</source>
-        <translation>Progreso.</translation>
+        <translation>Progreso</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
@@ -1093,7 +1097,7 @@
     </message>
     <message>
         <source>Open wallet warning</source>
-        <translation>Aviso de apertura de monedero</translation>
+        <translation>Ver aviso sobre la cartera</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -1139,16 +1143,12 @@
         <translation>Muestra si el proxy SOCKS5 suministrado se utiliza para llegar a los pares a través de este tipo de red.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Use SOCKS&amp;5 y proxy por separado para llegar a sus compañeros a través de los servicios ocultos de Tor:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Ocultar el icono de la bandeja del sistema.</translation>
     </message>
     <message>
         <source>&amp;Hide tray icon</source>
-        <translation>Ocultar icono de bandeja</translation>
+        <translation>&amp;Ocultar el icono de la bandeja</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -1204,7 +1204,7 @@
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>Monedero</translation>
+        <translation>C&amp;artera</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1275,10 +1275,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Conéctese a la red de Bitcoin a través de un proxy SOCKS5 separado para los servicios Tor ocultos.</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;Ventana</translation>
     </message>
@@ -1328,7 +1324,7 @@
     </message>
     <message>
         <source>&amp;OK</source>
-        <translation>&amp;Aceptar</translation>
+        <translation>&amp;OK</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1453,7 +1449,46 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Saldo total actual en direcciones de solo-ver</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialogo</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Firmar Tx</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Emitir Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Copiar al portapapeles</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Guardar...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Cerrar</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT copiado al portapapeles</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Monto total</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>o</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1717,10 +1752,6 @@
         <translation>Cadena de bloques</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Número actual de bloques</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Grupo de memoria</translation>
     </message>
@@ -1763,10 +1794,6 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Seleccione un par para ver información detallada.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>Incluido en la lista blanca</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1819,10 +1846,6 @@
     <message>
         <source>Services</source>
         <translation>Servicios</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Puntuación Ban</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1973,14 +1996,6 @@
         <translation>Salida</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Sí</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>No</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Desconocido</translation>
     </message>
@@ -2079,12 +2094,28 @@
         <source>Copy amount</source>
         <translation>Copiar cantidad</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>No se pudo desbloquear el monedero.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>Código QR</translation>
+        <source>Amount:</source>
+        <translation>Cantidad:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Etiqueta:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mensaje:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Monedero:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2105,30 +2136,6 @@
     <message>
         <source>Payment information</source>
         <translation>Información del pago</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Dirección</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Cantidad</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mensaje</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Monedero</translation>
     </message>
 </context>
 <context>
@@ -2409,16 +2416,8 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Confirme la propuesta de transaccion</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Copiar la TBPF al portapapeles</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Enviar</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>TBPF copiada</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3202,12 +3201,16 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Cerrar el monedero durante demasiado tiempo puede causar la resincronización de toda la cadena si la poda es habilitada.</translation>
     </message>
-</context>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Cerrar todas las carteras</translation>
+    </message>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>No se ha cargado ningún monedero</translation>
+        <source>Create a new wallet</source>
+        <translation>Crear monedero nuevo</translation>
     </message>
 </context>
 <context>
@@ -3280,6 +3283,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Exportar a un archivo los datos de esta pestaña</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Respaldar monedero</translation>
     </message>
@@ -3323,10 +3330,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Poda: la última sincronización del monedero sobrepasa los datos podados. Necesita reindexar con -reindex (o descargar la cadena de bloques de nuevo en el caso de un nodo podado)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Error: Un error interno fatal ha ocurrido. Ver debug.log para detalles</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Poda blockstore...</translation>
     </message>
@@ -3337,10 +3340,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>The %s developers</source>
         <translation>Los desarrolladores de %s</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>No se puede generar una clave de cambio-de-dirección. No hay claves en el conjunto de claves internas y no se pueden generar claves.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3389,14 +3388,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Advertencia: ¡No parecemos concordar del todo con nuestros pares! Puede que necesite actualizarse, o puede que otros nodos necesiten actualizarse.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d de los últimos 100 bloques tienen una versión no esperada</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrupto. Fracasó la recuperación</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3521,10 +3512,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Cargando direcciones P2P...</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Error: ¡Espacio en disco muy bajo!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3709,10 +3696,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Advertencia: nuevas reglas desconocidas activadas (versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Eliminando todas las transacciones del monedero...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee tiene un valor muy elevado. Comisiones muy grandes podrían ser pagadas en una única transacción.</translation>
     </message>
@@ -3723,10 +3706,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>La longitud total de la cadena de versión de red ( %i ) supera la longitud máxima ( %i ) . Reducir el número o tamaño de uacomments .</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Advertencia: ¡Archivo de monedero corrupto, datos recuperados! Original %s guardado como %s en %s; si su balance de transacciones es incorrecto, debe restaurar desde una copia de seguridad.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3771,10 +3750,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Insufficient funds</source>
         <translation>Fondos insuficientes</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>No se puede actualizar un monedero dividido sin HD sin actualizar para admitir el keypool pre dividido. Utilice -upgradewallet = 169900 o -upgradewallet sin una versión especificada.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

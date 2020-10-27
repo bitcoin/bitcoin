@@ -70,8 +70,10 @@
         <translation>Questi sono i tuoi indirizzi Bitcoin per l'invio di pagamenti. Controlla sempre l'importo e l'indirizzo del beneficiario prima di inviare bitcoin.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Questi sono i tuoi indirizzi Bitcoin per ricevere pagamenti. Usa il tasto "Crea nuovo indirizzo ricevente" nella schermata "Ricevi" per creare nuovi indirizzi.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Questi sono i tuoi indirizzi Bitcoin per ricevere pagamenti. Usa il tasto "Crea nuovo indirizzo ricevente" nella schermata "Ricevi" per creare nuovi indirizzi.
+E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -482,6 +484,22 @@
         <translation>Aggiornato</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Carica PSBT da file...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>Carica Partially Signed Bitcoin Transaction</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Carica PSBT dagli appunti...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Carica Partially Signed Bitcoin Transaction dagli appunti</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Finestra del nodo</translation>
     </message>
@@ -516,6 +534,14 @@
     <message>
         <source>Close wallet</source>
         <translation>Chiudi il portafoglio</translation>
+    </message>
+    <message>
+        <source>Close All Wallets...</source>
+        <translation>Chiudi Tutti i Portafogli...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Chiudi tutti i portafogli</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -630,8 +656,12 @@
         <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;bloccato&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Si è verificato un errore critico. Bitcoin non può più funzionare in maniera sicura e verrà chiuso.</translation>
+        <source>Original message:</source>
+        <translation>Messaggio originale:</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Si è verificato un errore critico. %1 non può più continuare in maniera sicura e verrà chiuso.</translation>
     </message>
 </context>
 <context>
@@ -833,6 +863,10 @@
     <message>
         <source>Make Blank Wallet</source>
         <translation>Crea Portafoglio Vuoto</translation>
+    </message>
+    <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>Usa descriptors per gestione scriptPubKey</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1139,10 +1173,6 @@
         <translation>Mostra se il proxy SOCK5 di default che p stato fornito è usato per raggiungere i contatti attraverso questo tipo di rete.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Usa una SOCKS&amp;5 proxy differente per raggiungere peers usando servizi Tor hidden</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Nascondi l'icona nella barra delle applicazioni.</translation>
     </message>
@@ -1276,10 +1306,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Connette alla rete Bitcoin attraverso un proxy SOCKS5 separato per Tor.</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;Finestra</translation>
     </message>
@@ -1318,6 +1344,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Specifica se le funzionalita di coin control saranno visualizzate.</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Connette alla rete Bitcoin attraverso un proxy SOCKS5 separato per i Tor onion services.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Usa un proxy SOCKS&amp;5 separato per raggiungere peers attraverso i Tor onion services.</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1453,6 +1487,129 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>Saldo corrente totale negli indirizzi di sola lettura</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialogo</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Firma Tx</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Trasmetti Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Copia negli Appunti</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Salva...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Chiudi</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Caricamento della transazione fallito: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Firma della transazione fallita: %1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Non posso firmare piu' inputs.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>Firmato %1 inputs, ma sono richieste piu' firme.</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>Transazione firmata con successo. La transazione é pronta per essere trasmessa.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Errore sconosciuto processando la transazione.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Transazione trasmessa con successo! ID della transazione: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Trasmissione della transazione fallita: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT copiata negli appunti.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Salva Dati Transazione</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Transazione Parzialmente Firmata (Binario) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT salvata su disco.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation> * Invia %1 a %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Non in grado di calcolare la fee della transazione o l'ammontare totale della transazione.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Paga fee della transazione: </translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Importo totale</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>o</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>La transazione ha %1 inputs non firmati.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>La transazione manca di alcune informazioni sugli inputs.</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>La transazione necessita ancora di firma/e.</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Ma questo portafoglio non può firmare transazioni.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Ma questo portafoglio non ha le chiavi giuste.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>La transazione è completamente firmata e pronta per essere trasmessa.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Lo stato della transazione è sconosciuto.</translation>
     </message>
 </context>
 <context>
@@ -1620,6 +1777,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Errore: %1</translation>
     </message>
     <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Errore durante l'inizializzazione delle impostazioni: %1</translation>
+    </message>
+    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 non è ancora stato chiuso in modo sicuro</translation>
     </message>
@@ -1718,10 +1879,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Block chain</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Numero attuale di blocchi</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Memory Pool</translation>
     </message>
@@ -1766,10 +1923,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Seleziona un peer per visualizzare informazioni più dettagliate.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Whitelisted/sicuri</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Direzione</translation>
     </message>
@@ -1806,6 +1959,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Finestra del nodo</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>Altezza del blocco corrente</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Apri il file log del debug di %1 dalla cartella dati attuale. Può richiedere alcuni secondi per file di log di grandi dimensioni.</translation>
     </message>
@@ -1818,12 +1975,12 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Aumenta dimensioni font</translation>
     </message>
     <message>
-        <source>Services</source>
-        <translation>Servizi</translation>
+        <source>Permissions</source>
+        <translation>Permessi</translation>
     </message>
     <message>
-        <source>Ban Score</source>
-        <translation>Punteggio di Ban</translation>
+        <source>Services</source>
+        <translation>Servizi</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1974,14 +2131,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>In uscita</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Si</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>No</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Sconosciuto</translation>
     </message>
@@ -2080,12 +2229,40 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Copy amount</source>
         <translation>Copia l'importo</translation>
     </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Impossibile sbloccare il portafoglio.</translation>
+    </message>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Non è stato possibile generare il nuovo %1 indirizzo</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>Codice QR</translation>
+        <source>Request payment to ...</source>
+        <translation>Richiedi pagamento a ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Indirizzo:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Importo:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Etichetta:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Messaggio:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Portafoglio:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2106,30 +2283,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Payment information</source>
         <translation>Informazioni di pagamento</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Indirizzo</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Importo</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etichetta</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Messaggio</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portafoglio</translation>
     </message>
 </context>
 <context>
@@ -2378,8 +2531,20 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Sei sicuro di voler inviare?</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Per favore, rivedi la tua proposta di transazione. Questo produrrà una Transazione Bitcoin Parzialmente Firmata (PSBT) che puoi copiare e quindi firmare con es. un portafoglio %1 offline o un portafoglio hardware compatibile con PSBT.</translation>
+        <source>Create Unsigned</source>
+        <translation>Crea non Firmata</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Salva Dati Transazione</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Transazione Parzialmente Firmata (Binario) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>PSBT salvata</translation>
     </message>
     <message>
         <source>or</source>
@@ -2388,6 +2553,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Si puó aumentare la commissione successivamente (segnalando Replace-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Per favore, controlla la tua proposta di transazione. Questo produrrà una Partially Signed Bitcoin Transaction (PSBT) che puoi salvare o copiare e quindi firmare con es. un portafoglio %1 offline o un portafoglio hardware compatibile con PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2418,16 +2587,8 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Conferma la proposta di transazione</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Copia PSBT negli appunti</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Invia</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT copiata</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3211,12 +3372,28 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Chiudere il portafoglio per troppo tempo può causare la resincronizzazione dell'intera catena se la modalità "pruning" è attiva.</translation>
     </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Chiudi tutti i portafogli</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Sei sicuro di voler chiudere tutti i portafogli?</translation>
+    </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Non è stato caricato alcun portafoglio.</translation>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>Nessun portafoglio è stato caricato.
+Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
+- OR -</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Crea un nuovo portafoglio</translation>
     </message>
 </context>
 <context>
@@ -3289,6 +3466,30 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Esporta su file i dati contenuti nella tabella corrente</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Errore</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Non in grado di decodificare PSBT dagli appunti (base64 non valida)</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>Carica Dati Transazione</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Transazione Parzialmente Firmata (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>Il file PSBT deve essere inferiore a 100 MiB</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Non in grado di decodificare PSBT</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Backup Portafoglio</translation>
     </message>
@@ -3332,10 +3533,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Prune: l'ultima sincronizzazione del portafoglio risulta essere precedente alla eliminazione dei dati per via della modalità "pruning". È necessario eseguire un -reindex (scaricare nuovamente la blockchain in caso di nodo pruned).</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Errore: si è presentato un errore interno fatale, consulta il file debug.log per maggiori dettagli</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Pruning del blockstore...</translation>
     </message>
@@ -3346,10 +3543,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>The %s developers</source>
         <translation>Sviluppatori di %s</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Impossibile generare una chiave per il resto. Non c'è nessuna chiave nel keypool interno ed è impossibile generare altre chiavi.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3398,14 +3591,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Attenzione: Sembra che non vi sia pieno consenso con i nostri peer! Un aggiornamento da parte tua o degli altri nodi potrebbe essere necessario.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d degli ultimi 100 blocchi hanno una versione inaspettata</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrotto, recupero fallito</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3532,10 +3717,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Caricamento indirizzi P2P...</translation>
     </message>
     <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Errore: Spazio su disco insufficiente!</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Caricamento bloccati...</translation>
     </message>
@@ -3608,8 +3789,28 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>L'importo della transazione risulta troppo basso per l'invio una volta dedotte le commissioni.</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Questo errore potrebbe essersi verificato se questo portafoglio non è stato chiuso in modo pulito ed è stato caricato l'ultima volta utilizzando una build con una versione più recente di Berkeley DB. In tal caso, utilizza il software che ha caricato per ultimo questo portafoglio</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>La transazione richiede un indirizzo di resto, ma non possiamo generarlo. Si prega di eseguire prima keypoolrefill.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Per ritornare alla modalità unpruned sarà necessario ricostruire il database utilizzando l'opzione -reindex. L'intera blockchain sarà riscaricata.</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Si è verificato un errore interno fatale, consultare debug.log per i dettagli</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Non e' possibile impostare -peerblockfilters senza -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>Lo spazio su disco è insufficiente!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3622,6 +3823,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Errore: lo spazio sul disco è troppo poco per %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Errore: Keypool esaurito, esegui prima keypoolrefill</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3642,6 +3847,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>È necessario specificare una porta con -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>Nessun server proxy specificato. Usa -proxy=&lt;ip&gt; o -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
@@ -3718,10 +3927,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Attenzione: nuove regole non conosciute attivate (versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Eliminazione dal portafoglio di tutte le transazioni...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee è impostato molto alto! Commissioni così alte possono venir pagate anche su una singola transazione.</translation>
     </message>
@@ -3732,10 +3937,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>La lunghezza totale della stringa di network version (%i) eccede la lunghezza massima (%i). Ridurre il numero o la dimensione di uacomments.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Attenzione: file del Portafoglio corrotto, dati recuperati! %s originale salvato come %s in %s; se il saldo o le transazioni non sono corrette effettua un ripristino da un backup.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3780,10 +3981,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Insufficient funds</source>
         <translation>Fondi insufficienti</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Impossibile aggiornare un portafoglio diviso non HD senza aggiornamento per supportare il keypool pre-split. Si prega di utilizzare -upgradewallet = 169900 o -upgradewallet senza specificare la versione.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
