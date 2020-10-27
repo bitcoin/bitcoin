@@ -29,7 +29,7 @@ public:
             valid = false;
         }
         READWRITE(ephemeralPubKey);
-        READWRITE(FLATDATA(iv));
+        READWRITE(iv);
         READWRITE(data);
         if (ser_action.ForRead()) {
             valid = true;
