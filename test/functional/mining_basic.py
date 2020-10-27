@@ -71,7 +71,7 @@ class MiningTest(SyscoinTestFramework):
         self.connect_nodes(0, 1)
         # SYSCOIN
         # n = VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT)
-        n = 4 + n + CHAIN_ID * VERSION_CHAIN_START
+        n = 4 + CHAIN_ID * VERSION_CHAIN_START
         assert_equal(n, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0)
         self.connect_nodes(0, 1)
