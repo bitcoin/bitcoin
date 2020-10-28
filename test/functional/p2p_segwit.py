@@ -242,7 +242,7 @@ class SegWitTest(SyscoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
-        block.set_base_version(version)
+        block.nVersion = version
         block.rehash()
         return block
 

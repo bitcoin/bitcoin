@@ -20,9 +20,6 @@ from test_framework.messages import (
     CBlock,
     CBlockHeader,
     BLOCK_HEADER_SIZE,
-    # SYSCOIN
-    CHAIN_ID,
-    VERSION_CHAIN_START,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import SyscoinTestFramework
@@ -63,16 +60,13 @@ class MiningTest(SyscoinTestFramework):
         assert_equal(mining_info['currentblockweight'], 4000)
 
         self.log.info('test blockversion')
-        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=255'])
+        # SYSCOIN cannot use 1337 as it uses VERSION_AUXPOW special bit (256)
+        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=1237'])
         self.connect_nodes(0, 1)
-        # SYSCOIN 
-        assert_equal(255 + CHAIN_ID * VERSION_CHAIN_START, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
+        assert_equal(1237, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0, extra_args=['-mocktime={}'.format(t)])
         self.connect_nodes(0, 1)
-        # SYSCOIN
-        # n = VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT)
-        n = 4 + CHAIN_ID * VERSION_CHAIN_START
-        assert_equal(n, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
+        assert_equal(VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT), self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0)
         self.connect_nodes(0, 1)
 

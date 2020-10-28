@@ -154,7 +154,7 @@ public:
 CAuxpowBuilder::CAuxpowBuilder (int baseVersion, int chainId)
   : auxpowChainIndex(-1)
 {
-  parentBlock.SetBaseVersion(baseVersion, chainId);
+  parentBlock.nVersion = baseVersion;
 }
 
 void
@@ -285,15 +285,9 @@ BOOST_FIXTURE_TEST_CASE (check_auxpow, BasicTestingSetup)
   auxpow = builder.get (builder.parentBlock.vtx[1]);
   BOOST_CHECK (!auxpow.check (hashAux, ourChainId, params));
 
-  /* The parent chain can't have the same chain ID.  */
-  CAuxpowBuilder builder2(builder);
-  builder2.parentBlock.SetChainId (100);
-  BOOST_CHECK (builder2.get ().check (hashAux, ourChainId, params));
-  builder2.parentBlock.SetChainId (ourChainId);
-  BOOST_CHECK (!builder2.get ().check (hashAux, ourChainId, params));
 
   /* Disallow too long merkle branches.  */
-  builder2 = builder;
+  CAuxpowBuilder builder2(builder);
   index = CAuxPow::getExpectedIndex (nonce, ourChainId, height + 1);
   auxRoot = builder2.buildAuxpowChain (hashAux, height + 1, index);
   data = CAuxpowBuilder::buildCoinbaseData (true, auxRoot, height + 1, nonce);
@@ -432,23 +426,11 @@ BOOST_FIXTURE_TEST_CASE (auxpow_pow, BasicTestingSetup)
 
   block.nVersion = 2;
   mineBlock (block, true);
-  BOOST_CHECK (!CheckProofOfWork (block, params));
-
-  block.SetBaseVersion (2, params.nAuxpowChainId);
-  mineBlock (block, true);
   BOOST_CHECK (CheckProofOfWork (block, params));
 
-  block.SetChainId (params.nAuxpowChainId + 1);
-  mineBlock (block, true);
-  BOOST_CHECK (!CheckProofOfWork (block, params));
 
   /* Check the case when the block does not have auxpow (this is true
      right now).  */
-
-  block.SetChainId (params.nAuxpowChainId);
-  block.SetAuxpowVersion (true);
-  mineBlock (block, true);
-  BOOST_CHECK (!CheckProofOfWork (block, params));
 
   block.SetAuxpowVersion (false);
   mineBlock (block, true);
@@ -504,6 +486,19 @@ BOOST_FIXTURE_TEST_CASE (auxpow_pow, BasicTestingSetup)
   block.SetAuxpow (builder.getUnique ());
   BOOST_CHECK (CheckProofOfWork (block, params));
   tamperWith (block.hashMerkleRoot);
+  BOOST_CHECK (!CheckProofOfWork (block, params));
+
+  /* Valid auxpow, PoW check of parent block. Invalid chainid  */
+  const int index1 = CAuxPow::getExpectedIndex (nonce, ourChainId+1, height);
+  block.SetAuxpowVersion (true);
+  auxRoot = builder.buildAuxpowChain (block.GetHash (), height, index1);
+  data = CAuxpowBuilder::buildCoinbaseData (true, auxRoot, height, nonce);
+  builder.setCoinbase (CScript () << data);
+  mineBlock (builder.parentBlock, false, block.nBits);
+  block.SetAuxpow (builder.getUnique ());
+  BOOST_CHECK (!CheckProofOfWork (block, params));
+  mineBlock (builder.parentBlock, true, block.nBits);
+  block.SetAuxpow (builder.getUnique ());
   BOOST_CHECK (!CheckProofOfWork (block, params));
 }
 
