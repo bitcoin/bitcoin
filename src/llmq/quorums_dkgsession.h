@@ -248,7 +248,7 @@ private:
     std::map<uint256, CDKGJustification> justifications;
     std::map<uint256, CDKGPrematureCommitment> prematureCommitments;
 
-    mutable CCriticalSection cs_pending;
+    mutable RecursiveMutex cs_pending;
     std::vector<size_t> pendingContributionVerifications;
 
     // filled by ReceivePrematureCommitment and used by FinalizeCommitments
@@ -280,7 +280,7 @@ public:
     void SendContributions(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan);
-    void VerifyPendingContributions();
+    void VerifyPendingContributions() EXCLUSIVE_LOCKS_REQUIRED(cs_pending);
 
     // Phase 2: complaint
     void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
