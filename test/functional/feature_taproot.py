@@ -1448,10 +1448,6 @@ class TaprootTest(SyscoinTestFramework):
         self.log.info("Post-activation tests...")
         self.nodes[1].generate(101)
         self.test_spenders(self.nodes[1], spenders_taproot_active(), input_counts=[1, 2, 2, 2, 2, 3])
-        bestVersion = 
-        # SYSCOIN
-        n = VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TAPROOT_BIT)
-        assert_equal(n + (CHAIN_ID * VERSION_CHAIN_START), self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["version"])
         # Transfer % of funds to pre-taproot node.
         addr = self.nodes[0].getnewaddress()
         self.nodes[1].sendtoaddress(address=addr, amount=int(self.nodes[1].getbalance() * 70000000) / 100000000)
