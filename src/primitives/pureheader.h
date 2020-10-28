@@ -8,7 +8,6 @@
 
 #include <serialize.h>
 #include <uint256.h>
-
 /**
  * A block header without auxpow information.  This "intermediate step"
  * in constructing the full header is useful, because it breaks the cyclic
@@ -19,7 +18,8 @@
 class CPureBlockHeader
 {
 private:
-
+    /* Mask for dummy bit and versionbits top mask.  */
+    static const int32_t VERSIONAUXPOW_TOP_MASK = (1 << 28) + (1 << 29) + (1 << 30);
     /* Modifiers to the version.  */
     static const int32_t VERSION_AUXPOW = (1 << 8);
 
@@ -78,10 +78,7 @@ public:
     {
         return GetBaseVersion(nVersion);
     }
-    static inline int32_t GetBaseVersion(int32_t ver)
-    {
-        return ver % VERSION_AUXPOW;
-    }
+    static int32_t GetBaseVersion(int32_t ver);
 
     /**
      * Set the base version (apart from chain ID and auxpow flag) to
@@ -90,22 +87,19 @@ public:
      * @param nBaseVersion The base version.
      * @param nChainId The auxpow chain ID.
      */
-    void SetBaseVersion(int32_t nBaseVersion, int32_t nChainId);
+    void SetBaseVersion(int32_t nBaseVersion, const int32_t &nChainId);
 
     /**
      * Extract the chain ID.
      * @return The chain ID encoded in the version.
      */
-    inline int32_t GetChainId() const
-    {
-        return nVersion / VERSION_CHAIN_START;
-    }
+    int32_t GetChainId() const;
 
     /**
      * Set the chain ID.  This is used for the test suite.
      * @param ch The chain ID to set.
      */
-    inline void SetChainId(int32_t chainId)
+    inline void SetChainId(const int32_t &chainId)
     {
         nVersion %= VERSION_CHAIN_START;
         nVersion |= chainId * VERSION_CHAIN_START;
