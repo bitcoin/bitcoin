@@ -741,7 +741,7 @@ void TransactionTablePriv::ShowProgress(const std::string &title, int nProgress)
 
             vQueueNotifications[i].invoke(parent);
         }
-        std::vector<TransactionNotification >().swap(vQueueNotifications); // clear
+        vQueueNotifications.clear();
     }
 }
 
