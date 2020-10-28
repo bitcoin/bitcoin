@@ -197,6 +197,19 @@ void ReleaseDirectoryLocks()
     dir_locks.clear();
 }
 
+bool DirIsWritable(const fs::path& directory)
+{
+    fs::path tmpFile = directory / fs::unique_path();
+
+    FILE* file = fsbridge::fopen(tmpFile, "a");
+    if (!file) return false;
+
+    fclose(file);
+    remove(tmpFile);
+
+    return true;
+}
+
 /**
  * Interpret a string argument as a boolean.
  *

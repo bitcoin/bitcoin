@@ -155,18 +155,18 @@ class BitcoinTestFramework():
             self.setup_network()
             self.run_test()
             success = TestStatus.PASSED
-        except JSONRPCException as e:
+        except JSONRPCException:
             self.log.exception("JSONRPC error")
         except SkipTest as e:
             self.log.warning("Test Skipped: %s" % e.message)
             success = TestStatus.SKIPPED
-        except AssertionError as e:
+        except AssertionError:
             self.log.exception("Assertion failed")
-        except KeyError as e:
+        except KeyError:
             self.log.exception("Key error")
-        except Exception as e:
+        except Exception:
             self.log.exception("Unexpected exception caught during testing")
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             self.log.warning("Exiting after keyboard interrupt")
 
         if success == TestStatus.FAILED and self.options.pdbonfailure:
@@ -178,7 +178,7 @@ class BitcoinTestFramework():
             try:
                 if self.nodes:
                     self.stop_nodes()
-            except BaseException as e:
+            except BaseException:
                 success = False
                 self.log.exception("Unexpected exception caught during shutdown")
         else:
@@ -322,27 +322,6 @@ class BitcoinTestFramework():
         """Stop and start a test node"""
         self.stop_node(i)
         self.start_node(i, extra_args)
-
-    def assert_start_raises_init_error(self, i, extra_args=None, expected_msg=None, *args, **kwargs):
-        with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
-            try:
-                self.start_node(i, extra_args, stderr=log_stderr, *args, **kwargs)
-                self.stop_node(i)
-            except Exception as e:
-                assert 'dashd exited' in str(e)  # node must have shutdown
-                self.nodes[i].running = False
-                self.nodes[i].process = None
-                if expected_msg is not None:
-                    log_stderr.seek(0)
-                    stderr = log_stderr.read().decode('utf-8')
-                    if expected_msg not in stderr:
-                        raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
-            else:
-                if expected_msg is None:
-                    assert_msg = "dashd should have exited with an error"
-                else:
-                    assert_msg = "dashd should have exited with expected error " + expected_msg
-                raise AssertionError(assert_msg)
 
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)

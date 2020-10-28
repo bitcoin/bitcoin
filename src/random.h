@@ -12,6 +12,7 @@
 
 #include <chrono> // For std::chrono::microseconds
 #include <cstdint>
+#include <limits>
 
 /* Seed OpenSSL PRNG with additional entropy data */
 void RandAddSeed();
@@ -133,6 +134,12 @@ public:
 
     /** Generate a random boolean. */
     bool randbool() { return randbits(1); }
+
+    // Compatibility with the C++11 UniformRandomBitGenerator concept
+    typedef uint64_t result_type;
+    static constexpr uint64_t min() { return 0; }
+    static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
+    inline uint64_t operator()() { return rand64(); }
 };
 
 /* Number of random bytes returned by GetOSRand.

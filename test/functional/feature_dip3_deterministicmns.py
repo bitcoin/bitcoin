@@ -347,7 +347,7 @@ class DIP3Test(BitcoinTestFramework):
         rawtx = self.nodes[0].createrawtransaction(txins, targets)
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
         rawtx = self.nodes[0].signrawtransaction(rawtx)['hex']
-        new_txid = self.nodes[0].sendrawtransaction(rawtx)
+        self.nodes[0].sendrawtransaction(rawtx)
 
         return dummy_txin
 
