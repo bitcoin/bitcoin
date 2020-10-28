@@ -70,10 +70,6 @@
         <translation>Disse er dine Bitcoin-adresser til afsendelse af betalinger. Tjek altid beløb og modtagelsesadresse, inden du sender bitcoins.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Disse er dine Bitcoin adresser til at modtage betalinger. Benyt 'Opret ny modtager adresse' knappen i modtag fanen for at oprette nye adresser.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopiér adresse</translation>
     </message>
@@ -629,11 +625,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Tegnebog er &lt;b&gt;krypteret&lt;/b&gt; og i øjeblikket &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Der opstod en fatal fejl. Bitcoin kan ikke længere fortsætte sikkert og vil afslutte.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1139,10 +1131,6 @@
         <translation>Viser om den angivne standard-SOCKS5-proxy bruges til at nå knuder via denne netværkstype.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Brug separat SOCKS&amp;5-proxy for at nå knuder via Tors skjulte tjenester:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Skjul ikonet fra statusfeltet.</translation>
     </message>
@@ -1273,10 +1261,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Forbind til Bitcoin-netværket gennem en separat SOCKS5-proxy for Tors skjulte tjenester.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1453,7 +1437,22 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Nuværende totalsaldo på kigge-adresser</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialog</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Total Mængde</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>eller</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1717,10 +1716,6 @@
         <translation>Blokkæde</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Nuværende antal blokke</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Hukommelsespulje</translation>
     </message>
@@ -1763,10 +1758,6 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Vælg en anden knude for at se detaljeret information.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>På hvidliste</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1819,10 +1810,6 @@
     <message>
         <source>Services</source>
         <translation>Tjenester</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Bandlysningsscore</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1973,14 +1960,6 @@
         <translation>Udgående</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nej</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Ukendt</translation>
     </message>
@@ -2079,12 +2058,28 @@
         <source>Copy amount</source>
         <translation>Kopiér beløb</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunne ikke låse tegnebog op.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR-kode</translation>
+        <source>Amount:</source>
+        <translation>Beløb:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Mærkat:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Besked:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Tegnebog:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2105,30 +2100,6 @@
     <message>
         <source>Payment information</source>
         <translation>Betalingsinformation</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresse</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Beløb</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Mærkat</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Besked</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Tegnebog</translation>
     </message>
 </context>
 <context>
@@ -2409,16 +2380,8 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Bekræft transaktionsudkast</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Kopiér PSBT til udklipsholderen</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Afsend</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT kopieret</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3202,12 +3165,12 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Lukning af tegnebog i for lang tid kan resultere i at synkronisere hele kæden forfra, hvis beskæring er aktiveret.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Ingen tegnebog er indlæst.</translation>
+        <source>Create a new wallet</source>
+        <translation>Opret en ny tegnebog</translation>
     </message>
 </context>
 <context>
@@ -3280,6 +3243,10 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Eksportér den aktuelle visning til en fil</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Fejl</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Sikkerhedskopiér tegnebog</translation>
     </message>
@@ -3323,10 +3290,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Beskæring: Seneste synkronisering rækker udover beskårne data. Du er nødt til at bruge -reindex (downloade hele blokkæden igen i fald af beskåret knude)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Fejl: En alvorlig intern fejl er opstået. Se debug.log for detaljer</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Beskærer bloklager…</translation>
     </message>
@@ -3337,10 +3300,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>The %s developers</source>
         <translation>Udviklerne af %s</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Kan ikke generere en bytte-adresse nøgle. Ingen nøgler i den interne nøglepulje og kan ikke generere nogle nøgler.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3389,14 +3348,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Advarsel: Vi ser ikke ud til at være fuldt ud enige med andre knuder! Du kan være nødt til at opgradere, eller andre knuder kan være nødt til at opgradere.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d af de seneste 100 blokke har en uventet version</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s ødelagt, redning af data mislykkedes</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3521,10 +3472,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Indlæser P2P-adresser…</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Fejl: Disk pladsen er for lav!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3709,10 +3656,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Advarsel: Ukendte nye regler aktiveret (versionsbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Zapper alle transaktioner fra tegnebog…</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee er sat meget højt! Gebyrer så store risikeres betalt på en enkelt transaktion.</translation>
     </message>
@@ -3723,10 +3666,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Den totale længde på netværksversionsstrengen (%i) overstiger maksimallængden (%i). Reducér antaller af eller størrelsen på uacomments.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Advarsel: Tegnebogsfil ødelagt, data reddet! Oprindelig %s gemt som %s i %s; hvis din saldo eller dine transaktioner er forkert, bør du genskabe fra en sikkerhedskopi.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3771,10 +3710,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Insufficient funds</source>
         <translation>Manglende dækning</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Kan ikke opgradere en ikke HD dele tegnebog uden opgradering til at støtte før split nøglepool. Venligst brug -upgradewallet=169900 eller -upgradewallet med ingen version specificeret.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

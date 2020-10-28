@@ -54,10 +54,6 @@
         <translation>මේවා ඔබගේ ගෙවීම් යැවීම සඳහා වන බිට්කොයින් ලිපින වේ. කාසි යැවීමට පෙර සෑම විටම මුදල සහ ලැබීමේ ලිපිනය පරීක්ෂා කරන්න.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation> මේවා ඔබගේ ගෙවීම් ලැබීම සඳහා වන බිට්කොයින් ලිපින වේ. නව ලිපින සෑදීම සඳහා ලැබීම් ටැබ් එකෙහි ඇති 'නව ලැබීමේ ලිපිනයක් සාදන්න' බොත්තම භාවිතා කරන්න.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>කොමා වලින් වෙන් කරන ලද ගොනුව (* .csv)</translation>
     </message>
@@ -331,6 +327,9 @@
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -355,16 +354,8 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address</source>
-        <translation>ලිපිනය</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>අගය</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>ලේබලය</translation>
+        <source>Amount:</source>
+        <translation>අගය:</translation>
     </message>
     </context>
 <context>

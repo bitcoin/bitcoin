@@ -70,10 +70,6 @@
         <translation>Berikut ialah alamat-alamat Bitcoin Anda yang digunakan untuk mengirimkan pembayaran. Selalu periksa jumlah dan alamat penerima sebelum mengirimkan koin.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Ini adalah alamat Bitcoin untuk menerima pembayaran. Gunakan tombol 'Buat alamat penerima baru' di tab terima untuk membuat alamat baru.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Salin Alamat</translation>
     </message>
@@ -629,11 +625,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Dompet saat ini &lt;b&gt;terenkripsi&lt;/b&gt; dan &lt;b&gt;terkunci&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Terjadi Kesalahan Fatal. Bitcoin Tidak Dapat Melanjutkan Dengan Aman Dan Akan Keluar</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1139,10 +1131,6 @@
         <translation>Perlihatkan apabila proxy SOCKS5 default digunakan untuk berhungan dengan orang lain lewat tipe jaringan ini.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Menggunakan proxy SOCKS5 tersendiri untuk berhubungan dengan orang lain melalui layanan Tor:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Sembunyikan ikon dari system tray.</translation>
     </message>
@@ -1273,10 +1261,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Koneksi ke jaringan bitcoin melalui proxy SOCKS5 yang berbeda untuk layanan Tor tersembunyi.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1453,7 +1437,18 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Jumlah saldo di alamat hanya lihat</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Total Amount</source>
+        <translation>Jumlah Keseluruhan</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>atau</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1717,10 +1712,6 @@
         <translation>Rantai blok</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Jumlah blok terkini</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Memory Pool</translation>
     </message>
@@ -1763,10 +1754,6 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Pilih satu peer untuk melihat informasi detail.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>Whitelist</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1813,10 +1800,6 @@
     <message>
         <source>Services</source>
         <translation>Layanan</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Ban Score</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1963,14 +1946,6 @@
         <translation>keluar</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Ya</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Tidak</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Tidak diketahui</translation>
     </message>
@@ -2065,12 +2040,24 @@
         <source>Copy amount</source>
         <translation>Salin Jumlah</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Tidak dapat membuka dompet.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>Kode QR</translation>
+        <source>Amount:</source>
+        <translation>Nilai:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Pesan:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Wallet:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2091,30 +2078,6 @@
     <message>
         <source>Payment information</source>
         <translation>Informasi pembayaran</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>Tautan</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Alamat</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Jumlah</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Pesan</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Dompet</translation>
     </message>
 </context>
 <context>
@@ -2391,16 +2354,8 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Konfirmasi proposal transaksi</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Salin PSBT ke papan klip</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Kirim</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT disalin</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3148,12 +3103,12 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Menutup dompet terlalu lama dapat menyebabkan harus menyinkron ulang seluruh rantai jika pemangkasan diaktifkan.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Tidak ada dompent yang dimuat.</translation>
+        <source>Create a new wallet</source>
+        <translation>Bikin dompet baru</translation>
     </message>
 </context>
 <context>
@@ -3226,6 +3181,10 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Ekspor data dalam tab sekarang ke sebuah berkas</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Kesalahan</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Cadangkan Dompet</translation>
     </message>
@@ -3267,10 +3226,6 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
         <translation>Pemangkasan: sinkronisasi dompet terakhir melampaui data yang sudah dipangkas. Anda perlu -reindex (unduh seluruh blockchain lagi jika terjadi node pemangkasan)</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Error: Kesalahan internal fatal terjadi, lihat debug.log untuk detailnya</translation>
     </message>
     <message>
         <source>Pruning blockstore...</source>
@@ -3351,10 +3306,6 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Memuat alamat P2P....</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Eror: Kapasitas penyimpanan penuh!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3481,10 +3432,6 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Memverifikasi dompet...</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Setiap transaksi dalam dompet sedang di-'Zap'...</translation>
     </message>
     <message>
         <source>%s is set very high!</source>

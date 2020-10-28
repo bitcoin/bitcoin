@@ -70,10 +70,6 @@
         <translation>비트코인을 보내는 계좌 주소입니다. 코인을 보내기 전에 금액과 받는 주소를 항상 확인하세요.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>지불 수신용 비트코인주소. 신규 주소를 만들려면 'Create new receiving address' 버튼을 사용하세요.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>주소 복사(&amp;C)</translation>
     </message>
@@ -629,11 +625,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>지갑이 &lt;b&gt;암호화&lt;/b&gt; 되었고 현재 &lt;b&gt;잠겨져&lt;/b&gt; 있습니다</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>치명적인 오류가 발생했습니다. 비트코인을 더이상 안전하게 진행할 수 없어 곧 종료합니다.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1119,10 +1111,6 @@
         <translation>제공된 기본 SOCKS5 프록시가 이 네트워크 유형을 통해 피어에 도달하는 경우 표시됩니다.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Tor 서비스를 이용하여 피어에게 연결하기 위해 분리된 SOCKS5 프록시 사용:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>시스템 트레이 로 부터 아이콘 숨기기</translation>
     </message>
@@ -1253,10 +1241,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Tor 서비스를 경유하여 비트코인 네트워크에 연결하기 위해 분리된 SOCKS5 프록시를 사용합니다.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1433,7 +1417,18 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>조회전용 주소의 현재 잔액</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Total Amount</source>
+        <translation>총액</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>또는</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1697,10 +1692,6 @@
         <translation>블록 체인</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>현재 블록 수</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>메모리 풀</translation>
     </message>
@@ -1745,10 +1736,6 @@
         <translation>자세한 정보를 보려면 피어를 선택하세요.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>화이트리스트에 포함</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>방향</translation>
     </message>
@@ -1791,10 +1778,6 @@
     <message>
         <source>Services</source>
         <translation>서비스</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>밴 스코어</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1945,14 +1928,6 @@
         <translation>아웃바운드</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>예</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>아니오</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>알수없음</translation>
     </message>
@@ -2043,12 +2018,24 @@
         <source>Copy amount</source>
         <translation>거래액 복사</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>지갑을 잠금해제 할 수 없습니다.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR 코드</translation>
+        <source>Amount:</source>
+        <translation>거래액:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>메시지:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>지갑:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2069,30 +2056,6 @@
     <message>
         <source>Payment information</source>
         <translation>지불 정보</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>주소</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>거래액</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>라벨</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>메시지</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>지갑</translation>
     </message>
 </context>
 <context>
@@ -2361,16 +2324,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>코인 전송을 확인</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>PSBT를 클립보드에 복사</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>보내기</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT 복사됨</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3142,12 +3097,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>블록축소를 하고 지갑을 너무 오랫동안 닫으면 체인 전체를 다시 동기화해야 할 수도 있습니다.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>지갑 불러오기가 안됩니다.</translation>
+        <source>Create a new wallet</source>
+        <translation>새로운 지갑 생성하기</translation>
     </message>
 </context>
 <context>
@@ -3212,6 +3167,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>현재 탭에 있는 데이터를 파일로 내보내기</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>오류</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>지갑 백업</translation>
     </message>
@@ -3255,10 +3214,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>블록 축소: 마지막 지갑 동기화 지점이 축소된 데이터보다 과거의 것 입니다. -reindex가 필요합니다 (축소된 노드의 경우 모든 블록체인을 재다운로드합니다)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>오류: 치명적인 내부 오류가 발생했습니다, 자세한 내용은 debug.log 를 확인해주세요.</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>블록 데이터를 축소 중입니다..</translation>
     </message>
@@ -3269,10 +3224,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>%s 개발자</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>거스름돈 주소 생성 불가. 내장 지갑 열쇠 보관함에 열쇠가 없으면 새로운 열쇠를 생성할 수 없습니다.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3321,14 +3272,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>경고: 현재 비트코인 버전이 다른 네트워크 참여자들과 동일하지 않은 것 같습니다. 당신 또는 다른 참여자들이 동일한 비트코인 버전으로 업그레이드 할 필요가 있습니다.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>지난 100개의 블록 중 %d개에 예상치 못한 버전이 있습니다.</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s 손상되었고 복구가 실패하였습니다</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3449,10 +3392,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Loading P2P addresses...</source>
         <translation>P2P 주소 불러오는 중...</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>오류: 디스크 공간이 부족합니다!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3637,10 +3576,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>경고: 알려지지 않은 새로운 규칙이 활성화되었습니다. (버전비트 %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>지갑의 모든거래내역 건너뛰기...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee 값이 너무 큽니다!  하나의 거래에 너무 큰 수수료가 지불 됩니다.</translation>
     </message>
@@ -3651,10 +3586,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>네트워크 버전 문자 (%i)의 길이가 최대길이 (%i)를 초과합니다. uacomments의 갯수나 길이를 줄이세요.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>경고 : 지갑파일이 손상되어 데이터가 복구되었습니다. 원래의 %s 파일은 %s 후에 %s 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3699,10 +3630,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Insufficient funds</source>
         <translation>잔액이 부족합니다</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>HD split을 하지 않은 지갑은 pre split keypool로 업그레이드 하지 않은 이상 업그레이드가 불가능합니다. -upgradewallet=169900 이나 -upgradewallet (버전을 정하지 않고) 명령을 사용하십시오.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

@@ -70,10 +70,6 @@
         <translation>اینها آدرس‌های شما برای ارسال وجوه هستند. همیشه قبل از ارسال، مقدار و آدرس گیرنده را بررسی کنید.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>اینها آدرس بیت کوین های دریافتی شما می باشدند. در تب دریافت از دکمه 'ایحاد آدرس جدید' برای ساخت آدرس جدید استفاده نمائید.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>کپی آدرس</translation>
     </message>
@@ -626,11 +622,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>wallet رمزگذاری شد و در حال حاضر قفل است</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>خطای بحرانی رخ داده است. بیتکوین دیگر به صورت ایمن قادر به ادامه دادن نمی‌باشد و خارج خواهد شد.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -960,6 +952,10 @@
         <translation>کیف پول هم در همین دایرکتوری ذخیره می‌شود.</translation>
     </message>
     <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>خطا: نمی‌توان پوشه‌ای برای داده‌ها در «%1» ایجاد کرد.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>خطا</translation>
     </message>
@@ -1009,6 +1005,10 @@
     <message>
         <source>Hide</source>
         <translation>پنهان کردن</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>خروج</translation>
     </message>
     </context>
 <context>
@@ -1123,10 +1123,6 @@
     <message>
         <source>Tor</source>
         <translation>شبکه Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>اتصال به شبکه بیت کوین با استفاده از پراکسی SOCKS5 برای استفاده از سرویس مخفی تور</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1286,6 +1282,21 @@
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
         <translation>موجودی استخراج شده در آدرس های فقط قابل مشاهده هنوز کامل نشده است</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>تگفتگو</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>میزان کل</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>یا</translation>
     </message>
     </context>
 <context>
@@ -1519,10 +1530,6 @@
         <translation>زنجیره مجموعه تراکنش ها</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>تعداد زنجیره های حاضر</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>استخر حافظه</translation>
     </message>
@@ -1565,10 +1572,6 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>انتخاب همتا یا جفت برای جزییات اطلاعات</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>لیست سفید شده یا لیست سالم WhiteList</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1711,14 +1714,6 @@
         <translation>هیچ وقت</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>بله</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>خیر</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>ناشناس یا نامعلوم</translation>
     </message>
@@ -1781,12 +1776,28 @@
         <source>Copy amount</source>
         <translation>کپی مقدار</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>نمیتوان کیف پول را باز کرد.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>کی یو آر کد Qr Code</translation>
+        <source>Amount:</source>
+        <translation>میزان وجه:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>برچسب:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>پیام:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>کیف پول:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -1807,30 +1818,6 @@
     <message>
         <source>Payment information</source>
         <translation>اطلاعات پرداخت</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>آدرس URL</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>آدرس</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>میزان وجه:</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>برچسب</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>پیام</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>کیف پول</translation>
     </message>
 </context>
 <context>
@@ -2059,8 +2046,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>تایید کردن ارسال کوین ها</translation>
     </message>
     <message>
-        <source>PSBT copied</source>
-        <translation>PSBT کپی شد</translation>
+        <source>Send</source>
+        <translation>ارسال</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2285,6 +2272,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>قفل‌گشابی کیف‌پول لغو شد.</translation>
     </message>
     <message>
+        <source>No error</source>
+        <translation>بدون خطا</translation>
+    </message>
+    <message>
         <source>Private key for the entered address is not available.</source>
         <translation>کلید خصوصی برای نشانی وارد شده در دسترس نیست.</translation>
     </message>
@@ -2417,6 +2408,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Transaction total size</source>
         <translation>حجم کل تراکنش</translation>
+    </message>
+    <message>
+        <source>Merchant</source>
+        <translation>بازرگان</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2701,8 +2696,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>کیف‌پولی بارگذاری نشد.</translation>
+        <source>Create a new wallet</source>
+        <translation>ساخت کیف پول جدید</translation>
     </message>
 </context>
 <context>
@@ -2753,6 +2748,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>صدور داده نوار جاری به یک فایل</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>خطا</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -2846,6 +2845,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>توصیفگرهای فایل به اندازه کافی در دسترس نیست</translation>
     </message>
     <message>
+        <source>Replaying blocks...</source>
+        <translation>در حال بازبینی بلوک‌ها...</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation>سورس کد موجود است از %s.</translation>
     </message>
@@ -2868,6 +2871,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>خواندن از پایگاه داده با خطا مواجه شد,در حال خاموش شدن.</translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation>خطا در بارگذاری پایگاه داده ها</translation>
     </message>
     <message>
         <source>Invalid -proxy address or hostname: '%s'</source>
@@ -2904,11 +2911,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
         <translation>هشدار: قوانین جدید ناشناخته‌ای فعال شده‌اند (نسخه‌بیت %i)</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>تراکنش بیش از حد طولانی از یک زنجیر مهر و موم شده است
-</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>

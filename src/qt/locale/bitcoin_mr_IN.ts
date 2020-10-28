@@ -70,10 +70,6 @@
         <translation>पैसे पाठविण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत. नाणी पाठविण्यापूर्वी नेहमी रक्कम आणि प्राप्त होणारा पत्ता तपासून पहा.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>पैसे प्राप्त करण्यासाठीचे हे आपले बिटकॉइन पत्ते आहेत. नवीन पत्ते तयार करण्यासाठी प्राप्त टॅबमधील 'नवीन प्राप्त करण्याचा पत्ता तयार करा' बटण वापरा.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;पत्ता कॉपी करा</translation>
     </message>
@@ -159,6 +155,9 @@
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -178,14 +177,6 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>पत्ता</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>

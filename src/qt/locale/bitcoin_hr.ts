@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Dodajte novu adresu</translation>
+        <translation>Stvoriti  novu adresu</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -68,10 +68,6 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Ovo su vaše Bitcoin adrese za slanje novca. Uvijek provjerite iznos i adresu primatelja prije slanja novca.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Ovo su vaše Bitcoin adrese za primanje novca. Preporučeno je da koristite novu primateljsku adresu za svaku transakciju.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -616,11 +612,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Novčanik je &lt;b&gt;šifriran&lt;/b&gt; i trenutno &lt;b&gt;zaključan&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Dogodila se kobna greška. Bitcoin ne može više sigurno nastaviti te će se zatvoriti.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1118,10 +1110,6 @@
         <translation>Prikazuje se ako je isporučeni uobičajeni SOCKS5 proxy korišten radi dohvaćanja klijenata preko ovog tipa mreže.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Koristite zaseban SOCKS&amp;5 proxy kako biste dohvatili klijente preko Tora:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Sakrijte ikonu sa sustavne trake.</translation>
     </message>
@@ -1252,10 +1240,6 @@
     <message>
         <source>Tor</source>
         <translation>Tora</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Spojite se na Bitcoin mrežu kroz zaseban SOCKS5 proxy za povezivanje na Tor.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1432,7 +1416,22 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Trenutno ukupno stanje na isključivo promatranim adresama</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dijalog</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Ukupni iznos</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>ili</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1692,10 +1691,6 @@
         <translation>Lanac blokova</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Trenutni broj blokova</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Memorijski bazen</translation>
     </message>
@@ -1740,10 +1735,6 @@
         <translation>Odaberite klijent kako biste vidjeli detaljne informacije.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Na bijeloj listi</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Smjer</translation>
     </message>
@@ -1782,10 +1773,6 @@
     <message>
         <source>Services</source>
         <translation>Usluge</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Broj zabrana</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1936,14 +1923,6 @@
         <translation>Izlazni</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Da</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Ne</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Nepoznato</translation>
     </message>
@@ -2034,12 +2013,28 @@
         <source>Copy amount</source>
         <translation>Kopiraj iznos</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ne može se otključati novčanik.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR kôd</translation>
+        <source>Amount:</source>
+        <translation>Iznos:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Oznaka</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Poruka:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Novčanik:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2060,30 +2055,6 @@
     <message>
         <source>Payment information</source>
         <translation>Informacije o uplati</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Iznos</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Oznaka</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Poruka</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Novčanik</translation>
     </message>
 </context>
 <context>
@@ -2230,6 +2201,11 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Dust:</source>
         <translation>Prah:</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Sakrijte postavke za transakcijske provizije
+</translation>
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
@@ -2445,6 +2421,10 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Remove this entry</source>
         <translation>Obrišite ovaj zapis</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Iznos za slanje u odabranoj valuti </translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -3117,12 +3097,12 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Držanje novčanik zatvorenim predugo može rezultirati ponovnom sinkronizacijom cijelog lanca ako je obrezivanje uključeno.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Nije pokrenut nikakav novčanik.</translation>
+        <source>Create a new wallet</source>
+        <translation>Stvorite novi novčanik</translation>
     </message>
 </context>
 <context>
@@ -3183,6 +3163,10 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Izvoz podataka iz trenutnog lista u datoteku</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Greška</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Arhiviranje novčanika</translation>
     </message>
@@ -3226,10 +3210,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Obrezivanje: zadnja sinkronizacija novčanika ide dalje od obrezivanih podataka. Morate koristiti -reindex (ponovo preuzeti cijeli lanac blokova u slučaju obrezivanog čvora)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Greška: Dogodila se kobna interna greška. Vidite debug.log za detalje</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Obrezuje se blockstore...</translation>
     </message>
@@ -3240,10 +3220,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>The %s developers</source>
         <translation>Ekipa %s</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Ne može se generirati ključ adrese za ostatak. Nema ključeva u unutarnjem bazenu ključeva i ne mogu se generirati nikakvi ključevi.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3292,14 +3268,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Upozorenje: Izgleda da se ne slažemo u potpunosti s našim klijentima! Možda ćete se vi ili ostali čvorovi morati ažurirati.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d od zadnjih 100 blokova ima neočekivanu verziju</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s pokvaren, spašavanje neuspješno</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3416,10 +3384,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Pokreće se popis P2P adresa...</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Pogreška: Nema dovoljno prostora na disku!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3604,10 +3568,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Upozorenje: nepoznata nova pravila aktivirana (versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Brišu se sve transakcije iz novčanika...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee je postavljen preveliko. Naknade ove veličine će biti plaćene na individualnoj transakciji.</translation>
     </message>
@@ -3618,10 +3578,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Ukupna duljina stringa verzije mreže (%i) prelazi maksimalnu duljinu (%i). Smanjite broj ili veličinu komentara o korisničkom agentu (uacomments).</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Upozorenje: Datoteka novčanika je pokvarena, ali su podaci spašeni! Original %s snimljen je kao %s u %s; ako su transakcije ili stanje neispravni, onda biste trebali restorirati sa sigurnosne kopije (backupa).</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3666,10 +3622,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Insufficient funds</source>
         <translation>Nedovoljna sredstva</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Ne može se ažurirati novčanik koji nije HD bez ažuriranja radi podrške za bazen ključeva prije raskola. Molim koristite -upgradewallet=169900 ili -upgradewallet bez zadane verzije.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

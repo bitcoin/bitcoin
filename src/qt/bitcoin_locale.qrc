@@ -73,6 +73,7 @@
         <file alias="ta">locale/bitcoin_ta.qm</file>
         <file alias="te">locale/bitcoin_te.qm</file>
         <file alias="th">locale/bitcoin_th.qm</file>
+        <file alias="tr">locale/bitcoin_tr.qm</file>
         <file alias="uk">locale/bitcoin_uk.qm</file>
         <file alias="ur">locale/bitcoin_ur.qm</file>
         <file alias="uz@Cyrl">locale/bitcoin_uz@Cyrl.qm</file>

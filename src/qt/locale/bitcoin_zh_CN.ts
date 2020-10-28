@@ -70,8 +70,10 @@
         <translation>您可以给这些比特币地址付款。在付款之前，务必要检查金额和收款地址是否正确。</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>您可以用这些比特币地址收款。使用“接收”标签页中的"创建新收款地址"按钮创建新地址。</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>这是您用来收款的比特币地址。使用“接收”标签页中的“创建新收款地址”按钮来创建新的收款地址。
+只有“传统（legacy）”类型的地址支持签名。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -482,6 +484,22 @@
         <translation>已是最新</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>从文件加载PSBT...(&amp;L)</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>加载部分签名比特币交易（PSBT）</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>从剪贴板加载PSBT...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>从剪贴板中加载部分签名比特币交易（PSBT）</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>节点窗口</translation>
     </message>
@@ -518,8 +536,24 @@
         <translation>关闭钱包</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>关闭所有钱包...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>关闭所有钱包</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>显示 %1 帮助信息，获取可用命令行选项列表</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>不明文显示数值(&amp;M)</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>在“概况”标签页中不明文显示数值、只显示掩码</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -630,8 +664,12 @@
         <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;锁定&lt;/b&gt;状态</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>发生严重错误。客户端无法安全地继续运行，即将退出。</translation>
+        <source>Original message:</source>
+        <translation>原消息:</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>发生致命错误。%1 已经无法继续安全运行并即将退出。</translation>
     </message>
 </context>
 <context>
@@ -833,6 +871,14 @@
     <message>
         <source>Make Blank Wallet</source>
         <translation>创建空白钱包</translation>
+    </message>
+    <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>使用输出描述符进行scriptPubKey管理</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>输出描述符钱包</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1139,10 +1185,6 @@
         <translation>显示默认的SOCKS5代理是否被用于在该类型的网络下连接同伴。</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>连接Tor隐藏服务节点时使用另一个SOCKS&amp;5代理:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>不在系统通知区域显示图标。</translation>
     </message>
@@ -1275,10 +1317,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>通过 Tor 隐藏服务连接比特币网络时使用另一个 SOCKS5 代理。</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>窗口(&amp;W)</translation>
     </message>
@@ -1317,6 +1355,14 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>是否显示手动选币功能。</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>连接比特币网络时专门为Tor onion服务使用另一个 SOCKS5 代理。</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>连接Tor onion服务节点时使用另一个SOCKS&amp;5代理：</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1452,6 +1498,133 @@
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>仅观察地址中的当前总余额</translation>
+    </message>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>“概况”标签页已启用隐私模式。要明文显示数值，请在设置中取消勾选“不明文显示数值”。</translation>
+    </message>
+</context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>会话</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>签名交易</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>广播交易</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>复制到剪贴板</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>保存...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>加载交易失败: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>签名交易失败: %1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>没有交易输入项可供签名了。</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>已签名 %1 个交易输入项，但是仍然还有余下的项目需要签名。</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>成功签名交易。交易已经可以广播。</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>处理交易时遇到未知错误。</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>已成功广播交易！交易ID: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>交易广播失败: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>已复制PSBT到剪贴板</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>保存交易数据</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>部分签名交易(二进制) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT已保存到硬盘</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation> * 发送 %1 至 %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>无法计算交易费用或总交易金额。</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>支付交易费用:</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>总额</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>或</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>交易中含有%1个未签名输入项。</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>交易中有输入项缺失某些信息。</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>交易仍然需要签名。</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(但这个钱包不能签名交易)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(但这个钱包没有正确的密钥)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>交易已经完全签名，可以广播。</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>交易状态未知。</translation>
     </message>
 </context>
 <context>
@@ -1619,6 +1792,10 @@
         <translation>错误: %1</translation>
     </message>
     <message>
+        <source>Error initializing settings: %1</source>
+        <translation>初始化设置出错: %1</translation>
+    </message>
+    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 尚未安全退出...</translation>
     </message>
@@ -1717,10 +1894,6 @@
         <translation>区块链</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>当前区块数量</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>内存池</translation>
     </message>
@@ -1765,10 +1938,6 @@
         <translation>选择节点查看详细信息。</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>白名单</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>方向</translation>
     </message>
@@ -1805,6 +1974,10 @@
         <translation>节点窗口</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>当前区块高度</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>打开当前数据目录中的 %1 调试日志文件。日志文件大的话可能要等上几秒钟。</translation>
     </message>
@@ -1817,12 +1990,12 @@
         <translation>放大字体大小</translation>
     </message>
     <message>
-        <source>Services</source>
-        <translation>服务</translation>
+        <source>Permissions</source>
+        <translation>权限</translation>
     </message>
     <message>
-        <source>Ban Score</source>
-        <translation>封禁记分</translation>
+        <source>Services</source>
+        <translation>服务</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1973,14 +2146,6 @@
         <translation>传出</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>是</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>否</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>未知</translation>
     </message>
@@ -2079,12 +2244,40 @@
         <source>Copy amount</source>
         <translation>复制金额</translation>
     </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>无法解锁钱包。</translation>
+    </message>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>无法生成新的%1地址</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>二维码</translation>
+        <source>Request payment to ...</source>
+        <translation>请求付款到 ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>地址:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>金额:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>标签：</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>消息:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>钱包:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2105,30 +2298,6 @@
     <message>
         <source>Payment information</source>
         <translation>付款信息</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>地址</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>金额</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>标签</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>消息</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>钱包</translation>
     </message>
 </context>
 <context>
@@ -2377,8 +2546,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>您确定要发出吗？</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>请务必要审核您的交易提案。这将会产生一笔“部分签名比特币交易”（PSBT），您可以复制它，然后可以通过各种方式对它进行签名，比如，可以通过离线%1钱包或是兼容PSBT的硬件钱包来完成签名。</translation>
+        <source>Create Unsigned</source>
+        <translation>创建未签名交易</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>保存交易数据</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>部分签名交易(二进制) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>已保存PSBT</translation>
     </message>
     <message>
         <source>or</source>
@@ -2387,6 +2568,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>你可以后来再追加手续费（打上支持BIP-125手续费追加的标记）</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>请务必仔细检查您的交易请求。这会产生一个部分签名比特币交易(PSBT)，可以把保存下来或复制出去，然后就可以对它进行签名，比如用离线%1钱包，或是用兼容PSBT的硬件钱包。</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2417,16 +2602,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>确认交易提案</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>复制PSBT到剪贴板</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>发送</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>已复制PSBT</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -3210,12 +3387,28 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>启用修剪时，如果一个钱包被卸载太久，就必须重新同步整条区块链才能再次加载它。</translation>
     </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>关闭所有钱包</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>您确定想要关闭所有钱包吗?</translation>
+    </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>没有载入钱包。</translation>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>未加载钱包。
+请转到“文件”菜单 &gt; “打开钱包”来加载一个钱包。
+- 或者 -</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>创建一个新的钱包</translation>
     </message>
 </context>
 <context>
@@ -3288,6 +3481,30 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>将当前标签页数据导出到文件</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>无法从剪贴板解码PSBT(Base64值无效)</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>加载交易数据</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>部分签名交易 (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>PSBT文件必须小于100MiB</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>无法解码PSBT</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>备份钱包</translation>
     </message>
@@ -3331,10 +3548,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>修剪:上次同步钱包的位置已经超出（落后于）现有修剪后数据的范围。你需要进行-reindex（对于已经启用修剪节点，就需要重新下载整个区块链）</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>错误：发生了致命的内部错误，详情见 debug.log 文件</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>正在修剪区块存储...</translation>
     </message>
@@ -3345,10 +3558,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>%s 开发者</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>无法生成找零地址密钥。 内部密钥池中没有密钥，也无法生成任何密钥。</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3397,14 +3606,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>警告：我们和其他节点似乎没达成共识！您可能需要升级，或者就是其他节点可能需要升级。</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>最后100个区块中的%d个包含未知的版本号</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s 已损坏，抢救失败</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3531,10 +3732,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>正在加载P2P地址...</translation>
     </message>
     <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>错误:磁盘空间低!</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>正在加载黑名单...</translation>
     </message>
@@ -3599,6 +3796,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>错误：监听外部连接失败 (listen函数返回了错误 %s)</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s损坏。请尝试用bitcoin-wallet钱包工具来对其进行急救。或者用一个备份进行还原。</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
+        <translation>无法在不支持“拆分前的密钥池”（pre split keypool）的情况下对“非拆分HD钱包”（non HD split wallet）进行升级。请使用版本号169900，或者压根不要指定版本号。</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>参数 -maxtxfee=&lt;amount&gt;: '%s' 指定了非法的金额 (手续费必须至少达到最小转发费率(minrelay fee) %s 以避免交易卡着发不出去)</translation>
     </message>
@@ -3607,8 +3812,32 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>这笔交易在扣除手续费后的金额太小，以至于无法送出</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>如果这个钱包之前没有正确关闭，而且上一次是被新版的Berkeley DB加载过，就会发生这个错误。如果是这样，请使用上次加载过这个钱包的那个软件。</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>为了在常规选币过程中优先考虑避免“只花出一个地址上的一部分币”（partial spend）这种情况，您最多还需要（在常规手续费之外）付出的交易手续费。</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>交易需要一个找零地址，但是我们无法生成它。请先调用 keypoolrefill 。</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>您需要使用 -reindex 重新构建数据库以回到未修剪模式。这将重新下载整个区块链</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>发生了致命的内部错误，请在debug.log中查看详情</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>没有启用-blockfilterindex，就不能启用-peerblockfilters。</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>磁盘空间太低!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3621,6 +3850,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>错误： %s 所在的磁盘空间低。</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>错误: 密钥池已被耗尽，请先调用keypoolrefill</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>手续费率 (%s) 低于最大手续费率设置 (%s)</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3641,6 +3878,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>-whitebind: '%s' 需要指定一个端口</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>未指定代理服务器。请使用 -proxy=&lt;ip&gt; 或 -proxy=&lt;ip:port&gt; 。</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
@@ -3717,10 +3958,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>警告:不明的交易规则已经激活(versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>正在销毁钱包中的交易...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>参数 -maxtxfee 被设置得非常高！即使是单笔交易也可能付出如此之大的手续费。</translation>
     </message>
@@ -3731,10 +3968,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>网络版本字符串的总长度 (%i) 超过最大长度 (%i) 了。请减少 uacomment 参数的数目或长度。</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>警告：钱包文件损坏，但数据被救回！原始的钱包文件%s已经重命名为%s并保存到%s目录下 。如果您的账户余额或者交易记录不正确，请使用您的钱包备份文件进行恢复。</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3779,10 +4012,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Insufficient funds</source>
         <translation>金额不足</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>如果要对“非分离HD钱包（non HD split wallet）”进行升级，就必须先把它升级到支持“未进行分割的密钥池（pre split keypool）”的版本，否则无法进行升级。请使用指定了具体版本号的 -upgradewallet=169900 参数，或者直接使用不指定具体版本号的 -upgradewallet 参数重启钱包。</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

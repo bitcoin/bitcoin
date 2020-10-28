@@ -431,6 +431,9 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -487,30 +490,22 @@
         <source>Clear</source>
         <translation>Pastro</translation>
     </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nuk mund të ç'kyçet portofoli.</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Amount:</source>
+        <translation>Shuma:</translation>
+    </message>
+    <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Kopjo adresen</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresë</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Sasia</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiketë</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portofol</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -770,6 +765,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Problem</translation>
     </message>
     </context>
 <context>

@@ -67,10 +67,6 @@
         <translation>പേയ്മെന്റുകൾ അയയ്ക്കുന്നതിനുള്ള നിങ്ങളുടെ ബിറ്റ്കോയിൻ വിലാസങ്ങളാണ് ഇവ. നാണയങ്ങൾ അയയ്ക്കുന്നതിനുമുമ്പ് എല്ലായ്പ്പോഴും തുകയും സ്വീകരിക്കുന്ന വിലാസവും പരിശോധിക്കുക.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>ഇവയാണ് പണം  സ്വീകരിയ്ക്കുന്നതിനായുള്ള താങ്കളുടെ വിലാസങ്ങൾ. പുതിയ വിലാസങ്ങൾ കൂട്ടിച്ചേർക്കുന്നതിനായി ' പുതിയ വിലാസം സൃഷ്ടിയ്ക്കുക ' എന്ന ബട്ടൺ അമർത്തുക.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;വിലാസം പകർത്തുക</translation>
     </message>
@@ -418,6 +414,9 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -446,16 +445,8 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address</source>
-        <translation>വിലാസം</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>തുക </translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>ലേബൽ</translation>
+        <source>Amount:</source>
+        <translation>തുക:</translation>
     </message>
     </context>
 <context>
@@ -597,6 +588,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>നിലവിലെ ടാബിൽ ഒരു ഫയലിൽ ഡാറ്റ എക്സ്പോർട്ട് ചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>പിശക് </translation>
     </message>
     </context>
 <context>

@@ -70,10 +70,6 @@
         <translation>இவை பணம் அனுப்புவதற்கு உங்களின் பிட்காயின் முகவரிகள். பிட்காயின்களை அனுப்புவதற்கு முன் எப்பொழுதும் தொகையும் பெறுதலையும் சரிபார்க்கவும்.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>பிட்காயின் பெறுவதற்காக உங்கள் முகவரி இவை. புதிய முகவரிகளை உருவாக்க 'புதிய முகவரியை உருவாக்கு' என்ற பட்டனை கிளிக் செய்யவும்.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;காபி முகவரி</translation>
     </message>
@@ -617,11 +613,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Wallet குறியாக்கப்பட்டு தற்போது பூட்டப்பட்டுள்ளது</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Wallet குறியாக்கப்பட்டு தற்போது பூட்டப்பட்டுள்ளது</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1111,10 +1103,6 @@
         <translation>வழங்கப்பட்ட முன்னிருப்பு SOCKS5 ப்ராக்ஸி இந்த நெட்வொர்க் வகையின் மூலம் சகலருக்கும் சென்றால் பயன்படுத்தப்படுகிறது.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Tor மறைக்கப்பட்ட சேவைகளை வழியாக சகலரையும் அணுக தனித்த SOCKS &amp; 5 ப்ராக்ஸி பயன்படுத்தவும்</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>கணினி தட்டில் இருந்து ஐகானை மறைக்கவும்.</translation>
     </message>
@@ -1245,10 +1233,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>டார் மறைக்கப்பட்ட சேவைகளை தனித்த SOCKS5 ப்ராக்ஸி மூலம் பிட்கோடு நெட்வொர்க்குடன் இணைக்கவும்.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1425,7 +1409,18 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>தற்போதைய மொத்த சமநிலை வாட்ச் மட்டும் முகவரிகள்</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Total Amount</source>
+        <translation>முழு தொகை</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>அல்லது</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1661,10 +1656,6 @@
         <translation>தடுப்பு சங்கிலி</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>தொகுதிகள் தற்போதைய எண்</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>நினைவக குளம்</translation>
     </message>
@@ -1709,10 +1700,6 @@
         <translation>விரிவான தகவலைப் பார்வையிட ஒரு சகவரைத் தேர்ந்தெடுக்கவும்.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>அனுமதிக்கப்பட்டவை</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>திசை</translation>
     </message>
@@ -1751,10 +1738,6 @@
     <message>
         <source>Services</source>
         <translation>சேவைகள்</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>பான் ஸ்கோர்</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1905,14 +1888,6 @@
         <translation>வெளி செல்லும்</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>ஆம்</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>மறு</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>அறியப்படாத</translation>
     </message>
@@ -2003,12 +1978,24 @@
         <source>Copy amount</source>
         <translation>நகல் நகல்</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>பணப்பை திறக்க முடியவில்லை.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR குறியீடு</translation>
+        <source>Amount:</source>
+        <translation>விலை</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>செய்தி:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>கைப்பை:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2029,30 +2016,6 @@
     <message>
         <source>Payment information</source>
         <translation>கொடுப்பனவு தகவல்</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>முகவரி</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>தொகை</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>லேபிள்</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>செய்தி</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>பணப்பை</translation>
     </message>
 </context>
 <context>
@@ -3042,12 +3005,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>வாலட்டை அதிக நேரம் மூடுவதாலும் ப்ரூனிங் இயக்கப்பட்டாலோ முழு செயினை ரீசிங்க் செய்வதற்கு இது வழிவகுக்கும்.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>எந்த வாலட்டும் லோட் செய்யப்படவில்லை.</translation>
+        <source>Create a new wallet</source>
+        <translation>புதிய வாலட்டை உருவாக்கு</translation>
     </message>
 </context>
 <context>
@@ -3108,6 +3071,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>தற்போதைய தாவலில் தரவை ஒரு கோப்பிற்கு ஏற்றுமதி செய்க</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>பிழை</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>பேக்அப் வாலட்</translation>
     </message>
@@ -3151,10 +3118,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>ப்ரூன்: கடைசி வாலட் ஒத்திசைவு ப்ரூன் தரவுக்கு அப்பாற்பட்டது. நீங்கள் -reindex செய்ய வேண்டும் (ப்ரூன் நோட் உபயோகித்தால் முழு பிளாக்செயினையும் மீண்டும் டவுன்லோட் செய்யவும்)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>பிழை: ஆபத்தான உள் பிழை ஏற்பட்டது, விவரங்களுக்கு debug.log ஐ பார்க்கவும்</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>பிளாக்ஸ்டோர் ப்ரூன் செய்யபடுகிறது...</translation>
     </message>
@@ -3165,10 +3128,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>%s டெவலப்பர்கள்</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>மாற்று-முகவரி கீயை உருவாக்க முடியாது. கீ தகவல்தளத்தில் கீகள் இல்லை மற்றும் எந்த கீயையும் உருவாக்க முடியாது.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3217,14 +3176,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>எச்சரிக்கை: நாங்கள் எங்கள் பீர்களுடன் முழுமையாக உடன்படுவதாகத் தெரியவில்லை! நீங்கள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம், அல்லது மற்ற நோடுகள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம்.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>கடைசி 100 தொகுதிகளில் %d எதிர்பாராத பதிப்பைக் கொண்டுள்ளன</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s சிதைந்தது, மீட்பு தோல்வியுற்றது</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3329,10 +3280,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Loading P2P addresses...</source>
         <translation>பி2பி முகவரிகள் லோட் செய்யப்படுகிறது...</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>பிழை: டிஸ்க் ஸ்பேஸ் மிகக் குறைவாக உள்ளது!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3465,10 +3412,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
         <translation>எச்சரிக்கை: அறியப்படாத புதிய விதிகள் செயல்படுத்தப்பட்டன (வெர்ஷன்பிட் %i)</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>வாலாட்டிலிருந்து அனைத்து பரிவர்த்தனைகளையும் அழிக்கிறது...</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>

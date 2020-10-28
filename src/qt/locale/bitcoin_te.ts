@@ -70,10 +70,6 @@
         <translation>ఇవి మీరు పంపే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. నాణేలు పంపే ముందు ప్రతిసారి అందుకునే చిరునామా మరియు చెల్లింపు మొత్తం సరిచూసుకోండి.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>చెల్లింపులు స్వీకరించడానికి ఇవి మీ బిట్‌కాయిన్ చిరునామాలు. క్రొత్త చిరునామాలను సృష్టించడానికి స్వీకరించు ట్యాబ్‌లోని 'క్రొత్త స్వీకరించే చిరునామాను సృష్టించండి' బటన్‌ను ఉపయోగించండి.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>చిరునామాను కాపీ చెయ్యండి</translation>
     </message>
@@ -303,6 +299,9 @@
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -326,23 +325,7 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>చిరునామా</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>ఉల్లాకు</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>సందేశం</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>వాలెట్</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -482,6 +465,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>ప్రస్తుతం ఉన్న సమాచారాన్ని ఫైల్ లోనికి ఎగుమతి చేసుకోండి</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>లోపం</translation>
     </message>
     </context>
 <context>

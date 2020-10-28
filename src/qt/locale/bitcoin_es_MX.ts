@@ -70,10 +70,6 @@
         <translation>Estas son tus direcciones de Bitcoin para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Estas son tus direcciones Bitcoin para recibir pagos. Usa el botón "Crear Nueva Dirección de Recepción" en la pestaña de recepciones para crear nuevas direcciones.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copiar dirección</translation>
     </message>
@@ -542,11 +538,7 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>La cartera esta &lt;b&gt;encriptada&lt;/b&gt; y &lt;b&gt;bloqueada&lt;/b&gt; actualmente </translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Se produjo un error fatal. Bitcoin ya no puede continuar de forma segura y va a renunciar.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -950,6 +942,21 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>&lt;b&gt;Transacciones recientes&lt;/b&gt;</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Total Amount</source>
+        <translation>Cantidad total</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>o</translation>
+    </message>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -1098,14 +1105,6 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <translation>Salida</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Sí</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>No</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Desconocido</translation>
     </message>
@@ -1188,9 +1187,25 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <source>Copy amount</source>
         <translation>copiar monto</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>No se puede desbloquear la cartera</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Monto:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mensaje:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Cartera:</translation>
+    </message>
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Copiar dirección</translation>
@@ -1199,27 +1214,7 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <source>&amp;Save Image...</source>
         <translation>&amp;Guardar imagen...</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Dirección</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Monto</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mensaje</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cartera</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1763,8 +1758,8 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>No se há cargado la cartera.</translation>
+        <source>Create a new wallet</source>
+        <translation>Crear una nueva cartera</translation>
     </message>
 </context>
 <context>
@@ -1787,6 +1782,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar la información en la pestaña actual a un archivo</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
