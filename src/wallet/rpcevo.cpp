@@ -217,8 +217,8 @@ static RPCHelpMan protx_register()
                     {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO, "IP and port in the form \"IP:PORT\".\n"
                                         "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."},
                     {"ownerAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The Syscoin address to use for payee updates and proposal voting.\n"
-                                        "The private key belonging to this address must be known in your wallet. The address must\n"
-                                        "be unused and must differ from the collateralAddress."},
+                                        "The corresponding private key does not have to be known by your wallet.\n"
+                                        "The address must be unused and must differ from the collateralAddress."},
                     {"operatorPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The operator BLS public key. The BLS private key does not have to be known.\n"
                                         "It has to match the BLS private key which is later used when operating the masternode."},
                     {"votingAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The voting key address. The private key does not have to be known by your wallet.\n"
@@ -282,9 +282,9 @@ static RPCHelpMan protx_register()
             }
         }
 
-        CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
+        ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
         CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-        CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
+        CKeyID keyIDVoting = ptx.keyIDOwner;
         if (request.params[paramIdx + 3].get_str() != "") {
             keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
         }
@@ -303,7 +303,6 @@ static RPCHelpMan protx_register()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
         }
 
-        ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
         ptx.pubKeyOperator = pubKeyOperator;
         ptx.keyIDVoting = keyIDVoting;
         ptx.scriptPayout = GetScriptForDestination(payoutDest);
@@ -369,8 +368,8 @@ static RPCHelpMan protx_register_fund()
                     {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO, "IP and port in the form \"IP:PORT\".\n"
                                         "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."},
                     {"ownerAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The Syscoin address to use for payee updates and proposal voting.\n"
-                                        "The private key belonging to this address must be known in your wallet. The address must\n"
-                                        "be unused and must differ from the collateralAddress."},
+                                        "The corresponding private key does not have to be known by your wallet.\n"
+                                        "The address must be unused and must differ from the collateralAddress."},
                     {"operatorPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The operator BLS public key. The BLS private key does not have to be known.\n"
                                         "It has to match the BLS private key which is later used when operating the masternode."},
                     {"votingAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The voting key address. The private key does not have to be known by your wallet.\n"
@@ -432,9 +431,9 @@ static RPCHelpMan protx_register_fund()
         }
     }
 
-    CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
+    ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-    CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
+    CKeyID keyIDVoting = ptx.keyIDOwner;
     if (request.params[paramIdx + 3].get_str() != "") {
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
@@ -453,7 +452,6 @@ static RPCHelpMan protx_register_fund()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
     }
 
-    ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
     ptx.pubKeyOperator = pubKeyOperator;
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
@@ -496,8 +494,8 @@ static RPCHelpMan protx_register_prepare()
                 {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO, "IP and port in the form \"IP:PORT\".\n"
                                     "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."},
                 {"ownerAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The Syscoin address to use for payee updates and proposal voting.\n"
-                                    "The private key belonging to this address must be known in your wallet. The address must\n"
-                                    "be unused and must differ from the collateralAddress."},
+                                    "The corresponding private key does not have to be known by your wallet.\n"
+                                    "The address must be unused and must differ from the collateralAddress."},
                 {"operatorPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The operator BLS public key. The BLS private key does not have to be known.\n"
                                     "It has to match the BLS private key which is later used when operating the masternode."},
                 {"votingAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The voting key address. The private key does not have to be known by your wallet.\n"
@@ -559,9 +557,9 @@ static RPCHelpMan protx_register_prepare()
             }
         }
 
-        CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
+        ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
         CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
-        CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
+        CKeyID keyIDVoting = ptx.keyIDOwner;
         if (request.params[paramIdx + 3].get_str() != "") {
             keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
         }
@@ -580,7 +578,6 @@ static RPCHelpMan protx_register_prepare()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
         }
 
-        ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
         ptx.pubKeyOperator = pubKeyOperator;
         ptx.keyIDVoting = keyIDVoting;
         ptx.scriptPayout = GetScriptForDestination(payoutDest);
