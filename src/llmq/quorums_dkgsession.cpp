@@ -257,6 +257,8 @@ bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGContribution& 
 
 void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan)
 {
+    LOCK(cs_pending);
+
     CDKGLogger logger(*this, __func__);
 
     retBan = false;
@@ -356,6 +358,8 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
 // See CBLSWorker::VerifyContributionShares for more details.
 void CDKGSession::VerifyPendingContributions()
 {
+    AssertLockHeld(cs_pending);
+
     CDKGLogger logger(*this, __func__);
 
     cxxtimer::Timer t1(true);
@@ -409,7 +413,10 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
         return;
     }
 
-    VerifyPendingContributions();
+    {
+        LOCK(cs_pending);
+        VerifyPendingContributions();
+    }
 
     CDKGLogger logger(*this, __func__);
 
