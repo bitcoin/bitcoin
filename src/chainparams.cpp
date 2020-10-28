@@ -176,7 +176,7 @@ public:
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
         consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
-        consensus.nAuxpowChainId = 0x1000;
+        consensus.nAuxpowChainId = 8;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -196,7 +196,7 @@ public:
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x4c332acd53ca99ab78fb80a3dacffe234674674e0b682350c492d7fe839d128e"); // 419800
-        consensus.nAuxpowChainId = 0x1000;
+        consensus.nAuxpowChainId = 8;
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
@@ -340,7 +340,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c");
         consensus.nAuxpowStartHeight = 1;
-        consensus.nAuxpowChainId = 0x1000;
+        consensus.nAuxpowChainId = 8;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 1965866356;
@@ -489,7 +489,7 @@ public:
         consensus.DIP0003Height = 200;
         consensus.DIP0003EnforcementHeight = 400;
         consensus.nAuxpowStartHeight = 1;
-        consensus.nAuxpowChainId = 0x1000;
+        consensus.nAuxpowChainId = 8;
         consensus.fStrictChainId = false;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
         consensus.nSubsidyHalvingInterval = 210000;
@@ -605,7 +605,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256{};
         consensus.nAuxpowStartHeight = 0;
-        consensus.nAuxpowChainId = 0x1000;
+        consensus.nAuxpowChainId = 8;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
         consensus.nSYSXAsset = 123456;
