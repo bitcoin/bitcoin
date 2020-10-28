@@ -80,6 +80,9 @@ public:
     }
     static int32_t GetBaseVersion(int32_t ver);
 
+    static inline bool IsValidBaseVersion(const int32_t &nBaseVersion) {
+        return (nBaseVersion & ~VERSIONAUXPOW_TOP_MASK) < VERSION_CHAIN_START;
+    }
     /**
      * Set the base version (apart from chain ID and auxpow flag) to
      * the one given.  This should only be called when auxpow is not yet
