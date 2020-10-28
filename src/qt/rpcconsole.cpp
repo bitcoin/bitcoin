@@ -445,8 +445,8 @@ void RPCExecutor::request(const QString &command, const QString &walletID)
     }
 }
 
-RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent) :
-    QWidget(parent, Qt::Window),
+RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags flags) :
+    QWidget(parent, flags),
     m_node(node),
     ui(new Ui::RPCConsole),
     clientModel(0),
@@ -531,6 +531,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent) :
     pageButtons.addButton(ui->btnPeers, pageButtons.buttons().size());
     pageButtons.addButton(ui->btnRepair, pageButtons.buttons().size());
     connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+
+    showPage(TAB_INFO);
 
     clear();
 }

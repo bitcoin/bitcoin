@@ -39,7 +39,7 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(interfaces::Node& node, QWidget* parent);
+    explicit RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags flags);
     ~RPCConsole();
 
     static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);

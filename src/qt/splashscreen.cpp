@@ -200,7 +200,9 @@ void SplashScreen::unsubscribeFromCoreSignals()
     // Disconnect signals from client
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
+#ifdef ENABLE_WALLET
     m_handler_load_wallet->disconnect();
+#endif // ENABLE_WALLET
     for (auto& handler : m_connected_wallet_handlers) {
         handler->disconnect();
     }
