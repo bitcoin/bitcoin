@@ -3790,8 +3790,8 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
        (baseVer < 3 && nHeight >= consensusParams.BIP66Height) ||
        (baseVer < 4 && nHeight >= consensusParams.BIP65Height) ||
        !CPureBlockHeader::IsValidBaseVersion(baseVer))
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", baseVer),
-                                 strprintf("rejected nVersion=0x%08x block", block.nVersion));
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
+                                 strprintf("rejected nVersion=0x%08x block", baseVer));
 
     return true;
 }
