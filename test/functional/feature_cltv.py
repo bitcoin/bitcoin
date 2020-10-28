@@ -110,8 +110,7 @@ class BIP65Test(SyscoinTestFramework):
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
         block.set_base_version(3)
         block.solve()
-        # SYSCOIN
-        with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x10000003)'.format(block.hash)]):
+        with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x00080003)'.format(block.hash)]):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
