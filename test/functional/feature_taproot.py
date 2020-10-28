@@ -1210,7 +1210,8 @@ class TaprootTest(SyscoinTestFramework):
         extra_output_script = CScript([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR))
 
         block = create_block(self.tip, create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees), self.lastblocktime + 1)
-        block.nVersion = 4
+        # SYSCOIN
+        block.set_base_version(4)
         for tx in txs:
             tx.rehash()
             block.vtx.append(tx)
