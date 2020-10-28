@@ -1337,16 +1337,14 @@ static void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     AssertLockHeld(cs_main);
     // Before we get past initial download, we cannot reliably alert about forks
     // (we assume we don't get stuck on a fork before finishing our initial sync)
-    if (::ChainstateActive().IsInitialBlockDownload())
+    if (::ChainstateActive().IsInitialBlockDownload()) {
         return;
+    }
 
-    if (pindexBestInvalid && pindexBestInvalid->nChainWork > ::ChainActive().Tip()->nChainWork + (GetBlockProof(*::ChainActive().Tip()) * 6))
-    {
+    if (pindexBestInvalid && pindexBestInvalid->nChainWork > ::ChainActive().Tip()->nChainWork + (GetBlockProof(*::ChainActive().Tip()) * 6)) {
         LogPrintf("%s: Warning: Found invalid chain at least ~6 blocks longer than our best chain.\nChain state database corruption likely.\n", __func__);
         SetfLargeWorkInvalidChainFound(true);
-    }
-    else
-    {
+    } else {
         SetfLargeWorkInvalidChainFound(false);
     }
 }
@@ -2689,8 +2687,8 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
     AssertLockHeld(cs_main);
     AssertLockHeld(m_mempool.cs);
 
-    const CBlockIndex *pindexOldTip = m_chain.Tip();
-    const CBlockIndex *pindexFork = m_chain.FindFork(pindexMostWork);
+    const CBlockIndex* pindexOldTip = m_chain.Tip();
+    const CBlockIndex* pindexFork = m_chain.FindFork(pindexMostWork);
 
     // Disconnect active blocks which are no longer in the best chain.
     bool fBlocksDisconnected = false;
@@ -2710,7 +2708,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
         fBlocksDisconnected = true;
     }
 
-    // Build list of new blocks to connect.
+    // Build list of new blocks to connect (in descending height order).
     std::vector<CBlockIndex*> vpindexToConnect;
     bool fContinue = true;
     int nHeight = pindexFork ? pindexFork->nHeight : -1;
@@ -2720,7 +2718,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
         int nTargetHeight = std::min(nHeight + 32, pindexMostWork->nHeight);
         vpindexToConnect.clear();
         vpindexToConnect.reserve(nTargetHeight - nHeight);
-        CBlockIndex *pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
+        CBlockIndex* pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
         while (pindexIter && pindexIter->nHeight != nHeight) {
             vpindexToConnect.push_back(pindexIter);
             pindexIter = pindexIter->pprev;
@@ -2728,7 +2726,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
         nHeight = nTargetHeight;
 
         // Connect new blocks.
-        for (CBlockIndex *pindexConnect : reverse_iterate(vpindexToConnect)) {
+        for (CBlockIndex* pindexConnect : reverse_iterate(vpindexToConnect)) {
             if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connectTrace, disconnectpool)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
