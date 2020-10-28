@@ -54,9 +54,11 @@ class NetTest(DashTestFramework):
         # Especially the exchange of messages like getheaders and friends causes test failures here
         self.nodes[0].ping()
         self.wait_until(lambda: all(['pingtime' in n for n in self.nodes[0].getpeerinfo()]))
-        self.log.info('Connect nodes both way')
+        # By default, the test framework sets up an addnode connection from
+        # node 1 --> node0. By connecting node0 --> node 1, we're left with
+        # the two nodes being connected both ways.
+        # Topology will look like: node0 <--> node1
         self.connect_nodes(0, 1)
-        self.connect_nodes(1, 0)
         self.sync_all()
 
         self.test_connection_count()
@@ -74,6 +76,41 @@ class NetTest(DashTestFramework):
         # and node0 was also connected to node2 (a masternode)
         # during network setup
         assert_equal(self.nodes[0].getconnectioncount(), 3)
+
+    def test_getpeerinfo(self):
+        self.log.info("Test getpeerinfo")
+        # Create a few getpeerinfo last_block/last_transaction values.
+        self.wallet.send_self_transfer(from_node=self.nodes[0]) # Make a transaction so we can see it in the getpeerinfo results
+        self.nodes[1].generate(1)
+        self.sync_all()
+        time_now = self.mocktime
+        peer_info = [x.getpeerinfo() for x in self.nodes]
+        # Verify last_block and last_transaction keys/values.
+        for node, peer, field in product(range(self.num_nodes - self.mn_count), range(2), ['last_block', 'last_transaction']):
+            assert field in peer_info[node][peer].keys()
+            if peer_info[node][peer][field] != 0:
+                assert_approx(peer_info[node][peer][field], time_now, vspan=60)
+        # check both sides of bidirectional connection between nodes
+        # the address bound to on one side will be the source address for the other node
+        assert_equal(peer_info[0][0]['addrbind'], peer_info[1][0]['addr'])
+        assert_equal(peer_info[1][0]['addrbind'], peer_info[0][0]['addr'])
+        # check the `servicesnames` field
+        for info in peer_info:
+            assert_net_servicesnames(int(info[0]["services"], 0x10), info[0]["servicesnames"])
+
+        # Check dynamically generated networks list in getpeerinfo help output.
+        assert "(ipv4, ipv6, onion, i2p, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
+        # This part is slightly different comparing to the Bitcoin implementation. This is expected because we create connections on network setup a bit differently too.
+        # We also create more connection during the test itself to test mn specific stats
+        assert_equal(peer_info[0][0]['connection_type'], 'inbound')
+        assert_equal(peer_info[0][1]['connection_type'], 'inbound')
+        assert_equal(peer_info[0][2]['connection_type'], 'manual')
+
+        assert_equal(peer_info[1][0]['connection_type'], 'manual')
+        assert_equal(peer_info[1][1]['connection_type'], 'inbound')
+
+        assert_equal(peer_info[2][0]['connection_type'], 'manual')
+
 
     def test_getnettotals(self):
         self.log.info("Test getnettotals")
@@ -113,15 +150,13 @@ class NetTest(DashTestFramework):
 
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.nodes[0].setnetworkactive(state=True)
-        # Connect nodes both ways.
         self.connect_nodes(0, 1)
-        self.connect_nodes(1, 0)
 
         info = self.nodes[1].getnetworkinfo()
         assert_equal(info['networkactive'], True)
-        assert_equal(info['connections'], 2)
+        assert_equal(info['connections'], 1)
         assert_equal(info['connections_in'], 1)
-        assert_equal(info['connections_out'], 1)
+        assert_equal(info['connections_out'], 0)
         assert_equal(info['connections_mn'], 0)
         assert_equal(info['connections_mn_in'], 0)
         assert_equal(info['connections_mn_out'], 0)
@@ -135,15 +170,17 @@ class NetTest(DashTestFramework):
         assert "(ipv4, ipv6, onion, i2p)" in self.nodes[0].help("getnetworkinfo")
 
         self.log.info('Test extended connections info')
-        self.connect_nodes(1, 2)
+        # Connect nodes both ways.
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 0)
         self.nodes[1].ping()
         self.wait_until(lambda: all(['pingtime' in n for n in self.nodes[1].getpeerinfo()]))
-        assert_equal(self.nodes[1].getnetworkinfo()['connections'], 3)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections'], 2)
         assert_equal(self.nodes[1].getnetworkinfo()['connections_in'], 1)
-        assert_equal(self.nodes[1].getnetworkinfo()['connections_out'], 2)
-        assert_equal(self.nodes[1].getnetworkinfo()['connections_mn'], 1)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_out'], 1)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_mn'], 0)
         assert_equal(self.nodes[1].getnetworkinfo()['connections_mn_in'], 0)
-        assert_equal(self.nodes[1].getnetworkinfo()['connections_mn_out'], 1)
+        assert_equal(self.nodes[1].getnetworkinfo()['connections_mn_out'], 0)
 
     def test_getaddednodeinfo(self):
         self.log.info("Test getaddednodeinfo")
@@ -164,40 +201,6 @@ class NetTest(DashTestFramework):
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
         # check that a non-existent node returns an error
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
-
-    def test_getpeerinfo(self):
-        self.log.info("Test getpeerinfo")
-        # Create a few getpeerinfo last_block/last_transaction values.
-        self.wallet.send_self_transfer(from_node=self.nodes[0]) # Make a transaction so we can see it in the getpeerinfo results
-        self.nodes[1].generate(1)
-        self.sync_all()
-        time_now = self.mocktime
-        peer_info = [x.getpeerinfo() for x in self.nodes]
-        # Verify last_block and last_transaction keys/values.
-        for node, peer, field in product(range(self.num_nodes - self.mn_count), range(2), ['last_block', 'last_transaction']):
-            assert field in peer_info[node][peer].keys()
-            if peer_info[node][peer][field] != 0:
-                assert_approx(peer_info[node][peer][field], time_now, vspan=60)
-        # check both sides of bidirectional connection between nodes
-        # the address bound to on one side will be the source address for the other node
-        assert_equal(peer_info[0][0]['addrbind'], peer_info[1][0]['addr'])
-        assert_equal(peer_info[1][0]['addrbind'], peer_info[0][0]['addr'])
-        # check the `servicesnames` field
-        for info in peer_info:
-            assert_net_servicesnames(int(info[0]["services"], 0x10), info[0]["servicesnames"])
-
-        # Check dynamically generated networks list in getpeerinfo help output.
-        assert "(ipv4, ipv6, onion, i2p, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
-        # This part is slightly different comparing to the Bitcoin implementation. This is expected because we create connections on network setup a bit differently too.
-        # We also create more connection during the test itself to test mn specific stats
-        assert_equal(peer_info[0][0]['connection_type'], 'inbound')
-        assert_equal(peer_info[0][1]['connection_type'], 'inbound')
-        assert_equal(peer_info[0][2]['connection_type'], 'manual')
-
-        assert_equal(peer_info[1][0]['connection_type'], 'manual')
-        assert_equal(peer_info[1][1]['connection_type'], 'inbound')
-
-        assert_equal(peer_info[2][0]['connection_type'], 'manual')
 
     def test_service_flags(self):
         self.log.info("Test service flags")
