@@ -129,3 +129,14 @@ def generate_wif_key():
     k = ECKey()
     k.generate()
     return bytes_to_wif(k.get_bytes(), k.is_compressed)
+
+def is_sqlite_file(filename):
+    with open(filename, "rb") as f:
+        file_magic = f.read(16)
+        return file_magic == b"SQLite format 3\x00"
+
+def is_bdb_file(filename):
+    with open(filename, "rb") as f:
+        f.seed(12, 0)
+        file_magic = f.read(4)
+        return file_magic == b"\x00\x05\x31\x62" or file_magic == b"\x62\x31\x05\x00"
