@@ -2778,6 +2778,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CInv inv(nInvType, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
+        {
+            LOCK(cs_main);
+            EraseObjectRequest(pfrom->GetId(), inv);
+        }
+
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (nInvType == MSG_DSTX) {
             uint256 hashTx = tx.GetHash();
@@ -2829,8 +2834,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         bool fMissingInputs = false;
         CValidationState state;
-
-        EraseObjectRequest(pfrom->GetId(), inv);
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
