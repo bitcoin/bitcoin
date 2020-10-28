@@ -442,8 +442,8 @@ void RPCExecutor::request(const QString &command)
     }
 }
 
-RPCConsole::RPCConsole(QWidget* parent) :
-    QWidget(parent, Qt::Window),
+RPCConsole::RPCConsole(QWidget* parent, Qt::WindowFlags flags) :
+    QWidget(parent, flags),
     ui(new Ui::RPCConsole),
     clientModel(0),
     historyPtr(0),
@@ -523,6 +523,8 @@ RPCConsole::RPCConsole(QWidget* parent) :
     pageButtons.addButton(ui->btnPeers, pageButtons.buttons().size());
     pageButtons.addButton(ui->btnRepair, pageButtons.buttons().size());
     connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+
+    showPage(TAB_INFO);
 
     clear();
 }

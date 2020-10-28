@@ -41,12 +41,10 @@ Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
 Common stuff
 ******************************************************/
 
-WalletFrame,
-QDialog {
-    background-color: #323233;
-}
-
-QMessageBox {
+QDialog,
+QMainWindow,
+QMessageBox
+WalletFrame {
     background-color: #323233;
 }
 
