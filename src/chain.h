@@ -298,11 +298,6 @@ public:
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
 
-    /* Analyse the block version.  */
-    inline int GetBaseVersion() const
-    {
-        return CPureBlockHeader::GetBaseVersion(nVersion);
-    }
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);

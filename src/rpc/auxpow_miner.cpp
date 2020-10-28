@@ -144,7 +144,7 @@ AuxpowMiner::createAuxBlock (const CScript& scriptPubKey, const util::Ref& conte
 
   UniValue result(UniValue::VOBJ);
   result.pushKV ("hash", pblock->GetHash ().GetHex ());
-  result.pushKV ("chainid", pblock->GetChainId ());
+  result.pushKV ("chainid", Params().GetConsensus().nAuxpowChainId);
   result.pushKV ("previousblockhash", pblock->hashPrevBlock.GetHex ());
   result.pushKV ("coinbasevalue",
                  static_cast<int64_t> (pblock->vtx[0]->vout[0].nValue));

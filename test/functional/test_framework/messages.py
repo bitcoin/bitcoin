@@ -80,7 +80,6 @@ MSG_QUORUM_RECOVERED_SIG = 19
 
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
-VERSION_CHAIN_START = (1 << 16)
 CHAIN_ID = 0x1000
 
 FILTER_TYPE_BASIC = 0
@@ -728,9 +727,7 @@ class CBlockHeader:
             self.calc_sha256()
 
     def set_null(self):
-        # Set auxpow chain ID.  Blocks without a chain ID are not accepted
-        # by the regtest network consensus rules (since they are "legacy").
-        self.set_base_version(1)
+        self.nVersion = 1
 
         self.hashPrevBlock = 0
         self.hashMerkleRoot = 0
@@ -740,10 +737,6 @@ class CBlockHeader:
         self.auxpow = None
         self.sha256 = None
         self.hash = None
-
-    def set_base_version(self, n):
-        assert n < VERSION_AUXPOW
-        self.nVersion = n + CHAIN_ID * VERSION_CHAIN_START
 
     def mark_auxpow(self):
         self.nVersion |= VERSION_AUXPOW
