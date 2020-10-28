@@ -644,6 +644,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def wait_until(self, test_function, timeout=60):
         return wait_until_helper(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor)
 
+    def get_wallet_file_path(self, wallets_dir, wallet_name):
+        wallet_path = os.path.join(wallets_dir, wallet_name)
+        wallet_path = os.path.join(wallet_path, self.wallet_data_filename)
+        return wallet_path
+
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
     def _start_logging(self):
