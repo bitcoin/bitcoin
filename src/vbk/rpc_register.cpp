@@ -17,10 +17,10 @@
 #include <fstream>
 #include <set>
 
+#include "rpc_register.hpp"
 #include <vbk/merkle.hpp>
 #include <vbk/pop_service.hpp>
 #include <veriblock/mempool_result.hpp>
-#include "rpc_register.hpp"
 
 namespace VeriBlock {
 
@@ -136,9 +136,6 @@ template <typename pop_t>
 bool parsePayloads(const UniValue& array, std::vector<pop_t>& out, altintegration::ValidationState& state)
 {
     std::vector<pop_t> payloads;
-    if(array.size() > 0) {
-        LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with %s, amount %d \n", pop_t::name(), array.size());
-    }
     for (uint32_t idx = 0u, size = array.size(); idx < size; ++idx) {
         auto& payloads_hex = array[idx];
 
@@ -153,6 +150,16 @@ bool parsePayloads(const UniValue& array, std::vector<pop_t>& out, altintegratio
 
     out = payloads;
     return true;
+}
+
+template <typename T>
+static void logSubmitResult(const std::string idhex, const altintegration::ValidationState& state)
+{
+    if (!state.IsValid()) {
+        LogPrintf("rejected to add %s=%s to POP mempool: %s\n", T::name(), idhex, state.toString());
+    } else {
+        LogPrintf("accepted %s=%s\n to POP mempool", T::name(), idhex);
+    }
 }
 
 UniValue submitpop(const JSONRPCRequest& request)
@@ -187,7 +194,23 @@ UniValue submitpop(const JSONRPCRequest& request)
         LOCK(cs_main);
         auto& pop_mempool = *VeriBlock::GetPop().mempool;
 
+        // TODO: this will eventually be gone
         altintegration::MempoolResult result = pop_mempool.submitAll(popData);
+        if (!result.context.empty()) {
+            for (auto& it : result.context) {
+                logSubmitResult<altintegration::VbkBlock>(it.first.toHex(), it.second);
+            }
+        }
+        if (!result.vtbs.empty()) {
+            for (auto& it : result.vtbs) {
+                logSubmitResult<altintegration::VTB>(it.first.toHex(), it.second);
+            }
+        }
+        if (!result.atvs.empty()) {
+            for (auto& it : result.atvs) {
+                logSubmitResult<altintegration::ATV>(it.first.toHex(), it.second);
+            }
+        }
 
         return altintegration::ToJSON<UniValue>(result);
     }
@@ -217,6 +240,61 @@ static BtcTree& btc()
 {
     return VeriBlock::GetPop().altTree->btc();
 }
+
+// submitpop
+namespace {
+void check_submitpop(const JSONRPCRequest& request, const std::string& popdata)
+{
+    auto cmdname = strprintf("submitpop%s", popdata);
+    RPCHelpMan{
+        cmdname,
+        "Submit " + popdata,
+        {
+            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Serialized " + popdata},
+        },
+        {},
+        RPCExamples{
+            HelpExampleCli(cmdname, "\"<hex>\"") +
+            HelpExampleRpc(cmdname, "\"<hex>\"")},
+    }
+        .Check(request);
+}
+
+template <typename Pop>
+UniValue submitpopIt(const JSONRPCRequest& request)
+{
+    check_submitpop(request, Pop::name());
+
+    auto payloads_bytes = ParseHexV(request.params[0].get_str(), Pop::name());
+
+    Pop data;
+    altintegration::ValidationState state;
+    if (!altintegration::Deserialize(payloads_bytes, data, state)) {
+        return state.Invalid("bad-data");
+    }
+
+    LOCK(cs_main);
+    auto& mp = *VeriBlock::GetPop().mempool;
+    auto idhex = data.getId().toHex();
+    mp.submit<Pop>(data, state);
+    logSubmitResult<Pop>(idhex, state);
+    return altintegration::ToJSON<UniValue>(state);
+}
+
+UniValue submitpopatv(const JSONRPCRequest& request)
+{
+    return submitpopIt<altintegration::ATV>(request);
+}
+UniValue submitpopvtb(const JSONRPCRequest& request)
+{
+    return submitpopIt<altintegration::VTB>(request);
+}
+UniValue submitpopvbkblock(const JSONRPCRequest& request)
+{
+    return submitpopIt<altintegration::VbkBlock>(request);
+}
+
+} // namespace
 
 // getblock
 namespace {
@@ -360,7 +438,7 @@ UniValue getblockhash(const JSONRPCRequest& request, Tree& tree, const std::stri
 
     auto* index = best[height];
     assert(index);
-    return altintegration::ToJSON<UniValue>(*index);
+    return UniValue(index->getHash().toHex());
 }
 
 UniValue getvbkblockhash(const JSONRPCRequest& request)
@@ -404,11 +482,11 @@ namespace {
 
 template <typename T>
 bool GetPayload(
-  const typename T::id_t& pid,
-  T& out,
-  const Consensus::Params& consensusParams,
-  const CBlockIndex* const block_index,
-  std::vector<uint256>& containingBlocks)
+    const typename T::id_t& pid,
+    T& out,
+    const Consensus::Params& consensusParams,
+    const CBlockIndex* const block_index,
+    std::vector<uint256>& containingBlocks)
 {
     LOCK(cs_main);
 
@@ -416,7 +494,7 @@ bool GetPayload(
         CBlock block;
         if (!ReadBlockFromDisk(block, block_index, consensusParams)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-              strprintf("Can not read block %s from disk", block_index->GetBlockHash().GetHex()));
+                strprintf("Can not read block %s from disk", block_index->GetBlockHash().GetHex()));
         }
         if (!VeriBlock::FindPayloadInBlock<T>(block, pid, out)) {
             return false;
@@ -596,7 +674,10 @@ UniValue getrawvbkblock(const JSONRPCRequest& req)
 } // namespace
 
 const CRPCCommand commands[] = {
-    {"pop_mining", "submitpop", &submitpop, {"atv", "vtbs"}},
+    {"pop_mining", "submitpop", &submitpop, {"vbkblocks", "vtbs", "atvs"}},
+    {"pop_mining", "submitpopatv", &submitpopatv, {"atv"}},
+    {"pop_mining", "submitpopvtb", &submitpopvtb, {"vtb"}},
+    {"pop_mining", "submitpopvbkblock", &submitpopvbkblock, {"vbkblock"}},
     {"pop_mining", "getpopdata", &getpopdata, {"blockheight"}},
     {"pop_mining", "debugpop", &debugpop, {}},
     {"pop_mining", "getvbkblock", &getvbkblock, {"hash"}},
