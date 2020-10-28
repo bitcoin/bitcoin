@@ -126,7 +126,6 @@ class BlockchainTest(SyscoinTestFramework):
         assert res['automatic_pruning']
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
-        # SYSCOIN
         assert_equal(res['softforks'], {
             'bip34': {'type': 'buried', 'active': False, 'height': 500},
             'bip66': {'type': 'buried', 'active': False, 'height': 1251},
@@ -145,8 +144,8 @@ class BlockchainTest(SyscoinTestFramework):
                         'period': 144,
                         'threshold': 108,
                         'elapsed': 57,
-                        'count': 0,
-                        'possible': False,
+                        'count': 57,
+                        'possible': True,
                     },
                 },
                 'active': False
