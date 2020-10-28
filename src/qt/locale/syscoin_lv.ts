@@ -116,6 +116,10 @@
         <translation>Jaunā parole vēlreiz</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Rādīt paroli</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Šifrēt maciņu</translation>
     </message>
@@ -128,12 +132,24 @@
         <translation>Atšifrēt maciņu</translation>
     </message>
     <message>
+        <source>Change passphrase</source>
+        <translation>Mainīt paroli</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Apstiprināt maciņa šifrēšanu</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Maciņš šifrēts</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Maciņš tagad šifrēts</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -204,6 +220,10 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Atvērt &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Maciņš:</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -659,6 +679,9 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -753,10 +776,6 @@
         <translation>Bloku virkne</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Pašreizējais bloku skaits</translation>
-    </message>
-    <message>
         <source>Last block time</source>
         <translation>Pēdējā bloka laiks</translation>
     </message>
@@ -839,8 +858,16 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR Kods</translation>
+        <source>Amount:</source>
+        <translation>Daudzums:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Ziņojums:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Maciņš:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -854,23 +881,7 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Saglabāt Attēlu...</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Adrese</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Daudzums</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nosaukums</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Maciņš</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1194,6 +1205,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Kļūda</translation>
     </message>
     </context>
 <context>
