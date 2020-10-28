@@ -295,12 +295,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             assert info['keypoolsize'] == 0
         else:
             # Descriptor wallets appear to corrupted wallets to old software
-            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v19.loadwallet, "w1")
-            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v19.loadwallet, "w2")
-            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v19.loadwallet, "w3")
-            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v18.loadwallet, "w1")
-            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v18.loadwallet, "w2")
-            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v18.loadwallet, "w3")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: w1 corrupt, salvage failed", node_v19.loadwallet, "w1")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: w2 corrupt, salvage failed", node_v19.loadwallet, "w2")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: w3 corrupt, salvage failed", node_v19.loadwallet, "w3")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: w1 corrupt, salvage failed", node_v18.loadwallet, "w1")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: w2 corrupt, salvage failed", node_v18.loadwallet, "w2")
+            assert_raises_rpc_error(-4, "Wallet file verification failed: w3 corrupt, salvage failed", node_v18.loadwallet, "w3")
 
         # Open the wallets in v0.17
         node_v17.loadwallet("w1_v18")
@@ -324,9 +324,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v17.assert_start_raises_init_error(["-wallet=w3_v18"], "Error: Error loading w3_v18: Wallet requires newer version of Bitcoin Core")
         if self.options.descriptors:
             # Descriptor wallets appear to corrupted wallets to old software
-            node_v17.assert_start_raises_init_error(["-wallet=w1"], "Error: wallet.dat corrupt, salvage failed")
-            node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
-            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
+            node_v17.assert_start_raises_init_error(["-wallet=w1"], "Error: w1 corrupt, salvage failed")
+            node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: w2 corrupt, salvage failed")
+            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: w3 corrupt, salvage failed")
         else:
             node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
         self.start_node(4)

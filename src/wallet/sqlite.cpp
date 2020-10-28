@@ -570,7 +570,7 @@ bool ExistsSQLiteDatabase(const fs::path& path)
 {
     fs::path dir;
     std::string filename;
-    SplitWalletPath(path, dir, filename, DATABASE_FILENAME);
+    SplitWalletPath(path, dir, filename, DATABASE_FILENAME, false);
     const fs::path file = dir / filename;
     return fs::symlink_status(file).type() == fs::regular_file && IsSQLiteFile(file);
 }
@@ -579,7 +579,7 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
 {
     fs::path dir;
     std::string filename;
-    SplitWalletPath(path, dir, filename, DATABASE_FILENAME);
+    SplitWalletPath(path, dir, filename, DATABASE_FILENAME, false);
     const fs::path file = dir / filename;
     try {
         auto db = MakeUnique<SQLiteDatabase>(dir, file);

@@ -646,7 +646,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def get_wallet_file_path(self, wallets_dir, wallet_name):
         wallet_path = os.path.join(wallets_dir, wallet_name)
-        wallet_path = os.path.join(wallet_path, self.wallet_data_filename)
+        if not self.options.descriptors or os.path.isdir(wallet_path):
+            wallet_path = os.path.join(wallet_path, self.wallet_data_filename)
         return wallet_path
 
     # Private helper methods. These should not be accessed by the subclass test scripts.

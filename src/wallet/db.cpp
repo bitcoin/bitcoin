@@ -8,10 +8,11 @@
 
 #include <string>
 
-void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename, const std::string& default_filename)
+void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename, const std::string& default_filename, bool default_dir)
 {
-    if (fs::is_regular_file(wallet_path)) {
-        // Special case for backwards compatibility: if wallet path points to an
+    if (fs::is_regular_file(wallet_path) || (!fs::exists(wallet_path) && !default_dir)) {
+        // For newly created SQLite wallets (!exists && !default_dir): Always make a file at wallet_path
+        // For BDB Special case for backwards compatibility: if wallet path points to an
         // existing file, treat it as the path to a BDB data file in a parent
         // directory that also contains BDB log files.
         env_directory = wallet_path.parent_path();
