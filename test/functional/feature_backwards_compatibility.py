@@ -29,6 +29,10 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet_util import (
+    is_bdb_file,
+    is_sqlite_file,
+)
 
 
 class BackwardsCompatibilityTest(BitcoinTestFramework):
@@ -62,6 +66,24 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
+
+    def copy_wallets(self, dst_wallets_dir, src_wallets_dir):
+        for wallet in os.listdir(src_wallets_dir):
+            if self.options.descriptors:
+                if wallet.endswith("-journal"):
+                    # Skip SQLite journal files
+                    continue
+                wallet_path = os.path.join(src_wallets_dir, wallet)
+                if os.path.isfile(wallet_path) and is_sqlite_file(wallet_path):
+                    shutil.copyfile(
+                        wallet_path,
+                        os.path.join(dst_wallets_dir, wallet)
+                    )
+                    continue
+            shutil.copytree(
+                os.path.join(src_wallets_dir, wallet),
+                os.path.join(dst_wallets_dir, wallet)
+            )
 
     def run_test(self):
         self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
@@ -184,37 +206,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v18.unloadwallet("w2_v18")
 
         # Copy wallets to v0.16
-        for wallet in os.listdir(node_master_wallets_dir):
-            shutil.copytree(
-                os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v16_wallets_dir, wallet)
-            )
+        self.copy_wallets(node_v16_wallets_dir, node_master_wallets_dir)
 
         # Copy wallets to v0.17
-        for wallet in os.listdir(node_master_wallets_dir):
-            shutil.copytree(
-                os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v17_wallets_dir, wallet)
-            )
-        for wallet in os.listdir(node_v18_wallets_dir):
-            shutil.copytree(
-                os.path.join(node_v18_wallets_dir, wallet),
-                os.path.join(node_v17_wallets_dir, wallet)
-            )
+        self.copy_wallets(node_v17_wallets_dir, node_master_wallets_dir)
+        self.copy_wallets(node_v17_wallets_dir, node_v18_wallets_dir)
 
         # Copy wallets to v0.18
-        for wallet in os.listdir(node_master_wallets_dir):
-            shutil.copytree(
-                os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v18_wallets_dir, wallet)
-            )
+        self.copy_wallets(node_v18_wallets_dir, node_master_wallets_dir)
 
         # Copy wallets to v0.19
-        for wallet in os.listdir(node_master_wallets_dir):
-            shutil.copytree(
-                os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v19_wallets_dir, wallet)
-            )
+        self.copy_wallets(node_v19_wallets_dir, node_master_wallets_dir)
 
         if not self.options.descriptors:
             # Descriptor wallets break compatibility, only run this test for legacy wallet
