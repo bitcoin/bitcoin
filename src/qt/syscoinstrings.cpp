@@ -39,6 +39,9 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
+"More than one onion bind address is provided. Using %s for the automatically "
+"created Tor onion service."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
@@ -49,6 +52,15 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet "
+"schema version: %s"),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"SQLiteDatabase: Failed to prepare the statement to fetch the application id: "
+"%s"),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
+"supported"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
@@ -125,6 +137,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Error: Disk space is low for %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error: Keypool ran out, please call keypoolrefill first"),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to rescan the wallet during initialization"),
+QT_TRANSLATE_NOOP("syscoin-core", "Failed to verify database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Fee rate (%s) is lower than the minimum fee rate setting (%s)"),
 QT_TRANSLATE_NOOP("syscoin-core", "Importing..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
@@ -153,6 +166,12 @@ QT_TRANSLATE_NOOP("syscoin-core", "Reducing -maxconnections from %d to %d, becau
 QT_TRANSLATE_NOOP("syscoin-core", "Replaying blocks..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Rescanning..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Rewinding blocks..."),
+QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to execute statement to verify database: %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to fetch the application id: %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to prepare statement to verify database: %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to read database verification error: %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Unexpected application id. Expected %u, got %u"),
 QT_TRANSLATE_NOOP("syscoin-core", "Section [%s] is not recognized."),
 QT_TRANSLATE_NOOP("syscoin-core", "Signing transaction failed"),
 QT_TRANSLATE_NOOP("syscoin-core", "Specified -walletdir \"%s\" does not exist"),
