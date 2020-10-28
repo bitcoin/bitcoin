@@ -104,32 +104,18 @@ class NetTest(BitcoinTestFramework):
 
     def test_getnettotals(self):
         self.log.info("Test getnettotals")
-        # getnettotals totalbytesrecv and totalbytessent should be
-        # consistent with getpeerinfo. Since the RPC calls are not atomic,
-        # and messages might have been recvd or sent between RPC calls, call
-        # getnettotals before and after and verify that the returned values
-        # from getpeerinfo are bounded by those values.
+        # Test getnettotals and getpeerinfo by doing a ping. The bytes
+        # sent/received should increase by at least the size of one ping (32
+        # bytes) and one pong (32 bytes).
         net_totals_before = self.nodes[0].getnettotals()
-        peer_info = self.nodes[0].getpeerinfo()
-        net_totals_after = self.nodes[0].getnettotals()
-        assert_equal(len(peer_info), 2)
-        peers_recv = sum([peer['bytesrecv'] for peer in peer_info])
-        peers_sent = sum([peer['bytessent'] for peer in peer_info])
+        peer_info_before = self.nodes[0].getpeerinfo()
 
-        assert_greater_than_or_equal(peers_recv, net_totals_before['totalbytesrecv'])
-        assert_greater_than_or_equal(net_totals_after['totalbytesrecv'], peers_recv)
-        assert_greater_than_or_equal(peers_sent, net_totals_before['totalbytessent'])
-        assert_greater_than_or_equal(net_totals_after['totalbytessent'], peers_sent)
-
-        # test getnettotals and getpeerinfo by doing a ping
-        # the bytes sent/received should change
-        # note ping and pong are 32 bytes each
         self.nodes[0].ping()
-        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytessent'] >= net_totals_after['totalbytessent'] + 32 * 2), timeout=1)
-        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytesrecv'] >= net_totals_after['totalbytesrecv'] + 32 * 2), timeout=1)
+        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytessent'] >= net_totals_before['totalbytessent'] + 32 * 2), timeout=1)
+        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytesrecv'] >= net_totals_before['totalbytesrecv'] + 32 * 2), timeout=1)
 
-        peer_info_after_ping = self.nodes[0].getpeerinfo()
-        for before, after in zip(peer_info, peer_info_after_ping):
+        peer_info_after = self.nodes[0].getpeerinfo()
+        for before, after in zip(peer_info_before, peer_info_after):
             assert_greater_than_or_equal(after['bytesrecv_per_msg'].get('pong', 0), before['bytesrecv_per_msg'].get('pong', 0) + 32)
             assert_greater_than_or_equal(after['bytessent_per_msg'].get('ping', 0), before['bytessent_per_msg'].get('ping', 0) + 32)
 
