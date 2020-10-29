@@ -29,7 +29,7 @@
  * @ingroup ed
  */
 
-#include "relic_core.h"
+#include <relic_core.h>
 
 void ed_curve_init(void) {
 	ctx_t *ctx = core_get();

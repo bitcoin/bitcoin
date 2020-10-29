@@ -29,7 +29,7 @@
  * @ingroup ed
  */
 
-#include "relic_core.h"
+#include <relic_core.h>
 
 #if FP_PRIME == 255
 /**

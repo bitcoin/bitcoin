@@ -20,7 +20,7 @@
  * along with RELIC. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "relic_fp_low.h"
+#include <relic_fp_low.h>
 
 #include "macro.s"
 

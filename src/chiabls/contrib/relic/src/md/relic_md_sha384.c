@@ -28,9 +28,9 @@
  * @ingroup md
  */
 
-#include "relic_conf.h"
-#include "relic_core.h"
-#include "relic_md.h"
+#include <relic_conf.h>
+#include <relic_core.h>
+#include <relic_md.h>
 #include "sha.h"
 
 /*============================================================================*/

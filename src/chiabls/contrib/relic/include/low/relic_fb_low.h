@@ -40,7 +40,7 @@
 
 #ifdef ASM
 
-#include "relic_conf.h"
+#include <relic_conf.h>
 
 #undef FB_DIGS
 #if (FB_POLYN % WSIZE) > 0
@@ -51,7 +51,7 @@
 
 #else
 
-#include "relic_types.h"
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Function prototypes                                                        */

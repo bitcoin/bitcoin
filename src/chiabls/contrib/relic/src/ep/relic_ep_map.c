@@ -28,8 +28,8 @@
  * @ingroup ep
  */
 
-#include "relic_core.h"
-#include "relic_md.h"
+#include <relic_core.h>
+#include <relic_md.h>
 
 /**
  * Based on the rust implementation of pairings, zkcrypto/pairing.

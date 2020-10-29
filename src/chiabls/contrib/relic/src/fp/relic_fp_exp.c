@@ -28,8 +28,8 @@
  * @ingroup fp
  */
 
-#include "relic_core.h"
-#include "relic_util.h"
+#include <relic_core.h>
+#include <relic_util.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

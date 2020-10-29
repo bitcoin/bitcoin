@@ -26,8 +26,8 @@
  * @ingroup fp
  */
 
-#include "relic_conf.h"
-#include "relic_fp_low.h"
+#include <relic_conf.h>
+#include <relic_fp_low.h>
 
 #ifdef MSP430X
 #include <msp430.h>

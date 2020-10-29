@@ -40,16 +40,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "relic_err.h"
-#include "relic_bn.h"
-#include "relic_eb.h"
-#include "relic_epx.h"
-#include "relic_ed.h"
-#include "relic_conf.h"
-#include "relic_bench.h"
-#include "relic_rand.h"
-#include "relic_pool.h"
-#include "relic_label.h"
+#include <relic_err.h>
+#include <relic_bn.h>
+#include <relic_eb.h>
+#include <relic_epx.h>
+#include <relic_ed.h>
+#include <relic_conf.h>
+#include <relic_bench.h>
+#include <relic_rand.h>
+#include <relic_pool.h>
+#include <relic_label.h>
 
 #if MULTI != RELIC_NONE
 #include <math.h>

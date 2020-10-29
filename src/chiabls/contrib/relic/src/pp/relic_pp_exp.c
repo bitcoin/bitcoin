@@ -28,9 +28,9 @@
  * @ingroup pp
  */
 
-#include "relic_core.h"
-#include "relic_pp.h"
-#include "relic_util.h"
+#include <relic_core.h>
+#include <relic_pp.h>
+#include <relic_util.h>
 
 /*============================================================================*/
 /* Private definitions                                                        */
@@ -62,8 +62,8 @@ static void pp_exp_bn(fp12_t c, fp12_t a) {
 		bn_new(x);
 
 		/*
-		 * New final exponentiation following Fuentes-Castañeda, Knapp and
-		 * Rodríguez-Henríquez: Fast Hashing to G_2.
+		 * New final exponentiation following Fuentes-Castaï¿½eda, Knapp and
+		 * Rodrï¿½guez-Henrï¿½quez: Fast Hashing to G_2.
 		 */
 		fp_param_get_var(x);
 		fp_param_get_sps(b, &l);

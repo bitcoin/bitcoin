@@ -28,8 +28,8 @@
  * @ingroup cp
  */
 
-#include "relic.h"
-#include "relic_test.h"
+#include <relic.h>
+#include <relic_test.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

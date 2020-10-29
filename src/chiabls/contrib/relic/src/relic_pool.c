@@ -33,11 +33,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "relic_core.h"
-#include "relic_conf.h"
-#include "relic_dv.h"
-#include "relic_bn.h"
-#include "relic_pool.h"
+#include <relic_core.h>
+#include <relic_conf.h>
+#include <relic_dv.h>
+#include <relic_bn.h>
+#include <relic_pool.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

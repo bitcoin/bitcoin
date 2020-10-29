@@ -40,7 +40,7 @@
 
 #ifdef ASM
 
-#include "relic_conf.h"
+#include <relic_conf.h>
 
 #if (BN_PRECI % WSIZE) > 0
 #define BN_DIGS	(BN_PRECI/WSIZE + 1)
@@ -58,7 +58,7 @@
 
 #else
 
-#include "relic_types.h"
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Function prototypes                                                        */

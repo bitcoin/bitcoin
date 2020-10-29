@@ -30,8 +30,8 @@
 
 #include <stdio.h>
 
-#include "relic.h"
-#include "relic_bench.h"
+#include <relic.h>
+#include <relic_bench.h>
 
 static void pairing2(void) {
 	bn_t k, n, l;

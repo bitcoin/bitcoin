@@ -28,7 +28,7 @@
  * @ingroup arch
  */
 
-#include "relic_types.h"
+#include <relic_types.h>
 
 /**
  * Renames the inline assembly macro to a prettier name.

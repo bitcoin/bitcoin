@@ -28,8 +28,8 @@
  * @ingroup arch
  */
 
-#include "relic_types.h"
-#include "relic_label.h"
+#include <relic_types.h>
+#include <relic_label.h>
 
 /**
  * Renames the inline assembly macro to a prettier name.

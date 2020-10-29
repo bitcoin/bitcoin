@@ -28,8 +28,8 @@
  * @ingroup bench
  */
 
-#include "relic.h"
-#include "relic_bench.h"
+#include <relic.h>
+#include <relic_bench.h>
 
 static void memory2(void) {
 	fp2_t a[BENCH];

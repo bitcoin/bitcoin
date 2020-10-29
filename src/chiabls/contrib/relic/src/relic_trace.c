@@ -33,8 +33,8 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "relic_core.h"
-#include "relic_conf.h"
+#include <relic_core.h>
+#include <relic_conf.h>
 #include "relic_trace.h"
 
 #ifdef TRACE

@@ -35,11 +35,11 @@
 #ifndef RELIC_CP_H
 #define RELIC_CP_H
 
-#include "relic_conf.h"
-#include "relic_types.h"
-#include "relic_bn.h"
-#include "relic_ec.h"
-#include "relic_pc.h"
+#include <relic_conf.h>
+#include <relic_types.h>
+#include <relic_bn.h>
+#include <relic_ec.h>
+#include <relic_pc.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

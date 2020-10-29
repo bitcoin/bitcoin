@@ -30,10 +30,10 @@
 
 #include <string.h>
 
-#include "relic_conf.h"
-#include "relic_core.h"
-#include "relic_util.h"
-#include "relic_md.h"
+#include <relic_conf.h>
+#include <relic_core.h>
+#include <relic_util.h>
+#include <relic_md.h>
 #include "blake2.h"
 
 /*============================================================================*/

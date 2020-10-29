@@ -28,11 +28,11 @@
  * @ingroup pp
  */
 
-#include "relic_core.h"
-#include "relic_pp.h"
-#include "relic_fp_low.h"
-#include "relic_fpx_low.h"
-#include "relic_util.h"
+#include <relic_core.h>
+#include <relic_pp.h>
+#include <relic_fp_low.h>
+#include <relic_fpx_low.h>
+#include <relic_util.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

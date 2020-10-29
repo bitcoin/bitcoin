@@ -1,4 +1,4 @@
-#include "relic_conf.h"
+#include <relic_conf.h>
 
 .text
 .align 2

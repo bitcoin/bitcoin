@@ -28,8 +28,8 @@
  * @ingroup fp
  */
 
-#include "relic_fp.h"
-#include "relic_fp_low.h"
+#include <relic_fp.h>
+#include <relic_fp_low.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

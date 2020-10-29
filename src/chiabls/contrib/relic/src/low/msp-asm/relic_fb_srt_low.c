@@ -30,9 +30,9 @@
 
 #include <stdlib.h>
 
-#include "relic_fb.h"
-#include "relic_fb_low.h"
-#include "relic_util.h"
+#include <relic_fb.h>
+#include <relic_fb_low.h>
+#include <relic_util.h>
 
 #if FB_POLYN != 271 && FB_POLYN != 353
 

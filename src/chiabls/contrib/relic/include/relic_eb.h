@@ -35,11 +35,11 @@
 #ifndef RELIC_EB_H
 #define RELIC_EB_H
 
-#include "relic_fb.h"
-#include "relic_bn.h"
-#include "relic_conf.h"
-#include "relic_types.h"
-#include "relic_label.h"
+#include <relic_fb.h>
+#include <relic_bn.h>
+#include <relic_conf.h>
+#include <relic_types.h>
+#include <relic_label.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

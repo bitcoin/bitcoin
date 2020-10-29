@@ -28,7 +28,7 @@
  * @ingroup bn
  */
 
-#include "relic_bn_low.h"
+#include <relic_bn_low.h>
 
 .arch atmega128
 

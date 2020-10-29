@@ -37,8 +37,8 @@
 
 #ifdef ASM
 
-#include "relic_conf.h"
-#include "relic_label.h"
+#include <relic_conf.h>
+#include <relic_label.h>
 
 #if (FP_PRIME % WSIZE) > 0
 #define FP_DIGS	(FP_PRIME/WSIZE + 1)

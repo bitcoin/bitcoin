@@ -30,8 +30,8 @@
 
 #include <stdio.h>
 
-#include "relic.h"
-#include "relic_bench.h"
+#include <relic.h>
+#include <relic_bench.h>
 
 static void memory(void) {
 	ec_t a[BENCH];

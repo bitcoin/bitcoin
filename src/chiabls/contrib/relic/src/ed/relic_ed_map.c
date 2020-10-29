@@ -29,8 +29,8 @@
  * @ingroup ed
  */
 
-#include "relic_core.h"
-#include "relic_md.h"
+#include <relic_core.h>
+#include <relic_md.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

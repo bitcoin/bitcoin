@@ -31,7 +31,7 @@
 #ifndef RELIC_TRACE_H
 #define RELIC_TRACE_H
 
-#include "relic_label.h"
+#include <relic_label.h>
 
 /*============================================================================*/
 /* Macro definitions                                                          */

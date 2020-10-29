@@ -35,13 +35,13 @@
 #ifndef RELIC_EC_H
 #define RELIC_EC_H
 
-#include "relic_ep.h"
-#include "relic_eb.h"
-#include "relic_ed.h"
-#include "relic_bn.h"
-#include "relic_util.h"
-#include "relic_conf.h"
-#include "relic_types.h"
+#include <relic_ep.h>
+#include <relic_eb.h>
+#include <relic_ed.h>
+#include <relic_bn.h>
+#include <relic_util.h>
+#include <relic_conf.h>
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */
