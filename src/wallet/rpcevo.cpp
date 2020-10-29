@@ -29,33 +29,6 @@
 #include <util/translation.h>
 #include <node/context.h>
 
-// Allows to specify Syscoin address or priv key. In case of Syscoin address, the priv key is taken from the wallet
-static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, bool allowAddresses = true) {
-    if (!pwallet) {
-        throw std::runtime_error("addresses not supported when wallet is disabled");
-    }
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    CTxDestination dest = DecodeDestination(strKeyOrAddress);
-    if (allowAddresses && IsValidDestination(dest)) {
-        auto keyId = GetKeyForDestination(spk_man, dest);
-        if (keyId.IsNull())
-            throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
-        CKey key;
-        if (!spk_man.GetKey(keyId, key))
-            throw std::runtime_error(strprintf("non-wallet or invalid address %s", strKeyOrAddress));
-        return key;
-    }
-    CKey key = DecodeSecret(strKeyOrAddress);
-    if (!key.IsValid()) {
-        throw std::runtime_error(strprintf("invalid priv-key/address %s", strKeyOrAddress));
-    }
-    return key;
-}
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
