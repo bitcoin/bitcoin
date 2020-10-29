@@ -71,11 +71,16 @@ bool VerifyWallets(interfaces::Chain& chain)
 
         DatabaseOptions options;
         DatabaseStatus status;
+        options.require_existing = true;
         options.verify = true;
         bilingual_str error_string;
         if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
-            chain.initError(error_string);
-            return false;
+            if (status == DatabaseStatus::FAILED_NOT_FOUND) {
+                chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s\n", error_string.original)));
+            } else {
+                chain.initError(error_string);
+                return false;
+            }
         }
     }
 
@@ -88,10 +93,14 @@ bool LoadWallets(interfaces::Chain& chain)
         for (const std::string& name : gArgs.GetArgs("-wallet")) {
             DatabaseOptions options;
             DatabaseStatus status;
+            options.require_existing = true;
             options.verify = false; // No need to verify, assuming verified earlier in VerifyWallets()
             bilingual_str error;
             std::vector<bilingual_str> warnings;
             std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
+            if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
+                continue;
+            }
             std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(chain, name, std::move(database), options.create_flags, error, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
