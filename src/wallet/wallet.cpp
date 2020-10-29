@@ -4510,7 +4510,7 @@ DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDes
     return nullptr;
 }
 
-ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label)
+ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal)
 {
     if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         WalletLogPrintf("Cannot add WalletDescriptor to a non-descriptor wallet\n");
@@ -4567,7 +4567,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
         }
 
         CTxDestination dest;
-        if (ExtractDestination(script_pub_keys.at(0), dest)) {
+        if (!internal && ExtractDestination(script_pub_keys.at(0), dest)) {
             SetAddressBook(dest, label, "receive");
         }
     }
