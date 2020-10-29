@@ -296,13 +296,13 @@ Wallet
 
 Bitcoin Core will no longer automatically create new wallets on startup. It will
 load existing wallets specified by `-wallet` options on the command line or in
-`bitcoin.conf` or `settings.json` files. And by default it will also load a
+`syscoin.conf` or `settings.json` files. And by default it will also load a
 top-level unnamed ("") wallet. However, if specified wallets don't exist,
 Bitcoin Core will now just log warnings instead of creating new wallets with
 new keys and addresses like previous releases did.
 
 New wallets can be created through the GUI (which has a more prominent create
-wallet option), through the `bitcoin-cli createwallet` or `bitcoin-wallet
+wallet option), through the `syscoin-cli createwallet` or `syscoin-wallet
 create` commands, or the `createwallet` RPC. (#15454)
 
 ### Experimental Descriptor Wallets
@@ -437,14 +437,14 @@ GUI changes
 - Wallets created or loaded in the GUI will now be automatically loaded on
   startup, so they don't need to be manually reloaded next time Bitcoin Core is
   started. The list of wallets to load on startup is stored in
-  `\<datadir\>/settings.json` and augments any command line or `bitcoin.conf`
+  `\<datadir\>/settings.json` and augments any command line or `syscoin.conf`
   `-wallet=` settings that specify more wallets to load. Wallets that are
   unloaded in the GUI get removed from the settings list so they won't load
   again automatically next startup. (#19754)
 
 - The GUI Peers window no longer displays a "Ban Score" field. This is part of
   changes in 0.20.1 and in this release to the handling of misbehaving
-  peers. Refer to "Changes regarding misbehaving peers" in the 0.20.1 release
+  peers. Refer to "Changes regarding misbehaving peers" in the 4.2.0 release
   notes for details. (#19512)
 
 Low-level changes
