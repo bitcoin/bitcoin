@@ -18,9 +18,6 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
     ToHex,
-    # SYSCOIN
-    CHAIN_ID,
-    VERSION_CHAIN_START,
 )
 from test_framework.script import (
     ANNEX_TAG,
@@ -91,9 +88,6 @@ import json
 import hashlib
 import os
 import random
-# SYSCOIN
-VERSIONBITS_TOP_BITS = 0x20000000
-VERSIONBITS_DEPLOYMENT_TAPROOT_BIT = 2
 # === Framework for building spending transactions. ===
 #
 # The computation is represented as a "context" dict, whose entries store potentially-unevaluated expressions that

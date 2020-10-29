@@ -65,7 +65,7 @@ class MiningTest(SyscoinTestFramework):
         self.log.info('test blockversion')
         self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=1237'])
         self.connect_nodes(0, 1)
-        # SYSCOIN 
+        # SYSCOIN
         assert_equal(1237, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0, extra_args=['-mocktime={}'.format(t)])
         self.connect_nodes(0, 1)
