@@ -161,6 +161,11 @@ AC_ARG_ENABLE(bench,
     [use_bench=$enableval],
     [use_bench=yes])
 
+AC_ARG_ENABLE(secp-check,
+    AS_HELP_STRING([--disable-secp-check],[do not run libsecp256k1 tests with `make check` (default is to run them)]),
+    [use_secp_check=$enableval],
+    [use_secp_check=yes])
+
 AC_ARG_ENABLE([extended-functional-tests],
     AS_HELP_STRING([--enable-extended-functional-tests],[enable expensive functional tests when using lcov (default no)]),
     [use_extended_functional_tests=$enableval],
@@ -1607,6 +1612,7 @@ AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
+AM_CONDITIONAL([ENABLE_SECP_CHECK],[test x$use_secp_check = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([USE_LIBEVENT],[test x$use_libevent = xyes])
@@ -1756,6 +1762,7 @@ if test x$use_tests != xno; then
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"
+echo "  secp checks   = $use_secp_check"
 echo "  with upnp     = $use_upnp"
 echo "  use asm       = $use_asm"
 echo "  sanitizers    = $use_sanitizers"
