@@ -503,7 +503,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
         if extra_args is None:
             extra_args = [None] * self.num_nodes
-        
+
         assert_equal(len(extra_args), self.num_nodes)
         try:
             for i, node in enumerate(self.nodes):
