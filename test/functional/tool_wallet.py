@@ -218,7 +218,8 @@ class ToolWalletTest(BitcoinTestFramework):
     def test_salvage(self):
         # TODO: Check salvage actually salvages and doesn't break things. https://github.com/bitcoin/bitcoin/issues/7463
         self.log.info('Check salvage')
-        self.start_node(0, ['-wallet=salvage'])
+        self.start_node(0)
+        self.nodes[0].createwallet("salvage")
         self.stop_node(0)
 
         self.assert_tool_output('', '-wallet=salvage', 'salvage')
