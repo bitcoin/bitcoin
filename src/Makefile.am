@@ -397,6 +397,7 @@ endif
   chiabls/src/extendedpublickey.cpp \
   chiabls/src/util.hpp \
   chiabls/build/contrib/relic/include/relic_conf.h \
+  chiabls/contrib/relic/include/relic_label.h \
   $(SYSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
