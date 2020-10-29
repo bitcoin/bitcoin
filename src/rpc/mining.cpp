@@ -603,7 +603,7 @@ static RPCHelpMan getblocktemplate()
     LOCK(cs_main);
     // SYSCOIN RPC_MISC_ERROR
     std::string errorMessage = "";
-    if(!fRegTest && !fSigNet && !CheckSpecs(errorMessage, true)){
+    if(!fRegTest && !fSigNet && !fTestNet && !CheckSpecs(errorMessage, true)){
         throw JSONRPCError(RPC_MISC_ERROR, errorMessage);
     }
     std::string strMode = "template";
