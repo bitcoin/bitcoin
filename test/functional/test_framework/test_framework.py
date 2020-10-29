@@ -492,7 +492,6 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """Start a syscoind"""
 
         node = self.nodes[i]
-
         node.start(*args, **kwargs)
         node.wait_for_rpc_connection()
 
@@ -504,6 +503,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
         if extra_args is None:
             extra_args = [None] * self.num_nodes
+        
         assert_equal(len(extra_args), self.num_nodes)
         try:
             for i, node in enumerate(self.nodes):
@@ -985,7 +985,11 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
-        self.import_deterministic_coinbase_privkeys()
+        num_nodes_copy = self.num_nodes
+        self.num_nodes = 1
+        if self.is_wallet_compiled():
+            self.import_deterministic_coinbase_privkeys()
+        self.num_nodes = num_nodes_copy
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
