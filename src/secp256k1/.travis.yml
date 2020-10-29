@@ -33,7 +33,7 @@ env:
     - CFLAGS=-O0 CTIMETEST=no
     - ECMULTGENPRECISION=2
     - ECMULTGENPRECISION=8
-    - RUN_VALGRIND=yes BIGNUM=no ASM=x86_64 EXPERIMENTAL=yes ECDH=yes  RECOVERY=yes EXTRAFLAGS="--disable-openssl-tests" BUILD=
+    - RUN_VALGRIND=yes BIGNUM=no ASM=x86_64 ECDH=yes  RECOVERY=yes EXPERIMENTAL=yes SCHNORRSIG=yes EXTRAFLAGS="--disable-openssl-tests" BUILD=
 matrix:
   fast_finish: true
   include:
@@ -81,7 +81,7 @@ matrix:
             - libc6-dbg:i386
     # S390x build (big endian system)
     - compiler: gcc
-      env: HOST=s390x-unknown-linux-gnu ECDH=yes RECOVERY=yes EXPERIMENTAL=yes CTIMETEST=
+      env: HOST=s390x-unknown-linux-gnu ECDH=yes RECOVERY=yes EXPERIMENTAL=yes SCHNORRSIG=yes CTIMETEST=
       arch: s390x
 
 # We use this to install macOS dependencies instead of the built in `homebrew` plugin,
