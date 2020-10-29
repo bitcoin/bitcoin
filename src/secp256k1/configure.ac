@@ -122,7 +122,7 @@ AC_ARG_ENABLE(ecmult_static_precomputation,
     [use_ecmult_static_precomputation=auto])
 
 AC_ARG_ENABLE(module_ecdh,
-    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation (experimental)]),
+    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation]),
     [enable_module_ecdh=$enableval],
     [enable_module_ecdh=no])
 
@@ -395,8 +395,8 @@ esac
 
 if test x"$use_tests" = x"yes"; then
   SECP_OPENSSL_CHECK
-  if test x"$has_openssl_ec" = x"yes"; then
-    if test x"$enable_openssl_tests" != x"no"; then
+  if test x"$enable_openssl_tests" != x"no" && test x"$has_openssl_ec" = x"yes"; then
+      enable_openssl_tests=yes
       AC_DEFINE(ENABLE_OPENSSL_TESTS, 1, [Define this symbol if OpenSSL EC functions are available])
       SECP_TEST_INCLUDES="$SSL_CFLAGS $CRYPTO_CFLAGS $CRYPTO_CPPFLAGS"
       SECP_TEST_LIBS="$CRYPTO_LIBS"
@@ -406,16 +406,17 @@ if test x"$use_tests" = x"yes"; then
         SECP_TEST_LIBS="$SECP_TEST_LIBS -lgdi32"
         ;;
       esac
-    fi
   else
     if test x"$enable_openssl_tests" = x"yes"; then
       AC_MSG_ERROR([OpenSSL tests requested but OpenSSL with EC support is not available])
     fi
+    enable_openssl_tests=no
   fi
 else
   if test x"$enable_openssl_tests" = x"yes"; then
     AC_MSG_ERROR([OpenSSL tests requested but tests are not enabled])
   fi
+  enable_openssl_tests=no
 fi
 
 if test x"$set_bignum" = x"gmp"; then
@@ -458,14 +459,10 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
   AC_MSG_NOTICE([WARNING: experimental build])
   AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
-  AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
   AC_MSG_NOTICE([Building extrakeys module: $enable_module_extrakeys])
   AC_MSG_NOTICE([Building schnorrsig module: $enable_module_schnorrsig])
   AC_MSG_NOTICE([******])
 else
-  if test x"$enable_module_ecdh" = x"yes"; then
-    AC_MSG_ERROR([ECDH module is experimental. Use --enable-experimental to allow.])
-  fi
   if test x"$enable_module_extrakeys" = x"yes"; then
     AC_MSG_ERROR([extrakeys module is experimental. Use --enable-experimental to allow.])
   fi
@@ -507,6 +504,8 @@ echo "Build Options:"
 echo "  with ecmult precomp     = $set_precomp"
 echo "  with external callbacks = $use_external_default_callbacks"
 echo "  with benchmarks         = $use_benchmark"
+echo "  with tests              = $use_tests"
+echo "  with openssl tests      = $enable_openssl_tests"
 echo "  with coverage           = $enable_coverage"
 echo "  module ecdh             = $enable_module_ecdh"
 echo "  module recovery         = $enable_module_recovery"
