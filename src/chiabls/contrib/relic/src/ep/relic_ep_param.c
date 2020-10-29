@@ -28,8 +28,8 @@
  * @ingroup ep
  */
 
-#include "relic_core.h"
-#include "relic_epx.h"
+#include <relic_core.h>
+#include <relic_epx.h>
 
 /*============================================================================*/
 /* Private definitions                                                        */

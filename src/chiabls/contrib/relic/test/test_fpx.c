@@ -28,8 +28,8 @@
  * @ingroup test
  */
 
-#include "relic.h"
-#include "relic_test.h"
+#include <relic.h>
+#include <relic_test.h>
 
 static int memory2(void) {
 	err_t e;

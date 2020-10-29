@@ -30,8 +30,8 @@
 
 #include <stdio.h>
 
-#include "relic.h"
-#include "relic_test.h"
+#include <relic.h>
+#include <relic_test.h>
 
 #if ARCH == AVR || ARCH == MSP || ARCH == ARM
 #define MSG_SIZE	112

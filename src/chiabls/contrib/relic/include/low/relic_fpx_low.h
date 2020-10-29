@@ -31,7 +31,7 @@
 #ifndef RELIC_FPX_LOW_H
 #define RELIC_FPX_LOW_H
 
-#include "relic_fpx.h"
+#include <relic_fpx.h>
 
 /*============================================================================*/
 /* Function prototypes                                                        */

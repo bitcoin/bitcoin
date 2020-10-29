@@ -30,9 +30,9 @@
 
 #include <stdio.h>
 
-#include "relic.h"
-#include "relic_test.h"
-#include "relic_bench.h"
+#include <relic.h>
+#include <relic_test.h>
+#include <relic_bench.h>
 
 static int addition2(void) {
 	int code = STS_ERR;

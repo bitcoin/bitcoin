@@ -33,10 +33,10 @@
 #include <ctype.h>
 #include <inttypes.h>
 
-#include "relic_core.h"
-#include "relic_conf.h"
-#include "relic_util.h"
-#include "relic_types.h"
+#include <relic_core.h>
+#include <relic_conf.h>
+#include <relic_util.h>
+#include <relic_types.h>
 
 #if ARCH == ARM && OPSYS == DROID
 #include <android/log.h>

@@ -28,10 +28,10 @@
  * @ingroup fb
  */
 
-#include "relic_fb.h"
-#include "relic_bn_low.h"
-#include "relic_fb_low.h"
-#include "relic_util.h"
+#include <relic_fb.h>
+#include <relic_bn_low.h>
+#include <relic_fb_low.h>
+#include <relic_util.h>
 
 void fb_mul1_low(dig_t *c, const dig_t *a, dig_t digit) {
 	dig_t carry;

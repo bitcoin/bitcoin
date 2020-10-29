@@ -28,9 +28,9 @@
  * @ingroup relic
  */
 
-#include "relic_test.h"
-#include "relic_util.h"
-#include "relic_core.h"
+#include <relic_test.h>
+#include <relic_util.h>
+#include <relic_core.h>
 
 /*============================================================================*/
 /* Private definitions                                                        */

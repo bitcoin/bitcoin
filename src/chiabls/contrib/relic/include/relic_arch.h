@@ -35,8 +35,8 @@
 #ifndef RELIC_ARCH_H
 #define RELIC_ARCH_H
 
-#include "relic_types.h"
-#include "relic_label.h"
+#include <relic_types.h>
+#include <relic_label.h>
 
 #if ARCH == AVR
 #include <avr/pgmspace.h>

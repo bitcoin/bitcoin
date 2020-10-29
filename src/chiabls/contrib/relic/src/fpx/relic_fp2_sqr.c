@@ -28,8 +28,8 @@
  * @ingroup fpx
  */
 
-#include "relic_core.h"
-#include "relic_fpx_low.h"
+#include <relic_core.h>
+#include <relic_fpx_low.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

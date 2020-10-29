@@ -35,14 +35,14 @@
 #ifndef RELIC_PC_H
 #define RELIC_PC_H
 
-#include "relic_fbx.h"
-#include "relic_ep.h"
-#include "relic_eb.h"
-#include "relic_pp.h"
-#include "relic_bn.h"
-#include "relic_util.h"
-#include "relic_conf.h"
-#include "relic_types.h"
+#include <relic_fbx.h>
+#include <relic_ep.h>
+#include <relic_eb.h>
+#include <relic_pp.h>
+#include <relic_bn.h>
+#include <relic_util.h>
+#include <relic_conf.h>
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

@@ -30,14 +30,14 @@
 
 #include <stdlib.h>
 
-#include "relic_fb.h"
-#include "relic_fb_low.h"
-#include "relic_bn_low.h"
-#include "relic_util.h"
+#include <relic_fb.h>
+#include <relic_fb_low.h>
+#include <relic_bn_low.h>
+#include <relic_util.h>
 
 #include <xmmintrin.h>
 #include <tmmintrin.h>
-#include "macros.h"
+#include <macros.h>
 
 #define INV(A,B,C,D)	D,C,B,A
 

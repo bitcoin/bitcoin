@@ -28,9 +28,9 @@
  * @ingroup bn
  */
 
-#include "relic_bn.h"
-#include "relic_bn_low.h"
-#include "relic_util.h"
+#include <relic_bn.h>
+#include <relic_bn_low.h>
+#include <relic_util.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

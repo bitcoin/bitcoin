@@ -36,9 +36,9 @@
 #ifndef RELIC_PP_H
 #define RELIC_PP_H
 
-#include "relic_fpx.h"
-#include "relic_epx.h"
-#include "relic_types.h"
+#include <relic_fpx.h>
+#include <relic_epx.h>
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Macro definitions                                                          */

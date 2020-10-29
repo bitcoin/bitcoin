@@ -28,10 +28,10 @@
  * @ingroup eb
  */
 
-#include "string.h"
+#include <string.h>
 
-#include "relic_core.h"
-#include "relic_eb.h"
+#include <relic_core.h>
+#include <relic_eb.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

@@ -35,9 +35,9 @@
 #ifndef RELIC_BENCH_H
 #define RELIC_BENCH_H
 
-#include "relic_conf.h"
-#include "relic_label.h"
-#include "relic_util.h"
+#include <relic_conf.h>
+#include <relic_label.h>
+#include <relic_util.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

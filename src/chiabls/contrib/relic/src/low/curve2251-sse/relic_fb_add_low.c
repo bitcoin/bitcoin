@@ -36,10 +36,10 @@
 #endif
 
 #include <tmmintrin.h>
-#include "relic_fb.h"
-#include "relic_fb_low.h"
+#include <relic_fb.h>
+#include <relic_fb_low.h>
 
-#include "macros.h"
+#include <macros.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

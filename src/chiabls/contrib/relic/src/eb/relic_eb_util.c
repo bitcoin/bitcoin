@@ -28,9 +28,9 @@
  * @ingroup eb
  */
 
-#include "relic_core.h"
-#include "relic_eb.h"
-#include "relic_conf.h"
+#include <relic_core.h>
+#include <relic_eb.h>
+#include <relic_conf.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

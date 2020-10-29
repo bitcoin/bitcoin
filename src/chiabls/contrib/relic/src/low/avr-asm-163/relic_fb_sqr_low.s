@@ -20,7 +20,7 @@
  * along with RELIC. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "relic_fb_low.h"
+#include <relic_fb_low.h>
 
 #define RT		r24
 

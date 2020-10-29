@@ -31,9 +31,9 @@
 #ifndef RELIC_DV_LOW_H
 #define RELIC_DV_LOW_H
 
-#include "relic_bn_low.h"
-#include "relic_fb_low.h"
-#include "relic_fp_low.h"
+#include <relic_bn_low.h>
+#include <relic_fb_low.h>
+#include <relic_fp_low.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

@@ -35,8 +35,8 @@
 #ifndef RELIC_FPX_H
 #define RELIC_FPX_H
 
-#include "relic_fp.h"
-#include "relic_types.h"
+#include <relic_fp.h>
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Type definitions                                                           */

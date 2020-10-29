@@ -31,7 +31,7 @@
  * @ingroup bn
  */
 
-#include "relic_core.h"
+#include <relic_core.h>
 
 /*============================================================================*/
 /* Private definitions                                                        */

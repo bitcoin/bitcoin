@@ -28,7 +28,7 @@
  * @ingroup arch
  */
 
-#include "relic_util.h"
+#include <relic_util.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

@@ -31,8 +31,8 @@
 
 #include <stdio.h>
 
-#include "relic.h"
-#include "relic_bench.h"
+#include <relic.h>
+#include <relic_bench.h>
 
 #if defined(WITH_BN)
 

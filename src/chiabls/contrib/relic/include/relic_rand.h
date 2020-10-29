@@ -35,7 +35,7 @@
 #ifndef RELIC_RAND_H
 #define RELIC_RAND_H
 
-#include "relic_rand.h"
+#include <relic_rand.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

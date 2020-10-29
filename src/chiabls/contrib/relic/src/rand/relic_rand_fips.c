@@ -30,12 +30,12 @@
 
 #include <string.h>
 
-#include "relic_conf.h"
-#include "relic_core.h"
-#include "relic_label.h"
-#include "relic_rand.h"
-#include "relic_md.h"
-#include "relic_err.h"
+#include <relic_conf.h>
+#include <relic_core.h>
+#include <relic_label.h>
+#include <relic_rand.h>
+#include <relic_md.h>
+#include <relic_err.h>
 
 /*============================================================================*/
 /* Private definitions                                                        */

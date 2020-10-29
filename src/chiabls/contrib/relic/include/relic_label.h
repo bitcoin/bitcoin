@@ -31,7 +31,7 @@
 #ifndef RELIC_LABEL_H
 #define RELIC_LABEL_H
 
-#include "relic_conf.h"
+#include <relic_conf.h>
 
 #define PREFIX(F)		_PREFIX(LABEL, F)
 #define _PREFIX(A, B)		__PREFIX(A, B)

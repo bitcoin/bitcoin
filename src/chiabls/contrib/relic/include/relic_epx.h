@@ -36,9 +36,9 @@
 #ifndef RELIC_EPX_H
 #define RELIC_EPX_H
 
-#include "relic_fpx.h"
-#include "relic_ep.h"
-#include "relic_types.h"
+#include <relic_fpx.h>
+#include <relic_ep.h>
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

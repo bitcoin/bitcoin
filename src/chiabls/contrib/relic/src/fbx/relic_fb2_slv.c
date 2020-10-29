@@ -28,8 +28,8 @@
  * @ingroup fb
  */
 
-#include "relic_core.h"
-#include "relic_fbx.h"
+#include <relic_core.h>
+#include <relic_fbx.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */

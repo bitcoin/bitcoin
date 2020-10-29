@@ -35,8 +35,8 @@
 #ifndef RELIC_FBX_H
 #define RELIC_FBX_H
 
-#include "relic_fb.h"
-#include "relic_types.h"
+#include <relic_fb.h>
+#include <relic_types.h>
 
 /*============================================================================*/
 /* Type definitions                                                           */

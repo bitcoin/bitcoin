@@ -83,27 +83,27 @@
 extern "C" {
 #endif
 
-#include "relic_arch.h"
-#include "relic_core.h"
-#include "relic_types.h"
-#include "relic_bn.h"
-#include "relic_dv.h"
-#include "relic_fp.h"
-#include "relic_fpx.h"
-#include "relic_fb.h"
-#include "relic_fbx.h"
-#include "relic_ep.h"
-#include "relic_eb.h"
-#include "relic_ed.h"
-#include "relic_ec.h"
-#include "relic_pp.h"
-#include "relic_pc.h"
-#include "relic_cp.h"
-#include "relic_bc.h"
-#include "relic_md.h"
-#include "relic_err.h"
-#include "relic_rand.h"
-#include "relic_util.h"
+#include <relic_arch.h>
+#include <relic_core.h>
+#include <relic_types.h>
+#include <relic_bn.h>
+#include <relic_dv.h>
+#include <relic_fp.h>
+#include <relic_fpx.h>
+#include <relic_fb.h>
+#include <relic_fbx.h>
+#include <relic_ep.h>
+#include <relic_eb.h>
+#include <relic_ed.h>
+#include <relic_ec.h>
+#include <relic_pp.h>
+#include <relic_pc.h>
+#include <relic_cp.h>
+#include <relic_bc.h>
+#include <relic_md.h>
+#include <relic_err.h>
+#include <relic_rand.h>
+#include <relic_util.h>
 
 #ifdef __cplusplus
 }

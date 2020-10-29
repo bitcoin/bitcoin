@@ -35,9 +35,9 @@
 #ifndef RELIC_UTIL_H
 #define RELIC_UTIL_H
 
-#include "relic_arch.h"
-#include "relic_types.h"
-#include "relic_label.h"
+#include <relic_arch.h>
+#include <relic_types.h>
+#include <relic_label.h>
 
 /*============================================================================*/
 /* Macro definitions                                                          */

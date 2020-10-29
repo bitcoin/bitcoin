@@ -35,10 +35,10 @@
 #ifndef RELIC_POOL_H
 #define RELIC_POOL_H
 
-#include "relic_conf.h"
-#include "relic_dv.h"
-#include "relic_util.h"
-#include "relic_label.h"
+#include <relic_conf.h>
+#include <relic_dv.h>
+#include <relic_util.h>
+#include <relic_label.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

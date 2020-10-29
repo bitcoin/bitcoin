@@ -30,9 +30,9 @@
 
 #include <string.h>
 
-#include "relic_core.h"
-#include "relic_err.h"
-#include "relic_bc.h"
+#include <relic_core.h>
+#include <relic_err.h>
+#include <relic_bc.h>
 #include "rijndael-api-fst.h"
 
 /*============================================================================*/

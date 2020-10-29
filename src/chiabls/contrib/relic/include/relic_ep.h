@@ -35,10 +35,10 @@
 #ifndef RELIC_EP_H
 #define RELIC_EP_H
 
-#include "relic_fp.h"
-#include "relic_bn.h"
-#include "relic_types.h"
-#include "relic_label.h"
+#include <relic_fp.h>
+#include <relic_bn.h>
+#include <relic_types.h>
+#include <relic_label.h>
 
 /*============================================================================*/
 /* Constant definitions                                                       */

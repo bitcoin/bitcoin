@@ -31,8 +31,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "relic_core.h"
-#include "relic_conf.h"
+#include <relic_core.h>
+#include <relic_conf.h>
 
 #if OPSYS == DUINO && TIMER == HREAL
 /*

@@ -34,10 +34,10 @@
 #include <wmmintrin.h>
 #endif
 
-#include "relic_fb.h"
-#include "relic_fb_low.h"
-#include "relic_util.h"
-#include "macros.h"
+#include <relic_fb.h>
+#include <relic_fb_low.h>
+#include <relic_util.h>
+#include <macros.h>
 
 /*============================================================================*/
 /* Private definitions                                                        */

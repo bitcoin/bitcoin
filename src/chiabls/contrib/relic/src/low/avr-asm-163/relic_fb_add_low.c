@@ -29,8 +29,8 @@
  * @ingroup fb
  */
 
-#include "relic_fb.h"
-#include "relic_fb_low.h"
+#include <relic_fb.h>
+#include <relic_fb_low.h>
 
 
 /*============================================================================*/

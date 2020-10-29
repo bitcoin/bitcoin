@@ -31,8 +31,8 @@
 
 #include <assert.h>
 
-#include "relic_core.h"
-#include "relic_label.h"
+#include <relic_core.h>
+#include <relic_label.h>
 
 static void ed_add_inver(ed_t r, const ed_t p, const ed_t q) {
 	assert(ed_is_valid(p) != 0);

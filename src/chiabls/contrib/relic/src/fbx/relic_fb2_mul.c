@@ -28,9 +28,9 @@
  * @ingroup fbx
  */
 
-#include "relic_core.h"
-#include "relic_fbx.h"
-#include "relic_fb_low.h"
+#include <relic_core.h>
+#include <relic_fbx.h>
+#include <relic_fb_low.h>
 
 /*============================================================================*/
 /* Public definitions                                                         */
