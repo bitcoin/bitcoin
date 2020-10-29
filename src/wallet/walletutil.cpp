@@ -39,7 +39,6 @@ fs::path GetWalletDir()
 std::vector<fs::path> ListWalletDir()
 {
     const fs::path wallet_dir = GetWalletDir();
-    const size_t offset = wallet_dir.string().size() + 1;
     std::vector<fs::path> paths;
     boost::system::error_code ec;
 
@@ -49,9 +48,8 @@ std::vector<fs::path> ListWalletDir()
             continue;
         }
 
-        // Get wallet path relative to walletdir by removing walletdir from the wallet path.
-        // This can be replaced by boost::filesystem::lexically_relative once boost is bumped to 1.60.
-        const fs::path path = it->path().string().substr(offset);
+        // Get wallet path relative to wallet_dir by removing wallet_dir from the wallet path.
+        const fs::path path = it->path().lexically_relative(wallet_dir);
 
         if (it->status().type() == fs::directory_file &&
             (ExistsBerkeleyDatabase(it->path()) || ExistsSQLiteDatabase(it->path()))) {
