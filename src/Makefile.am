@@ -563,7 +563,7 @@ libsyscoin_wallet_a_SOURCES = \
   $(SYSCOIN_CORE_H)
 
 if USE_SQLITE
-libbitcoin_wallet_a_SOURCES += wallet/sqlite.cpp
+libsyscoin_wallet_a_SOURCES += wallet/sqlite.cpp
 endif
 
 libsyscoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
