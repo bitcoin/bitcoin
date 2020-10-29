@@ -531,7 +531,7 @@ endif
 
 # wallet: shared between syscoind and syscoin-qt, but only linked
 # when wallet enabled
-libsyscoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+libsyscoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SQLITE_CFLAGS)
 libsyscoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_wallet_a_SOURCES = \
   interfaces/wallet.cpp \
@@ -547,7 +547,6 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/salvage.cpp \
   wallet/scriptpubkeyman.cpp \
-  wallet/sqlite.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
@@ -562,6 +561,10 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/rpcgovernance.cpp \
   wallet/rpcmasternode.cpp \
   $(SYSCOIN_CORE_H)
+
+if USE_SQLITE
+libbitcoin_wallet_a_SOURCES += wallet/sqlite.cpp
+endif
 
 libsyscoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_wallet_tool_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
