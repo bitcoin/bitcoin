@@ -1473,11 +1473,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // SYSCOIN
     fRegTest = args.GetBoolArg("-regtest", false);
     fSigNet = args.GetBoolArg("-signet", false);
+    fTestNet = args.GetBoolArg("-signet", false);
     std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
 	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
     CBLSSecretKey keyOperator;
     if(fMasternodeMode) {
-        if(!fRegTest) {
+        if(!fRegTest && !fTestNet) {
             std::string errorMessage = "";
             if(!CheckSpecs(errorMessage)){
                 return InitError(Untranslated(errorMessage));

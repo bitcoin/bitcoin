@@ -45,6 +45,7 @@ extern bool bGethTestnet;
 extern bool fDisableGovernance;
 extern bool fRegTest;
 extern bool fSigNet;
+extern bool fTestNet;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;
 extern std::string exePath;
