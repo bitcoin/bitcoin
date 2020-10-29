@@ -153,11 +153,20 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.log.debug("Check that node[1] will not send an invalid tx to node[0]")
         tx.vout[0].nValue += 1
         txid = tx.rehash()
+        # Send the transaction twice. The first time, it'll be rejected by ATMP because it conflicts
+        # with a mempool transaction. The second time, it'll be in the recentRejects filter.
         p2p_rebroadcast_wallet.send_txs_and_test(
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid),
+            reject_reason='{} from peer=0 was not accepted: txn-mempool-conflict'.format(txid)
+        )
+
+        p2p_rebroadcast_wallet.send_txs_and_test(
+            [tx],
+            self.nodes[1],
+            success=False,
+            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid)
         )
 
     def checkpermission(self, args, expectedPermissions, whitelisted):
