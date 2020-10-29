@@ -186,14 +186,29 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
 
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("--descriptors", default=False, action="store_true",
+        group.add_argument("--descriptors", action='store_const', const=True,
                             help="Run test using a descriptor wallet", dest='descriptors')
-        group.add_argument("--legacy-wallet", default=False, action="store_false",
+        group.add_argument("--legacy-wallet", action='store_const', const=False,
                             help="Run test using legacy wallets", dest='descriptors')
 
         self.add_options(parser)
         self.options = parser.parse_args()
         self.options.previous_releases_path = previous_releases_path
+
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
+        self.config = config
+
+        if self.options.descriptors is None:
+            # Prefer BDB unless it isn't available
+            if self.is_bdb_compiled():
+                self.options.descriptors = False
+            elif self.is_sqlite_compiled():
+                self.options.descriptors = True
+            else:
+                # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
+                # It still needs to exist and be None in order for tests to work however.
+                self.options.descriptors = None
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
@@ -204,9 +219,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-        self.config = config
+        config = self.config
+
         fname_bitcoind = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
