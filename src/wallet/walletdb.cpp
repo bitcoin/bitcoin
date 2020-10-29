@@ -15,7 +15,9 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/bdb.h>
+#ifdef USE_SQLITE
 #include <wallet/sqlite.h>
+#endif
 #include <wallet/wallet.h>
 
 #include <atomic>
@@ -1012,6 +1014,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         if (ExistsBerkeleyDatabase(path)) {
             format = DatabaseFormat::BERKELEY;
         }
+#ifdef USE_SQLITE
         if (ExistsSQLiteDatabase(path)) {
             if (format) {
                 error = Untranslated(strprintf("Failed to load database path '%s'. Data is in ambiguous format.", path.string()));
@@ -1020,6 +1023,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
             }
             format = DatabaseFormat::SQLITE;
         }
+#endif
     } else if (options.require_existing) {
         error = Untranslated(strprintf("Failed to load database path '%s'. Path does not exist.", path.string()));
         status = DatabaseStatus::FAILED_NOT_FOUND;
@@ -1048,9 +1052,13 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     // Format is not set when a db doesn't already exist, so use the format specified by the options if it is set.
     if (!format && options.require_format) format = options.require_format;
 
+#ifdef USE_SQLITE
     if (format && format == DatabaseFormat::SQLITE) {
         return MakeSQLiteDatabase(path, options, status, error);
     }
+#else
+    assert(format != DatabaseFormat::SQLITE);
+#endif
 
     return MakeBerkeleyDatabase(path, options, status, error);
 }
