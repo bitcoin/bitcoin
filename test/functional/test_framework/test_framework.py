@@ -110,6 +110,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # skipped. If list is truncated, wallet creation is skipped and keys
         # are not imported.
         self.wallet_names = None
+        # By default the wallet is not required. Set to true by skip_if_no_wallet().
+        # When False, we ignore wallet_names regardless of what it is.
+        self.requires_wallet = False
         self.set_test_params()
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         if self.options.timeout_factor == 0 :
@@ -393,7 +396,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
-        if self.is_wallet_compiled():
+        if self.requires_wallet:
             self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
@@ -785,6 +788,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def skip_if_no_wallet(self):
         """Skip the running test if wallet has not been compiled."""
+        self.requires_wallet = True
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
         if self.options.descriptors:
