@@ -158,7 +158,7 @@ static void logSubmitResult(const std::string idhex, const altintegration::Valid
     if (!state.IsValid()) {
         LogPrintf("rejected to add %s=%s to POP mempool: %s\n", T::name(), idhex, state.toString());
     } else {
-        LogPrintf("accepted %s=%s to POP mempool", T::name(), idhex);
+        LogPrintf("accepted %s=%s to POP mempool\n", T::name(), idhex);
     }
 }
 
