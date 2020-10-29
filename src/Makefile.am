@@ -398,6 +398,8 @@ endif
   chiabls/src/util.hpp \
   chiabls/build/contrib/relic/include/relic_conf.h \
   chiabls/contrib/relic/include/relic_label.h \
+  chiabls/contrib/relic/include/relic.h \
+  chiabls/contrib/relic/include/relic_test.h \
   $(SYSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
