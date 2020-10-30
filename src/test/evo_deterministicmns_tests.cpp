@@ -12,7 +12,6 @@
 #include <messagesigner.h>
 #include <policy/policy.h>
 #include <script/signingprovider.h>
-#include <keystore.h>
 #include <spork.h>
 
 #include <evo/specialtx.h>
