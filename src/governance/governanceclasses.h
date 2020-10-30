@@ -39,8 +39,8 @@ private:
     trigger_m_t mapTrigger;
 
     std::vector<CSuperblock_sptr> GetActiveTriggers() EXCLUSIVE_LOCKS_REQUIRED(governance.cs);
-    bool AddNewTrigger(uint256 nHash) EXCLUSIVE_LOCKS_REQUIRED(governance.cs);
-    void CleanAndRemove() EXCLUSIVE_LOCKS_REQUIRED(governance.cs);
+    bool AddNewTrigger(uint256 nHash);
+    void CleanAndRemove();
 
 public:
     CGovernanceTriggerManager() :

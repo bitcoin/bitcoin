@@ -96,8 +96,6 @@ CAmount ParsePaymentAmount(const std::string& strAmount)
 
 bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
 {
-    AssertLockHeld(governance.cs);
-
     // IF WE ALREADY HAVE THIS HASH, RETURN
     if (mapTrigger.count(nHash)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::AddNewTrigger -- Already have hash, nHash = %s, count = %d, size = %s\n",
@@ -132,8 +130,6 @@ bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
 
 void CGovernanceTriggerManager::CleanAndRemove()
 {
-    AssertLockHeld(governance.cs);
-
     // Remove triggers that are invalid or expired
     LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- mapTrigger.size() = %d\n", mapTrigger.size());
 
