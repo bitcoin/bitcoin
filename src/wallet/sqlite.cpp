@@ -17,7 +17,6 @@
 #include <sqlite3.h>
 #include <stdint.h>
 
-static const char* const DATABASE_FILENAME = "wallet.dat";
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
 static Mutex g_sqlite_mutex;
@@ -568,17 +567,11 @@ bool SQLiteBatch::TxnAbort()
     return res == SQLITE_OK;
 }
 
-bool ExistsSQLiteDatabase(const fs::path& path)
-{
-    const fs::path file = path / DATABASE_FILENAME;
-    return fs::symlink_status(file).type() == fs::regular_file && IsSQLiteFile(file);
-}
-
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
 {
-    const fs::path file = path / DATABASE_FILENAME;
     try {
-        auto db = MakeUnique<SQLiteDatabase>(path, file);
+        fs::path data_file = SQLiteDataFile(path);
+        auto db = MakeUnique<SQLiteDatabase>(data_file.parent_path(), data_file);
         if (options.verify && !db->Verify(error)) {
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;

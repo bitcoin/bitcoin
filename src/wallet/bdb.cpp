@@ -53,16 +53,13 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
 }
 
 /**
- * @param[in] wallet_path Path to wallet directory. Or (for backwards compatibility only) a path to a berkeley btree data file inside a wallet directory.
- * @param[out] database_filename Filename of berkeley btree data file inside the wallet directory.
+ * @param[in] env_directory Path to environment directory
  * @return A shared pointer to the BerkeleyEnvironment object for the wallet directory, never empty because ~BerkeleyEnvironment
  * erases the weak pointer from the g_dbenvs map.
  * @post A new BerkeleyEnvironment weak pointer is inserted into g_dbenvs if the directory path key was not already in the map.
  */
-std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
+std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory)
 {
-    fs::path env_directory;
-    SplitWalletPath(wallet_path, env_directory, database_filename);
     LOCK(cs_db);
     auto inserted = g_dbenvs.emplace(env_directory.string(), std::weak_ptr<BerkeleyEnvironment>());
     if (inserted.second) {
@@ -808,21 +805,14 @@ std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(bool flush_on_close)
     return MakeUnique<BerkeleyBatch>(*this, false, flush_on_close);
 }
 
-bool ExistsBerkeleyDatabase(const fs::path& path)
-{
-    fs::path env_directory;
-    std::string data_filename;
-    SplitWalletPath(path, env_directory, data_filename);
-    return IsBDBFile(env_directory / data_filename);
-}
-
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
 {
+    fs::path data_file = BDBDataFile(path);
     std::unique_ptr<BerkeleyDatabase> db;
     {
         LOCK(cs_db); // Lock env.m_databases until insert in BerkeleyDatabase constructor
-        std::string data_filename;
-        std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(path, data_filename);
+        std::string data_filename = data_file.filename().string();
+        std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(data_file.parent_path());
         if (env->m_databases.count(data_filename)) {
             error = Untranslated(strprintf("Refusing to load database. Data file '%s' is already loaded.", (env->Directory() / data_filename).string()));
             status = DatabaseStatus::FAILED_ALREADY_LOADED;

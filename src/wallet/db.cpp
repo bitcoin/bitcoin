@@ -10,17 +10,6 @@
 
 #include <string>
 
-#ifdef USE_BDB
-bool ExistsBerkeleyDatabase(const fs::path& path);
-#else
-#   define ExistsBerkeleyDatabase(path)  (false)
-#endif
-#ifdef USE_SQLITE
-bool ExistsSQLiteDatabase(const fs::path& path);
-#else
-#   define ExistsSQLiteDatabase(path)  (false)
-#endif
-
 std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
 {
     const size_t offset = wallet_dir.string().size() + 1;
@@ -39,10 +28,10 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
             const fs::path path = it->path().string().substr(offset);
 
             if (it->status().type() == fs::directory_file &&
-                (ExistsBerkeleyDatabase(it->path()) || ExistsSQLiteDatabase(it->path()))) {
+                (IsBDBFile(BDBDataFile(it->path())) || IsSQLiteFile(SQLiteDataFile(it->path())))) {
                 // Found a directory which contains wallet.dat btree file, add it as a wallet.
                 paths.emplace_back(path);
-            } else if (it.level() == 0 && it->symlink_status().type() == fs::regular_file && ExistsBerkeleyDatabase(it->path())) {
+            } else if (it.level() == 0 && it->symlink_status().type() == fs::regular_file && IsBDBFile(it->path())) {
                 if (it->path().filename() == "wallet.dat") {
                     // Found top-level wallet.dat btree file, add top level directory ""
                     // as a wallet.
@@ -64,24 +53,31 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
     return paths;
 }
 
-void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename)
+fs::path BDBDataFile(const fs::path& wallet_path)
 {
     if (fs::is_regular_file(wallet_path)) {
         // Special case for backwards compatibility: if wallet path points to an
         // existing file, treat it as the path to a BDB data file in a parent
         // directory that also contains BDB log files.
-        env_directory = wallet_path.parent_path();
-        database_filename = wallet_path.filename().string();
+        return wallet_path;
     } else {
         // Normal case: Interpret wallet path as a directory path containing
         // data and log files.
-        env_directory = wallet_path;
-        database_filename = "wallet.dat";
+        return wallet_path / "wallet.dat";
     }
+}
+
+fs::path SQLiteDataFile(const fs::path& path)
+{
+    return path / "wallet.dat";
 }
 
 bool IsBDBFile(const fs::path& path)
 {
+#ifndef USE_BDB
+    return false;
+#endif
+
     if (!fs::exists(path)) return false;
 
     // A Berkeley DB Btree file has at least 4K.
@@ -107,6 +103,10 @@ bool IsBDBFile(const fs::path& path)
 
 bool IsSQLiteFile(const fs::path& path)
 {
+#ifndef USE_SQLITE
+    return false;
+#endif
+
     if (!fs::exists(path)) return false;
 
     // A SQLite Database file is at least 512 bytes.

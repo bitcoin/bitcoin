@@ -113,7 +113,6 @@ public:
     sqlite3* m_db{nullptr};
 };
 
-bool ExistsSQLiteDatabase(const fs::path& path);
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
 std::string SQLiteDatabaseVersion();

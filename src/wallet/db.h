@@ -228,6 +228,8 @@ std::vector<fs::path> ListDatabases(const fs::path& path);
 
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
+fs::path BDBDataFile(const fs::path& path);
+fs::path SQLiteDataFile(const fs::path& path);
 bool IsBDBFile(const fs::path& path);
 bool IsSQLiteFile(const fs::path& path);
 
