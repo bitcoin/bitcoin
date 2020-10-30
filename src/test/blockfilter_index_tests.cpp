@@ -11,6 +11,7 @@
 #include <script/standard.h>
 #include <test/util/blockfilter.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
 
