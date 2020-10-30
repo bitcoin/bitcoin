@@ -223,6 +223,9 @@ enum class DatabaseStatus {
     FAILED_ENCRYPT,
 };
 
+/** Recursively list database paths in directory. */
+std::vector<fs::path> ListDatabases(const fs::path& path);
+
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
 bool IsBDBFile(const fs::path& path);
