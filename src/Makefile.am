@@ -28,6 +28,8 @@ SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 if EMBEDDED_CHIABLS
 SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
 LIBCHIABLS =-lcurl chiabls/build/libchiabls.a -lgmp
+$(LIBCHIABLS):
+	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 else
 LIBCHIABLS =-lcurl -lgnutls -lz -lhogweed -lnettle -lchiabls -lgmp
 if TARGET_WINDOWS
@@ -71,9 +73,6 @@ LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-
-$(LIBCHIABLS): $(wildcard chiabls/src/*.hpp) $(wildcard chiabls/src/*.cpp) $(wildcard chiabls/build/contrib/relic/include/*) $(wildcard chiabls/contrib/relic/src/*) $(wildcard chiabls/contrib/relic/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
