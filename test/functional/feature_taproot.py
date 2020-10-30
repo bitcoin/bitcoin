@@ -1451,7 +1451,11 @@ class TaprootTest(BitcoinTestFramework):
 
         # Pre-taproot activation tests.
         self.log.info("Pre-activation tests...")
-        self.test_spenders(self.nodes[0], spenders_taproot_inactive(), input_counts=[1, 2, 2, 2, 2, 3])
+        # Run each test twice; once in isolation, and once combined with others. Testing in isolation
+        # means that the standardness is verified in every test (as combined transactions are only standard
+        # when all their inputs are standard).
+        self.test_spenders(self.nodes[0], spenders_taproot_inactive(), input_counts=[1])
+        self.test_spenders(self.nodes[0], spenders_taproot_inactive(), input_counts=[2, 3])
 
 
 if __name__ == '__main__':
