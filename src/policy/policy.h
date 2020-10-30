@@ -38,11 +38,11 @@ static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 /** The maximum number of witness stack items in a standard P2WSH script */
 static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEMS = 100;
-/** The maximum size of each witness stack item in a standard P2WSH script */
+/** The maximum size in bytes of each witness stack item in a standard P2WSH script */
 static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEM_SIZE = 80;
-/** The maximum size of each witness stack item in a standard BIP 342 script (Taproot, leaf version 0xc0) */
+/** The maximum size in bytes of each witness stack item in a standard BIP 342 script (Taproot, leaf version 0xc0) */
 static const unsigned int MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE = 80;
-/** The maximum size of a standard witnessScript */
+/** The maximum size in bytes of a standard witnessScript */
 static const unsigned int MAX_STANDARD_P2WSH_SCRIPT_SIZE = 3600;
 /** Min feerate for defining dust. Historically this has been based on the
  * minRelayTxFee, however changing the dust limit changes which transactions are
