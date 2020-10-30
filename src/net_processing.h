@@ -65,7 +65,9 @@ public:
     * @param[in]   pfrom           The node which we have received messages from.
     * @param[in]   interrupt       Interrupt condition for processing threads
     */
-    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
+    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_main);
+
     /**
     * Send queued protocol messages to be sent to a give node.
     *
@@ -84,8 +86,12 @@ public:
     void ReattemptInitialBroadcast(CScheduler& scheduler) const;
 
     /** Process a single message from a peer. Public for fuzz testing */
-    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc);
+    void ProcessMessage(CNode& pfrom,
+                        const std::string& msg_type,
+                        CDataStream& vRecv,
+                        const std::chrono::microseconds time_received,
+                        const std::atomic<bool>& interruptMsgProc)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_main);
 
     /**
      * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
