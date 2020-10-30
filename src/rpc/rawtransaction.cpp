@@ -840,7 +840,7 @@ static RPCHelpMan sendrawtransaction()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) EXCLUSIVE_LOCKS_REQUIRED(!cs_main) -> UniValue
 {
     RPCTypeCheck(request.params, {
         UniValue::VSTR,
