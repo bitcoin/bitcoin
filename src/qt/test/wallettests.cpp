@@ -131,7 +131,7 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
 //     QT_QPA_PLATFORM=xcb     src/qt/test/test_bitcoin-qt  # Linux
 //     QT_QPA_PLATFORM=windows src/qt/test/test_bitcoin-qt  # Windows
 //     QT_QPA_PLATFORM=cocoa   src/qt/test/test_bitcoin-qt  # macOS
-void TestGUI(interfaces::Node& node)
+static void TestGUI(interfaces::Node& node) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
@@ -269,7 +269,7 @@ void TestGUI(interfaces::Node& node)
 
 } // namespace
 
-void WalletTests::walletTests()
+void WalletTests::walletTests() EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
 #ifdef Q_OS_MAC
     if (QApplication::platformName() == "minimal") {

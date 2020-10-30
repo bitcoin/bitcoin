@@ -691,7 +691,9 @@ static void StartupNotify(const ArgsManager& args)
 }
 #endif
 
-static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args)
+static void ThreadImport(ChainstateManager& chainman,
+                         std::vector<fs::path> vImportFiles,
+                         const ArgsManager& args) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     const CChainParams& chainparams = Params();
     ScheduleBatchPriority();
@@ -1877,9 +1879,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         vImportFiles.push_back(strFile);
     }
 
-    g_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=, &chainman, &args] {
-        ThreadImport(chainman, vImportFiles, args);
-    });
+    g_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk",
+                               [=, &chainman, &args]() EXCLUSIVE_LOCKS_REQUIRED(!cs_main) {
+                                   ThreadImport(chainman, vImportFiles, args);
+                               });
 
     // Wait for genesis block to be processed
     {

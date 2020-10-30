@@ -14,7 +14,7 @@
 
 #include <vector>
 
-static void AssembleBlock(benchmark::Bench& bench)
+static void AssembleBlock(benchmark::Bench& bench) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     TestingSetup test_setup{
         CBaseChainParams::REGTEST,

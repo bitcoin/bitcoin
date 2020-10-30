@@ -76,6 +76,7 @@ static void AddKey(CWallet& wallet, const CKey& key)
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
+EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     // Cap last block file size, and mine new block in a new block file.
     CBlockIndex* oldTip = ::ChainActive().Tip();
@@ -175,7 +176,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     // Cap last block file size, and mine new block in a new block file.
     CBlockIndex* oldTip = ::ChainActive().Tip();
@@ -240,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
 // greater or equal than key birthday. Previously there was a bug where
 // importwallet RPC would start the scan at the latest block with timestamp less
 // than or equal to key birthday.
-BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
@@ -517,7 +518,7 @@ public:
         wallet.reset();
     }
 
-    CWalletTx& AddTx(CRecipient recipient)
+    CWalletTx& AddTx(CRecipient recipient) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
     {
         CTransactionRef tx;
         CAmount fee;
@@ -549,7 +550,7 @@ public:
     std::unique_ptr<CWallet> wallet;
 };
 
-BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
+BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     std::string coinbaseAddress = coinbaseKey.GetPubKey().GetID().ToString();
 

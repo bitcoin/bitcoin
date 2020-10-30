@@ -5,8 +5,12 @@
 #ifndef BITCOIN_TEST_UTIL_MINING_H
 #define BITCOIN_TEST_UTIL_MINING_H
 
+#include <sync.h>
+
 #include <memory>
 #include <string>
+
+extern RecursiveMutex cs_main;
 
 class CBlock;
 class CScript;
@@ -14,12 +18,12 @@ class CTxIn;
 struct NodeContext;
 
 /** Returns the generated coin */
-CTxIn MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
+CTxIn MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey) EXCLUSIVE_LOCKS_REQUIRED(!cs_main);
 
 /** Prepare a block to be mined */
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
 
 /** RPC-like helper function, returns the generated coin */
-CTxIn generatetoaddress(const NodeContext&, const std::string& address);
+CTxIn generatetoaddress(const NodeContext&, const std::string& address) EXCLUSIVE_LOCKS_REQUIRED(!cs_main);
 
 #endif // BITCOIN_TEST_UTIL_MINING_H

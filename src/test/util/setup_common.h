@@ -113,7 +113,7 @@ struct TestChain100Setup : public RegTestingSetup {
      * scriptPubKey, and try to add it to the current chain.
      */
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
-                                 const CScript& scriptPubKey);
+                                 const CScript& scriptPubKey) EXCLUSIVE_LOCKS_REQUIRED(!cs_main);
 
     ~TestChain100Setup();
 

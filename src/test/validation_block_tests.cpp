@@ -148,7 +148,7 @@ void MinerTestingSetup::BuildChain(const uint256& root, int height, const unsign
     }
 }
 
-BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
+BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     // build a large-ish chain that's likely to have some forks
     std::vector<std::shared_ptr<const CBlock>> blocks;
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     // will subscribe to events generated during block validation and assert on ordering invariance
     std::vector<std::thread> threads;
     for (int i = 0; i < 10; i++) {
-        threads.emplace_back([&]() {
+        threads.emplace_back([&]() EXCLUSIVE_LOCKS_REQUIRED(!cs_main) {
             bool ignored;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
@@ -229,10 +229,11 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
  * or consistent with the chain state after the reorg, and not just consistent
  * with some intermediate state during the reorg.
  */
-BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
+BOOST_AUTO_TEST_CASE(mempool_locks_reorg) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     bool ignored;
-    auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
+    auto ProcessBlock = [&](std::shared_ptr<const CBlock> block)
+                            EXCLUSIVE_LOCKS_REQUIRED(!cs_main) -> bool {
         return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
     };
 

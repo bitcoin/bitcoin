@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(findAncestorByHash)
     BOOST_CHECK(!chain->findAncestorByHash(active[10]->GetBlockHash(), active[20]->GetBlockHash()));
 }
 
-BOOST_AUTO_TEST_CASE(findCommonAncestor)
+BOOST_AUTO_TEST_CASE(findCommonAncestor) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     auto chain = interfaces::MakeChain(m_node);
     auto& active = ChainActive();

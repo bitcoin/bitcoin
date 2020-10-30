@@ -20,7 +20,7 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, TestingSetup)
 //! Basic tests for ChainstateManager.
 //!
 //! First create a legacy (IBD) chainstate, then create a snapshot chainstate.
-BOOST_AUTO_TEST_CASE(chainstatemanager)
+BOOST_AUTO_TEST_CASE(chainstatemanager) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     ChainstateManager manager;
     CTxMemPool mempool;

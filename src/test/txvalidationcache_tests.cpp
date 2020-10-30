@@ -18,6 +18,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const C
 BOOST_AUTO_TEST_SUITE(txvalidationcache_tests)
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
+EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     // Make sure skipping validation of transactions that were
     // validated going into the memory pool does not allow
