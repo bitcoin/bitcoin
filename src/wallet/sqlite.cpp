@@ -596,37 +596,3 @@ std::string SQLiteDatabaseVersion()
 {
     return std::string(sqlite3_libversion());
 }
-
-bool IsSQLiteFile(const fs::path& path)
-{
-    if (!fs::exists(path)) return false;
-
-    // A SQLite Database file is at least 512 bytes.
-    boost::system::error_code ec;
-    auto size = fs::file_size(path, ec);
-    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), path.string());
-    if (size < 512) return false;
-
-    fsbridge::ifstream file(path, std::ios::binary);
-    if (!file.is_open()) return false;
-
-    // Magic is at beginning and is 16 bytes long
-    char magic[16];
-    file.read(magic, 16);
-
-    // Application id is at offset 68 and 4 bytes long
-    file.seekg(68, std::ios::beg);
-    char app_id[4];
-    file.read(app_id, 4);
-
-    file.close();
-
-    // Check the magic, see https://sqlite.org/fileformat2.html
-    std::string magic_str(magic, 16);
-    if (magic_str != std::string("SQLite format 3", 16)) {
-        return false;
-    }
-
-    // Check the application id matches our network magic
-    return memcmp(Params().MessageStart(), app_id, 4) == 0;
-}

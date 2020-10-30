@@ -225,4 +225,7 @@ enum class DatabaseStatus {
 
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
+bool IsBDBFile(const fs::path& path);
+bool IsSQLiteFile(const fs::path& path);
+
 #endif // BITCOIN_WALLET_DB_H

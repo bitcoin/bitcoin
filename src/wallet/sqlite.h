@@ -117,6 +117,5 @@ bool ExistsSQLiteDatabase(const fs::path& path);
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
 std::string SQLiteDatabaseVersion();
-bool IsSQLiteFile(const fs::path& path);
 
 #endif // BITCOIN_WALLET_SQLITE_H

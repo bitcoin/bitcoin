@@ -86,9 +86,6 @@ public:
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
 
-/** Check format of database file */
-bool IsBDBFile(const fs::path& path);
-
 class BerkeleyBatch;
 
 /** An instance of this class represents one database.
