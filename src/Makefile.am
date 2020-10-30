@@ -396,46 +396,6 @@ endif
   chiabls/src/extendedpublickey.hpp \
   chiabls/src/extendedpublickey.cpp \
   chiabls/src/util.hpp \
-  chiabls/contrib/relic/include/relic_epx.h \
-  chiabls/contrib/relic/include/relic_ed.h \
-  chiabls/contrib/relic/include/relic_pp.h \
-  chiabls/contrib/relic/include/relic_pool.h \
-  chiabls/contrib/relic/include/relic_types.h \
-  chiabls/contrib/relic/include/relic_fpx.h \
-  chiabls/contrib/relic/include/relic_dv.h \
-  chiabls/contrib/relic/include/relic_label.h \
-  chiabls/contrib/relic/include/low/relic_fpx_low.h \
-  chiabls/contrib/relic/include/low/relic_bn_low.h \
-  chiabls/contrib/relic/include/low/relic_fp_low.h \
-  chiabls/contrib/relic/include/low/relic_dv_low.h \
-  chiabls/contrib/relic/include/low/relic_fb_low.h \
-  chiabls/contrib/relic/include/relic_core.h \
-  chiabls/contrib/relic/include/relic_ec.h \
-  chiabls/contrib/relic/include/relic_fbx.h \
-  chiabls/contrib/relic/include/relic.h \
-  chiabls/contrib/relic/include/relic_fp.h \
-  chiabls/contrib/relic/include/relic_fb.h \
-  chiabls/contrib/relic/include/relic_test.h \
-  chiabls/contrib/relic/include/relic_cp.h \
-  chiabls/contrib/relic/include/relic_bench.h \
-  chiabls/contrib/relic/include/relic_eb.h \
-  chiabls/contrib/relic/include/relic_util.h \
-  chiabls/contrib/relic/include/relic_md.h \
-  chiabls/contrib/relic/include/relic_rand.h \
-  chiabls/contrib/relic/include/relic_bc.h \
-  chiabls/contrib/relic/include/relic_trace.h \
-  chiabls/contrib/relic/include/relic_ep.h \
-  chiabls/contrib/relic/include/relic_err.h \
-  chiabls/contrib/relic/include/relic_arch.h \
-  chiabls/contrib/relic/include/relic_pc.h \
-  chiabls/contrib/relic/include/relic_bn.h \
-  chiabls/contrib/relic/src/low/curve2251-sse/macros.h \
-  chiabls/contrib/relic/src/bc/rijndael-api-fst.h \
-  chiabls/contrib/relic/src/bc/rijndael-alg-fst.h \
-  chiabls/contrib/relic/src/md/sha.h \
-  chiabls/contrib/relic/src/md/blake2.h \
-  chiabls/contrib/relic/src/md/blake2-impl.h \
-  chiabls/build/contrib/relic/include/relic_conf.h \
   $(SYSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
@@ -460,8 +420,6 @@ libsyscoin_server_a_SOURCES = \
   governance/governancevalidators.cpp \
   governance/governancevote.cpp \
   governance/governancevotedb.cpp \
-  immer/map.hpp \
-  immer/map_transient.hpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -966,7 +924,15 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-EXTRA_DIST = $(CTAES_DIST)
+CHIABLS_DIST = chiabls/CMakeLists.txt
+CHIABLS_DIST += chiabls/README.md
+CHIABLS_DIST += chiabls/build/.configure-custom.sh
+CHIABLS_DIST += chiabls/build/configure
+CHIABLS_DIST += chiabls/cmake_modules
+CHIABLS_DIST += chiabls/contrib
+CHIABLS_DIST += chiabls/src
+
+EXTRA_DIST = $(CTAES_DIST) $(CHIABLS_DIST) immer
 
 
 config/syscoin-config.h: config/stamp-h1
@@ -982,8 +948,8 @@ clean-local:
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
-	-rm -f chiabls/build/*.a
-	-rm -rf chiabls/build/object_chiablstmp chiabls/build/object_relic_s chiabls/build/object_sodium
+	-rm -f chiabls/build/*.a chiabls/src/*.o
+	-rm -rf chiabls/build/object_chiablstmp chiabls/build/object_relic_s chiabls/build/object_sodium chiabls/src/.deps
 
 .rc.o:
 	@test -f $(WINDRES)
