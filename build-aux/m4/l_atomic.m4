@@ -12,6 +12,7 @@ dnl warranty.
 m4_define([_CHECK_ATOMIC_testbody], [[
   #include <atomic>
   #include <cstdint>
+  #include <cstddef>
 
   int main() {
     std::atomic<size_t> a{};
