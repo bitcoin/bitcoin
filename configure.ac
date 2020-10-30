@@ -1425,6 +1425,12 @@ dnl chiabls check
 AC_CHECK_LIB([chiabls],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
 
+dnl libcurl check
+PKG_CHECK_MODULES([LIBCURL], [libcurl >= 7.35.0],, [AC_MSG_ERROR([libcurl 7.35.0 or greater was not found.])])
+AC_CHECK_HEADERS([curl/curl.h], [libcurl_found_headers=yes; break;])
+AS_IF([test "x$libcurl_found_headers" != "xyes"],
+            [AC_MSG_ERROR([Unable to find libcurl headers.])])
+            
 dnl libmultiprocess library check
 
 libmultiprocess_found=no
