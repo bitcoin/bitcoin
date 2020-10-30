@@ -109,10 +109,11 @@ bool ParseCommandLine(std::function<UniValue(const std::string&, const UniValue&
                                 UniValue subelement;
                                 if (lastResult.isArray())
                                 {
-                                    for(char argch: curarg)
-                                        if (!IsDigit(argch))
-                                            throw std::runtime_error("Invalid result query");
-                                    subelement = lastResult[atoi(curarg.c_str())];
+                                    int index;
+                                    if (!ParseInt32(curarg, &index)) {
+                                        throw std::runtime_error("Invalid result query");
+                                    }
+                                    subelement = lastResult[index];
                                 }
                                 else if (lastResult.isObject())
                                     subelement = find_value(lastResult, curarg);
