@@ -362,6 +362,7 @@ public:
         return MakeUnique<NotificationsHandlerImpl>(std::move(notifications));
     }
     void waitForNotificationsIfTipChanged(const uint256& old_tip) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
     {
         if (!old_tip.IsNull()) {
             LOCK(::cs_main);

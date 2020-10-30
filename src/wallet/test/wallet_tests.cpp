@@ -47,7 +47,7 @@ static std::shared_ptr<CWallet> TestLoadWallet(interfaces::Chain& chain)
     return wallet;
 }
 
-static void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
+static void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     SyncWithValidationInterfaceQueue();
     wallet->m_chain_notifications_handler.reset();
@@ -707,7 +707,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
 //! wallet rescan and notifications are immediately synced, to verify the wallet
 //! must already have a handler in place for them, and there's no gap after
 //! rescanning where new transactions in new blocks could be lost.
-BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     // Create new wallet with known key and unload it.
     auto chain = interfaces::MakeChain(m_node);
@@ -778,7 +778,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
     // deadlock during the sync and simulates a new block notification happening
     // as soon as possible.
     addtx_count = 0;
-    auto handler = HandleLoadWallet([&](std::unique_ptr<interfaces::Wallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->wallet()->cs_wallet) {
+    auto handler = HandleLoadWallet([&](std::unique_ptr<interfaces::Wallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->wallet()->cs_wallet, !cs_main) {
             BOOST_CHECK(rescan_completed);
             m_coinbase_txns.push_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
             block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
@@ -801,7 +801,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletFromFile, TestChain100Setup)
     TestUnloadWallet(std::move(wallet));
 }
 
-BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     auto chain = interfaces::MakeChain(m_node);
     auto wallet = TestLoadWallet(*chain);

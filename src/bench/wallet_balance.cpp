@@ -12,7 +12,10 @@
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 
-static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_watchonly, const bool add_mine)
+static void WalletBalance(benchmark::Bench& bench,
+                          const bool set_dirty,
+                          const bool add_watchonly,
+                          const bool add_mine) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     TestingSetup test_setup{
         CBaseChainParams::REGTEST,
@@ -53,10 +56,25 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     });
 }
 
-static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ true, /* add_watchonly */ true, /* add_mine */ true); }
-static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ true); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ false, /* add_mine */ true); }
-static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ false); }
+static void WalletBalanceDirty(benchmark::Bench& bench) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
+{
+    WalletBalance(bench, /* set_dirty */ true, /* add_watchonly */ true, /* add_mine */ true);
+}
+
+static void WalletBalanceClean(benchmark::Bench& bench) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
+{
+    WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ true);
+}
+
+static void WalletBalanceMine(benchmark::Bench& bench) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
+{
+    WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ false, /* add_mine */ true);
+}
+
+static void WalletBalanceWatch(benchmark::Bench& bench) EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
+{
+    WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ false);
+}
 
 BENCHMARK(WalletBalanceDirty);
 BENCHMARK(WalletBalanceClean);
