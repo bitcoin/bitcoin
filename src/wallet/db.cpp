@@ -74,10 +74,6 @@ fs::path SQLiteDataFile(const fs::path& path)
 
 bool IsBDBFile(const fs::path& path)
 {
-#ifndef USE_BDB
-    return false;
-#endif
-
     if (!fs::exists(path)) return false;
 
     // A Berkeley DB Btree file has at least 4K.
@@ -103,10 +99,6 @@ bool IsBDBFile(const fs::path& path)
 
 bool IsSQLiteFile(const fs::path& path)
 {
-#ifndef USE_SQLITE
-    return false;
-#endif
-
     if (!fs::exists(path)) return false;
 
     // A SQLite Database file is at least 512 bytes.
