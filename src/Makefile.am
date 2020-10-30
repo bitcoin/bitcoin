@@ -24,9 +24,9 @@ SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFL
 
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
+SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
 
 if EMBEDDED_CHIABLS
-SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
 LIBCHIABLS =-lcurl chiabls/build/libchiabls.a -lgmp
 $(LIBCHIABLS):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
