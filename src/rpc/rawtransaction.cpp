@@ -155,7 +155,7 @@ static RPCHelpMan getrawtransaction()
             + HelpExampleCli("getrawtransaction", "\"mytxid\" false \"myblockhash\"")
             + HelpExampleCli("getrawtransaction", "\"mytxid\" true \"myblockhash\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) EXCLUSIVE_LOCKS_REQUIRED(!cs_main) -> UniValue
 {
     const NodeContext& node = EnsureNodeContext(request.context);
 

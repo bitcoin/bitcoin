@@ -376,6 +376,7 @@ static bool rest_mempool_contents(const util::Ref& context, HTTPRequest* req, co
 }
 
 static bool rest_tx(const util::Ref& context, HTTPRequest* req, const std::string& strURIPart)
+    EXCLUSIVE_LOCKS_REQUIRED(!cs_main)
 {
     if (!CheckWarmup(req))
         return false;
