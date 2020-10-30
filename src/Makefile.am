@@ -25,13 +25,14 @@ SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFL
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
+SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 if EMBEDDED_CHIABLS
-LIBCHIABLS =-lcurl chiabls/build/libchiabls.a -lgmp
+LIBCHIABLS =$(LIBCURL_LIBS) chiabls/build/libchiabls.a -lgmp
 $(LIBCHIABLS):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 else
-LIBCHIABLS =-lcurl -lgnutls -lz -lhogweed -lnettle -lchiabls -lgmp
+LIBCHIABLS =$(LIBCURL_LIBS) -lgnutls -lz -lhogweed -lnettle -lchiabls -lgmp
 if TARGET_WINDOWS
 LIBCHIABLS+= -lcrypt32
 endif
