@@ -20,7 +20,7 @@ class DIP3Test(SyscoinTestFramework):
         self.setup_clean_chain = True
 
         self.extra_args = ["-sporkkey=cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW"]
-        self.extra_args += ["-mncollateral=100","-wallet="]
+        self.extra_args += ["-mncollateral=100"]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -45,6 +45,8 @@ class DIP3Test(SyscoinTestFramework):
         self.start_controller_node()
 
     def run_test(self):
+        if self.is_wallet_compiled():
+            self.nodes[0].createwallet(self.default_wallet_name)
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 100:
             self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress()) # generate enough for collaterals
