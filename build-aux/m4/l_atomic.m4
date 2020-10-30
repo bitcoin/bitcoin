@@ -14,10 +14,10 @@ m4_define([_CHECK_ATOMIC_testbody], [[
   #include <cstdint>
 
   int main() {
-    std::atomic<int64_t> a{};
+    std::atomic<size_t> a{};
 
-    int64_t v = 5;
-    int64_t r = a.fetch_add(v);
+    size_t v = 5;
+    size_t r = a.fetch_add(v);
     return static_cast<int>(r);
   }
 ]])
