@@ -422,7 +422,7 @@ void BerkeleyEnvironment::CloseDb(const std::string& strFile)
     }
 }
 
-void BerkeleyEnvironment::ReloadDbEnv()
+void BerkeleyEnvironment::ReloadDbEnv() EXCLUSIVE_LOCKS_REQUIRED(!cs_db)
 {
     // Make sure that no Db's are in use
     AssertLockNotHeld(cs_db);
@@ -650,7 +650,7 @@ void BerkeleyDatabase::Close()
     env->Flush(true);
 }
 
-void BerkeleyDatabase::ReloadDbEnv()
+void BerkeleyDatabase::ReloadDbEnv() EXCLUSIVE_LOCKS_REQUIRED(!cs_db)
 {
     env->ReloadDbEnv();
 }
