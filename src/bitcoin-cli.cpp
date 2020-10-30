@@ -12,6 +12,7 @@
 #include <optional.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
+#include <rpc/nested.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <tinyformat.h>
@@ -224,7 +225,7 @@ class BaseRequestHandler
 {
 public:
     virtual ~BaseRequestHandler() {}
-    virtual UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) = 0;
+    virtual UniValue PrepareRequest(const std::string& method, const UniValue& args) = 0;
     virtual UniValue ProcessReply(const UniValue &batch_in) = 0;
 };
 
@@ -238,7 +239,7 @@ public:
     const int ID_BALANCES = 3;
 
     /** Create a simulated `getinfo` request. */
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string& method, const UniValue& args) override
     {
         if (!args.empty()) {
             throw std::runtime_error("-getinfo takes no arguments");
@@ -370,14 +371,14 @@ public:
     static constexpr int ID_PEERINFO = 0;
     static constexpr int ID_NETWORKINFO = 1;
 
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string& method, const UniValue& args) override
     {
-        if (!args.empty()) {
+        if (args.isArray() && args.size() > 0 && args[0].isStr()) {
             uint8_t n{0};
-            if (ParseUInt8(args.at(0), &n)) {
+            if (ParseUInt8(args[0].get_str(), &n)) {
                 m_details_level = std::min(n, MAX_DETAIL_LEVEL);
             } else {
-                throw std::runtime_error(strprintf("invalid -netinfo argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
+                throw std::runtime_error(strprintf("invalid -netinfo argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args[0].get_str()));
             }
         }
         UniValue result(UniValue::VARR);
@@ -573,10 +574,9 @@ public:
 class GenerateToAddressRequestHandler : public BaseRequestHandler
 {
 public:
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string& method, const UniValue& params) override
     {
-        address_str = args.at(1);
-        UniValue params{RPCConvertValues("generatetoaddress", args)};
+        address_str = params[1].get_str();
         return JSONRPCRequestObj("generatetoaddress", params, 1);
     }
 
@@ -594,15 +594,9 @@ protected:
 /** Process default single requests */
 class DefaultRequestHandler: public BaseRequestHandler {
 public:
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string& method, const UniValue& args) override
     {
-        UniValue params;
-        if(gArgs.GetBoolArg("-named", DEFAULT_NAMED)) {
-            params = RPCConvertNamedValues(method, args);
-        } else {
-            params = RPCConvertValues(method, args);
-        }
-        return JSONRPCRequestObj(method, params, 1);
+        return JSONRPCRequestObj(method, args, 1);
     }
 
     UniValue ProcessReply(const UniValue &reply) override
@@ -611,7 +605,7 @@ public:
     }
 };
 
-static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const UniValue& args, const Optional<std::string>& rpcwallet = {})
 {
     std::string host;
     // In preference order, we choose the following for the port:
@@ -733,7 +727,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
  * @returns the RPC response as a UniValue object.
  * @throws a CConnectionFailed std::runtime_error if connection failed or RPC server still in warmup.
  */
-static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const UniValue& args, const Optional<std::string>& rpcwallet = {})
 {
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
@@ -893,6 +887,7 @@ static int CommandLineRPC(int argc, char *argv[])
                 fputc('\n', stdout);
             }
         }
+        bool use_nested{false};
         std::unique_ptr<BaseRequestHandler> rh;
         std::string method;
         if (gArgs.IsArgSet("-getinfo")) {
@@ -912,30 +907,85 @@ static int CommandLineRPC(int argc, char *argv[])
             } else {
                 ParseError(error, strPrint, nRet);
             }
+            method = "generatetoaddress";
         } else {
             rh.reset(new DefaultRequestHandler());
             if (args.size() < 1) {
                 throw std::runtime_error("too few parameters (need at least command)");
             }
             method = args[0];
+
+            // if the method contains a bracket, enable nested commands
+            if (method.find('(') != std::string::npos && !gArgs.GetBoolArg("-named", DEFAULT_NAMED)) {
+                use_nested = true;
+            }
             args.erase(args.begin()); // Remove trailing method name from arguments vector
         }
         if (nRet == 0) {
             // Perform RPC call
             Optional<std::string> wallet_name{};
             if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
-            const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
+            if (use_nested) {
+                UniValue reply;
+                std::string result_str; /* unused */
+                std::string uri;
 
-            // Parse reply
-            UniValue result = find_value(reply, "result");
-            const UniValue& error = find_value(reply, "error");
-            if (error.isNull()) {
-                if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
-                    GetWalletBalances(result); // fetch multiwallet balances and append to result
+                // format the complete command string expected by RPCNested::ParseCommandLine
+                for (const auto &piece : args) {
+                    method += " "+ (piece.size() ? piece : "''");
                 }
-                ParseResult(result, strPrint);
+
+                // set the wallet endpoint (if -rpcwallet is set)
+                if (wallet_name) uri = wallet_name->data();
+
+                // process the command string
+                RPCNested::ParseCommandLine([&rh, &wallet_name](const std::string &method, const UniValue &params, const std::string &uri_inner, bool &stop_parse) {
+                    // RPC execution callback
+                    // may be called multiple times due to possible command nesting
+                    const UniValue reply_inner = ConnectAndCallRPC(rh.get(), method, params, wallet_name);
+
+                    // only pass on the JSON "result" sub-object
+                    // required for nested commands with the direct access option
+                    const UniValue result = find_value(reply_inner, "result");
+                    const UniValue& error = find_value(reply_inner, "error");
+                    if (!error.isNull()) {
+                        // in case of an error, returen the complete JSON object (not only the result)
+                        stop_parse = true;
+                        return reply_inner;
+                    }
+                    return result;
+                },
+                [](const std::string &) {
+                    // ignore command filtering (only used by the GUI)
+                    return false;
+                }, result_str, reply, method, true, nullptr, uri);
+
+                const UniValue& error = find_value(reply, "error");
+                if (error.isNull()) {
+                    ParseResult(reply, strPrint);
+                } else {
+                    ParseError(error, strPrint, nRet);
+                }
             } else {
-                ParseError(error, strPrint, nRet);
+                // execution path for named arguments or special request handlers
+                UniValue params;
+                if(gArgs.GetBoolArg("-named", DEFAULT_NAMED)) {
+                    params = RPCConvertNamedValues(method, args);
+                } else {
+                    params = RPCConvertValues(method, args);
+                }
+                const UniValue reply = ConnectAndCallRPC(rh.get(), method, params, wallet_name);
+                // Parse reply
+                UniValue result = find_value(reply, "result");
+                const UniValue& error = find_value(reply, "error");
+                if (error.isNull()) {
+                    if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
+                        GetWalletBalances(result); // fetch multiwallet balances and append to result
+                    }
+                    ParseResult(result, strPrint);
+                } else {
+                    ParseError(error, strPrint, nRet);
+                }
             }
         }
     } catch (const std::exception& e) {
