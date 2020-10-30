@@ -20,6 +20,7 @@ fi
 export CONTAINER_NAME=ci_s390x
 export DOCKER_NAME_TAG="debian:buster"
 export RUN_UNIT_TESTS=true
+export TEST_RUNNER_ENV="LC_ALL=C"
 export RUN_FUNCTIONAL_TESTS=true
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-reduce-exports --with-incompatible-bdb --with-boost-process"

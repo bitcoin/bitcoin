@@ -73,13 +73,6 @@ jobs:
         QEMU_USER_CMD=""
 
     - stage: test
-      name: 'S390x  [GOAL: install]  [buster]  [unit tests, functional tests]'
-      arch: s390x  # Can disable QEMU_USER_CMD and run the tests natively without qemu
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
-        QEMU_USER_CMD=""
-
-    - stage: test
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no boost::process, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
