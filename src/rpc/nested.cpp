@@ -1,3 +1,12 @@
+// Copyright (c) 2020 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <rpc/nested.h>
+
+#include <rpc/client.h>
+#include <util/strencodings.h>
+
 /**
  * Split shell command line into a list of arguments and optionally execute the command(s).
  * Aims to emulate \c bash and friends.
@@ -11,14 +20,20 @@
  *   - Within double quotes, only escape \c " and backslashes before a \c " or another backslash
  *   - Within single quotes, no escaping is possible and no special interpretation takes place
  *
- * @param[in]    node    optional node to execute command on
- * @param[out]   strResult   stringified result from the executed command(chain)
- * @param[in]    strCommand  Command line to split
- * @param[in]    fExecute    set true if you want the command to be executed
- * @param[out]   pstrFilteredOut  Command line, filtered to remove any sensitive data
+ * @param[in]    rpc_exec_func   callback function for handling the RPC call
+ * @param[in]    filter_func     callback function for filtering the output string pstrFilteredOut
+ * @param[out]   strResult       stringified result from the executed command(chain)
+ * @param[out]   lastResult      UniValue object of the result from the executed command(chain)
+ * @param[in]    strCommand      Command line to split
+ * @param[in]    fExecute        set true if you want the command to be executed
+ * @param[out]   pstrFilteredOut Command line, filtered to remove any sensitive data
+ * @param[in]    uri             URI to call
  */
 
-bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut, const WalletModel* wallet_model)
+namespace RPCNested
+{
+
+bool ParseCommandLine(std::function<UniValue(const std::string&, const UniValue&, const std::string&, bool &stop_parsing)> rpc_exec_func, std::function<bool(const std::string &)> filter_func, std::string &strResult, UniValue &lastResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut, const std::string &uri)
 {
     std::vector< std::vector<std::string> > stack;
     stack.push_back(std::vector<std::string>());
@@ -37,13 +52,12 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
         STATE_COMMAND_EXECUTED_INNER
     } state = STATE_EATING_SPACES;
     std::string curarg;
-    UniValue lastResult;
     unsigned nDepthInsideSensitive = 0;
     size_t filter_begin_pos = 0, chpos;
     std::vector<std::pair<size_t, size_t>> filter_ranges;
 
     auto add_to_current_stack = [&](const std::string& strArg) {
-        if (stack.back().empty() && (!nDepthInsideSensitive) && historyFilter.contains(QString::fromStdString(strArg), Qt::CaseInsensitive)) {
+        if (stack.back().empty() && (!nDepthInsideSensitive) && filter_func(strArg)) {
             nDepthInsideSensitive = 1;
             filter_begin_pos = chpos;
         }
@@ -174,15 +188,11 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                             // and pass it along with the method name to the dispatcher.
                             UniValue params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
                             std::string method = stack.back()[0];
-                            std::string uri;
-#ifdef ENABLE_WALLET
-                            if (wallet_model) {
-                                QByteArray encodedName = QUrl::toPercentEncoding(wallet_model->getWalletName());
-                                uri = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
+                            bool stop_parse{false};
+                            lastResult = rpc_exec_func(method, params, uri, stop_parse);
+                            if (stop_parse) {
+                                return false;
                             }
-#endif
-                            assert(node);
-                            lastResult = node->executeRpc(method, params, uri);
                         }
 
                         state = STATE_COMMAND_EXECUTED;
@@ -256,3 +266,5 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
             return false;
     }
 }
+
+} // namespace RPCNested

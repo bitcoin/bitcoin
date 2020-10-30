@@ -17,6 +17,7 @@
 #include <interfaces/node.h>
 #include <netbase.h>
 #include <rpc/client.h>
+#include <rpc/nested.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -129,6 +130,25 @@ public:
 
 
 #include <qt/rpcconsole.moc>
+
+bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut, const WalletModel* wallet_model)
+{
+    std::string uri{};
+#ifdef ENABLE_WALLET
+    if (wallet_model) {
+        QByteArray encodedName = QUrl::toPercentEncoding(wallet_model->getWalletName());
+        uri = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
+    }
+#endif
+    UniValue reply_object; // unused
+    return RPCNested::ParseCommandLine([node](const std::string &method, const UniValue &params, const std::string &uri_inner, bool &stop_parse) {
+        assert(node);
+        return node->executeRpc(method, params, uri_inner);
+    },
+    [](const std::string &strArg) {
+        return historyFilter.contains(QString::fromStdString(strArg), Qt::CaseInsensitive);
+    }, strResult, reply_object, strCommand, fExecute, pstrFilteredOut, uri);
+}
 
 void RPCExecutor::request(const QString &command, const WalletModel* wallet_model)
 {
