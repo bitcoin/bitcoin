@@ -5,6 +5,7 @@
 #include <rpc/nested.h>
 
 #include <rpc/client.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 /**
@@ -71,7 +72,7 @@ bool ParseCommandLine(std::function<UniValue(const std::string&, const UniValue&
     auto close_out_params = [&]() {
         if (nDepthInsideSensitive) {
             if (!--nDepthInsideSensitive) {
-                assert(filter_begin_pos);
+                CHECK_NONFATAL(filter_begin_pos);
                 filter_ranges.push_back(std::make_pair(filter_begin_pos, chpos));
                 filter_begin_pos = 0;
             }
@@ -245,7 +246,7 @@ bool ParseCommandLine(std::function<UniValue(const std::string&, const UniValue&
     }
     if (pstrFilteredOut) {
         if (STATE_COMMAND_EXECUTED == state) {
-            assert(!stack.empty());
+            CHECK_NONFATAL(!stack.empty());
             close_out_params();
         }
         *pstrFilteredOut = strCommand;
