@@ -28,8 +28,6 @@ SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 if EMBEDDED_CHIABLS
 SYSCOIN_INCLUDES += -I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include
 LIBCHIABLS =-lcurl chiabls/build/libchiabls.a -lgmp
-$(LIBCHIABLS):
-	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
 else
 LIBCHIABLS =-lcurl -lgnutls -lz -lhogweed -lnettle -lchiabls -lgmp
 if TARGET_WINDOWS
@@ -73,6 +71,9 @@ LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+
+$(LIBCHIABLS): $(wildcard chiabls/src/*.hpp) $(wildcard chiabls/src/*.cpp) $(wildcard chiabls/build/contrib/relic/include/*) $(wildcard chiabls/contrib/relic/src/*) $(wildcard chiabls/contrib/relic/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
@@ -396,10 +397,46 @@ endif
   chiabls/src/extendedpublickey.hpp \
   chiabls/src/extendedpublickey.cpp \
   chiabls/src/util.hpp \
-  chiabls/build/contrib/relic/include/relic_conf.h \
+  chiabls/contrib/relic/include/relic_epx.h \
+  chiabls/contrib/relic/include/relic_ed.h \
+  chiabls/contrib/relic/include/relic_pp.h \
+  chiabls/contrib/relic/include/relic_pool.h \
+  chiabls/contrib/relic/include/relic_types.h \
+  chiabls/contrib/relic/include/relic_fpx.h \
+  chiabls/contrib/relic/include/relic_dv.h \
   chiabls/contrib/relic/include/relic_label.h \
+  chiabls/contrib/relic/include/low/relic_fpx_low.h \
+  chiabls/contrib/relic/include/low/relic_bn_low.h \
+  chiabls/contrib/relic/include/low/relic_fp_low.h \
+  chiabls/contrib/relic/include/low/relic_dv_low.h \
+  chiabls/contrib/relic/include/low/relic_fb_low.h \
+  chiabls/contrib/relic/include/relic_core.h \
+  chiabls/contrib/relic/include/relic_ec.h \
+  chiabls/contrib/relic/include/relic_fbx.h \
   chiabls/contrib/relic/include/relic.h \
+  chiabls/contrib/relic/include/relic_fp.h \
+  chiabls/contrib/relic/include/relic_fb.h \
   chiabls/contrib/relic/include/relic_test.h \
+  chiabls/contrib/relic/include/relic_cp.h \
+  chiabls/contrib/relic/include/relic_bench.h \
+  chiabls/contrib/relic/include/relic_eb.h \
+  chiabls/contrib/relic/include/relic_util.h \
+  chiabls/contrib/relic/include/relic_md.h \
+  chiabls/contrib/relic/include/relic_rand.h \
+  chiabls/contrib/relic/include/relic_bc.h \
+  chiabls/contrib/relic/include/relic_trace.h \
+  chiabls/contrib/relic/include/relic_ep.h \
+  chiabls/contrib/relic/include/relic_err.h \
+  chiabls/contrib/relic/include/relic_arch.h \
+  chiabls/contrib/relic/include/relic_pc.h \
+  chiabls/contrib/relic/include/relic_bn.h \
+  chiabls/contrib/relic/src/low/curve2251-sse/macros.h \
+  chiabls/contrib/relic/src/bc/rijndael-api-fst.h \
+  chiabls/contrib/relic/src/bc/rijndael-alg-fst.h \
+  chiabls/contrib/relic/src/md/sha.h \
+  chiabls/contrib/relic/src/md/blake2.h \
+  chiabls/contrib/relic/src/md/blake2-impl.h \
+  chiabls/build/contrib/relic/include/relic_conf.h \
   $(SYSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
