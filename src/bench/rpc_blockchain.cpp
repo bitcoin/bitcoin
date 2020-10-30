@@ -25,7 +25,8 @@ static void BlockToJsonVerbose(benchmark::Bench& bench)
     blockindex.phashBlock = &blockHash;
     blockindex.nBits = 403014710;
 
-    bench.run([&] {
+    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
+        AssertLockNotHeld(cs_main);
         (void)blockToJSON(block, &blockindex, &blockindex, /*verbose*/ true);
     });
 }
