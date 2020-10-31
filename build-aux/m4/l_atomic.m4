@@ -13,12 +13,39 @@ m4_define([_CHECK_ATOMIC_testbody], [[
   #include <atomic>
   #include <cstdint>
 
-  int main() {
-    std::atomic<int64_t> a{};
+  template <typename T>
+  void test_atomic()
+  {
+      std::atomic<T> a;
+      a.store(T{});
+      T i = a.load();
+  }
 
-    int64_t v = 5;
-    int64_t r = a.fetch_add(v);
-    return static_cast<int>(r);
+  struct uint128_type
+  {
+      std::uint64_t left;
+      std::uint64_t right;
+  };
+
+  int main()
+  {
+      std::atomic_flag af = ATOMIC_FLAG_INIT;
+      if (af.test_and_set())
+          af.clear();
+
+      test_atomic<int>();
+      test_atomic<std::uint8_t>();
+      test_atomic<std::uint16_t>();
+      test_atomic<std::uint32_t>();
+      test_atomic<std::uint64_t>();
+      test_atomic<uint128_type>();
+
+      std::memory_order mo;
+      mo = std::memory_order_relaxed;
+      mo = std::memory_order_acquire;
+      mo = std::memory_order_release;
+      mo = std::memory_order_acq_rel;
+      mo = std::memory_order_seq_cst;
   }
 ]])
 
