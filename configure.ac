@@ -607,7 +607,6 @@ case $host in
      dnl -static is interpreted by libtool, where it has a different meaning.
      dnl In libtool-speak, it's -all-static.
      AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
-     AX_CHECK_LINK_FLAG([[-static]],[AC_DEFINE(CURL_STATICLIB, 1, [when not building a shared library])])
 
      AC_PATH_PROG([MAKENSIS], [makensis], none)
      if test x$MAKENSIS = xnone; then
@@ -1424,7 +1423,15 @@ dnl chiabls check
 
 AC_CHECK_LIB([chiabls],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
-            
+LIBCHIABLS_CFLAGS='-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include'
+if test x$need_bundled_chiabls = xyes; then
+  LIBCHIABLS_LIBS=chiabls/build/libchiabls.a
+elif test "x$need_bundled_chiabls" = xno; then
+  LIBCHIABLS_LIBS=-lchiabls
+fi        
+AC_SUBST(LIBCHIABLS_CFLAGS)
+AC_SUBST(LIBCHIABLS_LIBS)  
+
 dnl libmultiprocess library check
 
 libmultiprocess_found=no
