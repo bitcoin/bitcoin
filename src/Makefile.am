@@ -950,7 +950,7 @@ clean-local:
 	-rm -f config.h
 	-rm -rf test/__pycache__
 	-rm -f chiabls/build/*.a chiabls/src/*.o
-	-rm -rf chiabls/build/object_chiablstmp chiabls/build/object_relic_s chiabls/build/object_sodium chiabls/src/.deps
+	-rm -rf chiabls/build/object_chiablstmp chiabls/build/object_relic_s chiabls/build/object_sodium
 
 .rc.o:
 	@test -f $(WINDRES)
