@@ -1,4 +1,4 @@
-Syscoin Core version 4.1.0.0 is now available from:
+Syscoin Core version 4.2.0.0 is now available from:
 
   https://github.com/syscoin/syscoin/releases/tag/v4.1.0
 
