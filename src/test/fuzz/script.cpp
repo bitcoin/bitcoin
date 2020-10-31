@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <compressor.h>
+#include <primitives/transaction.h>
 #include <core_io.h>
 #include <core_memusage.h>
 #include <policy/policy.h>

@@ -4,7 +4,7 @@
 
 #include <amount.h>
 #include <arith_uint256.h>
-#include <compressor.h>
+#include <primitives/transaction.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <crypto/common.h>
