@@ -72,6 +72,7 @@ QT_TS = \
   qt/locale/syscoin_ta.ts \
   qt/locale/syscoin_te.ts \
   qt/locale/syscoin_th.ts \
+  qt/locale/syscoin_tr.ts \
   qt/locale/syscoin_uk.ts \
   qt/locale/syscoin_ur.ts \
   qt/locale/syscoin_uz@Cyrl.ts \
