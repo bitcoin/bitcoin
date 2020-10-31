@@ -34,8 +34,10 @@
 
 namespace boost {
 namespace detail {
+#if (BOOST_OS_WINDOWS)
 // NOLINTNEXTLINE(clang-diagnostic-unused-const-variable)
 const size_t buffer_size = 8192;
+#endif
 const size_t default_converter_max_length = 6;
 
 std::string os_pathsep()
