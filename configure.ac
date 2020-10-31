@@ -1527,7 +1527,7 @@ if test x$enable_wallet != xno; then
               [AC_MSG_ERROR([Unable to find libcurl headers.])])
   AC_SUBST(LIBCURL_CFLAGS)
   AC_SUBST(LIBCURL_LIBS)
-if
+fi
 
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
