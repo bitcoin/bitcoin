@@ -20,10 +20,14 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_sqlite()
 
     def run_test(self):
+        # Make a legacy wallet and check it is BDB
+        self.nodes[0].createwallet(wallet_name="legacy1", descriptors=False)
         wallet_info = self.nodes[0].getwalletinfo()
         assert_equal(wallet_info['format'], 'bdb')
+        self.nodes[0].unloadwallet("legacy1")
 
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
