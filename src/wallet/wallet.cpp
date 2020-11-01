@@ -100,6 +100,7 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     if (i != vpwallets.end()) return false;
     vpwallets.push_back(wallet);
     wallet->ConnectScriptPubKeyManNotifiers();
+    wallet->NotifyCanGetAddressesChanged();
     return true;
 }
 
