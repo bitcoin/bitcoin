@@ -769,6 +769,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if wallet has not been compiled."""
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
+        if self.options.descriptors:
+            self.skip_if_no_sqlite()
+
+    def skip_if_no_sqlite(self):
+        """Skip the running test if sqlite has not been compiled."""
+        if not self.is_sqlite_compiled():
+            raise SkipTest("sqlite has not been compiled.")
 
     def skip_if_no_wallet_tool(self):
         """Skip the running test if bitcoin-wallet has not been compiled."""
@@ -808,3 +815,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
         return self.config["components"].getboolean("ENABLE_ZMQ")
+
+    def is_sqlite_compiled(self):
+        """Checks whether the wallet module was compiled."""
+        return self.config["components"].getboolean("USE_SQLITE")
