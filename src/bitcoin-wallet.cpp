@@ -30,7 +30,7 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     argsman.AddArg("create", "Create new wallet file", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
 
     // Hidden
-    argsman.AddArg("salvage", "Attempt to recover private keys from a corrupt wallet", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    argsman.AddArg("salvage", "Attempt to recover private keys from a corrupt wallet. Warning: 'salvage' is experimental.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("wipetxes", "Wipe all transactions from a wallet", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
 }
 
