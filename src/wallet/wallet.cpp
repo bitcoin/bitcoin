@@ -122,6 +122,7 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     assert(::masternodeSync != nullptr && ::coinJoinClientManagers != nullptr);
     ::coinJoinClientManagers->Add(*wallet);
     g_wallet_init_interface.InitCoinJoinSettings(*::coinJoinClientManagers);
+    wallet->NotifyCanGetAddressesChanged();
     return true;
 }
 
