@@ -162,9 +162,8 @@ def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=C
 
 def create_transaction(node, txid, to_address, *, amount):
     """ Return signed transaction spending the first output of the
-        input txid. Note that the node must be able to sign for the
-        output that is being spent, and the node must not be running
-        multiple wallets.
+        input txid. Note that the node must have a wallet that can
+        sign for the output that is being spent.
     """
     raw_tx = create_raw_transaction(node, txid, to_address, amount=amount)
     tx = CTransaction()
@@ -173,14 +172,18 @@ def create_transaction(node, txid, to_address, *, amount):
 
 def create_raw_transaction(node, txid, to_address, *, amount):
     """ Return raw signed transaction spending the first output of the
-        input txid. Note that the node must be able to sign for the
-        output that is being spent, and the node must not be running
-        multiple wallets.
+        input txid. Note that the node must have a wallet that can sign
+        for the output that is being spent.
     """
-    rawtx = node.createrawtransaction(inputs=[{"txid": txid, "vout": 0}], outputs={to_address: amount})
-    signresult = node.signrawtransactionwithwallet(rawtx)
-    assert_equal(signresult["complete"], True)
-    return signresult['hex']
+    psbt = node.createpsbt(inputs=[{"txid": txid, "vout": 0}], outputs={to_address: amount})
+    for _ in range(2):
+        for w in node.listwallets():
+            wrpc = node.get_wallet_rpc(w)
+            signed_psbt = wrpc.walletprocesspsbt(psbt)
+            psbt = signed_psbt['psbt']
+    final_psbt = node.finalizepsbt(psbt)
+    assert_equal(final_psbt["complete"], True)
+    return final_psbt['hex']
 
 def get_legacy_sigopcount_block(block, accurate=True):
     count = 0
