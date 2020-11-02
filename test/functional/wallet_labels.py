@@ -138,7 +138,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         change_label(node, labels[2].addresses[0], labels[2], labels[2])
 
         self.log.info('Check watchonly labels')
-        node.createwallet(wallet_name='watch_only', disable_private_keys=True, descriptors=False)
+        node.createwallet(wallet_name='watch_only', disable_private_keys=True)
         wallet_watch_only = node.get_wallet_rpc('watch_only')
         VALID = {
             '✔️_a1': 'yMNJePdcKvXtWWQnFYHNeJ5u8TF2v1dfK4',
@@ -159,7 +159,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             ad = INVALID[l]
             assert_raises_rpc_error(
                 -5,
-                "Invalid Dash address or script",
+                "Address is not valid" if self.options.descriptors else "Invalid Dash address or script",
                 lambda: wallet_watch_only.importaddress(label=l, rescan=False, address=ad),
             )
 

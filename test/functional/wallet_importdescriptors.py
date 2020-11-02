@@ -35,6 +35,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                            ["-keypool=5"]
                           ]
         self.setup_clean_chain = True
+        self.wallet_names = []
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -60,7 +61,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info('Setting up wallets')
-        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
+        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False, descriptors=True)
         w0 = self.nodes[0].get_wallet_rpc('w0')
 
         self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True, descriptors=True)

@@ -24,6 +24,7 @@ from test_framework.test_framework import BitcoinTestFramework
 
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
 )
 
 
@@ -82,7 +83,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # w1: regular wallet, created on master: update this test when default
         #     wallets can no longer be opened by older versions.
-        node_master.rpc.createwallet(wallet_name="w1")
+        node_master.createwallet(wallet_name="w1")
         wallet = node_master.get_wallet_rpc("w1")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled']
@@ -101,7 +102,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['private_keys_enabled']
         assert info['keypoolsize'] > 0
         # Use addmultisigaddress (see #18075)
-        address_18075 = wallet.rpc.addmultisigaddress(1, ["0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52", "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"], "")["address"]
+        address_18075 = wallet.addmultisigaddress(1, ["0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52", "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"], "")["address"]
         assert wallet.getaddressinfo(address_18075)["solvable"]
 
         # w1_v18: regular wallet, created with v0.18
@@ -217,94 +218,104 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 os.path.join(node_v20_wallets_dir, wallet)
             )
 
-        # Open the wallets in v0.20
-        node_v20.loadwallet("w1")
-        wallet = node_v20.get_wallet_rpc("w1")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-        txs = wallet.listtransactions()
-        assert_equal(len(txs), 1)
+        if not self.options.descriptors:
+            # Descriptor wallets break compatibility, only run this test for legacy wallet
+            # Open the wallets in v0.20
+            node_v20.loadwallet("w1")
+            wallet = node_v20.get_wallet_rpc("w1")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] > 0
+            txs = wallet.listtransactions()
+            assert_equal(len(txs), 1)
 
-        node_v20.loadwallet("w2")
-        wallet = node_v20.get_wallet_rpc("w2")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled'] == False
-        assert info['keypoolsize'] == 0
+            node_v20.loadwallet("w2")
+            wallet = node_v20.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled'] == False
+            assert info['keypoolsize'] == 0
 
-        node_v20.loadwallet("w3")
-        wallet = node_v20.get_wallet_rpc("w3")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] == 0
+            node_v20.loadwallet("w3")
+            wallet = node_v20.get_wallet_rpc("w3")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] == 0
 
-        # Open the wallets in v0.19
-        node_v19.loadwallet("w1")
-        wallet = node_v19.get_wallet_rpc("w1")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-        txs = wallet.listtransactions()
-        assert_equal(len(txs), 1)
+            # Open the wallets in v0.19
+            node_v19.loadwallet("w1")
+            wallet = node_v19.get_wallet_rpc("w1")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] > 0
+            txs = wallet.listtransactions()
+            assert_equal(len(txs), 1)
 
-        node_v19.loadwallet("w2")
-        wallet = node_v19.get_wallet_rpc("w2")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled'] == False
-        assert info['keypoolsize'] == 0
+            node_v19.loadwallet("w2")
+            wallet = node_v19.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled'] == False
+            assert info['keypoolsize'] == 0
 
-        node_v19.loadwallet("w3")
-        wallet = node_v19.get_wallet_rpc("w3")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] == 0
+            node_v19.loadwallet("w3")
+            wallet = node_v19.get_wallet_rpc("w3")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] == 0
 
-        # Open the wallets in v0.18
-        node_v18.loadwallet("w1")
-        wallet = node_v18.get_wallet_rpc("w1")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-        txs = wallet.listtransactions()
-        assert_equal(len(txs), 1)
+            # Open the wallets in v0.18
+            node_v18.loadwallet("w1")
+            wallet = node_v18.get_wallet_rpc("w1")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] > 0
+            txs = wallet.listtransactions()
+            assert_equal(len(txs), 1)
 
-        node_v18.loadwallet("w2")
-        wallet = node_v18.get_wallet_rpc("w2")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled'] == False
-        assert info['keypoolsize'] == 0
+            node_v18.loadwallet("w2")
+            wallet = node_v18.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled'] == False
+            assert info['keypoolsize'] == 0
 
-        node_v18.loadwallet("w3")
-        wallet = node_v18.get_wallet_rpc("w3")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] == 0
+            node_v18.loadwallet("w3")
+            wallet = node_v18.get_wallet_rpc("w3")
+            info = wallet.getwalletinfo()
+            assert info['private_keys_enabled']
+            assert info['keypoolsize'] == 0
+
+            node_v17.loadwallet("w1")
+            wallet = node_v17.get_wallet_rpc("w1")
+            info = wallet.getwalletinfo()
+            # doesn't have private_keys_enabled in v17
+            #assert info['private_keys_enabled']
+            assert info['keypoolsize'] > 0
+
+            node_v17.loadwallet("w2")
+            wallet = node_v17.get_wallet_rpc("w2")
+            info = wallet.getwalletinfo()
+            # doesn't have private_keys_enabled in v17
+            # TODO enable back when HD wallets are created by default
+            # assert info['private_keys_enabled'] == False
+            # assert info['keypoolsize'] == 0
+        else:
+            # Descriptor wallets appear to be corrupted wallets to old software
+            assert_raises_rpc_error(-4, "Wallet requires newer version of Dash Core", node_v19.loadwallet, "w1")
+            node_v19.loadwallet("w2")
+            node_v19.loadwallet("w3")
+            assert_raises_rpc_error(-18, "Data is not in recognized format", node_v18.loadwallet, "w1")
+            node_v18.loadwallet("w2")
+            node_v18.loadwallet("w3")
 
         # Open the wallets in v0.17
         node_v17.loadwallet("w1_v18")
         wallet = node_v17.get_wallet_rpc("w1_v18")
         info = wallet.getwalletinfo()
         # doesn't have private_keys_enabled in v17
-        #assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-
-        node_v17.loadwallet("w1")
-        wallet = node_v17.get_wallet_rpc("w1")
-        info = wallet.getwalletinfo()
-        # doesn't have private_keys_enabled in v17
-        #assert info['private_keys_enabled']
+        # assert info['private_keys_enabled']
         assert info['keypoolsize'] > 0
 
         node_v17.loadwallet("w2_v18")
         wallet = node_v17.get_wallet_rpc("w2_v18")
-        info = wallet.getwalletinfo()
-        # doesn't have private_keys_enabled in v17
-        # TODO enable back when HD wallets are created by default
-        # assert info['private_keys_enabled'] == False
-        # assert info['keypoolsize'] == 0
-
-        node_v17.loadwallet("w2")
-        wallet = node_v17.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
         # doesn't have private_keys_enabled in v17
         # TODO enable back when HD wallets are created by default
