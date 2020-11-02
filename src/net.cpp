@@ -873,8 +873,10 @@ Optional<CNetMessage> V2TransportDeserializer::GetMessage(std::chrono::microseco
     Optional<CNetMessage> msg(std::move(vRecv)); // result in a message with CDataStream with readpos pointing to the message payload
     msg->m_command = command_name;
 
-    // store command string, payload size, wire message size
-    msg->m_message_size = msg->m_recv.size();                                                                    //message payload size (excluding command)
+    // if we could successfully decrypt the message, the message no longer contains the "header" (AAD & MAC)
+    // if failed to decrypt – which we tolerate at this point – we need to reduce the message size by the length of the AAD & MAC
+    // to conform to the abstract TransportDeserializer protocol
+    msg->m_message_size = valid_checksum ? msg->m_recv.size() : (msg->m_recv.size() - CHACHA20_POLY1305_AEAD_AAD_LEN - CHACHA20_POLY1305_AEAD_TAG_LEN);
     msg->m_raw_message_size = CHACHA20_POLY1305_AEAD_AAD_LEN + m_message_size + CHACHA20_POLY1305_AEAD_TAG_LEN; // raw wire size
 
     // store receive time
