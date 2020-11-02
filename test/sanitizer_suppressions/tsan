@@ -32,7 +32,7 @@ deadlock:CConnman::ForNode
 deadlock:CConnman::GetNodeStats
 deadlock:CChainState::ConnectTip
 deadlock:UpdateTip
-deadlock:wallet_tests::CreateWalletFromFile
+deadlock:wallet_tests::CreateWallet
 
 # WalletBatch (unidentified deadlock)
 deadlock:WalletBatch
