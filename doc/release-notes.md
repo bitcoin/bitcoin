@@ -65,8 +65,8 @@ format of this file has been changed in a backwards-incompatible way in order to
 accommodate the storage of Tor v3 and other BIP155 addresses. This means that if
 the file is modified by 0.21.0 or newer then older versions will not be able to
 read it. Those old versions, in the event of a downgrade, will log an error
-message that deserialization has failed and will continue normal operation
-as if the file was missing, creating a new empty one. (#19954)
+message "Incorrect keysize in addrman deserialization" and will continue normal
+operation as if the file was missing, creating a new empty one. (#19954)
 
 Notable changes
 ===============
