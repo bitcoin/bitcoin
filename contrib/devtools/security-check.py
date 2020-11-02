@@ -181,6 +181,9 @@ def check_ELF_separate_code(executable):
         '.data': 'RW',
         '.bss': 'RW',
     }
+    if get_ELF_header(executable).get('Machine') == 'PowerPC64':
+        # .plt is RW on ppc64 even with separate-code
+        EXPECTED_FLAGS['.plt'] = 'RW'
     # For all LOAD program headers get mapping to the list of sections,
     # and for each section, remember the flags of the associated program header.
     flags_per_section = {}
