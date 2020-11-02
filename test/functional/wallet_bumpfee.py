@@ -184,7 +184,7 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     # which spends it, and make sure bumpfee can be called on it.
 
     segwit_in = next(u for u in rbf_node.listunspent() if u["amount"] == Decimal("0.001"))
-    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='p2sh-segwit'))
+    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='bech32'))
     segwitid = send_to_witness(
         use_p2wsh=False,
         node=rbf_node,
@@ -365,7 +365,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     rbf_node.createwallet(wallet_name="signer", disable_private_keys=False, blank=True)
     signer = rbf_node.get_wallet_rpc("signer")
     assert signer.getwalletinfo()['private_keys_enabled']
-    result = signer.importmulti([{
+    reqs = [{
         "desc": priv_rec_desc,
         "timestamp": 0,
         "range": [0,1],
@@ -378,7 +378,11 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
         "range": [0, 0],
         "internal": True,
         "keypool": False
-    }])
+    }]
+    if self.options.descriptors:
+        result = signer.importdescriptors(reqs)
+    else:
+        result = signer.importmulti(reqs)
     assert_equal(result, [{'success': True}, {'success': True}])
 
     # Create another wallet with just the public keys, which creates PSBTs
@@ -386,21 +390,27 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     watcher = rbf_node.get_wallet_rpc("watcher")
     assert not watcher.getwalletinfo()['private_keys_enabled']
 
-    result = watcher.importmulti([{
+    reqs = [{
         "desc": pub_rec_desc,
         "timestamp": 0,
         "range": [0, 10],
         "internal": False,
         "keypool": True,
-        "watchonly": True
+        "watchonly": True,
+        "active": True,
     }, {
         "desc": pub_change_desc,
         "timestamp": 0,
         "range": [0, 10],
         "internal": True,
         "keypool": True,
-        "watchonly": True
-    }])
+        "watchonly": True,
+        "active": True,
+    }]
+    if self.options.descriptors:
+        result = watcher.importdescriptors(reqs)
+    else:
+        result = watcher.importmulti(reqs)
     assert_equal(result, [{'success': True}, {'success': True}])
 
     funding_address1 = watcher.getnewaddress(address_type='bech32')
