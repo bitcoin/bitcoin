@@ -826,6 +826,9 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """Checks whether the zmq module was compiled."""
         return self.config["components"].getboolean("ENABLE_ZMQ")
 
+    def is_sqlite_compiled(self):
+        """Checks whether the wallet module was compiled."""
+        return self.config["components"].getboolean("USE_SQLITE")
 
 MASTERNODE_COLLATERAL = 100
 
@@ -1338,6 +1341,3 @@ class DashTestFramework(SyscoinTestFramework):
                     c += 1
             return c >= count
         wait_until_helper(test, timeout=timeout)
-    def is_sqlite_compiled(self):
-        """Checks whether the wallet module was compiled."""
-        return self.config["components"].getboolean("USE_SQLITE")
