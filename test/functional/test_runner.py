@@ -200,6 +200,7 @@ BASE_SCRIPTS = [
     'omni_deactivation.py',
     'omni_freeze.py',
     'omni_freedexspec.py',
+    'omni_dexversionsspec.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
