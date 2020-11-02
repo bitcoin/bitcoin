@@ -11,6 +11,7 @@ Needs `readelf` (for ELF), `objdump` (for PE) and `otool` (for MACHO).
 import subprocess
 import sys
 import os
+import re
 
 from typing import List, Optional
 
@@ -22,18 +23,22 @@ def run_command(command) -> str:
     p = subprocess.run(command, stdout=subprocess.PIPE, check=True, universal_newlines=True)
     return p.stdout
 
+def get_ELF_header(executable):
+    stdout = run_command([READELF_CMD, '-h', '-W', executable])
+    out = {}
+    for line in stdout.splitlines():
+        m = re.match(r'^\s*([^:]+)\:\s*(.*?)(?:\s+\([^()]+\))?$', line)
+        if not m:
+            continue
+        key, val = m.groups()
+        out[key] = val
+    return out
+
 def check_ELF_PIE(executable) -> bool:
     '''
     Check for position independent executable (PIE), allowing for address space randomization.
     '''
-    stdout = run_command([READELF_CMD, '-h', '-W', executable])
-
-    ok = False
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(line)>=2 and tokens[0] == 'Type:' and tokens[1] == 'DYN':
-            ok = True
-    return ok
+    return get_ELF_header(executable).get('Type') == 'DYN'
 
 def get_ELF_program_headers(executable):
     '''Return type and flags for ELF program headers'''
