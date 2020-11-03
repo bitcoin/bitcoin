@@ -2755,6 +2755,11 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             "      }\n"
             "      ,...\n"
             "    ]\n"
+            "  \"scanning\":                        (json object) current scanning details, or false if no scan is in progress\n"
+            "    {\n"
+            "      \"duration\" : xxxx              (numeric) elapsed seconds since scan start\n"
+            "      \"progress\" : x.xxxx,           (numeric) scanning progress percentage [0.0, 1.0]\n"
+            "    }\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getwalletinfo", "")
@@ -2805,6 +2810,14 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             accounts.push_back(account);
         }
         obj.pushKV("hdaccounts", accounts);
+    }
+    if (pwallet->IsScanning()) {
+        UniValue scanning(UniValue::VOBJ);
+        scanning.pushKV("duration", pwallet->ScanningDuration() / 1000);
+        scanning.pushKV("progress", pwallet->ScanningProgress());
+        obj.pushKV("scanning", scanning);
+    } else {
+        obj.pushKV("scanning", false);
     }
     return obj;
 }
