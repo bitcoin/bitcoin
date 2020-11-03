@@ -45,8 +45,6 @@ class NULLDUMMYTest(SyscoinTestFramework):
         self.extra_args = [[
             '-segwitheight=432',
             '-addresstype=legacy',
-            # SYSCOIN
-            '-dip3params=9000:9000',
         ]] * 2
 
     def skip_test_if_missing_module(self):
