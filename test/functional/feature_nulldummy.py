@@ -45,8 +45,6 @@ class NULLDUMMYTest(SyscoinTestFramework):
         self.extra_args = [[
             '-segwitheight=432',
             '-addresstype=legacy',
-            # SYSCOIN
-            '-dip3params=9000:9000',
         ]] * 2
 
     def skip_test_if_missing_module(self):
@@ -56,7 +54,8 @@ class NULLDUMMYTest(SyscoinTestFramework):
         self.nodes[0].createwallet(wallet_name='wmulti', disable_private_keys=True)
         wmulti = self.nodes[0].get_wallet_rpc('wmulti')
         w0 = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
-        self.address = w0.getnewaddress()
+        # SYSCOIN
+        self.address = w0.getnewaddress(address_type='legacy')
         self.pubkey = w0.getaddressinfo(self.address)['pubkey']
         self.ms_address = wmulti.addmultisigaddress(1, [self.pubkey])['address']
         self.wit_address = w0.getnewaddress(address_type='p2sh-segwit')
