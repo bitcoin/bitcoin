@@ -59,7 +59,8 @@ class NULLDUMMYTest(SyscoinTestFramework):
         # SYSCOIN
         self.address = w0.getnewaddress(address_type='legacy')
         self.pubkey = w0.getaddressinfo(self.address)['pubkey']
-        self.ms_address = wmulti.addmultisigaddress(1, [self.pubkey])['address']
+        # SYSCOIN
+        self.ms_address = wmulti.addmultisigaddress(1, [self.pubkey], '', 'legacy')['address']
         self.wit_address = w0.getnewaddress(address_type='p2sh-segwit')
         self.wit_ms_address = wmulti.addmultisigaddress(1, [self.pubkey], '', 'p2sh-segwit')['address']
         if not self.options.descriptors:
