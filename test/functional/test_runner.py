@@ -187,6 +187,7 @@ BASE_SCRIPTS = [
     'rpc_scantxoutset.py',
     'feature_logging.py',
     #'p2p_node_network_limited.py', # Not compatible with Omni
+    'omni_feecache.py',
     'feature_blocksdir.py',
     'feature_config_args.py',
     'rpc_help.py',
