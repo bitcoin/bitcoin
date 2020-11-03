@@ -156,6 +156,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::LEVELDB, "leveldb"},
     {BCLog::VALIDATION, "validation"},
     // SYSCOIN
+    {BCLog::CHAINLOCKS, "chainlocks"},
     {BCLog::GOBJECT, "gobject"},
     {BCLog::LLMQ, "llmq"},
     {BCLog::LLMQ_DKG, "llmq-dkg"},

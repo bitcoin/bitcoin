@@ -8,7 +8,7 @@ import time
 from test_framework.test_framework import DashTestFramework
 
 '''
-llmq-signing.py
+feature_llmqsigning.py
 
 Checks LLMQs signing sessions
 

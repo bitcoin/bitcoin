@@ -62,6 +62,7 @@
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
+#include <llmq/quorums_chainlocks.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>
 #include <algorithm> // std::unique
@@ -194,7 +195,11 @@ CBlockIndex* LookupBlockIndex(const uint256& hash)
     BlockMap::const_iterator it = g_chainman.BlockIndex().find(hash);
     return it == g_chainman.BlockIndex().end() ? nullptr : it->second;
 }
-
+std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> LookupBlockIndexPrev(const uint256& hash)
+{
+    AssertLockHeld(cs_main);
+    return g_chainman.PrevBlockIndex().equal_range(hash);
+}
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
     AssertLockHeld(cs_main);
@@ -2204,6 +2209,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     }
+    // SYSCOIN
+    if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
+    }
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
@@ -3428,7 +3437,7 @@ void ResetBlockFailureFlags(CBlockIndex *pindex) {
     return ::ChainstateActive().ResetBlockFailureFlags(pindex);
 }
 
-CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
+CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus)
 {
     AssertLockHeld(cs_main);
 
@@ -3455,12 +3464,21 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     }
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
-    pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
-        pindexBestHeader = pindexNew;
+    // SYSCOIN
+    if (nStatus & BLOCK_VALID_MASK) {
+        pindexNew->RaiseValidity(nStatus);
+        if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+            pindexBestHeader = pindexNew;
+    } else {
+        pindexNew->RaiseValidity(BLOCK_VALID_TREE); // required validity level
+        pindexNew->nStatus |= nStatus;
+    }
 
     setDirtyBlockIndex.insert(pindexNew);
-
+    // SYSCOIN track prevBlockHash -> pindex (multimap)
+    if (pindexNew->pprev) {
+        m_prev_block_index.emplace(pindexNew->pprev->GetBlockHash(), pindexNew);
+    }
     return pindexNew;
 }
 
@@ -3978,6 +3996,12 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             LogPrintf("ERROR: %s: prev block invalid\n", __func__);
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
+        // SYSCOIN
+        if (pindexPrev->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
+            // it's ok-ish, the other node is probably missing the latest chainlock
+            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-prevblk-chainlock");
+        }
+
         if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
@@ -4018,6 +4042,13 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
                     return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
                 }
             }
+        }
+        // SYSCOIN
+        if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
+            if (pindex == nullptr) {
+                AddToBlockIndex(block, BLOCK_CONFLICT_CHAINLOCK);
+            }
+            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
         }
     }
     if (pindex == nullptr)
@@ -4197,8 +4228,13 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == ::ChainActive().Tip());
-    CCoinsViewCache viewNew(&::ChainstateActive().CoinsTip());
+    // SYSCOIN
     uint256 block_hash(block.GetHash());
+    if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, block_hash)) {
+        return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
+    }
+    CCoinsViewCache viewNew(&::ChainstateActive().CoinsTip());
+    
     CBlockIndex indexDummy(block);
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
@@ -4434,6 +4470,10 @@ bool BlockManager::LoadBlockIndex(
     {
         CBlockIndex* pindex = item.second;
         vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
+        // SYSCOIN build mapPrevBlockIndex
+        if (pindex->pprev) {
+            m_prev_block_index.emplace(pindex->pprev->GetBlockHash(), pindex);
+        }
     }
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
     for (const std::pair<int, CBlockIndex*>& item : vSortedByHeight)

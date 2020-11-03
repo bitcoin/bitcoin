@@ -106,8 +106,7 @@ public:
 
 public:
     SERIALIZE_METHODS(CSigSharesInv, obj) {
-        uint64_t invSize = obj.inv.size();
-        READWRITE(VARINT(obj.sessionId), COMPACTSIZE(invSize), AUTOBITSET(obj.inv, (size_t)invSize));
+        READWRITE(VARINT(obj.sessionId), DYNBITSET(obj.inv));
     }
 
     void Init(size_t size);
@@ -358,7 +357,7 @@ class CSigSharesManager : public CRecoveredSigsListener
     const size_t MAX_MSGS_SIG_SHARES = 32;
 
 private:
-    RecursiveMutex cs;
+    mutable RecursiveMutex cs;
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;

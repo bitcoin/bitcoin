@@ -48,6 +48,7 @@
 // SYSCOIN
 #include <wallet/context.h>
 #include <services/asset.h>
+#include <llmq/quorums_chainlocks.h>
 struct CUpdatedBlock
 {
     uint256 hash;
@@ -183,6 +184,8 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    // SYSCOIN
+    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
     return result;
 }
 
@@ -230,6 +233,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    // SYSCOIN
+    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
     return result;
 }
 
@@ -268,6 +273,44 @@ static RPCHelpMan getbestblockhash()
 {
     LOCK(cs_main);
     return ::ChainActive().Tip()->GetBlockHash().GetHex();
+},
+    };
+}
+
+
+static RPCHelpMan getbestchainlock()
+{
+    return RPCHelpMan{"getbestchainlock",
+            "\nReturns information about the best chainlock. Throws an error if there is no known chainlock yet.\n",
+            {
+            },
+            RPCResult{
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "blockhash", "The block hash hex encoded"},
+                    {RPCResult::Type::NUM, "height", "Block height"},
+                    {RPCResult::Type::STR_HEX, "signature", "The chainlock's BLS signature"},
+                    {RPCResult::Type::BOOL, "known_block", "True if the block is known by our node"},
+                }},
+            RPCExamples{
+                HelpExampleCli("getbestchainlock", "")
+        + HelpExampleRpc("getbestchainlock", "")
+            },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    UniValue result(UniValue::VOBJ);
+    ChainstateManager& chainman = EnsureChainman(request.context);
+    llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetBestChainLock();
+    if (clsig.IsNull()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
+    }
+    result.pushKV("blockhash", clsig.blockHash.GetHex());
+    result.pushKV("height", clsig.nHeight);
+    result.pushKV("signature", clsig.sig.ToString());
+
+    LOCK(cs_main);
+    result.pushKV("known_block", chainman.BlockIndex().count(clsig.blockHash) > 0);
+    return result;
 },
     };
 }
@@ -2538,6 +2581,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getchaintxstats",        &getchaintxstats,        {"nblocks", "blockhash"} },
     { "blockchain",         "getblockstats",          &getblockstats,          {"hash_or_height", "stats"} },
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       {} },
+    // SYSCOIN
+    { "blockchain",         "getbestchainlock",       &getbestchainlock,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
     { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },

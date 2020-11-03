@@ -120,7 +120,7 @@ public:
    * @param h The merkle block height.
    * @return The expected index for the aux hash.
    */
-  static int getExpectedIndex (uint32_t nNonce, int nChainId, unsigned h);
+  static int getExpectedIndex (const uint32_t &nNonce, const int &nChainId, const unsigned &h);
 
   /**
    * Constructs a minimal CAuxPow object for the given block header and
