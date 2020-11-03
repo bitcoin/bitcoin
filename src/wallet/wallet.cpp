@@ -2059,7 +2059,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
                     LOCK(cs_main);
                     gvp = GuessVerificationProgress(chainParams.TxData(), pindex);
                 }
-                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((gvp - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+                m_scanning_progress = (gvp - dProgressStart) / (dProgressTip - dProgressStart);
+                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
             }
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
