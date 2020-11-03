@@ -48,7 +48,7 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
         return error("Aux POW chain merkle branch too long");
 
     // Check that the chain merkle root is in the coinbase
-    const uint256 nRootHash
+    const uint256 &nRootHash
       = CheckMerkleBranch (hashAuxBlock, vChainMerkleBranch, nChainIndex);
     valtype vchRootHash(nRootHash.begin (), nRootHash.end ());
     std::reverse (vchRootHash.begin (), vchRootHash.end ()); // correct endian
@@ -62,7 +62,7 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
     if (coinbaseTx->vin.empty())
         return error("Aux POW coinbase has no inputs");
 
-    const CScript script = coinbaseTx->vin[0].scriptSig;
+    const CScript &script = coinbaseTx->vin[0].scriptSig;
 
     // Check that the same work is not submitted twice to our chain.
     //
@@ -101,12 +101,12 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
     if (script.end() - pc < 8)
         return error("Aux POW missing chain merkle tree size and nonce in parent coinbase");
 
-    const uint32_t nSize = DecodeLE32 (&pc[0]);
-    const unsigned merkleHeight = vChainMerkleBranch.size ();
+    const uint32_t &nSize = DecodeLE32 (&pc[0]);
+    const unsigned &merkleHeight = vChainMerkleBranch.size ();
     if (nSize != (1u << merkleHeight))
         return error("Aux POW merkle branch size does not match parent coinbase");
 
-    const uint32_t nNonce = DecodeLE32 (&pc[4]);
+    const uint32_t &nNonce = DecodeLE32 (&pc[4]);
     if (nChainIndex != getExpectedIndex (nNonce, nChainId, merkleHeight))
         return error("Aux POW wrong index");
 
@@ -114,7 +114,7 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
 }
 
 int
-CAuxPow::getExpectedIndex (uint32_t nNonce, int nChainId, unsigned h)
+CAuxPow::getExpectedIndex (const uint32_t &nNonce, const int &nChainId, const unsigned &h)
 {
   // Choose a pseudo-random slot in the chain merkle tree
   // but have it be fixed for a size/nonce/chain combination.

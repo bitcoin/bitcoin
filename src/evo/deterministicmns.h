@@ -552,7 +552,7 @@ class CDeterministicMNManager
     static const int LIST_DIFFS_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
 
 public:
-    RecursiveMutex cs;
+    mutable RecursiveMutex cs;
 
 private:
     CEvoDB& evoDb;

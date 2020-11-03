@@ -12,7 +12,6 @@ ZDAG_WARNING_RBF = 1
 ZDAG_WARNING_NOT_ZDAG_TX = 2
 ZDAG_WARNING_SIZE_OVER_POLICY = 3
 ZDAG_MAJOR_CONFLICT = 4
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 class AssetZDAGTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True

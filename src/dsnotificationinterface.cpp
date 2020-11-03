@@ -14,6 +14,7 @@
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_dkgsessionmgr.h>
+#include <llmq/quorums_chainlocks.h>
 #include <shutdown.h>
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -26,6 +27,7 @@ void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
     if(ShutdownRequested())
         return;
+    llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
     masternodeSync.AcceptedBlockHeader(pindexNew);
 }
 
@@ -51,6 +53,8 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     if (fInitialDownload)
         return;
+    if(llmq::chainLocksHandler)
+        llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
     if(llmq::quorumManager)
         llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     if(llmq::quorumDKGSessionManager)

@@ -11,6 +11,7 @@
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
+#include <llmq/quorums_chainlocks.h>
 
 #include <dbwrapper.h>
 #include <net.h>
@@ -32,10 +33,13 @@ void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, CConnman& connman, BanMan& ba
     quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
     quorumSigSharesManager = new CSigSharesManager(connman, banman);
     quorumSigningManager = new CSigningManager(*llmqDb, unitTests, connman, peerman);
+    chainLocksHandler = new CChainLocksHandler(connman, peerman);
 }
 
 void DestroyLLMQSystem()
 {
+    delete chainLocksHandler;
+    chainLocksHandler = nullptr;
     delete quorumSigningManager;
     quorumSigningManager = nullptr;
     delete quorumSigSharesManager;
@@ -66,10 +70,16 @@ void StartLLMQSystem()
         quorumSigSharesManager->RegisterAsRecoveredSigsListener();
         quorumSigSharesManager->StartWorkerThread();
     }
+    if (chainLocksHandler) {
+        chainLocksHandler->Start();
+    }
 }
 
 void StopLLMQSystem()
 {
+    if (chainLocksHandler) {
+        chainLocksHandler->Stop();
+    }
     if (quorumSigSharesManager) {
         quorumSigSharesManager->StopWorkerThread();
         quorumSigSharesManager->UnregisterAsRecoveredSigsListener();

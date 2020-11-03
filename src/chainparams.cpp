@@ -145,6 +145,26 @@ static Consensus::LLMQParams llmq50_60 = {
         .recoveryMembers = 25,
 };
 
+
+static Consensus::LLMQParams llmq400_60 = {
+        .type = Consensus::LLMQ_400_60,
+        .name = "llmq_400_60",
+        .size = 400,
+        .minSize = 300,
+        .threshold = 240,
+
+        .dkgInterval = 24 * 12, // one DKG every 12 hours
+        .dkgPhaseBlocks = 4,
+        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 28,
+        .dkgBadVotesThreshold = 300,
+
+        .signingActiveQuorumCount = 4, // two days worth of LLMQs
+
+        .keepOldConnections = 5,
+        .recoveryMembers = 100,
+};
+
 /**
  * Main network
  */
@@ -254,6 +274,8 @@ public:
         nMinSporkKeys = 1;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         nLLMQConnectionRetryTimeout = 60;
         fAllowMultiplePorts = false;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
@@ -399,6 +421,8 @@ public:
         nMinSporkKeys = 1;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         nLLMQConnectionRetryTimeout = 60;
         fAllowMultiplePorts = false;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
@@ -545,6 +569,7 @@ public:
         nMinSporkKeys = 1;
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         fAllowMultiplePorts = true;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
@@ -650,6 +675,7 @@ public:
         nMinSporkKeys = 1; 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         fAllowMultiplePorts = true;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes

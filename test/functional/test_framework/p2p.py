@@ -72,6 +72,7 @@ from test_framework.messages import (
     # Syscoin Specific
     msg_getmnlistd,
     msg_mnlistdiff,
+    msg_clsig,
 )
 from test_framework.util import wait_until_helper
 
@@ -110,6 +111,7 @@ MESSAGEMAP = {
     b"version": msg_version,
     b"wtxidrelay": msg_wtxidrelay,
     # Syscoin Specific
+    b"clsig": msg_clsig,
     b"getmnlistd": msg_getmnlistd,
     b"getsporks": None,
     b"govsync": None,

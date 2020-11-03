@@ -203,6 +203,7 @@ struct Params {
     /** Block height at which DIP0003 becomes enforced */
     int DIP0003EnforcementHeight;
     std::map<uint8_t, LLMQParams> llmqs;
+    uint8_t llmqTypeChainLocks;
         /**
      * If true, witness commitments contain a payload equal to a Bitcoin Script solution
      * to the signet challenge. See BIP325.

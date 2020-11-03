@@ -29,7 +29,7 @@ private:
     CEvoDB& evoDb;
     CConnman& connman;
     // TODO cleanup
-    RecursiveMutex minableCommitmentsCs;
+    mutable RecursiveMutex minableCommitmentsCs;
     std::map<std::pair<uint8_t, uint256>, uint256> minableCommitmentsByQuorum;
     std::map<uint256, CFinalCommitment> minableCommitments;
 

@@ -67,6 +67,7 @@ const char *QGETSIGSHARES="qgetsigs";
 const char *QBSIGSHARES="qbsigs";
 const char *QSIGREC="qsigrec";
 const char *QSIGSHARE="qsigshare";
+const char *CLSIG="clsig";
 const char *MNAUTH="mnauth";
 } // namespace NetMsgType
 
@@ -124,6 +125,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QBSIGSHARES,
     NetMsgType::QSIGREC,
     NetMsgType::QSIGSHARE,
+    NetMsgType::CLSIG,
     NetMsgType::MNAUTH,  
     NetMsgType::GETCFILTERS,
     NetMsgType::CFILTER,
@@ -231,6 +233,7 @@ std::string CInv::GetCommand() const
     case MSG_QUORUM_JUSTIFICATION:          return cmd.append(NetMsgType::QJUSTIFICATION);
     case MSG_QUORUM_PREMATURE_COMMITMENT:   return cmd.append(NetMsgType::QPCOMMITMENT);
     case MSG_QUORUM_RECOVERED_SIG:          return cmd.append(NetMsgType::QSIGREC);
+    case MSG_CLSIG:                         return cmd.append(NetMsgType::CLSIG);
 
 
     default:

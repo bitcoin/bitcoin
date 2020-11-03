@@ -77,7 +77,7 @@ MSG_QUORUM_COMPLAINT = 16
 MSG_QUORUM_JUSTIFICATION = 17
 MSG_QUORUM_PREMATURE_COMMITMENT = 18
 MSG_QUORUM_RECOVERED_SIG = 19
-
+MSG_CLSIG = 20
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
 VERSION_CHAIN_START = (1 << 16)
@@ -1941,6 +1941,28 @@ class msg_mnlistdiff():
     def __repr__(self):
         return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
+class msg_clsig():
+    command = b"clsig"
+
+    def __init__(self, height=0, blockHash=0, sig=b'\\x0' * 96):
+        self.height = height
+        self.blockHash = blockHash
+        self.sig = sig
+
+    def deserialize(self, f):
+        self.height = struct.unpack('<i', f.read(4))[0]
+        self.blockHash = deser_uint256(f)
+        self.sig = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack('<i', self.height)
+        r += ser_uint256(self.blockHash)
+        r += self.sig
+        return r
+
+    def __repr__(self):
+        return "msg_clsig(height=%d, blockHash=%064x)" % (self.height, self.blockHash)
 
 class msg_no_witness_blocktxn(msg_blocktxn):
     __slots__ = ()

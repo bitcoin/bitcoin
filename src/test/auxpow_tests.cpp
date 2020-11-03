@@ -202,7 +202,7 @@ CAuxpowBuilder::get (const CTransactionRef tx) const
   res.nChainIndex = auxpowChainIndex;
   res.parentBlock = parentBlock;
 
-  return res;
+  return std::move(res);
 }
 
 valtype

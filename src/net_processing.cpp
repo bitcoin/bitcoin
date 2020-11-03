@@ -47,6 +47,7 @@
 #include <llmq/quorums_init.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
+#include <llmq/quorums_chainlocks.h>
 #include <typeinfo>
 
 /** Expiration time for orphan transactions in seconds */
@@ -813,6 +814,8 @@ std::chrono::microseconds GetAdditionalTxRequestDelay(uint32_t invType)
         case MSG_QUORUM_JUSTIFICATION:
         case MSG_QUORUM_PREMATURE_COMMITMENT:
             return GETDATA_OTHER_INTERVAL;
+        case MSG_CLSIG:
+            return std::chrono::seconds{5};
         default:
             return GETDATA_TX_INTERVAL;
     }
@@ -1507,6 +1510,8 @@ bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLU
         return llmq::quorumDKGSessionManager->AlreadyHave(hash);
     case MSG_QUORUM_RECOVERED_SIG:
         return llmq::quorumSigningManager->AlreadyHave(hash);
+    case MSG_CLSIG:
+        return llmq::chainLocksHandler->AlreadyHave(hash);
     }
     {
         LOCK(g_cs_orphans);
@@ -1924,6 +1929,14 @@ void static ProcessGetData(CNode& pfrom, Peer& peer, const CChainParams& chainpa
                     llmq::CRecoveredSig o;
                     if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
                         connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
+                        push = true;
+                    }
+                    break;
+                }
+                case(MSG_CLSIG): {
+                    llmq::CChainLockSig o;
+                    if (llmq::chainLocksHandler->GetChainLockByHash(inv.hash, o)) {
+                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
                         push = true;
                     }
                     break;
@@ -4093,6 +4106,9 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         return;
     } else if(msg_type == NetMsgType::QSIGREC) {
         llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, *this);
+        return;
+    } else if(msg_type == NetMsgType::CLSIG) {
+        llmq::chainLocksHandler->ProcessMessage(&pfrom, msg_type, vRecv);
         return;
     } else if(msg_type == NetMsgType::QCONTRIB || 
             msg_type == NetMsgType::QCOMPLAINT ||

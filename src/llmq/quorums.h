@@ -84,7 +84,7 @@ private:
     CEvoDB& evoDb;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
-    RecursiveMutex quorumsCacheCs;
+    mutable RecursiveMutex quorumsCacheCs;
     std::map<std::pair<uint8_t, uint256>, CQuorumPtr> quorumsCache;
     unordered_lru_cache<std::pair<uint8_t, uint256>, std::vector<CQuorumCPtr>, StaticSaltedHasher, 32> scanQuorumsCache;
 

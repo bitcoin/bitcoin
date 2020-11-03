@@ -602,6 +602,20 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         self.connect_nodes(1, 2)
         self.sync_all()
 
+    # SYSCOIN
+    def isolate_node(self, node, timeout=5):
+        node.setnetworkactive(False)
+        st = time.time()
+        while time.time() < st + timeout:
+            if node.getconnectioncount() == 0:
+                return
+            time.sleep(0.5)
+        raise AssertionError("disconnect_node timed out")
+
+    def reconnect_isolated_node(self, node, node_num):
+        node.setnetworkactive(True)
+        self.connect_nodes(node.index, node_num)
+
     def sync_blocks(self, nodes=None, wait=1, timeout=60):
         """
         Wait until everybody has the same tip.
@@ -868,7 +882,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
             for i in range(0, num_nodes):
-                self.extra_args[i].append("-dip3params=50:50")
+                self.extra_args[i].append("-dip3params=30:50")
         for i in range(0, num_nodes):
             self.extra_args[i].append("-mncollateral=100")
         # LLMQ default test params (no need to pass -llmqtestparams)
@@ -1087,12 +1101,36 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_tx(self, txid, node, expected=True, timeout=15):
         def check_tx():
             try:
+                self.bump_mocktime(1)
                 return node.getrawtransaction(txid)
             except:
                 return False
         time.sleep(0.5)
-        if wait_until_helper(check_tx, timeout=timeout, do_assert=expected) and not expected:
+        if wait_until_helper(check_tx, timeout=timeout) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
+        def check_chainlocked_block():
+            try:
+                self.log.info('prebump')
+                self.bump_mocktime(1)
+                self.log.info('bump and get block {}'.format(block_hash))
+                block = node.getblock(block_hash)
+                self.log.info('get block {}'.format(block["confirmations"] > 0 and block["chainlock"] is True))
+                return block["confirmations"] > 0 and block["chainlock"] is True
+            except:
+                self.log.info('except cl node index %d', node.index)
+                return False
+        if wait_until_helper(check_chainlocked_block, timeout=timeout) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=15):
+        for node in self.nodes:
+            self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
+
+    def wait_for_best_chainlock(self, node, block_hash, timeout=15):
+        wait_until_helper(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout)
+
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():

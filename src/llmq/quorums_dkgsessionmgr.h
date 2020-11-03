@@ -25,7 +25,7 @@ private:
     CBLSWorker& blsWorker;
     std::map<uint8_t, CDKGSessionHandler> dkgSessionHandlers;
 
-    RecursiveMutex contributionsCacheCs;
+    mutable RecursiveMutex contributionsCacheCs;
     struct ContributionsCacheKey {
         uint8_t llmqType;
         uint256 quorumHash;

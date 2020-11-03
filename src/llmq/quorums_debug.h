@@ -89,7 +89,7 @@ public:
 class CDKGDebugManager
 {
 private:
-    RecursiveMutex cs;
+    mutable RecursiveMutex cs;
     CDKGDebugStatus localStatus;
 
 public:

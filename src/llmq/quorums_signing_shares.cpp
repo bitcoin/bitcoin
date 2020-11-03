@@ -1178,7 +1178,7 @@ bool CSigSharesManager::SendMessages()
             for (auto& sigSesAnn : it1->second) {
                 LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::SendMessages -- QSIGSESANN signHash=%s, sessionId=%d, node=%d\n",
                          CLLMQUtils::BuildSignHash(sigSesAnn).ToString(), sigSesAnn.sessionId, pnode->GetId());
-                msgs.emplace_back(sigSesAnn);
+                msgs.emplace_back(std::move(sigSesAnn));
                 if (msgs.size() == MAX_MSGS_CNT_QSIGSESANN) {
                     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSESANN, msgs));
                     msgs.clear();
@@ -1230,7 +1230,7 @@ bool CSigSharesManager::SendMessages()
 
             }
             if (!msgs.empty()) {
-                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, std::move(msgs)));
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, msgs));
                 didSend = true;
             }
         }

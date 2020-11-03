@@ -7,7 +7,7 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_greater_than_or_equal, time
 
 '''
-llmq-connections.py
+feature_llmqconnections.py
 
 Checks intra quorum connections
 
