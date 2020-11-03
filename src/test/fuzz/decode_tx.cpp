@@ -24,8 +24,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     if (result_try_witness_and_maybe_no_witness) {
         assert(result_try_no_witness || result_try_witness);
     }
-    // if (result_try_no_witness) { // Uncomment when https://github.com/bitcoin/bitcoin/pull/17775 is merged
-    if (result_try_witness) { // Remove stop-gap when https://github.com/bitcoin/bitcoin/pull/17775 is merged
+    if (result_try_no_witness) {
         assert(result_try_witness_and_maybe_no_witness);
     }
 }
