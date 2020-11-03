@@ -837,7 +837,8 @@ void PeerManager::ReattemptInitialBroadcast(CScheduler& scheduler) const
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
-void PeerManager::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
+void PeerManager::FinalizeNode(const CNode& node, bool& fUpdateConnectionTime) {
+    NodeId nodeid = node.GetId();
     fUpdateConnectionTime = false;
     LOCK(cs_main);
     int misbehavior{0};
@@ -854,7 +855,8 @@ void PeerManager::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
     if (state->fSyncStarted)
         nSyncStarted--;
 
-    if (misbehavior == 0 && state->fCurrentlyConnected) {
+    if (misbehavior == 0 && state->fCurrentlyConnected && !node.IsBlockOnlyConn()) {
+        // Note: we avoid changing visible addrman state for block-relay-only peers
         fUpdateConnectionTime = true;
     }
 
@@ -2405,14 +2407,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             // empty and no one will know who we are, so these mechanisms are
             // important to help us connect to the network.
             //
-            // We also update the addrman to record connection success for
-            // these peers (which include OUTBOUND_FULL_RELAY and FEELER
-            // connections) so that addrman will have an up-to-date notion of
-            // which peers are online and available.
-            //
-            // We skip these operations for BLOCK_RELAY peers to avoid
-            // potentially leaking information about our BLOCK_RELAY
-            // connections via the addrman or address relay.
+            // We skip this for BLOCK_RELAY peers to avoid potentially leaking
+            // information about our BLOCK_RELAY connections via address relay.
             if (fListen && !::ChainstateActive().IsInitialBlockDownload())
             {
                 CAddress addr = GetLocalAddress(&pfrom.addr, pfrom.GetLocalServices());
@@ -2431,9 +2427,23 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             // Get recent addresses
             m_connman.PushMessage(&pfrom, CNetMsgMaker(greatest_common_version).Make(NetMsgType::GETADDR));
             pfrom.fGetAddr = true;
+        }
 
-            // Moves address from New to Tried table in Addrman, resolves
-            // tried-table collisions, etc.
+        if (!pfrom.IsInboundConn()) {
+            // For non-inbound connections, we update the addrman to record
+            // connection success so that addrman will have an up-to-date
+            // notion of which peers are online and available.
+            //
+            // While we strive to not leak information about block-relay-only
+            // connections via the addrman, not moving an address to the tried
+            // table is also potentially detrimental because new-table entries
+            // are subject to eviction in the event of addrman collisions.  We
+            // mitigate the information-leak by never calling
+            // CAddrMan::Connected() on block-relay-only peers; see
+            // FinalizeNode().
+            //
+            // This moves an address from New to Tried table in Addrman,
+            // resolves tried-table collisions, etc.
             m_connman.MarkAddressGood(pfrom.addr);
         }
 
