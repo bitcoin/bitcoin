@@ -90,34 +90,9 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [C++17, previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: memory (MSan)]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_msan.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
-
-    - stage: test
-      name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
-
-    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
-
-    - stage: test
-      name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_mac.sh"
 
     - stage: test
       name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'

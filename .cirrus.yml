@@ -53,6 +53,14 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #    - choco install python --version=3.7.7 -y
 
 task:
+  name: 'x86_64 Linux  [GOAL: install]  [bionic]  [C++17, previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
+
+task:
   name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: thread (TSan), no gui]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
@@ -64,6 +72,14 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
+  name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: memory (MSan)]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
+
+task:
   name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
@@ -72,9 +88,33 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
+  name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
+
+task:
   name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, fuzzers under valgrind]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
+
+task:
+  name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
+
+task:
+  name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_mac.sh"
