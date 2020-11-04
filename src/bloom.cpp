@@ -157,8 +157,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
         if (GetTxPayload(tx, proTx)) {
             if(contains(proTx.proTxHash))
                 return true;
-            if(contains(proTx.keyIDVoting) ||
-                    contains(std::vector<unsigned char>(proTx.scriptPayout.begin(), proTx.scriptPayout.end())) {
+            if(contains(proTx.keyIDVoting) || contains(std::vector<unsigned char>(proTx.scriptPayout.begin(), proTx.scriptPayout.end()))) {
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
                     insert(proTx.proTxHash);
                 return true;
