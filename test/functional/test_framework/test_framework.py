@@ -1121,7 +1121,6 @@ class DashTestFramework(SyscoinTestFramework):
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"] is True
             except:
-                self.log.info('except cl node index %d', node.index)
                 return False
         if wait_until_helper(check_chainlocked_block, timeout=timeout) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
