@@ -205,30 +205,9 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
-# x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
-
-    - stage: test
-      name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
-
-    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
-
-    - stage: test
-      name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_mac.sh"
 
     - stage: test
       name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
