@@ -42,11 +42,13 @@ AC_DEFUN([CHECK_ATOMIC], [
         ])
     ])
   AC_MSG_CHECKING([std::atomic host override])
-  AC_MSG_RESULT([no])
   case $host in
   s390x*)
     AC_MSG_RESULT([yes])
     LIBS="$LIBS -latomic"
+    ;;
+  *)
+    AC_MSG_RESULT([no])
     ;;
   esac
   AC_LANG_POP
