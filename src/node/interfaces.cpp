@@ -202,15 +202,7 @@ public:
     }
     uint256 getBestBlockHash() override
     {
-        const CBlockIndex* tip;
-        {
-            // TODO: Temporary scope to check correctness of refactored code.
-            // Should be removed manually after merge of
-            // https://github.com/bitcoin/bitcoin/pull/20158
-            LOCK(cs_main);
-            assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
-            tip = chainman().ActiveChain().Tip();
-        }
+        const CBlockIndex* tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
         return tip ? tip->GetBlockHash() : Params().GenesisBlock().GetHash();
     }
     int64_t getLastBlockTime() override
@@ -233,16 +225,7 @@ public:
         return GuessVerificationProgress(Params().TxData(), tip);
     }
     bool isInitialBlockDownload() override {
-        const CChainState* active_chainstate;
-        {
-            // TODO: Temporary scope to check correctness of refactored code.
-            // Should be removed manually after merge of
-            // https://github.com/bitcoin/bitcoin/pull/20158
-            LOCK(::cs_main);
-            active_chainstate = &m_context->chainman->ActiveChainstate();
-            assert(std::addressof(::ChainstateActive()) == std::addressof(*active_chainstate));
-        }
-        return active_chainstate->IsInitialBlockDownload();
+        return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
     bool getReindex() override { return ::fReindex; }
     bool getImporting() override { return ::fImporting; }
@@ -647,16 +630,7 @@ public:
     }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {
-        const CChainState* active_chainstate;
-        {
-            // TODO: Temporary scope to check correctness of refactored code.
-            // Should be removed manually after merge of
-            // https://github.com/bitcoin/bitcoin/pull/20158
-            LOCK(::cs_main);
-            active_chainstate = &chainman().ActiveChainstate();
-            assert(std::addressof(::ChainstateActive()) == std::addressof(*active_chainstate));
-        }
-        return active_chainstate->IsInitialBlockDownload();
+        return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
     int64_t getAdjustedTime() override { return GetAdjustedTime(); }
