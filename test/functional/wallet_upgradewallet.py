@@ -104,7 +104,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         # calling upgradewallet without version arguments
         # should return nothing if successful
-        assert_equal(wallet.upgradewallet(), "")
+        assert_equal(wallet.upgradewallet(), {})
         new_version = wallet.getwalletinfo()["walletversion"]
         # upgraded wallet version should be greater than older one
         assert_greater_than_or_equal(new_version, old_version)
@@ -127,8 +127,8 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal('hdseedid' in wallet.getwalletinfo(), False)
         # calling upgradewallet with explicit version number
         # should return nothing if successful
-        assert_equal(wallet.upgradewallet(120200), "")
 
+        assert_equal(wallet.upgradewallet(169900), {})
         new_version = wallet.getwalletinfo()["walletversion"]
         # upgraded wallet would not have 120200 version until HD seed actually appeared
         assert_greater_than(120200, new_version)
