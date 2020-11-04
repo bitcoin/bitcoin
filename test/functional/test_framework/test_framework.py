@@ -1117,11 +1117,8 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
         def check_chainlocked_block():
             try:
-                self.log.info('prebump')
                 self.bump_mocktime(1)
-                self.log.info('bump and get block {}'.format(block_hash))
                 block = node.getblock(block_hash)
-                self.log.info('get block {}'.format(block["confirmations"] > 0 and block["chainlock"] is True))
                 return block["confirmations"] > 0 and block["chainlock"] is True
             except:
                 self.log.info('except cl node index %d', node.index)
