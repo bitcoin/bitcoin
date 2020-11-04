@@ -82,7 +82,7 @@ else
 fi
 
 dnl Check if -latomic is required for <std::atomic>
-AC_CHECK_LIB([atomic],[__atomic_load_16],,[LDFLAGS="${LDFLAGS} -latomic"])
+CHECK_ATOMIC
 
 dnl Unless the user specified OBJCXX, force it to be the same as CXX. This ensures
 dnl that we get the same -std flags for both.
