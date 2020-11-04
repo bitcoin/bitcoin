@@ -21,21 +21,29 @@ m4_define([_CHECK_ATOMIC_testbody], [[
       T i = a.load();
   }
 
+  struct uint128_type
+  {
+      std::uint64_t left;
+      std::uint64_t right;
+  };
+
   int main()
   {
-      __int128_t x = 0, y = 0;
-      y = __atomic_load_n(&x, 0);
-      __atomic_store_n(&x, y, 0);
-      __atomic_compare_exchange_n(&x, &y, x, 0, 0, 0);
+      std::atomic<uint128_type> f1({0,0});
+      uint128_type f2 = {0,0};
+      uint128_type f3 = {1,1};
       std::atomic_flag af = ATOMIC_FLAG_INIT;
       if (af.test_and_set())
           af.clear();
+
+      f1.compare_exchange_strong(f2, f3);
 
       test_atomic<int>();
       test_atomic<std::uint8_t>();
       test_atomic<std::uint16_t>();
       test_atomic<std::uint32_t>();
       test_atomic<std::uint64_t>();
+      test_atomic<uint128_type>();
 
       std::memory_order mo;
       mo = std::memory_order_relaxed;
@@ -43,7 +51,6 @@ m4_define([_CHECK_ATOMIC_testbody], [[
       mo = std::memory_order_release;
       mo = std::memory_order_acq_rel;
       mo = std::memory_order_seq_cst;
-      
   }
 ]])
 
