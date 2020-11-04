@@ -30,8 +30,8 @@ class WalletSendTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def test_send(self, from_wallet, to_wallet=None, amount=None, data=None,
-                  arg_conf_target=None, arg_estimate_mode=None,
-                  conf_target=None, estimate_mode=None, add_to_wallet=None, psbt=None,
+                  arg_conf_target=None, arg_estimate_mode=None, arg_fee_rate=None,
+                  conf_target=None, estimate_mode=None, fee_rate=None, add_to_wallet=None, psbt=None,
                   inputs=None, add_inputs=None, change_address=None, change_position=None, change_type=None,
                   include_watching=None, locktime=None, lock_unspents=None, replaceable=None, subtract_fee_from_outputs=None,
                   expect_error=None):
@@ -64,6 +64,8 @@ class WalletSendTest(BitcoinTestFramework):
             options["conf_target"] = conf_target
         if estimate_mode is not None:
             options["estimate_mode"] = estimate_mode
+        if fee_rate is not None:
+            options["fee_rate"] = fee_rate
         if inputs is not None:
             options["inputs"] = inputs
         if add_inputs is not None:
@@ -91,18 +93,19 @@ class WalletSendTest(BitcoinTestFramework):
             options = None
 
         if expect_error is None:
-            res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
+            res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, fee_rate=arg_fee_rate, options=options)
         else:
             try:
                 assert_raises_rpc_error(expect_error[0], expect_error[1], from_wallet.send,
-                                        outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
+                    outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, fee_rate=arg_fee_rate, options=options)
             except AssertionError:
                 # Provide debug info if the test fails
                 self.log.error("Unexpected successful result:")
                 self.log.error(arg_conf_target)
                 self.log.error(arg_estimate_mode)
+                self.log.error(arg_fee_rate)
                 self.log.error(options)
-                res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, options=options)
+                res = from_wallet.send(outputs=outputs, conf_target=arg_conf_target, estimate_mode=arg_estimate_mode, fee_rate=arg_fee_rate, options=options)
                 self.log.error(res)
                 if "txid" in res and add_to_wallet:
                     self.log.error("Transaction details:")
@@ -228,10 +231,10 @@ class WalletSendTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].decodepsbt(res1["psbt"])["fee"],
                      self.nodes[1].decodepsbt(res2["psbt"])["fee"])
         # but not at the same time
-        for mode in ["unset", "economical", "conservative", "btc/kb", "sat/b"]:
+        for mode in ["unset", "economical", "conservative"]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=1, arg_estimate_mode="economical",
                 conf_target=1, estimate_mode=mode, add_to_wallet=False,
-                expect_error=(-8, "Use either conf_target and estimate_mode or the options dictionary to control fee rate"))
+                expect_error=(-8, "Pass conf_target and estimate_mode either as arguments or in the options object, but not both"))
 
         self.log.info("Create PSBT from watch-only wallet w3, sign with w2...")
         res = self.test_send(from_wallet=w3, to_wallet=w1, amount=1)
@@ -253,41 +256,49 @@ class WalletSendTest(BitcoinTestFramework):
         assert res["complete"]
 
         self.log.info("Test setting explicit fee rate")
-        res1 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=1, arg_estimate_mode="economical", add_to_wallet=False)
-        res2 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=1, estimate_mode="economical", add_to_wallet=False)
+        res1 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=1, add_to_wallet=False)
+        res2 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=1, add_to_wallet=False)
         assert_equal(self.nodes[1].decodepsbt(res1["psbt"])["fee"], self.nodes[1].decodepsbt(res2["psbt"])["fee"])
 
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.00007, estimate_mode="btc/kb", add_to_wallet=False)
+        # Passing conf_target 0, estimate_mode "" as placeholder arguments should allow fee_rate to apply.
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0, estimate_mode="", fee_rate=7, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00007"))
 
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=2, estimate_mode="sat/b", add_to_wallet=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=2, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00002"))
 
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.00004531, arg_estimate_mode="btc/kb", add_to_wallet=False)
+        # Passing conf_target 0, estimate_mode "" as placeholder arguments should allow fee_rate to apply.
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0, arg_estimate_mode="", arg_fee_rate=4.531, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00004531"))
 
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=3, arg_estimate_mode="sat/b", add_to_wallet=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=3, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00003"))
 
+        # Test that passing fee_rate as both an argument and an option raises.
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=1, fee_rate=1, add_to_wallet=False,
+                       expect_error=(-8, "Pass the fee_rate either as an argument, or in the options object, but not both"))
+
+        assert_raises_rpc_error(-8, "Use fee_rate (sat/vB) instead of feeRate", w0.send, {w1.getnewaddress(): 1}, 6, "conservative", 1, {"feeRate": 0.01})
+
+        assert_raises_rpc_error(-3, "Unexpected key totalFee", w0.send, {w1.getnewaddress(): 1}, 6, "conservative", 1, {"totalFee": 0.01})
+
         for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
-                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))
-        for mode in ["btc/kb", "sat/b"]:
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=-1, estimate_mode=mode,
-                expect_error=(-3, "Amount out of range"))
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0, estimate_mode=mode,
-                expect_error=(-4, "Fee rate (0.00000000 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
+                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees.h
+        for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
+                expect_error=(-8, "Invalid estimate_mode parameter"))
 
-        for mode in ["foo", Decimal("3.141592")]:
+        for mode in ["", "foo", Decimal("3.141592")]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode,
                 expect_error=(-8, "Invalid estimate_mode parameter"))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode,
                 expect_error=(-8, "Invalid estimate_mode parameter"))
-            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", lambda: w0.send({w1.getnewaddress(): 1}, 0.1, mode))
+            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", w0.send, {w1.getnewaddress(): 1}, 0.1, mode)
 
         for mode in ["economical", "conservative", "btc/kb", "sat/b"]:
             self.log.debug("{}".format(mode))
@@ -295,17 +306,11 @@ class WalletSendTest(BitcoinTestFramework):
                 self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,
                     expect_error=(-3, "Expected type number for conf_target, got {}".format(k)))
 
-        # TODO: error should use sat/B instead of BTC/kB if sat/B is selected.
+        # TODO: The error message should use sat/vB units instead of BTC/kB.
         # Test setting explicit fee rate just below the minimum.
-        for unit, fee_rate in {"sat/B": 0.99999999, "BTC/kB": 0.00000999}.items():
-            self.log.info("Explicit fee rate raises RPC error 'fee rate too low' if conf_target {} and estimate_mode {} are passed".format(fee_rate, unit))
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=fee_rate, estimate_mode=unit,
-                expect_error=(-4, "Fee rate (0.00000999 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
-
-        self.log.info("Explicit fee rate raises RPC error if estimate_mode is passed without a conf_target")
-        for unit, fee_rate in {"sat/B": 100, "BTC/kB": 0.001}.items():
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, estimate_mode=unit,
-                expect_error=(-8, "Selected estimate_mode {} requires a fee rate to be specified in conf_target".format(unit)))
+        self.log.info("Explicit fee rate raises RPC error 'fee rate too low' if fee_rate of 0.99999999 is passed")
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=0.99999999,
+            expect_error=(-4, "Fee rate (0.00000999 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)"))
 
         # TODO: Return hex if fee rate is below -maxmempool
         # res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b", add_to_wallet=False)
