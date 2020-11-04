@@ -221,7 +221,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
 
     if (cc.m_fee_mode == FeeEstimateMode::DASH_KB || cc.m_fee_mode == FeeEstimateMode::DUFF_B) {
         if (estimate_param.isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Selected estimate_mode requires a fee rate");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Selected estimate_mode %s requires a fee rate to be specified in conf_target", estimate_mode.get_str()));
         }
 
         CAmount fee_rate = AmountFromValue(estimate_param);
@@ -426,7 +426,8 @@ static RPCHelpMan sendtoaddress()
                 "The recipient will receive less amount of Dash than you enter in the amount field."},
             {"use_is", RPCArg::Type::BOOL, /* default */ "false", "Deprecated and ignored"},
             {"use_cj", RPCArg::Type::BOOL, /* default */ "false", "Use CoinJoin funds only"},
-            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                         "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
             {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
@@ -921,7 +922,8 @@ static RPCHelpMan sendmany()
                     },
                     {"use_is", RPCArg::Type::BOOL, /* default */ "false", "Deprecated and ignored"},
                     {"use_cj", RPCArg::Type::BOOL, /* default */ "false", "Use CoinJoin funds only"},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                       "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"verbose", RPCArg::Type::BOOL, /* default */ "false", "If true, return extra infomration about the transaction."},
@@ -3378,7 +3380,7 @@ static RPCHelpMan listunspent()
     };
 }
 
-void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl)
+void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, const UniValue& options, CCoinControl& coinControl)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -3533,7 +3535,8 @@ static RPCHelpMan fundrawtransaction()
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                                          "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "       \"" + FeeModes("\"\n\"") + "\""},
                         },
@@ -4177,7 +4180,8 @@ static RPCHelpMan send()
                     },
                 },
             },
-            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                    "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
             {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
@@ -4189,7 +4193,8 @@ static RPCHelpMan send()
                     {"add_to_wallet", RPCArg::Type::BOOL, /* default */ "true", "When false, returns a serialized transaction which will not be added to the wallet or broadcast"},
                     {"change_address", RPCArg::Type::STR_HEX, /* default */ "pool address", "The Dash address to receive the change"},
                     {"change_position", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks), or fee rate (for " + CURRENCY_UNIT + "/kB or " + CURRENCY_ATOM + "/B estimate modes)"},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                            "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
                     {"include_watching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only.\n"
@@ -4205,7 +4210,7 @@ static RPCHelpMan send()
                     {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                     {"psbt", RPCArg::Type::BOOL,  /* default */ "automatic", "Always return a PSBT, implies add_to_wallet=false."},
-                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, /* default */ "empty array", "A JSON array of integers.\n"
+                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, /* default */ "empty array", "Outputs to subtract the fee from, specified as integer indices.\n"
                     "The fee will be equally deducted from the amount of each specified output.\n"
                     "Those recipients will receive less funds than you enter in their corresponding amount field.\n"
                     "If no outputs are specified here, the sender pays the fee.",
@@ -4279,7 +4284,7 @@ static RPCHelpMan send()
     CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"]);
     CCoinControl coin_control;
     // Automatically select coins, unless at least one is manually selected. Can
-    // be overriden by options.add_inputs.
+    // be overridden by options.add_inputs.
     coin_control.m_add_inputs = rawTx.vin.size() == 0;
     FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control);
 
@@ -4534,7 +4539,8 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                         },
                     },
-                    {"conf_target", RPCArg::Type::NUM, /* default */ "Fallback to wallet's confirmation target", "Confirmation target (in blocks)"},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet -txconfirmtarget", "Confirmation target (in blocks)\n"
+                                                          "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                     "         \"" + FeeModes("\"\n\"") + "\""},
                 },

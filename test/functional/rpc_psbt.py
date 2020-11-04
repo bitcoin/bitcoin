@@ -94,8 +94,11 @@ class PSBTTest(BitcoinTestFramework):
             elif out['scriptPubKey']['address'] == p2pkh:
                 p2pkh_pos = out['n']
 
+        inputs = [{"txid":txid,"vout":p2pkh_pos}]
+        outputs = [{self.nodes[1].getnewaddress(): 9.99}]
+
         # spend single key from node 1
-        created_psbt = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():9.99})
+        created_psbt = self.nodes[1].walletcreatefundedpsbt(inputs, outputs)
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(created_psbt['psbt'])
         # Make sure it has both types of UTXOs
         decoded = self.nodes[1].decodepsbt(walletprocesspsbt_out['psbt'])
@@ -105,18 +108,62 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
-        # feeRate of 0.1 DASH / KB produces a total fee slightly below -maxtxfee (~0.06650000):
-        res = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():9.99}, 0, {"feeRate": 0.1, "add_inputs": True}, False)
+        self.log.info("Test walletcreatefundedpsbt feeRate of 0.1 DASH/kB produces a total fee at or slightly below -maxtxfee (~0.06650000)")
+        res = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"feeRate": 0.1, "add_inputs": True})
         assert_approx(res["fee"], 0.04, 0.03)
-        decoded_psbt = self.nodes[0].decodepsbt(res['psbt'])
-        for psbt_in in decoded_psbt["inputs"]:
-            assert "bip32_derivs" not in psbt_in
 
-        # feeRate of 10 DASH / KB produces a total fee well above -maxtxfee
+        self.log.info("Test walletcreatefundedpsbt explicit fee rate with conf_target and estimate_mode")
+        for unit, fee_rate in {"dash/kb": 0.1, "duff/b": 10000}.items():
+            fee = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"conf_target": fee_rate, "estimate_mode": unit, "add_inputs": True})["fee"]
+            self.log.info("- conf_target {}, estimate_mode {} produces fee {} at or slightly below -maxtxfee (~0.05290000)".format(fee_rate, unit, fee))
+            assert_approx(fee, vexp=0.04, vspan=0.03)
+
+        for field, fee_rate in {"conf_target": 0.1, "estimate_mode": "duff/b"}.items():
+            self.log.info("- raises RPC error if both feeRate and {} are passed".format(field))
+            assert_raises_rpc_error(-8, "Cannot specify both {} and feeRate".format(field),
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"feeRate": 0.1, field: fee_rate, "add_inputs": True}))
+
+        self.log.info("- raises RPC error with invalid estimate_mode settings")
+        for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
+            assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": v, "conf_target": 0.1, "add_inputs": True}))
+        for mode in ["foo", Decimal("3.141592")]:
+            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter",
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": mode, "conf_target": 0.1, "add_inputs": True}))
+
+        self.log.info("- raises RPC error if estimate_mode is passed without a conf_target")
+        for unit in ["DUFF/B", "DASH/KB"]:
+            assert_raises_rpc_error(-8, "Selected estimate_mode {} requires a fee rate to be specified in conf_target".format(unit),
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": unit}))
+
+        self.log.info("- raises RPC error with invalid conf_target settings")
+        for mode in ["unset", "economical", "conservative", "dash/kb", "duff/b"]:
+            self.log.debug("{}".format(mode))
+            for k, v in {"string": "", "object": {"foo": "bar"}}.items():
+                assert_raises_rpc_error(-3, "Expected type number for conf_target, got {}".format(k),
+                    lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": mode, "conf_target": v, "add_inputs": True}))
+            if mode in ["dash/kb", "duff/b"]:
+                assert_raises_rpc_error(-3, "Amount out of range",
+                    lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": mode, "conf_target": -1, "add_inputs": True}))
+                assert_raises_rpc_error(-4, "Fee rate (0.00000000 DASH/kB) is lower than the minimum fee rate setting (0.00001000 DASH/kB)",
+                    lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": mode, "conf_target": 0, "add_inputs": True}))
+            else:
+                for n in [-1, 0, 1009]:
+                    assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",
+                        lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": mode, "conf_target": n, "add_inputs": True}))
+
+        for unit, fee_rate in {"DUFF/B": 0.99999999, "DASH/KB": 0.00000999}.items():
+            self.log.info("- raises RPC error 'fee rate too low' if conf_target {} and estimate_mode {} are passed".format(fee_rate, unit))
+            assert_raises_rpc_error(-4, "Fee rate (0.00000999 DASH/kB) is lower than the minimum fee rate setting (0.00001000 DASH/kB)",
+                lambda: self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"estimate_mode": unit, "conf_target": fee_rate, "add_inputs": True}))
+
+        self.log.info("Test walletcreatefundedpsbt feeRate of 10 DASH/kB produces total fee well above -maxtxfee and raises RPC error")
         # previously this was silently capped at -maxtxfee
-        assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)", self.nodes[1].walletcreatefundedpsbt, [{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():9.99}, 0, {"feeRate": 10, "add_inputs": True})
-        assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)", self.nodes[1].walletcreatefundedpsbt, [{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():1}, 0, {"feeRate": 10, "add_inputs": True})
+        for bool_add, outputs_array in {True: outputs, False: [{self.nodes[1].getnewaddress(): 1}]}.items():
+            assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)",
+                self.nodes[1].walletcreatefundedpsbt, inputs, outputs_array, 0, {"feeRate": 10, "add_inputs": bool_add})
 
+        self.log.info("Test various PSBT operations")
         # partially sign multisig things with node 1
         psbtx = wmulti.walletcreatefundedpsbt(inputs=[{"txid":txid,"vout":p2sh_pos}], outputs={self.nodes[1].getnewaddress():9.99}, options={'changeAddress': self.nodes[1].getrawchangeaddress()})['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(psbtx)
