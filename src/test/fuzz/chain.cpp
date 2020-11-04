@@ -12,6 +12,11 @@
 #include <vector>
 // SYSCOIN
 #include <chainparams.h>
+void initialize()
+{
+    static const ECCVerifyHandle verify_handle;
+    SelectParams(CBaseChainParams::REGTEST);
+}
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
