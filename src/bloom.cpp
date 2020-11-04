@@ -112,20 +112,6 @@ bool CBloomFilter::IsWithinSizeConstraints() const
 }
 
 // SYSCOIN
-// Match if the filter contains any arbitrary script data element in script
-bool CBloomFilter::CheckScript(const CScript &script) const
-{
-    CScript::const_iterator pc = script.begin();
-    std::vector<unsigned char> data;
-    while (pc < script.end()) {
-        opcodetype opcode;
-        if (!script.GetOp(pc, opcode, data))
-            break;
-        if (data.size() != 0 && contains(data))
-            return true;
-    }
-    return false;
-}
 // If the transaction is a special transaction that has a registration
 // transaction hash, test the registration transaction hash.
 // If the transaction is a special transaction with any public keys or any
@@ -144,7 +130,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
             if(contains(proTx.collateralOutpoint) ||
                     contains(proTx.keyIDOwner) ||
                     contains(proTx.keyIDVoting) ||
-                    CheckScript(proTx.scriptPayout)) {
+                    contains(std::vector<unsigned char>(proTx.scriptPayout.begin(), proTx.scriptPayout.end()))) {
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
                     insert(tx.GetHash());
                 return true;
@@ -158,7 +144,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
             if(contains(proTx.proTxHash)) {
                 return true;
             }
-            if(CheckScript(proTx.scriptOperatorPayout)) {
+            if(contains(std::vector<unsigned char>(proTx.scriptOperatorPayout.begin(), proTx.scriptOperatorPayout.end()))) {
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
                     insert(proTx.proTxHash);
                 return true;
@@ -172,7 +158,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
             if(contains(proTx.proTxHash))
                 return true;
             if(contains(proTx.keyIDVoting) ||
-                    CheckScript(proTx.scriptPayout)) {
+                    contains(std::vector<unsigned char>(proTx.scriptPayout.begin(), proTx.scriptPayout.end())) {
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
                     insert(proTx.proTxHash);
                 return true;
