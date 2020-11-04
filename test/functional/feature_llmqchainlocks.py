@@ -6,7 +6,6 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
 
 '''
 feature_llmqchainlocks.py
@@ -27,7 +26,7 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(len(self.nodes)):
             if i != 1:
                 self.connect_nodes(i, 1)
-                
+
         self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
 
@@ -124,7 +123,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Reenable network on first node and wait for chainlock")
         self.reconnect_isolated_node(self.nodes[0], 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), timeout=30)
-    
+
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
         self.bump_scheduler(5)
