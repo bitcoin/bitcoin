@@ -29,29 +29,28 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
     // this will also consume the data, even if we bail out early
     auto pm = std::make_shared<CDataStream>(std::move(vRecv));
 
-    {
-        LOCK(cs);
-
-        if (messagesPerNode[from] >= maxMessagesPerNode) {
-            // TODO ban?
-            LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
-            return;
-        }
-        messagesPerNode[from]++;
-    }
-
     CHashWriter hw(SER_GETHASH, 0);
     hw.write(pm->data(), pm->size());
     uint256 hash = hw.GetHash();
 
-    LOCK2(cs_main, cs);
+    if (from != -1) {
+        LOCK(cs_main);
+        EraseObjectRequest(from, CInv(invType, hash));
+    }
+
+    LOCK(cs);
+
+    if (messagesPerNode[from] >= maxMessagesPerNode) {
+        // TODO ban?
+        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
+        return;
+    }
+    messagesPerNode[from]++;
 
     if (!seenMessages.emplace(hash).second) {
         LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- already seen %s, peer=%d\n", __func__, hash.ToString(), from);
         return;
     }
-
-    EraseObjectRequest(from, CInv(invType, hash));
 
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
 }
@@ -454,10 +453,6 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         const auto& msg = *p.second;
 
         auto hash = ::SerializeHash(msg);
-        {
-            LOCK(cs_main);
-            EraseObjectRequest(p.first, CInv(MessageType, hash));
-        }
 
         bool ban = false;
         if (!session.PreVerifyMessage(hash, msg, ban)) {

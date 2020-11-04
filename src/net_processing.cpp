@@ -2734,6 +2734,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CInv inv(nInvType, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
+        {
+            LOCK(cs_main);
+            EraseObjectRequest(pfrom->GetId(), inv);
+        }
+
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (nInvType == MSG_DSTX) {
             uint256 hashTx = tx.GetHash();
@@ -2785,8 +2790,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         bool fMissingInputs = false;
         CValidationState state;
-
-        EraseObjectRequest(pfrom->GetId(), inv);
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
@@ -4158,8 +4161,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                     CInv islockInv(MSG_ISLOCK, islockHash);
                     pto->filterInventoryKnown.insert(islockHash);
 
-                    LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", inv.ToString(), vInv.size(), pto->GetId());
-                    vInv.push_back(inv);
+                    LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", islockInv.ToString(), vInv.size(), pto->GetId());
+                    vInv.push_back(islockInv);
                     if (vInv.size() == MAX_INV_SZ) {
                         LogPrint(BCLog::NET, "SendMessages -- pushing inv's: count=%d peer=%d\n", vInv.size(), pto->GetId());
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));

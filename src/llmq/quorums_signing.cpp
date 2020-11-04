@@ -482,6 +482,11 @@ void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand
 
 void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig, CConnman& connman)
 {
+    {
+        LOCK(cs_main);
+        EraseObjectRequest(pfrom->GetId(), CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash()));
+    }
+
     bool ban = false;
     if (!PreVerifyRecoveredSig(pfrom->GetId(), recoveredSig, ban)) {
         if (ban) {
@@ -681,11 +686,6 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman& connman)
 {
     auto llmqType = (Consensus::LLMQType)recoveredSig.llmqType;
-
-    {
-        LOCK(cs_main);
-        EraseObjectRequest(nodeId, CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash()));
-    }
 
     if (db.HasRecoveredSigForHash(recoveredSig.GetHash())) {
         return;

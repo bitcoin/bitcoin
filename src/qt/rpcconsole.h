@@ -34,7 +34,7 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(QWidget* parent);
+    explicit RPCConsole(QWidget* parent, Qt::WindowFlags flags);
     ~RPCConsole();
 
     static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr);

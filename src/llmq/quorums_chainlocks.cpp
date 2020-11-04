@@ -108,7 +108,7 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
 
 void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLockSig& clsig, const uint256& hash)
 {
-    {
+    if (from != -1) {
         LOCK(cs_main);
         EraseObjectRequest(from, CInv(MSG_CLSIG, hash));
     }
