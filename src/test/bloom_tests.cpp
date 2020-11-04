@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(bloom_match)
 // SYSCOIN
 BOOST_AUTO_TEST_CASE(dip2_bloom_match)
 {
-    // ProRegTx from testnet (txid: 7323ffecf37f0728a579b400ca2a594db60fda78534ac611d9ae15debabb4c05)
+    // ProRegTx from testnet (txid: a446abfd1a73e451e86886dbe75ebbbeb28e4dc7989a1972442844204d0c5632)
     CDataStream stream(ParseHex("500000000001012fa52ec38276cc8f5376d6cbb211524851b2feec21f866966bf4ce7b7558ee910000000000feffffff020000000000000000d16a4cce01000000000031e77323502acc4c8d204d2951c6f75cfb79910afaf9deb119e6598aa9bc59b80100000000000000000000000000ffffadf9310947c154a9eed46b864772bd4aeea2165a3206d1ee4e941324af7ca7a4c4f1cf36e20d259e4724e18be0e39471db9f7d88f64748ec17583fbe591538dce8293c801e4d3410d2ed35cfddbf0573c05b33d7f24a0562b21a648d449d00001600145b1c9907188c05144fb19ba71f516bf50aec9b615b0283fd4c816f3f637b06d3d73ea5d94b859ac3f28589c9312ce5b65c05c913000bc317a804000000160014800563f22c7022b1f8b5c371e5361996d78872220247304402202879ffad1d8de66ca7bd1cac8c89551e28369005804a2ca5847a38c2f1e34c94022071109d1a1ad8cebbdb8dad33bbc0984b4f090233b27564ee946e403c55710c4e0121033fc91a933e42becc19bcff709345eff216e0f8d7129b3a91a19b0e520d4b114a00000000"), SER_DISK, CLIENT_VERSION);
     CTransaction proregtx(deserialize, stream);
     // ProUpServTx from testnet (txid: ad77a3226c261dd3bee05c4b4cd96a61c147df39a85d2ec1acb17441c195a9e7)
@@ -246,10 +246,10 @@ BOOST_AUTO_TEST_CASE(dip2_bloom_match)
 
 BOOST_AUTO_TEST_CASE(dip2_bloom_update)
 {
-    // ProRegTx from testnet (txid: 39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed461)
+    // ProRegTx from testnet (txid: a446abfd1a73e451e86886dbe75ebbbeb28e4dc7989a1972442844204d0c5632)
     CDataStream stream(ParseHex("500000000001012fa52ec38276cc8f5376d6cbb211524851b2feec21f866966bf4ce7b7558ee910000000000feffffff020000000000000000d16a4cce01000000000031e77323502acc4c8d204d2951c6f75cfb79910afaf9deb119e6598aa9bc59b80100000000000000000000000000ffffadf9310947c154a9eed46b864772bd4aeea2165a3206d1ee4e941324af7ca7a4c4f1cf36e20d259e4724e18be0e39471db9f7d88f64748ec17583fbe591538dce8293c801e4d3410d2ed35cfddbf0573c05b33d7f24a0562b21a648d449d00001600145b1c9907188c05144fb19ba71f516bf50aec9b615b0283fd4c816f3f637b06d3d73ea5d94b859ac3f28589c9312ce5b65c05c913000bc317a804000000160014800563f22c7022b1f8b5c371e5361996d78872220247304402202879ffad1d8de66ca7bd1cac8c89551e28369005804a2ca5847a38c2f1e34c94022071109d1a1ad8cebbdb8dad33bbc0984b4f090233b27564ee946e403c55710c4e0121033fc91a933e42becc19bcff709345eff216e0f8d7129b3a91a19b0e520d4b114a00000000"), SER_DISK, CLIENT_VERSION);
     CTransaction proregtx(deserialize, stream);
-    // ProUpServTx from testnet (txid: 0c9627a054784f207db34c311b06e8bb797c4a120a236dbb02b51268dd186d39)
+    // ProUpServTx from testnet (txid: ad77a3226c261dd3bee05c4b4cd96a61c147df39a85d2ec1acb17441c195a9e7)
     stream = CDataStream(ParseHex("51000000011dd439844b6d2d96ded5745743ba6ee44255819f16189e7322408affd5a4491b00000000484730440220506ff294cf06061a61c188553b9a94bad2c10f637c81534d538ee5e2f6aa58aa02203c1a9b6db1c9850a3dbbaa8b5c214c7f71bdabc792ddc6fc97c582b0afc952c501ffffffff0300e1f505000000001976a91434addcf1fa52147886d29b14b2e0507c7f9d20ae88ac00111024010000001976a91434addcf1fa52147886d29b14b2e0507c7f9d20ae88ac0000000000000000d16a4cce0100e7a995c14174b1acc12e5da839df47c1616ad94c4b5ce0bed31d266c22a377ad00000000000000000000ffff0101010103e81976a91434addcf1fa52147886d29b14b2e0507c7f9d20ae88acf1bc5bea7d948122131d095bcf5342151918c6d533ff948b9ddbce0fed12f9b1970c0b0874b09f6a6b005d29848639a4e56971fcf5ccd15235cac9bff9740e83a8cc41ba24c467637756910fbe803633028c0390f0b6a158ca23bd4bf864ad4d6cdc2f5660f800272301a19f407efdf0880c8a74c22afb9d6ba42f137953a88500000000"), SER_DISK, CLIENT_VERSION);
     CTransaction proupservtx(deserialize, stream);
     // ProUpRegTx from testnet (txid: 3037bf4e45d1a9d57891ea8baa72b38ad6323bd28945b11325bdd33ebea049b3)
@@ -264,14 +264,15 @@ BOOST_AUTO_TEST_CASE(dip2_bloom_update)
     filter.insert(COutPoint(uint256S("0xb859bca98a59e619b1def9fa0a9179fb5cf7c651294d208d4ccc2a502373e731"), 1));
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(proupservtx), "Bloom filter matches without update");
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proregtx), "Bloom filter didn't match collateral outpoint in ProRegTx");
-    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter wasn't updated with proregtx hash");
+    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(proupregtx), "Bloom filter wasn't updated with proregtx hash");
 
     // if ProUpRegTx matches, all related pro txes match too
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(ParseHex("35cfddbf0573c05b33d7f24a0562b21a648d449d"));
-    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(proupservtx), "Bloom filter matches without update");
-    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter didn't match Voting keyid in ProUpRegTx");
-    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter wasn't updated with proregtx hash");
+    filter.insert(uint256S("0xa446abfd1a73e451e86886dbe75ebbbeb28e4dc7989a1972442844204d0c5632"));
+    filter.insert(uint256S("0xad77a3226c261dd3bee05c4b4cd96a61c147df39a85d2ec1acb17441c195a9e7"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupservtx), "Bloom filter matches without update");
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter didn't match proregtx hash in ProUpRegTx");
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(prouprevtx), "Bloom filter wasn't updated with proregtx hash");
 }
 BOOST_AUTO_TEST_CASE(merkle_block_1)
 {
