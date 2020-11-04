@@ -23,7 +23,7 @@ m4_define([_CHECK_ATOMIC_testbody], [[
 
   int main()
   {
-      unsigned __int128 x = 0, y = 0;
+      __int128_t x = 0, y = 0;
       y = __atomic_load_n(&x, 0);
       __atomic_store_n(&x, y, 0);
       __atomic_compare_exchange_n(&x, &y, x, 0, 0, 0);
