@@ -105,21 +105,21 @@ private:
 
     QMenuBar *appMenuBar;
     QToolBar *appToolBar;
+    QToolButton *overviewButton;
+    QToolButton *sendCoinsButton;
+    QToolButton *privateSendCoinsButton;
+    QToolButton *receiveCoinsButton;
+    QToolButton *historyButton;
+    QToolButton *masternodeButton;
     QAction* appToolBarLogoAction;
-    QToolButton *overviewAction;
-    QToolButton *historyAction;
-    QToolButton *masternodeAction;
     QAction *quitAction;
-    QToolButton *sendCoinsAction;
     QAction *sendCoinsMenuAction;
-    QToolButton *privateSendCoinsAction;
     QAction *privateSendCoinsMenuAction;
     QAction *usedSendingAddressesAction;
     QAction *usedReceivingAddressesAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
-    QToolButton *receiveCoinsAction;
     QAction *receiveCoinsMenuAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
