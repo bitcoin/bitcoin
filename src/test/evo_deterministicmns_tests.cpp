@@ -18,7 +18,6 @@
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 #include <boost/test/unit_test.hpp>
-
 typedef std::vector<std::pair<COutPoint, std::pair<int, CAmount>> > SimpleUTXOVec;
 
 static SimpleUTXOVec BuildSimpleUTXOVec(const std::vector<CTransactionRef>& txs)
@@ -99,6 +98,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const 
     proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
     proTx.scriptPayout = scriptPayout;
+    proTx.nOperatorReward = 5000;
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
@@ -110,13 +110,12 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOVec& utxos, int port, const 
     return tx;
 }
 
-static CMutableTransaction CreateProUpServTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpServTx(SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CKey& coinbaseKey)
 {
     CProUpServTx proTx;
     proTx.proTxHash = proTxHash;
     proTx.addr = LookupNumeric("1.1.1.1", port);
-    proTx.scriptOperatorPayout = scriptOperatorPayout;
-
+    proTx.scriptOperatorPayout = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE;
     FundTransaction(tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN);
@@ -352,7 +351,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
 
     // test ProUpServTx
-    auto tx = CreateProUpServTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], 1000, CScript(), coinbaseKey);
+    auto tx = CreateProUpServTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], 1000, coinbaseKey);
     CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
@@ -408,7 +407,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
     nHeight++;
 
-    tx = CreateProUpServTx(utxos, dmnHashes[0], newOperatorKey, 100, CScript(), coinbaseKey);
+    tx = CreateProUpServTx(utxos, dmnHashes[0], newOperatorKey, 100, coinbaseKey);
     CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
