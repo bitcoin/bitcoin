@@ -229,7 +229,7 @@ class WalletTest(SyscoinTestFramework):
 
         self.log.info("Test case-insensitive explicit fee rate (sendmany as SYS/kB)")
         # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode sys/kB requires a fee rate to be specified in conf_target",
+        assert_raises_rpc_error(-8, "Selected estimate_mode SYS/kB requires a fee rate to be specified in conf_target",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
             estimate_mode='SYS/kB')
@@ -427,7 +427,7 @@ class WalletTest(SyscoinTestFramework):
             assert prebalance > 2
             address = self.nodes[1].getnewaddress()
             # Throw if no conf_target provided
-            assert_raises_rpc_error(-8, "Selected estimate_mode SYS/Kb requires a fee rate to be specified in conf_target",
+            assert_raises_rpc_error(-8, "Selected estimate_mode SYS/kB requires a fee rate to be specified in conf_target",
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
