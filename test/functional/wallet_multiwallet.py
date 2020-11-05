@@ -100,14 +100,14 @@ class MultiWalletTest(BitcoinTestFramework):
         #   w8         - to verify existing wallet file is loaded correctly. Not tested for SQLite wallets as this is a deprecated BDB behavior.
         #   ''         - to verify default wallet file is created correctly
         to_create = ['w1', 'w2', 'w3', 'w', 'sub/w5', 'w7_symlink']
-        in_wallet_dir = to_create.copy() # Wallets in the wallet dir
-        in_wallet_dir.append('w7') # w7 is not loaded or created, but will be listed by listwalletdir because w7_symlink
-        to_create.append(os.path.join(self.options.tmpdir, 'extern/w6')) # External, not in the wallet dir, so we need to avoid adding it to in_wallet_dir
+        in_wallet_dir = [w.replace('/', os.path.sep) for w in to_create]  # Wallets in the wallet dir
+        in_wallet_dir.append('w7')  # w7 is not loaded or created, but will be listed by listwalletdir because w7_symlink
+        to_create.append(os.path.join(self.options.tmpdir, 'extern/w6'))  # External, not in the wallet dir, so we need to avoid adding it to in_wallet_dir
         to_load = [self.default_wallet_name]
         if not self.options.is_sqlite_only:
             to_load.append('w8')
-        wallet_names = to_create + to_load # Wallet names loaded in the wallet
-        in_wallet_dir += to_load # The loaded wallets are also in the wallet dir
+        wallet_names = to_create + to_load  # Wallet names loaded in the wallet
+        in_wallet_dir += to_load  # The loaded wallets are also in the wallet dir
         self.start_node(0)
 
         for wallet_name in to_create:
@@ -397,6 +397,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, exp_stderr, self.nodes[1].loadwallet, wallet)
         self.nodes[0].unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
+
 
 if __name__ == '__main__':
     MultiWalletTest().main()
