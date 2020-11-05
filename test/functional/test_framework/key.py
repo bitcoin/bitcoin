@@ -322,7 +322,7 @@ class ECPubKey():
         u1 = z*w % SECP256K1_ORDER
         u2 = r*w % SECP256K1_ORDER
         R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, u1), (self.p, u2)]))
-        if R is None or R[0] != r:
+        if R is None or (R[0] % SECP256K1_ORDER) != r:
             return False
         return True
 
