@@ -47,8 +47,6 @@ using interfaces::FoundBlock;
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
-static const uint32_t WALLET_BTC_KB_TO_SAT_B = COIN / 1000; // 1 sat / B = 0.00001 BTC / kB
-
 static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValue& param) {
     bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
     bool avoid_reuse = param.isNull() ? can_avoid_reuse : param.get_bool();
@@ -217,12 +215,8 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Selected estimate_mode %s requires a fee rate to be specified in conf_target", estimate_mode.get_str()));
         }
 
-        CAmount fee_rate = AmountFromValue(estimate_param);
-        if (cc.m_fee_mode == FeeEstimateMode::SAT_B) {
-            fee_rate /= WALLET_BTC_KB_TO_SAT_B;
-        }
-
-        cc.m_feerate = CFeeRate(fee_rate);
+        CAmount feerate{AmountFromValue(estimate_param)};
+        cc.m_feerate = cc.m_fee_mode == FeeEstimateMode::SAT_B ? CFeeRate(feerate, COIN) : CFeeRate(feerate);
 
         // default RBF to true for explicit fee rate modes
         if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
