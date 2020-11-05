@@ -185,7 +185,8 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
     // SYSCOIN
-    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
+    if(llmq::chainLocksHandler)
+        result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
     return result;
 }
 
@@ -234,7 +235,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
     // SYSCOIN
-    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
+    if(llmq::chainLocksHandler)
+        result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
     return result;
 }
 
