@@ -415,49 +415,49 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // everything is fine here.
     if (tx.nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
         CProRegTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
-        if (!proTx.collateralOutpoint.hash.IsNull()) {
-            mapProTxRefs.emplace(tx.GetHash(), proTx.collateralOutpoint.hash);
-        }
-        mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
-        mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
-        mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
-        if (!proTx.collateralOutpoint.hash.IsNull()) {
-            mapProTxCollaterals.emplace(proTx.collateralOutpoint, tx.GetHash());
+        if(GetTxPayload(tx, proTx)) {
+            if (!proTx.collateralOutpoint.hash.IsNull()) {
+                mapProTxRefs.emplace(tx.GetHash(), proTx.collateralOutpoint.hash);
+            }
+            mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
+            mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
+            mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
+            if (!proTx.collateralOutpoint.hash.IsNull()) {
+                mapProTxCollaterals.emplace(proTx.collateralOutpoint, tx.GetHash());
+            }
         }
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         CProUpServTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
-        mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-        mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
+        if(GetTxPayload(tx, proTx)) {
+            mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
+            mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
+        }
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
-        mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-        mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
-        CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
-        auto dmn = mnList.GetMN(proTx.proTxHash);
-        assert(dmn);
-        newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
-        if (dmn->pdmnState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
-            newit->isKeyChangeProTx = true;
+        if(GetTxPayload(tx, proTx)) {
+            mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
+            mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
+            CDeterministicMNList mnList;
+            deterministicMNManager->GetListAtChainTip(mnList);
+            auto dmn = mnList.GetMN(proTx.proTxHash);
+            assert(dmn);
+            newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
+            if (dmn->pdmnState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
+                newit->isKeyChangeProTx = true;
+            }
         }
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         CProUpRevTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
-        mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-        CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
-        auto dmn = mnList.GetMN(proTx.proTxHash);
-        assert(dmn);
-        newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
-        if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
-            newit->isKeyChangeProTx = true;
+        if(GetTxPayload(tx, proTx)) {
+            mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
+            CDeterministicMNList mnList;
+            deterministicMNManager->GetListAtChainTip(mnList);
+            auto dmn = mnList.GetMN(proTx.proTxHash);
+            assert(dmn);
+            newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
+            if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
+                newit->isKeyChangeProTx = true;
+            }
         }
     }
 }
