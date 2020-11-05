@@ -509,36 +509,32 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 
     if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_REGISTER) {
         CProRegTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+        if (GetTxPayload(it->GetTx(), proTx)) {
+            if (!proTx.collateralOutpoint.IsNull()) {
+                eraseProTxRef(it->GetTx().GetHash(), proTx.collateralOutpoint.hash);
+            }
+            mapProTxAddresses.erase(proTx.addr);
+            mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
+            mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
+            mapProTxCollaterals.erase(proTx.collateralOutpoint);
         }
-        if (!proTx.collateralOutpoint.IsNull()) {
-            eraseProTxRef(it->GetTx().GetHash(), proTx.collateralOutpoint.hash);
-        }
-        mapProTxAddresses.erase(proTx.addr);
-        mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
-        mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
-        mapProTxCollaterals.erase(proTx.collateralOutpoint);
     } else if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         CProUpServTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+        if (GetTxPayload(it->GetTx(), proTx)) {
+            eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
+            mapProTxAddresses.erase(proTx.addr);
         }
-        eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
-        mapProTxAddresses.erase(proTx.addr);
     } else if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+        if (GetTxPayload(it->GetTx(), proTx)) { 
+            eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
+            mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
         }
-        eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
-        mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
     } else if (it->GetTx().nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
         CProUpRevTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+        if (GetTxPayload(it->GetTx(), proTx)) {
+            eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         }
-        eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
     }
     // remove bridge transfer id from mempool structure
     if(IsSyscoinMintTx(it->GetTx().nVersion)) {
