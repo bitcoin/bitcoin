@@ -67,7 +67,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     CScript pubKey;
     pubKey << i++ << OP_TRUE;
 
-    auto ptemplate = BlockAssembler(*m_node.mempool, Params()).CreateNewBlock(pubKey);
+    auto ptemplate = BlockAssembler(*m_node.mempool, Params()).CreateNewBlock(::ChainstateActive(), pubKey);
     auto pblock = std::make_shared<CBlock>(ptemplate->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
 {
     CScript pubKey;
     pubKey << 1 << OP_TRUE;
-    auto ptemplate = BlockAssembler(*m_node.mempool, Params()).CreateNewBlock(pubKey);
+    auto ptemplate = BlockAssembler(*m_node.mempool, Params()).CreateNewBlock(::ChainstateActive(), pubKey);
     CBlock pblock = ptemplate->block;
 
     CTxOut witness;
