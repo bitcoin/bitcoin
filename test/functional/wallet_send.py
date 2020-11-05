@@ -5,13 +5,15 @@
 """Test the send RPC command."""
 
 from decimal import Decimal, getcontext
+from itertools import product
+
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
-    assert_raises_rpc_error
+    assert_raises_rpc_error,
 )
 
 class WalletSendTest(BitcoinTestFramework):
@@ -271,8 +273,9 @@ class WalletSendTest(BitcoinTestFramework):
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00003"))
 
-        # TODO: This test should pass with all modes, e.g. with the next line uncommented, for consistency with the other explicit feerate RPCs.
-        # for mode in ["unset", "economical", "conservative", "btc/kb", "sat/b"]:
+        for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
+                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))
         for mode in ["btc/kb", "sat/b"]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=-1, estimate_mode=mode,
                 expect_error=(-3, "Amount out of range"))
@@ -282,17 +285,15 @@ class WalletSendTest(BitcoinTestFramework):
         for mode in ["foo", Decimal("3.141592")]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode,
                 expect_error=(-8, "Invalid estimate_mode parameter"))
-            # TODO: these 2 equivalent sends with an invalid estimate_mode arg should both fail, but they do not...why?
-            # self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode,
-            #     expect_error=(-8, "Invalid estimate_mode parameter"))
-            # assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", lambda: w0.send({w1.getnewaddress(): 1}, 0.1, mode))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode,
+                expect_error=(-8, "Invalid estimate_mode parameter"))
+            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", lambda: w0.send({w1.getnewaddress(): 1}, 0.1, mode))
 
-        # TODO: These tests should pass for consistency with the other explicit feerate RPCs, but they do not.
-        # for mode in ["unset", "economical", "conservative", "btc/kb", "sat/b"]:
-        #     self.log.debug("{}".format(mode))
-        #     for k, v in {"string": "", "object": {"foo": "bar"}}.items():
-        #         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,
-        #             expect_error=(-3, "Expected type number for conf_target, got {}".format(k)))
+        for mode in ["economical", "conservative", "btc/kb", "sat/b"]:
+            self.log.debug("{}".format(mode))
+            for k, v in {"string": "true", "object": {"foo": "bar"}}.items():
+                self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,
+                    expect_error=(-3, "Expected type number for conf_target, got {}".format(k)))
 
         # TODO: error should use sat/B instead of BTC/kB if sat/B is selected.
         # Test setting explicit fee rate just below the minimum.

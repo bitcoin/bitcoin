@@ -4087,7 +4087,7 @@ static RPCHelpMan send()
             if (!wallet) return NullUniValue;
             CWallet* const pwallet = wallet.get();
 
-            UniValue options = request.params[3];
+            UniValue options{request.params[3].isNull() ? UniValue::VOBJ : request.params[3]};
             if (options.exists("feeRate") || options.exists("fee_rate") || options.exists("estimate_mode") || options.exists("conf_target")) {
                 if (!request.params[1].isNull() || !request.params[2].isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Use either conf_target and estimate_mode or the options dictionary to control fee rate");
