@@ -16,7 +16,6 @@
 #include <hash.h>
 #include <net_permissions.h>
 #include <netaddress.h>
-#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -760,7 +759,7 @@ public:
     // read and deserialize data
     virtual int Read(const char *data, unsigned int bytes) = 0;
     // decomposes a message from the context
-    virtual Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err) = 0;
+    virtual CNetMessage GetMessage(std::chrono::microseconds time, bool& reject_message) = 0;
     virtual ~TransportDeserializer() {}
 };
 
@@ -819,7 +818,7 @@ public:
         if (ret < 0) Reset();
         return ret;
     }
-    Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
+    CNetMessage GetMessage(std::chrono::microseconds time, bool& reject_message) override;
 };
 
 /** The TransportSerializer prepares messages for the network transport

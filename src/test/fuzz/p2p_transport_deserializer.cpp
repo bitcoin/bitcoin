@@ -32,14 +32,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         n_bytes -= handled;
         if (deserializer.Complete()) {
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
-            uint32_t out_err_raw_size{0};
-            Optional<CNetMessage> result{deserializer.GetMessage(m_time, out_err_raw_size)};
-            if (result) {
-                assert(result->m_command.size() <= CMessageHeader::COMMAND_SIZE);
-                assert(result->m_raw_message_size <= buffer.size());
-                assert(result->m_raw_message_size == CMessageHeader::HEADER_SIZE + result->m_message_size);
-                assert(result->m_time == m_time);
-            }
+            bool reject_message{false};
+            CNetMessage msg = deserializer.GetMessage(m_time, reject_message);
+            assert(msg.m_command.size() <= CMessageHeader::COMMAND_SIZE);
+            assert(msg.m_raw_message_size <= buffer.size());
+            assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);
+            assert(msg.m_time == m_time);
         }
     }
 }
