@@ -52,6 +52,7 @@ from test_framework.messages import (
     MSG_TYPE_MASK,
     msg_verack,
     msg_version,
+    msg_wtxidrelay,
     NODE_NETWORK,
     NODE_WITNESS,
     sha256,
@@ -86,6 +87,7 @@ MESSAGEMAP = {
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
+    b"wtxidrelay": msg_wtxidrelay,
 }
 
 MAGIC_BYTES = {
@@ -343,6 +345,7 @@ class P2PInterface(P2PConnection):
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
     def on_tx(self, message): pass
+    def on_wtxidrelay(self, message): pass
 
     def on_inv(self, message):
         want = msg_getdata()
@@ -360,6 +363,8 @@ class P2PInterface(P2PConnection):
 
     def on_version(self, message):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        if message.nVersion >= 70016:
+            self.send_message(msg_wtxidrelay())
         self.send_message(msg_verack())
         self.nServices = message.nServices
 
