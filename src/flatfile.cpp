@@ -36,7 +36,7 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
         return nullptr;
     }
     fs::path path = FileName(pos);
-    fs::create_directories(path.parent_path());
+    TryCreateDirectories(path.parent_path());
     FILE* file = fsbridge::fopen(path, read_only ? "rb": "rb+");
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");
