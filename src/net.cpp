@@ -710,13 +710,13 @@ int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
 
     // Check start string, network magic
     if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-        LogPrint(BCLog::NET, "HEADER ERROR - MESSAGESTART (%s, %u bytes), received %s, peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, HexStr(hdr.pchMessageStart), m_node_id);
+        LogPrint(BCLog::NET, "HEADER ERROR - WRONG MESSAGESTART (%s, %u bytes), received %s, peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
     if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-        LogPrint(BCLog::NET, "HEADER ERROR - SIZE (%s, %u bytes), peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, m_node_id);
+        LogPrint(BCLog::NET, "HEADER ERROR - PAYLOAD TOO LARGE (%s, %u bytes), peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, m_node_id);
         return -1;
     }
 
@@ -778,7 +778,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
                  m_node_id);
         reject_message = true;
     } else if (!hdr.IsCommandValid()) {
-        LogPrint(BCLog::NET, "HEADER ERROR - COMMAND (%s, %u bytes), peer=%d\n",
+        LogPrint(BCLog::NET, "HEADER ERROR - INVALID MSGTYPE (%s, %u bytes), peer=%d\n",
                  hdr.GetCommand(), msg.m_message_size, m_node_id);
         reject_message = true;
     }
