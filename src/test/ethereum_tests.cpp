@@ -14,10 +14,11 @@
 #include <univalue.h>
 #include <key_io.h>
 #include <util/system.h>
+#include <test/util/setup_common.h>
 extern UniValue read_json(const std::string& jsondata);
 
+BOOST_FIXTURE_TEST_SUITE(ethereum_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_SUITE(ethereum_tests)
 BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
 {
     tfm::format(std::cout,"Running ethereum_parseabidata...\n");
