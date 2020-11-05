@@ -116,7 +116,7 @@ script: |
 
   # Create the source tarball
   mkdir -p "$(dirname "$GIT_ARCHIVE")"
-  git archive --output="$GIT_ARCHIVE" HEAD
+  git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 
   ORIGPATH="$PATH"
   # Extract the git archive into a dir for each host and build
@@ -126,7 +126,7 @@ script: |
     cd distsrc-${i}
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
-    tar -xf $GIT_ARCHIVE
+    tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}"

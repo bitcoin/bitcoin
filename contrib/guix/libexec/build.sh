@@ -158,7 +158,7 @@ GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
-    git archive --output="$GIT_ARCHIVE" HEAD
+    git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 fi
 
 ###########################
@@ -193,7 +193,7 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
     cd "$DISTSRC"
 
     # Extract the source tarball
-    tar -xf "${GIT_ARCHIVE}"
+    tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     ./autogen.sh
 
