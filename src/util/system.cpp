@@ -785,7 +785,8 @@ const fs::path &GetBlocksDir()
 
     path /= BaseParams().DataDir();
     path /= "blocks";
-    fs::create_directories(path);
+    // SYSCOIN
+    TryCreateDirectories(path);
     path = StripRedundantLastElementsOfPath(path);
     return path;
 }
@@ -812,9 +813,10 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
-    if (fs::create_directories(path)) {
+    // SYSCOIN
+    if (TryCreateDirectories(path)) {
         // This is the first run, create wallets subdirectory too
-        fs::create_directories(path / "wallets");
+        TryCreateDirectories(path / "wallets");
     }
 
     path = StripRedundantLastElementsOfPath(path);
