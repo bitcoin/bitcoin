@@ -488,7 +488,7 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 	if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		return false;
     // if witness script we get the next element which should be our MN data
-    if(vchData[0] == 0xaa &&
+    if(!vchData.empty() && vchData[0] == 0xaa &&
         vchData[1] == 0x21 &&
         vchData[2] == 0xa9 &&
         vchData[3] == 0xed &&
