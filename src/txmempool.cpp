@@ -440,10 +440,11 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             CDeterministicMNList mnList;
             deterministicMNManager->GetListAtChainTip(mnList);
             auto dmn = mnList.GetMN(proTx.proTxHash);
-            assert(dmn);
-            newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
-            if (dmn->pdmnState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
-                newit->isKeyChangeProTx = true;
+            if(dmn) {
+                newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
+                if (dmn->pdmnState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
+                    newit->isKeyChangeProTx = true;
+                }
             }
         }
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE) {
@@ -453,10 +454,11 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             CDeterministicMNList mnList;
             deterministicMNManager->GetListAtChainTip(mnList);
             auto dmn = mnList.GetMN(proTx.proTxHash);
-            assert(dmn);
-            newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
-            if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
-                newit->isKeyChangeProTx = true;
+            if(dmn) {
+                newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
+                if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
+                    newit->isKeyChangeProTx = true;
+                }
             }
         }
     }
