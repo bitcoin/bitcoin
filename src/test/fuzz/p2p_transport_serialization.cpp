@@ -68,18 +68,16 @@ FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serializa
         }
         if (deserializer.Complete()) {
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
-            uint32_t out_err_raw_size{0};
-            std::optional<CNetMessage> result{deserializer.GetMessage(m_time, out_err_raw_size)};
-            if (result) {
-                assert(result->m_command.size() <= CMessageHeader::COMMAND_SIZE);
-                assert(result->m_raw_message_size <= mutable_msg_bytes.size());
-                assert(result->m_raw_message_size == CMessageHeader::HEADER_SIZE + result->m_message_size);
-                assert(result->m_time == m_time);
+            bool reject_message{false};
+            CNetMessage msg = deserializer.GetMessage(m_time, reject_message);
+            assert(msg.m_command.size() <= CMessageHeader::COMMAND_SIZE);
+            assert(msg.m_raw_message_size <= mutable_msg_bytes.size());
+            assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);
+            assert(msg.m_time == m_time);
 
-                std::vector<unsigned char> header;
-                auto msg = CNetMsgMaker{result->m_recv.GetVersion()}.Make(result->m_command, MakeUCharSpan(result->m_recv));
-                serializer.prepareForTransport(msg, header);
-            }
+            std::vector<unsigned char> header;
+            auto msg2 = CNetMsgMaker{msg.m_recv.GetVersion()}.Make(msg.m_command, MakeUCharSpan(msg.m_recv));
+            serializer.prepareForTransport(msg2, header);
         }
     }
 }
