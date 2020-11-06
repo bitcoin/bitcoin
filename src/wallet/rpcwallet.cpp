@@ -2307,7 +2307,7 @@ static RPCHelpMan settxfee()
                 "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n"
                 "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
                 {
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee in " + CURRENCY_UNIT + "/kB"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee in " + CURRENCY_UNIT + "/kvB"},
                 },
                 RPCResult{
                     RPCResult::Type::BOOL, "", "Returns true if successful"
@@ -2430,7 +2430,7 @@ static RPCHelpMan getwalletinfo()
                         {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
                         {RPCResult::Type::NUM, "keypoolsize_hd_internal", "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
                         {RPCResult::Type::NUM_TIME, "unlocked_until", /* optional */ true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
-                        {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB"},
+                        {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::STR_HEX, "hdseedid", /* optional */ true, "the Hash160 of the HD seed (only present when HD is enabled)"},
                         {RPCResult::Type::BOOL, "private_keys_enabled", "false if privatekeys are disabled for this wallet (enforced watch-only wallet)"},
                         {RPCResult::Type::BOOL, "avoid_reuse", "whether this wallet tracks clean/dirty coins in terms of reuse"},
@@ -3206,7 +3206,7 @@ static RPCHelpMan fundrawtransaction()
                                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, /* default */ "not set, fall back to wallet fee estimation", "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
-                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set, fall back to wallet fee estimation", "Specify a fee rate in " + CURRENCY_UNIT + "/kB."},
+                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set, fall back to wallet fee estimation", "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The integers.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
                                                           "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
@@ -4362,7 +4362,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"includeWatching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only"},
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, /* default */ "not set, fall back to wallet fee estimation", "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
-                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set, fall back to wallet fee estimation", "Specify a fee rate in " + CURRENCY_UNIT + "/kB."},
+                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set, fall back to wallet fee estimation", "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "The outputs to subtract the fee from.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
                                                           "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
