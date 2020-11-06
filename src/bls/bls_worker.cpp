@@ -139,10 +139,10 @@ struct Aggregator {
     // items in the queue are all intermediate aggregation results of finished batches.
     // The intermediate results must be deleted by us again (which we do in SyncAggregateAndPushAggQueue)
     boost::lockfree::queue<T*> aggQueue;
-    std::atomic<size_t> aggQueueSize{0};
+    boost::atomic<size_t> aggQueueSize{0};
 
     // keeps track of currently queued/in-progress batches. If it reaches 0, we are done
-    std::atomic<size_t> waitCount{0};
+    boost::atomic<size_t> waitCount{0};
 
     typedef std::function<void(const T& agg)> DoneCallback;
     DoneCallback doneCallback;
@@ -343,7 +343,7 @@ struct VectorAggregator {
     bool parallel;
     ctpl::thread_pool& workerPool;
 
-    std::atomic<size_t> doneCount;
+    boost::atomic<size_t> doneCount;
 
     VectorPtrType result;
     size_t vecSize;
@@ -405,7 +405,7 @@ struct ContributionVerifier {
 
         // starts with 0 and is incremented if either vvec or skShare aggregation finishes. If it reaches 2, we know
         // that aggregation for this batch is fully done. We can then start verification.
-        std::unique_ptr<std::atomic<int> > aggDone;
+        std::unique_ptr<boost::atomic<int> > aggDone;
 
         // we can't directly update a vector<bool> in parallel
         // as vector<bool> is not thread safe (uses bitsets internally)
@@ -427,7 +427,7 @@ struct ContributionVerifier {
     size_t verifyCount;
 
     std::vector<BatchState> batchStates;
-    std::atomic<size_t> verifyDoneCount{0};
+    boost::atomic<size_t> verifyDoneCount{0};
     std::function<void(const std::vector<bool>&)> doneCallback;
 
     ContributionVerifier(const CBLSId& _forId, const std::vector<BLSVerificationVectorPtr>& _vvecs,
@@ -460,7 +460,7 @@ struct ContributionVerifier {
         for (size_t i = 0; i < batchCount; i++) {
             auto& batchState = batchStates[i];
 
-            batchState.aggDone.reset(new std::atomic<int>(0));
+            batchState.aggDone.reset(new boost::atomic<int>(0));
             batchState.start = i * batchSize;
             batchState.count = std::min(batchSize, vvecs.size() - batchState.start);
             batchState.verifyResults.assign(batchState.count, 0);
