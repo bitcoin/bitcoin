@@ -39,6 +39,7 @@ unsigned-integer-overflow:stl_bvector.h
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
+unsigned-integer-overflow:auxpow.cpp
 
 implicit-integer-sign-change:*/include/c++/*/bits/*.h
 implicit-integer-sign-change:*/new_allocator.h
