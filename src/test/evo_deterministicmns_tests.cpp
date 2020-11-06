@@ -323,7 +323,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         LOCK(cs_main);
         DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
         const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = ::ChainActive().Height() + 1;
-        CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    }
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    {
+        LOCK(cs_main);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     }
     nHeight++;
