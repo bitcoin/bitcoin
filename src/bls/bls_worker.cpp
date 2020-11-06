@@ -184,7 +184,7 @@ struct Aggregator {
             return;
         }
 
-        /*if (batchCount == 1) {
+        if (batchCount == 1) {
             // just a single batch of work, take a shortcut.
             PushWork([this](int threadId) {
                 if (inputVec->size() == 1) {
@@ -195,7 +195,7 @@ struct Aggregator {
                 delete this;
             });
             return;
-        }*/
+        }
 
         // increment wait counter as otherwise the first finished async aggregation might signal that we're done
         IncWait();
