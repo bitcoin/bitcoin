@@ -222,7 +222,6 @@ BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 
 BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
-    LOCK(cs_main);
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
@@ -230,12 +229,19 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     auto tx = CreateProRegTx(utxos, 1, addr, coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = std::vector<CMutableTransaction>{tx};
 
-    int nHeight = ::ChainActive().Height();
+    int nHeight;
+    {
+        LOCK(cs_main);
+        nHeight = ::ChainActive().Height();
+    }
 
     // We start one block before DIP3 activation, so mining a block with a DIP3 transaction should be no-op
     auto block = std::make_shared<CBlock>(CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
-    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
-    BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
+    {
+        LOCK(cs_main);
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
+    }
     CDeterministicMNList mnList;
     deterministicMNManager->GetListAtChainTip(mnList);
     BOOST_ASSERT(!mnList.HasMN(tx.GetHash()));
@@ -245,16 +251,18 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     txns = std::vector<CMutableTransaction>{tx};
     // Mining a block with a DIP3 transaction should succeed now
     block = std::make_shared<CBlock>(CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
-    BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
+    }
     deterministicMNManager->GetListAtChainTip(mnList);
     BOOST_ASSERT(mnList.HasMN(tx.GetHash()));
 }
 
 BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 {
-    LOCK(cs_main);
     CKey sporkKey;
     sporkKey.MakeNewKey(true);
     sporkManager.SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
@@ -262,7 +270,11 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
 
-    int nHeight = ::ChainActive().Height();
+    int nHeight;
+    {
+        LOCK(cs_main);
+        nHeight = ::ChainActive().Height();
+    }
     int port = 1;
 
     std::vector<uint256> dmnHashes;
@@ -277,35 +289,43 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         dmnHashes.emplace_back(tx.GetHash());
         ownerKeys.emplace(tx.GetHash(), ownerKey);
         operatorKeys.emplace(tx.GetHash(), operatorKey);
-
-        // also verify that payloads are not malleable after they have been signed
-        // the form of ProRegTx we use here is one with a collateral included, so there is no signature inside the
-        // payload itself. This means, we need to rely on script verification, which takes the hash of the extra payload
-        // into account
-        auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
-        TxValidationState dummyState;
-        // Technically, the payload is still valid...
-        BOOST_ASSERT(CheckProRegTx(CTransaction(tx), ::ChainActive().Tip(), dummyState, false));
-        BOOST_ASSERT(CheckProRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummyState, false));
-        // But the signature should not verify anymore
-        BOOST_ASSERT(CheckTransactionSignature(tx));
-        BOOST_ASSERT(!CheckTransactionSignature(tx2));
+        {
+            LOCK(cs_main);
+            // also verify that payloads are not malleable after they have been signed
+            // the form of ProRegTx we use here is one with a collateral included, so there is no signature inside the
+            // payload itself. This means, we need to rely on script verification, which takes the hash of the extra payload
+            // into account
+            auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
+            TxValidationState dummyState;
+            // Technically, the payload is still valid...
+            BOOST_ASSERT(CheckProRegTx(CTransaction(tx), ::ChainActive().Tip(), dummyState, false));
+            BOOST_ASSERT(CheckProRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummyState, false));
+            // But the signature should not verify anymore
+            BOOST_ASSERT(CheckTransactionSignature(tx));
+            BOOST_ASSERT(!CheckTransactionSignature(tx2));
+        }
 
         CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        {
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
 
-        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+            BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        }
         CDeterministicMNList mnList;
         deterministicMNManager->GetListAtChainTip(mnList);
         BOOST_ASSERT(mnList.HasMN(tx.GetHash()));
 
         nHeight++;
     }
-
-    int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
-    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = ::ChainActive().Height() + 1;
-    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    int DIP0003EnforcementHeightBackup;
+    {
+        LOCK(cs_main);
+        DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
+        const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = ::ChainActive().Height() + 1;
+        CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    }
     nHeight++;
 
     // check MN reward payments
@@ -315,7 +335,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         auto dmnExpectedPayee = mnList.GetMNPayee();
 
         CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        {
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        }
         BOOST_ASSERT(!block.vtx.empty());
 
         auto dmnPayout = FindPayoutDmn(block);
@@ -338,8 +361,11 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
             txns.emplace_back(tx);
         }
         CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        {
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+            BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        }
 
         for (size_t j = 0; j < 3; j++) {
             CDeterministicMNList mnList;
@@ -353,8 +379,11 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     // test ProUpServTx
     auto tx = CreateProUpServTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], 1000, coinbaseKey);
     CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    }
     nHeight++;
     CDeterministicMNList mnList;
     deterministicMNManager->GetListAtChainTip(mnList);
@@ -364,8 +393,11 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     // test ProUpRevTx
     tx = CreateProUpRevTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], coinbaseKey);
     CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    }
     nHeight++;
     deterministicMNManager->GetListAtChainTip(mnList);
     dmn = mnList.GetMN(dmnHashes[0]);
@@ -378,7 +410,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         BOOST_ASSERT(dmnExpectedPayee->proTxHash != dmnHashes[0]);
 
         CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        {
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        }
         BOOST_ASSERT(!block.vtx.empty());
 
         auto dmnPayout = FindPayoutDmn(block);
@@ -394,23 +429,32 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     deterministicMNManager->GetListAtChainTip(mnList);
     dmn = mnList.GetMN(dmnHashes[0]);
     tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
-    // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
-    auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
-    TxValidationState dummyState;
-    BOOST_ASSERT(CheckProUpRegTx(CTransaction(tx), ::ChainActive().Tip(), dummyState, false));
-    BOOST_ASSERT(!CheckProUpRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummyState, false));
-    BOOST_ASSERT(CheckTransactionSignature(tx));
-    BOOST_ASSERT(!CheckTransactionSignature(tx2));
+    {
+        LOCK(cs_main);
+        // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
+        auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
+        TxValidationState dummyState;
+        BOOST_ASSERT(CheckProUpRegTx(CTransaction(tx), ::ChainActive().Tip(), dummyState, false));
+        BOOST_ASSERT(!CheckProUpRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummyState, false));
+        BOOST_ASSERT(CheckTransactionSignature(tx));
+        BOOST_ASSERT(!CheckTransactionSignature(tx2));
+    }
     // now process the block
     CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    }
     nHeight++;
 
     tx = CreateProUpServTx(utxos, dmnHashes[0], newOperatorKey, 100, coinbaseKey);
     CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    }
     nHeight++;
     deterministicMNManager->GetListAtChainTip(mnList);
     dmn = mnList.GetMN(dmnHashes[0]);
@@ -427,7 +471,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         }
 
         CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        {
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        }
         BOOST_ASSERT(!block.vtx.empty());
 
         auto dmnPayout = FindPayoutDmn(block);
