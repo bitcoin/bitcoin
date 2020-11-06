@@ -11,8 +11,11 @@
 
 int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &path, int pathPtr) {
   std::string partialPath;
+  // typecast as the character
+  uint8_t partialPathInt; 
   char pathPtrInt[2] = {encodedPartialPath[0], '\0'};
-  int partialPathInt = std::strtol(pathPtrInt, NULL, 10);
+  if(!ParseUInt8(pathPtrInt, &partialPathInt))
+    return -1;
   if(partialPathInt == 0 || partialPathInt == 2){
     partialPath = encodedPartialPath.substr(2);
   }else{
@@ -27,7 +30,8 @@ int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &
 std::string hexToASCII(std::string hex) 
 { 
     // initialize the ASCII code string as empty. 
-    std::string ascii = ""; 
+    std::string ascii = "";
+    uint8_t ch;
     for (size_t i = 0; i < hex.length(); i += 2) 
     { 
         // extract two characters from hex string 
@@ -35,7 +39,8 @@ std::string hexToASCII(std::string hex)
   
         // change it into base 16 and  
         // typecast as the character 
-        char ch = std::stoul(part, nullptr, 16); 
+        if(!ParseUInt8FromHex(part, &ch))
+          return ascii;
   
         // add this char to final ASCII string 
         ascii += ch; 
@@ -49,10 +54,11 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
         dev::RLP nodeKey = root;       
         int pathPtr = 0;
 
-    	const std::string pathString = dev::toHex(path);
+    	  const std::string &pathString = dev::toHex(path);
   
         int nibbles;
         char pathPtrInt[2];
+        uint8_t pathInt;
         for (int i = 0 ; i < len ; i++) {
           currentNode = parentNodes[i];
           if(!nodeKey.payload().contentsEqual(sha3(currentNode.data()).ref().toVector())){
@@ -73,11 +79,11 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
                   return false;
                 }
               }
-          
               pathPtrInt[0] = pathString[pathPtr];
               pathPtrInt[1] = '\0';
-
-              nodeKey = currentNode[strtol(pathPtrInt, NULL, 16)]; //must == sha3(rlp.encode(currentNode[path[pathptr]]))
+              if(!ParseUInt8FromHex(pathPtrInt, &pathInt))
+                return false;
+              nodeKey = currentNode[pathInt]; //must == sha3(rlp.encode(currentNode[path[pathptr]]))
               pathPtr += 1;
               break;
             case 2:
