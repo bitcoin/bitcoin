@@ -44,7 +44,7 @@ if [ -z "$NO_DEPENDS" ]; then
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
-  DOCKER_EXEC $SHELL_OPTS travis_wait 50 make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+  DOCKER_EXEC $SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
 fi
 if [ -n "$PREVIOUS_RELEASES_TO_DOWNLOAD" ]; then
   BEGIN_FOLD previous-versions
