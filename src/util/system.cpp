@@ -1700,6 +1700,9 @@ bool TryCreateDirectories(const fs::path& p)
 {
     try
     {
+        if (fs::exists(p) && !fs::is_directory(p)) {
+            fs::remove(p);
+        }
         return fs::create_directories(p);
     } catch (const fs::filesystem_error&) {
         if (!fs::exists(p) || !fs::is_directory(p))
