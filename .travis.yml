@@ -41,7 +41,7 @@ before_script:
   - set -o errexit; source ./ci/test/05_before_script.sh &> "/dev/null"
 script:
   - export CONTINUE=1
-  - if [ $SECONDS -gt 1200 ]; then export CONTINUE=0; fi  # Likely the depends build took very long
+  - if [ $SECONDS -gt 2400 ]; then export CONTINUE=0; fi  # Likely the depends build took very long
   - if [ $TRAVIS_REPO_SLUG = "syscoin/syscoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
   - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_a.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
   - if [[ $SECONDS -gt 50*60-$EXPECTED_TESTS_DURATION_IN_SECONDS ]]; then export CONTINUE=0; fi
