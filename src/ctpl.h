@@ -29,8 +29,7 @@
 #include <exception>
 #include <future>
 #include <mutex>
-#include <boost/lockfree/queue.hpp>
-
+#include <concurrentqueue.h>
 
 #ifndef _ctplThreadPoolLength_
 #define _ctplThreadPoolLength_  100
@@ -98,14 +97,14 @@ namespace ctpl {
         // empty the queue
         void clear_queue() {
             std::function<void(int id)> * _f;
-            while (this->q.pop(_f))
+            while (this->q.try_dequeue(_f))
                 delete _f;  // empty the queue
         }
 
         // pops a functional wrapper to the original function
         std::function<void(int)> pop() {
             std::function<void(int id)> * _f = nullptr;
-            this->q.pop(_f);
+            this->q.try_dequeue(_f);
             std::unique_ptr<std::function<void(int id)>> func(_f);  // at return, delete the function even if an exception occurred
             
             std::function<void(int)> f;
@@ -157,7 +156,8 @@ namespace ctpl {
             auto _f = new std::function<void(int id)>([pck](int id) {
                 (*pck)(id);
             });
-            this->q.push(_f);
+            if(!this->q.try_enqueue(_f))
+                this->q.enqueue(_f);
 
             std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
@@ -174,7 +174,9 @@ namespace ctpl {
             auto _f = new std::function<void(int id)>([pck](int id) {
                 (*pck)(id);
             });
-            this->q.push(_f);
+
+            if(!this->q.try_enqueue(_f))
+                this->q.enqueue(_f);
 
             std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
@@ -196,7 +198,7 @@ namespace ctpl {
             auto f = [this, i, flag/* a copy of the shared ptr to the flag */]() {
                 std::atomic<bool> & _flag = *flag;
                 std::function<void(int id)> * _f;
-                bool isPop = this->q.pop(_f);
+                bool isPop = this->q.try_dequeue(_f);
                 while (true) {
                     while (isPop) {  // if there is anything in the queue
                         std::unique_ptr<std::function<void(int id)>> func(_f);  // at return, delete the function even if an exception occurred
@@ -205,13 +207,13 @@ namespace ctpl {
                         if (_flag)
                             return;  // the thread is wanted to stop, return even if the queue is not empty yet
                         else
-                            isPop = this->q.pop(_f);
+                            isPop = this->q.try_dequeue(_f);
                     }
 
                     // the queue is empty here, wait for the next command
                     std::unique_lock<std::mutex> lock(this->mutex);
                     ++this->nWaiting;
-                    this->cv.wait(lock, [this, &_f, &isPop, &_flag](){ isPop = this->q.pop(_f); return isPop || this->isDone || _flag; });
+                    this->cv.wait(lock, [this, &_f, &isPop, &_flag](){ isPop = this->q.try_dequeue(_f); return isPop || this->isDone || _flag; });
                     --this->nWaiting;
 
                     if (!isPop)
@@ -225,7 +227,7 @@ namespace ctpl {
 
         std::vector<std::unique_ptr<std::thread>> threads;
         std::vector<std::shared_ptr<std::atomic<bool>>> flags;
-        mutable boost::lockfree::queue<std::function<void(int id)> *> q;
+        mutable moodycamel::ConcurrentQueue<std::function<void(int id)> *> q;
         std::atomic<bool> isDone;
         std::atomic<bool> isStop;
         std::atomic<int> nWaiting;  // how many threads are waiting
