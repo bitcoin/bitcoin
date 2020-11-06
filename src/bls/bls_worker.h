@@ -12,8 +12,6 @@
 #include <future>
 #include <mutex>
 
-#include <boost/lockfree/queue.hpp>
-
 // Low level BLS/DKG stuff. All very compute intensive and optimized for parallelization
 // The worker tries to parallelize as much as possible and utilizes a few properties of BLS aggregation to speed up things
 // For example, public key vectors can be aggregated in parallel if they are split into batches and the batched aggregations are
