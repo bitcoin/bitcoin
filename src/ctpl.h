@@ -30,7 +30,7 @@
 #include <future>
 #include <mutex>
 #include <boost/lockfree/queue.hpp>
-#include <boost/atomic.hpp>
+
 
 #ifndef _ctplThreadPoolLength_
 #define _ctplThreadPoolLength_  100
@@ -75,7 +75,7 @@ namespace ctpl {
                     this->flags.resize(nThreads);
 
                     for (int i = oldNThreads; i < nThreads; ++i) {
-                        this->flags[i] = std::make_shared<boost::atomic<bool>>(false);
+                        this->flags[i] = std::make_shared<std::atomic<bool>>(false);
                         this->set_thread(i);
                     }
                 }
@@ -192,9 +192,9 @@ namespace ctpl {
         thread_pool & operator=(thread_pool &&);// = delete;
 
         void set_thread(int i) {
-            std::shared_ptr<boost::atomic<bool>> flag(this->flags[i]);  // a copy of the shared ptr to the flag
+            std::shared_ptr<std::atomic<bool>> flag(this->flags[i]);  // a copy of the shared ptr to the flag
             auto f = [this, i, flag/* a copy of the shared ptr to the flag */]() {
-                boost::atomic<bool> & _flag = *flag;
+                std::atomic<bool> & _flag = *flag;
                 std::function<void(int id)> * _f;
                 bool isPop = this->q.pop(_f);
                 while (true) {
@@ -224,11 +224,11 @@ namespace ctpl {
         void init() { this->nWaiting = 0; this->isStop = false; this->isDone = false; }
 
         std::vector<std::unique_ptr<std::thread>> threads;
-        std::vector<std::shared_ptr<boost::atomic<bool>>> flags;
+        std::vector<std::shared_ptr<std::atomic<bool>>> flags;
         mutable boost::lockfree::queue<std::function<void(int id)> *> q;
-        boost::atomic<bool> isDone;
-        boost::atomic<bool> isStop;
-        boost::atomic<int> nWaiting;  // how many threads are waiting
+        std::atomic<bool> isDone;
+        std::atomic<bool> isStop;
+        std::atomic<int> nWaiting;  // how many threads are waiting
 
         std::mutex mutex;
         std::condition_variable cv;
