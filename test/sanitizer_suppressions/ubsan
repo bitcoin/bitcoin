@@ -12,7 +12,6 @@ float-divide-by-zero:wallet/wallet.cpp
 # list is used to suppress -fsanitize=integer warnings when running our CI UBSan
 # job.
 unsigned-integer-overflow:arith_uint256.h
-unsigned-integer-overflow:auxpow.cpp
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
 unsigned-integer-overflow:syscoin-tx.cpp
@@ -58,7 +57,7 @@ implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:protocol.cpp
 implicit-integer-sign-change:script/syscoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
-implicit-integer-sign-change,implicit-signed-integer-truncation:serialize.h
+implicit-integer-sign-change:serialize.h
 implicit-integer-sign-change:test/arith_uint256_tests.cpp
 implicit-integer-sign-change:test/coins_tests.cpp
 implicit-integer-sign-change:test/pow_tests.cpp
