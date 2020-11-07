@@ -58,6 +58,7 @@ implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:protocol.cpp
 implicit-integer-sign-change:script/syscoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
+implicit-integer-sign-change:serialize.h
 implicit-integer-sign-change:test/arith_uint256_tests.cpp
 implicit-integer-sign-change:test/coins_tests.cpp
 implicit-integer-sign-change:test/pow_tests.cpp
