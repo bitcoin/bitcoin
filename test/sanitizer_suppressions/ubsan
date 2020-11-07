@@ -83,3 +83,13 @@ implicit-signed-integer-truncation:torcontrol.cpp
 implicit-unsigned-integer-truncation:crypto/*
 implicit-unsigned-integer-truncation:leveldb/*
 implicit-integer-sign-change:crc32c/*
+implicit-signed-integer-truncation:serialize.h
+
+# -fsanitize=thread suppressions
+# ===============================
+heap-use-after-free:net_processing.cpp
+
+# -fsanitize=memory suppressions
+# ===============================
+use-of-uninitialized-value:test/*
+
