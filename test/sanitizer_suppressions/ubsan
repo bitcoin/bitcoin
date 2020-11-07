@@ -89,7 +89,4 @@ implicit-signed-integer-truncation:serialize.h
 # ===============================
 heap-use-after-free:net_processing.cpp
 
-# -fsanitize=memory suppressions
-# ===============================
-use-of-uninitialized-value:test/*
 
