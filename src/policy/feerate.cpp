@@ -9,7 +9,7 @@
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
 {
-    if(nBytes_ < 0 || nFeePaid < 0 || nFeePaid > int64_t(std::numeric_limits<int64_t>::max()/1000))
+    if(nFeePaid < 0 || nFeePaid > int64_t(std::numeric_limits<int64_t>::max()/1000))
         return;
     int64_t nSize = int64_t(nBytes_);
 
