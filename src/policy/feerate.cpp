@@ -9,7 +9,8 @@
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
 {
-    assert(nBytes_ <= uint64_t(std::numeric_limits<int64_t>::max()));
+    if(nFeePaid > uint64_t(std::numeric_limits<int64_t>::max()/1000))
+        return 0;
     int64_t nSize = int64_t(nBytes_);
 
     if (nSize > 0)
@@ -24,7 +25,7 @@ CAmount CFeeRate::GetFee(size_t nBytes_) const
         return 0;
     if(nSatoshisPerK > std::numeric_limits<int64_t>::max()/1000)
         return 0;
-    assert(nBytes_ <= uint64_t(std::numeric_limits<int64_t>::max()));
+
     int64_t nSize = int64_t(nBytes_);
 
     CAmount nFee = nSatoshisPerK * nSize / 1000;
