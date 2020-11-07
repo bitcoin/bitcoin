@@ -52,12 +52,12 @@
 #endif
 
 #if defined(__APPLE__)
-#include "TargetConditionals.h"
+#include <TargetConditionals.h>
 #endif
 
 #ifdef MCDBGQ_USE_RELACY
-#include "relacy/relacy_std.hpp"
-#include "relacy_shims.h"
+#include <relacy/relacy_std.hpp>
+#include <relacy_shims.h>
 // We only use malloc/free anyway, and the delete macro messes up `= delete` method declarations.
 // We'll override the default trait malloc ourselves without a macro.
 #undef new
@@ -284,7 +284,7 @@ namespace moodycamel { namespace details {
 } }
 
 #ifdef MOODYCAMEL_QUEUE_INTERNAL_DEBUG
-#include "internal/concurrentqueue_internal_debug.h"
+#include <internal/concurrentqueue_internal_debug.h>
 #endif
 
 namespace moodycamel {
