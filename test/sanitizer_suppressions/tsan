@@ -49,4 +49,5 @@ deadlock:libdb
 race:libzmq
 
 # unit test use-after-free suppression of chainparams
-race:PeerManager::TipMayBeStale
+race:TipMayBeStale
+race:PeerManager::CheckForStaleTipAndEvictPeers
