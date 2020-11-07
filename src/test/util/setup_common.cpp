@@ -91,6 +91,11 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
+    // SYSCOIN
+    evoDb.reset(new CEvoDB(1 << 20, true, true));
+    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+    gArgs.ForceSetArg("-mncollateral", "100");
+    gArgs.ForceSetArg("-dip3params", "550:550");
     ClearDatadirCache();
     {
         SetupServerArgs(m_node);
@@ -120,10 +125,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         noui_connect();
         noui_connected = true;
     }
-    // SYSCOIN
-    evoDb.reset(new CEvoDB(1 << 20, true, true));
-    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-    gArgs.ForceSetArg("-dip3params", "90000:90000");
 }
 
 BasicTestingSetup::~BasicTestingSetup()
@@ -219,9 +220,6 @@ TestingSetup::~TestingSetup()
 // SYSCOIN
 TestChain100Setup::TestChain100Setup(int count)
 {
-    // SYSCOIN
-    gArgs.ForceSetArg("-mncollateral", "100");
-    gArgs.ForceSetArg("-dip3params", "150:150");
     // Need to recreate chainparams
     SelectParams(CBaseChainParams::REGTEST);
 
