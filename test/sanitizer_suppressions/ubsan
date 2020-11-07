@@ -84,5 +84,3 @@ implicit-unsigned-integer-truncation:crypto/*
 implicit-unsigned-integer-truncation:leveldb/*
 implicit-integer-sign-change:crc32c/*
 heap-use-after-free:net_processing.cpp
-
-
