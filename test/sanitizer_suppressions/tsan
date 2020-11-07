@@ -47,3 +47,6 @@ deadlock:src/qt/test/*
 # External libraries
 deadlock:libdb
 race:libzmq
+
+# unit test use-after-free suppression of chainparams
+race:PeerManager::TipMayBeStale
