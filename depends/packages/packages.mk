@@ -11,7 +11,7 @@ qt_darwin_packages=qt
 qt_mingw32_packages=qt
 
 bdb_packages=bdb libcurl gnutls nettle
-sqlite_packages=sqlite
+sqlite_packages=sqlite libcurl gnutls nettle
 
 zmq_packages=zeromq
 
