@@ -539,7 +539,6 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-syncmempool=<n>", strprintf("Sync mempool from other nodes on start (default: %d)", DEFAULT_SYNC_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -2417,7 +2416,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         // SYSCOIN
         node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
     } 
-    SetSYSXAssetForUnitTests(args.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
 #if HAVE_SYSTEM
     StartupNotify(args);
 #endif
