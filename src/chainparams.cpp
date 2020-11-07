@@ -82,16 +82,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
-void CChainParams::TurnOffSegwitForUnitTests ()
-{
-  consensus.BIP16Height = 1000000;
-  consensus.BIP34Height = 1000000;
-}
-void CChainParams::SetSYSXAssetForUnitTests (uint32_t asset)
-{
-  consensus.nSYSXAsset = asset;
-}
-
 void CChainParams::UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
 {
     consensus.DIP0003Height = nActivationHeight;
@@ -803,24 +793,7 @@ void SelectParams(const std::string& network)
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(gArgs, network);
 }
-void TurnOffSegwitForUnitTests ()
-{
-  /* TODO: It is ugly that we need a const-cast here, but this is only for
-     unit testing.  Upstream avoids this by turning off segwit through
-     forcing command-line args in the tests.  For that to work in our case,
-     we would have to have an explicit argument for BIP16.  */
-  auto* params = const_cast<CChainParams*> (globalChainParams.get ());
-  params->TurnOffSegwitForUnitTests ();
-}
-void SetSYSXAssetForUnitTests (uint32_t asset)
-{
-  /* TODO: It is ugly that we need a const-cast here, but this is only for
-     unit testing.  Upstream avoids this by turning off segwit through
-     forcing command-line args in the tests.  For that to work in our case,
-     we would have to have an explicit argument for BIP16.  */
-  auto* params = const_cast<CChainParams*> (globalChainParams.get ());
-  params->SetSYSXAssetForUnitTests (asset);
-}
+
 void UpdateLLMQTestParams(int size, int threshold)
 {
     auto* params = const_cast<CChainParams*> (globalChainParams.get ());

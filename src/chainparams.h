@@ -91,9 +91,7 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
-    void TurnOffSegwitForUnitTests();
     // SYSCOIN
-    void SetSYSXAssetForUnitTests(uint32_t asset);
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
@@ -153,17 +151,11 @@ const CChainParams &Params();
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
-/**
- * Allows turning off segwit for unit tests.
- */
-void TurnOffSegwitForUnitTests();
 // SYSCOIN
 /**
  * Allows modifying parameters of the test LLMQ
  */
 void UpdateLLMQTestParams(int size, int threshold);
-
-void SetSYSXAssetForUnitTests(uint32_t asset);
 /**
  * Allows modifying the DIP3 activation and enforcement height
  */
