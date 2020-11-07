@@ -12,6 +12,7 @@ float-divide-by-zero:wallet/wallet.cpp
 # list is used to suppress -fsanitize=integer warnings when running our CI UBSan
 # job.
 unsigned-integer-overflow:arith_uint256.h
+unsigned-integer-overflow:auxpow.cpp
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
 unsigned-integer-overflow:syscoin-tx.cpp
@@ -57,7 +58,6 @@ implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:protocol.cpp
 implicit-integer-sign-change:script/syscoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
-implicit-integer-sign-change:serialize.h
 implicit-integer-sign-change:test/arith_uint256_tests.cpp
 implicit-integer-sign-change:test/coins_tests.cpp
 implicit-integer-sign-change:test/pow_tests.cpp
@@ -70,11 +70,13 @@ implicit-integer-sign-change:util/strencodings.*
 implicit-integer-sign-change:validation.cpp
 implicit-integer-sign-change:zmq/zmqpublishnotifier.cpp
 implicit-signed-integer-truncation,implicit-integer-sign-change:chain.h
+implicit-signed-integer-truncation,implicit-integer-sign-change:serialize.h
 implicit-signed-integer-truncation,implicit-integer-sign-change:test/skiplist_tests.cpp
 implicit-signed-integer-truncation:chain.h
 implicit-signed-integer-truncation:crypto/*
 implicit-signed-integer-truncation:cuckoocache.h
 implicit-signed-integer-truncation:leveldb/*
+implicit-signed-integer-truncation:serialize.h
 implicit-signed-integer-truncation:streams.h
 implicit-signed-integer-truncation:test/arith_uint256_tests.cpp
 implicit-signed-integer-truncation:test/skiplist_tests.cpp
