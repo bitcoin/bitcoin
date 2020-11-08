@@ -799,8 +799,3 @@ void UpdateLLMQTestParams(int size, int threshold)
     auto* params = const_cast<CChainParams*> (globalChainParams.get ());
     params->UpdateLLMQTestParams(size, threshold);
 }
-void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-{
-    auto* params = const_cast<CChainParams*> (globalChainParams.get ());
-    params->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
-}

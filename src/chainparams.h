@@ -156,8 +156,4 @@ void SelectParams(const std::string& chain);
  * Allows modifying parameters of the test LLMQ
  */
 void UpdateLLMQTestParams(int size, int threshold);
-/**
- * Allows modifying the DIP3 activation and enforcement height
- */
-void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
 #endif // SYSCOIN_CHAINPARAMS_H
