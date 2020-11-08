@@ -2178,12 +2178,12 @@ void CConnman::ThreadOpenMasternodeConnections()
         }
         if (!interruptNet.sleep_for(std::chrono::milliseconds(sleepTime)))
             return;
-
+    
         didConnect = false;
 
         if (!fNetworkActive || !masternodeSync.IsBlockchainSynced())
             continue;
-
+        CSemaphoreGrant grant(*semOutbound);
         std::set<CService> connectedNodes;
         std::map<uint256, bool> connectedProRegTxHashes;
         ForEachNode([&](const CNode* pnode) {
@@ -2194,7 +2194,6 @@ void CConnman::ThreadOpenMasternodeConnections()
         });
         CDeterministicMNList mnList;
         deterministicMNManager->GetListAtChainTip(mnList);
-
         if (interruptNet)
             return;
 
@@ -2912,8 +2911,6 @@ void CConnman::StopNodes()
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
-    // SYSCOIN
-    semMasternodeOutbound.reset();
 }
 
 void CConnman::DeleteNode(CNode* pnode)

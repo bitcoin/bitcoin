@@ -666,8 +666,6 @@ private:
      * \sa CNode::nLocalServices
      */
     ServiceFlags nLocalServices;
-    // SYSCOIN
-    std::unique_ptr<CSemaphore> semMasternodeOutbound;
     std::unique_ptr<CSemaphore> semOutbound;
     std::unique_ptr<CSemaphore> semAddnode;
     int nMaxConnections;
