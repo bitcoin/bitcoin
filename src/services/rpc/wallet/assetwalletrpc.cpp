@@ -170,7 +170,6 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
     }
     if(curl)
         curl_easy_cleanup(curl);
-    curl_global_cleanup();
     return bFilled;
 }
 
