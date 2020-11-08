@@ -511,7 +511,8 @@ public:
         // SYSCOIN
         curl_global_init(CURL_GLOBAL_ALL);
     }
-    ~WalletClientImpl() override { UnloadWallets(); }
+    // SYSCOIN
+    ~WalletClientImpl() override { curl_global_cleanup(); UnloadWallets(); }
 
     //! ChainClient methods
     void registerRpcs() override
