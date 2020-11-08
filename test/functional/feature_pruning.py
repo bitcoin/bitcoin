@@ -45,7 +45,7 @@ def mine_large_blocks(node, n):
 
     for _ in range(n):
         # Build the coinbase transaction (with large scriptPubKey)
-        coinbase_tx = create_coinbase(height)
+        coinbase_tx = create_coinbase(height, dip3height=9000)
         coinbase_tx.vin[0].nSequence = 2 ** 32 - 1
         coinbase_tx.vout[0].scriptPubKey = big_script
         coinbase_tx.rehash()
@@ -79,16 +79,16 @@ class PruneTest(SyscoinTestFramework):
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
-        self.full_node_default_args = ["-maxreceivebuffer=20000", "-checkblocks=5"]
+        self.full_node_default_args = ["-dip3params=2000:2000","-maxreceivebuffer=20000", "-checkblocks=5"]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [
             self.full_node_default_args,
             self.full_node_default_args,
-            ["-maxreceivebuffer=20000", "-prune=550"],
-            ["-maxreceivebuffer=20000"],
-            ["-maxreceivebuffer=20000"],
-            ["-prune=550"],
+            ["-dip3params=2000:2000","-maxreceivebuffer=20000", "-prune=550"],
+            ["-dip3params=2000:2000","-maxreceivebuffer=20000"],
+            ["-dip3params=2000:2000","-maxreceivebuffer=20000"],
+            ["-dip3params=2000:2000","-prune=550"],
         ]
         self.rpc_timeout = 120
 
