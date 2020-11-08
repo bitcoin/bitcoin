@@ -399,7 +399,7 @@ def copy_datadir(from_node, to_node, dirname):
     from_datadir = os.path.join(dirname, "node"+str(from_node), "regtest")
     to_datadir = os.path.join(dirname, "node"+str(to_node), "regtest")
 
-    dirs = ["blocks", "chainstate", "evodb", "llmq", "ethereumminttx", "ethereumtxroots", "assets", "blockindex"]
+    dirs = ["blocks", "chainstate", "evodb", "llmq", "ethereumminttx", "ethereumtxroots", "assets", "dbblockindex"]
     for d in dirs:
         try:
             src = os.path.join(from_datadir, d)
