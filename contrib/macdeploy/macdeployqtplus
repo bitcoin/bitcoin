@@ -17,8 +17,9 @@
 #
 
 import subprocess, sys, re, os, shutil, stat, os.path, time
-from string import Template
 from argparse import ArgumentParser
+from pathlib import Path
+from string import Template
 from typing import List, Optional
 
 # This is ported from the original macdeployqt with modifications
@@ -526,8 +527,7 @@ ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, h
 ap.add_argument("-sign", dest="sign", action="store_true", default=False, help="sign .app bundle with codesign tool")
 ap.add_argument("-dmg", nargs="?", const="", metavar="basename", help="create a .dmg disk image; if basename is not specified, a camel-cased version of the app name is used")
 ap.add_argument("-fancy", nargs=1, metavar="plist", default=[], help="make a fancy looking disk image using the given plist file with instructions; requires -dmg to work")
-ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's resources; the language list must be separated with commas, not with whitespace")
-ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
+ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translations. Base translations will automatically be added to the bundle's resources.")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
 ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom volume name for dmg")
 
@@ -546,15 +546,6 @@ if not os.path.exists(app_bundle):
 
 app_bundle_name = os.path.splitext(os.path.basename(app_bundle))[0]
 
-# ------------------------------------------------
-translations_dir = None
-if config.translations_dir and config.translations_dir[0]:
-    if os.path.exists(config.translations_dir[0]):
-        translations_dir = config.translations_dir[0]
-    else:
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not find translation dir \"{}\"\n".format(translations_dir))
-        sys.exit(1)
 # ------------------------------------------------
 
 for p in config.add_resources:
@@ -684,26 +675,24 @@ if config.plugins:
 
 # ------------------------------------------------
 
-if len(config.add_qt_tr) == 0:
-    add_qt_tr = []
-else:
-    if translations_dir is not None:
-        qt_tr_dir = translations_dir
-    else:
-        if deploymentInfo.qtPath is not None:
-            qt_tr_dir = os.path.join(deploymentInfo.qtPath, "translations")
-        else:
-            sys.stderr.write("Error: Could not find Qt translation path\n")
-            sys.exit(1)
-    add_qt_tr = ["qt_{}.qm".format(lng) for lng in config.add_qt_tr[0].split(",")]
-    for lng_file in add_qt_tr:
-        p = os.path.join(qt_tr_dir, lng_file)
-        if verbose >= 3:
-            print("Checking for \"{}\"...".format(p))
-        if not os.path.exists(p):
-            if verbose >= 1:
-                sys.stderr.write("Error: Could not find Qt translation file \"{}\"\n".format(lng_file))
-                sys.exit(1)
+if config.translations_dir:
+    if not Path(config.translations_dir[0]).exists():
+        sys.stderr.write("Error: Could not find translation dir \"{}\"\n".format(config.translations_dir[0]))
+        sys.exit(1)
+
+if verbose >= 2:
+    print("+ Adding Qt translations +")
+
+translations = Path(config.translations_dir[0])
+
+regex = re.compile('qt_[a-z]*(.qm|_[A-Z]*.qm)')
+
+lang_files = [x for x in translations.iterdir() if regex.match(x.name)]
+
+for file in lang_files:
+    if verbose >= 3:
+        print(file.as_posix(), "->", os.path.join(applicationBundle.resourcesPath, file.name))
+    shutil.copy2(file.as_posix(), os.path.join(applicationBundle.resourcesPath, file.name))
 
 # ------------------------------------------------
 
@@ -712,16 +701,6 @@ if verbose >= 2:
 
 with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
     f.write(qt_conf.encode())
-
-# ------------------------------------------------
-
-if len(add_qt_tr) > 0 and verbose >= 2:
-    print("+ Adding Qt translations +")
-
-for lng_file in add_qt_tr:
-    if verbose >= 3:
-        print(os.path.join(qt_tr_dir, lng_file), "->", os.path.join(applicationBundle.resourcesPath, lng_file))
-    shutil.copy2(os.path.join(qt_tr_dir, lng_file), os.path.join(applicationBundle.resourcesPath, lng_file))
 
 # ------------------------------------------------
 
