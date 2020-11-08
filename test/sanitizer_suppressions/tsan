@@ -9,6 +9,7 @@ mutex:CConnman::Interrupt
 mutex:CConnman::WakeMessageHandler
 mutex:CConnman::ThreadOpenConnections
 mutex:CConnman::ThreadOpenAddedConnections
+mutex:CConnman::ThreadOpenMasternodeConnections
 mutex:CConnman::SocketHandler
 mutex:UpdateTip
 mutex:PeerManager::UpdatedBlockTip
