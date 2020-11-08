@@ -79,24 +79,3 @@ jobs:
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
-
-    - stage: test
-      name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
-      os: osx
-      # Use the most recent version:
-      # Xcode 11.3.1, macOS 10.14, SDK 10.15
-      # https://docs.travis-ci.com/user/reference/osx/#macos-version
-      osx_image: xcode11.3
-      addons:
-        homebrew:
-          packages:
-          - berkeley-db4
-          - miniupnpc
-          - qrencode
-          - sqlite
-          - ccache
-          - zeromq
-      env: >-
-        DANGER_RUN_CI_ON_HOST=true
-        CI_USE_APT_INSTALL=no
-        FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

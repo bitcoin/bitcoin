@@ -16,7 +16,3 @@ export OSX_SDK=""
 export CCACHE_SIZE=300M
 
 export RUN_SECURITY_TESTS="true"
-if [ "$TRAVIS_REPO_SLUG" != "bitcoin/bitcoin" ]; then
-  export RUN_FUNCTIONAL_TESTS="false"
-  export EXPECTED_TESTS_DURATION_IN_SECONDS=200
-fi
