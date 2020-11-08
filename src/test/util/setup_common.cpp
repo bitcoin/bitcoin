@@ -220,9 +220,6 @@ TestingSetup::~TestingSetup()
 // SYSCOIN
 TestChain100Setup::TestChain100Setup(int count)
 {
-    // Need to recreate chainparams
-    SelectParams(CBaseChainParams::REGTEST);
-
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;

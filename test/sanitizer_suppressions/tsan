@@ -49,7 +49,3 @@ deadlock:src/qt/test/*
 deadlock:libdb
 race:libzmq
 
-# unit test use-after-free suppression of chainparams
-race:src/test/*
-deadlock:src/test/*
-
