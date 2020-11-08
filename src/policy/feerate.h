@@ -19,8 +19,8 @@ enum class FeeEstimateMode {
     UNSET,        //!< Use default settings based on other criteria
     ECONOMICAL,   //!< Force estimateSmartFee to use non-conservative estimates
     CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
-    BTC_KB,       //!< Use explicit BTC/kB fee given in coin control
-    SAT_B,        //!< Use explicit sat/B fee given in coin control
+    BTC_KVB,      //!< Use BTC/kvB fee rate unit
+    SAT_VB,       //!< Use sat/vB fee rate unit
 };
 
 /**
@@ -65,7 +65,7 @@ public:
     friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
     friend bool operator!=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK != b.nSatoshisPerK; }
     CFeeRate& operator+=(const CFeeRate& a) { nSatoshisPerK += a.nSatoshisPerK; return *this; }
-    std::string ToString(const FeeEstimateMode& fee_estimate_mode = FeeEstimateMode::BTC_KB) const;
+    std::string ToString(const FeeEstimateMode& fee_estimate_mode = FeeEstimateMode::BTC_KVB) const;
 
     SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
 };

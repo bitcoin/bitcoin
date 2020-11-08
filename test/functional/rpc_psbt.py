@@ -194,9 +194,9 @@ class PSBTTest(BitcoinTestFramework):
         assert_approx(res2["fee"], 0.055, 0.005)
 
         self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-4, "Fee rate (0.00000000 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)",
+        assert_raises_rpc_error(-4, "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
             self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": 0, "add_inputs": True})
-        assert_raises_rpc_error(-8, "Invalid feeRate 0.00000000 BTC/kB (must be greater than 0)",
+        assert_raises_rpc_error(-8, "Invalid feeRate 0.00000000 BTC/kvB (must be greater than 0)",
             self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"feeRate": 0, "add_inputs": True})
         for param, value in {("fee_rate", 100000), ("feeRate", 1)}:
             assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)",
@@ -246,7 +246,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Test setting explicit fee rate just below the minimum.
         self.log.info("- raises RPC error 'fee rate too low' if feerate_sat_vb of 0.99999999 is passed")
-        assert_raises_rpc_error(-4, "Fee rate (0.00000999 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)",
+        assert_raises_rpc_error(-4, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
             self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": 0.99999999, "add_inputs": True})
 
         self.log.info("Test walletcreatefundedpsbt with too-high fee rate produces total fee well above -maxtxfee and raises RPC error")

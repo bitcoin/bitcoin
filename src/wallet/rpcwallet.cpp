@@ -3136,7 +3136,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             }
             CFeeRate fee_rate(AmountFromValue(options["feeRate"]));
             if (fee_rate <= CFeeRate(0)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid feeRate %s (must be greater than 0)", fee_rate.ToString()));
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid feeRate %s (must be greater than 0)", fee_rate.ToString(FeeEstimateMode::BTC_KVB)));
             }
             coinControl.m_feerate = fee_rate;
             coinControl.fOverrideFeeRate = true;
