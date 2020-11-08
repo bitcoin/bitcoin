@@ -686,14 +686,12 @@ fs::path StripRedundantLastElementsOfPath(const fs::path& path)
 }
 } // namespace
 
-static fs::path g_blocks_path_cache_net_specific;
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
-static RecursiveMutex csPathCached;
+static Mutex g_blocksdir_path_mutex;
+static fs::path g_blocks_path_cache_net_specific GUARDED_BY(g_blocksdir_path_mutex);
 
 const fs::path &GetBlocksDir()
 {
-    LOCK(csPathCached);
+    LOCK(g_blocksdir_path_mutex);
     fs::path &path = g_blocks_path_cache_net_specific;
 
     // Cache the path to avoid calling fs::create_directories on every call of
@@ -717,9 +715,13 @@ const fs::path &GetBlocksDir()
     return path;
 }
 
+static Mutex g_datadir_path_mutex;
+static fs::path pathCached GUARDED_BY(g_datadir_path_mutex);
+static fs::path pathCachedNetSpecific GUARDED_BY(g_datadir_path_mutex);
+
 const fs::path &GetDataDir(bool fNetSpecific)
 {
-    LOCK(csPathCached);
+    LOCK(g_datadir_path_mutex);
     fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
     // Cache the path to avoid calling fs::create_directories on every call of
@@ -756,11 +758,11 @@ bool CheckDataDirOption()
 
 void ClearDatadirCache()
 {
-    LOCK(csPathCached);
+    WITH_LOCK(g_blocksdir_path_mutex, g_blocks_path_cache_net_specific = fs::path());
 
+    LOCK(g_datadir_path_mutex);
     pathCached = fs::path();
     pathCachedNetSpecific = fs::path();
-    g_blocks_path_cache_net_specific = fs::path();
 }
 
 fs::path GetConfigFile(const std::string& confPath)
