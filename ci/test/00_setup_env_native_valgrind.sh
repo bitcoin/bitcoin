@@ -12,4 +12,5 @@ export USE_VALGRIND=1
 export NO_DEPENDS=1
 export TEST_RUNNER_EXTRA="--exclude rpc_bind"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
 export GOAL="install"
+export TEST_RUNNER_EXTRA="--exclude feature_llmqsimplepose,feature_asset_zdag,feature_asset_verify_zdag"
 export SYSCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC=clang CXX=clang++"  # TODO enable GUI
