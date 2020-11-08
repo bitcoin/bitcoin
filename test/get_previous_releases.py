@@ -49,13 +49,13 @@ def download_binary(tag, args) -> int:
     print('Fetching: {tarballUrl}'.format(tarballUrl=tarballUrl))
 
     header, status = subprocess.Popen(
-        ['curl', '--head', tarballUrl], stdout=subprocess.PIPE).communicate()
+        ['curl', '-L', '--head', tarballUrl], stdout=subprocess.PIPE).communicate()
     if re.search("404 Not Found", header.decode("utf-8")):
         print("Binary tag was not found")
         return 1
 
     curlCmds = [
-        ['curl', '--remote-name', tarballUrl]
+        ['curl', '-L', '--remote-name', tarballUrl]
     ]
 
     for cmd in curlCmds:
