@@ -17,4 +17,5 @@ that the list is as expected.
 
 Ubuntu:
 
-    sudo apt-get install python3-dnspython
+    sudo apt-get install python3-pip
+    pip3 install dnspython
