@@ -3,6 +3,7 @@ utilities in their entirety. It does not contain unit tests, which
 can be found in [/src/test](/src/test), [/src/wallet/test](/src/wallet/test),
 etc.
 
+
 This directory contains the following sets of tests:
 
 - [functional](/test/functional) which test the functionality of
