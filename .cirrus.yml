@@ -1,6 +1,6 @@
 ### Global defaults
 
-timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+timeout_in: 180m  # https://cirrus-ci.org/faq/#instance-timed-out
 container:
   # https://cirrus-ci.org/faq/#are-there-any-limits
   # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel

@@ -11,4 +11,5 @@ export DOCKER_PACKAGES="gcc-c++ libtool make git python3 python36-zmq"
 export PACKAGES="boost-devel libevent-devel libdb4-devel libdb4-cxx-devel miniupnpc-devel zeromq-devel qt5-qtbase-devel qt5-qttools-devel qrencode-devel libgmp3-dev libcurl4-gnutls-dev"
 export NO_DEPENDS=1
 export GOAL="install"
+export TEST_RUNNER_EXTRA="--exclude feature_llmqsimplepose,feature_asset_zdag,feature_asset_verify_zdag"
 export SYSCOIN_CONFIG="--enable-reduce-exports"
