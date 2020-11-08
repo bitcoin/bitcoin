@@ -28,6 +28,7 @@ extern CMasternodeSync masternodeSync;
 class CMasternodeSync
 {
 private:
+    mutable RecursiveMutex cs;
     // Keep track of current asset
     int nCurrentAsset;
     // Count peers we've requested the asset from
@@ -49,13 +50,13 @@ public:
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
-    bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
-    bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
+    bool IsBlockchainSynced() const {LOCK(cs); return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
+    bool IsSynced() const { LOCK(cs);return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
 
-    int GetAssetID() const { return nCurrentAsset; }
-    int GetAttempt() const { return nTriedPeerCount; }
+    int GetAssetID() const { LOCK(cs); return nCurrentAsset; }
+    int GetAttempt() const { LOCK(cs);return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
-    int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
+    int64_t GetAssetStartTime() { LOCK(cs);return nTimeAssetSyncStarted; }
     std::string GetAssetName() const;
     bilingual_str GetSyncStatus();
 
