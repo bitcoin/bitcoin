@@ -22,6 +22,9 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.sync_blocks(self.nodes, timeout=60*5)
 
