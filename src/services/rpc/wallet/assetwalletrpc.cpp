@@ -126,12 +126,6 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
   return chunk.memory;
 }
 bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, std::string& strError) {
-    CURLcode resInit = curl_global_init(CURL_GLOBAL_ALL);
-    if(resInit != 0) {
-        strError = strprintf("curl_global_init() failed: %s\n", curl_easy_strerror(resInit));
-        return false;
-    }
-
     CURL *curl = curl_easy_init();
     std::string strHex = EncodeHexTx(*tx);
     UniValue reqObj(UniValue::VOBJ);
