@@ -984,7 +984,7 @@ static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 1 year of blocks
 // SYSCOIN
 class CBlockIndexDB : public CDBWrapper {
 public:
-    CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    explicit CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
         return Read(txid, nHeight);
     }  
