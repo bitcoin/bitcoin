@@ -1,4 +1,4 @@
-Bitcoin Core integration/staging tree
+Bitcoin Core 2.0 integration/staging tree
 =====================================
 
 https://bitcoincore.org
