@@ -54,6 +54,14 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #    - choco install python --version=3.7.7 -y
 
 task:
+  name: 'ARM  [GOAL: install]  [buster]  [unit tests, no functional tests]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: debian:buster
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
+
+task:
   name: 'x86_64 Linux  [GOAL: install]  [bionic]  [C++17, previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
