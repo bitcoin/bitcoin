@@ -9,10 +9,6 @@
 
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
-    // SYSCOIN
-    const bool &isSysTx = tx.HasAssets();
-    const bool &IsMnTx = tx.IsMnTx();
-    const bool &isCoinBase = tx.IsCoinBase();
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vin-empty");
@@ -46,7 +42,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
     }
 
-    if (isCoinBase)
+    if (tx.IsCoinBase())
     {
         if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cb-length");
