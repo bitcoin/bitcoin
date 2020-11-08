@@ -19,6 +19,7 @@ CMasternodeSync masternodeSync;
 
 void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 {
+    LOCK(cs);
     // Avoid resetting the sync process if we just "recently" received a new block
     if (fForce || (GetTime() - nTimeLastUpdateBlockTip > MASTERNODE_SYNC_RESET_SECONDS)) {
         nCurrentAsset = MASTERNODE_SYNC_BLOCKCHAIN;
@@ -35,6 +36,7 @@ void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 
 void CMasternodeSync::BumpAssetLastTime(const std::string& strFuncName)
 {
+    LOCK(cs);
     if(IsSynced()) return;
     nTimeLastBumped = GetTime();
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::BumpAssetLastTime -- %s\n", strFuncName);
@@ -42,6 +44,7 @@ void CMasternodeSync::BumpAssetLastTime(const std::string& strFuncName)
 
 std::string CMasternodeSync::GetAssetName() const
 {
+    LOCK(cs);
     switch(nCurrentAsset)
     {
         case(MASTERNODE_SYNC_BLOCKCHAIN):   return "MASTERNODE_SYNC_BLOCKCHAIN";
@@ -53,6 +56,7 @@ std::string CMasternodeSync::GetAssetName() const
 
 void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 {
+    LOCK(cs);
     switch(nCurrentAsset)
     {
         case(MASTERNODE_SYNC_BLOCKCHAIN):
@@ -79,6 +83,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 
 bilingual_str CMasternodeSync::GetSyncStatus()
 {
+    LOCK(cs);
     switch (nCurrentAsset) {
         case MASTERNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...");
         case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
@@ -89,6 +94,7 @@ bilingual_str CMasternodeSync::GetSyncStatus()
 
 void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const
 {
+    LOCK(cs);
     if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
 
         //do not care about stats if sync process finished or failed
@@ -104,6 +110,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
 
 void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 {
+    LOCK(cs);
     static int nTick = 0;
     nTick++;
 
@@ -303,6 +310,7 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
 
 void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
+    LOCK(cs);
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::AcceptedBlockHeader -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
 
     if (!IsBlockchainSynced()) {
@@ -313,6 +321,7 @@ void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 
 void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman)
 {
+    LOCK(cs);
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
     if (IsSynced() || !pindexBestHeader)
@@ -326,6 +335,7 @@ void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitia
 
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman)
 {
+    LOCK(cs);
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
     nTimeLastUpdateBlockTip = GetAdjustedTime();
@@ -366,6 +376,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
 
 void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman)
 {
+    LOCK(cs);
     if (ShutdownRequested()) return;
 
     ProcessTick(connman, peerman);
