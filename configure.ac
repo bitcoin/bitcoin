@@ -1536,6 +1536,15 @@ if test x$enable_wallet != xno; then
   AC_SUBST(LIBCURL_LIBS)
 fi
 
+dnl libgmp check
+PKG_CHECK_MODULES([GMP], [gmp >= 6.0.0],, [AC_MSG_ERROR([libgmp 6.0.0 or greater was not found.])])
+AC_CHECK_HEADERS([gmp.h], [libgmp_found_headers=yes; break;])
+AS_IF([test "x$libgmp_found_headers" != "xyes"],
+            [AC_MSG_ERROR([Unable to find libgmp3-dev headers.])])
+AC_SUBST(GMP_CFLAGS)
+AC_SUBST(GMP_LIBS)
+
+
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
@@ -1750,10 +1759,6 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
-AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes;])])
-if test x$has_gmp != xyes; then
-    AC_MSG_ERROR([[libgmp3-dev not installed]])
-fi
 
 if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
