@@ -12,6 +12,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     // SYSCOIN
     const bool &isSysTx = tx.HasAssets();
     const bool &IsMnTx = tx.IsMnTx();
+    const bool &isCoinBase = tx.IsCoinBase();
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vin-empty");
@@ -32,9 +33,6 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-txouttotal-toolarge");
-
-        if ((isSysTx || IsMnTx) && txout.scriptPubKey.size() > 0 && txout.scriptPubKey[0] == OP_RETURN && txout.scriptPubKey.size() > MAX_SCRIPT_SIZE)
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-opreturn-toolarge");
     }
 
     // Check for duplicate inputs (see CVE-2018-17144)
@@ -48,7 +46,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
     }
 
-    if (tx.IsCoinBase())
+    if (isCoinBase)
     {
         if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cb-length");
