@@ -13,7 +13,7 @@ if [[ $QEMU_USER_CMD == qemu-s390* ]]; then
   export LC_ALL=C
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+if [ "$CI_OS_NAME" == "macos" ]; then
   ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
 fi
 
@@ -69,16 +69,16 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
   echo "Number of CPUs: $(sysctl -n hw.logicalcpu)"
 else
   DOCKER_EXEC free -m -h
   DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
   DOCKER_EXEC echo $(lscpu | grep Endian)
-  DOCKER_EXEC echo "Free disk space:"
-  DOCKER_EXEC df -h
 fi
+DOCKER_EXEC echo "Free disk space:"
+DOCKER_EXEC df -h
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
   DOCKER_EXEC git clone --depth=1 https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}

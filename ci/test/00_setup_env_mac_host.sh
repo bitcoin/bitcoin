@@ -10,6 +10,7 @@ export HOST=x86_64-apple-darwin16
 export PIP_PACKAGES="zmq"
 export GOAL="install"
 export BITCOIN_CONFIG="--with-gui --enable-reduce-exports --enable-werror --with-boost-process"
+export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
 export CCACHE_SIZE=300M
