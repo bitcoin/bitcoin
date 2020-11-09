@@ -3474,18 +3474,6 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
 
         auto conf_target = options.exists("confTarget") ? options["confTarget"] : options["conf_target"];
 
-        if (!conf_target.isNull()) {
-            if (options.exists("fee_rate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
-            }
-        } else if (options.exists("fee_rate")) {
-            CFeeRate fee_rate(AmountFromValue(options["fee_rate"]));
-            if (fee_rate <= CFeeRate(0)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid fee_rate %s (must be greater than 0)", fee_rate.ToString()));
-            }
-            coin_control.m_feerate = fee_rate;
-        }
-
         if (options.exists("replaceable")) {
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }

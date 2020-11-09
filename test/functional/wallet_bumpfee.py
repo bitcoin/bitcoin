@@ -111,7 +111,7 @@ class BumpFeeTest(BitcoinTestFramework):
             rbf_node.bumpfee, rbfid, {"fee_rate": INSUFFICIENT})
 
         self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-8, "Invalid fee_rate 0.00000000 BTC/kB (must be greater than 0)",
+        assert_raises_rpc_error(-8, "Insufficient total fee 0.00, must be at least 0.00001704 (oldFee 0.00000999 + incrementalFee 0.00000705)",
             rbf_node.bumpfee, rbfid, {"fee_rate": 0})
         assert_raises_rpc_error(-4, "Specified or calculated fee 0.141 is too high (cannot be higher than -maxtxfee 0.10",
             rbf_node.bumpfee, rbfid, {"fee_rate": TOO_HIGH})
