@@ -206,6 +206,13 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             AssertEqualAfterSerializeDeserialize(s);
         }
         AssertEqualAfterSerializeDeserialize(s, INIT_PROTO_VERSION | ADDRV2_FORMAT);
+        CService s1;
+        DeserializeFromFuzzingInput(buffer, s1, INIT_PROTO_VERSION);
+        AssertEqualAfterSerializeDeserialize(s1, INIT_PROTO_VERSION);
+        assert(s1.IsAddrV1Compatible());
+        CService s2;
+        DeserializeFromFuzzingInput(buffer, s2, INIT_PROTO_VERSION | ADDRV2_FORMAT);
+        AssertEqualAfterSerializeDeserialize(s2, INIT_PROTO_VERSION | ADDRV2_FORMAT);
 #elif MESSAGEHEADER_DESERIALIZE
         CMessageHeader mh;
         DeserializeFromFuzzingInput(buffer, mh);
