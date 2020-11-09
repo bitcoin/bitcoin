@@ -280,17 +280,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         for mn in self.mninfo:
             mn.node.quorum('sign', 100, request_id, message_hash)
 
-        recSig = None
-
-        t = time.time()
-        while time.time() - t < 10:
-            try:
-                recSig = self.nodes[0].quorum('getrecsig', 100, request_id, message_hash)
-                break
-            except:
-                time.sleep(0.1)
-        assert(recSig is not None)
-
+        recSig = self.get_recovered_sig(request_id, message_hash)
         clsig = msg_clsig(height, blockHash, hex_str_to_bytes(recSig['sig']))
         return clsig
 
@@ -309,17 +299,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         for mn in self.mninfo:
             mn.node.quorum('sign', 100, request_id, message_hash)
 
-        recSig = None
-
-        t = time.time()
-        while time.time() - t < 10:
-            try:
-                recSig = self.nodes[0].quorum('getrecsig', 100, request_id, message_hash)
-                break
-            except:
-                time.sleep(0.1)
-        assert(recSig is not None)
-
+        recSig = self.get_recovered_sig(request_id, message_hash)
         islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(recSig['sig']))
         return islock
 
