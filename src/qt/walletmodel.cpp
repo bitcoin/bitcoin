@@ -587,11 +587,7 @@ bool WalletModel::isWalletEnabled()
 
 QString WalletModel::getWalletName() const
 {
-    QString walletName = QString::fromStdString(m_wallet->getWalletName());
-    if (walletName.endsWith(".dat")) {
-        walletName.truncate(walletName.size() - 4);
-    }
-    return walletName;
+    return QString::fromStdString(m_wallet->getWalletName());
 }
 
 bool WalletModel::isMultiwallet()
