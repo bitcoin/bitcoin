@@ -13,8 +13,8 @@ if [[ $QEMU_USER_CMD == qemu-s390* ]]; then
   export LC_ALL=C
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-  ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
+if [ "$CI_OS_NAME" == "macos" ]; then
+  IN_GETOPT_BIN="/usr/local/opt/gnu-getopt/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
 fi
 
 # Create folders that are mounted into the docker
@@ -26,9 +26,7 @@ export LSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/
 export TSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1"
 export UBSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
 env | grep -E '^(BASE_|QEMU_|CCACHE_|LC_ALL|BOOST_TEST_RANDOM|DEBIAN_FRONTEND|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS|PREVIOUS_RELEASES_DIR))' | tee /tmp/env
-if [[ $HOST = *-mingw32 ]]; then
-  DOCKER_ADMIN="--cap-add SYS_ADMIN"
-elif [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)
+if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)
   DOCKER_ADMIN="--cap-add SYS_PTRACE"
 fi
 
@@ -72,16 +70,16 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   fi
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
   echo "Number of CPUs: $(sysctl -n hw.logicalcpu)"
 else
   DOCKER_EXEC free -m -h
   DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
   DOCKER_EXEC echo $(lscpu | grep Endian)
-  DOCKER_EXEC echo "Free disk space:"
-  DOCKER_EXEC df -h
 fi
+DOCKER_EXEC echo "Free disk space:"
+DOCKER_EXEC df -h
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
  if [ "$RUN_FUZZ_TESTS" = "true" ]; then
