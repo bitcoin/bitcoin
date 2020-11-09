@@ -21,7 +21,7 @@ void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 {
     // Avoid resetting the sync process if we just "recently" received a new block
     if (fForce || (GetTime() - nTimeLastUpdateBlockTip > MASTERNODE_SYNC_RESET_SECONDS)) {
-        nCurrentAsset = MASTERNODE_SYNC_BLOCKCHAIN;
+        SetSyncMode(MASTERNODE_SYNC_BLOCKCHAIN);
         nTriedPeerCount = 0;
         nTimeAssetSyncStarted = GetTime();
         nTimeLastBumped = GetTime();
