@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import plistlib
 import subprocess, sys, re, os, shutil, stat, os.path, time
 from argparse import ArgumentParser
 from pathlib import Path
@@ -537,13 +538,6 @@ app_bundle_name = os.path.splitext(os.path.basename(app_bundle))[0]
 # ------------------------------------------------
 
 if len(config.fancy) == 1:
-    if verbose:
-        print("Fancy: Importing plistlib...")
-    try:
-        import plistlib
-    except ImportError:
-        sys.stderr.write("Error: Could not import plistlib which is required for fancy disk images.\n")
-        sys.exit(1)
     
     p = config.fancy[0]
     if verbose:
