@@ -5,7 +5,6 @@
 """Utilities for manipulating blocks and transactions."""
 
 from binascii import a2b_hex
-import io
 import struct
 import time
 import unittest
@@ -46,7 +45,6 @@ from .script import (
     hash160,
 )
 from .util import assert_equal
-from io import BytesIO
 
 WITNESS_SCALE_FACTOR = 4
 MAX_BLOCK_SIGOPS = 20000
@@ -98,9 +96,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     if txlist:
         for tx in txlist:
             if not hasattr(tx, 'calc_sha256'):
-                txo = CTransaction()
-                txo.deserialize(io.BytesIO(tx))
-                tx = txo
+                tx = FromHex(CTransaction(), tx)
             block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
@@ -197,8 +193,7 @@ def create_transaction(node, txid, to_address, *, amount):
         sign for the output that is being spent.
     """
     raw_tx = create_raw_transaction(node, txid, to_address, amount=amount)
-    tx = CTransaction()
-    tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx)))
+    tx = FromHex(CTransaction(), raw_tx)
     return tx
 
 def create_raw_transaction(node, txid, to_address, *, amount):
