@@ -3391,9 +3391,10 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
         "By default, the new fee will be calculated automatically using the estimatesmartfee RPC.\n"
         "The user can specify a confirmation target for estimatesmartfee.\n"
-        "Alternatively, the user can specify a fee_rate (in " + CURRENCY_ATOM + "/vB) for the new transaction.\n"
+        "Alternatively, the user can specify a fee rate in " + CURRENCY_ATOM + "/vB for the new transaction.\n"
         "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
-        "returned by getnetworkinfo) to enter the node's mempool.\n",
+        "returned by getnetworkinfo) to enter the node's mempool.\n"
+        "* WARNING: before version 0.21, fee_rate was in " + CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB. *\n",
         {
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid to be bumped"},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
@@ -3402,7 +3403,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "or fee rate (for " + CURRENCY_UNIT + "/kB and " + CURRENCY_ATOM + "/B estimate modes)"},
                     {"fee_rate", RPCArg::Type::AMOUNT, /* default */ "not set, fall back to wallet fee estimation",
                              "\nSpecify a fee rate in " + CURRENCY_ATOM + "/vB instead of relying on the built-in fee estimator.\n"
-                             "Must be at least 1 " + CURRENCY_ATOM + "/vB higher than the current transaction fee rate.\n"},
+                             "Must be at least 1 " + CURRENCY_ATOM + "/vB higher than the current transaction fee rate.\n"
+                             "WARNING: before version 0.21, fee_rate was in " + CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB.\n"},
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
                              "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
                              "be left unchanged from the original. If false, any input sequence numbers in the\n"
