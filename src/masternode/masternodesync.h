@@ -51,12 +51,14 @@ public:
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
     bool IsBlockchainSynced() const {LOCK(cs); return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
-    bool IsSynced() const { LOCK(cs);return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
+    bool IsSynced() const { LOCK(cs); return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
+    int GetSyncMode() const { LOCK(cs); return nCurrentAsset; }
+    void SetSyncMode(const int nMode) const { LOCK(cs); nCurrentAsset =  nMode; }
 
-    int GetAssetID() const { LOCK(cs); return nCurrentAsset; }
-    int GetAttempt() const { LOCK(cs);return nTriedPeerCount; }
+    int GetAssetID() const { return nCurrentAsset; }
+    int GetAttempt() const { return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
-    int64_t GetAssetStartTime() { LOCK(cs);return nTimeAssetSyncStarted; }
+    int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
     std::string GetAssetName() const;
     bilingual_str GetSyncStatus();
 
