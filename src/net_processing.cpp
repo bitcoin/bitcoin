@@ -148,6 +148,12 @@ static constexpr uint32_t MAX_GETCFILTERS_SIZE = 1000;
 static constexpr uint32_t MAX_GETCFHEADERS_SIZE = 2000;
 /** the maximum percentage of addresses from our addrman to return in response to a getaddr message. */
 static constexpr size_t MAX_PCT_ADDR_TO_SEND = 23;
+/**
+ * When considering whether we should flood to an outbound connection supporting reconciliation,
+ * see how many outbound connections are already used for flooding. Flood only if the limit is not reached.
+ * It helps to save bandwidth and reduce the privacy leak.
+ */
+static constexpr uint32_t MAX_OUTBOUND_FLOOD_TO = 8;
 
 struct COrphanTx {
     // When modifying, adapt the copy of this definition in tests/DoS_tests.
@@ -325,6 +331,15 @@ private:
      *  passed to TxRequestTracker. */
     void AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /**
+     * Return the number of outbound peers we
+     * relay transactions to by flooding.
+     * Used to determine whether we should flood to a new peer
+     * which supports reconciliation, in case we haven't reached
+     * the outbound flooding bandwidth-conserving limit.
+     */
+    size_t GetFloodingOutboundsCount(const CNode& skip_node) const;
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, int64_t nTime);
@@ -912,6 +927,28 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, int64_t nTime)
     } else {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), tx_relay, nodeid);
     }
+}
+
+size_t PeerManagerImpl::GetFloodingOutboundsCount(const CNode& skip_node) const
+{
+    size_t result = 0;
+    m_connman.ForEachNode([this, &result, &skip_node](const CNode* pnode) {
+        if (!pnode->m_tx_relay) return;
+        if (pnode->GetId() == skip_node.GetId()) return;
+        if (!pnode->IsFullOutboundConn() && !pnode->IsManualConn()) return;
+
+        PeerRef peer = GetPeerRef(pnode->GetId());
+        LOCK(peer->m_recon_state_mutex);
+        if (peer->m_recon_state) {
+            // Nodes supporting reconciliation still may be meant for flooding.
+            if (peer->m_recon_state->IsChosenForFlooding()) ++result;
+        } else {
+            // Nodes not supporting reconciliation are definitely meant for flooding,
+            // unless they don't support tx relay, which is already checked above.
+            ++result;
+        }
+    });
+    return result;
 }
 
 void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
@@ -2839,6 +2876,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (recon_version != 1) return;
 
         // Do not flood through inbound connections which support reconciliation to save bandwidth.
+        // Flood only through a limited number of outbound connections.
         bool flood_to = false;
         if (pfrom.IsInboundConn()) {
             // We currently don't support reconciliations with inbound peers which
@@ -2854,8 +2892,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // Just ignore SENDRECON and use normal flooding for transaction relay with them.
             if (recon_requestor) return;
             if (!recon_responder) return;
-            // TODO: Flood only through a limited number of outbound connections.
-            flood_to = true;
+
+            uint64_t outbound_flooding_peers = GetFloodingOutboundsCount(pfrom);
+            if (outbound_flooding_peers < MAX_OUTBOUND_FLOOD_TO) {
+                flood_to = true;
+            }
         }
 
         uint64_t local_salt = peer->m_local_recon_salt;

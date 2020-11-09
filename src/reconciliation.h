@@ -71,4 +71,9 @@ public:
     ReconState(bool requestor, bool responder, bool flood_to, uint64_t k0, uint64_t k1) :
         m_requestor(requestor), m_responder(responder), m_flood_to(flood_to),
         m_k0(k0), m_k1(k1), m_local_q(DEFAULT_RECON_Q) {}
+
+    bool IsChosenForFlooding() const
+    {
+        return m_flood_to;
+    }
 };
