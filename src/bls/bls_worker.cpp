@@ -337,6 +337,7 @@ struct VectorAggregator {
     typedef std::shared_ptr<VectorType> VectorPtrType;
     typedef std::vector<VectorPtrType> VectorVectorType;
     typedef std::function<void(const VectorPtrType& agg)> DoneCallback;
+    std::mutex sigAggregateMutex;
     DoneCallback doneCallback;
 
     const VectorVectorType& vecs;
@@ -387,10 +388,18 @@ struct VectorAggregator {
 
     void CheckDone(const T& agg, size_t idx)
     {
-        (*result)[idx] = agg;
-        if (++doneCount == vecSize) {
+        bool done;
+        {
+            std::unique_lock<std::mutex> l(sigAggregateMutex);
+            (*result)[idx] = agg;
+            done = ++doneCount == vecSize;
+        }
+        if (done) {
             doneCallback(result);
-            delete this;
+            {
+                std::unique_lock<std::mutex> l(sigAggregateMutex);
+                delete this;
+            }
         }
     }
 };
