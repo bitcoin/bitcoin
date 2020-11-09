@@ -983,8 +983,8 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
         vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
 
     FastRandomContext insecure_rand;
-    std::shuffle(vTriggerObjHashes.begin(), vTriggerObjHashes.end(), insecure_rand);
-    std::shuffle(vOtherObjHashes.begin(), vOtherObjHashes.end(), insecure_rand);
+    Shuffle(vTriggerObjHashes.begin(), vTriggerObjHashes.end(), insecure_rand);
+    Shuffle(vOtherObjHashes.begin(), vOtherObjHashes.end(), insecure_rand);
 
     for (int i = 0; i < nMaxObjRequestsPerNode; ++i) {
         uint256 nHashGovobj;
