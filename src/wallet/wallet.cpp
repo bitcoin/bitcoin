@@ -4440,19 +4440,37 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
     m_spk_managers[id] = std::move(spk_manager);
 }
 
-void CWallet::SetupDescriptorScriptPubKeyMans()
+void CWallet::SetupDescriptorScriptPubKeyMans(CKey* seed_key)
 {
     AssertLockHeld(cs_wallet);
 
     // Make a seed
-    CKey seed_key;
-    seed_key.MakeNewKey(true);
-    CPubKey seed = seed_key.GetPubKey();
-    assert(seed_key.VerifyPubKey(seed));
+    CKey xxx;
+    if(seed_key == nullptr) {
+        CKey seed;
+        seed.MakeNewKey(true);
+        std::vector<unsigned char> vch;
+        vch.push_back(seed.size() / 2);
+        for (unsigned int i = 0; i< seed.size() / 2; i++) {
+            uint8_t v = seed.begin()[i];
+            vch.push_back(v);
+        }
+        while(vch.end()-vch.begin() < 32) {
+            vch.push_back(0);
+        }
+        xxx.Set(vch.begin(), vch.end(), true);
+        seed_key = &xxx;
+    }
+    CPubKey seed = seed_key->GetPubKey();
+    assert(seed_key->VerifyPubKey(seed));
 
     // Get the extended key
     CExtKey master_key;
-    master_key.SetSeed(seed_key.begin(), seed_key.size());
+    if(seed_key->begin()[31] == 0 && seed_key->begin()[0] < 30) {
+        master_key.SetSeed(seed_key->begin() + 1, seed_key->begin()[0], true);
+    } else {
+        master_key.SetSeed(seed_key->begin(), seed_key->size(), true);
+    }
 
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {

@@ -79,11 +79,11 @@ static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWall
 
 
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
-bool HaveKey(const SigningProvider& wallet, const CKey& key)
+bool HaveKey(const SigningProvider* wallet, const CKey& key)
 {
     CKey key2;
     key2.Set(key.begin(), key.end(), !key.IsCompressed());
-    return wallet.HaveKey(key.GetPubKey().GetID()) || wallet.HaveKey(key2.GetPubKey().GetID());
+    return wallet->HaveKey(key.GetPubKey().GetID()) || wallet->HaveKey(key2.GetPubKey().GetID());
 }
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
@@ -4190,12 +4190,14 @@ static RPCHelpMan sethdseed()
                                          "keypool will be used until it has been depleted."},
                     {"seed", RPCArg::Type::STR, /* default */ "random seed", "The WIF private key to use as the new HD seed.\n"
                                          "The seed value can be retrieved using the dumpwallet command. It is the private key marked hdseed=1"},
+                    {"seed_type", RPCArg::Type::STR, /* default */ "wif", "The seed type to use. Options are \"wif\", \"hex\", and \"mnemonic\"."},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("sethdseed", "")
             + HelpExampleCli("sethdseed", "false")
             + HelpExampleCli("sethdseed", "true \"wifkey\"")
+            + HelpExampleCli("sethdseed", "true \"entropy\" \"hex\"")
             + HelpExampleRpc("sethdseed", "true, \"wifkey\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -4204,13 +4206,59 @@ static RPCHelpMan sethdseed()
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
+    LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
+    }
+    if (!spk_man) {
+        LOCK(wallet->cs_wallet);
+        CKey seed_key;
+        if (request.params[1].isNull()) {
+            CKey seed;
+            seed.MakeNewKey(true);
+            std::vector<unsigned char> vch;
+            vch.push_back(seed.size() / 2);
+            for (unsigned int i = 0; i< seed.size() / 2; i++) {
+                uint8_t v = seed.begin()[i];
+                vch.push_back(v);
+            }
+            while(vch.end()-vch.begin() < 32) {
+                vch.push_back(0);
+            }
+            seed_key.Set(vch.begin(), vch.end(), true);
+        } else {
+            if (!request.params[2].isNull() && request.params[2].get_str() == "hex") {
+                std::vector<unsigned char> seed = ParseHex(request.params[1].get_str());
+                std::vector<unsigned char> vch;
+                if(seed.size() < 16 && seed.size() % 4 != 0) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid seed size");
+                }
+                if(seed.size() < 32) {
+                    vch.push_back(seed.size());
+                }
+                for (uint8_t v: seed) {
+                    vch.push_back(v);
+                }
+                while(vch.end()-vch.begin() < 32){
+                    vch.push_back(0);
+                }
+                seed_key.Set(vch.begin(), vch.end(), true);
+            } else {
+                seed_key = DecodeSecret(request.params[1].get_str());
+            }
+        }
+        if (!seed_key.IsValid()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+        }
+        wallet->SetupDescriptorScriptPubKeyMans(&seed_key);
+        return NullUniValue;
+    }
 
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed to a wallet with private keys disabled");
     }
 
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+    LOCK2(pwallet->cs_wallet, spk_man->cs_KeyStore);
 
     // Do not do anything to non-HD wallets
     if (!pwallet->CanSupportFeature(FEATURE_HD)) {
@@ -4226,7 +4274,7 @@ static RPCHelpMan sethdseed()
 
     CPubKey master_pub_key;
     if (request.params[1].isNull()) {
-        master_pub_key = spk_man.GenerateNewSeed();
+        master_pub_key = spk_man->GenerateNewSeed();
     } else {
         CKey key = DecodeSecret(request.params[1].get_str());
         if (!key.IsValid()) {
@@ -4237,11 +4285,11 @@ static RPCHelpMan sethdseed()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key (either as an HD seed or as a loose private key)");
         }
 
-        master_pub_key = spk_man.DeriveNewSeed(key);
+        master_pub_key = spk_man->DeriveNewSeed(key);
     }
 
-    spk_man.SetHDSeed(master_pub_key);
-    if (flush_key_pool) spk_man.NewKeyPool();
+    spk_man->SetHDSeed(master_pub_key);
+    if (flush_key_pool) spk_man->NewKeyPool();
 
     return NullUniValue;
 },
@@ -4554,7 +4602,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "send",                             &send,                          {"outputs","conf_target","estimate_mode","options"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode","verbose"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode","avoid_reuse","verbose"} },
-    { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
+    { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed","seed_type"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
     { "wallet",             "setwalletflag",                    &setwalletflag,                 {"flag","value"} },

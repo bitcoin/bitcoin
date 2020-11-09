@@ -150,6 +150,7 @@ BITCOIN_CORE_H = \
   interfaces/node.h \
   interfaces/wallet.h \
   key.h \
+  key_bip39.h \
   key_io.h \
   logging.h \
   logging/timer.h \
@@ -405,6 +406,8 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
+  crypto/hmac_pbkdf.cpp \
+  crypto/hmac_pbkdf.h \
   crypto/poly1305.h \
   crypto/poly1305.cpp \
   crypto/ripemd160.cpp \

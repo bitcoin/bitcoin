@@ -15,6 +15,7 @@
     <ClCompile Include="..\..\src\crypto\chacha20.cpp" />
     <ClCompile Include="..\..\src\crypto\hmac_sha256.cpp" />
     <ClCompile Include="..\..\src\crypto\hmac_sha512.cpp" />
+    <ClCompile Include="..\..\src\crypto\hmac_pbkdf.cpp" />
     <ClCompile Include="..\..\src\crypto\ripemd160.cpp" />
     <ClCompile Include="..\..\src\crypto\sha1.cpp" />
     <ClCompile Include="..\..\src\crypto\sha256.cpp" />

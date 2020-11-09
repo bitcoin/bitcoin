@@ -4,10 +4,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
+#include <key_bip39.h>
 
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
+#include <crypto/hmac_pbkdf.h>
 #include <random.h>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <util/strencodings.h>
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
@@ -298,10 +304,50 @@ bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
 
-void CExtKey::SetSeed(const unsigned char *seed, unsigned int nSeedLen) {
+void CExtKey::SetSeed(const unsigned char *seed, unsigned int nSeedLen, bool bip39) {
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
-    CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(vout.data());
+    unsigned int extra_bits = 0;
+    switch (nSeedLen*8/32) {
+        case 4: extra_bits = 0xf0; break;
+        case 5: extra_bits = 0xf8; break;
+        case 6: extra_bits = 0xfc; break;
+        case 7: extra_bits = 0xfe; break;
+        case 8: extra_bits = 0xff; break;
+    }
+    unsigned char extra_bits_out[32];
+    CSHA256 extra_bits_source;
+    extra_bits_source.Write(seed, nSeedLen);
+    extra_bits_source.Finalize(extra_bits_out);
+    std::vector<unsigned char> seed_expanded;
+    for (unsigned int i=0; i < nSeedLen; i++) {
+        uint8_t v = seed[i];
+        seed_expanded.push_back(v);
+    }
+    seed_expanded.push_back(extra_bits_out[0] & (extra_bits & (unsigned char )0xff));
+    nSeedLen += 1;
+    size_t total_bits = nSeedLen * 8u;
+    size_t total_mnemonics = total_bits / 11;
+    std::stringstream mnemonic;
+    for (unsigned int i = 0; i < total_mnemonics; ++i) {
+        unsigned int pos, end, value;
+        for (pos = i * 11, end = pos + 11, value = 0; pos < end; ++pos)
+            value = (value << 1u) | !!((&*seed_expanded.begin())[(pos) / 8u] & (1u << (7u - (pos) % 8u)));
+        mnemonic << words[value];
+        if(i<total_mnemonics-1)
+            mnemonic << " ";
+    }
+    std::string mnemonic_string = mnemonic.str();
+    unsigned char* mnemonics = (unsigned char *)mnemonic_string.c_str();
+    unsigned char salt[] = "mnemonic";
+    unsigned char out[64];
+    pkcs5_pbkdf2_hmac_sha512(mnemonics, mnemonic_string.size(), salt, strlen((char*)salt), 2048, 64, out);
+    if (!bip39) {
+        nSeedLen -= 1;
+        CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(vout.data());
+    } else {
+        CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(out, 64).Finalize(vout.data());
+    }
     key.Set(vout.data(), vout.data() + 32, true);
     memcpy(chaincode.begin(), vout.data() + 32, 32);
     nDepth = 0;
