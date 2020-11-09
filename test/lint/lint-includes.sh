@@ -87,6 +87,7 @@ EXPECTED_BOOST_INCLUDES=(
     boost/locale.hpp
     boost/filesystem/operations.hpp
     boost/filesystem/path.hpp
+    boost/lockfree/queue.hpp
     boost/pool/pool_alloc.hpp
     boost/thread.hpp
 )

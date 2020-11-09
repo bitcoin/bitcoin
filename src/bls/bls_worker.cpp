@@ -138,7 +138,7 @@ struct Aggregator {
     std::mutex m;
     // items in the queue are all intermediate aggregation results of finished batches.
     // The intermediate results must be deleted by us again (which we do in SyncAggregateAndPushAggQueue)
-    moodycamel::ConcurrentQueue<T*> aggQueue;
+    boost::lockfree::queue<T*> aggQueue;
     std::atomic<size_t> aggQueueSize{0};
 
     // keeps track of currently queued/in-progress batches. If it reaches 0, we are done
@@ -157,7 +157,7 @@ struct Aggregator {
             parallel(_parallel),
             workerPool(_workerPool),
             sigAggregateMutex(_sigAggregateMutex),
-            aggQueue(512),
+            aggQueue(0),
             doneCallback(std::move(_doneCallback))
     {
         inputVec = std::make_shared<std::vector<const T*> >(count);
@@ -233,7 +233,7 @@ struct Aggregator {
         std::vector<T*> rem(aggQueueSize);
         for (size_t i = 0; i < rem.size(); i++) {
             T* p = nullptr;
-            bool s = aggQueue.try_dequeue(p);
+            bool s = aggQueue.pop(p);
             assert(s);
             rem[i] = p;
         }
@@ -276,9 +276,7 @@ struct Aggregator {
 
     void PushAggQueue(const T& v)
     {
-        auto * newT = new T(v);
-        if(!aggQueue.try_enqueue(newT))
-            aggQueue.enqueue(newT);
+        aggQueue.push(new T(v));
 
         if (++aggQueueSize >= batchSize) {
             // we've collected enough intermediate results to form a new batch.
@@ -293,7 +291,7 @@ struct Aggregator {
                 // collect items for new batch
                 for (size_t i = 0; i < batchSize; i++) {
                     T* p = nullptr;
-                    bool s = aggQueue.try_dequeue(p);
+                    bool s = aggQueue.pop(p);
                     assert(s);
                     (*newBatch)[i] = p;
                 }
