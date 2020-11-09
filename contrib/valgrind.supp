@@ -1,0 +1,185 @@
+# This valgrind suppressions file includes known Valgrind warnings in our
+# dependencies that cannot be fixed in-tree.
+#
+# Example use:
+# $ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
+# $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+#       --show-leak-kinds=all src/test/test_bitcoin
+#
+# To create suppressions for found issues, use the --gen-suppressions=all option:
+# $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+#       --show-leak-kinds=all --gen-suppressions=all --show-reachable=yes \
+#       --error-limit=no src/test/test_bitcoin
+#
+# Note that suppressions may depend on OS and/or library versions.
+# Tested on:
+# * aarch64 (Ubuntu 20.04 system libs, without gui)
+# * x86_64  (Ubuntu 18.04 system libs, without gui)
+{
+   Suppress libstdc++ warning - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65434
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:*/libstdc++.*
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   obj:*/ld-*.so
+}
+{
+   Suppress libdb warning - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=662917
+   Memcheck:Cond
+   obj:*/libdb_cxx-*.so
+   fun:__log_put
+}
+{
+   Suppress libdb warning
+   Memcheck:Param
+   pwrite64(buf)
+   fun:pwrite
+   fun:__os_io
+}
+{
+   Suppress libdb warning
+   Memcheck:Cond
+   fun:__log_putr.isra.1
+}
+{
+   Suppress libdb warning
+   Memcheck:Param
+   pwrite64(buf)
+   ...
+   obj:*/libdb_cxx-*.so
+}
+{
+   Suppress uninitialized bytes warning in compat code
+   Memcheck:Param
+   ioctl(TCSET{S,SW,SF})
+   fun:tcsetattr
+}
+{
+   Suppress libdb warning
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/libdb_cxx-*.so
+}
+{
+   Suppress leaks on init
+   Memcheck:Leak
+   ...
+   fun:_Z11AppInitMainR11NodeContext
+}
+{
+   Suppress leaks on shutdown
+   Memcheck:Leak
+   ...
+   fun:_Z8ShutdownR11NodeContext
+}
+{
+   Ignore GUI warning
+   Memcheck:Leak
+   ...
+   obj:/usr/lib64/libgdk-3.so.0.2404.7
+}
+{
+   Suppress leveldb warning (leveldb::InitModule()) - https://github.com/google/leveldb/issues/113
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZN7leveldbL10InitModuleEv
+}
+{
+   Suppress leveldb warning (leveldb::Env::Default()) - https://github.com/google/leveldb/issues/113
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   ...
+   fun:_ZN7leveldbL14InitDefaultEnvEv
+}
+{
+   Suppress leveldb leak
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   ...
+   fun:_ZN7leveldb6DBImpl14BackgroundCallEv
+}
+{
+   Suppress leveldb leak
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:GetCoin
+}
+{
+   Suppress wcsnrtombs glibc SSE4 warning (could be related: https://stroika.atlassian.net/browse/STK-626)
+   Memcheck:Addr16
+   fun:__wcsnlen_sse4_1
+   fun:wcsnrtombs
+}
+{
+   Suppress wcsnrtombs warning (remove after removing boost::fs)
+   Memcheck:Cond
+   ...
+   fun:_ZN5boost10filesystem6detail11unique_pathERKNS0_4pathEPNS_6system10error_codeE
+}
+{
+   Suppress boost warning
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_ZN5boost9unit_test9framework5state17execute_test_treeEmjPKNS2_23random_generator_helperE
+   fun:_ZN5boost9unit_test9framework3runEmb
+   fun:_ZN5boost9unit_test14unit_test_mainEPFbvEiPPc
+   fun:main
+}
+{
+   Suppress boost::filesystem warning (fixed in boost 1.70: https://github.com/boostorg/filesystem/commit/bbe9d1771e5d679b3f10c42a58fc81f7e8c024a9)
+   Memcheck:Cond
+   fun:_ZN5boost10filesystem6detail28directory_iterator_incrementERNS0_18directory_iteratorEPNS_6system10error_codeE
+   ...
+   obj:*/libboost_filesystem.so.*
+}
+{
+   Suppress boost::filesystem warning (could be related: https://stackoverflow.com/questions/9830182/function-boostfilesystemcomplete-being-reported-as-possible-memory-leak-by-v)
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   ...
+   fun:_ZN5boost10filesystem8absoluteERKNS0_4pathES3_
+}
+{
+   Suppress boost still reachable memory warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   ...
+   fun:_M_construct_aux<char*>
+   fun:_M_construct<char*>
+   fun:basic_string
+   fun:path
+}
+{
+   Suppress LogInstance still reachable memory warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_Z11LogInstancev
+}
+{
+   Suppress secp256k1_context_create still reachable memory warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:secp256k1_context_create
+}
+{
+   Suppress BCLog::Logger::StartLogging() still reachable memory warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:_ZN5BCLog6Logger12StartLoggingEv
+}

@@ -1,0 +1,23 @@
+--- old/qtbase/mkspecs/features/qt_module.prf
++++ new/qtbase/mkspecs/features/qt_module.prf
+@@ -264,7 +264,7 @@
+ load(qt_targets)
+ 
+ # this builds on top of qt_common
+-!internal_module:!lib_bundle:if(unix|mingw) {
++if(unix|mingw):!if(darwin:debug_and_release:CONFIG(debug, debug|release)) {
+     CONFIG += create_pc
+     QMAKE_PKGCONFIG_DESTDIR = pkgconfig
+     host_build: \
+@@ -274,9 +274,9 @@
+     QMAKE_PKGCONFIG_INCDIR = $$[QT_INSTALL_HEADERS/raw]
+     QMAKE_PKGCONFIG_CFLAGS = -I${includedir}/$$MODULE_INCNAME
+     QMAKE_PKGCONFIG_NAME = $$replace(TARGET, ^Qt, "Qt$$QT_MAJOR_VERSION ")
+-    QMAKE_PKGCONFIG_FILE = $$replace(TARGET, ^Qt, Qt$$QT_MAJOR_VERSION)
++    QMAKE_PKGCONFIG_FILE = $$replace(TARGET, ^Qt, Qt$$QT_MAJOR_VERSION)$$qtPlatformTargetSuffix()
+     for(i, MODULE_DEPENDS): \
+-        QMAKE_PKGCONFIG_REQUIRES += $$replace(QT.$${i}.name, ^Qt, Qt$$section(QT.$${i}.VERSION, ., 0, 0))
++        QMAKE_PKGCONFIG_REQUIRES += $$replace(QT.$${i}.name, ^Qt, Qt$$section(QT.$${i}.VERSION, ., 0, 0))$$qtPlatformTargetSuffix()
+     isEmpty(QMAKE_PKGCONFIG_DESCRIPTION): \
+         QMAKE_PKGCONFIG_DESCRIPTION = $$replace(TARGET, ^Qt, "Qt ") module
+     pclib_replace.match = $$lib_replace.match

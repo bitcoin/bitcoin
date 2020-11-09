@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\secp256k1\src\secp256k1.c" />
+  </ItemGroup>
+    <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>ENABLE_MODULE_ECDH;ENABLE_MODULE_RECOVERY;ENABLE_MODULE_EXTRAKEYS;ENABLE_MODULE_SCHNORRSIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\..\src\secp256k1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+     </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\common.vcxproj" />
+</Project>
