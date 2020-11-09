@@ -31,12 +31,14 @@ typedef std::set<CInputCoin> CoinSet;
 static const CoinEligibilityFilter filter_standard(1, 6, 0);
 static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
 static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
+static int nextLockTime = 0;
 
 static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
+    tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     set.emplace_back(MakeTransactionRef(tx), nInput);
 }
 
@@ -45,6 +47,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
+    tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     CInputCoin coin(MakeTransactionRef(tx), nInput);
     coin.effective_value = nValue - fee;
     coin.m_fee = fee;
@@ -54,7 +57,6 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
 
 static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
 {
-    static int nextLockTime = 0;
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
@@ -79,6 +81,23 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
     }
     COutput output(wallet, *wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     coins.push_back(output);
+}
+
+static bool equivalent_sets(CoinSet a, CoinSet b)
+{
+    std::vector<CAmount> a_amts;
+    std::vector<CAmount> b_amts;
+    for (const auto& coin : a) {
+        a_amts.push_back(coin.txout.nValue);
+    }
+    for (const auto& coin : b) {
+        b_amts.push_back(coin.txout.nValue);
+    }
+    std::sort(a_amts.begin(), a_amts.end());
+    std::sort(b_amts.begin(), b_amts.end());
+
+    std::pair<std::vector<CAmount>::iterator, std::vector<CAmount>::iterator> ret = mismatch(a_amts.begin(), a_amts.end(), b_amts.begin());
+    return ret.first == a_amts.end() && ret.second == b_amts.end();
 }
 
 static bool equal_sets(CoinSet a, CoinSet b)
@@ -158,7 +177,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Select 1 Cent
     add_coin(1 * CENT, 1, actual_selection);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equal_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, actual_selection));
     BOOST_CHECK_EQUAL(value_ret, 1 * CENT);
     actual_selection.clear();
     selection.clear();
@@ -166,7 +185,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Select 2 Cent
     add_coin(2 * CENT, 2, actual_selection);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 2 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equal_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, actual_selection));
     BOOST_CHECK_EQUAL(value_ret, 2 * CENT);
     actual_selection.clear();
     selection.clear();
@@ -175,7 +194,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     add_coin(4 * CENT, 4, actual_selection);
     add_coin(1 * CENT, 1, actual_selection);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 5 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equal_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, actual_selection));
     BOOST_CHECK_EQUAL(value_ret, 5 * CENT);
     actual_selection.clear();
     selection.clear();
@@ -189,7 +208,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     add_coin(1 * CENT, 1, actual_selection);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0.5 * CENT, selection, value_ret));
     BOOST_CHECK_EQUAL(value_ret, 1 * CENT);
-    BOOST_CHECK(equal_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, actual_selection));
     actual_selection.clear();
     selection.clear();
 
@@ -204,7 +223,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     add_coin(4 * CENT, 4, actual_selection);
     add_coin(1 * CENT, 1, actual_selection);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equal_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, actual_selection));
     BOOST_CHECK_EQUAL(value_ret, 10 * CENT);
     actual_selection.clear();
     selection.clear();
@@ -217,7 +236,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 5000, selection, value_ret));
     BOOST_CHECK_EQUAL(value_ret, 10 * CENT);
     // FIXME: this test is redundant with the above, because 1 Cent is selected, not "too small"
-    // BOOST_CHECK(equal_sets(selection, actual_selection));
+    // BOOST_CHECK(equivalent_sets(selection, actual_selection));
 
     // Select 0.25 Cent, not possible
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.25 * CENT, 0.5 * CENT, selection, value_ret));
@@ -247,7 +266,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     }
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 30 * CENT, 5000, selection, value_ret));
     BOOST_CHECK_EQUAL(value_ret, 30 * CENT);
-    BOOST_CHECK(equal_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, actual_selection));
 
     ////////////////////
     // Behavior tests //
