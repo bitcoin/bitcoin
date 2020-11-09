@@ -12,6 +12,7 @@
 #include <messagesigner.h>
 #include <spork.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <string>
 
@@ -210,6 +211,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     voteInstanceRef = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
     fileVotes.AddVote(vote);
     fDirtyCache = true;
+    // SEND NOTIFICATION TO SCRIPT/ZMQ
+    GetMainSignals().NotifyGovernanceVote(vote);
     return true;
 }
 
