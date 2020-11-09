@@ -9,7 +9,6 @@ $(package)_config_opts+=--enable-cxx --enable-fat --disable-shared --enable-stat
 $(package)_config_opts_linux=--with-pic
 $(package)_config_opts_darwin=--with-pic
 $(package)_cflags_armv7l_linux+=-march=armv7-a
-$(package)_config_opts_arm=--disable-assembly
 endef
 
 define $(package)_config_cmds
