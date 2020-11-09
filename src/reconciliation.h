@@ -63,8 +63,9 @@ enum ReconPhase {
  * Recompute q in case of full reconciliation success (both initially or after extension).
  * In case reconciliation completely failed (initial and extension), fallback to the default q,
  * set to cause an overestimation, but should converge to the reasonable q in the next round.
- * Note that accurate recompute in case of complete failure is difficult, because it requires waiting for GETDATA/INV
- * the peer would send to us, and find the actual difference from there (also may be inaccurate due to the latencies).
+ * Note that accurate recompute in case of complete failure is difficult,
+ * because it requires waiting for GETDATA/INV the peer would send to us, and find
+ * the actual difference from there (also may be inaccurate due to the latencies).
  */
 enum ReconLocalQAction {
     Q_KEEP,
@@ -350,5 +351,24 @@ public:
         if (clear_local_set) m_local_set.clear();
 
         m_local_short_id_mapping.clear();
+    }
+
+    /**
+     * When during reconciliation we find a set difference successfully (by combining sketches),
+     * we want to find which transactions are missing on our and on their side.
+     * For those missing on our side, we may only find short IDs.
+     */
+    std::vector<uint256> GetRelevantIDsFromShortIDs(std::vector<uint64_t> diff, std::vector<uint32_t>& local_missing)
+    {
+        std::vector<uint256> remote_missing;
+        for (const auto& diff_short_id: diff) {
+            const auto local_tx = m_local_short_id_mapping.find(diff_short_id);
+            if (local_tx != m_local_short_id_mapping.end()) {
+                remote_missing.push_back(local_tx->second);
+            } else {
+                local_missing.push_back(diff_short_id);
+            }
+        }
+        return remote_missing;
     }
 };
