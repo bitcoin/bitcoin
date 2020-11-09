@@ -52,11 +52,11 @@ int getIndexForConfTarget(int target) {
 SendCoinsDialog::SendCoinsDialog(bool _fPrivateSend, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
-    clientModel(0),
-    model(0),
+    clientModel(nullptr),
+    model(nullptr),
+    m_coin_control(new CCoinControl),
     fNewRecipientAllowed(true),
-    fFeeMinimized(true),
-    fPrivateSend(_fPrivateSend)
+    fFeeMinimized(true)
 {
     ui->setupUi(this);
 
@@ -156,13 +156,14 @@ SendCoinsDialog::SendCoinsDialog(bool _fPrivateSend, QWidget* parent) :
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
 
-    if (fPrivateSend) {
+    if (_fPrivateSend) {
         ui->sendButton->setText("PrivateS&end");
         ui->sendButton->setToolTip(tr("Confirm the PrivateSend action"));
     } else {
         ui->sendButton->setText(tr("S&end"));
         ui->sendButton->setToolTip(tr("Confirm the send action"));
     }
+    m_coin_control->UsePrivateSend(_fPrivateSend);
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
@@ -303,16 +304,9 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     WalletModelTransaction currentTransaction(recipients);
     WalletModel::SendCoinsReturn prepareStatus;
 
-    // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
-    CCoinControl ctrl;
-    if (model->getOptionsModel()->getCoinControlFeatures())
-        ctrl = *CoinControlDialog::coinControl();
+    updateCoinControlState(*m_coin_control);
 
-    updateCoinControlState(ctrl);
-
-    ctrl.UsePrivateSend(fPrivateSend);
-
-    prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
+    prepareStatus = model->prepareTransaction(currentTransaction, *m_coin_control);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -382,7 +376,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     questionString.append("<br />");
 
 
-    if(ctrl.IsUsingPrivateSend()) {
+    if(m_coin_control->IsUsingPrivateSend()) {
         questionString.append(tr("using") + " <b>" + tr("PrivateSend funds only") + "</b>");
     } else {
         questionString.append(tr("using") + " <b>" + tr("any available funds") + "</b>");
@@ -405,7 +399,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         questionString.append("</span> ");
         questionString.append(tr("are added as transaction fee"));
 
-        if (ctrl.IsUsingPrivateSend()) {
+        if (m_coin_control->IsUsingPrivateSend()) {
             questionString.append(" " + tr("(PrivateSend transactions have higher fees usually due to no change output being allowed)"));
         }
     }
@@ -418,14 +412,14 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     CFeeRate feeRate(txFee, currentTransaction.getTransactionSize());
     questionString.append(tr("Fee rate: %1").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())) + "/kB");
 
-    if (ctrl.IsUsingPrivateSend()) {
+    if (m_coin_control->IsUsingPrivateSend()) {
         // append number of inputs
         questionString.append("<hr />");
         int nInputs = currentTransaction.getWtx()->get().vin.size();
         questionString.append(tr("This transaction will consume %n input(s)", "", nInputs));
 
         // warn about potential privacy issues when spending too many inputs at once
-        if (nInputs >= 10 && ctrl.IsUsingPrivateSend()) {
+        if (nInputs >= 10 && m_coin_control->IsUsingPrivateSend()) {
             questionString.append("<br />");
             questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
             questionString.append(tr("Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended").arg(10));
@@ -461,14 +455,14 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     }
 
     // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction, ctrl.IsUsingPrivateSend());
+    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction, m_coin_control->IsUsingPrivateSend());
     // process sendStatus and on error generate message shown to user
     processSendCoinsReturn(sendStatus);
 
     if (sendStatus.status == WalletModel::OK)
     {
         accept();
-        CoinControlDialog::coinControl()->UnSelectAll();
+        m_coin_control->UnSelectAll();
         coinControlUpdateLabels();
         Q_EMIT coinsSent(currentTransaction.getWtx()->get().GetHash());
     }
@@ -478,7 +472,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 void SendCoinsDialog::clear()
 {
     // Clear coin control settings
-    CoinControlDialog::coinControl()->UnSelectAll();
+    m_coin_control->UnSelectAll();
     ui->checkBoxCoinControlChange->setChecked(false);
     ui->lineEditCoinControlChange->clear();
     coinControlUpdateLabels();
@@ -618,7 +612,7 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
     if(model && model->getOptionsModel())
     {
         CAmount bal = 0;
-        if (fPrivateSend) {
+        if (m_coin_control->IsUsingPrivateSend()) {
             bal = balances.anonymized_balance;
         } else {
             bal = balances.balance;
@@ -710,15 +704,8 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
 
 void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
 {
-    // Get CCoinControl instance if CoinControl is enabled or create a new one.
-    CCoinControl coin_control;
-    if (model->getOptionsModel()->getCoinControlFeatures()) {
-        coin_control = *CoinControlDialog::coinControl();
-    }
-
     // Calculate available amount to send.
-    CAmount amount = model->wallet().getAvailableBalance(coin_control, fPrivateSend);
-
+    CAmount amount = model->wallet().getAvailableBalance(*m_coin_control);
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry* e = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if (e && !e->isHidden() && e != entry) {
@@ -784,24 +771,15 @@ void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
     ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
 }
 
-void SendCoinsDialog::showEvent(QShowEvent* event)
-{
-    QWidget::showEvent(event);
-    if (!event->spontaneous()) {
-        CoinControlDialog::usePrivateSend(fPrivateSend);
-    }
-}
-
 void SendCoinsDialog::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
         return;
-    CCoinControl coin_control;
-    updateCoinControlState(coin_control);
-    coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
+    updateCoinControlState(*m_coin_control);
+    m_coin_control->m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     int returned_target;
     FeeReason reason;
-    CFeeRate feeRate = CFeeRate(model->node().getMinimumFee(1000, coin_control, &returned_target, &reason));
+    CFeeRate feeRate = CFeeRate(model->node().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
     ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
 
@@ -867,8 +845,9 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 {
     ui->frameCoinControl->setVisible(checked);
 
-    if (!checked && model) // coin control features disabled
-        CoinControlDialog::coinControl()->SetNull();
+    if (!checked && model) { // coin control features disabled
+        m_coin_control->SetNull(false);
+    }
 
     coinControlUpdateLabels();
 }
@@ -876,8 +855,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg(this);
-    dlg.setModel(model);
+    CoinControlDialog dlg(*m_coin_control, model, this);
     dlg.exec();
     coinControlUpdateLabels();
 }
@@ -887,7 +865,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
-        CoinControlDialog::coinControl()->destChange = CNoDestination();
+        m_coin_control->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->clear();
     }
     else
@@ -903,7 +881,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
     if (model && model->getAddressTableModel())
     {
         // Default to no change address until verified
-        CoinControlDialog::coinControl()->destChange = CNoDestination();
+        m_coin_control->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
 
         const CTxDestination dest = DecodeDestination(text.toStdString());
@@ -926,7 +904,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                     QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
                 if(btnRetVal == QMessageBox::Yes)
-                    CoinControlDialog::coinControl()->destChange = dest;
+                    m_coin_control->destChange = dest;
                 else
                 {
                     ui->lineEditCoinControlChange->setText("");
@@ -945,7 +923,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                 else
                     ui->labelCoinControlChangeLabel->setText(tr("(no label)"));
 
-                CoinControlDialog::coinControl()->destChange = dest;
+                m_coin_control->destChange = dest;
             }
         }
     }
@@ -957,7 +935,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
     if (!model || !model->getOptionsModel())
         return;
 
-    updateCoinControlState(*CoinControlDialog::coinControl());
+    updateCoinControlState(*m_coin_control);
 
     // set pay amounts
     CoinControlDialog::payAmounts.clear();
@@ -975,10 +953,10 @@ void SendCoinsDialog::coinControlUpdateLabels()
         }
     }
 
-    if (CoinControlDialog::coinControl()->HasSelected())
+    if (m_coin_control->HasSelected())
     {
         // actual coin control calculation
-        CoinControlDialog::updateLabels(model, this);
+        CoinControlDialog::updateLabels(*m_coin_control, model, this);
 
         // show coin control stats
         ui->labelCoinControlAutomaticallySelected->hide();

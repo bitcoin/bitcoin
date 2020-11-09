@@ -422,9 +422,9 @@ public:
     {
         return m_wallet.GetAverageAnonymizedRounds();
     }
-    CAmount getAvailableBalance(const CCoinControl& coin_control, bool fAnonymized) override
+    CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
-        if (fAnonymized) {
+        if (coin_control.IsUsingPrivateSend()) {
             return m_wallet.GetAnonymizedBalance(&coin_control);
         } else {
             return m_wallet.GetAvailableBalance(&coin_control);

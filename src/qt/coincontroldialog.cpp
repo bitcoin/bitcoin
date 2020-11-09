@@ -32,7 +32,6 @@
 
 QList<CAmount> CoinControlDialog::payAmounts;
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
-CoinControlDialog::Mode CoinControlDialog::mode{CoinControlDialog::Mode::NORMAL};
 
 bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
     int column = treeWidget()->sortColumn();
@@ -41,10 +40,11 @@ bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
     return QTreeWidgetItem::operator<(other);
 }
 
-CoinControlDialog::CoinControlDialog(QWidget* parent) :
+CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _model, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::CoinControlDialog),
-    model(0)
+    m_coin_control(coin_control),
+    model(_model)
 {
     ui->setupUi(this);
 
@@ -152,6 +152,13 @@ CoinControlDialog::CoinControlDialog(QWidget* parent) :
         ui->radioTreeMode->click();
     if (settings.contains("nCoinControlSortColumn") && settings.contains("nCoinControlSortOrder"))
         sortView(settings.value("nCoinControlSortColumn").toInt(), (static_cast<Qt::SortOrder>(settings.value("nCoinControlSortOrder").toInt())));
+
+    if(_model->getOptionsModel() && _model->getAddressTableModel())
+    {
+        updateView();
+        updateLabelLocked();
+        CoinControlDialog::updateLabels(m_coin_control, _model, this);
+    }
 }
 
 CoinControlDialog::~CoinControlDialog()
@@ -162,18 +169,6 @@ CoinControlDialog::~CoinControlDialog()
     settings.setValue("nCoinControlSortOrder", (int)sortOrder);
 
     delete ui;
-}
-
-void CoinControlDialog::setModel(WalletModel *_model)
-{
-    this->model = _model;
-
-    if(_model && _model->getOptionsModel() && _model->getAddressTableModel())
-    {
-        updateView();
-        updateLabelLocked();
-        CoinControlDialog::updateLabels(_model, this);
-    }
 }
 
 // ok button
@@ -201,8 +196,8 @@ void CoinControlDialog::buttonSelectAllClicked()
                 ui->treeWidget->topLevelItem(i)->setCheckState(COLUMN_CHECKBOX, state);
     ui->treeWidget->setEnabled(true);
     if (state == Qt::Unchecked)
-        coinControl()->UnSelectAll(); // just to be sure
-    CoinControlDialog::updateLabels(model, this);
+        m_coin_control.UnSelectAll(); // just to be sure
+    CoinControlDialog::updateLabels(m_coin_control, model, this);
 }
 
 // Toggle lock state
@@ -216,7 +211,7 @@ void CoinControlDialog::buttonToggleLockClicked()
             item = ui->treeWidget->topLevelItem(i);
             COutPoint outpt(uint256S(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), item->data(COLUMN_ADDRESS, VOutRole).toUInt());
             // Don't toggle the lock state of partially mixed coins if they are not hidden in PrivateSend mode
-            if (coinControl()->IsUsingPrivateSend() && !fHideAdditional && !model->isFullyMixed(outpt)) {
+            if (m_coin_control.IsUsingPrivateSend() && !fHideAdditional && !model->isFullyMixed(outpt)) {
                 continue;
             }
             if (model->wallet().isLockedCoin(outpt)) {
@@ -232,7 +227,7 @@ void CoinControlDialog::buttonToggleLockClicked()
             updateLabelLocked();
         }
         ui->treeWidget->setEnabled(true);
-        CoinControlDialog::updateLabels(model, this);
+        CoinControlDialog::updateLabels(m_coin_control, model, this);
     }
     else{
         QMessageBox msgBox(this);
@@ -424,16 +419,16 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         COutPoint outpt(uint256S(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), item->data(COLUMN_ADDRESS, VOutRole).toUInt());
 
         if (item->checkState(COLUMN_CHECKBOX) == Qt::Unchecked)
-            coinControl()->UnSelect(outpt);
+            m_coin_control.UnSelect(outpt);
         else if (item->isDisabled()) // locked (this happens if "check all" through parent node)
             item->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         else {
-            coinControl()->Select(outpt);
+            m_coin_control.Select(outpt);
         }
 
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
-            CoinControlDialog::updateLabels(model, this);
+            CoinControlDialog::updateLabels(m_coin_control, model, this);
     }
 }
 
@@ -454,10 +449,10 @@ void CoinControlDialog::on_hideButton_clicked()
 {
     fHideAdditional = !fHideAdditional;
     updateView();
-    CoinControlDialog::updateLabels(model, this);
+    CoinControlDialog::updateLabels(m_coin_control, model, this);
 }
 
-void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
+void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *model, QDialog* dialog)
 {
     if (!model)
         return;
@@ -490,7 +485,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     bool fUnselectedNonMixed{false};
 
     std::vector<COutPoint> vCoinControl;
-    coinControl()->ListSelected(vCoinControl);
+    m_coin_control.ListSelected(vCoinControl);
 
     size_t i = 0;
     for (const auto& out : model->wallet().getCoins(vCoinControl)) {
@@ -501,7 +496,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         const COutPoint& outpt = vCoinControl[i++];
         if (out.is_spent)
         {
-            coinControl()->UnSelect(outpt);
+            m_coin_control.UnSelect(outpt);
             fUnselectedSpent = true;
             continue;
         }
@@ -540,14 +535,14 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = model->node().getMinimumFee(nBytes, *coinControl(), nullptr /* returned_target */, nullptr /* reason */);
+        nPayFee = model->node().getMinimumFee(nBytes, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
 
         if (nPayAmount > 0)
         {
             nChange = nAmount - nPayAmount;
 
             // PrivateSend Fee = overpay
-            if(coinControl()->IsUsingPrivateSend() && nChange > 0)
+            if(m_coin_control.IsUsingPrivateSend() && nChange > 0)
             {
                 nPayFee = std::max(nChange, nPayFee);
                 nChange = 0;
@@ -651,30 +646,12 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     }
 }
 
-void CoinControlDialog::usePrivateSend(bool fUsePrivateSend)
-{
-    CoinControlDialog::mode = fUsePrivateSend ? CoinControlDialog::Mode::PRIVATESEND : CoinControlDialog::Mode::NORMAL;
-}
-
-CCoinControl* CoinControlDialog::coinControl()
-{
-    if (CoinControlDialog::mode == CoinControlDialog::Mode::NORMAL) {
-        static CCoinControl coinControlNormal;
-        coinControlNormal.UsePrivateSend(false);
-        return &coinControlNormal;
-    } else {
-        static CCoinControl coinControlPrivateSend;
-        coinControlPrivateSend.UsePrivateSend(true);
-        return &coinControlPrivateSend;
-    }
-}
-
 void CoinControlDialog::updateView()
 {
     if (!model || !model->getOptionsModel() || !model->getAddressTableModel())
         return;
 
-    bool fNormalMode = mode == Mode::NORMAL;
+    bool fNormalMode = !m_coin_control.IsUsingPrivateSend();
     ui->treeWidget->setColumnHidden(COLUMN_PRIVATESEND_ROUNDS, fNormalMode);
     ui->treeWidget->setColumnHidden(COLUMN_LABEL, !fNormalMode);
     ui->radioTreeMode->setVisible(fNormalMode);
@@ -686,22 +663,19 @@ void CoinControlDialog::updateView()
     }
 
     QString strHideButton;
-    switch (mode) {
-    case Mode::NORMAL:
+    if (fNormalMode) {
         if (fHideAdditional) {
             strHideButton = tr("Show all coins");
         } else {
             strHideButton = tr("Hide PrivateSend coins");
         }
-        break;
-    case Mode::PRIVATESEND:
+    } else {
         if (fHideAdditional) {
             strHideButton = tr("Show all PrivateSend coins");
         } else {
             strHideButton = tr("Show spendable coins only");
         }
         ui->radioListMode->setChecked(true);
-        break;
     }
     ui->hideButton->setText(strHideButton);
 
@@ -748,15 +722,15 @@ void CoinControlDialog::updateView()
             CAmount nAmount = out.txout.nValue;
             bool fPrivateSendAmount = model->node().privateSendOptions().isDenominated(nAmount) || model->node().privateSendOptions().isCollateralAmount(nAmount);
 
-            if (coinControl()->IsUsingPrivateSend()) {
+            if (m_coin_control.IsUsingPrivateSend()) {
                 fFullyMixed = model->isFullyMixed(output);
                 if ((fHideAdditional && !fFullyMixed) || (!fHideAdditional && !fPrivateSendAmount)) {
-                    coinControl()->UnSelect(output);
+                    m_coin_control.UnSelect(output);
                     continue;
                 }
             } else {
                 if (fHideAdditional && fPrivateSendAmount) {
-                    coinControl()->UnSelect(output);
+                    m_coin_control.UnSelect(output);
                     continue;
                 }
             }
@@ -831,17 +805,17 @@ void CoinControlDialog::updateView()
 
             // disable locked coins
             if (model->wallet().isLockedCoin(output)) {
-                coinControl()->UnSelect(output); // just to be sure
+                m_coin_control.UnSelect(output); // just to be sure
                 itemOutput->setDisabled(true);
                 itemOutput->setIcon(COLUMN_CHECKBOX, GUIUtil::getIcon("lock_closed", GUIUtil::ThemedColor::RED));
             }
 
             // set checkbox
-            if (coinControl()->IsSelected(output)) {
+            if (m_coin_control.IsSelected(output)) {
                 itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
             }
 
-            if (coinControl()->IsUsingPrivateSend() && !fHideAdditional && !fFullyMixed) {
+            if (m_coin_control.IsUsingPrivateSend() && !fHideAdditional && !fFullyMixed) {
                 itemOutput->setDisabled(true);
             }
         }

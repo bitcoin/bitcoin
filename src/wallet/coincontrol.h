@@ -53,7 +53,7 @@ public:
         SetNull();
     }
 
-    void SetNull()
+    void SetNull(bool fResetCoinType = true)
     {
         destChange = CNoDestination();
         fAllowOtherInputs = false;
@@ -65,7 +65,9 @@ public:
         fOverrideFeeRate = false;
         m_confirm_target.reset();
         m_fee_mode = FeeEstimateMode::UNSET;
-        nCoinType = CoinType::ALL_COINS;
+        if (fResetCoinType) {
+            nCoinType = CoinType::ALL_COINS;
+        }
     }
 
     bool HasSelected() const
