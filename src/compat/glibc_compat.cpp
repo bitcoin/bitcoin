@@ -84,7 +84,7 @@ static ssize_t GetDevURandom(unsigned char *ent32, size_t length)
     if (f == -1) {
         return -1;
     }
-    int have = 0;
+    size_t have = 0;
     do {
         ssize_t n = read(f, ent32 + have, length - have);
         if (n <= 0 || n + have > length) {
@@ -94,7 +94,7 @@ static ssize_t GetDevURandom(unsigned char *ent32, size_t length)
         have += n;
     } while (have < length);
     close(f);
-    return have;
+    return (ssize_t)have;
 }
 #endif
 
@@ -110,7 +110,7 @@ extern "C" ssize_t __wrap_getrandom (void *buffer, size_t length, unsigned int f
         * interrupted by signals."
         */
         rv = syscall(SYS_getrandom, buffer, length, flags);
-        if (rv != length) {
+        if ((size_t)rv != length) {
             if (rv < 0 && errno == ENOSYS) {
                 /* Fallback for kernel <3.17: the return value will be -1 and errno
                 * ENOSYS if the syscall is not available, in that case fall back
