@@ -25,7 +25,7 @@ public:
 
 private:
     ctpl::thread_pool workerPool;
-
+    std::mutex sigAggregateMutex;
     static const int SIG_VERIFY_BATCH_SIZE = 8;
     struct SigVerifyJob {
         SigVerifyDoneCallback doneCallback;
