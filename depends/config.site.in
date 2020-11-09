@@ -1,4 +1,4 @@
-depends_prefix="`dirname ${ac_site_file}`/.."
+depends_prefix="$(cd "$(dirname ${ac_site_file})/.." && pwd)"
 
 cross_compiling=maybe
 host_alias=@HOST@
