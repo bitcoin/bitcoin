@@ -514,7 +514,7 @@ ap = ArgumentParser(description="""Improved version of macdeployqt.
 Outputs a ready-to-deploy app in a folder "dist" and optionally wraps it in a .dmg file.
 Note, that the "dist" folder will be deleted before deploying on each run.
 
-Optionally, Qt translation files (.qm) and additional resources can be added to the bundle.""")
+Optionally, Qt translation files (.qm) can be added to the bundle.""")
 
 ap.add_argument("app_bundle", nargs=1, metavar="app-bundle", help="application bundle to be deployed")
 ap.add_argument("-verbose", type=int, nargs=1, default=[1], metavar="<0-3>", help="0 = no output, 1 = error/warning (default), 2 = normal, 3 = debug")
@@ -523,7 +523,6 @@ ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, h
 ap.add_argument("-dmg", nargs="?", const="", metavar="basename", help="create a .dmg disk image; if basename is not specified, a camel-cased version of the app name is used")
 ap.add_argument("-fancy", nargs=1, metavar="plist", default=[], help="make a fancy looking disk image using the given plist file with instructions; requires -dmg to work")
 ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translations. Base translations will automatically be added to the bundle's resources.")
-ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
 ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom volume name for dmg")
 
 config = ap.parse_args()
@@ -540,16 +539,6 @@ if not os.path.exists(app_bundle):
     sys.exit(1)
 
 app_bundle_name = os.path.splitext(os.path.basename(app_bundle))[0]
-
-# ------------------------------------------------
-
-for p in config.add_resources:
-    if verbose >= 3:
-        print("Checking for \"%s\"..." % p)
-    if not os.path.exists(p):
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not find additional resource file \"{}\"\n".format(p))
-        sys.exit(1)
 
 # ------------------------------------------------
 
@@ -696,20 +685,6 @@ if verbose >= 2:
 
 with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
     f.write(qt_conf.encode())
-
-# ------------------------------------------------
-
-if len(config.add_resources) > 0 and verbose >= 2:
-    print("+ Adding additional resources +")
-
-for p in config.add_resources:
-    t = os.path.join(applicationBundle.resourcesPath, os.path.basename(p))
-    if verbose >= 3:
-        print(p, "->", t)
-    if os.path.isdir(p):
-        shutil.copytree(p, t, symlinks=True)
-    else:
-        shutil.copy2(p, t)
 
 # ------------------------------------------------
 
