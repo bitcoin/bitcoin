@@ -194,16 +194,15 @@ class DeploymentInfo(object):
         return False
 
 def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
-    if verbose >= 3:
+    if verbose:
         print("Inspecting with otool: " + binaryPath)
     otoolbin=os.getenv("OTOOL", "otool")
     otool = subprocess.Popen([otoolbin, "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     o_stdout, o_stderr = otool.communicate()
     if otool.returncode != 0:
-        if verbose >= 1:
-            sys.stderr.write(o_stderr)
-            sys.stderr.flush()
-            raise RuntimeError("otool failed with return code {}".format(otool.returncode))
+        sys.stderr.write(o_stderr)
+        sys.stderr.flush()
+        raise RuntimeError("otool failed with return code {}".format(otool.returncode))
 
     otoolLines = o_stdout.split("\n")
     otoolLines.pop(0) # First line is the inspected binary
@@ -215,7 +214,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
         line = line.replace("@loader_path", os.path.dirname(binaryPath))
         info = FrameworkInfo.fromOtoolLibraryLine(line.strip())
         if info is not None:
-            if verbose >= 3:
+            if verbose:
                 print("Found framework:")
                 print(info)
             libraries.append(info)
@@ -227,7 +226,7 @@ def runInstallNameTool(action: str, *args):
     subprocess.check_call([installnametoolbin, "-"+action] + list(args))
 
 def changeInstallName(oldName: str, newName: str, binaryPath: str, verbose: int):
-    if verbose >= 3:
+    if verbose:
         print("Using install_name_tool:")
         print(" in", binaryPath)
         print(" change reference", oldName)
@@ -235,7 +234,7 @@ def changeInstallName(oldName: str, newName: str, binaryPath: str, verbose: int)
     runInstallNameTool("change", oldName, newName, binaryPath)
 
 def changeIdentification(id: str, binaryPath: str, verbose: int):
-    if verbose >= 3:
+    if verbose:
         print("Using install_name_tool:")
         print(" change identification in", binaryPath)
         print(" to", id)
@@ -243,7 +242,7 @@ def changeIdentification(id: str, binaryPath: str, verbose: int):
 
 def runStrip(binaryPath: str, verbose: int):
     stripbin=os.getenv("STRIP", "strip")
-    if verbose >= 3:
+    if verbose:
         print("Using strip:")
         print(" stripped", binaryPath)
     subprocess.check_call([stripbin, "-x", binaryPath])
@@ -267,7 +266,7 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
         os.makedirs(toDir)
     
     shutil.copy2(fromPath, toPath)
-    if verbose >= 3:
+    if verbose:
         print("Copied:", fromPath)
         print(" to:", toPath)
 
@@ -281,13 +280,12 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
         linkto = framework.version
         if not os.path.exists(linkfrom):
             os.symlink(linkto, linkfrom)
-            if verbose >= 2:
-                print("Linked:", linkfrom, "->", linkto)
+            print("Linked:", linkfrom, "->", linkto)
         fromResourcesDir = framework.sourceResourcesDirectory
         if os.path.exists(fromResourcesDir):
             toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
             shutil.copytree(fromResourcesDir, toResourcesDir, symlinks=True)
-            if verbose >= 3:
+            if verbose:
                 print("Copied resources:", fromResourcesDir)
                 print(" to:", toResourcesDir)
         fromContentsDir = framework.sourceVersionContentsDirectory
@@ -296,7 +294,7 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
         if os.path.exists(fromContentsDir):
             toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
             shutil.copytree(fromContentsDir, toContentsDir, symlinks=True)
-            if verbose >= 3:
+            if verbose:
                 print("Copied Contents:", fromContentsDir)
                 print(" to:", toContentsDir)
     elif framework.frameworkName.startswith("libQtGui"): # Copy qt_menu.nib (applies to non-framework layout)
@@ -304,7 +302,7 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
         qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
         if os.path.exists(qtMenuNibSourcePath) and not os.path.exists(qtMenuNibDestinationPath):
             shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath, symlinks=True)
-            if verbose >= 3:
+            if verbose:
                 print("Copied for libQtGui:", qtMenuNibSourcePath)
                 print(" to:", qtMenuNibDestinationPath)
     
@@ -318,16 +316,14 @@ def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPat
         framework = frameworks.pop(0)
         deploymentInfo.deployedFrameworks.append(framework.frameworkName)
         
-        if verbose >= 2:
-            print("Processing", framework.frameworkName, "...")
+        print("Processing", framework.frameworkName, "...")
         
         # Get the Qt path from one of the Qt frameworks
         if deploymentInfo.qtPath is None and framework.isQtFramework():
             deploymentInfo.detectQtPath(framework.frameworkDirectory)
         
         if framework.installName.startswith("@executable_path") or framework.installName.startswith(bundlePath):
-            if verbose >= 2:
-                print(framework.frameworkName, "already deployed, skipping.")
+            print(framework.frameworkName, "already deployed, skipping.")
             continue
         
         # install_name_tool the new id into the binary
@@ -358,7 +354,7 @@ def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPat
 
 def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip: bool, verbose: int) -> DeploymentInfo:
     frameworks = getFrameworks(applicationBundle.binaryPath, verbose)
-    if len(frameworks) == 0 and verbose >= 1:
+    if len(frameworks) == 0:
         print("Warning: Could not find any external frameworks to deploy in {}.".format(applicationBundle.path))
         return DeploymentInfo()
     else:
@@ -478,8 +474,7 @@ def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: Deployme
             plugins.append((pluginDirectory, pluginName))
     
     for pluginDirectory, pluginName in plugins:
-        if verbose >= 2:
-            print("Processing plugin", os.path.join(pluginDirectory, pluginName), "...")
+        print("Processing plugin", os.path.join(pluginDirectory, pluginName), "...")
         
         sourcePath = os.path.join(deploymentInfo.pluginPath, pluginDirectory, pluginName)
         destinationDirectory = os.path.join(appBundleInfo.pluginPath, pluginDirectory)
@@ -488,7 +483,7 @@ def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: Deployme
         
         destinationPath = os.path.join(destinationDirectory, pluginName)
         shutil.copy2(sourcePath, destinationPath)
-        if verbose >= 3:
+        if verbose:
             print("Copied:", sourcePath)
             print(" to:", destinationPath)
         
@@ -517,7 +512,7 @@ Note, that the "dist" folder will be deleted before deploying on each run.
 Optionally, Qt translation files (.qm) can be added to the bundle.""")
 
 ap.add_argument("app_bundle", nargs=1, metavar="app-bundle", help="application bundle to be deployed")
-ap.add_argument("-verbose", type=int, nargs=1, default=[1], metavar="<0-3>", help="0 = no output, 1 = error/warning (default), 2 = normal, 3 = debug")
+ap.add_argument("-verbose", nargs="?", const=True, help="Output additional debugging information")
 ap.add_argument("-no-plugins", dest="plugins", action="store_false", default=True, help="skip plugin deployment")
 ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, help="don't run 'strip' on the binaries")
 ap.add_argument("-dmg", nargs="?", const="", metavar="basename", help="create a .dmg disk image; if basename is not specified, a camel-cased version of the app name is used")
@@ -527,15 +522,14 @@ ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom
 
 config = ap.parse_args()
 
-verbose = config.verbose[0]
+verbose = config.verbose
 
 # ------------------------------------------------
 
 app_bundle = config.app_bundle[0]
 
 if not os.path.exists(app_bundle):
-    if verbose >= 1:
-        sys.stderr.write("Error: Could not find app bundle \"{}\"\n".format(app_bundle))
+    sys.stderr.write("Error: Could not find app bundle \"{}\"\n".format(app_bundle))
     sys.exit(1)
 
 app_bundle_name = os.path.splitext(os.path.basename(app_bundle))[0]
@@ -543,29 +537,26 @@ app_bundle_name = os.path.splitext(os.path.basename(app_bundle))[0]
 # ------------------------------------------------
 
 if len(config.fancy) == 1:
-    if verbose >= 3:
+    if verbose:
         print("Fancy: Importing plistlib...")
     try:
         import plistlib
     except ImportError:
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not import plistlib which is required for fancy disk images.\n")
+        sys.stderr.write("Error: Could not import plistlib which is required for fancy disk images.\n")
         sys.exit(1)
     
     p = config.fancy[0]
-    if verbose >= 3:
+    if verbose:
         print("Fancy: Loading \"{}\"...".format(p))
     if not os.path.exists(p):
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not find fancy disk image plist at \"{}\"\n".format(p))
+        sys.stderr.write("Error: Could not find fancy disk image plist at \"{}\"\n".format(p))
         sys.exit(1)
     
     try:
         with open(p, 'rb') as fp:
             fancy = plistlib.load(fp, fmt=plistlib.FMT_XML)
     except:
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not parse fancy disk image plist at \"{}\"\n".format(p))
+        sys.stderr.write("Error: Could not parse fancy disk image plist at \"{}\"\n".format(p))
         sys.exit(1)
     
     try:
@@ -578,19 +569,17 @@ if len(config.fancy) == 1:
             for key, value in fancy["items_position"].items():
                 assert isinstance(value, list) and len(value) == 2 and isinstance(value[0], int) and isinstance(value[1], int)
     except:
-        if verbose >= 1:
-            sys.stderr.write("Error: Bad format of fancy disk image plist at \"{}\"\n".format(p))
+        sys.stderr.write("Error: Bad format of fancy disk image plist at \"{}\"\n".format(p))
         sys.exit(1)
     
     if "background_picture" in fancy:
         bp = fancy["background_picture"]
-        if verbose >= 3:
+        if verbose:
             print("Fancy: Resolving background picture \"{}\"...".format(bp))
         if not os.path.exists(bp):
             bp = os.path.join(os.path.dirname(p), bp)
             if not os.path.exists(bp):
-                if verbose >= 1:
-                    sys.stderr.write("Error: Could not find background picture at \"{}\" or \"{}\"\n".format(fancy["background_picture"], bp))
+                sys.stderr.write("Error: Could not find background picture at \"{}\" or \"{}\"\n".format(fancy["background_picture"], bp))
                 sys.exit(1)
             else:
                 fancy["background_picture"] = bp
@@ -600,8 +589,7 @@ else:
 # ------------------------------------------------
 
 if os.path.exists("dist"):
-    if verbose >= 2:
-        print("+ Removing old dist folder +")
+    print("+ Removing old dist folder +")
     
     shutil.rmtree("dist")
 
@@ -616,9 +604,8 @@ else:
 
 target = os.path.join("dist", "Bitcoin-Qt.app")
 
-if verbose >= 2:
-    print("+ Copying source bundle +")
-if verbose >= 3:
+print("+ Copying source bundle +")
+if verbose:
     print(app_bundle, "->", target)
 
 os.mkdir("dist")
@@ -628,33 +615,28 @@ applicationBundle = ApplicationBundleInfo(target)
 
 # ------------------------------------------------
 
-if verbose >= 2:
-    print("+ Deploying frameworks +")
+print("+ Deploying frameworks +")
 
 try:
     deploymentInfo = deployFrameworksForAppBundle(applicationBundle, config.strip, verbose)
     if deploymentInfo.qtPath is None:
         deploymentInfo.qtPath = os.getenv("QTDIR", None)
         if deploymentInfo.qtPath is None:
-            if verbose >= 1:
-                sys.stderr.write("Warning: Could not detect Qt's path, skipping plugin deployment!\n")
+            sys.stderr.write("Warning: Could not detect Qt's path, skipping plugin deployment!\n")
             config.plugins = False
 except RuntimeError as e:
-    if verbose >= 1:
-        sys.stderr.write("Error: {}\n".format(str(e)))
+    sys.stderr.write("Error: {}\n".format(str(e)))
     sys.exit(1)
 
 # ------------------------------------------------
 
 if config.plugins:
-    if verbose >= 2:
-        print("+ Deploying plugins +")
+    print("+ Deploying plugins +")
     
     try:
         deployPlugins(applicationBundle, deploymentInfo, config.strip, verbose)
     except RuntimeError as e:
-        if verbose >= 1:
-            sys.stderr.write("Error: {}\n".format(str(e)))
+        sys.stderr.write("Error: {}\n".format(str(e)))
         sys.exit(1)
 
 # ------------------------------------------------
@@ -664,8 +646,7 @@ if config.translations_dir:
         sys.stderr.write("Error: Could not find translation dir \"{}\"\n".format(config.translations_dir[0]))
         sys.exit(1)
 
-if verbose >= 2:
-    print("+ Adding Qt translations +")
+print("+ Adding Qt translations +")
 
 translations = Path(config.translations_dir[0])
 
@@ -674,14 +655,13 @@ regex = re.compile('qt_[a-z]*(.qm|_[A-Z]*.qm)')
 lang_files = [x for x in translations.iterdir() if regex.match(x.name)]
 
 for file in lang_files:
-    if verbose >= 3:
+    if verbose:
         print(file.as_posix(), "->", os.path.join(applicationBundle.resourcesPath, file.name))
     shutil.copy2(file.as_posix(), os.path.join(applicationBundle.resourcesPath, file.name))
 
 # ------------------------------------------------
 
-if verbose >= 2:
-    print("+ Installing qt.conf +")
+print("+ Installing qt.conf +")
 
 with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
     f.write(qt_conf.encode())
@@ -696,9 +676,7 @@ if config.dmg is not None:
             del kwargs["capture_stdout"]
             run = subprocess.check_output
         else:
-            if verbose < 2:
-                hdiutil_args.append("-quiet")
-            elif verbose >= 3:
+            if verbose:
                 hdiutil_args.append("-verbose")
             run = subprocess.check_call
         
@@ -709,11 +687,10 @@ if config.dmg is not None:
         
         return run(hdiutil_args, universal_newlines=True)
     
-    if verbose >= 2:
-        if fancy is None:
-            print("+ Creating .dmg disk image +")
-        else:
-            print("+ Preparing .dmg disk image +")
+    if fancy is None:
+        print("+ Creating .dmg disk image +")
+    else:
+        print("+ Preparing .dmg disk image +")
     
     if config.dmg != "":
         dmg_name = config.dmg
@@ -727,7 +704,7 @@ if config.dmg is not None:
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
     else:
-        if verbose >= 3:
+        if verbose:
             print("Determining size of \"dist\"...")
         size = 0
         for path, dirs, files in os.walk("dist"):
@@ -735,14 +712,14 @@ if config.dmg is not None:
                 size += os.path.getsize(os.path.join(path, file))
         size += int(size * 0.15)
         
-        if verbose >= 3:
+        if verbose:
             print("Creating temp image for modification...")
         try:
             runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname=volname, ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
         
-        if verbose >= 3:
+        if verbose:
             print("Attaching temp image...")
         try:
             output = runHDIUtil("attach", dmg_name + ".temp", readwrite=True, noverify=True, noautoopen=True, capture_stdout=True)
@@ -753,13 +730,12 @@ if config.dmg is not None:
         disk_root = m.group(0)
         disk_name = m.group(1)
         
-        if verbose >= 2:
-            print("+ Applying fancy settings +")
+        print("+ Applying fancy settings +")
         
         if "background_picture" in fancy:
             bg_path = os.path.join(disk_root, ".background", os.path.basename(fancy["background_picture"]))
             os.mkdir(os.path.dirname(bg_path))
-            if verbose >= 3:
+            if verbose:
                 print(fancy["background_picture"], "->", bg_path)
             shutil.copy2(fancy["background_picture"], bg_path)
         else:
@@ -821,18 +797,16 @@ if config.dmg is not None:
             params["background_commands"] = bgscript.substitute({"bgpic" : os.path.basename(bg_path), "disk" : params["disk"]})
 
         s = appscript.substitute(params)
-        if verbose >= 2:
-            print("Running AppleScript:")
-            print(s)
+        print("Running AppleScript:")
+        print(s)
 
         p = subprocess.Popen(['osascript', '-'], stdin=subprocess.PIPE)
         p.communicate(input=s.encode('utf-8'))
         if p.returncode:
             print("Error running osascript.")
 
-        if verbose >= 2:
-            print("+ Finalizing .dmg disk image +")
-            time.sleep(5)
+        print("+ Finalizing .dmg disk image +")
+        time.sleep(5)
         
         try:
             runHDIUtil("convert", dmg_name + ".temp", format="UDBZ", o=dmg_name + ".dmg", ov=True)
@@ -843,7 +817,6 @@ if config.dmg is not None:
 
 # ------------------------------------------------
 
-if verbose >= 2:
-    print("+ Done +")
+print("+ Done +")
 
 sys.exit(0)
