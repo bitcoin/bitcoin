@@ -15,7 +15,6 @@ unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:auxpow.cpp
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
-unsigned-integer-overflow:concurrentqueue.h
 unsigned-integer-overflow:syscoin-tx.cpp
 unsigned-integer-overflow:bloom.cpp
 unsigned-integer-overflow:chain.cpp
