@@ -86,7 +86,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 node.AddKnownTx(inv_opt->hash);
             },
             [&] {
-                node.PushTxInventory(ConsumeUInt256(fuzzed_data_provider));
+                node.PushTxInventory(ConsumeUInt256(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider);

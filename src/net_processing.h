@@ -69,6 +69,6 @@ public:
 };
 
 /** Relay transaction to every node */
-void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman, bool flood) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_NET_PROCESSING_H

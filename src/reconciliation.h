@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <set>
 #include <string>
 
 /** Static component of the salt used to compute short txids for transaction reconciliation. */
@@ -66,6 +67,14 @@ class ReconState {
      */
     double m_local_q;
 
+    /**
+     * Store all transactions which we would relay to the peer (policy checks passed, etc.)
+     * in this set instead of announcing them right away. When reconciliation time comes, we will
+     * compute an efficient representation of this set ("sketch") and use it to efficient reconcile
+     * this set with a similar set on the other side of the connection.
+     */
+    std::set<uint256> m_local_set;
+
 public:
 
     ReconState(bool requestor, bool responder, bool flood_to, uint64_t k0, uint64_t k1) :
@@ -75,5 +84,26 @@ public:
     bool IsChosenForFlooding() const
     {
         return m_flood_to;
+    }
+
+    bool IsResponder() const
+    {
+        return m_responder;
+    }
+
+    std::vector<uint256> AddToReconSet(std::vector<uint256> txs_to_reconcile, uint32_t limit)
+    {
+        std::vector<uint256> remaining_txs;
+        int32_t recon_set_overflow = m_local_set.size() + txs_to_reconcile.size() - limit;
+        if (recon_set_overflow > 0) {
+            remaining_txs = std::vector<uint256>(txs_to_reconcile.end() - recon_set_overflow, txs_to_reconcile.end());
+            txs_to_reconcile.resize(txs_to_reconcile.size() - recon_set_overflow);
+        }
+
+        for (const auto& wtxid: txs_to_reconcile) {
+            m_local_set.insert(wtxid);
+        }
+
+        return remaining_txs;
     }
 };

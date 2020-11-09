@@ -695,12 +695,12 @@ public:
         }
     }
 
-    void PushTxInventory(const uint256& hash)
+    void PushTxInventory(const uint256& hash, bool flood)
     {
         if (m_tx_relay == nullptr) return;
         LOCK(m_tx_relay->cs_tx_inventory);
         if (!m_tx_relay->filterInventoryKnown.contains(hash)) {
-            m_tx_relay->m_transactions_to_announce.emplace(hash, true);
+            m_tx_relay->m_transactions_to_announce.emplace(hash, flood);
         }
     }
 

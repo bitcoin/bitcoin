@@ -80,7 +80,14 @@ static constexpr int32_t MAX_PEER_TX_REQUEST_IN_FLIGHT = 100;
 /** Maximum number of transactions to consider for requesting, per peer. It provides a reasonable DoS limit to
  *  per-peer memory usage spent on announcements, while covering peers continuously sending INVs at the maximum
  *  rate (by our own policy, see INVENTORY_BROADCAST_PER_SECOND) for several minutes, while not receiving
- *  the actual transaction (from any peer) in response to requests for them. */
+ *  the actual transaction (from any peer) in response to requests for them.
+ *  Also limits a maximum number of elements to store in the reconciliation set. After the limit is reached,
+ *  the remaining transactions are set to be flooded to that peer.
+ *  W.r.t set reconciliation, sets the bound on the following objects:
+ *  - reconciliation set;
+ *  - reconciliation set snapshot;
+ *  - reconciliation short-full id mapping.
+ */
 static constexpr int32_t MAX_PEER_TX_ANNOUNCEMENTS = 5000;
 /** How long to delay requesting transactions via txids, if we have wtxid-relaying peers */
 static constexpr auto TXID_RELAY_DELAY = std::chrono::seconds{2};
@@ -1019,7 +1026,15 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler) const
 
         if (tx != nullptr) {
             LOCK(cs_main);
-            RelayTransaction(txid, tx->GetWitnessHash(), m_connman);
+            // We re-relay these transactions via reconciliation (same as for initial broadcast),
+            // instead of flooding, to hide the origin of transactions.
+            // Since in Erlay transactions are flooded only inbound->outbound,
+            // non-reachable nodes never flood transactions from other nodes (they have no inbounds).
+            // Thus, making them flood these would tell a receiver that these indeed belong to the
+            // flooding non-reachable nodes. Instead, we relay them via reconciliation,
+            // in which case a receiver can't distinguish them from transactions we reconciled
+            // with some other peer.
+            RelayTransaction(txid, tx->GetWitnessHash(), m_connman, false);
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
@@ -1667,17 +1682,19 @@ bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED
     return g_chainman.m_blockman.LookupBlockIndex(block_hash) != nullptr;
 }
 
-void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman)
+void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman, bool flood)
 {
-    connman.ForEachNode([&txid, &wtxid](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    connman.ForEachNode([&txid, &wtxid, flood](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
 
         CNodeState* state = State(pnode->GetId());
         if (state == nullptr) return;
         if (state->m_wtxid_relay) {
-            pnode->PushTxInventory(wtxid);
+            pnode->PushTxInventory(wtxid, flood);
         } else {
-            pnode->PushTxInventory(txid);
+            // Reconciliations are not supported for non-wtxid peers,
+            // so we always use flooding.
+            pnode->PushTxInventory(txid, true);
         }
     });
 }
@@ -2251,7 +2268,7 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
 
         if (AcceptToMemoryPool(m_mempool, state, porphanTx, &removed_txn, false /* bypass_limits */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
-            RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), m_connman);
+            RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), m_connman, true);
             for (unsigned int i = 0; i < porphanTx->vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(orphanHash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
@@ -3358,7 +3375,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
+                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman, true);
                 }
             }
             return;
@@ -3373,7 +3390,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // requests for it.
             m_txrequest.ForgetTxHash(tx.GetHash());
             m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-            RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
+
+            // Flood those transactions which were received either via flooding, or inbound reconciliation,
+            // but NOT via outbound reconciliation. Flooding then is mainly used for initial propagation
+            // of new transactions across a network of reachable nodes quickly.
+            bool flood = WITH_LOCK(peer->m_recon_state_mutex, return !(peer->m_recon_state && peer->m_recon_state->IsResponder()));
+            RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman, flood);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
@@ -4745,15 +4767,16 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
             if (pto->m_tx_relay != nullptr) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
+                LOCK(peer->m_recon_state_mutex);
                 // Check whether periodic sends should happen
                 bool fSendTrickle = pto->HasPermission(PF_NOBAN);
                 if (pto->m_tx_relay->nNextInvSend < current_time) {
                     fSendTrickle = true;
-                    if (pto->IsInboundConn()) {
-                        pto->m_tx_relay->nNextInvSend = std::chrono::microseconds{m_connman.PoissonNextSendInbound(count_microseconds(current_time), INVENTORY_BROADCAST_INTERVAL)};
-                    } else {
-                        // Use half the delay for outbound peers, as there is less privacy concern for them.
+                    if (peer->m_recon_state || !pto->IsInboundConn()) {
+                        // Use half the delay as there is less privacy concern.
                         pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1});
+                    } else {
+                        pto->m_tx_relay->nNextInvSend = std::chrono::microseconds{m_connman.PoissonNextSendInbound(count_microseconds(current_time), INVENTORY_BROADCAST_INTERVAL)};
                     }
                 }
 
@@ -4798,6 +4821,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // Produce a vector with all candidates for sending
                     std::vector<std::map<uint256, bool>::iterator> vInvTx;
                     vInvTx.reserve(pto->m_tx_relay->m_transactions_to_announce.size());
+                    std::vector<uint256> txs_to_reconcile;
                     for (std::map<uint256, bool>::iterator it = pto->m_tx_relay->m_transactions_to_announce.begin(); it != pto->m_tx_relay->m_transactions_to_announce.end(); it++) {
                         vInvTx.push_back(it);
                     }
@@ -4835,9 +4859,17 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             continue;
                         }
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
-                        // Send
+
+                        bool flood_tx = it->second;
+                        if (!peer->m_recon_state || (peer->m_recon_state->IsChosenForFlooding() && flood_tx)) {
+                            // Always flood to non-reconciliation nodes supporting tx relay.
+                            // For reconciliation nodes, flood if flood_to is set up and transaction is meant for flooding.
+                            vInv.push_back(inv);
+                        } else {
+                            // Storing to populate the reconciliation set.
+                            txs_to_reconcile.push_back(txinfo.tx->GetWitnessHash());
+                        }
                         State(pto->GetId())->m_recently_announced_invs.insert(hash);
-                        vInv.push_back(inv);
                         nRelayedTransactions++;
                         {
                             // Expire old relay messages
@@ -4869,6 +4901,21 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             // filter, when a child tx is requested. See
                             // ProcessGetData().
                             pto->m_tx_relay->filterInventoryKnown.insert(txid);
+                        }
+                    }
+
+                    // Populating local reconciliation set.
+                    if (peer->m_recon_state && txs_to_reconcile.size() != 0) {
+                        auto overflown_transactions = peer->m_recon_state->AddToReconSet(txs_to_reconcile, MAX_PEER_TX_ANNOUNCEMENTS);
+                        if (overflown_transactions.size() > 0) {
+                            LogPrint(BCLog::NET, "Reconciliation set for the peer=%d is at capacity, not adding new transactions. \n", pto->GetId());
+                            // Since we reconcile frequently, it either means:
+                            // (1) a peer for some reason does not request reconciliations from us for a long while, or
+                            // (2) really a lot of valid fee-paying transactions were dumped on us at once.
+                            // We don't care about a laggy peer (1) because we probably can't help them even if we flood transactions.
+                            // However, exploiting (2) should not prevent us from relaying certain transactions.
+                            // Since computing a sketch over too many elements is too expensive, we will just flood some transactions here.
+                            AnnounceTxs(overflown_transactions, *pto);
                         }
                     }
                 }
