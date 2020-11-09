@@ -501,11 +501,6 @@ def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: Deployme
             if dependency.frameworkName not in deploymentInfo.deployedFrameworks:
                 deployFrameworks([dependency], appBundleInfo.path, destinationPath, strip, verbose, deploymentInfo)
 
-qt_conf="""[Paths]
-Translations=Resources
-Plugins=PlugIns
-"""
-
 ap = ArgumentParser(description="""Improved version of macdeployqt.
 
 Outputs a ready-to-deploy app in a folder "dist" and optionally wraps it in a .dmg file.
@@ -606,6 +601,11 @@ for file in lang_files:
 # ------------------------------------------------
 
 print("+ Installing qt.conf +")
+
+qt_conf="""[Paths]
+Translations=Resources
+Plugins=PlugIns
+"""
 
 with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
     f.write(qt_conf.encode())
