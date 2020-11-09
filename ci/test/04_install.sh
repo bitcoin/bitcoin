@@ -13,8 +13,8 @@ if [[ $QEMU_USER_CMD == qemu-s390* ]]; then
   export LC_ALL=C
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-  ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
+if [ "$CI_OS_NAME" == "macos" ]; then
+  IN_GETOPT_BIN="/usr/local/opt/gnu-getopt/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
 fi
 
 # Create folders that are mounted into the docker
@@ -26,9 +26,7 @@ export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/l
 export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
 export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
 env | grep -E '^(BITCOIN_CONFIG|BASE_|QEMU_|CCACHE_|LC_ALL|BOOST_TEST_RANDOM|DEBIAN_FRONTEND|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS|PREVIOUS_RELEASES_DIR)' | tee /tmp/env
-if [[ $HOST = *-mingw32 ]]; then
-  DOCKER_ADMIN="--cap-add SYS_ADMIN"
-elif [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)
+if [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)
   DOCKER_ADMIN="--cap-add SYS_PTRACE"
 fi
 
@@ -69,16 +67,16 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
   echo "Number of CPUs: $(sysctl -n hw.logicalcpu)"
 else
   DOCKER_EXEC free -m -h
   DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
   DOCKER_EXEC echo $(lscpu | grep Endian)
-  DOCKER_EXEC echo "Free disk space:"
-  DOCKER_EXEC df -h
 fi
+DOCKER_EXEC echo "Free disk space:"
+DOCKER_EXEC df -h
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
   DOCKER_EXEC git clone --depth=1 https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
