@@ -156,7 +156,7 @@ struct Aggregator {
                DoneCallback _doneCallback) :
             parallel(_parallel),
             workerPool(_workerPool),
-            aggQueue(600),
+            aggQueue(512),
             doneCallback(std::move(_doneCallback))
     {
         inputVec = std::make_shared<std::vector<const T*> >(count);

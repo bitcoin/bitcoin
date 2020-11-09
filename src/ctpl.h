@@ -32,7 +32,7 @@
 #include <concurrentqueue.h>
 
 #ifndef _ctplThreadPoolLength_
-#define _ctplThreadPoolLength_  100
+#define _ctplThreadPoolLength_  512
 #endif
 
 
