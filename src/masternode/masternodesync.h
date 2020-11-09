@@ -53,7 +53,7 @@ public:
     bool IsBlockchainSynced() const {LOCK(cs); return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
     bool IsSynced() const { LOCK(cs); return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
     int GetSyncMode() const { LOCK(cs); return nCurrentAsset; }
-    void SetSyncMode(const int nMode) const { LOCK(cs); nCurrentAsset =  nMode; }
+    void SetSyncMode(const int nMode) { LOCK(cs); nCurrentAsset = nMode; }
 
     int GetAssetID() const { return nCurrentAsset; }
     int GetAttempt() const { return nTriedPeerCount; }
