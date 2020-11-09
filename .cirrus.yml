@@ -54,6 +54,13 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #    - choco install python --version=3.7.7 -y
 
 task:
+  name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no boost::process, no functional tests]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_win64.sh"
+
   name: 'x86_64 Linux  [GOAL: install]  [bionic]  [C++17, previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
