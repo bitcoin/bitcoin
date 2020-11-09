@@ -70,6 +70,14 @@ class ReconciliationState {
      */
     double m_local_q;
 
+    /**
+     * Store all transactions which we would relay to the peer (policy checks passed, etc.)
+     * in this set instead of announcing them right away. When reconciliation time comes, we will
+     * compute an efficient representation of this set ("sketch") and use it to efficient reconcile
+     * this set with a similar set on the other side of the connection.
+     */
+    std::set<uint256> m_local_set;
+
 public:
 
     ReconciliationState(bool requestor, bool responder, bool flood_to, uint64_t k0, uint64_t k1) :
@@ -79,6 +87,23 @@ public:
     bool IsChosenForFlooding() const
     {
         return m_flood_to;
+    }
+
+    bool IsResponder() const
+    {
+        return m_responder;
+    }
+
+    uint16_t GetLocalSetSize() const
+    {
+        return m_local_set.size();
+    }
+
+    void AddToReconSet(const std::vector<uint256>& txs_to_reconcile)
+    {
+        for (const auto& wtxid: txs_to_reconcile) {
+            m_local_set.insert(wtxid);
+        }
     }
 };
 
@@ -137,6 +162,14 @@ class TxReconciliationTracker {
         } else {
             return nullopt;
         }
+    }
+
+    void StoreTxsToAnnounce(const NodeId peer_id, const std::vector<uint256>& txs_to_reconcile)
+    {
+        LOCK(m_states_mutex);
+        auto recon_state = m_states.find(peer_id);
+        assert(recon_state != m_states.end());
+        recon_state->second.AddToReconSet(txs_to_reconcile);
     }
 
     void RemovePeer(const NodeId peer_id)

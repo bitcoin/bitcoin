@@ -99,8 +99,16 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // best-effort of initial broadcast
         node.mempool->AddUnbroadcastTx(hashTx);
 
+        // We relay these transactions via reconciliation,
+        // instead of flooding, to hide the origin of transactions.
+        // Since in Erlay transactions are flooded only inbound->outbound,
+        // non-reachable nodes never flood transactions from other nodes (they have no inbounds).
+        // Thus, making them flood these would tell a receiver that these indeed belong to the
+        // flooding non-reachable nodes. Instead, we relay them via reconciliation,
+        // in which case a receiver can't distinguish them from transactions we reconciled
+        // with some other peer.
         LOCK(cs_main);
-        RelayTransaction(hashTx, tx->GetWitnessHash(), *node.connman);
+        RelayTransaction(hashTx, tx->GetWitnessHash(), *node.connman, false);
     }
 
     return TransactionError::OK;
