@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg2"
+   viewBox="0 0 24 24"
+   height="92"
+   width="92"
+   version="1.2">
+  <metadata
+     id="metadata10">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs8" />
+  <g
+     transform="translate(0.2636,0.29)"
+     id="g4160">
+    <g
+       id="g4210"
+       transform="matrix(0,1,-1,0,130.3,-36.15)">
+      <g
+         id="g4289"
+         transform="matrix(-1,0,0,1,-16.98,0.8136)">
+        <g
+           id="g4291">
+          <path
+             id="path4147"
+             d="m -64.85,116.2 a 0.6001,0.6001 0 0 0 -0.6,0.6 l 0,2 a 0.6001,0.6001 0 0 0 0.6,0.6 c 0.48,0 0.9,0.4 0.9,0.9 l 0,2.4 c -1.18,0.6 -2,1.8 -2,3.2 0,2 1.64,3.6 3.6,3.6 1.97,0 3.6,-1.6 3.6,-3.6 0,-1.4 -0.83,-2.6 -2,-3.2 l 0,-2.4 c 0,-2.3 -1.86,-4.1 -4.1,-4.1 z"
+             style="" />
+          <g
+             id="g4295">
+            <path
+               style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;baseline-shift:baseline;text-anchor:start;white-space:normal;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+               d="m -67.35,106.1 c -1.94,0 -3.5,1.6 -3.5,3.5 0,1.4 0.85,2.5 2,3 l 0,2.7 c 0,2.2 1.79,4 4,4 l 0.5,0 0,-0.5 0,-2.5 -0.5,0 c -0.55,0 -1,-0.5 -1,-1 l 0,-2.7 c 1.15,-0.5 2,-1.6 2,-3 0,-1.9 -1.57,-3.5 -3.5,-3.5 z m 0,1 c 1.37,0 2.5,1.2 2.5,2.5 0,1.1 -0.7,2 -1.66,2.3 l -0.34,0.1 0,3.3 c 0,0.9 0.67,1.5 1.5,1.8 l 0,1 c -1.38,-0.3 -2.5,-1.4 -2.5,-2.8 l 0,-3.3 -0.34,-0.1 c -0.96,-0.3 -1.66,-1.2 -1.66,-2.3 0,-1.3 1.12,-2.5 2.5,-2.5 z"
+               id="path4297" />
+            <path
+               id="path4145"
+               d="m -57.35,106 c -1.99,0 -3.6,1.7 -3.6,3.6 0,1.4 0.83,2.6 2,3.2 l 0,2.5 c 0,0.5 -0.41,0.9 -0.9,0.9 l -4.35,0 a 0.6001,0.6001 0 0 0 -0.6,0.6 l 0,2 a 0.6001,0.6001 0 0 0 0.6,0.6 l 4.35,0 c 2.26,0 4.1,-1.9 4.1,-4.1 l 0,-2.5 c 1.17,-0.6 2,-1.8 2,-3.2 0,-1.9 -1.6,-3.6 -3.6,-3.6 z"
+               style="" />
+          </g>
+          <path
+             id="path4149"
+             d="m -69.84,116.2 c -2.24,0 -4.1,1.8 -4.1,4.1 l 0,2.5 c -1.17,0.5 -1.99,1.7 -1.99,3.1 0,2 1.64,3.6 3.61,3.6 1.96,0 3.6,-1.6 3.6,-3.6 0,-1.4 -0.83,-2.6 -2,-3.2 l 0,-2.4 c 0,-0.5 0.41,-0.9 0.9,-0.9 l 4.51,0 a 0.6001,0.6001 0 0 0 0.6,-0.6 l 0,-2 a 0.6001,0.6001 0 0 0 -0.6,-0.6 l -4.53,0 z"
+             style="" />
+        </g>
+      </g>
+    </g>
+    <g
+       transform="matrix(0,1,1,0,-106.3,-36.15)"
+       id="g4142">
+      <g
+         transform="matrix(-1,0,0,1,-16.98,0.8136)"
+         id="g4144" />
+    </g>
+  </g>
+  <path
+     id="path4170"
+     d="m 15.2,12 c 0,-0.84 -0.4,-1.65 -1,-2.242 -0.5,-0.64 -1.3,-0.96 -2.2,-0.96 -0.9,0 -1.7,0.32 -2.2,0.96 -0.6,0.592 -1,1.402 -1,2.242 0,0.84 0.4,1.65 1,2.24 0.5,0.64 1.3,0.96 2.2,0.96 0.9,0 1.7,-0.32 2.2,-0.96 0.6,-0.59 1,-1.4 1,-2.24 z"
+     style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+</svg>

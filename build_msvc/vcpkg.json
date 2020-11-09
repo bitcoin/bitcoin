@@ -1,0 +1,20 @@
+{
+  "name": "bitcoin-core",
+  "version-string": "1",
+  "dependencies": [
+    "berkeleydb",
+    "boost-filesystem",
+    "boost-multi-index",
+    "boost-process",
+    "boost-signals2",
+    "boost-test",
+    "boost-thread",
+    "sqlite3",
+    "double-conversion",
+    {
+      "name": "libevent",
+      "features": ["thread"]
+    },
+    "zeromq"
+  ]
+}
