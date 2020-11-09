@@ -7,17 +7,13 @@
 export LC_ALL=C.UTF-8
 
 export HOST=x86_64-apple-darwin16
-export DOCKER_NAME_TAG=ubuntu:18.04  # Check that bionic can cross-compile to macos (bionic is used in the gitian build as well)
 export PIP_PACKAGES="zmq"
 export GOAL="install"
 export SYSCOIN_CONFIG="--with-gui --enable-reduce-exports --enable-werror --with-boost-process"
+export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export TEST_RUNNER_EXTRA="--exclude feature_llmqsimplepose"
 export OSX_SDK=""
 export CCACHE_SIZE=300M
 
 export RUN_SECURITY_TESTS="true"
-if [ "$TRAVIS_REPO_SLUG" != "syscoin/syscoin" ]; then
-  export RUN_FUNCTIONAL_TESTS="false"
-  export EXPECTED_TESTS_DURATION_IN_SECONDS=200
-fi
