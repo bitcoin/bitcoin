@@ -4302,6 +4302,27 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    // Among transactions requested by short ID here, we should send only those transactions
+    // sketched (stored in local set snapshot), because otherwise we would leak privacy (mempool content).
+    if (msg_type == NetMsgType::RECONCILDIFF) {
+        LOCK(peer->m_recon_state_mutex);
+        if (peer->m_recon_state == nullptr) return;
+        if (peer->m_recon_state->GetIncomingPhase() != RECON_INIT_RESPONDED &&
+            peer->m_recon_state->GetIncomingPhase() != RECON_EXT_RESPONDED) return;
+        bool recon_result;
+        std::vector<uint32_t> ask_shortids;
+        vRecv >> recon_result >> ask_shortids;
+        std::vector<uint256> remote_missing;
+        if (recon_result) {
+            remote_missing = peer->m_recon_state->GetWTXIDsFromShortIDs(ask_shortids);
+        } else {
+            remote_missing = peer->m_recon_state->GetLocalSet(true);
+        }
+        AnnounceTxs(remote_missing, pfrom);
+        peer->m_recon_state->FinalizeReconciliation(false, Q_KEEP, 0, 0);
+        return;
+    }
+
     // Ignore unknown commands for extensibility
     LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
     return;
