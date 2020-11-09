@@ -2,6 +2,7 @@
 # Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import time
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
@@ -38,14 +39,19 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.nodes[2].importprivkey(self.nodes[0].dumpprivkey(useraddress0))
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
-        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1)['txid']
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001, False)['txid']
+        time.sleep(0.25)
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, False)['txid']
+        time.sleep(0.25)
+        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
         self.sync_mempools(self.nodes[0:3],timeout=30)
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1)['txid']
+        time.sleep(0.25)
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
         # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
-        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress0, 1)['txid']
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.0001)['txid']
+        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
+        time.sleep(0.25)
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.0001, False)['txid']
+        time.sleep(0.25)
         tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 1)['txid']
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(2):
@@ -79,9 +85,13 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        time.sleep(0.25)
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        time.sleep(0.25)
         tx3 = self.nodes[0].assetallocationburn(self.asset, 1, '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
+        time.sleep(0.25)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        time.sleep(0.25)
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):
@@ -101,9 +111,13 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
 
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        time.sleep(0.25)
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        time.sleep(0.25)
         tx3 = self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})['txid']
+        time.sleep(0.25)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        time.sleep(0.25)
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):

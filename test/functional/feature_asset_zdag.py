@@ -2,6 +2,7 @@
 # Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import time
 from decimal import Decimal
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -47,25 +48,30 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_equal(len(out), 2)
         # send 2 asset UTXOs to newaddress2 same logic as explained above about dbl spend
         self.nodes[0].assetallocationsend(self.asset, newaddress2, 0.4)
+        time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, newaddress2, 1)
+        time.sleep(0.25)
         self.nodes[0].generate(1)
         self.sync_blocks()
         # should have 2 sys utxos and 2 asset utxos
         out =  self.nodes[2].listunspent()
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
-        self.nodes[1].assetallocationsend(self.asset, newaddress1, 0.4)
+        self.nodes[1].assetallocationsend(self.asset, newaddress1, 0.4, False)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
-        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, 1)['txid']
+        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, 1, False)['txid']
         # dbl spend
-        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.9)['txid']
+        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.9, False)['txid']
+        time.sleep(0.25)
         # use tx2 to build tx3
         tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.05)['txid']
+        time.sleep(0.25)
         # use tx2 to build tx4
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.025)['txid']
+
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
             self.nodes[i].getrawtransaction(tx1)
@@ -133,8 +139,11 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.2)
+        time.sleep(0.25)
         self.nodes[1].assetallocationsend(self.asset, useraddress1, 0.2)
+        time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.2)
+        time.sleep(0.25)
         self.nodes[2].assetallocationsend(self.asset, useraddress1, 0.2)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         # put all in useraddress1 so node4 can access in dbl spend, its probably in change address prior to this on node0
@@ -148,6 +157,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[2].sendrawtransaction(rawtx)
 
         self.nodes[1].assetallocationsend(self.asset, useraddress3, 0.2)
+        time.sleep(0.25)
         self.nodes[2].assetallocationburn(self.asset, 0.3, "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.sync_mempools(self.nodes[0:3], timeout=30)
         # node1/node2/node3 shouldn't have dbl spend tx because no RBF and not zdag tx
@@ -182,15 +192,24 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[0].generate(1)
         self.nodes[0].syscoinburntoassetallocation(self.asset, 1)
+        time.sleep(0.25)
         self.nodes[0].syscoinburntoassetallocation(self.asset, 1)
+        time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.1)
+        time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.01)
+        time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.001)
+        time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)
+        time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)
+        time.sleep(0.25)
         balanceBefore = self.nodes[0].getbalance(minconf=0)
         self.nodes[0].assetallocationburn(self.asset, 1, '')
+        time.sleep(0.25)
         self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})
+        time.sleep(0.25)
         self.nodes[0].assetallocationburn(self.asset, 0.88889, '')
         # subtract balance with 0.001 threshold to account for update fee
         assert(self.nodes[0].getbalance(minconf=0) - (balanceBefore+Decimal(1.88889)) < Decimal(0.001))
@@ -208,9 +227,13 @@ class AssetZDAGTest(SyscoinTestFramework):
         # listunspent for node0 should be have just 1 (asset ownership)
         # check that nodes have allocations in listunspent before burning
         self.nodes[1].assetallocationburn(self.asset, 0.1, '')
+        time.sleep(0.25)
         self.nodes[2].assetallocationburn(self.asset, 0.01, '')
+        time.sleep(0.25)
         self.nodes[2].assetallocationburn(self.asset, 0.001, '')
+        time.sleep(0.25)
         self.nodes[3].assetallocationburn(self.asset, 0.0001, '')
+        time.sleep(0.25)
         self.nodes[2].assetallocationburn(self.asset, 0.00001, '')
         # ensure burning sysx gives new sys balance
         # account for rounding errors in Decimal

@@ -12,7 +12,7 @@ export PIP_PACKAGES="zmq"
 export GOAL="install"
 export SYSCOIN_CONFIG="--with-gui --enable-reduce-exports --enable-werror --with-boost-process"
 export NO_DEPENDS=1
-export TEST_RUNNER_EXTRA="--exclude feature_llmqsimplepose,feature_asset_zdag,feature_asset_verify_zdag"
+export TEST_RUNNER_EXTRA="--exclude feature_llmqsimplepose"
 export OSX_SDK=""
 export CCACHE_SIZE=300M
 
