@@ -52,10 +52,9 @@ public:
 
     bool IsBlockchainSynced() const {LOCK(cs); return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
     bool IsSynced() const { LOCK(cs); return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
-    int GetSyncMode() const { LOCK(cs); return nCurrentAsset; }
     void SetSyncMode(const int nMode) { LOCK(cs); nCurrentAsset = nMode; }
 
-    int GetAssetID() const { return nCurrentAsset; }
+    int GetAssetID() const { LOCK(cs); return nCurrentAsset; }
     int GetAttempt() const { return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
     int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }

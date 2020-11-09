@@ -42,7 +42,7 @@ void CMasternodeSync::BumpAssetLastTime(const std::string& strFuncName)
 
 std::string CMasternodeSync::GetAssetName() const
 {
-    switch(GetSyncMode())
+    switch(GetAssetID())
     {
         case(MASTERNODE_SYNC_BLOCKCHAIN):   return "MASTERNODE_SYNC_BLOCKCHAIN";
         case(MASTERNODE_SYNC_GOVERNANCE):   return "MASTERNODE_SYNC_GOVERNANCE";
@@ -53,7 +53,7 @@ std::string CMasternodeSync::GetAssetName() const
 
 void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 {
-    switch(GetSyncMode())
+    switch(GetAssetID())
     {
         case(MASTERNODE_SYNC_BLOCKCHAIN):
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
@@ -79,7 +79,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 
 bilingual_str CMasternodeSync::GetSyncStatus()
 {
-    switch (GetSyncMode()) {
+    switch (GetAssetID()) {
         case MASTERNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...");
         case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished");
@@ -109,7 +109,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
     const static int64_t nSyncStart = GetTimeMillis();
     const static std::string strAllow = strprintf("allow-sync-%lld", nSyncStart);
-    const int nMode = GetSyncMode();
+    const int nMode = GetAssetID();
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
     if(GetTime() - nTimeLastProcess > 60*60 && !fMasternodeMode) {
