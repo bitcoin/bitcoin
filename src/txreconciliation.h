@@ -138,6 +138,16 @@ class TxReconciliationTracker {
             return nullopt;
         }
     }
+
+    void RemovePeer(const NodeId peer_id)
+    {
+        LOCK(m_queue_mutex);
+        m_queue.erase(std::remove(m_queue.begin(), m_queue.end(), peer_id), m_queue.end());
+        LOCK(m_local_salts_mutex);
+        m_local_salts.erase(peer_id);
+        LOCK(m_states_mutex);
+        m_states.erase(peer_id);
+    }
 };
 
 #endif // BITCOIN_TXRECONCILIATION_H
