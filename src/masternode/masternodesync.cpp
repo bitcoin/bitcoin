@@ -347,9 +347,12 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
         // no need to check any further while still in IBD mode
         return;
     }
-
-    // Note: since we sync headers first, it should be ok to use this
-    bool fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
+    bool fReachedBestHeaderNew;
+    {
+        LOCK(cs_main);
+        // Note: since we sync headers first, it should be ok to use this
+        fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
+    }
 
     if (fReachedBestHeader && !fReachedBestHeaderNew) {
         // Switching from true to false means that we previously stuck syncing headers for some reason,
