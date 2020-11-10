@@ -177,6 +177,9 @@ class TestNode():
 
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
+        return self._rpc_dispatch(name)
+
+    def _rpc_dispatch(self, name):
         if self.use_cli:
             return getattr(RPCOverloadWrapper(self.cli, True, self.descriptors), name)
         else:
