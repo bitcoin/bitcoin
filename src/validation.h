@@ -503,9 +503,9 @@ enum class CoinsCacheSizeState
  * whereas block information and metadata independent of the current tip is
  * kept in `BlockMetadataManager`.
  */
-class CChainState {
-private:
-
+class CChainState
+{
+protected:
     /**
      * Every received block is assigned a unique and increasing identifier, so we
      * know which one to give priority in case of a fork.

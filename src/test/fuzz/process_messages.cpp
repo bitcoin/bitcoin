@@ -12,6 +12,7 @@
 #include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <util/memory.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -39,7 +40,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
+    TestChainState& chainstate = *(TestChainState*)&g_setup->m_node.chainman->ActiveChainstate();
+    chainstate.ResetIbd();
     std::vector<CNode*> peers;
+    bool jump_out_of_ibd{false};
 
     const auto num_peers_to_add = fuzzed_data_provider.ConsumeIntegralInRange(1, 3);
     for (int i = 0; i < num_peers_to_add; ++i) {
@@ -58,6 +62,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
 
     while (fuzzed_data_provider.ConsumeBool()) {
+        if (!jump_out_of_ibd) jump_out_of_ibd = fuzzed_data_provider.ConsumeBool();
+        if (jump_out_of_ibd && chainstate.IsInitialBlockDownload()) chainstate.JumpOutOfIbd();
         const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
 
         CSerializedNetMsg net_msg;
