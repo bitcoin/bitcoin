@@ -217,7 +217,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
         # Start by creating a lot of utxos on node3
         initial_height = self.nodes[3].getblockcount()
-        utxo_list = create_confirmed_utxos(self, self.nodes[3].getnetworkinfo()['relayfee'], self.nodes[3], 5000)
+        utxo_list = create_confirmed_utxos(self, self.nodes[3].getnetworkinfo()['relayfee'], self.nodes[3], 5000, sync_fun=self.no_op)
         self.log.info(f"Prepped {len(utxo_list)} utxo entries")
 
         # Sync these blocks with the other nodes
@@ -258,6 +258,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                     nblocks=min(10, current_height + 1 - self.nodes[3].getblockcount()),
                     # new address to avoid mining a block that has just been invalidated
                     address=self.nodes[3].getnewaddress(),
+                    sync_fun=self.no_op,
                 ))
             self.log.debug(f"Syncing {len(block_hashes)} new blocks...")
             self.sync_node3blocks(block_hashes)
