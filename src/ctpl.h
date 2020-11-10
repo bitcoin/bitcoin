@@ -149,6 +149,7 @@ namespace ctpl {
 
         template<typename F, typename... Rest>
         auto push(F && f, Rest&&... rest) ->std::future<decltype(f(0, rest...))> {
+            std::unique_lock<std::mutex> lock(this->mutex);
             auto pck = std::make_shared<std::packaged_task<decltype(f(0, rest...))(int)>>(
                 std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Rest>(rest)...)
             );
@@ -159,7 +160,6 @@ namespace ctpl {
             if(!this->q.try_enqueue(_f))
                 this->q.enqueue(_f);
 
-            std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
 
             return pck->get_future();
@@ -169,6 +169,7 @@ namespace ctpl {
         // operator returns std::future, where the user can get the result and rethrow the caught exceptions
         template<typename F>
         auto push(F && f) ->std::future<decltype(f(0))> {
+            std::unique_lock<std::mutex> lock(this->mutex);
             auto pck = std::make_shared<std::packaged_task<decltype(f(0))(int)>>(std::forward<F>(f));
 
             auto _f = new std::function<void(int id)>([pck](int id) {
@@ -178,7 +179,6 @@ namespace ctpl {
             if(!this->q.try_enqueue(_f))
                 this->q.enqueue(_f);
 
-            std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
 
             return pck->get_future();
