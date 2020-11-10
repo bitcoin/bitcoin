@@ -60,17 +60,27 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.notary_address3 = self.nodes[3].getnewaddress()
         self.notary_address4 = self.nodes[4].getnewaddress()
         self.asset0 = self.nodes[0].assetnew('1', 'TST0', 'asset description', '0x', 8, 10000, 127, self.notary_address0, notary, {})['asset_guid']
+        self.nodes[0].generate(1)
         self.asset1 = self.nodes[0].assetnew('1', 'TST1', 'asset description', '0x', 8, 10000, 127, self.notary_address1, notary, {})['asset_guid']
+        self.nodes[0].generate(1)
         self.asset2 = self.nodes[0].assetnew('1', 'TST2', 'asset description', '0x', 8, 10000, 127, self.notary_address2, notary, {})['asset_guid']
+        self.nodes[0].generate(1)
         self.asset3 = self.nodes[0].assetnew('1', 'TST3', 'asset description', '0x', 8, 10000, 127, self.notary_address3, notary, {})['asset_guid']
+        self.nodes[0].generate(1)
         self.asset4 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 10000, 127, self.notary_address4, notary, {})['asset_guid']
+        self.nodes[0].generate(1)
         self.asset5 = self.nodes[0].assetnew('1', 'TST4', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset0, self.nodes[0].getnewaddress(), 1)
+        self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset1, self.nodes[0].getnewaddress(), 2)
+        self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset2, self.nodes[0].getnewaddress(), 3)
+        self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset3, self.nodes[0].getnewaddress(), 4)
+        self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset4, self.nodes[0].getnewaddress(), 5)
+        self.nodes[0].generate(1)
         self.nodes[0].assetsend(self.asset5, self.nodes[0].getnewaddress(), 6)
         self.nodes[0].generate(1)
         sendobj = [{"asset_guid":self.asset0,"address":self.nodes[1].getnewaddress(),"amount":0.5},{"asset_guid":self.asset0,"address":self.nodes[1].getnewaddress(),"amount":0.5},{"asset_guid":self.asset1,"address":self.nodes[1].getnewaddress(),"amount":2},{"asset_guid":self.asset2,"address":self.nodes[1].getnewaddress(),"amount":2.5},{"asset_guid":self.asset3,"address":self.nodes[1].getnewaddress(),"amount":3},{"asset_guid":self.asset4,"address":self.nodes[1].getnewaddress(),"amount":3.5},{"asset_guid":self.asset5,"address":self.nodes[1].getnewaddress(),"amount":5}]
