@@ -25,7 +25,7 @@ public:
 
 private:
     ctpl::thread_pool workerPool;
-    std::mutex sigAggregateMutex;
+    RecursiveMutex sigAggregateMutex;
     static const int SIG_VERIFY_BATCH_SIZE = 8;
     struct SigVerifyJob {
         SigVerifyDoneCallback doneCallback;
@@ -43,7 +43,7 @@ private:
         }
     };
 
-    std::mutex sigVerifyMutex;
+    RecursiveMutex sigVerifyMutex;
     int sigVerifyBatchesInProgress{0};
     std::vector<SigVerifyJob> sigVerifyQueue;
 
@@ -150,7 +150,7 @@ class CBLSWorkerCache
 private:
     CBLSWorker& worker;
 
-    std::mutex cacheCs;
+    RecursiveMutex cacheCs;
     std::map<uint256, std::shared_future<BLSVerificationVectorPtr> > vvecCache;
     std::map<uint256, std::shared_future<CBLSSecretKey> > secretKeyShareCache;
     std::map<uint256, std::shared_future<CBLSPublicKey> > publicKeyShareCache;

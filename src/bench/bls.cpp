@@ -142,11 +142,6 @@ static void BLSVerify_LargeBlock1000(benchmark::Bench& bench)
     BLSVerify_LargeBlock(1000, bench);
 }
 
-static void BLSVerify_LargeBlock10000(benchmark::Bench& bench)
-{
-    BLSVerify_LargeBlock(10000, bench);
-}
-
 static void BLSVerify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
