@@ -444,7 +444,6 @@ class WalletSendTest(BitcoinTestFramework):
         res = self.nodes[0].sendrawtransaction(hex)
         self.nodes[0].generate(1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 1)
-        self.sync_all()
 
         self.log.info("Lock unspents...")
         utxo1 = w0.listunspent()[0]

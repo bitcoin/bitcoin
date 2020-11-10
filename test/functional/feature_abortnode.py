@@ -26,7 +26,7 @@ class AbortNodeTest(BitcoinTestFramework):
         # We'll connect the nodes later
 
     def run_test(self):
-        self.nodes[0].generate(3)
+        self.nodes[0].generate(3, sync_fun=None)
         datadir = get_datadir_path(self.options.tmpdir, 0)
 
         # Deleting the undo file will result in reorg failure
@@ -34,10 +34,10 @@ class AbortNodeTest(BitcoinTestFramework):
 
         # Connecting to a node with a more work chain will trigger a reorg
         # attempt.
-        self.nodes[1].generate(3)
+        self.nodes[1].generate(3, sync_fun=None)
         with self.nodes[0].assert_debug_log(["Failed to disconnect block"]):
             self.connect_nodes(0, 1)
-            self.nodes[1].generate(1)
+            self.nodes[1].generate(1, sync_fun=None)
 
             # Check that node0 aborted
             self.log.info("Waiting for crash")

@@ -43,7 +43,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Send a tx to be unconfirmed later
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         tx = self.nodes[0].gettransaction(txid)
-        self.nodes[0].generate(4)
+        self.nodes[0].generate(4, sync_fun=None)
         tx_before_reorg = self.nodes[0].gettransaction(txid)
         assert_equal(tx_before_reorg["confirmations"], 4)
 
@@ -62,9 +62,9 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         conflicting = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs_2))
 
         conflicted_txid = self.nodes[0].sendrawtransaction(conflicted["hex"])
-        self.nodes[0].generate(1)
+        self.nodes[0].generate(1, sync_fun=None)
         conflicting_txid = self.nodes[2].sendrawtransaction(conflicting["hex"])
-        self.nodes[2].generate(9)
+        self.nodes[2].generate(9, sync_fun=None)
 
         # Reconnect node0 and node2 and check that conflicted_txid is effectively conflicted
         self.connect_nodes(0, 2)
@@ -78,11 +78,11 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.restart_node(0)
 
         # The block chain re-orgs and the tx is included in a different block
-        self.nodes[1].generate(9)
+        self.nodes[1].generate(9, sync_fun=None)
         self.nodes[1].sendrawtransaction(tx["hex"])
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(1, sync_fun=None)
         self.nodes[1].sendrawtransaction(conflicted["hex"])
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(1, sync_fun=None)
 
         # Node0 wallet file is loaded on longest sync'ed node1
         self.stop_node(1)

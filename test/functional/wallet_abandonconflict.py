@@ -158,7 +158,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
         signed = self.nodes[0].signrawtransactionwithwallet(tx)
         self.nodes[1].sendrawtransaction(signed["hex"])
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(1, sync_fun=None)
 
         self.connect_nodes(0, 1)
         self.sync_blocks()

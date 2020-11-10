@@ -300,9 +300,27 @@ class TestNode():
             time.sleep(1.0 / poll_per_s)
         self._raise_assertion_error("Unable to retrieve cookie credentials after {}s".format(self.rpc_timeout))
 
-    def generate(self, nblocks, maxtries=1000000):
+    def generateblock(self, *args, sync_fun=True, **kwargs):
+        ret = self._rpc_dispatch('generateblock')(*args, **kwargs)
+        if sync_fun:
+            self.default_sync_fun() if sync_fun == True else sync_fun()
+        return ret
+
+    def generatetodescriptor(self, *args, sync_fun=True, **kwargs):
+        ret = self._rpc_dispatch('generatetodescriptor')(*args, **kwargs)
+        if sync_fun:
+            self.default_sync_fun() if sync_fun == True else sync_fun()
+        return ret
+
+    def generatetoaddress(self, *args, sync_fun=True, **kwargs):
+        ret = self._rpc_dispatch('generatetoaddress')(*args, **kwargs)
+        if sync_fun:
+            self.default_sync_fun() if sync_fun == True else sync_fun()
+        return ret
+
+    def generate(self, nblocks, **kwargs):
         self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
-        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
+        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, **kwargs)
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:

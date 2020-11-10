@@ -84,8 +84,7 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Have node0 mine a block, if requested:
         if (self.options.mine_block):
-            self.nodes[0].generate(1)
-            self.sync_blocks(self.nodes[0:2])
+            self.nodes[0].generate(1, sync_fun=lambda: self.sync_blocks(self.nodes[0:2]))
 
         tx1 = self.nodes[0].gettransaction(txid1)
         tx2 = self.nodes[0].gettransaction(txid2)
@@ -114,7 +113,7 @@ class TxnMallTest(BitcoinTestFramework):
             return
 
         # ... mine a block...
-        self.nodes[2].generate(1)
+        self.nodes[2].generate(1, sync_fun=None)
 
         # Reconnect the split network, and sync chain:
         self.connect_nodes(1, 2)
