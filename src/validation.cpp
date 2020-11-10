@@ -2656,8 +2656,6 @@ CBlockIndex* CChainState::FindBestChain()
         }
     }
 
-    // update best header after POP FR
-    pindexBestHeader = bestCandidate;
     return bestCandidate;
 }
 
@@ -2905,12 +2903,16 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, const CChainPar
                     pindexBestChain = FindBestChain();
                 }
 
-                // update best known header
-                pindexBestHeader = pindexBestChain;
-
                 // Whether we have anything to do at all.
                 if (pindexBestChain == nullptr || pindexBestChain == m_chain.Tip()) {
                     break;
+                }
+
+                assert(pindexBestChain);
+                // if pindexBestHeader is a direct successor of pindexBestChain, pindexBestHeader is still best.
+                // otherwise pindexBestChain is new best pindexBestHeader
+                if(pindexBestHeader == nullptr || pindexBestHeader->GetAncestor(pindexBestChain->nHeight) != pindexBestChain) {
+                    pindexBestHeader = pindexBestChain;
                 }
 
                 bool fInvalidFound = false;
@@ -3226,7 +3228,9 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+    // VeriBlock: if pindexNew is a successor of pindexBestHeader, and pindexNew has higher chainwork, then update pindexBestHeader
+    if (pindexBestHeader == nullptr || ((pindexBestHeader->nChainWork < pindexNew->nChainWork) &&
+                                           (pindexNew->GetAncestor(pindexBestHeader->nHeight) == pindexBestHeader)))
         pindexBestHeader = pindexNew;
 
     setDirtyBlockIndex.insert(pindexNew);

@@ -25,6 +25,7 @@
 #include <veriblock/blockchain/alt_chain_params.hpp>
 
 #define VBK_GAMMA  0xb1
+#define VBK_1  0xc0
 #define VBK_VERSION (VBK_GAMMA + 0x1)
 
 /**
