@@ -305,7 +305,6 @@ class WalletTest(BitcoinTestFramework):
 
         self.sync_all()
         self.nodes[1].generate(1)  # mine a block
-        self.sync_all()
 
         unspent_txs = self.nodes[0].listunspent()  # zero value tx must be in listunspents output
         found = False

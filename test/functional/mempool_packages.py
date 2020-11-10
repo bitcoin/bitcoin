@@ -180,7 +180,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
         self.nodes[0].generate(1)
-        self.sync_blocks()
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         # Prioritise a transaction that has been mined, then add it back to the
         # mempool by using invalidateblock.
@@ -272,7 +271,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Test reorg handling
         # First, the basics:
         self.nodes[0].generate(1)
-        self.sync_blocks()
         self.nodes[1].invalidateblock(self.nodes[0].getbestblockhash())
         self.nodes[1].reconsiderblock(self.nodes[0].getbestblockhash())
 
@@ -319,7 +317,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Mine these in a block
         self.nodes[0].generate(1)
-        self.sync_all()
 
         # Now generate tx8, with a big fee
         inputs = [ {'txid' : tx1_id, 'vout': 0}, {'txid' : txid, 'vout': 0} ]

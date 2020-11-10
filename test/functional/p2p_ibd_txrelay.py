@@ -30,7 +30,6 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
 
         # Come out of IBD by generating a block
         self.nodes[0].generate(1)
-        self.sync_all()
 
         self.log.info("Check that nodes reset minfilter after coming out of IBD")
         for node in self.nodes:

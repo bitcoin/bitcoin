@@ -31,7 +31,6 @@ class MerkleBlockTest(BitcoinTestFramework):
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
         miniwallet.generate(5)
         self.nodes[0].generate(COINBASE_MATURITY)
-        self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
         assert_equal(chain_height, 105)
@@ -57,7 +56,6 @@ class MerkleBlockTest(BitcoinTestFramework):
         tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
         txid3 = tx3['txid']
         self.nodes[0].generate(1)
-        self.sync_all()
 
         txid_spent = txin_spent["txid"]
         txid_unspent = txid1  # Input was change from txid2, so txid1 should be unspent

@@ -189,7 +189,6 @@ class ImportRescanTest(BitcoinTestFramework):
             self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + TIMESTAMP_WINDOW + 1,
         )
         self.nodes[0].generate(1)
-        self.sync_all()
 
         # For each variation of wallet key import, invoke the import RPC and
         # check the results from getbalance and listtransactions.

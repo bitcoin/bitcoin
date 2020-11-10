@@ -187,8 +187,6 @@ class ZMQTest (BitcoinTestFramework):
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
 
-        self.sync_all()
-
         for x in range(num_blocks):
             # Should receive the coinbase txid.
             txid = hashtx.receive()
@@ -350,7 +348,6 @@ class ZMQTest (BitcoinTestFramework):
             # removed from the mempool by the block mining it.
             mempool_size = len(self.nodes[0].getrawmempool())
             c_block = self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)[0]
-            self.sync_all()
             # Make sure the number of mined transactions matches the number of txs out of mempool
             mempool_size_delta = mempool_size - len(self.nodes[0].getrawmempool())
             assert_equal(len(self.nodes[0].getblock(c_block)["tx"])-1, mempool_size_delta)
@@ -390,7 +387,6 @@ class ZMQTest (BitcoinTestFramework):
             # Other things may happen but aren't wallet-deterministic so we don't test for them currently
             self.nodes[0].reconsiderblock(best_hash)
             self.nodes[1].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
-            self.sync_all()
 
             self.log.info("Evict mempool transaction by block conflict")
             orig_txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0, replaceable=True)

@@ -115,7 +115,6 @@ class TxnMallTest(BitcoinTestFramework):
         # Reconnect the split network, and sync chain:
         self.connect_nodes(1, 2)
         self.nodes[2].generate(1)  # Mine another block to make sure we sync
-        self.sync_blocks()
         assert_equal(self.nodes[0].gettransaction(doublespend_txid)["confirmations"], 2)
 
         # Re-fetch transaction info:
