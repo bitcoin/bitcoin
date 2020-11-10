@@ -74,6 +74,8 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
+    cpu: 4  # Double CPU and Memory to avoid timeout
+    memory: 16G
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
