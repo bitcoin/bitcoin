@@ -18,7 +18,8 @@ from test_framework.test_framework import SyscoinTestFramework
 VB_PERIOD = 144           # versionbits period length for regtest
 VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
-VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
+# SYSCOIN
+VB_UNKNOWN_BIT = 15       # Choose a bit unassigned to any deployment, can't be above bit 16 because of auxpow
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
 
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
@@ -46,7 +47,7 @@ class VersionBitsWarningTest(SyscoinTestFramework):
 
         for _ in range(numblocks):
             block = create_block(tip, create_coinbase(height + 1), block_time)
-            block.nVersion = version
+            block.set_base_version(version)
             block.solve()
             peer.send_message(msg_block(block))
             block_time += 1
