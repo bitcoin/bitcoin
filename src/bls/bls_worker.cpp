@@ -134,8 +134,8 @@ struct Aggregator {
 
     bool parallel;
     ctpl::thread_pool& workerPool;
-    std::mutex &sigAggregateMutex;
-    std::mutex m;
+    RecursiveMutex &sigAggregateMutex;
+    RecursiveMutex m;
     // items in the queue are all intermediate aggregation results of finished batches.
     // The intermediate results must be deleted by us again (which we do in SyncAggregateAndPushAggQueue)
     moodycamel::ConcurrentQueue<T*> aggQueue;
@@ -152,7 +152,7 @@ struct Aggregator {
     Aggregator(const std::vector<TP>& _inputVec,
                size_t start, size_t count,
                bool _parallel,
-               ctpl::thread_pool& _workerPool, std::mutex &_sigAggregateMutex,
+               ctpl::thread_pool& _workerPool, RecursiveMutex &_sigAggregateMutex,
                DoneCallback _doneCallback) :
             parallel(_parallel),
             workerPool(_workerPool),
@@ -173,7 +173,7 @@ struct Aggregator {
     // If parallel=true, then this will return fast, otherwise this will block until aggregation is done
     void Start()
     {
-        std::unique_lock<std::mutex> l(sigAggregateMutex);
+        LOCK(sigAggregateMutex);
         size_t batchCount = (inputVec->size() + batchSize - 1) / batchSize;
 
         if (!parallel) {
@@ -217,7 +217,7 @@ struct Aggregator {
 
     void CheckDone()
     {
-        std::unique_lock<std::mutex> l(sigAggregateMutex);
+        LOCK(sigAggregateMutex);
         if (--waitCount == 0) {
             Finish();
         }
@@ -284,7 +284,7 @@ struct Aggregator {
             // we've collected enough intermediate results to form a new batch.
             std::shared_ptr<std::vector<const T*> > newBatch;
             {
-                std::unique_lock<std::mutex> l(m);
+                LOCK(m);
                 if (aggQueueSize < batchSize) {
                     // some other worker thread grabbed this batch
                     return;
@@ -348,7 +348,7 @@ struct VectorAggregator {
     size_t count;
     bool parallel;
     ctpl::thread_pool& workerPool;
-    std::mutex &sigAggregateMutex;
+    RecursiveMutex &sigAggregateMutex;
     std::atomic<size_t> doneCount;
 
     VectorPtrType result;
@@ -356,7 +356,7 @@ struct VectorAggregator {
 
     VectorAggregator(const VectorVectorType& _vecs,
                      size_t _start, size_t _count,
-                     bool _parallel, ctpl::thread_pool& _workerPool, std::mutex &_sigAggregateMutex,
+                     bool _parallel, ctpl::thread_pool& _workerPool, RecursiveMutex &_sigAggregateMutex,
                      DoneCallback _doneCallback) :
             doneCallback(std::move(_doneCallback)),
             vecs(_vecs),
@@ -392,7 +392,7 @@ struct VectorAggregator {
 
     void CheckDone(const T& agg, size_t idx)
     {
-        std::unique_lock<std::mutex> l(sigAggregateMutex);
+        LOCK(sigAggregateMutex);
         (*result)[idx] = agg;
         if (++doneCount == vecSize) {
             doneCallback(result);
@@ -430,7 +430,7 @@ struct ContributionVerifier {
     bool aggregated;
 
     ctpl::thread_pool& workerPool;
-    std::mutex &sigAggregateMutex;
+    RecursiveMutex &sigAggregateMutex;
     size_t batchCount;
     size_t verifyCount;
 
@@ -439,7 +439,7 @@ struct ContributionVerifier {
     std::function<void(const std::vector<bool>&)> doneCallback;
     ContributionVerifier(const CBLSId& _forId, const std::vector<BLSVerificationVectorPtr>& _vvecs,
                          const BLSSecretKeyVector& _skShares, size_t _batchSize,
-                         bool _parallel, bool _aggregated, ctpl::thread_pool& _workerPool, std::mutex& _sigAggregateMutex,
+                         bool _parallel, bool _aggregated, ctpl::thread_pool& _workerPool, RecursiveMutex& _sigAggregateMutex,
                          std::function<void(const std::vector<bool>&)> _doneCallback) :
         forId(_forId),
         vvecs(_vvecs),
@@ -487,7 +487,7 @@ struct ContributionVerifier {
 
     void Finish()
     {
-        std::unique_lock<std::mutex> l(sigAggregateMutex);
+        LOCK(sigAggregateMutex);
         size_t batchIdx = 0;
         std::vector<bool> result(vvecs.size());
         for (size_t i = 0; i < vvecs.size(); i += batchSize) {
@@ -641,7 +641,7 @@ BLSVerificationVectorPtr CBLSWorker::BuildQuorumVerificationVector(const std::ve
 
 template <typename T>
 void AsyncAggregateHelper(ctpl::thread_pool& workerPool,
-                          const std::vector<T>& vec, size_t start, size_t count, bool parallel, std::mutex& sigAggregateMutex,
+                          const std::vector<T>& vec, size_t start, size_t count, bool parallel, RecursiveMutex& sigAggregateMutex,
                           std::function<void(const T&)> doneCallback)
 {
     if (start == 0 && count == 0) {
@@ -860,7 +860,7 @@ void CBLSWorker::AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& p
         return;
     }
 
-    std::unique_lock<std::mutex> l(sigVerifyMutex);
+    LOCK(sigVerifyMutex);
 
     bool foundDuplicate = false;
     for (auto& s : sigVerifyQueue) {
@@ -891,7 +891,7 @@ std::future<bool> CBLSWorker::AsyncVerifySig(const CBLSSignature& sig, const CBL
 
 bool CBLSWorker::IsAsyncVerifyInProgress()
 {
-    std::unique_lock<std::mutex> l(sigVerifyMutex);
+    LOCK(sigVerifyMutex);
     return sigVerifyBatchesInProgress != 0;
 }
 
@@ -906,7 +906,7 @@ void CBLSWorker::PushSigVerifyBatch()
                 bool valid = job.sig.VerifyInsecure(job.pubKey, job.msgHash);
                 job.doneCallback(valid);
             }
-            std::unique_lock<std::mutex> l(sigVerifyMutex);
+            LOCK(sigVerifyMutex);
             sigVerifyBatchesInProgress--;
             if (!sigVerifyQueue.empty()) {
                 PushSigVerifyBatch();
@@ -953,7 +953,7 @@ void CBLSWorker::PushSigVerifyBatch()
             }
         }
 
-        std::unique_lock<std::mutex> l(sigVerifyMutex);
+        LOCK(sigVerifyMutex);
         sigVerifyBatchesInProgress--;
         if (!sigVerifyQueue.empty()) {
             PushSigVerifyBatch();
