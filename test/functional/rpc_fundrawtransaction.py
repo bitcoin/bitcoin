@@ -738,7 +738,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
                 node.fundrawtransaction, rawtx, {"estimate_mode": v, "conf_target": 0.1, "add_inputs": True})
         for mode in ["", "foo", Decimal("3.141592")]:
-            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter",
+            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                 node.fundrawtransaction, rawtx, {"estimate_mode": mode, "conf_target": 0.1, "add_inputs": True})
 
         self.log.info("Test fundrawtxn with invalid conf_target settings")

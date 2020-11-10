@@ -138,7 +138,8 @@ class BumpFeeTest(BitcoinTestFramework):
             assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
                 rbf_node.bumpfee, rbfid, {"estimate_mode": v})
         for mode in ["foo", Decimal("3.1415"), "sat/B", "BTC/kB"]:
-            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", rbf_node.bumpfee, rbfid, {"estimate_mode": mode})
+            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
+                rbf_node.bumpfee, rbfid, {"estimate_mode": mode})
 
         self.clear_mempool()
 
