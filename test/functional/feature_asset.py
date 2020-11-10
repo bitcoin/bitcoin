@@ -40,6 +40,7 @@ class AssetTest(SyscoinTestFramework):
         # 375 bytes long payload (500 bytes base64 encoded) + 11 byte overhead + 1 (base64 encoded should be more than 512 bytes)
         baddata = gooddata + "a"
         asset = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 10000, 127, '', {}, {})['asset_guid']
+        self.nodes[0].generate(1)
         asset1 = self.nodes[0].assetnew('1', 'TST', gooddata, '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         self.nodes[0].generate(1)
         self.sync_blocks()
@@ -58,6 +59,7 @@ class AssetTest(SyscoinTestFramework):
         gooddata = 'asset description'
         self.nodes[0].assetnew('1', 'T', gooddata, '0x', 8, 10000, 127, '', {}, {})
         assert_raises_rpc_error(-26, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', '', gooddata, '0x', 8, 10000, 127, '', {}, {})
+        self.nodes[0].generate(1)
         self.nodes[0].assetnew('1', 'ABCDEFGHI', gooddata, '0x', 8, 10000, 127, '', {}, {})
         assert_raises_rpc_error(-26, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', 'ABCDEFGHIJ', gooddata, '0x', 8, 10000, 127, '', {}, {})
         self.nodes[0].generate(1)
