@@ -1096,7 +1096,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # than any single input available, and require more than 1 input. So we make 3 outputs
         for i in range(0, 3):
             funds.sendtoaddress(tester.getnewaddress(address_type="bech32"), 1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # Create transactions in order to calculate fees for the target bounds that can trigger this bug
         change_tx = tester.fundrawtransaction(tester.createrawtransaction([], [{funds.getnewaddress(): 1.5}]))

@@ -105,7 +105,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # the other high fee transactions. Keep mining until our mempool has
         # decreased by all the high fee size that we calculated above.
         while (self.nodes[0].getmempoolinfo()['bytes'] > sizes[0] + sizes[1]):
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # High fee transaction should not have been mined, but other high fee rate
         # transactions should have been.

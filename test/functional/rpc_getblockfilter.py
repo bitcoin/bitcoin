@@ -21,8 +21,8 @@ class GetBlockFilterTest(BitcoinTestFramework):
         # Create two chains by disconnecting nodes 0 & 1, mining, then reconnecting
         self.disconnect_nodes(0, 1)
 
-        self.generate(self.nodes[0], 3)
-        self.generate(self.nodes[1], 4)
+        self.generate(self.nodes[0], 3, sync_fun=self.no_op)
+        self.generate(self.nodes[1], 4, sync_fun=self.no_op)
 
         assert_equal(self.nodes[0].getblockcount(), 3)
         chain0_hashes = [self.nodes[0].getblockhash(block_height) for block_height in range(4)]

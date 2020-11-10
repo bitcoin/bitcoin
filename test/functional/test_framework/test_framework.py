@@ -413,7 +413,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # To ensure that all nodes are out of IBD, the most recent block
             # must have a timestamp not too old (see IsInitialBlockDownload()).
             self.log.debug('Generate a block with current time')
-            block_hash = self.generate(self.nodes[0], 1)[0]
+            block_hash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
             block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
                 n.submitblock(block)
@@ -627,20 +627,27 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.connect_nodes(1, 2)
         self.sync_all()
 
-    def generate(self, generator, *args, **kwargs):
+    def no_op(self):
+        pass
+
+    def generate(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generate(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generateblock(self, generator, *args, **kwargs):
+    def generateblock(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generateblock(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generatetoaddress(self, generator, *args, **kwargs):
+    def generatetoaddress(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generatetoaddress(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generatetodescriptor(self, generator, *args, **kwargs):
+    def generatetodescriptor(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generatetodescriptor(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
     def sync_blocks(self, nodes=None, wait=1, timeout=60):

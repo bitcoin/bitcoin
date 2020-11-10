@@ -451,10 +451,10 @@ def find_output(node, txid, amount, *, blockhash=None):
 
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
-def create_confirmed_utxos(test_framework, fee, node, count):
+def create_confirmed_utxos(test_framework, fee, node, count, **kwargs):
     to_generate = int(0.5 * count) + 101
     while to_generate > 0:
-        test_framework.generate(node, min(25, to_generate))
+        test_framework.generate(node, min(25, to_generate), **kwargs)
         to_generate -= 25
     utxos = node.listunspent()
     iterations = count - len(utxos)
@@ -475,7 +475,7 @@ def create_confirmed_utxos(test_framework, fee, node, count):
         node.sendrawtransaction(signed_tx)
 
     while (node.getmempoolinfo()['size'] > 0):
-        test_framework.generate(node, 1)
+        test_framework.generate(node, 1, **kwargs)
 
     utxos = node.listunspent()
     assert len(utxos) >= count

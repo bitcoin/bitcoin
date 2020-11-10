@@ -77,7 +77,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
         # 1. Have nodes mine a block (leave IBD)
-        [self.generatetoaddress(n, 1, n.get_deterministic_priv_key().address) for n in self.nodes]
+        [self.generate(n, 1, sync_fun=self.no_op) for n in self.nodes]
         tips = [int("0x" + n.getbestblockhash(), 0) for n in self.nodes]
 
         # 2. Send one block that builds on each tip.
