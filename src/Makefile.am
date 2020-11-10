@@ -134,6 +134,7 @@ SYSCOIN_CORE_H = \
   governance/governancevalidators.h \
   governance/governancevote.h \
   governance/governancevotedb.h \
+  concurrentqueue.h \
   ctpl.h \
   cxxtimer.hpp \
   evo/cbtx.h \
