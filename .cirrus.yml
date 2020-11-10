@@ -4,8 +4,8 @@ timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
 container:
   # https://cirrus-ci.org/faq/#are-there-any-limits
   # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-  cpu: 2
-  memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+  cpu: 16
+  memory: 24G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
   kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
@@ -82,8 +82,6 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4  # Double CPU and Memory to avoid timeout
-    memory: 16G
   env:
     MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
@@ -101,8 +99,6 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4  # Double CPU and Memory to avoid timeout
-    memory: 16G
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
@@ -119,8 +115,6 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4  # Double CPU and Memory to avoid timeout
-    memory: 16G
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
 
@@ -129,8 +123,6 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4  # Double CPU and Memory to avoid timeout
-    memory: 16G
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
