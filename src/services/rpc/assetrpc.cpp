@@ -444,7 +444,7 @@ static RPCHelpMan assetinfo()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
-    const int &nAsset = params[0].get_uint();
+    const uint32_t &nAsset = params[0].get_uint();
     UniValue oAsset(UniValue::VOBJ);
 
     CAsset txPos;
