@@ -43,6 +43,7 @@ deadlock:TestPotentialDeadLockDetected
 
 # Wildcard for all gui tests, should be replaced with non-wildcard suppressions
 race:src/qt/test/*
+race:src/bench/*
 deadlock:src/qt/test/*
 
 # External libraries
