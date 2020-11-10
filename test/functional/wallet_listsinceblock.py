@@ -191,6 +191,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         address = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
         self.nodes[2].sendtoaddress(address, 10)
         self.nodes[2].generate(6)
+        self.sync_all()
         self.nodes[2].importprivkey(privkey)
         utxos = self.nodes[2].listunspent()
         utxo = [u for u in utxos if u["address"] == address][0]
