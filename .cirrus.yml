@@ -143,6 +143,7 @@ task:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: catalina-xcode-12.1  # https://cirrus-ci.org/guide/macOS
   env:
+    MAKEJOBS: "-j4"
     DANGER_RUN_CI_ON_HOST: "true"
     CI_USE_APT_INSTALL: "no"
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
