@@ -5084,7 +5084,7 @@ bool LoadMempool(CTxMemPool& pool)
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             TxValidationState state;
-            if (nTime + nExpiryTimeout > nNow) {
+            if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
                 AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
                                            nullptr /* plTxnReplaced */, false /* bypass_limits */,
