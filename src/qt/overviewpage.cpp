@@ -161,6 +161,7 @@ public:
                             CMPTransaction mp_obj;
                             int parseRC = ParseTransaction(*wtx, blockHeight, 0, mp_obj);
                             if (0 < parseRC) { //positive RC means DEx payment
+                                valid = true;
                                 std::string tmpBuyer, tmpSeller;
                                 uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
                                 {
