@@ -17,11 +17,12 @@
 #
 
 import plistlib
-import subprocess, sys, re, os, shutil, stat, os.path
+import sys, re, os, shutil, stat, os.path
 from argparse import ArgumentParser
 from ds_store import DSStore
 from mac_alias import Alias
 from pathlib import Path
+from subprocess import PIPE, run
 from typing import List, Optional
 
 # This is ported from the original macdeployqt with modifications
@@ -199,14 +200,13 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     if verbose:
         print("Inspecting with otool: " + binaryPath)
     otoolbin=os.getenv("OTOOL", "otool")
-    otool = subprocess.Popen([otoolbin, "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    o_stdout, o_stderr = otool.communicate()
+    otool = run([otoolbin, "-L", binaryPath], stdout=PIPE, stderr=PIPE, universal_newlines=True)
     if otool.returncode != 0:
-        sys.stderr.write(o_stderr)
+        sys.stderr.write(otool.stderr)
         sys.stderr.flush()
         raise RuntimeError("otool failed with return code {}".format(otool.returncode))
 
-    otoolLines = o_stdout.split("\n")
+    otoolLines = otool.stdout.split("\n")
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
@@ -225,7 +225,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
 
 def runInstallNameTool(action: str, *args):
     installnametoolbin=os.getenv("INSTALLNAMETOOL", "install_name_tool")
-    subprocess.check_call([installnametoolbin, "-"+action] + list(args))
+    run([installnametoolbin, "-"+action] + list(args), check=True)
 
 def changeInstallName(oldName: str, newName: str, binaryPath: str, verbose: int):
     if verbose:
@@ -247,7 +247,7 @@ def runStrip(binaryPath: str, verbose: int):
     if verbose:
         print("Using strip:")
         print(" stripped", binaryPath)
-    subprocess.check_call([stripbin, "-x", binaryPath])
+    run([stripbin, "-x", binaryPath], check=True)
 
 def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional[str]:
     if framework.sourceFilePath.startswith("Qt"):
@@ -658,23 +658,6 @@ ds.close()
 
 if config.dmg is not None:
 
-    def runHDIUtil(verb: str, image_basename: str, **kwargs) -> int:
-        hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
-        if "capture_stdout" in kwargs:
-            del kwargs["capture_stdout"]
-            run = subprocess.check_output
-        else:
-            if verbose:
-                hdiutil_args.append("-verbose")
-            run = subprocess.check_call
-        
-        for key, value in kwargs.items():
-            hdiutil_args.append("-" + key)
-            if value is not True:
-                hdiutil_args.append(str(value))
-        
-        return run(hdiutil_args, universal_newlines=True)
-
     print("+ Preparing .dmg disk image +")
 
     if verbose:
@@ -687,17 +670,14 @@ if config.dmg is not None:
 
     if verbose:
         print("Creating temp image for modification...")
-    try:
-        runHDIUtil("create", appname + ".temp", srcfolder="dist", format="UDRW", size=size, volname=appname, ov=True)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.returncode)
+
+    tempname = appname + ".temp.dmg"
+
+    run(["hdiutil", "create", tempname, "-srcfolder", "dist", "-format", "UDRW", "-size", str(size), "-volname", appname], check=True, universal_newlines=True)
 
     if verbose:
         print("Attaching temp image...")
-    try:
-        output = runHDIUtil("attach", appname + ".temp", readwrite=True, noverify=True, noautoopen=True, capture_stdout=True)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.returncode)
+    output = run(["hdiutil", "attach", tempname, "-readwrite"], check=True, universal_newlines=True, stdout=PIPE).stdout
 
     m = re.search(r"/Volumes/(.+$)", output)
     disk_root = m.group(0)
@@ -714,15 +694,11 @@ if config.dmg is not None:
 
     print("+ Finalizing .dmg disk image +")
 
-    subprocess.run(["hdiutil", "detach", "/Volumes/{}".format(appname)], universal_newlines=True)
+    run(["hdiutil", "detach", "/Volumes/{}".format(appname)], universal_newlines=True)
 
-    try:
-        runHDIUtil("convert", appname + ".temp", format="UDBZ", o=appname + ".dmg", ov=True)
-    except subprocess.CalledProcessError as e:
-        print(e)
-        sys.exit(e.returncode)
+    run(["hdiutil", "convert", tempname, "-format", "UDZO", "-o", appname, "-imagekey", "zlib-level=9"], check=True, universal_newlines=True)
 
-    os.unlink(appname + ".temp.dmg")
+    os.unlink(tempname)
 
 # ------------------------------------------------
 
