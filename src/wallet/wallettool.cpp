@@ -36,15 +36,9 @@ static void WalletCreate(CWallet* wallet_instance)
     wallet_instance->TopUpKeyPool();
 }
 
-static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, bool create)
+static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, DatabaseOptions options)
 {
-    DatabaseOptions options;
     DatabaseStatus status;
-    if (create) {
-        options.require_create = true;
-    } else {
-        options.require_existing = true;
-    }
     bilingual_str error;
     std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
     if (!database) {
@@ -85,7 +79,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
         }
     }
 
-    if (create) WalletCreate(wallet_instance.get());
+    if (options.require_create) WalletCreate(wallet_instance.get());
 
     return wallet_instance;
 }
@@ -110,14 +104,18 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
     fs::path path = fs::absolute(name, GetWalletDir());
 
     if (command == "create") {
-        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, /* create= */ true);
+        DatabaseOptions options;
+        options.require_create = true;
+        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Close();
         }
     } else if (command == "info" || command == "salvage") {
         if (command == "info") {
-            std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, /* create= */ false);
+            DatabaseOptions options;
+            options.require_existing = true;
+            std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
             if (!wallet_instance) return false;
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Close();
