@@ -532,6 +532,7 @@ struct ContributionVerifier {
 
     void HandleVerifyDone(size_t batchIdx, size_t count)
     {
+        LOCK(sigAggregateMutex);
         size_t c = verifyDoneCount += count;
         if (c == verifyCount) {
             Finish();
