@@ -122,6 +122,7 @@ class AssetTest(SyscoinTestFramework):
         self.sync_blocks()
         self.nodes[0].assettransfer(asset0, self.nodes[1].getnewaddress())
         self.nodes[1].assettransfer(asset1, self.nodes[0].getnewaddress())
+        self.sync_mempools()
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assetupdate, asset0, '', '', 127, '', {}, {})
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assetupdate, asset1, '', '', 127, '', {}, {})
         self.sync_mempools()

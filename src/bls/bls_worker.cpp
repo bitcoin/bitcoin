@@ -189,6 +189,7 @@ struct Aggregator {
         if (batchCount == 1) {
             // just a single batch of work, take a shortcut.
             PushWork([this](int threadId) {
+                LOCK(sigAggregateMutex);
                 if (inputVec->size() == 1) {
                     doneCallback(*(*inputVec)[0]);
                 } else {

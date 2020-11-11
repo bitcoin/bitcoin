@@ -691,7 +691,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                             break;
                         }
                         else
-                            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
+                            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict-zdag");
                     }
                     else
                         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
