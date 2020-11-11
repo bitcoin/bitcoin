@@ -216,18 +216,6 @@ UniValue submitpop(const JSONRPCRequest& request)
     }
 }
 
-UniValue debugpop(const JSONRPCRequest& request)
-{
-    if (request.fHelp) {
-        throw std::runtime_error(
-            "debugpop\n"
-            "\nPrints alt-cpp-lib state into log.\n");
-    }
-    auto& pop = VeriBlock::GetPop();
-    LogPrint(BCLog::POP, "%s", VeriBlock::toPrettyString(pop));
-    return UniValue();
-}
-
 using VbkTree = altintegration::VbkBlockTree;
 using BtcTree = altintegration::VbkBlockTree::BtcTree;
 
@@ -679,7 +667,6 @@ const CRPCCommand commands[] = {
     {"pop_mining", "submitpopvtb", &submitpopvtb, {"vtb"}},
     {"pop_mining", "submitpopvbkblock", &submitpopvbkblock, {"vbkblock"}},
     {"pop_mining", "getpopdata", &getpopdata, {"blockheight"}},
-    {"pop_mining", "debugpop", &debugpop, {}},
     {"pop_mining", "getvbkblock", &getvbkblock, {"hash"}},
     {"pop_mining", "getbtcblock", &getbtcblock, {"hash"}},
     {"pop_mining", "getvbkbestblockhash", &getvbkbestblockhash, {}},
