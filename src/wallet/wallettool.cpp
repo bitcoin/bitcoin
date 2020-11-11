@@ -21,16 +21,19 @@ static void WalletToolReleaseWallet(CWallet* wallet)
     delete wallet;
 }
 
-static void WalletCreate(CWallet* wallet_instance)
+static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flags)
 {
     LOCK(wallet_instance->cs_wallet);
 
     wallet_instance->SetMinVersion(FEATURE_HD_SPLIT);
+    wallet_instance->AddWalletFlags(wallet_creation_flags);
 
-    // generate a new HD seed
-    auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
-    CPubKey seed = spk_man->GenerateNewSeed();
-    spk_man->SetHDSeed(seed);
+    if (!wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
+        spk_man->SetupGeneration(false);
+    } else {
+        wallet_instance->SetupDescriptorScriptPubKeyMans();
+    }
 
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
@@ -79,7 +82,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
         }
     }
 
-    if (options.require_create) WalletCreate(wallet_instance.get());
+    if (options.require_create) WalletCreate(wallet_instance.get(), options.create_flags);
 
     return wallet_instance;
 }
@@ -106,6 +109,11 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
     if (command == "create") {
         DatabaseOptions options;
         options.require_create = true;
+        if (gArgs.GetBoolArg("-descriptors", false)) {
+            options.create_flags |= WALLET_FLAG_DESCRIPTORS;
+            options.require_format = DatabaseFormat::SQLITE;
+        }
+
         std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
