@@ -758,7 +758,7 @@ class RPCCoverage():
         Print out RPC commands that were unexercised by tests.
 
         """
-        uncovered = self._get_uncovered_rpc_commands()
+        #uncovered = self._get_uncovered_rpc_commands()
         print("Uncovered RPC commands disabled (TODO)")
         return True
         #if uncovered:
