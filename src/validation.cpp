@@ -5496,7 +5496,7 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate)
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             TxValidationState state;
-            if (nTime + nExpiryTimeout > nNow) {
+            if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
                 assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
                 AcceptToMemoryPoolWithTime(chainparams, pool, active_chainstate, state, tx, nTime,
