@@ -419,7 +419,7 @@ private:
 
     static bool AcceptMessage(const uint256& nHash, hash_s_t& setHash);
 
-    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman);
+    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void RebuildIndexes();
 
