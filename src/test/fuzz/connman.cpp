@@ -117,7 +117,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             connman.RemoveAddedNode(random_string);
             break;
         case 24: {
-            const std::vector<bool> asmap = ConsumeRandomLengthIntegralVector<bool>(fuzzed_data_provider, 512);
+            const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
             if (SanityCheckASMap(asmap)) {
                 connman.SetAsmap(asmap);
             }
