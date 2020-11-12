@@ -601,7 +601,8 @@ int GetRandInt(int nMax) noexcept
 
 uint256 GetRandHash() noexcept
 {
-    uint256 hash;
+    // SYSCOIN
+    uint256 hash{};
     GetRandBytes((unsigned char*)&hash, sizeof(hash));
     return hash;
 }
