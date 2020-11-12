@@ -22,7 +22,6 @@ constexpr bool DEFAULT_WHITELISTRELAY = true;
 constexpr bool DEFAULT_WHITELISTFORCERELAY = false;
 
 enum class NetPermissionFlags : uint32_t {
-    // NOTE: When adding here, be sure to update net_permissions.cpp's NetPermissions::ToStrings too
     None = 0,
     // Can query bloomfilter even if -peerbloomfilters is false
     BloomFilter = (1U << 1),
