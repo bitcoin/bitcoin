@@ -1198,7 +1198,10 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
     sa.sa_flags = SA_NOCLDWAIT;
         
     sigaction( SIGCHLD, &sa, NULL ) ;
-        
+    int fd[2];
+    int readend =	0;
+    int writeend =	1;
+    pipe(fd);
     // Duplicate ("fork") the process. Will return zero in the child
     // process, and the child's PID in the parent (or negative on error).
     pid = fork() ;
@@ -1209,6 +1212,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
 	// TODO: sanitize environment variables as per
 	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
     if( pid == 0 ) {
+        dup2(fd[writeend], STDOUT_FILENO);
+        close(fd[readend]);
+        close(fd[writeend]);
         // Order of looking for the geth binary:
         // 1. current executable directory
         // 2. current executable directory/bin/[os]/syscoin_geth
@@ -1302,6 +1308,8 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
             }
         }
     } else {
+        close(fd[readend]);
+        close(fd[writeend]);
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;
     }
