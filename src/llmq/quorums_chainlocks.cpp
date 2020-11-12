@@ -150,11 +150,9 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 
         bestChainLockHash = hash;
         bestChainLock = clsig;
-    }
-    CInv inv(MSG_CLSIG, hash);
-    connman.RelayOtherInv(inv);
-    {
-        LOCK2(cs_main, cs);
+
+        CInv inv(MSG_CLSIG, hash);
+        connman.RelayOtherInv(inv);
         const CBlockIndex* pindex = LookupBlockIndex(clsig.blockHash);
         if (pindex == nullptr) {
             // we don't know the block/header for this CLSIG yet, so bail out for now
