@@ -21,6 +21,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
+#include <reconciliation.h>
 #include <reverse_iterator.h>
 #include <scheduler.h>
 #include <streams.h>
@@ -228,6 +229,10 @@ struct Peer {
      */
     const uint64_t m_local_recon_salt;
 
+    Mutex m_recon_state_mutex;
+    /// nullptr if we're not reconciling (neither passively nor actively) with this peer.
+    std::unique_ptr<ReconState> m_recon_state GUARDED_BY(m_recon_state_mutex);
+
     explicit Peer(NodeId id) : m_id(id), m_local_recon_salt(GetRand(UINT64_MAX)) {}
 };
 
@@ -343,6 +348,15 @@ private:
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */
     bool m_initial_sync_finished{false};
+
+    /**
+     * Transaction reconciliation should happen with peers in the same order,
+     * because the efficiency gain is the highest when reconciliation set difference
+     * is predictable. This queue is used to maintain the order of
+     * peers chosen for reconciliation.
+     */
+    Mutex m_recon_queue_mutex;
+    std::deque<CNode*> m_recon_queue GUARDED_BY(m_recon_queue_mutex);
 
     /** Protects m_peer_map. This mutex must not be locked while holding a lock
      *  on any of the mutexes inside a Peer object. */
@@ -2803,6 +2817,61 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
         pfrom.m_wants_addrv2 = true;
+        return;
+    }
+
+    // Received from an inbound peer planning to reconcile transactions with us, or
+    // from an outgoing peer demonstrating readiness to do reconciliations.
+    // If received from outgoing, adds the peer to the reconciliation queue.
+    // Feature negotiation of tx reconciliation should happen between VERSION and
+    // VERACK, to avoid relay problems from switching after a connection is up.
+    if (msg_type == NetMsgType::SENDRECON) {
+        if (!pfrom.m_tx_relay) return;
+        LOCK(peer->m_recon_state_mutex);
+        if (peer->m_recon_state != nullptr) return; // Do not support reconciliation salt/version updates.
+        LOCK(cs_main);
+        if (!State(pfrom.GetId())->m_wtxid_relay) return; // SENDRECON is allowed only after WTXIDRELAY.
+
+        bool recon_requestor, recon_responder;
+        uint64_t remote_salt;
+        uint32_t recon_version;
+        vRecv >> recon_requestor >> recon_responder >> recon_version >> remote_salt;
+        if (recon_version != 1) return;
+
+        // Do not flood through inbound connections which support reconciliation to save bandwidth.
+        bool flood_to = false;
+        if (pfrom.IsInboundConn()) {
+            // We currently don't support reconciliations with inbound peers which
+            // don't want to be reconciliation senders (request our sketches),
+            // or want to be reconciliation responders (send us their sketches).
+            // Just ignore SENDRECON and use normal flooding for transaction relay with them.
+            if (!recon_requestor) return;
+            if (recon_responder) return;
+        } else {
+            // We currently don't support reconciliations with outbound peers which
+            // don't want to be reconciliation responders (send us their sketches),
+            // or want to be reconciliation senders (request our sketches).
+            // Just ignore SENDRECON and use normal flooding for transaction relay with them.
+            if (recon_requestor) return;
+            if (!recon_responder) return;
+            // TODO: Flood only through a limited number of outbound connections.
+            flood_to = true;
+        }
+
+        uint64_t local_salt = peer->m_local_recon_salt;
+        uint64_t salt1 = local_salt, salt2 = remote_salt;
+        if (salt1 > salt2) std::swap(salt1, salt2);
+        static const auto RECON_SALT_HASHER = TaggedHash(RECON_STATIC_SALT);
+        uint256 full_salt = (CHashWriter(RECON_SALT_HASHER) << salt1 << salt2).GetSHA256();
+
+        peer->m_recon_state = MakeUnique<ReconState>(recon_requestor, recon_responder, flood_to, full_salt.GetUint64(0), full_salt.GetUint64(1));
+
+        // Reconcile with all outbound peers supporting reconciliation (even if we flood to them),
+        // to not miss transactions they have for us but won't flood.
+        if (recon_responder) {
+            LOCK(m_recon_queue_mutex);
+            m_recon_queue.push_back(&pfrom);
+        }
         return;
     }
 
