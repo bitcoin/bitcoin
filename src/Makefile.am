@@ -781,10 +781,10 @@ syscoin_daemon_sources += syscoind-res.rc
 endif
 # SYSCOIN need getauxwork and mempool stuff inside of wallet so server needs linking here for now but order has to be after wallet
 syscoin_bin_ldadd = \
-  $(LIBSYSCOIN_BLS) \
-  $(LIBCHIABLS) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_SERVER) \
+  $(LIBSYSCOIN_BLS) \
+  $(LIBCHIABLS) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBUNIVALUE) \
@@ -841,10 +841,10 @@ syscoin_tx_SOURCES += syscoin-tx-res.rc
 endif
 
 syscoin_tx_LDADD = \
-  $(LIBSYSCOIN_BLS) \
-  $(LIBCHIABLS) \
   $(LIBUNIVALUE) \
   $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_BLS) \
+  $(LIBCHIABLS) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
