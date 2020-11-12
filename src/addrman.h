@@ -7,6 +7,7 @@
 #define BITCOIN_ADDRMAN_H
 
 #include <clientversion.h>
+#include <config/bitcoin-config.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <random.h>
@@ -176,6 +177,28 @@ protected:
     mutable RecursiveMutex cs;
 
 private:
+    //! Serialization versions.
+    enum Format : uint8_t {
+        V0_HISTORICAL = 0,    //!< historic format, before commit e6b343d88
+        V1_DETERMINISTIC = 1, //!< for pre-asmap files
+        V2_ASMAP = 2,         //!< for files including asmap version
+        V3_BIP155 = 3,        //!< same as V2_ASMAP plus addresses are in BIP155 format
+    };
+
+    //! The maximum format this software knows it can unserialize. Also, we always serialize
+    //! in this format.
+    //! The format (first byte in the serialized stream) can be higher than this and
+    //! still this software may be able to unserialize the file - if the second byte
+    //! (see `lowest_compatible` in `Unserialize()`) is less or equal to this.
+    static constexpr Format FILE_FORMAT = Format::V3_BIP155;
+
+    //! The initial value of a field that is incremented every time an incompatible format
+    //! change is made (such that old software versions would not be able to parse and
+    //! understand the new file format). This is 32 because we overtook the "key size"
+    //! field which was 32 historically.
+    //! @note Don't increment this. Increment `lowest_compatible` in `Serialize()` instead.
+    static constexpr uint8_t INCOMPATIBILITY_BASE = 32;
+
     //! last used nId
     int nIdCount GUARDED_BY(cs);
 
@@ -265,14 +288,6 @@ protected:
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
-    //! Serialization versions.
-    enum class Format : uint8_t {
-        V0_HISTORICAL = 0,    //!< historic format, before commit e6b343d88
-        V1_DETERMINISTIC = 1, //!< for pre-asmap files
-        V2_ASMAP = 2,         //!< for files including asmap version
-        V3_BIP155 = 3,        //!< same as V2_ASMAP plus addresses are in BIP155 format
-    };
-
     // Compressed IP->ASN mapping, loaded from a file when a node starts.
     // Should be always empty if no file was provided.
     // This mapping is then used for bucketing nodes in Addrman.
@@ -295,8 +310,18 @@ public:
 
     /**
      * Serialized format.
-     * * version byte (@see `Format`)
-     * * 0x20 + nKey (serialized as if it were a vector, for backward compatibility)
+     * * format version byte (@see `Format`)
+     * * lowest compatible format version byte. This is used to help old software decide
+     *   whether to parse the file. For example:
+     *   * Bitcoin Core version N knows how to parse up to format=3. If a new format=4 is
+     *     introduced in version N+1 that is compatible with format=3 and it is known that
+     *     version N will be able to parse it, then version N+1 will write
+     *     (format=4, lowest_compatible=3) in the first two bytes of the file, and so
+     *     version N will still try to parse it.
+     *   * Bitcoin Core version N+2 introduces a new incompatible format=5. It will write
+     *     (format=5, lowest_compatible=5) and so any versions that do not know how to parse
+     *     format=5 will not try to read the file.
+     * * nKey
      * * nNew
      * * nTried
      * * number of "new" buckets XOR 2**30
@@ -327,12 +352,17 @@ public:
     {
         LOCK(cs);
 
-        // Always serialize in the latest version (currently Format::V3_BIP155).
+        // Always serialize in the latest version (FILE_FORMAT).
 
         OverrideStream<Stream> s(&s_, s_.GetType(), s_.GetVersion() | ADDRV2_FORMAT);
 
-        s << static_cast<uint8_t>(Format::V3_BIP155);
-        s << ((unsigned char)32);
+        s << static_cast<uint8_t>(FILE_FORMAT);
+
+        // Increment `lowest_compatible` iff a newly introduced format is incompatible with
+        // the previous one.
+        static constexpr uint8_t lowest_compatible = Format::V3_BIP155;
+        s << static_cast<uint8_t>(INCOMPATIBILITY_BASE + lowest_compatible);
+
         s << nKey;
         s << nNew;
         s << nTried;
@@ -392,15 +422,6 @@ public:
         Format format;
         s_ >> Using<CustomUintFormatter<1>>(format);
 
-        static constexpr Format maximum_supported_format = Format::V3_BIP155;
-        if (format > maximum_supported_format) {
-            throw std::ios_base::failure(strprintf(
-                "Unsupported format of addrman database: %u. Maximum supported is %u. "
-                "Continuing operation without using the saved list of peers.",
-                static_cast<uint8_t>(format),
-                static_cast<uint8_t>(maximum_supported_format)));
-        }
-
         int stream_version = s_.GetVersion();
         if (format >= Format::V3_BIP155) {
             // Add ADDRV2_FORMAT to the version so that the CNetAddr and CAddress
@@ -410,9 +431,16 @@ public:
 
         OverrideStream<Stream> s(&s_, s_.GetType(), stream_version);
 
-        unsigned char nKeySize;
-        s >> nKeySize;
-        if (nKeySize != 32) throw std::ios_base::failure("Incorrect keysize in addrman deserialization");
+        uint8_t compat;
+        s >> compat;
+        const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
+        if (lowest_compatible > FILE_FORMAT) {
+            throw std::ios_base::failure(strprintf(
+                "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
+                "but the maximum supported by this version of %s is %u.",
+                format, lowest_compatible, PACKAGE_NAME, static_cast<uint8_t>(FILE_FORMAT)));
+        }
+
         s >> nKey;
         s >> nNew;
         s >> nTried;
