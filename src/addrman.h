@@ -7,7 +7,7 @@
 #define SYSCOIN_ADDRMAN_H
 
 #include <clientversion.h>
-#include <config/bitcoin-config.h>
+#include <config/syscoin-config.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <random.h>
