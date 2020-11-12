@@ -244,33 +244,27 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
 void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman)
 {
-    AssertLockNotHeld(cs);
-    std::vector<CGovernanceVote> votes;
-    {
-        LOCK(cs);
-        uint256 nHash = govobj.GetHash();
-        std::vector<vote_time_pair_t> vecVotePairs;
-        ScopedLockBool guard(cs, fRateChecksEnabled, false);
-        cmmapOrphanVotes.GetAll(nHash, vecVotePairs);
-        
-        int64_t nNow = GetAdjustedTime();
-        for (auto& pairVote : vecVotePairs) {
-            bool fRemove = false;
-            CGovernanceVote& vote = pairVote.first;
-            CGovernanceException exception;
-            if (pairVote.second < nNow) {
-                fRemove = true;
-            } else if (govobj.ProcessVote(nullptr, vote, exception, connman)) {
-                votes.emplace_back(vote);
-                fRemove = true;
-            }
-            if (fRemove) {
-                cmmapOrphanVotes.Erase(nHash, pairVote);
-            }
+    AssertLockHeld(cs);
+    uint256 nHash = govobj.GetHash();
+    std::vector<vote_time_pair_t> vecVotePairs;
+    cmmapOrphanVotes.GetAll(nHash, vecVotePairs);
+
+    ScopedLockBool guard(cs, fRateChecksEnabled, false);
+
+    int64_t nNow = GetAdjustedTime();
+    for (auto& pairVote : vecVotePairs) {
+        bool fRemove = false;
+        CGovernanceVote& vote = pairVote.first;
+        CGovernanceException exception;
+        if (pairVote.second < nNow) {
+            fRemove = true;
+        } else if (govobj.ProcessVote(nullptr, vote, exception, connman)) {
+            vote.Relay(connman);
+            fRemove = true;
         }
-    }
-    for(auto& vote: votes) {
-        vote.Relay(connman);
+        if (fRemove) {
+            cmmapOrphanVotes.Erase(nHash, pairVote);
+        }
     }
 }
 
@@ -282,51 +276,49 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     // UPDATE CACHED VARIABLES FOR THIS OBJECT AND ADD IT TO OUR MANANGED DATA
 
     govobj.UpdateSentinelVariables(); //this sets local vars in object
-    {
-        LOCK(cs);
-        std::string strError = "";
 
-        // MAKE SURE THIS OBJECT IS OK
+    LOCK(cs);
+    std::string strError = "";
 
-        if (!govobj.IsValidLocally(strError, true)) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (nCachedBlockHeight %d) \n", strError, nCachedBlockHeight);
-            return;
-        }
+    // MAKE SURE THIS OBJECT IS OK
 
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
-
-        // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
-        // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
-        auto objpair = mapObjects.emplace(nHash, govobj);
-
-        if (!objpair.second) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- already have governance object %s\n", nHash.ToString());
-            return;
-        }
-
-        // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANAGERS?
-
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
-                    govobj.GetDataAsPlainString(), govobj.GetObjectType());
-
-        if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
-            if (!triggerman.AddNewTrigger(nHash)) {
-                LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
-                objpair.first->second.PrepareDeletion(GetAdjustedTime());
-                return;
-            }
-        }
-
-        LogPrintf("CGovernanceManager::AddGovernanceObject -- %s new, received from peer %s\n", strHash, pfrom ? pfrom->addr.ToString() : "nullptr");
+    if (!govobj.IsValidLocally(strError, true)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (nCachedBlockHeight %d) \n", strError, nCachedBlockHeight);
+        return;
     }
+
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
+
+    // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
+    // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
+    auto objpair = mapObjects.emplace(nHash, govobj);
+
+    if (!objpair.second) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- already have governance object %s\n", nHash.ToString());
+        return;
+    }
+
+    // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANAGERS?
+
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
+                govobj.GetDataAsPlainString(), govobj.GetObjectType());
+
+    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+        if (!triggerman.AddNewTrigger(nHash)) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
+            objpair.first->second.PrepareDeletion(GetAdjustedTime());
+            return;
+        }
+    }
+
+    LogPrintf("CGovernanceManager::AddGovernanceObject -- %s new, received from peer %s\n", strHash, pfrom ? pfrom->addr.ToString() : "nullptr");
     govobj.Relay(connman);
-    {
-        LOCK(cs);
-        // Update the rate buffer
-        MasternodeRateUpdate(govobj);
 
-        masternodeSync.BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
-    }
+    // Update the rate buffer
+    MasternodeRateUpdate(govobj);
+
+    masternodeSync.BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
+
     // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
 
     CGovernanceException exception;
@@ -834,71 +826,65 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
 void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
 {
     if (!masternodeSync.IsSynced()) return;
-    std::vector<CGovernanceObject> copyVec;
-    {
-        LOCK(cs);
 
-        // Check postponed proposals
-        for (object_m_it it = mapPostponedObjects.begin(); it != mapPostponedObjects.end();) {
-            const uint256& nHash = it->first;
-            CGovernanceObject& govobj = it->second;
+    LOCK(cs);
 
-            assert(govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER);
+    // Check postponed proposals
+    for (object_m_it it = mapPostponedObjects.begin(); it != mapPostponedObjects.end();) {
+        const uint256& nHash = it->first;
+        CGovernanceObject& govobj = it->second;
 
-            std::string strError;
-            bool fMissingConfirmations;
-            if (govobj.IsCollateralValid(strError, fMissingConfirmations)) {
-                if (govobj.IsValidLocally(strError, false)) {
-                    AddGovernanceObject(govobj, connman);
-                } else {
-                    LogPrint(BCLog::GOBJECT, "CGovernanceManager::CheckPostponedObjects -- %s invalid\n", nHash.ToString());
-                }
+        assert(govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER);
 
-            } else if (fMissingConfirmations) {
-                // wait for more confirmations
-                ++it;
-                continue;
-            }
-
-            // remove processed or invalid object from the queue
-            mapPostponedObjects.erase(it++);
-        }
-
-
-        // Perform additional relays for triggers
-        int64_t nNow = GetAdjustedTime();
-        int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
-
-        for (hash_s_it it = setAdditionalRelayObjects.begin(); it != setAdditionalRelayObjects.end();) {
-            object_m_it itObject = mapObjects.find(*it);
-            if (itObject != mapObjects.end()) {
-                CGovernanceObject& govobj = itObject->second;
-
-                int64_t nTimestamp = govobj.GetCreationTime();
-
-                bool fValid = (nTimestamp <= nNow + MAX_TIME_FUTURE_DEVIATION) && (nTimestamp >= nNow - 2 * nSuperblockCycleSeconds);
-                bool fReady = (nTimestamp <= nNow + MAX_TIME_FUTURE_DEVIATION - RELIABLE_PROPAGATION_TIME);
-
-                if (fValid) {
-                    if (fReady) {
-                        copyVec.emplace_back(govobj);
-                    } else {
-                        it++;
-                        continue;
-                    }
-                }
-
+        std::string strError;
+        bool fMissingConfirmations;
+        if (govobj.IsCollateralValid(strError, fMissingConfirmations)) {
+            if (govobj.IsValidLocally(strError, false)) {
+                AddGovernanceObject(govobj, connman);
             } else {
-                LogPrintf("CGovernanceManager::CheckPostponedObjects -- additional relay of unknown object: %s\n", it->ToString());
+                LogPrint(BCLog::GOBJECT, "CGovernanceManager::CheckPostponedObjects -- %s invalid\n", nHash.ToString());
             }
 
-            setAdditionalRelayObjects.erase(it++);
+        } else if (fMissingConfirmations) {
+            // wait for more confirmations
+            ++it;
+            continue;
         }
+
+        // remove processed or invalid object from the queue
+        mapPostponedObjects.erase(it++);
     }
-    for(auto& govobj: copyVec) {
-        LogPrintf("CGovernanceManager::CheckPostponedObjects -- additional relay: hash = %s\n", govobj.GetHash().ToString());
-        copyVec.emplace_back(govobj);
-        govobj.Relay(connman);
+
+
+    // Perform additional relays for triggers
+    int64_t nNow = GetAdjustedTime();
+    int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
+
+    for (hash_s_it it = setAdditionalRelayObjects.begin(); it != setAdditionalRelayObjects.end();) {
+        object_m_it itObject = mapObjects.find(*it);
+        if (itObject != mapObjects.end()) {
+            CGovernanceObject& govobj = itObject->second;
+
+            int64_t nTimestamp = govobj.GetCreationTime();
+
+            bool fValid = (nTimestamp <= nNow + MAX_TIME_FUTURE_DEVIATION) && (nTimestamp >= nNow - 2 * nSuperblockCycleSeconds);
+            bool fReady = (nTimestamp <= nNow + MAX_TIME_FUTURE_DEVIATION - RELIABLE_PROPAGATION_TIME);
+
+            if (fValid) {
+                if (fReady) {
+                    LogPrintf("CGovernanceManager::CheckPostponedObjects -- additional relay: hash = %s\n", govobj.GetHash().ToString());
+                    govobj.Relay(connman);
+                } else {
+                    it++;
+                    continue;
+                }
+            }
+
+        } else {
+            LogPrintf("CGovernanceManager::CheckPostponedObjects -- additional relay of unknown object: %s\n", it->ToString());
+        }
+
+        setAdditionalRelayObjects.erase(it++);
     }
 }
 
