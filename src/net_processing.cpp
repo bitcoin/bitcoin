@@ -219,7 +219,16 @@ struct Peer {
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
-    explicit Peer(NodeId id) : m_id(id) {}
+    /**
+     * Salt used to compute short IDs during transaction reconciliation.
+     * Salt is generated randomly per-connection to prevent linking of
+     * connections belonging to the same physical node.
+     * Also, salts should be different per-connection to prevent halting
+     * of relay of particular transactions due to collisions in short IDs.
+     */
+    const uint64_t m_local_recon_salt;
+
+    explicit Peer(NodeId id) : m_id(id), m_local_recon_salt(GetRand(UINT64_MAX)) {}
 };
 
 using PeerRef = std::shared_ptr<Peer>;
@@ -2546,6 +2555,22 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         if (greatest_common_version >= WTXID_RELAY_VERSION) {
             m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::WTXIDRELAY));
+
+            // Reconciliation is supported only when wtxid relay is supported for only
+            // those connections which (at least might) support transaction relay.
+            if (pfrom.IsFullOutboundConn() || pfrom.IsInboundConn() || pfrom.IsManualConn()) {
+                bool be_recon_requestor, be_recon_responder;
+                // Currently reconciliation requests flow only in one direction inbound->outbound.
+                if (pfrom.IsInboundConn()) {
+                    be_recon_requestor = false;
+                    be_recon_responder = true;
+                } else {
+                    be_recon_requestor = true;
+                    be_recon_responder = false;
+                }
+                uint32_t recon_version = 1;
+                m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDRECON, be_recon_requestor, be_recon_responder, recon_version, peer->m_local_recon_salt));
+            }
         }
 
         // Signal ADDRv2 support (BIP155).
