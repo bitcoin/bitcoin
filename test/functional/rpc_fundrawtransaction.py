@@ -752,7 +752,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                     node.fundrawtransaction, rawtx, {"estimate_mode": mode, "conf_target": n, "add_inputs": True})
 
         self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-4, "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
+        assert_raises_rpc_error(-8, "Invalid fee_rate 0.000 sat/vB (must be greater than 0)",
             node.fundrawtransaction, rawtx, {"fee_rate": 0, "add_inputs": True})
         assert_raises_rpc_error(-8, "Invalid feeRate 0.00000000 BTC/kvB (must be greater than 0)",
             node.fundrawtransaction, rawtx, {"feeRate": 0, "add_inputs": True})
@@ -766,12 +766,9 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-3, "Invalid amount",
                 node.fundrawtransaction, rawtx, {"fee_rate": "", "add_inputs": True})
 
-        # Test setting explicit fee rate just below the minimum.
-        self.log.info("- raises RPC error 'fee rate too low' if fee_rate of 0.99999999 sat/vB is passed")
-        msg = "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
-        assert_raises_rpc_error(-4, msg, node.fundrawtransaction, rawtx, {"fee_rate": 0.99999999, "add_inputs": True})
-        # This feeRate test only passes if `coinControl.fOverrideFeeRate = true` in wallet/rpcwallet.cpp::FundTransaction is removed.
-        # assert_raises_rpc_error(-4, msg, node.fundrawtransaction, rawtx, {"feeRate": 0.00000999, "add_inputs": True})
+        self.log.info("Test min fee rate checks are bypassed with fundrawtxn, e.g. a fee_rate under 1 sat/vB is allowed")
+        node.fundrawtransaction(rawtx, {"fee_rate": 0.99999999, "add_inputs": True})
+        node.fundrawtransaction(rawtx, {"feeRate": 0.00000999, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
         assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
