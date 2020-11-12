@@ -344,7 +344,7 @@ static void BLSVerify_BatchedParallel(benchmark::Bench& bench)
     }
 }
 
-BENCHMARK(BLSPubKeyAggregate_Normal)
+/*BENCHMARK(BLSPubKeyAggregate_Normal)
 BENCHMARK(BLSSecKeyAggregate_Normal)
 BENCHMARK(BLSSign_Normal)
 BENCHMARK(BLSVerify_Normal)
@@ -355,4 +355,4 @@ BENCHMARK(BLSVerify_LargeAggregatedBlock1000)
 BENCHMARK(BLSVerify_LargeAggregatedBlock10000)
 BENCHMARK(BLSVerify_LargeAggregatedBlock1000PreVerified)
 BENCHMARK(BLSVerify_Batched)
-BENCHMARK(BLSVerify_BatchedParallel)
+BENCHMARK(BLSVerify_BatchedParallel)*/
