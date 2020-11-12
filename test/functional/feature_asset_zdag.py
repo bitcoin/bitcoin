@@ -135,6 +135,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.sync_blocks()
         # create separate output for dbl spend
         self.nodes[0].assetsend(self.asset, useraddress1, 0.5)
+        time.sleep(0.25)
         # try to do multiple asset sends in one block
         assert_raises_rpc_error(-26, 'bad-txns-asset-inputs-missingorspent', self.nodes[0].assetsend, self.asset, useraddress1, 2)
         self.nodes[0].generate(1)
