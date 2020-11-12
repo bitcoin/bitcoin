@@ -11,7 +11,8 @@
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
-
+// SYSCOIN
+#include <curl/curl.h>
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
@@ -346,6 +347,8 @@ bool ECC_InitSanityCheck() {
 }
 
 void ECC_Start() {
+    // SYSCOIN
+    curl_global_init(CURL_GLOBAL_ALL);
     assert(secp256k1_context_sign == nullptr);
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
@@ -363,6 +366,8 @@ void ECC_Start() {
 }
 
 void ECC_Stop() {
+    // SYSCOIN
+    curl_global_cleanup();
     secp256k1_context *ctx = secp256k1_context_sign;
     secp256k1_context_sign = nullptr;
 

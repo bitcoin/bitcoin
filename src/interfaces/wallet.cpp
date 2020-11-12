@@ -33,7 +33,6 @@
 
 // SYSCOIN
 #include <node/context.h>
-#include <curl/curl.h>
 namespace interfaces {
 namespace {
 
@@ -508,11 +507,8 @@ public:
     {
         m_context.chain = &chain;
         m_context.args = &args;
-        // SYSCOIN
-        curl_global_init(CURL_GLOBAL_ALL);
     }
-    // SYSCOIN
-    ~WalletClientImpl() override { curl_global_cleanup(); UnloadWallets(); }
+    ~WalletClientImpl() override { UnloadWallets(); }
 
     //! ChainClient methods
     void registerRpcs() override
