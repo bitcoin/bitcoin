@@ -793,9 +793,9 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBCHIABLS) \
   $(LIBSECP256K1) \
-  $(LIBETHEREUM)
+  $(LIBETHEREUM) \
+  $(LIBCHIABLS)
 
 syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
@@ -850,9 +850,9 @@ syscoin_tx_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSYSCOIN_BLS) \
-  $(LIBCHIABLS) \
   $(LIBSECP256K1) \
-  $(LIBETHEREUM)
+  $(LIBETHEREUM) \
+  $(LIBCHIABLS)
 
 syscoin_tx_LDADD += $(BOOST_LIBS)
   
