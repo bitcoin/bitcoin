@@ -682,11 +682,15 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 if (fReplacementOptOut) {
                     // if not RBF then allow first double spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
-                    if(!args.m_test_accept && IsZTx){
+                    if(IsZTx){
                         // allow the first time this outpoint was found in conflict
                         auto it = mapAssetAllocationConflicts.emplace(txin.prevout, std::make_pair(ptx, MakeTransactionRef(*ptxConflicting)));
                         // if was inserted (not found)
                         if(it.second) {
+                            // if just testing, and this is the first conflict for this prevout then let it go through but just don't add it to the global mapAssetAllocationConflicts
+                            if(args.m_test_accept) {
+                                mapAssetAllocationConflicts.erase(txin.prevout);
+                            }
                             setConflictsAsset.insert(ptxConflicting->GetHash());
                             break;
                         }
