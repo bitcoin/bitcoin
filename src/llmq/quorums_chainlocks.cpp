@@ -150,9 +150,11 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 
         bestChainLockHash = hash;
         bestChainLock = clsig;
-
-        CInv inv(MSG_CLSIG, hash);
-        connman.RelayOtherInv(inv);
+    }
+    CInv inv(MSG_CLSIG, hash);
+    connman.RelayOtherInv(inv);
+    {
+        LOCK2(cs_main, cs);
         const CBlockIndex* pindex = LookupBlockIndex(clsig.blockHash);
         if (pindex == nullptr) {
             // we don't know the block/header for this CLSIG yet, so bail out for now
@@ -250,16 +252,18 @@ void CChainLocksHandler::TrySignChainTip()
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
-
-    const CBlockIndex* pindex;
+    uint256 msgHash;
+    uint32_t nHeight;
     {
         LOCK(cs_main);
-        pindex = ::ChainActive().Tip();
+        const CBlockIndex* pindex = ::ChainActive().Tip();
+        if (!pindex->pprev) {
+            return;
+        }
+        msgHash = pindex->GetBlockHash();
+        nHeight = pindex->nHeight;
     }
 
-    if (!pindex->pprev) {
-        return;
-    }
 
     // DIP8 defines a process called "Signing attempts" which should run before the CLSIG is finalized
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
@@ -273,36 +277,35 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
 
-        if (pindex->nHeight == lastSignedHeight) {
+        if (nHeight == lastSignedHeight) {
             // already signed this one
             return;
         }
 
-        if (bestChainLock.nHeight >= pindex->nHeight) {
+        if (bestChainLock.nHeight >= nHeight) {
             // already got the same CLSIG or a better one
             return;
         }
 
-        if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        if (InternalHasConflictingChainLock(nHeight, msgHash)) {
             // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
             // the correct chain.
             return;
         }
     }
 
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
+    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, msgHash.ToString(), pindex->nHeight);
 
 
-    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
-    uint256 msgHash = pindex->GetBlockHash();
+    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, nHeight));
 
     {
         LOCK(cs);
-        if (bestChainLock.nHeight >= pindex->nHeight) {
+        if (bestChainLock.nHeight >= nHeight) {
             // might have happened while we didn't hold cs
             return;
         }
-        lastSignedHeight = pindex->nHeight;
+        lastSignedHeight = nHeight;
         lastSignedRequestId = requestId;
         lastSignedMsgHash = msgHash;
     }
