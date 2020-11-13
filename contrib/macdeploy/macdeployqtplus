@@ -53,28 +53,18 @@ class FrameworkInfo(object):
             return False
     
     def __str__(self):
-        return """ Framework name: {}
- Framework directory: {}
- Framework path: {}
- Binary name: {}
- Binary directory: {}
- Binary path: {}
- Version: {}
- Install name: {}
- Deployed install name: {}
- Source file Path: {}
- Deployed Directory (relative to bundle): {}
-""".format(self.frameworkName,
-       self.frameworkDirectory,
-       self.frameworkPath,
-       self.binaryName,
-       self.binaryDirectory,
-       self.binaryPath,
-       self.version,
-       self.installName,
-       self.deployedInstallName,
-       self.sourceFilePath,
-       self.destinationDirectory)
+        return f""" Framework name: {frameworkName}
+ Framework directory: {self.frameworkDirectory}
+ Framework path: {self.frameworkPath}
+ Binary name: {self.binaryName}
+ Binary directory: {self.binaryDirectory}
+ Binary path: {self.binaryPath}
+ Version: {self.version}
+ Install name: {self.installName}
+ Deployed install name: {self.deployedInstallName}
+ Source file Path: {self.sourceFilePath}
+ Deployed Directory (relative to bundle): {self.destinationDirectory}
+"""
     
     def isDylib(self):
         return self.frameworkName.endswith(".dylib")
@@ -101,7 +91,7 @@ class FrameworkInfo(object):
         
         m = cls.reOLine.match(line)
         if m is None:
-            raise RuntimeError("otool line could not be parsed: " + line)
+            raise RuntimeError(f"otool line could not be parsed: {line}")
         
         path = m.group(1)
         
@@ -121,7 +111,7 @@ class FrameworkInfo(object):
             info.version = "-"
             
             info.installName = path
-            info.deployedInstallName = "@executable_path/../Frameworks/" + info.binaryName
+            info.deployedInstallName = f"@executable_path/../Frameworks/{info.binaryName}"
             info.sourceFilePath = path
             info.destinationDirectory = cls.bundleFrameworkDirectory
         else:
@@ -133,7 +123,7 @@ class FrameworkInfo(object):
                     break
                 i += 1
             if i == len(parts):
-                raise RuntimeError("Could not find .framework or .dylib in otool line: " + line)
+                raise RuntimeError(f"Could not find .framework or .dylib in otool line: {line}")
             
             info.frameworkName = parts[i]
             info.frameworkDirectory = "/".join(parts[:i])
@@ -144,7 +134,7 @@ class FrameworkInfo(object):
             info.binaryPath = os.path.join(info.binaryDirectory, info.binaryName)
             info.version = parts[i+2]
             
-            info.deployedInstallName = "@executable_path/../Frameworks/" + os.path.join(info.frameworkName, info.binaryPath)
+            info.deployedInstallName = f"@executable_path/../Frameworks/{os.path.join(info.frameworkName, info.binaryPath)}"
             info.destinationDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, info.binaryDirectory)
             
             info.sourceResourcesDirectory = os.path.join(info.frameworkPath, "Resources")
@@ -158,10 +148,10 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path: str):
         self.path = path
-        appName = "Bitcoin-Qt"
-        self.binaryPath = os.path.join(path, "Contents", "MacOS", appName)
+        # for backwards compatibility reasons, this must remain as Bitcoin-Qt
+        self.binaryPath = os.path.join(path, "Contents", "MacOS", "Bitcoin-Qt")
         if not os.path.exists(self.binaryPath):
-            raise RuntimeError("Could not find bundle binary for " + path)
+            raise RuntimeError(f"Could not find bundle binary for {path}")
         self.resourcesPath = os.path.join(path, "Contents", "Resources")
         self.pluginPath = os.path.join(path, "Contents", "PlugIns")
 
@@ -185,26 +175,24 @@ class DeploymentInfo(object):
                 self.pluginPath = pluginPath
     
     def usesFramework(self, name: str) -> bool:
-        nameDot = "{}.".format(name)
-        libNameDot = "lib{}.".format(name)
         for framework in self.deployedFrameworks:
             if framework.endswith(".framework"):
-                if framework.startswith(nameDot):
+                if framework.startswith(f"{name}."):
                     return True
             elif framework.endswith(".dylib"):
-                if framework.startswith(libNameDot):
+                if framework.startswith(f"lib{name}."):
                     return True
         return False
 
 def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     if verbose:
-        print("Inspecting with otool: " + binaryPath)
+        print(f"Inspecting with otool: {binaryPath}")
     otoolbin=os.getenv("OTOOL", "otool")
     otool = run([otoolbin, "-L", binaryPath], stdout=PIPE, stderr=PIPE, universal_newlines=True)
     if otool.returncode != 0:
         sys.stderr.write(otool.stderr)
         sys.stderr.flush()
-        raise RuntimeError("otool failed with return code {}".format(otool.returncode))
+        raise RuntimeError(f"otool failed with return code {otool.returncode}")
 
     otoolLines = otool.stdout.split("\n")
     otoolLines.pop(0) # First line is the inspected binary
@@ -252,14 +240,14 @@ def runStrip(binaryPath: str, verbose: int):
 def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional[str]:
     if framework.sourceFilePath.startswith("Qt"):
         #standard place for Nokia Qt installer's frameworks
-        fromPath = "/Library/Frameworks/" + framework.sourceFilePath
+        fromPath = f"/Library/Frameworks/{framework.sourceFilePath}"
     else:
         fromPath = framework.sourceFilePath
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
     
     if not os.path.exists(fromPath):
-        raise RuntimeError("No file at " + fromPath)
+        raise RuntimeError(f"No file at {fromPath}")
     
     if os.path.exists(toPath):
         return None # Already there
@@ -357,7 +345,7 @@ def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPat
 def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip: bool, verbose: int) -> DeploymentInfo:
     frameworks = getFrameworks(applicationBundle.binaryPath, verbose)
     if len(frameworks) == 0:
-        print("Warning: Could not find any external frameworks to deploy in {}.".format(applicationBundle.path))
+        print(f"Warning: Could not find any external frameworks to deploy in {applicationBundle.path}.")
         return DeploymentInfo()
     else:
         return deployFrameworks(frameworks, applicationBundle.path, applicationBundle.binaryPath, strip, verbose)
@@ -526,7 +514,7 @@ app_bundle = config.app_bundle[0]
 appname = config.appname[0]
 
 if not os.path.exists(app_bundle):
-    sys.stderr.write("Error: Could not find app bundle \"{}\"\n".format(app_bundle))
+    sys.stderr.write(f"Error: Could not find app bundle \"{app_bundle}\"\n")
     sys.exit(1)
 
 # ------------------------------------------------
@@ -564,7 +552,7 @@ try:
             sys.stderr.write("Warning: Could not detect Qt's path, skipping plugin deployment!\n")
             config.plugins = False
 except RuntimeError as e:
-    sys.stderr.write("Error: {}\n".format(str(e)))
+    sys.stderr.write(f"Error: {str(e)}\n")
     sys.exit(1)
 
 # ------------------------------------------------
@@ -575,14 +563,14 @@ if config.plugins:
     try:
         deployPlugins(applicationBundle, deploymentInfo, config.strip, verbose)
     except RuntimeError as e:
-        sys.stderr.write("Error: {}\n".format(str(e)))
+        sys.stderr.write(f"Error: {str(e)}\n")
         sys.exit(1)
 
 # ------------------------------------------------
 
 if config.translations_dir:
     if not Path(config.translations_dir[0]).exists():
-        sys.stderr.write("Error: Could not find translation dir \"{}\"\n".format(config.translations_dir[0]))
+        sys.stderr.write(f"Error: Could not find translation dir \"{config.translations_dir[0]}\"\n")
         sys.exit(1)
 
 print("+ Adding Qt translations +")
@@ -671,7 +659,7 @@ if config.dmg is not None:
     if verbose:
         print("Creating temp image for modification...")
 
-    tempname = appname + ".temp.dmg"
+    tempname: str = appname + ".temp.dmg"
 
     run(["hdiutil", "create", tempname, "-srcfolder", "dist", "-format", "UDRW", "-size", str(size), "-volname", appname], check=True, universal_newlines=True)
 
@@ -694,7 +682,7 @@ if config.dmg is not None:
 
     print("+ Finalizing .dmg disk image +")
 
-    run(["hdiutil", "detach", "/Volumes/{}".format(appname)], universal_newlines=True)
+    run(["hdiutil", "detach", f"/Volumes/{appname}"], universal_newlines=True)
 
     run(["hdiutil", "convert", tempname, "-format", "UDZO", "-o", appname, "-imagekey", "zlib-level=9"], check=True, universal_newlines=True)
 
