@@ -15,31 +15,44 @@ uint256 CPureBlockHeader::GetHash() const
 
 void CPureBlockHeader::SetBaseVersion(int32_t nBaseVersion, const int32_t &nChainId)
 {
-    const int32_t topMask = nBaseVersion & VERSIONAUXPOW_TOP_MASK;
-    if(topMask > 0) {
-        nBaseVersion &= ~topMask;
-    }
-    assert(nBaseVersion >= 0 && nBaseVersion < VERSION_CHAIN_START);
+    const int32_t withoutTopMask = nBaseVersion & ~VERSIONAUXPOW_TOP_MASK;
+    assert(withoutTopMask >= 0 && withoutTopMask < VERSION_CHAIN_START);
     assert(!IsAuxpow());
-    nVersion = nBaseVersion | (nChainId * VERSION_CHAIN_START);
-    if(topMask > 0) {
-        nVersion |= topMask;
-    }
+    nVersion = nBaseVersion | (nChainId << VERSION_START_BIT);
 }
 
-int32_t CPureBlockHeader::GetBaseVersion(int32_t ver)
+void CPureBlockHeader::SetOldBaseVersion(int32_t nBaseVersion, const int32_t &nChainId)
 {
-    const int32_t& nVersionWithoutTopBits = ver & ~VERSIONAUXPOW_TOP_MASK;
-    if((nVersionWithoutTopBits / VERSION_CHAIN_START) > 0) {
-        // TODO: remove magic and replace with params
-        ver -= (8 * VERSION_CHAIN_START);
-        ver &= ~VERSION_AUXPOW;
-    }
-    return ver;
+    assert(nBaseVersion >= 1 && nBaseVersion < VERSION_CHAIN_START);
+    assert(!IsAuxpow());
+    nVersion = nBaseVersion | (nChainId << VERSION_START_BIT);
 }
 
-int32_t CPureBlockHeader::GetChainId() const
+int32_t CPureBlockHeader::GetBaseVersion(const int32_t &ver) 
 {
-    const int32_t& nVersionWithoutTopBits = nVersion & ~VERSIONAUXPOW_TOP_MASK;
-    return nVersionWithoutTopBits / VERSION_CHAIN_START;
+    // remove AuxPow flag and Chain ID
+    return (ver & ~VERSION_AUXPOW) & ~VERSION_AUXPOW_CHAINID_SHIFTED;
+}
+
+int32_t CPureBlockHeader::GetOldBaseVersion(const int32_t &ver)
+{
+    
+    return (ver & ~VERSION_AUXPOW) & ~VERSION_OLD_AUXPOW_CHAINID_SHIFTED;
+}
+
+int32_t CPureBlockHeader::GetChainId(const int32_t &ver)
+{
+    // if auxpow is set then mask with Chain ID and shift back VERSION_START_BIT to get the real value
+    if((ver & VERSION_AUXPOW) > 0)
+        return (ver & MASK_AUXPOW_CHAINID_SHIFTED) >> VERSION_START_BIT;
+    else
+        return 0;
+}
+
+int32_t CPureBlockHeader::GetOldChainId(const int32_t &ver) 
+{
+    if((ver & VERSION_AUXPOW) > 0)
+        return (ver & MASK_OLD_AUXPOW_CHAINID_SHIFTED) >> VERSION_START_BIT;
+    else
+        return 0;
 }

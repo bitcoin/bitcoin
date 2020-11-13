@@ -1245,12 +1245,24 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
        the chain ID is correct.  Legacy blocks are not allowed since
        the merge-mining start, which is checked in AcceptBlockHeader
        where the height is known.  */
-    if (!block.IsLegacy() && params.fStrictChainId
-        && block.GetChainId() != params.nAuxpowChainId)
-        return error("%s : block does not have our chain ID"
-                     " (got %d, expected %d, full nVersion %d)",
-                     __func__, block.GetChainId(),
-                     params.nAuxpowChainId, block.nVersion);
+    const int32_t &nChainID = block.GetChainId();
+    if (!block.IsLegacy() && params.fStrictChainId) {
+        if(nChainID > 0) {
+            if(nChainID != params.nAuxpowChainId)
+                return error("%s : block does not have our chain ID"
+                        " (got %d, expected %d, full nVersion %d)",
+                        __func__, nChainID,
+                        params.nAuxpowChainId, block.nVersion);
+        } else if(block.auxpow) {
+            const int32_t &nOldChainID = block.GetOldChainId();
+            if(nOldChainID != params.nAuxpowOldChainId)
+                return error("%s : block does not have our old chain ID"
+                        " (got %d, expected %d, full nVersion %d)",
+                        __func__, nOldChainID,
+                        params.nAuxpowOldChainId, block.nVersion);
+        }
+    }
+        
 
     /* If there is no auxpow, just check the block hash.  */
     if (!block.auxpow)
@@ -2090,9 +2102,10 @@ public:
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
     {
+        // SYSCOIN
         return pindex->nHeight >= params.MinBIP9WarningHeight &&
                ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
-               ((pindex->nVersion >> bit) & 1) != 0 &&
+               ((pindex->GetBaseVersion() >> bit) & 1) != 0 &&
                ((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
     }
 };
@@ -3807,14 +3820,25 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
     // SYSCOIN
-    const auto& baseVer = block.GetBaseVersion();
-    if((baseVer < 2 && nHeight >= consensusParams.BIP34Height) ||
-       (baseVer < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (baseVer < 4 && nHeight >= consensusParams.BIP65Height) ||
-       !CPureBlockHeader::IsValidBaseVersion(baseVer))
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", baseVer),
-                                 strprintf("rejected nVersion=0x%08x block", block.nVersion));
-
+    if(nHeight >= consensusParams.nUTXOAssetsBlock) {
+        // if valid Chain ID (> 0) then it should always be nAuxpowChainId after nUTXOAssetsBlock block
+        const int32_t& nChainID = block.GetChainId();
+        const auto& baseVer = block.GetBaseVersion();
+        if((baseVer < 2 && nHeight >= consensusParams.BIP34Height) ||
+        (baseVer < 3 && nHeight >= consensusParams.BIP66Height) ||
+        (baseVer < 4 && nHeight >= consensusParams.BIP65Height) ||
+        !CPureBlockHeader::IsValidBaseVersion(baseVer) ||
+        (nChainID > 0 && nChainID != consensusParams.nAuxpowChainId))
+                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", baseVer),
+                                    strprintf("rejected nVersion=0x%08x block", block.nVersion));
+    } else {
+        const auto& baseVer = block.GetOldBaseVersion();
+        if((baseVer < 2 && nHeight >= consensusParams.BIP34Height) ||
+        (baseVer < 3 && nHeight >= consensusParams.BIP66Height) ||
+        (baseVer < 4 && nHeight >= consensusParams.BIP65Height))
+                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version-old(0x%08x)", baseVer),
+                                    strprintf("rejected nVersion=0x%08x block", block.nVersion));
+    }
     return true;
 }
 

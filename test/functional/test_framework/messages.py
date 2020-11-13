@@ -80,7 +80,9 @@ MSG_QUORUM_RECOVERED_SIG = 19
 MSG_CLSIG = 20
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
-VERSION_CHAIN_START = (1 << 16)
+VERSION_START_BIT = 16
+VERSION_CHAIN_START = (1 << VERSION_START_BIT)
+VERSIONAUXPOW_TOP_MASK = (1 << 28) + (1 << 29) + (1 << 30)
 CHAIN_ID = 8
 
 FILTER_TYPE_BASIC = 0
@@ -742,14 +744,9 @@ class CBlockHeader:
         self.hash = None
 
     def set_base_version(self, n):
-        VERSIONAUXPOW_TOP_MASK = (1 << 28) + (1 << 29) + (1 << 30)
-        topBits = (n & VERSIONAUXPOW_TOP_MASK)
-        if topBits > 0:
-            n = n & ~VERSIONAUXPOW_TOP_MASK
-        assert n < VERSION_CHAIN_START
-        self.nVersion = n + CHAIN_ID * VERSION_CHAIN_START
-        if topBits > 0:
-            n = n | topBits
+        withoutTopMask = n & ~VERSIONAUXPOW_TOP_MASK
+        assert withoutTopMask >= 0 and withoutTopMask < VERSION_CHAIN_START
+        self.nVersion = n | (CHAIN_ID << VERSION_START_BIT)
 
     def mark_auxpow(self):
         self.nVersion |= VERSION_AUXPOW

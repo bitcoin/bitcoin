@@ -22,7 +22,7 @@ from test_framework.messages import (
     BLOCK_HEADER_SIZE,
     # SYSCOIN
     CHAIN_ID,
-    VERSION_CHAIN_START,
+    VERSION_START_BIT,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import SyscoinTestFramework
@@ -71,7 +71,7 @@ class MiningTest(SyscoinTestFramework):
         self.connect_nodes(0, 1)
         # SYSCOIN
         n = VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT)
-        assert_equal(n + (CHAIN_ID * VERSION_CHAIN_START), self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
+        assert_equal(n | (CHAIN_ID << VERSION_START_BIT), self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0)
         self.connect_nodes(0, 1)
 
