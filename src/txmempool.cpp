@@ -14,6 +14,7 @@
 #include <policy/settings.h>
 #include <reverse_iterator.h>
 #include <util/moneystr.h>
+#include <util/overflow.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
@@ -833,11 +834,17 @@ TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 
 TxMempoolInfo CTxMemPool::info(const uint256& txid) const { return info(GenTxid{false, txid}); }
 
-void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
+bool CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
 {
+    if (nFeeDelta == std::numeric_limits<CAmount>::min()) {
+        return false;
+    }
     {
         LOCK(cs);
         CAmount &delta = mapDeltas[hash];
+        if (AdditionOverflow(delta, nFeeDelta)) {
+            return false;
+        }
         delta += nFeeDelta;
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
@@ -861,6 +868,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
         }
     }
     LogPrintf("PrioritiseTransaction: %s feerate += %s\n", hash.ToString(), FormatMoney(nFeeDelta));
+    return true;
 }
 
 void CTxMemPool::ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const

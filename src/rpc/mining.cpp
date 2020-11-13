@@ -467,7 +467,9 @@ static RPCHelpMan prioritisetransaction()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
     }
 
-    EnsureMemPool(request.context).PrioritiseTransaction(hash, nAmount);
+    if (!EnsureMemPool(request.context).PrioritiseTransaction(hash, nAmount)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "PrioritiseTransaction(...) failed. Invalid fee_delta argument?");
+    }
     return true;
 },
     };

@@ -5027,7 +5027,9 @@ bool LoadMempool(CTxMemPool& pool)
 
             CAmount amountdelta = nFeeDelta;
             if (amountdelta) {
-                pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
+                if (!pool.PrioritiseTransaction(tx->GetHash(), amountdelta)) {
+                    LogPrintf("PrioritiseTransaction(...) failed. Invalid fee delta?\n");
+                }
             }
             TxValidationState state;
             if (nTime > nNow - nExpiryTimeout) {
@@ -5058,7 +5060,9 @@ bool LoadMempool(CTxMemPool& pool)
         file >> mapDeltas;
 
         for (const auto& i : mapDeltas) {
-            pool.PrioritiseTransaction(i.first, i.second);
+            if (!pool.PrioritiseTransaction(i.first, i.second)) {
+                LogPrintf("PrioritiseTransaction(...) failed. Invalid fee delta?\n");
+            }
         }
 
         std::set<uint256> unbroadcast_txids;
