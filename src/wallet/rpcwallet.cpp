@@ -38,6 +38,7 @@
 #include <wallet/walletutil.h>
 
 #include <stdint.h>
+#include <regex>
 
 #include <univalue.h>
 
@@ -2720,8 +2721,16 @@ static RPCHelpMan createwallet()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
+    std::__cxx11::regex invalid_chars("(/|\\.)(.*)");
+
+    if (regex_match(request.params[0].get_str(), invalid_chars)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid characters in wallet name");
+    }
+
+
     if (!request.params[1].isNull() && request.params[1].get_bool()) {
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
