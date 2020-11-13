@@ -151,6 +151,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         bestChainLockHash = hash;
         bestChainLock = clsig;
     }
+    // don't hold lock while relaying which locks nodes/mempool
     CInv inv(MSG_CLSIG, hash);
     connman.RelayOtherInv(inv);
     {
