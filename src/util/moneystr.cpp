@@ -9,6 +9,9 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
+// FormatMoney(CAmount n) is not defined for n == std::numeric_limits<CAmount>::min().
+// The negation of std::numeric_limits<CAmount>::min() (-9223372036854775808) cannot be
+// represented in the type CAmount (int64_t).
 std::string FormatMoney(const CAmount& n)
 {
     // Note: not using straight sprintf here because we do NOT want
