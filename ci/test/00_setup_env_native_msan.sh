@@ -19,6 +19,6 @@ export DEP_OPTS="NO_BDB=1 NO_QT=1 CC='clang' CXX='clang++' CFLAGS='${MSAN_FLAGS}
 export GOAL="install"
 export SYSCOIN_CONFIG="--enable-wallet --with-sanitizers=memory --with-asm=no --prefix=${BASE_ROOT_DIR}/depends/x86_64-pc-linux-gnu/ CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' BDB_LIBS='-L${BDB_PREFIX}/lib -ldb_cxx-4.8' BDB_CFLAGS='-I${BDB_PREFIX}/include'"
 export USE_MEMORY_SANITIZER="true"
-export RUN_FUNCTIONAL_TESTS="true"
+export RUN_FUNCTIONAL_TESTS="false"
 export RUN_UNIT_TESTS="false" # SYSCOIN todo fix the gnutls init issue
 export CCACHE_SIZE=250M
