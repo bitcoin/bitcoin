@@ -253,7 +253,7 @@ void CChainLocksHandler::TrySignChainTip()
         return;
     }
     uint256 msgHash;
-    uint32_t nHeight;
+    int32_t nHeight;
     {
         LOCK(cs_main);
         const CBlockIndex* pindex = ::ChainActive().Tip();
