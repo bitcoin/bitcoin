@@ -26,6 +26,7 @@
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/overflow.h>
 #include <util/time.h>
 #include <util/vector.h>
 #include <version.h>
@@ -226,17 +227,6 @@ template <typename T>
     } else {
         return j != 0 && i > std::numeric_limits<T>::max() / j;
     }
-}
-
-template <class T>
-[[nodiscard]] bool AdditionOverflow(const T i, const T j) noexcept
-{
-    static_assert(std::is_integral<T>::value, "Integral required.");
-    if (std::numeric_limits<T>::is_signed) {
-        return (i > 0 && j > std::numeric_limits<T>::max() - i) ||
-               (i < 0 && j < std::numeric_limits<T>::min() - i);
-    }
-    return std::numeric_limits<T>::max() - i < j;
 }
 
 [[nodiscard]] inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
