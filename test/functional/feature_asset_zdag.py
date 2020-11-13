@@ -68,10 +68,10 @@ class AssetZDAGTest(SyscoinTestFramework):
         tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.9, False)['txid']
         time.sleep(0.25)
         # use tx2 to build tx3
-        tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.05)['txid']
+        tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.05, False)['txid']
         time.sleep(0.25)
-        # use tx2 to build tx4
-        tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.025)['txid']
+        # use tx3 to build tx4
+        tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.025, False)['txid']
 
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
