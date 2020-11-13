@@ -1617,7 +1617,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
      * that the server is there and will be ready later).  Warmup mode will
      * be disabled when initialisation is finished.
      */
-    if (args.GetBoolArg("-server", false)) {
+     // SYSCOIN
+    if (args.GetBoolArg("-server", true)) {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
         if (!AppInitServers(context, node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));

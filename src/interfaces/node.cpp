@@ -71,8 +71,8 @@ public:
     void startShutdown() override
     {
         StartShutdown();
-        // Stop RPC for clean shutdown if any of waitfor* commands is executed.
-        if (gArgs.GetBoolArg("-server", false)) {
+        // SYSCOIN Stop RPC for clean shutdown if any of waitfor* commands is executed.
+        if (gArgs.GetBoolArg("-server", true)) {
             InterruptRPC();
             StopRPC();
         }
