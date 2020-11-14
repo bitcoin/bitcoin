@@ -4249,6 +4249,16 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    // Peer requesting extension after initial reconciliation failed on their side.
+    // No privacy leak can happen here because sketch extension is constructed over the snapshot.
+    if (msg_type == NetMsgType::REQSKETCHEXT) {
+        LOCK(peer->m_recon_state_mutex);
+        if (peer->m_recon_state == nullptr) return;
+        if (peer->m_recon_state->GetIncomingPhase() != RECON_INIT_RESPONDED) return;
+        peer->m_recon_state->UpdateIncomingPhase(RECON_EXT_REQUESTED);
+        return;
+    }
+
     // Ignore unknown commands for extensibility
     LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
     return;
