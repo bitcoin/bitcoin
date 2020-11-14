@@ -4194,13 +4194,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
-    // Received a response to the reconciliation request.
+    // Received a response to the reconciliation request (initial request or request for extension if initial failed).
     // May leak tx-related privacy if we announce local transactions right away, if a peer is strategic about sending
     // sketches to us via different connections (requires attacker to occupy multiple outgoing connections).
     if (msg_type == NetMsgType::SKETCH) {
         LOCK(peer->m_recon_state_mutex);
         if (peer->m_recon_state == nullptr) return;
-        if (peer->m_recon_state->GetOutgoingPhase() != RECON_INIT_REQUESTED) return;
+        if (peer->m_recon_state->GetOutgoingPhase() != RECON_INIT_REQUESTED &&
+            peer->m_recon_state->GetOutgoingPhase() != RECON_EXT_REQUESTED) return;
 
         std::vector<uint8_t> skdata;
         vRecv >> skdata;
@@ -4211,19 +4212,38 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // Attempt to decode the received sketch with a local sketch.
+        // Handles both initial reconciliation and extension cases.
+        if (peer->m_recon_state->GetOutgoingPhase() == RECON_EXT_REQUESTED) {
+            // A sketch extension is missing the lower elements (to be a valid extended sketch), which we stored on our side at initial reconciliation step.
+            auto remote_sketch_snapshot = peer->m_recon_state->GetRemoteSketchSnapshot();
+            skdata.insert(skdata.begin(), remote_sketch_snapshot.begin(), remote_sketch_snapshot.end());
+        }
+
         uint16_t remote_sketch_capacity = uint16_t(skdata.size() / BYTES_PER_SKETCH_CAPACITY);
-        Minisketch remote_sketch;
+
+        Minisketch local_sketch, remote_sketch;
         if (remote_sketch_capacity != 0) {
             remote_sketch = Minisketch(RECON_FIELD_SIZE, 0, remote_sketch_capacity).Deserialize(skdata);
         }
-        Minisketch local_sketch = peer->m_recon_state->ComputeSketch(remote_sketch_capacity);
+        if (peer->m_recon_state->GetOutgoingPhase() == RECON_INIT_REQUESTED) {
+            local_sketch = peer->m_recon_state->ComputeSketch(remote_sketch_capacity);
+        } else {
+            local_sketch = peer->m_recon_state->ComputeExtendedSketch();
+        }
 
         if (remote_sketch_capacity == 0 || !remote_sketch || !local_sketch) {
             LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%I failed due to %s \n", pfrom.GetId(),
                 remote_sketch_capacity == 0 ? "empty sketch" : "minisketch API failure");
-            AnnounceTxs(peer->m_recon_state->GetLocalSet(), pfrom);
+            std::vector<uint256> remote_missing;
+            if (peer->m_recon_state->GetOutgoingPhase() == RECON_INIT_REQUESTED) {
+                remote_missing = peer->m_recon_state->GetLocalSet();
+                peer->m_recon_state->FinalizeReconciliation(true, Q_SET_DEFAULT, 0, 0);
+            } else {
+                remote_missing = peer->m_recon_state->GetLocalSet(true);
+                peer->m_recon_state->FinalizeReconciliation(false, Q_SET_DEFAULT, 0, 0);
+            }
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::RECONCILDIFF, false, std::vector<uint256>()));
-            peer->m_recon_state->FinalizeReconciliation(true, Q_SET_DEFAULT, 0, 0);
+            AnnounceTxs(remote_missing, pfrom);
             return;
         }
 
@@ -4232,19 +4252,42 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Attempt to decode the set difference
         std::vector<uint64_t> differences(remote_sketch_capacity);
         if (local_sketch.Merge(remote_sketch).Decode(differences)) {
-            // Initial reconciliation succeeded
-            // Send/request transactions which found to be missing
+            // Reconciliation over the current working sketch succeeded
             std::vector<uint32_t> local_missing;
-            LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%i succeeded without extension\n", pfrom.GetId());
-            std::vector<uint256> remote_missing = peer->m_recon_state->GetRelevantIDsFromShortIDs(differences, local_missing);
-            AnnounceTxs(remote_missing, pfrom);
-            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::RECONCILDIFF, true, local_missing));
-            peer->m_recon_state->FinalizeReconciliation(true, Q_RECOMPUTE, local_missing.size(), remote_missing.size());
+            if (peer->m_recon_state->GetOutgoingPhase() == RECON_INIT_REQUESTED) {
+                // Initial reconciliation succeeded
+                // Send/request transactions which found to be missing
+                LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%i succeeded without extension\n", pfrom.GetId());
+                std::vector<uint256> remote_missing = peer->m_recon_state->GetRelevantIDsFromShortIDs(differences, local_missing);
+                AnnounceTxs(remote_missing, pfrom);
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::RECONCILDIFF, true, local_missing));
+                peer->m_recon_state->FinalizeReconciliation(true, Q_RECOMPUTE, local_missing.size(), remote_missing.size());
+            } else {
+                // Reconciliation with extended sketch succeeded.
+                LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%I succeeded with extension\n", pfrom.GetId());
+                std::vector<uint256> remote_missing = peer->m_recon_state->GetRelevantIDsFromShortIDs(differences, local_missing);
+                AnnounceTxs(remote_missing, pfrom);
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::RECONCILDIFF, true, local_missing));
+                peer->m_recon_state->FinalizeReconciliation(true, Q_RECOMPUTE, local_missing.size(), remote_missing.size());
+            }
         } else {
-            // Initial reconciliation failed.
-            LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%i initially failed, requesting extension sketch\n", pfrom.GetId());
-            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::REQSKETCHEXT));
-            peer->m_recon_state->UpdateOutgoingPhase(RECON_EXT_REQUESTED);
+            // Reconciliation over the current working sketch failed.
+            if (peer->m_recon_state->GetOutgoingPhase() == RECON_INIT_REQUESTED) {
+                // Initial reconciliation failed.
+                // Store the received sketch and the local sketch, request extension.
+                LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%i initially failed, requesting extension sketch\n", pfrom.GetId());
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::REQSKETCHEXT));
+                peer->m_recon_state->UpdateOutgoingPhase(RECON_EXT_REQUESTED, remote_sketch_capacity, skdata);
+            } else {
+                // Reconciliation over extended sketch failed.
+                // Announce all local transactions from the reconciliation set.
+                // All remote transactions will be announced by peer due to the reconciliation failure flag.
+
+                LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%I failed after extension \n", pfrom.GetId());
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::RECONCILDIFF, false, std::vector<uint32_t>()));
+                AnnounceTxs(peer->m_recon_state->GetLocalSet(true), pfrom);
+                peer->m_recon_state->FinalizeReconciliation(false, Q_SET_DEFAULT, 0, 0);
+            }
         }
         return;
     }

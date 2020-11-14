@@ -270,19 +270,29 @@ public:
         }
     }
 
-    void UpdateOutgoingPhase(ReconPhase phase, uint16_t remote_sketch_capacity=0)
+    void UpdateOutgoingPhase(ReconPhase phase, uint16_t remote_sketch_capacity=0,
+        std::vector<uint8_t> remote_sketch=std::vector<uint8_t>())
     {
         m_outgoing_recon = phase;
         if (phase == RECON_EXT_REQUESTED) {
             m_capacity_snapshot = remote_sketch_capacity;
+            m_remote_sketch_snapshot = remote_sketch;
             m_local_set_snapshot = m_local_set;
             m_local_set.clear();
         }
     }
 
-    std::vector<uint256> GetLocalSet()
+    std::vector<uint256> GetLocalSet(bool snapshot=false)
     {
+        if (snapshot) {
+            return std::vector<uint256>(m_local_set_snapshot.begin(), m_local_set_snapshot.end());
+        }
         return std::vector<uint256>(m_local_set.begin(), m_local_set.end());
+    }
+
+    std::vector<uint8_t> GetRemoteSketchSnapshot()
+    {
+        return m_remote_sketch_snapshot;
     }
 
     std::vector<uint256> AddToReconSet(std::vector<uint256> txs_to_reconcile, uint32_t limit)
@@ -347,6 +357,7 @@ public:
             working_set = m_local_set_snapshot;
         } else {
             working_set = m_local_set;
+            m_capacity_snapshot = capacity;
         }
         // Avoid serializing/sending an empty sketch.
         if (working_set.size() == 0 || capacity == 0) return sketch;
@@ -400,7 +411,12 @@ public:
             // reconciliations.
             if (action == Q_RECOMPUTE) {
                 assert(m_outgoing_recon != RECON_NONE);
-                uint8_t local_set_size = m_local_set.size();
+                uint8_t local_set_size;
+                if (m_outgoing_recon == RECON_EXT_REQUESTED) {
+                    local_set_size = m_local_set_snapshot.size();
+                } else {
+                    local_set_size = m_local_set.size();
+                }
                 uint8_t remote_set_size = local_set_size + actual_local_missing - actual_remote_missing;
                 uint8_t set_size_diff = std::abs(local_set_size - remote_set_size);
                 uint8_t min_size = std::min(local_set_size, remote_set_size);
