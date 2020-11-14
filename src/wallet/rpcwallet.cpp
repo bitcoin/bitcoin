@@ -3593,7 +3593,7 @@ static RPCHelpMan rescanblockchain()
     }
 
     int start_height = 0;
-    Optional<int> stop_height;
+    Optional<int> stop_height = MakeOptional(false, int());
     uint256 start_block;
     {
         LOCK(pwallet->cs_wallet);
