@@ -3400,9 +3400,10 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
 
         InvalidChainFound(to_mark_failed);
     }
-
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
+        // SYSCOIN for MN list to update
+        GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr, IsInitialBlockDownload());
         uiInterface.NotifyBlockTip(GetSynchronizationState(IsInitialBlockDownload()), to_mark_failed->pprev);
     }
     return true;
