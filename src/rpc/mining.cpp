@@ -600,6 +600,7 @@ static RPCHelpMan getblocktemplate()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    bool isSBSportActive = sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED);
     LOCK(cs_main);
     // SYSCOIN RPC_MISC_ERROR
     std::string errorMessage = "";
@@ -690,7 +691,7 @@ static RPCHelpMan getblocktemplate()
     mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
 
     // next bock is a superblock and we need governance info to correctly construct it
-    if (!fRegTest && !fSigNet && sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
+    if (!fRegTest && !fSigNet && isSBSportActive
         && !masternodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Syscoin Core is syncing with network...");
@@ -935,6 +936,7 @@ static RPCHelpMan getblocktemplate()
         obj.pushKV("amount", txout.nValue);
         masternodeObj.push_back(obj);
     }
+    
 
     result.pushKV("masternode", masternodeObj);
     result.pushKV("masternode_payments_started", true);
@@ -942,20 +944,19 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("masternode_collateral_height", nCollateralHeight);
 
     UniValue superblockObjArray(UniValue::VARR);
-    if(pblocktemplate->voutSuperblockPayments.size()) {
-        for (const auto& txout : pblocktemplate->voutSuperblockPayments) {
-            UniValue entry(UniValue::VOBJ);
-            CTxDestination address1;
-            ExtractDestination(txout.scriptPubKey, address1);
-            entry.pushKV("payee", EncodeDestination(address1));
-            entry.pushKV("script", HexStr(txout.scriptPubKey));
-            entry.pushKV("amount", txout.nValue);
-            superblockObjArray.push_back(entry);
-        }
+    for (const auto& txout : pblocktemplate->voutSuperblockPayments) {
+        UniValue entry(UniValue::VOBJ);
+        CTxDestination address1;
+        ExtractDestination(txout.scriptPubKey, address1);
+        entry.pushKV("payee", EncodeDestination(address1));
+        entry.pushKV("script", HexStr(txout.scriptPubKey));
+        entry.pushKV("amount", txout.nValue);
+        superblockObjArray.push_back(entry);
     }
+    
     result.pushKV("superblock", superblockObjArray);
     result.pushKV("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock);
-    result.pushKV("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED));
+    result.pushKV("superblocks_enabled", isSBSportActive);
     if (!pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
         result.pushKV("default_witness_commitment_extra", HexStr(pblocktemplate->vchCoinbaseCommitmentExtra));
     }

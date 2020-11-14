@@ -3403,10 +3403,6 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
 
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
-        // Notify external listeners about accepted block header
-        GetMainSignals().AcceptedBlockHeader(pindex);
-        // SYSCOIN
-        GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr, IsInitialBlockDownload());
         uiInterface.NotifyBlockTip(GetSynchronizationState(IsInitialBlockDownload()), to_mark_failed->pprev);
     }
     return true;
@@ -4084,6 +4080,9 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 
     if (ppindex)
         *ppindex = pindex;
+
+    // SYSCOIN Notify external listeners about accepted block header
+    GetMainSignals().AcceptedBlockHeader(pindex);
 
     return true;
 }
