@@ -86,6 +86,7 @@ class HelpRpcTest(BitcoinTestFramework):
                 assert argname == 'dummy', ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
 
     def test_categories(self):
+        self.log.info("Test RPC help categories")
         node = self.nodes[0]
 
         # wrong argument count
@@ -111,6 +112,7 @@ class HelpRpcTest(BitcoinTestFramework):
         assert_equal(titles, components)
 
     def dump_help(self):
+        self.log.info("Test dump RPC help")
         dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')
         os.mkdir(dump_dir)
         calls = [line.split(' ', 1)[0] for line in self.nodes[0].help().splitlines() if line and not line.startswith('==')]
@@ -120,9 +122,11 @@ class HelpRpcTest(BitcoinTestFramework):
                 f.write(self.nodes[0].help(call))
 
     def wallet_help(self):
+        self.log.info("Test wallet RPC help")
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
         self.restart_node(0, extra_args=['-nowallet=1'])
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
+        assert "setfeerate amount" in self.nodes[0].help("setfeerate")
 
 
 if __name__ == '__main__':
