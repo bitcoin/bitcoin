@@ -6,6 +6,7 @@
 from decimal import Decimal
 from itertools import product
 
+from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
@@ -197,7 +198,7 @@ class WalletTest(BitcoinTestFramework):
         # Send 10 BTC normal
         address = self.nodes[0].getnewaddress("test")
         fee_per_byte = Decimal('0.001') / 1000
-        self.nodes[2].settxfee(fee_per_byte * 1000)
+        self.nodes[2].setfeerate(fee_per_byte * COIN)
         txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
         self.nodes[2].generate(1)
         self.sync_all(self.nodes[0:3])

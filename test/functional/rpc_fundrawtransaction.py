@@ -49,8 +49,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.min_relay_tx_fee = self.nodes[0].getnetworkinfo()['relayfee']
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
+        btc_kvb_to_sat_vb = Decimal(1e8 / 1e3)
+        min_relay_tx_fee_in_sat_vb = self.min_relay_tx_fee * btc_kvb_to_sat_vb
         for node in self.nodes:
-            node.settxfee(self.min_relay_tx_fee)
+            node.setfeerate(min_relay_tx_fee_in_sat_vb)
 
         # if the fee's positive delta is higher than this value tests will fail,
         # neg. delta always fail the tests.
@@ -717,7 +719,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         result = node.fundrawtransaction(rawtx)  # uses self.min_relay_tx_fee (set by settxfee)
         btc_kvb_to_sat_vb = 100000  # (1e5)
-        result1 = node.fundrawtransaction(rawtx, {"fee_rate": str(2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee)})
+        result1 = node.fundrawtransaction(rawtx, {"fee_rate": Decimal("2.009") * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
         result2 = node.fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
         result3 = node.fundrawtransaction(rawtx, {"fee_rate": 10 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
         result4 = node.fundrawtransaction(rawtx, {"feeRate": str(10 * self.min_relay_tx_fee)})
@@ -726,10 +728,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         result6 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 0})
 
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
-        assert_fee_amount(result1['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
+        assert_fee_amount(result1['fee'], count_bytes(result1['hex']), Decimal("2.009") * result_fee_rate)
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
-        assert_fee_amount(result4['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
+        assert_fee_amount(result4['fee'], count_bytes(result4['hex']), 10 * result_fee_rate)
         assert_fee_amount(result5['fee'], count_bytes(result5['hex']), 0)
         assert_fee_amount(result6['fee'], count_bytes(result6['hex']), 0)
 
@@ -817,9 +819,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
         # Test subtract fee from outputs with feeRate (BTC/kvB)
-        result = [self.nodes[3].fundrawtransaction(rawtx),  # uses self.min_relay_tx_fee (set by settxfee)
+        result = [self.nodes[3].fundrawtransaction(rawtx),  # uses self.min_relay_tx_fee (set by setfeerate)
             self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": []}),  # empty subtraction list
-            self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0]}),  # uses self.min_relay_tx_fee (set by settxfee)
+            self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0]}),  # uses self.min_relay_tx_fee (set by setfeerate)
             self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee}),
             self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee, "subtractFeeFromOutputs": [0]}),]
         dec_tx = [self.nodes[3].decoderawtransaction(tx_['hex']) for tx_ in result]
