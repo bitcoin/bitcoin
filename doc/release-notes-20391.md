@@ -1,3 +1,10 @@
+Updated RPCs
+------------
+
+- `settxfee` is marked as deprecated in favor of the new `setfeerate` RPC
+  described in the "New RPCs" section. This change is part of a larger migration
+  from BTC/kvB to sat/vB units for fee rates. (#20391)
+
 New RPCs
 ------------
 

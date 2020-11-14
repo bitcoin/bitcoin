@@ -2310,10 +2310,12 @@ static RPCHelpMan listlockunspent()
 static RPCHelpMan settxfee()
 {
     return RPCHelpMan{"settxfee",
-                "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n"
-                "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
+                "\n(Deprecated in favor of the setfeerate RPC in " + CURRENCY_ATOM + "/vB, which it is recommended to use instead.)\n"
+                "Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet.\n"
+                "Overrides the global -paytxfee configuration option. Like -paytxfee, it is not persisted after bitcoind shutdown/restart.\n"
+                "Can be deactivated by passing 0 as the fee rate, in which case automatic fee selection will be used by default.\n",
                 {
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee in " + CURRENCY_UNIT + "/kvB"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_UNIT + "/kvB to set (0 to unset)"},
                 },
                 RPCResult{
                     RPCResult::Type::BOOL, "", "Returns true if successful"
