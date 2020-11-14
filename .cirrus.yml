@@ -4,12 +4,12 @@ timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
 container:
   # https://cirrus-ci.org/faq/#are-there-any-limits
   # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-  cpu: 16
-  memory: 24G
+  cpu: 2
+  memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
   kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
-  MAKEJOBS: "-j16"
+  MAKEJOBS: "-j4"
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CCACHE_SIZE: "200M"
@@ -82,7 +82,10 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
+    cpu: 4  # Double CPU and Memory to avoid timeout
+    memory: 16G
   env:
+    MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
@@ -134,7 +137,6 @@ task:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: catalina-xcode-12.1  # https://cirrus-ci.org/guide/macOS
   env:
-    MAKEJOBS: "-j4"
     DANGER_RUN_CI_ON_HOST: "true"
     CI_USE_APT_INSTALL: "no"
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
