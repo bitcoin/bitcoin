@@ -179,6 +179,22 @@ class ReconState {
     ReconPhase m_incoming_recon{RECON_NONE};
 
     /**
+     * A reconciliation round may involve an extension, which is an extra exchange of messages.
+     * Since it may happen after a delay (at least network latency), new transactions may come
+     * during that time. To avoid mixing old and new transactions, those which are subject for
+     * extension of a current reconciliation round are moved to a reconciliation set snapshot
+     * after an initial (non-extended) sketch is sent.
+     * New transactions are kept in the regular reconciliation set.
+     */
+    std::set<uint256> m_local_set_snapshot;
+
+    /**
+     * A reconciliation round may involve an extension, in which case we should remember
+     * a capacity of the sketch sent out initially, so that a sketch extension is of the same size.
+     */
+    uint16_t m_capacity_snapshot{0};
+
+    /**
      * In a reconciliation round initiated by us, if we asked for an extension, we want to store
      * the sketch computed/transmitted in the initial step, so that we can use it when
      * sketch extension arrives.
@@ -237,10 +253,17 @@ public:
         return m_outgoing_recon;
     }
 
-    void UpdateIncomingPhase(ReconPhase phase)
+    void UpdateIncomingPhase(ReconPhase phase, uint16_t sketch_capacity=0)
     {
         m_incoming_recon = phase;
-        if (phase == RECON_INIT_RESPONDED) m_local_set.clear();
+        if (phase == RECON_INIT_RESPONDED) {
+            // Be ready to respond to extension request, to compute the extended sketch over
+            // the same initial set (without transactions received during the reconciliation).
+            // Allow to store new transactions separately in the original set.
+            m_capacity_snapshot = sketch_capacity;
+            m_local_set_snapshot = m_local_set;
+            m_local_set.clear();
+        }
     }
 
     void UpdateOutgoingPhase(ReconPhase phase)
@@ -372,6 +395,8 @@ public:
         m_local_short_id_mapping.clear();
         // This is currently belt-and-suspenders, as the code should work even without these calls.
         m_remote_sketch_snapshot.clear();
+        m_local_set_snapshot.clear();
+        m_capacity_snapshot = 0;
     }
 
     /**

@@ -5077,7 +5077,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         response_skdata = sketch.Serialize();
                     }
                     m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::SKETCH, response_skdata));
-                    peer->m_recon_state->UpdateIncomingPhase(RECON_INIT_RESPONDED);
+                    peer->m_recon_state->UpdateIncomingPhase(RECON_INIT_RESPONDED, sketch_capacity);
                 }
             }
         }
