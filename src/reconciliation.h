@@ -211,6 +211,7 @@ public:
     void UpdateIncomingPhase(ReconPhase phase)
     {
         m_incoming_recon = phase;
+        if (phase == RECON_INIT_RESPONDED) m_local_set.clear();
     }
 
     void UpdateOutgoingPhase(ReconPhase phase)
@@ -243,6 +244,11 @@ public:
         return true;
     }
 
+    std::chrono::microseconds GetNextRespond()
+    {
+        return m_next_recon_respond;
+    }
+
     void UpdateNextReconRespond(std::chrono::microseconds next_recon_respond)
     {
         m_next_recon_respond = next_recon_respond;
@@ -267,14 +273,14 @@ public:
      * of elements (see BIP-330). Considering whether we are going to send a sketch to a peer or use
      * locally, we estimate the set difference.
      */
-    Minisketch ComputeSketch(const std::set<uint256> local_set, uint16_t& capacity)
+    Minisketch ComputeSketch(uint16_t& capacity)
     {
         Minisketch sketch;
         // Avoid serializing/sending an empty sketch.
-        if (local_set.size() == 0 || capacity == 0) return sketch;
+        if (m_local_set.size() == 0 || capacity == 0) return sketch;
 
         std::vector<uint32_t> short_ids;
-        for (const auto& wtxid: local_set) {
+        for (const auto& wtxid: m_local_set) {
             uint32_t short_txid = ComputeShortID(wtxid);
             short_ids.push_back(short_txid);
             m_local_short_id_mapping.emplace(short_txid, wtxid);

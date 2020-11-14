@@ -4967,28 +4967,53 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
         if (!vInv.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+
         //
         // Message: reconciliation request
         //
-        LOCK(m_recon_queue_mutex);
-        if (m_recon_queue.size() > 0) {
-            // Request transaction reconciliation periodically to efficiently exchange transactions.
-            // To make reconciliation predictable and efficient, we reconcile with peers in order based on the queue,
-            // and with a delay between requests.
-            if (m_next_recon_request < current_time && m_recon_queue.back() == pto) {
+        {
+            LOCK(m_recon_queue_mutex);
+            if (m_recon_queue.size() > 0) {
+                // Request transaction reconciliation periodically to efficiently exchange transactions.
+                // To make reconciliation predictable and efficient, we reconcile with peers in order based on the queue,
+                // and with a delay between requests.
                 LOCK(peer->m_recon_state_mutex);
-                assert(peer->m_recon_state->IsResponder()); // Should not be in the queue otherwise
-                if (peer->m_recon_state->GetOutgoingPhase() != RECON_NONE) {
-                    // Do not initiate a new reconciliation if the old one is still in progress
-                    LogPrint(BCLog::NET, "Previous reconciliation with peer=%d is still ongoing, not initiating a new one\n", pto->GetId());
-                } else {
-                    m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::REQRECON,
-                        peer->m_recon_state->GetLocalSetSize(), peer->m_recon_state->GetLocalQ()));
-                    peer->m_recon_state->UpdateOutgoingPhase(RECON_INIT_REQUESTED);
+                if (m_next_recon_request < current_time && m_recon_queue.back() == pto) {
+                    assert(peer->m_recon_state->IsResponder()); // Should not be in the queue otherwise
+                    if (peer->m_recon_state->GetOutgoingPhase() != RECON_NONE) {
+                        // Do not initiate a new reconciliation if the old one is still in progress
+                        LogPrint(BCLog::NET, "Previous reconciliation with peer=%d is still ongoing, not initiating a new one\n", pto->GetId());
+                    } else {
+                        m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::REQRECON,
+                            peer->m_recon_state->GetLocalSetSize(), peer->m_recon_state->GetLocalQ()));
+                        peer->m_recon_state->UpdateOutgoingPhase(RECON_INIT_REQUESTED);
+                    }
+                    UpdateNextReconRequest(current_time);
+                    m_recon_queue.pop_back();
+                    m_recon_queue.push_front(pto);
                 }
-                UpdateNextReconRequest(current_time);
-                m_recon_queue.pop_back();
-                m_recon_queue.push_front(pto);
+            }
+        }
+
+        //
+        // Message: reconciliation response
+        //
+        {
+            LOCK(peer->m_recon_state_mutex);
+            if (peer->m_recon_state) {
+                // Respond to a requested reconciliation to enable efficient transaction exchange.
+                // Respond only periodically to a) limit CPU usage for sketch computation,
+                // and, b) limit transaction possession privacy leak.
+                if (peer->m_recon_state->GetIncomingPhase() == RECON_INIT_REQUESTED && current_time > peer->m_recon_state->GetNextRespond()) {
+                    std::vector<unsigned char> response_skdata;
+                    uint16_t sketch_capacity = peer->m_recon_state->EstimateSketchCapacity();
+                    Minisketch sketch = peer->m_recon_state->ComputeSketch(sketch_capacity);
+                    if (sketch) {
+                        response_skdata = sketch.Serialize();
+                    }
+                    m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::SKETCH, response_skdata));
+                    peer->m_recon_state->UpdateIncomingPhase(RECON_INIT_RESPONDED);
+                }
             }
         }
 
