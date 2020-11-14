@@ -20,17 +20,17 @@ import time
 
 from .authproxy import JSONRPCException
 from . import coverage
+from .p2p import NetworkThread
 from .test_node import TestNode
-from .mininode import NetworkThread
 from .util import (
     MAX_NODES,
     PortSeed,
     assert_equal,
     check_json_precision,
-    connect_nodes,
-    disconnect_nodes,
     get_datadir_path,
     initialize_datadir,
+    p2p_port,
+    wait_until_helper,
 )
 
 
@@ -101,8 +101,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
         self.bind_to_localhost_only = True
-        self.set_test_params()
         self.parse_args()
+        self.default_wallet_name = "default_wallet" if self.options.descriptors else ""
+        self.wallet_data_filename = "wallet.dat"
+        # Optional list of wallet names that can be set in set_test_params to
+        # create and import keys to. If unset, default is len(nodes) *
+        # [default_wallet_name]. If wallet names are None, wallet creation is
+        # skipped. If list is truncated, wallet creation is skipped and keys
+        # are not imported.
+        self.wallet_names = None
+        self.set_test_params()
+        assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         if self.options.timeout_factor == 0 :
             self.options.timeout_factor = 99999
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
@@ -174,9 +183,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown, valgrind 3.14 or later required")
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
-        parser.add_argument("--descriptors", default=False, action="store_true",
-                            help="Run test using a descriptor wallet")
         parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
+
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument("--descriptors", default=False, action="store_true",
+                            help="Run test using a descriptor wallet", dest='descriptors')
+        group.add_argument("--legacy-wallet", default=False, action="store_false",
+                            help="Run test using legacy wallets", dest='descriptors')
+
         self.add_options(parser)
         self.options = parser.parse_args()
         self.options.previous_releases_path = previous_releases_path
@@ -361,23 +375,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def setup_nodes(self):
         """Override this method to customize test node setup"""
         extra_args = [[]] * self.num_nodes
-        wallets = [[]] * self.num_nodes
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-            wallets = [[x for x in eargs if x.startswith('-wallet=')] for eargs in extra_args]
-        extra_args = [x + ['-nowallet'] for x in extra_args]
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
-        for i, n in enumerate(self.nodes):
-            n.extra_args.pop()
-            if '-wallet=0' in n.extra_args or '-nowallet' in n.extra_args or '-disablewallet' in n.extra_args or not self.is_wallet_compiled():
-                continue
-            if '-wallet=' not in wallets[i] and not any([x.startswith('-wallet=') for x in wallets[i]]):
-                wallets[i].append('-wallet=')
-            for w in wallets[i]:
-                wallet_name = w.split('=', 1)[1]
-                n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
-        self.import_deterministic_coinbase_privkeys()
+        if self.is_wallet_compiled():
+            self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
@@ -393,13 +396,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(chain_info["initialblockdownload"], False)
 
     def import_deterministic_coinbase_privkeys(self):
-        for n in self.nodes:
-            try:
-                n.getwalletinfo()
-            except JSONRPCException as e:
-                assert str(e).startswith('Method not found')
-                continue
+        for i in range(self.num_nodes):
+            self.init_wallet(i)
 
+    def init_wallet(self, i):
+        wallet_name = self.default_wallet_name if self.wallet_names is None else self.wallet_names[i] if i < len(self.wallet_names) else False
+        if wallet_name is not False:
+            n = self.nodes[i]
+            if wallet_name is not None:
+                n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
             n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
 
     def run_test(self):
@@ -533,10 +538,49 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.nodes[i].process.wait(timeout)
 
     def connect_nodes(self, a, b):
-        connect_nodes(self.nodes[a], b)
+        def connect_nodes_helper(from_connection, node_num):
+            ip_port = "127.0.0.1:" + str(p2p_port(node_num))
+            from_connection.addnode(ip_port, "onetry")
+            # poll until version handshake complete to avoid race conditions
+            # with transaction relaying
+            # See comments in net_processing:
+            # * Must have a version message before anything else
+            # * Must have a verack message before anything else
+            wait_until_helper(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
+            wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
+
+        connect_nodes_helper(self.nodes[a], b)
 
     def disconnect_nodes(self, a, b):
-        disconnect_nodes(self.nodes[a], b)
+        def disconnect_nodes_helper(from_connection, node_num):
+            def get_peer_ids():
+                result = []
+                for peer in from_connection.getpeerinfo():
+                    if "testnode{}".format(node_num) in peer['subver']:
+                        result.append(peer['id'])
+                return result
+
+            peer_ids = get_peer_ids()
+            if not peer_ids:
+                self.log.warning("disconnect_nodes: {} and {} were not connected".format(
+                    from_connection.index,
+                    node_num,
+                ))
+                return
+            for peer_id in peer_ids:
+                try:
+                    from_connection.disconnectnode(nodeid=peer_id)
+                except JSONRPCException as e:
+                    # If this node is disconnected between calculating the peer id
+                    # and issuing the disconnect, don't worry about it.
+                    # This avoids a race condition if we're mass-disconnecting peers.
+                    if e.error['code'] != -29:  # RPC_CLIENT_NODE_NOT_CONNECTED
+                        raise
+
+            # wait to disconnect
+            wait_until_helper(lambda: not get_peer_ids(), timeout=5)
+
+        disconnect_nodes_helper(self.nodes[a], b)
 
     def split_network(self):
         """
@@ -601,6 +645,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def sync_all(self, nodes=None):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
+
+    def wait_until(self, test_function, timeout=60):
+        return wait_until_helper(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
@@ -727,6 +774,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if wallet has not been compiled."""
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
+        if self.options.descriptors:
+            self.skip_if_no_sqlite()
+
+    def skip_if_no_sqlite(self):
+        """Skip the running test if sqlite has not been compiled."""
+        if not self.is_sqlite_compiled():
+            raise SkipTest("sqlite has not been compiled.")
 
     def skip_if_no_wallet_tool(self):
         """Skip the running test if bitcoin-wallet has not been compiled."""
@@ -766,3 +820,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
         return self.config["components"].getboolean("ENABLE_ZMQ")
+
+    def is_sqlite_compiled(self):
+        """Checks whether the wallet module was compiled."""
+        return self.config["components"].getboolean("USE_SQLITE")

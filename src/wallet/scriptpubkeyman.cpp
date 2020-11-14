@@ -96,6 +96,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
     case TxoutType::NONSTANDARD:
     case TxoutType::NULL_DATA:
     case TxoutType::WITNESS_UNKNOWN:
+    case TxoutType::WITNESS_V1_TAPROOT:
         break;
     case TxoutType::PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
@@ -452,8 +453,8 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, bilingual_str& error)
         hd_upgrade = true;
     }
     // Upgrade to HD chain split if necessary
-    if (m_storage.CanSupportFeature(FEATURE_HD_SPLIT) && CHDChain::VERSION_HD_CHAIN_SPLIT) {
-        WalletLogPrintf("\nUpgrading wallet to use HD chain split\n");
+    if (m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) {
+        WalletLogPrintf("Upgrading wallet to use HD chain split\n");
         m_storage.SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
         split_upgrade = FEATURE_HD_SPLIT > prev_version;
     }
@@ -655,7 +656,7 @@ std::unique_ptr<CKeyMetadata> LegacyScriptPubKeyMan::GetMetadata(const CTxDestin
 
 uint256 LegacyScriptPubKeyMan::GetID() const
 {
-    return UINT256_ONE();
+    return uint256::ONE;
 }
 
 /**

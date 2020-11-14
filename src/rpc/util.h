@@ -147,6 +147,7 @@ struct RPCArg {
     using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
+    const bool m_hidden;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
     const std::string m_description;
@@ -159,9 +160,11 @@ struct RPCArg {
         const Fallback fallback,
         const std::string description,
         const std::string oneline_description = "",
-        const std::vector<std::string> type_str = {})
+        const std::vector<std::string> type_str = {},
+        const bool hidden = false)
         : m_names{std::move(name)},
           m_type{std::move(type)},
+          m_hidden{hidden},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
           m_oneline_description{std::move(oneline_description)},
@@ -180,6 +183,7 @@ struct RPCArg {
         const std::vector<std::string> type_str = {})
         : m_names{std::move(name)},
           m_type{std::move(type)},
+          m_hidden{false},
           m_inner{std::move(inner)},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
@@ -329,8 +333,15 @@ class RPCHelpMan
 {
 public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
+    using RPCMethodImpl = std::function<UniValue(const RPCHelpMan&, const JSONRPCRequest&)>;
+    RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
 
     std::string ToString() const;
+    UniValue HandleRequest(const JSONRPCRequest& request)
+    {
+        Check(request);
+        return m_fun(*this, request);
+    }
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
     /**
@@ -343,8 +354,12 @@ public:
         }
     }
 
-private:
+    std::vector<std::string> GetArgNames() const;
+
     const std::string m_name;
+
+private:
+    const RPCMethodImpl m_fun;
     const std::string m_description;
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;

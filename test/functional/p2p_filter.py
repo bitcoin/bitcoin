@@ -19,7 +19,7 @@ from test_framework.messages import (
     msg_mempool,
     msg_version,
 )
-from test_framework.mininode import P2PInterface, mininode_lock
+from test_framework.p2p import P2PInterface, p2p_lock
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -60,22 +60,22 @@ class P2PBloomFilter(P2PInterface):
 
     @property
     def tx_received(self):
-        with mininode_lock:
+        with p2p_lock:
             return self._tx_received
 
     @tx_received.setter
     def tx_received(self, value):
-        with mininode_lock:
+        with p2p_lock:
             self._tx_received = value
 
     @property
     def merkleblock_received(self):
-        with mininode_lock:
+        with p2p_lock:
             return self._merkleblock_received
 
     @merkleblock_received.setter
     def merkleblock_received(self, value):
-        with mininode_lock:
+        with p2p_lock:
             self._merkleblock_received = value
 
 
@@ -131,7 +131,7 @@ class FilterTest(BitcoinTestFramework):
         self.log.debug("Send a mempool msg after connecting and check that the tx is received")
         self.nodes[0].add_p2p_connection(filter_peer)
         filter_peer.send_and_ping(filter_peer.watch_filter_init)
-        self.nodes[0].p2p.send_message(msg_mempool())
+        filter_peer.send_message(msg_mempool())
         filter_peer.wait_for_tx(txid)
 
     def test_frelay_false(self, filter_peer):
@@ -218,7 +218,6 @@ class FilterTest(BitcoinTestFramework):
         # Add peer but do not send version yet
         filter_peer_without_nrelay = self.nodes[0].add_p2p_connection(P2PBloomFilter(), send_version=False, wait_for_verack=False)
         # Send version with fRelay=False
-        filter_peer_without_nrelay.wait_until(lambda: filter_peer_without_nrelay.is_connected, timeout=10)
         version_without_fRelay = msg_version()
         version_without_fRelay.nRelay = 0
         filter_peer_without_nrelay.send_message(version_without_fRelay)

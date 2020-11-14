@@ -79,6 +79,9 @@ public:
     {
         return m_hash.size();
     }
+
+    unsigned char* data() { return m_hash.data(); }
+    const unsigned char* data() const { return m_hash.data(); }
 };
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
@@ -126,6 +129,7 @@ enum class TxoutType {
     NULL_DATA, //!< unspendable OP_RETURN script that carries data
     WITNESS_V0_SCRIPTHASH,
     WITNESS_V0_KEYHASH,
+    WITNESS_V1_TAPROOT,
     WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };
 
@@ -203,7 +207,8 @@ struct WitnessUnknown
  *  * ScriptHash: TxoutType::SCRIPTHASH destination (P2SH)
  *  * WitnessV0ScriptHash: TxoutType::WITNESS_V0_SCRIPTHASH destination (P2WSH)
  *  * WitnessV0KeyHash: TxoutType::WITNESS_V0_KEYHASH destination (P2WPKH)
- *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W???)
+ *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN/WITNESS_V1_TAPROOT destination (P2W???)
+ *    (taproot outputs do not require their own type as long as no wallet support exists)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
 typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
@@ -259,15 +264,5 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
-
-/**
- * Generate a pay-to-witness script for the given redeem script. If the redeem
- * script is P2PK or P2PKH, this returns a P2WPKH script, otherwise it returns a
- * P2WSH script.
- *
- * TODO: replace calls to GetScriptForWitness with GetScriptForDestination using
- * the various witness-specific CTxDestination subtypes.
- */
-CScript GetScriptForWitness(const CScript& redeemscript);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

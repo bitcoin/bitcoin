@@ -60,6 +60,7 @@ public:
     int GetVersion() const { return nVersion; }
     int GetType() const { return nType; }
     size_t size() const { return stream->size(); }
+    void ignore(size_t size) { return stream->ignore(size); }
 };
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
@@ -811,18 +812,6 @@ public:
             return false;
         }
         nReadPos = nPos;
-        return true;
-    }
-
-    bool Seek(uint64_t nPos) {
-        long nLongPos = nPos;
-        if (nPos != (uint64_t)nLongPos)
-            return false;
-        if (fseek(src, nLongPos, SEEK_SET))
-            return false;
-        nLongPos = ftell(src);
-        nSrcPos = nLongPos;
-        nReadPos = nLongPos;
         return true;
     }
 

@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 
         TxValidationState state;
         return AcceptToMemoryPool(*m_node.mempool, state, MakeTransactionRef(tx),
-            nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
+            nullptr /* plTxnReplaced */, true /* bypass_limits */);
     };
 
     // Create a double-spend of mature coinbase txn:
@@ -157,7 +157,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     CScript p2pk_scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     CScript p2sh_scriptPubKey = GetScriptForDestination(ScriptHash(p2pk_scriptPubKey));
     CScript p2pkh_scriptPubKey = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
-    CScript p2wpkh_scriptPubKey = GetScriptForWitness(p2pkh_scriptPubKey);
+    CScript p2wpkh_scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(coinbaseKey.GetPubKey()));
 
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(coinbaseKey));

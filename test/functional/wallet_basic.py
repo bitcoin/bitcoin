@@ -11,8 +11,6 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_raises_rpc_error,
-    connect_nodes,
-    wait_until,
 )
 from test_framework.wallet_util import test_address
 
@@ -33,9 +31,9 @@ class WalletTest(BitcoinTestFramework):
         self.setup_nodes()
         # Only need nodes 0-2 running at start of test
         self.stop_node(3)
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
         self.sync_all(self.nodes[0:3])
 
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
@@ -119,7 +117,7 @@ class WalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, expected locked output", self.nodes[2].lockunspent, True, [unspent_0])
         self.nodes[2].lockunspent(False, [unspent_0])
         assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
-        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
+        assert_raises_rpc_error(-6, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [unspent_0])
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
@@ -136,11 +134,19 @@ class WalletTest(BitcoinTestFramework):
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": unspent_0["txid"], "vout": 999}])
 
-        # An output should be unlocked when spent
+        # The lock on a manually selected output is ignored
         unspent_0 = self.nodes[1].listunspent()[0]
         self.nodes[1].lockunspent(False, [unspent_0])
         tx = self.nodes[1].createrawtransaction([unspent_0], { self.nodes[1].getnewaddress() : 1 })
-        tx = self.nodes[1].fundrawtransaction(tx)['hex']
+        self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})
+
+        # fundrawtransaction can lock an input
+        self.nodes[1].lockunspent(True, [unspent_0])
+        assert_equal(len(self.nodes[1].listlockunspent()), 0)
+        tx = self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})['hex']
+        assert_equal(len(self.nodes[1].listlockunspent()), 1)
+
+        # Send transaction
         tx = self.nodes[1].signrawtransactionwithwallet(tx)["hex"]
         self.nodes[1].sendrawtransaction(tx)
         assert_equal(len(self.nodes[1].listlockunspent()), 0)
@@ -203,6 +209,8 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('20'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
 
+        self.log.info("Test sendmany")
+
         # Sendmany 10 BTC
         txid = self.nodes[2].sendmany('', {address: 10}, 0, "", [])
         self.nodes[2].generate(1)
@@ -219,9 +227,9 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
 
-        # Sendmany with explicit fee (BTC/kB)
+        self.log.info("Test case-insensitive explicit fee rate (sendmany as BTC/kB)")
         # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+        assert_raises_rpc_error(-8, "Selected estimate_mode bTc/kB requires a fee rate to be specified in conf_target",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
             estimate_mode='bTc/kB')
@@ -245,9 +253,9 @@ class WalletTest(BitcoinTestFramework):
         node_0_bal += Decimal('10')
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
-        # Sendmany with explicit fee (SAT/B)
+        self.log.info("Test case-insensitive explicit fee rate (sendmany as sat/B)")
         # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+        assert_raises_rpc_error(-8, "Selected estimate_mode sat/b requires a fee rate to be specified in conf_target",
             self.nodes[2].sendmany,
             amounts={ address: 10 },
             estimate_mode='sat/b')
@@ -273,8 +281,14 @@ class WalletTest(BitcoinTestFramework):
         node_0_bal += Decimal('10')
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
+        # Test setting explicit fee rate just below the minimum.
+        for unit, fee_rate in {"BTC/kB": 0.00000999, "sat/B": 0.99999999}.items():
+            self.log.info("Test sendmany raises 'fee rate too low' if conf_target {} and estimate_mode {} are passed".format(fee_rate, unit))
+            assert_raises_rpc_error(-6, "Fee rate (0.00000999 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)",
+                self.nodes[2].sendmany, amounts={address: 10}, estimate_mode=unit, conf_target=fee_rate)
+
         self.start_node(3, self.nodes[3].extra_args)
-        connect_nodes(self.nodes[0], 3)
+        self.connect_nodes(0, 3)
         self.sync_all()
 
         # check if we can list zero value tx as available coins
@@ -309,9 +323,9 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(0, ["-walletbroadcast=0"])
         self.start_node(1, ["-walletbroadcast=0"])
         self.start_node(2, ["-walletbroadcast=0"])
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
         self.sync_all(self.nodes[0:3])
 
         txid_not_broadcast = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2)
@@ -336,9 +350,9 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(0)
         self.start_node(1)
         self.start_node(2)
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
         self.sync_blocks(self.nodes[0:3])
 
         self.nodes[0].generate(1)
@@ -363,6 +377,9 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(tx_obj['amount'], Decimal('-0.0001'))
 
         # General checks for errors from incorrect inputs
+        # This will raise an exception because the amount is negative
+        assert_raises_rpc_error(-3, "Amount out of range", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "-1")
+
         # This will raise an exception because the amount type is wrong
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
@@ -403,15 +420,14 @@ class WalletTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
 
-            # send with explicit btc/kb fee
-            self.log.info("test explicit fee (sendtoaddress as btc/kb)")
+            self.log.info("Test case-insensitive explicit fee rate (sendtoaddress as BTC/kB)")
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
             prebalance = self.nodes[2].getbalance()
             assert prebalance > 2
             address = self.nodes[1].getnewaddress()
             # Throw if no conf_target provided
-            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+            assert_raises_rpc_error(-8, "Selected estimate_mode BTc/Kb requires a fee rate to be specified in conf_target",
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
@@ -437,15 +453,15 @@ class WalletTest(BitcoinTestFramework):
             fee = prebalance - postbalance - Decimal('1')
             assert_fee_amount(fee, tx_size, Decimal('0.00002500'))
 
-            # send with explicit sat/b fee
             self.sync_all(self.nodes[0:3])
-            self.log.info("test explicit fee (sendtoaddress as sat/b)")
+
+            self.log.info("Test case-insensitive explicit fee rate (sendtoaddress as sat/B)")
             self.nodes[0].generate(1)
             prebalance = self.nodes[2].getbalance()
             assert prebalance > 2
             address = self.nodes[1].getnewaddress()
             # Throw if no conf_target provided
-            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+            assert_raises_rpc_error(-8, "Selected estimate_mode SAT/b requires a fee rate to be specified in conf_target",
                 self.nodes[2].sendtoaddress,
                 address=address,
                 amount=1.0,
@@ -470,6 +486,12 @@ class WalletTest(BitcoinTestFramework):
             postbalance = self.nodes[2].getbalance()
             fee = prebalance - postbalance - Decimal('1')
             assert_fee_amount(fee, tx_size, Decimal('0.00002000'))
+
+            # Test setting explicit fee rate just below the minimum.
+            for unit, fee_rate in {"BTC/kB": 0.00000999, "sat/B": 0.99999999}.items():
+                self.log.info("Test sendtoaddress raises 'fee rate too low' if conf_target {} and estimate_mode {} are passed".format(fee_rate, unit))
+                assert_raises_rpc_error(-6, "Fee rate (0.00000999 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)",
+                    self.nodes[2].sendtoaddress, address=address, amount=1, estimate_mode=unit, conf_target=fee_rate)
 
             # 2. Import address from node2 to node1
             self.nodes[1].importaddress(address_to_import)
@@ -524,8 +546,6 @@ class WalletTest(BitcoinTestFramework):
         maintenance = [
             '-rescan',
             '-reindex',
-            '-zapwallettxes=1',
-            '-zapwallettxes=2',
         ]
         chainlimit = 6
         for m in maintenance:
@@ -537,7 +557,7 @@ class WalletTest(BitcoinTestFramework):
             self.start_node(2, [m, "-limitancestorcount=" + str(chainlimit)])
             if m == '-reindex':
                 # reindex will leave rpc warm up "early"; Wait for it to finish
-                wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
+                self.wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
             assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
 
         # Exercise listsinceblock with the last two blocks
@@ -566,7 +586,7 @@ class WalletTest(BitcoinTestFramework):
         # So we should be able to generate exactly chainlimit txs for each original output
         sending_addr = self.nodes[1].getnewaddress()
         txid_list = []
-        for i in range(chainlimit * 2):
+        for _ in range(chainlimit * 2):
             txid_list.append(self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001')))
         assert_equal(self.nodes[0].getmempoolinfo()['size'], chainlimit * 2)
         assert_equal(len(txid_list), chainlimit * 2)
@@ -586,11 +606,14 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(0, extra_args=extra_args)
 
         # wait until the wallet has submitted all transactions to the mempool
-        wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)
+        self.wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)
+
+        # Prevent potential race condition when calling wallet RPCs right after restart
+        self.nodes[0].syncwithvalidationinterfacequeue()
 
         node0_balance = self.nodes[0].getbalance()
         # With walletrejectlongchains we will not create the tx and store it in our wallet.
-        assert_raises_rpc_error(-4, "Transaction has too long of a mempool chain", self.nodes[0].sendtoaddress, sending_addr, node0_balance - Decimal('0.01'))
+        assert_raises_rpc_error(-6, "Transaction has too long of a mempool chain", self.nodes[0].sendtoaddress, sending_addr, node0_balance - Decimal('0.01'))
 
         # Verify nothing new in wallet
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*", 99999)))
@@ -649,6 +672,18 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(set([*tx]), expected_verbose_fields)
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
         assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))
+
+        self.log.info("Test send* RPCs with verbose=True")
+        address = self.nodes[0].getnewaddress("test")
+        txid_feeReason_one = self.nodes[2].sendtoaddress(address=address, amount=5, verbose=True)
+        assert_equal(txid_feeReason_one["fee_reason"], "Fallback fee")
+        txid_feeReason_two = self.nodes[2].sendmany(dummy='', amounts={address: 5}, verbose=True)
+        assert_equal(txid_feeReason_two["fee_reason"], "Fallback fee")
+        self.log.info("Test send* RPCs with verbose=False")
+        txid_feeReason_three = self.nodes[2].sendtoaddress(address=address, amount=5, verbose=False)
+        assert_equal(self.nodes[2].gettransaction(txid_feeReason_three)['txid'], txid_feeReason_three)
+        txid_feeReason_four = self.nodes[2].sendmany(dummy='', amounts={address: 5}, verbose=False)
+        assert_equal(self.nodes[2].gettransaction(txid_feeReason_four)['txid'], txid_feeReason_four)
 
 
 if __name__ == '__main__':

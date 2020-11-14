@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Reference implementation for Bech32 and segwit addresses."""
-
+import unittest
 
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
@@ -84,7 +84,7 @@ def convertbits(data, frombits, tobits, pad=True):
     return ret
 
 
-def decode(hrp, addr):
+def decode_segwit_address(hrp, addr):
     """Decode a segwit address."""
     hrpgot, data = bech32_decode(addr)
     if hrpgot != hrp:
@@ -99,9 +99,23 @@ def decode(hrp, addr):
     return (data[0], decoded)
 
 
-def encode(hrp, witver, witprog):
+def encode_segwit_address(hrp, witver, witprog):
     """Encode a segwit address."""
     ret = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5))
-    if decode(hrp, ret) == (None, None):
+    if decode_segwit_address(hrp, ret) == (None, None):
         return None
     return ret
+
+class TestFrameworkScript(unittest.TestCase):
+    def test_segwit_encode_decode(self):
+        def test_python_bech32(addr):
+            hrp = addr[:4]
+            self.assertEqual(hrp, "bcrt")
+            (witver, witprog) = decode_segwit_address(hrp, addr)
+            self.assertEqual(encode_segwit_address(hrp, witver, witprog), addr)
+
+        # P2WPKH
+        test_python_bech32('bcrt1qthmht0k2qnh3wy7336z05lu2km7emzfpm3wg46')
+        # P2WSH
+        test_python_bech32('bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj')
+        test_python_bech32('bcrt1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqseac85')

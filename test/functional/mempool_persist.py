@@ -39,15 +39,12 @@ from decimal import Decimal
 import os
 import time
 
+from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.mininode import P2PTxInvStore
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
-    connect_nodes,
-    disconnect_nodes,
-    wait_until,
 )
 
 
@@ -62,7 +59,7 @@ class MempoolPersistTest(BitcoinTestFramework):
     def run_test(self):
         self.log.debug("Send 5 transactions from node2 (to its own address)")
         tx_creation_time_lower = int(time.time())
-        for i in range(5):
+        for _ in range(5):
             last_txid = self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("10"))
         node2_balance = self.nodes[2].getbalance()
         self.sync_all()
@@ -84,11 +81,11 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
 
         # disconnect nodes & make a txn that remains in the unbroadcast set.
-        disconnect_nodes(self.nodes[0], 1)
+        self.disconnect_nodes(0, 1)
         assert(len(self.nodes[0].getpeerinfo()) == 0)
         assert(len(self.nodes[0].p2ps) == 0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("12"))
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 2)
 
         self.log.debug("Stop-start the nodes. Verify that node0 has the transactions in its mempool and node1 does not. Verify that node2 calculates its balance correctly after loading wallet transactions.")
         self.stop_nodes()
@@ -172,7 +169,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         # check that txn gets broadcast due to unbroadcast logic
         conn = node0.add_p2p_connection(P2PTxInvStore())
         node0.mockscheduler(16*60) # 15 min + 1 for buffer
-        wait_until(lambda: len(conn.get_invs()) == 1)
+        self.wait_until(lambda: len(conn.get_invs()) == 1)
 
 if __name__ == '__main__':
     MempoolPersistTest().main()

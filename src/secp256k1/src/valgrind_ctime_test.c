@@ -6,14 +6,23 @@
 
 #include <valgrind/memcheck.h>
 #include "include/secp256k1.h"
+#include "assumptions.h"
 #include "util.h"
 
-#if ENABLE_MODULE_ECDH
+#ifdef ENABLE_MODULE_ECDH
 # include "include/secp256k1_ecdh.h"
 #endif
 
-#if ENABLE_MODULE_RECOVERY
+#ifdef ENABLE_MODULE_RECOVERY
 # include "include/secp256k1_recovery.h"
+#endif
+
+#ifdef ENABLE_MODULE_EXTRAKEYS
+# include "include/secp256k1_extrakeys.h"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG
+#include "include/secp256k1_schnorrsig.h"
 #endif
 
 int main(void) {
@@ -28,9 +37,12 @@ int main(void) {
     unsigned char key[32];
     unsigned char sig[74];
     unsigned char spubkey[33];
-#if ENABLE_MODULE_RECOVERY
+#ifdef ENABLE_MODULE_RECOVERY
     secp256k1_ecdsa_recoverable_signature recoverable_signature;
     int recid;
+#endif
+#ifdef ENABLE_MODULE_EXTRAKEYS
+    secp256k1_keypair keypair;
 #endif
 
     if (!RUNNING_ON_VALGRIND) {
@@ -49,7 +61,9 @@ int main(void) {
         msg[i] = i + 1;
     }
 
-    ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_DECLASSIFY);
+    ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                   | SECP256K1_CONTEXT_VERIFY
+                                   | SECP256K1_CONTEXT_DECLASSIFY);
 
     /* Test keygen. */
     VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
@@ -67,7 +81,7 @@ int main(void) {
     CHECK(ret);
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature));
 
-#if ENABLE_MODULE_ECDH
+#ifdef ENABLE_MODULE_ECDH
     /* Test ECDH. */
     VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
     ret = secp256k1_ecdh(ctx, msg, &pubkey, key, NULL, NULL);
@@ -75,7 +89,7 @@ int main(void) {
     CHECK(ret == 1);
 #endif
 
-#if ENABLE_MODULE_RECOVERY
+#ifdef ENABLE_MODULE_RECOVERY
     /* Test signing a recoverable signature. */
     VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
     ret = secp256k1_ecdsa_sign_recoverable(ctx, &recoverable_signature, msg, key, NULL, NULL);
@@ -113,6 +127,30 @@ int main(void) {
     ret = secp256k1_context_randomize(ctx, key);
     VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
     CHECK(ret);
+
+    /* Test keypair_create and keypair_xonly_tweak_add. */
+#ifdef ENABLE_MODULE_EXTRAKEYS
+    VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
+    ret = secp256k1_keypair_create(ctx, &keypair, key);
+    VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
+    CHECK(ret == 1);
+
+    /* The tweak is not treated as a secret in keypair_tweak_add */
+    VALGRIND_MAKE_MEM_DEFINED(msg, 32);
+    ret = secp256k1_keypair_xonly_tweak_add(ctx, &keypair, msg);
+    VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
+    CHECK(ret == 1);
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG
+    VALGRIND_MAKE_MEM_UNDEFINED(key, 32);
+    ret = secp256k1_keypair_create(ctx, &keypair, key);
+    VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
+    CHECK(ret == 1);
+    ret = secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, NULL, NULL);
+    VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
+    CHECK(ret == 1);
+#endif
 
     secp256k1_context_destroy(ctx);
     return 0;

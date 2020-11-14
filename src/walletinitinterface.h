@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLETINITINTERFACE_H
 #define BITCOIN_WALLETINITINTERFACE_H
 
+class ArgsManager;
+
 struct NodeContext;
 
 class WalletInitInterface {
@@ -12,7 +14,7 @@ public:
     /** Is the wallet component enabled */
     virtual bool HasWalletSupport() const = 0;
     /** Get wallet help string */
-    virtual void AddWalletOptions() const = 0;
+    virtual void AddWalletOptions(ArgsManager& argsman) const = 0;
     /** Check wallet parameter interaction */
     virtual bool ParameterInteraction() const = 0;
     /** Add wallets that should be opened to list of chain clients. */

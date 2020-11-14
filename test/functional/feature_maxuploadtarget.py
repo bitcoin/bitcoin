@@ -14,7 +14,7 @@ from collections import defaultdict
 import time
 
 from test_framework.messages import CInv, MSG_BLOCK, msg_getdata
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, mine_large_block
 
@@ -104,7 +104,7 @@ class MaxUploadTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getpeerinfo()), 3)
         # At most a couple more tries should succeed (depending on how long
         # the test has been running so far).
-        for i in range(3):
+        for _ in range(3):
             p2p_conns[0].send_message(getdata_request)
         p2p_conns[0].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
@@ -145,16 +145,16 @@ class MaxUploadTest(BitcoinTestFramework):
         self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1"])
 
         # Reconnect to self.nodes[0]
-        self.nodes[0].add_p2p_connection(TestP2PConn())
+        peer = self.nodes[0].add_p2p_connection(TestP2PConn())
 
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(MSG_BLOCK, big_new_block)]
         for i in range(20):
-            self.nodes[0].p2p.send_and_ping(getdata_request)
-            assert_equal(self.nodes[0].p2p.block_receive_map[big_new_block], i+1)
+            peer.send_and_ping(getdata_request)
+            assert_equal(peer.block_receive_map[big_new_block], i+1)
 
         getdata_request.inv = [CInv(MSG_BLOCK, big_old_block)]
-        self.nodes[0].p2p.send_and_ping(getdata_request)
+        peer.send_and_ping(getdata_request)
 
         self.log.info("Peer still connected after trying to download old block (download permission)")
         peer_info = self.nodes[0].getpeerinfo()

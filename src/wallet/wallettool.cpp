@@ -16,26 +16,14 @@ namespace WalletTool {
 // deleter here.
 static void WalletToolReleaseWallet(CWallet* wallet)
 {
-    wallet->WalletLogPrintf("\nReleasing wallet\n");
-    wallet->Flush(true);
+    wallet->WalletLogPrintf("Releasing wallet\n");
+    wallet->Close();
     delete wallet;
 }
 
-static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::path& path)
+static void WalletCreate(CWallet* wallet_instance)
 {
-    if (fs::exists(path)) {
-        tfm::format(std::cerr, "Error: File exists already\n");
-        return nullptr;
-    }
-    // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), CreateWalletDatabase(path)), WalletToolReleaseWallet);
     LOCK(wallet_instance->cs_wallet);
-    bool first_run = true;
-    DBErrors load_wallet_ret = wallet_instance->LoadWallet(first_run);
-    if (load_wallet_ret != DBErrors::LOAD_OK) {
-        tfm::format(std::cerr, "Error creating %s", name);
-        return nullptr;
-    }
 
     wallet_instance->SetMinVersion(FEATURE_HD_SPLIT);
 
@@ -46,18 +34,26 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
 
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
-    return wallet_instance;
 }
 
-static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path)
+static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, bool create)
 {
-    if (!fs::exists(path)) {
-        tfm::format(std::cerr, "Error: Wallet files does not exist\n");
+    DatabaseOptions options;
+    DatabaseStatus status;
+    if (create) {
+        options.require_create = true;
+    } else {
+        options.require_existing = true;
+    }
+    bilingual_str error;
+    std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
+    if (!database) {
+        tfm::format(std::cerr, "%s\n", error.original);
         return nullptr;
     }
 
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), CreateWalletDatabase(path)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet_instance{new CWallet(nullptr /* chain */, name, std::move(database)), WalletToolReleaseWallet};
     DBErrors load_wallet_ret;
     try {
         bool first_run;
@@ -89,6 +85,8 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
         }
     }
 
+    if (create) WalletCreate(wallet_instance.get());
+
     return wallet_instance;
 }
 
@@ -97,6 +95,9 @@ static void WalletShowInfo(CWallet* wallet_instance)
     LOCK(wallet_instance->cs_wallet);
 
     tfm::format(std::cout, "Wallet info\n===========\n");
+    tfm::format(std::cout, "Name: %s\n", wallet_instance->GetName());
+    tfm::format(std::cout, "Format: %s\n", wallet_instance->GetDatabase().Format());
+    tfm::format(std::cout, "Descriptors: %s\n", wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) ? "yes" : "no");
     tfm::format(std::cout, "Encrypted: %s\n", wallet_instance->IsCrypted() ? "yes" : "no");
     tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->IsHDEnabled() ? "yes" : "no");
     tfm::format(std::cout, "Keypool Size: %u\n", wallet_instance->GetKeyPoolSize());
@@ -104,50 +105,35 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->m_address_book.size());
 }
 
-static bool SalvageWallet(const fs::path& path)
-{
-    // Create a Database handle to allow for the db to be initialized before recovery
-    std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(path);
-
-    // Initialize the environment before recovery
-    bilingual_str error_string;
-    try {
-        database->Verify(error_string);
-    } catch (const fs::filesystem_error& e) {
-        error_string = Untranslated(strprintf("Error loading wallet. %s", fsbridge::get_filesystem_error_message(e)));
-    }
-    if (!error_string.original.empty()) {
-        tfm::format(std::cerr, "Failed to open wallet for salvage :%s\n", error_string.original);
-        return false;
-    }
-
-    // Perform the recovery
-    return RecoverDatabaseFile(path);
-}
-
 bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
 {
     fs::path path = fs::absolute(name, GetWalletDir());
 
     if (command == "create") {
-        std::shared_ptr<CWallet> wallet_instance = CreateWallet(name, path);
+        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, /* create= */ true);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
-            wallet_instance->Flush(true);
+            wallet_instance->Close();
         }
     } else if (command == "info" || command == "salvage") {
-        if (!fs::exists(path)) {
-            tfm::format(std::cerr, "Error: no wallet file at %s\n", name);
-            return false;
-        }
-
         if (command == "info") {
-            std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
+            std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, /* create= */ false);
             if (!wallet_instance) return false;
             WalletShowInfo(wallet_instance.get());
-            wallet_instance->Flush(true);
+            wallet_instance->Close();
         } else if (command == "salvage") {
-            return SalvageWallet(path);
+            bilingual_str error;
+            std::vector<bilingual_str> warnings;
+            bool ret = RecoverDatabaseFile(path, error, warnings);
+            if (!ret) {
+                for (const auto& warning : warnings) {
+                    tfm::format(std::cerr, "%s\n", warning.original);
+                }
+                if (!error.empty()) {
+                    tfm::format(std::cerr, "%s\n", error.original);
+                }
+            }
+            return ret;
         }
     } else {
         tfm::format(std::cerr, "Invalid command: %s\n", command);

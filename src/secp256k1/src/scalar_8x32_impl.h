@@ -271,9 +271,9 @@ static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
         tl = t; \
     } \
     c0 += tl;                 /* overflow is handled on the next line */ \
-    th += (c0 < tl) ? 1 : 0;  /* at most 0xFFFFFFFF */ \
+    th += (c0 < tl);          /* at most 0xFFFFFFFF */ \
     c1 += th;                 /* overflow is handled on the next line */ \
-    c2 += (c1 < th) ? 1 : 0;  /* never overflows by contract (verified in the next line) */ \
+    c2 += (c1 < th);          /* never overflows by contract (verified in the next line) */ \
     VERIFY_CHECK((c1 >= th) || (c2 != 0)); \
 }
 
@@ -286,7 +286,7 @@ static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
         tl = t; \
     } \
     c0 += tl;                 /* overflow is handled on the next line */ \
-    th += (c0 < tl) ? 1 : 0;  /* at most 0xFFFFFFFF */ \
+    th += (c0 < tl);          /* at most 0xFFFFFFFF */ \
     c1 += th;                 /* never overflows by contract (verified in the next line) */ \
     VERIFY_CHECK(c1 >= th); \
 }
@@ -300,16 +300,16 @@ static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
         tl = t; \
     } \
     th2 = th + th;                  /* at most 0xFFFFFFFE (in case th was 0x7FFFFFFF) */ \
-    c2 += (th2 < th) ? 1 : 0;       /* never overflows by contract (verified the next line) */ \
+    c2 += (th2 < th);               /* never overflows by contract (verified the next line) */ \
     VERIFY_CHECK((th2 >= th) || (c2 != 0)); \
     tl2 = tl + tl;                  /* at most 0xFFFFFFFE (in case the lowest 63 bits of tl were 0x7FFFFFFF) */ \
-    th2 += (tl2 < tl) ? 1 : 0;      /* at most 0xFFFFFFFF */ \
+    th2 += (tl2 < tl);              /* at most 0xFFFFFFFF */ \
     c0 += tl2;                      /* overflow is handled on the next line */ \
-    th2 += (c0 < tl2) ? 1 : 0;      /* second overflow is handled on the next line */ \
+    th2 += (c0 < tl2);              /* second overflow is handled on the next line */ \
     c2 += (c0 < tl2) & (th2 == 0);  /* never overflows by contract (verified the next line) */ \
     VERIFY_CHECK((c0 >= tl2) || (th2 != 0) || (c2 != 0)); \
     c1 += th2;                      /* overflow is handled on the next line */ \
-    c2 += (c1 < th2) ? 1 : 0;       /* never overflows by contract (verified the next line) */ \
+    c2 += (c1 < th2);               /* never overflows by contract (verified the next line) */ \
     VERIFY_CHECK((c1 >= th2) || (c2 != 0)); \
 }
 
@@ -317,15 +317,15 @@ static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
 #define sumadd(a) { \
     unsigned int over; \
     c0 += (a);                  /* overflow is handled on the next line */ \
-    over = (c0 < (a)) ? 1 : 0; \
+    over = (c0 < (a)); \
     c1 += over;                 /* overflow is handled on the next line */ \
-    c2 += (c1 < over) ? 1 : 0;  /* never overflows by contract */ \
+    c2 += (c1 < over);          /* never overflows by contract */ \
 }
 
 /** Add a to the number defined by (c0,c1). c1 must never overflow, c2 must be zero. */
 #define sumadd_fast(a) { \
     c0 += (a);                 /* overflow is handled on the next line */ \
-    c1 += (c0 < (a)) ? 1 : 0;  /* never overflows by contract (verified the next line) */ \
+    c1 += (c0 < (a));          /* never overflows by contract (verified the next line) */ \
     VERIFY_CHECK((c1 != 0) | (c0 >= (a))); \
     VERIFY_CHECK(c2 == 0); \
 }
@@ -672,26 +672,24 @@ static void secp256k1_scalar_sqr(secp256k1_scalar *r, const secp256k1_scalar *a)
     secp256k1_scalar_reduce_512(r, l);
 }
 
-#ifdef USE_ENDOMORPHISM
-static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *a) {
-    r1->d[0] = a->d[0];
-    r1->d[1] = a->d[1];
-    r1->d[2] = a->d[2];
-    r1->d[3] = a->d[3];
+static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *k) {
+    r1->d[0] = k->d[0];
+    r1->d[1] = k->d[1];
+    r1->d[2] = k->d[2];
+    r1->d[3] = k->d[3];
     r1->d[4] = 0;
     r1->d[5] = 0;
     r1->d[6] = 0;
     r1->d[7] = 0;
-    r2->d[0] = a->d[4];
-    r2->d[1] = a->d[5];
-    r2->d[2] = a->d[6];
-    r2->d[3] = a->d[7];
+    r2->d[0] = k->d[4];
+    r2->d[1] = k->d[5];
+    r2->d[2] = k->d[6];
+    r2->d[3] = k->d[7];
     r2->d[4] = 0;
     r2->d[5] = 0;
     r2->d[6] = 0;
     r2->d[7] = 0;
 }
-#endif
 
 SECP256K1_INLINE static int secp256k1_scalar_eq(const secp256k1_scalar *a, const secp256k1_scalar *b) {
     return ((a->d[0] ^ b->d[0]) | (a->d[1] ^ b->d[1]) | (a->d[2] ^ b->d[2]) | (a->d[3] ^ b->d[3]) | (a->d[4] ^ b->d[4]) | (a->d[5] ^ b->d[5]) | (a->d[6] ^ b->d[6]) | (a->d[7] ^ b->d[7])) == 0;

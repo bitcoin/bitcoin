@@ -14,6 +14,7 @@
 #include <interfaces/wallet.h>
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
+#include <qt/walletmodel.h>
 #include <util/system.h>
 #include <util/translation.h>
 
@@ -24,8 +25,8 @@
 #include <QScreen>
 
 
-SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
-    QWidget(nullptr, f), curAlignment(0), m_node(node)
+SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) :
+    QWidget(nullptr, f), curAlignment(0)
 {
     // set reference point, paddings
     int paddingRight            = 50;
@@ -124,7 +125,6 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     setFixedSize(r.size());
     move(QGuiApplication::primaryScreen()->geometry().center() - r.center());
 
-    subscribeToCoreSignals();
     installEventFilter(this);
 
     GUIUtil::handleCloseWindowShortcut(this);
@@ -132,14 +132,28 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
 SplashScreen::~SplashScreen()
 {
-    unsubscribeFromCoreSignals();
+    if (m_node) unsubscribeFromCoreSignals();
+}
+
+void SplashScreen::setNode(interfaces::Node& node)
+{
+    assert(!m_node);
+    m_node = &node;
+    subscribeToCoreSignals();
+    if (m_shutdown) m_node->startShutdown();
+}
+
+void SplashScreen::shutdown()
+{
+    m_shutdown = true;
+    if (m_node) m_node->startShutdown();
 }
 
 bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     if (ev->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
         if (keyEvent->key() == Qt::Key_Q) {
-            m_node.startShutdown();
+            shutdown();
         }
     }
     return QObject::eventFilter(obj, ev);
@@ -172,21 +186,22 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
                                 : _("press q to shutdown").translated) +
             strprintf("\n%d", nProgress) + "%");
 }
-#ifdef ENABLE_WALLET
-void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
-{
-    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
-    m_connected_wallets.emplace_back(std::move(wallet));
-}
-#endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_init_message = m_node.handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
-    m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    m_handler_init_message = m_node->handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
+    m_handler_show_progress = m_node->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+}
+
+void SplashScreen::handleLoadWallet()
+{
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
+    if (!WalletModel::isWalletEnabled()) return;
+    m_handler_load_wallet = m_node->walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
+        m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
+        m_connected_wallets.emplace_back(std::move(wallet));
+    });
 #endif
 }
 
@@ -221,6 +236,6 @@ void SplashScreen::paintEvent(QPaintEvent *event)
 
 void SplashScreen::closeEvent(QCloseEvent *event)
 {
-    m_node.startShutdown(); // allows an "emergency" shutdown during startup
+    shutdown(); // allows an "emergency" shutdown during startup
     event->ignore();
 }

@@ -7,6 +7,7 @@
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
+#include <crypto/sha3.h>
 #include <crypto/sha512.h>
 #include <hash.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -32,6 +33,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     CSHA1 sha1;
     CSHA256 sha256;
     CSHA512 sha512;
+    SHA3_256 sha3;
     CSipHasher sip_hasher{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
 
     while (fuzzed_data_provider.ConsumeBool()) {
@@ -44,19 +46,19 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                 }
             }
 
-            (void)hash160.Write(data.data(), data.size());
-            (void)hash256.Write(data.data(), data.size());
+            (void)hash160.Write(data);
+            (void)hash256.Write(data);
             (void)hmac_sha256.Write(data.data(), data.size());
             (void)hmac_sha512.Write(data.data(), data.size());
             (void)ripemd160.Write(data.data(), data.size());
             (void)sha1.Write(data.data(), data.size());
             (void)sha256.Write(data.data(), data.size());
+            (void)sha3.Write(data);
             (void)sha512.Write(data.data(), data.size());
             (void)sip_hasher.Write(data.data(), data.size());
 
-            (void)Hash(data.begin(), data.end());
+            (void)Hash(data);
             (void)Hash160(data);
-            (void)Hash160(data.begin(), data.end());
             (void)sha512.Size();
             break;
         }
@@ -66,19 +68,20 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             (void)ripemd160.Reset();
             (void)sha1.Reset();
             (void)sha256.Reset();
+            (void)sha3.Reset();
             (void)sha512.Reset();
             break;
         }
         case 2: {
-            switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 8)) {
+            switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 9)) {
             case 0: {
                 data.resize(CHash160::OUTPUT_SIZE);
-                hash160.Finalize(data.data());
+                hash160.Finalize(data);
                 break;
             }
             case 1: {
                 data.resize(CHash256::OUTPUT_SIZE);
-                hash256.Finalize(data.data());
+                hash256.Finalize(data);
                 break;
             }
             case 2: {
@@ -116,9 +119,21 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                 data[0] = sip_hasher.Finalize() % 256;
                 break;
             }
+            case 9: {
+                data.resize(SHA3_256::OUTPUT_SIZE);
+                sha3.Finalize(data);
+                break;
+            }
             }
             break;
         }
         }
+    }
+    if (fuzzed_data_provider.ConsumeBool()) {
+        uint64_t state[25];
+        for (size_t i = 0; i < 25; ++i) {
+            state[i] = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+        }
+        KeccakF(state);
     }
 }

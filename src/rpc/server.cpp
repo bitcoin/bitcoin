@@ -130,11 +130,9 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     return strRet;
 }
 
-UniValue help(const JSONRPCRequest& jsonRequest)
+static RPCHelpMan help()
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
-            RPCHelpMan{"help",
+    return RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
                     {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
@@ -143,32 +141,32 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                     RPCResult::Type::STR, "", "The help text"
                 },
                 RPCExamples{""},
-            }.ToString()
-        );
-
+        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
+{
     std::string strCommand;
     if (jsonRequest.params.size() > 0)
         strCommand = jsonRequest.params[0].get_str();
 
     return tableRPC.help(strCommand, jsonRequest);
+},
+    };
 }
 
-
-UniValue stop(const JSONRPCRequest& jsonRequest)
+static RPCHelpMan stop()
 {
     static const std::string RESULT{PACKAGE_NAME " stopping"};
-    // Accept the deprecated and ignored 'detach' boolean argument
+    return RPCHelpMan{"stop",
     // Also accept the hidden 'wait' integer argument (milliseconds)
     // For instance, 'stop 1000' makes the call wait 1 second before returning
     // to the client (intended for testing)
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
-            RPCHelpMan{"stop",
                 "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
-                {},
+                {
+                    {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "how long to wait in ms", "", {}, /* hidden */ true},
+                },
                 RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
                 RPCExamples{""},
-            }.ToString());
+        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
+{
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -176,11 +174,13 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
         UninterruptibleSleep(std::chrono::milliseconds{jsonRequest.params[0].get_int()});
     }
     return RESULT;
+},
+    };
 }
 
-static UniValue uptime(const JSONRPCRequest& jsonRequest)
+static RPCHelpMan uptime()
 {
-            RPCHelpMan{"uptime",
+    return RPCHelpMan{"uptime",
                 "\nReturns the total uptime of the server.\n",
                             {},
                             RPCResult{
@@ -190,14 +190,16 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
                     HelpExampleCli("uptime", "")
                 + HelpExampleRpc("uptime", "")
                 },
-            }.Check(jsonRequest);
-
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     return GetTime() - GetStartupTime();
 }
+    };
+}
 
-static UniValue getrpcinfo(const JSONRPCRequest& request)
+static RPCHelpMan getrpcinfo()
 {
-            RPCHelpMan{"getrpcinfo",
+    return RPCHelpMan{"getrpcinfo",
                 "\nReturns details of the RPC server.\n",
                 {},
                 RPCResult{
@@ -217,8 +219,8 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("getrpcinfo", "")
                 + HelpExampleRpc("getrpcinfo", "")},
-            }.Check(request);
-
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     LOCK(g_rpc_server_info.mutex);
     UniValue active_commands(UniValue::VARR);
     for (const RPCCommandExecutionInfo& info : g_rpc_server_info.active_commands) {
@@ -237,6 +239,8 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
 
     return result;
 }
+    };
+}
 
 // clang-format off
 static const CRPCCommand vRPCCommands[] =
@@ -252,23 +256,16 @@ static const CRPCCommand vRPCCommands[] =
 
 CRPCTable::CRPCTable()
 {
-    unsigned int vcidx;
-    for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
-    {
-        const CRPCCommand *pcmd;
-
-        pcmd = &vRPCCommands[vcidx];
-        mapCommands[pcmd->name].push_back(pcmd);
+    for (const auto& c : vRPCCommands) {
+        appendCommand(c.name, &c);
     }
 }
 
-bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
+void CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
 {
-    if (IsRPCRunning())
-        return false;
+    CHECK_NONFATAL(!IsRPCRunning()); // Only add commands before rpc is running
 
     mapCommands[name].push_back(pcmd);
-    return true;
 }
 
 bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)

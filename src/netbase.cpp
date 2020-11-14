@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <limits>
 
 #ifndef WIN32
 #include <fcntl.h>
@@ -51,14 +52,20 @@ enum Network ParseNetwork(const std::string& net_in) {
     return NET_UNROUTABLE;
 }
 
-std::string GetNetworkName(enum Network net) {
-    switch(net)
-    {
+std::string GetNetworkName(enum Network net)
+{
+    switch (net) {
+    case NET_UNROUTABLE: return "unroutable";
     case NET_IPV4: return "ipv4";
     case NET_IPV6: return "ipv6";
     case NET_ONION: return "onion";
-    default: return "";
-    }
+    case NET_I2P: return "i2p";
+    case NET_CJDNS: return "cjdns";
+    case NET_INTERNAL: return "internal";
+    case NET_MAX: assert(false);
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
 }
 
 bool static LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
@@ -838,8 +845,8 @@ bool LookupSubNet(const std::string& strSubnet, CSubNet& ret)
         if (slash != strSubnet.npos)
         {
             std::string strNetmask = strSubnet.substr(slash + 1);
-            int32_t n;
-            if (ParseInt32(strNetmask, &n)) {
+            uint8_t n;
+            if (ParseUInt8(strNetmask, &n)) {
                 // If valid number, assume CIDR variable-length subnet masking
                 ret = CSubNet(network, n);
                 return ret.IsValid();

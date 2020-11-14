@@ -26,8 +26,13 @@ struct Available {
     Available(CTransactionRef& ref, size_t tx_count) : ref(ref), tx_count(tx_count){}
 };
 
-static void ComplexMemPool(benchmark::State& state)
+static void ComplexMemPool(benchmark::Bench& bench)
 {
+    int childTxs = 800;
+    if (bench.complexityN() > 1) {
+        childTxs = static_cast<int>(bench.complexityN());
+    }
+
     FastRandomContext det_rand{true};
     std::vector<Available> available_coins;
     std::vector<CTransactionRef> ordered_coins;
@@ -46,7 +51,7 @@ static void ComplexMemPool(benchmark::State& state)
         ordered_coins.emplace_back(MakeTransactionRef(tx));
         available_coins.emplace_back(ordered_coins.back(), tx_counter++);
     }
-    for (auto x = 0; x < 800 && !available_coins.empty(); ++x) {
+    for (auto x = 0; x < childTxs && !available_coins.empty(); ++x) {
         CMutableTransaction tx = CMutableTransaction();
         size_t n_ancestors = det_rand.randrange(10)+1;
         for (size_t ancestor = 0; ancestor < n_ancestors && !available_coins.empty(); ++ancestor){
@@ -77,13 +82,13 @@ static void ComplexMemPool(benchmark::State& state)
     TestingSetup test_setup;
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
-    while (state.KeepRunning()) {
+    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         for (auto& tx : ordered_coins) {
             AddTx(tx, pool);
         }
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
         pool.TrimToSize(GetVirtualTransactionSize(*ordered_coins.front()));
-    }
+    });
 }
 
-BENCHMARK(ComplexMemPool, 1);
+BENCHMARK(ComplexMemPool);

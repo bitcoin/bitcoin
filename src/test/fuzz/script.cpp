@@ -48,7 +48,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     if (CompressScript(script, compressed)) {
         const unsigned int size = compressed[0];
         compressed.erase(compressed.begin());
-        assert(size >= 0 && size <= 5);
+        assert(size <= 5);
         CScript decompressed_script;
         const bool ok = DecompressScript(decompressed_script, size, compressed);
         assert(ok);
@@ -62,8 +62,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     std::vector<CTxDestination> addresses;
     int required_ret;
     (void)ExtractDestinations(script, type_ret, addresses, required_ret);
-
-    (void)GetScriptForWitness(script);
 
     const FlatSigningProvider signing_provider;
     (void)InferDescriptor(script, signing_provider);

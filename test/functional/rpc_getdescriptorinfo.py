@@ -17,6 +17,7 @@ class DescriptorTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-disablewallet"]]
+        self.wallet_names = []
 
     def test_desc(self, desc, isrange, issolvable, hasprivatekeys):
         info = self.nodes[0].getdescriptorinfo(desc)

@@ -143,7 +143,7 @@ class KeyPoolTest(BitcoinTestFramework):
         w2 = nodes[0].get_wallet_rpc('w2')
 
         # refer to initial wallet as w1
-        w1 = nodes[0].get_wallet_rpc('')
+        w1 = nodes[0].get_wallet_rpc(self.default_wallet_name)
 
         # import private key and fund it
         address = addr.pop()

@@ -60,7 +60,7 @@ struct CLockLocation {
     std::string ToString() const
     {
         return strprintf(
-            "%s %s:%s%s (in thread %s)",
+            "'%s' in %s:%s%s (in thread '%s')",
             mutexName, sourceFile, sourceLine, (fTry ? " (TRY)" : ""), m_thread_name);
     }
 
@@ -105,16 +105,6 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
 {
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
-    for (const LockStackItem& i : s2) {
-        if (i.first == mismatch.first) {
-            LogPrintf("\n (1)"); /* Continued */
-        }
-        if (i.first == mismatch.second) {
-            LogPrintf("\n (2)"); /* Continued */
-        }
-        LogPrintf("\n %s\n", i.second.ToString());
-    }
-    LogPrintf("Current lock order is:\n");
     for (const LockStackItem& i : s1) {
         if (i.first == mismatch.first) {
             LogPrintf("\n (1)"); /* Continued */
@@ -124,11 +114,25 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
         }
         LogPrintf("\n %s\n", i.second.ToString());
     }
+
+    std::string mutex_a, mutex_b;
+    LogPrintf("Current lock order is:\n");
+    for (const LockStackItem& i : s2) {
+        if (i.first == mismatch.first) {
+            LogPrintf(" (1)"); /* Continued */
+            mutex_a = i.second.Name();
+        }
+        if (i.first == mismatch.second) {
+            LogPrintf(" (2)"); /* Continued */
+            mutex_b = i.second.Name();
+        }
+        LogPrintf("\n %s\n", i.second.ToString());
+    }
     if (g_debug_lockorder_abort) {
-        tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order at %s:%i, details in debug log.\n", __FILE__, __LINE__);
+        tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString());
         abort();
     }
-    throw std::logic_error("potential deadlock detected");
+    throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
 static void push_lock(void* c, const CLockLocation& locklocation)
@@ -145,12 +149,17 @@ static void push_lock(void* c, const CLockLocation& locklocation)
         const LockPair p1 = std::make_pair(i.first, c);
         if (lockdata.lockorders.count(p1))
             continue;
-        lockdata.lockorders.emplace(p1, lock_stack);
 
         const LockPair p2 = std::make_pair(c, i.first);
+        if (lockdata.lockorders.count(p2)) {
+            auto lock_stack_copy = lock_stack;
+            lock_stack.pop_back();
+            potential_deadlock_detected(p1, lockdata.lockorders[p2], lock_stack_copy);
+            // potential_deadlock_detected() does not return.
+        }
+
+        lockdata.lockorders.emplace(p1, lock_stack);
         lockdata.invlockorders.insert(p2);
-        if (lockdata.lockorders.count(p2))
-            potential_deadlock_detected(p1, lockdata.lockorders[p2], lockdata.lockorders[p1]);
     }
 }
 
@@ -229,12 +238,15 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
 template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
 template void AssertLockHeldInternal(const char*, const char*, int, RecursiveMutex*);
 
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
+template <typename MutexType>
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs)
 {
     if (!LockHeld(cs)) return;
     tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
     abort();
 }
+template void AssertLockNotHeldInternal(const char*, const char*, int, Mutex*);
+template void AssertLockNotHeldInternal(const char*, const char*, int, RecursiveMutex*);
 
 void DeleteLock(void* cs)
 {
@@ -253,6 +265,17 @@ void DeleteLock(void* cs)
         lockdata.lockorders.erase(invinvitem);
         lockdata.invlockorders.erase(invit++);
     }
+}
+
+bool LockStackEmpty()
+{
+    LockData& lockdata = GetLockData();
+    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    const auto it = lockdata.m_lock_stacks.find(std::this_thread::get_id());
+    if (it == lockdata.m_lock_stacks.end()) {
+        return true;
+    }
+    return it->second.empty();
 }
 
 bool g_debug_lockorder_abort = true;

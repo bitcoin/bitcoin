@@ -14,6 +14,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <util/string.h>
+#include <util/threadnames.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
 
@@ -35,16 +36,19 @@ WalletController::WalletController(ClientModel& client_model, const PlatformStyl
     , m_platform_style(platform_style)
     , m_options_model(client_model.getOptionsModel())
 {
-    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
+    m_handler_load_wallet = m_node.walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
         getOrCreateWallet(std::move(wallet));
     });
 
-    for (std::unique_ptr<interfaces::Wallet>& wallet : m_node.getWallets()) {
+    for (std::unique_ptr<interfaces::Wallet>& wallet : m_node.walletClient().getWallets()) {
         getOrCreateWallet(std::move(wallet));
     }
 
     m_activity_worker->moveToThread(m_activity_thread);
     m_activity_thread->start();
+    QTimer::singleShot(0, m_activity_worker, []() {
+        util::ThreadRename("qt-walletctrl");
+    });
 }
 
 // Not using the default destructor because not all member types definitions are
@@ -66,7 +70,7 @@ std::map<std::string, bool> WalletController::listWalletDir() const
 {
     QMutexLocker locker(&m_mutex);
     std::map<std::string, bool> wallets;
-    for (const std::string& name : m_node.listWalletDir()) {
+    for (const std::string& name : m_node.walletClient().listWalletDir()) {
         wallets[name] = false;
     }
     for (WalletModel* wallet_model : m_wallets) {
@@ -249,10 +253,9 @@ void CreateWalletActivity::createWallet()
     }
 
     QTimer::singleShot(500, worker(), [this, name, flags] {
-        WalletCreationStatus status;
-        std::unique_ptr<interfaces::Wallet> wallet = node().createWallet(m_passphrase, flags, name, m_error_message, m_warning_message, status);
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);
 
-        if (status == WalletCreationStatus::SUCCESS) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
+        if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
         QTimer::singleShot(500, this, &CreateWalletActivity::finish);
     });
@@ -321,7 +324,7 @@ void OpenWalletActivity::open(const std::string& path)
     showProgressDialog(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, path] {
-        std::unique_ptr<interfaces::Wallet> wallet = node().loadWallet(path, m_error_message, m_warning_message);
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().loadWallet(path, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 

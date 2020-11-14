@@ -16,7 +16,7 @@ Features:
 * Very efficient implementation.
 * Suitable for embedded systems.
 * Optional module for public key recovery.
-* Optional module for ECDH key exchange (experimental).
+* Optional module for ECDH key exchange.
 
 Experimental features have not received enough scrutiny to satisfy the standard of quality of this library but are made available for testing and review by the community. The APIs of these features should not be considered stable.
 
@@ -48,7 +48,7 @@ Implementation details
   * Use wNAF notation for point multiplicands.
   * Use a much larger window for multiples of G, using precomputed multiples.
   * Use Shamir's trick to do the multiplication with the public key and the generator simultaneously.
-  * Optionally (off by default) use secp256k1's efficiently-computable endomorphism to split the P multiplicand into 2 half-sized ones.
+  * Use secp256k1's efficiently-computable endomorphism to split the P multiplicand into 2 half-sized ones.
 * Point multiplication for signing
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
   * Intended to be completely free of timing sidechannels for secret-key operations (on reasonable hardware/toolchains)

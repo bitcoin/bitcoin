@@ -71,7 +71,14 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['blocks'], blockchain_info['blocks'])
         assert_equal(cli_get_info['headers'], blockchain_info['headers'])
         assert_equal(cli_get_info['timeoffset'], network_info['timeoffset'])
-        assert_equal(cli_get_info['connections'], network_info['connections'])
+        assert_equal(
+            cli_get_info['connections'],
+            {
+                'in': network_info['connections_in'],
+                'out': network_info['connections_out'],
+                'total': network_info['connections']
+            }
+        )
         assert_equal(cli_get_info['proxy'], network_info['networks'][0]['proxy'])
         assert_equal(cli_get_info['difficulty'], blockchain_info['difficulty'])
         assert_equal(cli_get_info['chain'], blockchain_info['chain'])
@@ -88,7 +95,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(self.nodes[0].cli.getwalletinfo(), wallet_info)
 
             # Setup to test -getinfo, -generate, and -rpcwallet= with multiple wallets.
-            wallets = ['', 'Encrypted', 'secret']
+            wallets = [self.default_wallet_name, 'Encrypted', 'secret']
             amounts = [BALANCE + Decimal('9.999928'), Decimal(9), Decimal(31)]
             self.nodes[0].createwallet(wallet_name=wallets[1])
             self.nodes[0].createwallet(wallet_name=wallets[2])

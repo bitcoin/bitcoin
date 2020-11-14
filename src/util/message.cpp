@@ -64,7 +64,7 @@ bool MessageSign(
         return false;
     }
 
-    signature = EncodeBase64(signature_bytes.data(), signature_bytes.size());
+    signature = EncodeBase64(signature_bytes);
 
     return true;
 }

@@ -8,6 +8,7 @@
 #define SECP256K1_SCALAR_H
 
 #include "num.h"
+#include "util.h"
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"
@@ -15,12 +16,12 @@
 
 #if defined(EXHAUSTIVE_TEST_ORDER)
 #include "scalar_low.h"
-#elif defined(USE_SCALAR_4X64)
+#elif defined(SECP256K1_WIDEMUL_INT128)
 #include "scalar_4x64.h"
-#elif defined(USE_SCALAR_8X32)
+#elif defined(SECP256K1_WIDEMUL_INT64)
 #include "scalar_8x32.h"
 #else
-#error "Please select scalar implementation"
+#error "Please select wide multiplication implementation"
 #endif
 
 /** Clear a scalar to prevent the leak of sensitive data. */
@@ -101,12 +102,11 @@ static void secp256k1_scalar_order_get_num(secp256k1_num *r);
 /** Compare two scalars. */
 static int secp256k1_scalar_eq(const secp256k1_scalar *a, const secp256k1_scalar *b);
 
-#ifdef USE_ENDOMORPHISM
-/** Find r1 and r2 such that r1+r2*2^128 = a. */
-static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *a);
-/** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (see secp256k1_gej_mul_lambda). */
-static void secp256k1_scalar_split_lambda(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *a);
-#endif
+/** Find r1 and r2 such that r1+r2*2^128 = k. */
+static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *k);
+/** Find r1 and r2 such that r1+r2*lambda = k,
+ * where r1 and r2 or their negations are maximum 128 bits long (see secp256k1_ge_mul_lambda). */
+static void secp256k1_scalar_split_lambda(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *k);
 
 /** Multiply a and b (without taking the modulus!), divide by 2**shift, and round to the nearest integer. Shift must be at least 256. */
 static void secp256k1_scalar_mul_shift_var(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b, unsigned int shift);

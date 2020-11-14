@@ -67,7 +67,7 @@ esac
 
 CFLAGS="-W $CFLAGS"
 
-warn_CFLAGS="-std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings"
+warn_CFLAGS="-std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wundef -Wno-unused-function -Wno-long-long -Wno-overlength-strings"
 saved_CFLAGS="$CFLAGS"
 CFLAGS="$warn_CFLAGS $CFLAGS"
 AC_MSG_CHECKING([if ${CC} supports ${warn_CFLAGS}])
@@ -116,18 +116,13 @@ AC_ARG_ENABLE(exhaustive_tests,
     [use_exhaustive_tests=$enableval],
     [use_exhaustive_tests=yes])
 
-AC_ARG_ENABLE(endomorphism,
-    AS_HELP_STRING([--enable-endomorphism],[enable endomorphism [default=no]]),
-    [use_endomorphism=$enableval],
-    [use_endomorphism=no])
-
 AC_ARG_ENABLE(ecmult_static_precomputation,
     AS_HELP_STRING([--enable-ecmult-static-precomputation],[enable precomputed ecmult table for signing [default=auto]]),
     [use_ecmult_static_precomputation=$enableval],
     [use_ecmult_static_precomputation=auto])
 
 AC_ARG_ENABLE(module_ecdh,
-    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation (experimental)]),
+    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation]),
     [enable_module_ecdh=$enableval],
     [enable_module_ecdh=no])
 
@@ -136,19 +131,27 @@ AC_ARG_ENABLE(module_recovery,
     [enable_module_recovery=$enableval],
     [enable_module_recovery=no])
 
+AC_ARG_ENABLE(module_extrakeys,
+    AS_HELP_STRING([--enable-module-extrakeys],[enable extrakeys module (experimental)]),
+    [enable_module_extrakeys=$enableval],
+    [enable_module_extrakeys=no])
+
+AC_ARG_ENABLE(module_schnorrsig,
+    AS_HELP_STRING([--enable-module-schnorrsig],[enable schnorrsig module (experimental)]),
+    [enable_module_schnorrsig=$enableval],
+    [enable_module_schnorrsig=no])
+
 AC_ARG_ENABLE(external_default_callbacks,
     AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]),
     [use_external_default_callbacks=$enableval],
     [use_external_default_callbacks=no])
 
-AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
-[finite field implementation to use [default=auto]])],[req_field=$withval], [req_field=auto])
+dnl Test-only override of the (autodetected by the C code) "widemul" setting.
+dnl Legal values are int64 (for [u]int64_t), int128 (for [unsigned] __int128), and auto (the default).
+AC_ARG_WITH([test-override-wide-multiply], [] ,[set_widemul=$withval], [set_widemul=auto])
 
 AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|no|auto],
 [bignum implementation to use [default=auto]])],[req_bignum=$withval], [req_bignum=auto])
-
-AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
-[scalar implementation to use [default=auto]])],[req_scalar=$withval], [req_scalar=auto])
 
 AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto],
 [assembly optimizations to use (experimental: arm) [default=auto]])],[req_asm=$withval], [req_asm=auto])
@@ -156,8 +159,7 @@ AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto],
 AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE|auto],
 [window size for ecmult precomputation for verification, specified as integer in range [2..24].]
 [Larger values result in possibly better performance at the cost of an exponentially larger precomputed table.]
-[The table will store 2^(SIZE-2) * 64 bytes of data but can be larger in memory due to platform-specific padding and alignment.]
-[If the endomorphism optimization is enabled, two tables of this size are used instead of only one.]
+[The table will store 2^(SIZE-1) * 64 bytes of data but can be larger in memory due to platform-specific padding and alignment.]
 ["auto" is a reasonable setting for desktop machines (currently 15). [default=auto]]
 )],
 [req_ecmult_window=$withval], [req_ecmult_window=auto])
@@ -170,9 +172,21 @@ AC_ARG_WITH([ecmult-gen-precision], [AS_HELP_STRING([--with-ecmult-gen-precision
 )],
 [req_ecmult_gen_precision=$withval], [req_ecmult_gen_precision=auto])
 
-AC_CHECK_TYPES([__int128])
+AC_ARG_WITH([valgrind], [AS_HELP_STRING([--with-valgrind=yes|no|auto],
+[Build with extra checks for running inside Valgrind [default=auto]]
+)],
+[req_valgrind=$withval], [req_valgrind=auto])
 
-AC_CHECK_HEADER([valgrind/memcheck.h], [enable_valgrind=yes], [enable_valgrind=no], [])
+if test x"$req_valgrind" = x"no"; then
+  enable_valgrind=no
+else
+  AC_CHECK_HEADER([valgrind/memcheck.h], [enable_valgrind=yes], [
+    if test x"$req_valgrind" = x"yes"; then
+      AC_MSG_ERROR([Valgrind support explicitly requested but valgrind/memcheck.h header not available])
+    fi
+    enable_valgrind=no
+  ], [])
+fi
 AM_CONDITIONAL([VALGRIND_ENABLED],[test "$enable_valgrind" = "yes"])
 
 if test x"$enable_coverage" = x"yes"; then
@@ -265,63 +279,6 @@ else
   esac
 fi
 
-if test x"$req_field" = x"auto"; then
-  if test x"set_asm" = x"x86_64"; then
-    set_field=64bit
-  fi
-  if test x"$set_field" = x; then
-    SECP_INT128_CHECK
-    if test x"$has_int128" = x"yes"; then
-      set_field=64bit
-    fi
-  fi
-  if test x"$set_field" = x; then
-    set_field=32bit
-  fi
-else
-  set_field=$req_field
-  case $set_field in
-  64bit)
-    if test x"$set_asm" != x"x86_64"; then
-      SECP_INT128_CHECK
-      if test x"$has_int128" != x"yes"; then
-        AC_MSG_ERROR([64bit field explicitly requested but neither __int128 support or x86_64 assembly available])
-      fi
-    fi
-    ;;
-  32bit)
-    ;;
-  *)
-    AC_MSG_ERROR([invalid field implementation selection])
-    ;;
-  esac
-fi
-
-if test x"$req_scalar" = x"auto"; then
-  SECP_INT128_CHECK
-  if test x"$has_int128" = x"yes"; then
-    set_scalar=64bit
-  fi
-  if test x"$set_scalar" = x; then
-    set_scalar=32bit
-  fi
-else
-  set_scalar=$req_scalar
-  case $set_scalar in
-  64bit)
-    SECP_INT128_CHECK
-    if test x"$has_int128" != x"yes"; then
-      AC_MSG_ERROR([64bit scalar explicitly requested but __int128 support not available])
-    fi
-    ;;
-  32bit)
-    ;;
-  *)
-    AC_MSG_ERROR([invalid scalar implementation selected])
-    ;;
-  esac
-fi
-
 if test x"$req_bignum" = x"auto"; then
   SECP_GMP_CHECK
   if test x"$has_gmp" = x"yes"; then
@@ -365,16 +322,18 @@ no)
   ;;
 esac
 
-# select field implementation
-case $set_field in
-64bit)
-  AC_DEFINE(USE_FIELD_5X52, 1, [Define this symbol to use the FIELD_5X52 implementation])
+# select wide multiplication implementation
+case $set_widemul in
+int128)
+  AC_DEFINE(USE_FORCE_WIDEMUL_INT128, 1, [Define this symbol to force the use of the (unsigned) __int128 based wide multiplication implementation])
   ;;
-32bit)
-  AC_DEFINE(USE_FIELD_10X26, 1, [Define this symbol to use the FIELD_10X26 implementation])
+int64)
+  AC_DEFINE(USE_FORCE_WIDEMUL_INT64, 1, [Define this symbol to force the use of the (u)int64_t based wide multiplication implementation])
+  ;;
+auto)
   ;;
 *)
-  AC_MSG_ERROR([invalid field implementation])
+  AC_MSG_ERROR([invalid wide multiplication implementation])
   ;;
 esac
 
@@ -393,19 +352,6 @@ no)
   ;;
 *)
   AC_MSG_ERROR([invalid bignum implementation])
-  ;;
-esac
-
-#select scalar implementation
-case $set_scalar in
-64bit)
-  AC_DEFINE(USE_SCALAR_4X64, 1, [Define this symbol to use the 4x64 scalar implementation])
-  ;;
-32bit)
-  AC_DEFINE(USE_SCALAR_8X32, 1, [Define this symbol to use the 8x32 scalar implementation])
-  ;;
-*)
-  AC_MSG_ERROR([invalid scalar implementation])
   ;;
 esac
 
@@ -449,8 +395,8 @@ esac
 
 if test x"$use_tests" = x"yes"; then
   SECP_OPENSSL_CHECK
-  if test x"$has_openssl_ec" = x"yes"; then
-    if test x"$enable_openssl_tests" != x"no"; then
+  if test x"$enable_openssl_tests" != x"no" && test x"$has_openssl_ec" = x"yes"; then
+      enable_openssl_tests=yes
       AC_DEFINE(ENABLE_OPENSSL_TESTS, 1, [Define this symbol if OpenSSL EC functions are available])
       SECP_TEST_INCLUDES="$SSL_CFLAGS $CRYPTO_CFLAGS $CRYPTO_CPPFLAGS"
       SECP_TEST_LIBS="$CRYPTO_LIBS"
@@ -460,25 +406,22 @@ if test x"$use_tests" = x"yes"; then
         SECP_TEST_LIBS="$SECP_TEST_LIBS -lgdi32"
         ;;
       esac
-    fi
   else
     if test x"$enable_openssl_tests" = x"yes"; then
       AC_MSG_ERROR([OpenSSL tests requested but OpenSSL with EC support is not available])
     fi
+    enable_openssl_tests=no
   fi
 else
   if test x"$enable_openssl_tests" = x"yes"; then
     AC_MSG_ERROR([OpenSSL tests requested but tests are not enabled])
   fi
+  enable_openssl_tests=no
 fi
 
 if test x"$set_bignum" = x"gmp"; then
   SECP_LIBS="$SECP_LIBS $GMP_LIBS"
   SECP_INCLUDES="$SECP_INCLUDES $GMP_CPPFLAGS"
-fi
-
-if test x"$use_endomorphism" = x"yes"; then
-  AC_DEFINE(USE_ENDOMORPHISM, 1, [Define this symbol to use endomorphism optimization])
 fi
 
 if test x"$set_precomp" = x"yes"; then
@@ -493,7 +436,16 @@ if test x"$enable_module_recovery" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_RECOVERY, 1, [Define this symbol to enable the ECDSA pubkey recovery module])
 fi
 
-AC_C_BIGENDIAN()
+if test x"$enable_module_schnorrsig" = x"yes"; then
+  AC_DEFINE(ENABLE_MODULE_SCHNORRSIG, 1, [Define this symbol to enable the schnorrsig module])
+  enable_module_extrakeys=yes
+fi
+
+# Test if extrakeys is set after the schnorrsig module to allow the schnorrsig
+# module to set enable_module_extrakeys=yes
+if test x"$enable_module_extrakeys" = x"yes"; then
+  AC_DEFINE(ENABLE_MODULE_EXTRAKEYS, 1, [Define this symbol to enable the extrakeys module])
+fi
 
 if test x"$use_external_asm" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_ASM, 1, [Define this symbol if an external (non-inline) assembly implementation is used])
@@ -507,11 +459,15 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
   AC_MSG_NOTICE([WARNING: experimental build])
   AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
-  AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
+  AC_MSG_NOTICE([Building extrakeys module: $enable_module_extrakeys])
+  AC_MSG_NOTICE([Building schnorrsig module: $enable_module_schnorrsig])
   AC_MSG_NOTICE([******])
 else
-  if test x"$enable_module_ecdh" = x"yes"; then
-    AC_MSG_ERROR([ECDH module is experimental. Use --enable-experimental to allow.])
+  if test x"$enable_module_extrakeys" = x"yes"; then
+    AC_MSG_ERROR([extrakeys module is experimental. Use --enable-experimental to allow.])
+  fi
+  if test x"$enable_module_schnorrsig" = x"yes"; then
+    AC_MSG_ERROR([schnorrsig module is experimental. Use --enable-experimental to allow.])
   fi
   if test x"$set_asm" = x"arm"; then
     AC_MSG_ERROR([ARM assembly optimization is experimental. Use --enable-experimental to allow.])
@@ -531,6 +487,8 @@ AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
 AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$set_precomp" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_EXTRAKEYS], [test x"$enable_module_extrakeys" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$use_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm"])
 
@@ -543,20 +501,25 @@ AC_OUTPUT
 
 echo
 echo "Build Options:"
-echo "  with endomorphism       = $use_endomorphism"
 echo "  with ecmult precomp     = $set_precomp"
 echo "  with external callbacks = $use_external_default_callbacks"
 echo "  with benchmarks         = $use_benchmark"
+echo "  with tests              = $use_tests"
+echo "  with openssl tests      = $enable_openssl_tests"
 echo "  with coverage           = $enable_coverage"
 echo "  module ecdh             = $enable_module_ecdh"
 echo "  module recovery         = $enable_module_recovery"
+echo "  module extrakeys        = $enable_module_extrakeys"
+echo "  module schnorrsig       = $enable_module_schnorrsig"
 echo
 echo "  asm                     = $set_asm"
 echo "  bignum                  = $set_bignum"
-echo "  field                   = $set_field"
-echo "  scalar                  = $set_scalar"
 echo "  ecmult window size      = $set_ecmult_window"
 echo "  ecmult gen prec. bits   = $set_ecmult_gen_precision"
+dnl Hide test-only options unless they're used.
+if test x"$set_widemul" != xauto; then
+echo "  wide multiplication     = $set_widemul"
+fi
 echo
 echo "  valgrind                = $enable_valgrind"
 echo "  CC                      = $CC"

@@ -37,10 +37,13 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
+class UniValue;
+
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const BITCOIN_SETTINGS_FILENAME;
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -95,6 +98,16 @@ std::string ShellEscape(const std::string& arg);
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
+#ifdef HAVE_BOOST_PROCESS
+/**
+ * Execute a command which returns JSON, and parse the result.
+ *
+ * @param str_command The command to execute, including any arguments
+ * @param str_std_in string to pass to stdin
+ * @return parsed JSON
+ */
+UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
+#endif // HAVE_BOOST_PROCESS
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -332,6 +345,39 @@ public:
      * Return nullopt for unknown arg.
      */
     Optional<unsigned int> GetArgFlags(const std::string& name) const;
+
+    /**
+     * Read and update settings file with saved settings. This needs to be
+     * called after SelectParams() because the settings file location is
+     * network-specific.
+     */
+    bool InitSettings(std::string& error);
+
+    /**
+     * Get settings file path, or return false if read-write settings were
+     * disabled with -nosettings.
+     */
+    bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false) const;
+
+    /**
+     * Read settings file. Push errors to vector, or log them if null.
+     */
+    bool ReadSettingsFile(std::vector<std::string>* errors = nullptr);
+
+    /**
+     * Write settings file. Push errors to vector, or log them if null.
+     */
+    bool WriteSettingsFile(std::vector<std::string>* errors = nullptr) const;
+
+    /**
+     * Access settings with lock held.
+     */
+    template <typename Fn>
+    void LockSettings(Fn&& fn)
+    {
+        LOCK(cs_args);
+        fn(m_settings);
+    }
 
     /**
      * Log the config file options and the command line arguments,

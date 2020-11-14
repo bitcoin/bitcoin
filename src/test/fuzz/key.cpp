@@ -85,7 +85,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(negated_key == key);
     }
 
-    const uint256 random_uint256 = Hash(buffer.begin(), buffer.end());
+    const uint256 random_uint256 = Hash(buffer);
 
     {
         CKey child_key;

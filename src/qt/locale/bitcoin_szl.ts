@@ -529,11 +529,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portmanyj je &lt;b&gt;zaszyfrowany&lt;/b&gt; i terŏźnie &lt;b&gt;zaszperowany&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Przitrefiōł sie krytyczny feler. Bitcoin niy poradzi kōntynuować bezpiycznie i ôstanie zawrzity.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -1055,10 +1051,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Skupluj sie z necym Bitcoin ze pōmocōm ôsobnego proxy SOCKS5 dlŏ necu TOR</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>Ô&amp;kno</translation>
     </message>
@@ -1124,6 +1116,13 @@
     <message>
         <source>Your current total balance</source>
         <translation>Twoje terŏźne saldo</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>or</source>
+        <translation>abo</translation>
     </message>
     </context>
 <context>
@@ -1273,10 +1272,6 @@
         <translation>Keta blokōw</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Terŏźniŏ wielość blokōw</translation>
-    </message>
-    <message>
         <source>Current number of transactions</source>
         <translation>Terŏźniŏ wielość transakcyji</translation>
     </message>
@@ -1360,14 +1355,6 @@
         <source>Outbound</source>
         <translation>Wychodowy</translation>
     </message>
-    <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Niy</translation>
-    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -1411,12 +1398,24 @@
         <source>Copy amount</source>
         <translation>Kopiyruj kwotã</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Niy idzie było ôdszperować portmanyja.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>Kod QR</translation>
+        <source>Amount:</source>
+        <translation>Kwota:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Wiadōmość:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Portmanyj:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -1433,30 +1432,6 @@
     <message>
         <source>Payment information</source>
         <translation>Informacyje ô płacie</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Kwota</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etyketa</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Wiadōmość</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portmanyj</translation>
     </message>
 </context>
 <context>
@@ -1868,6 +1843,10 @@
         <translation>Eksportuj dane z aktywnyj szkarty do zbioru</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Feler</translation>
+    </message>
+    <message>
         <source>Backup Failed</source>
         <translation>Backup niy podarził sie</translation>
     </message>
@@ -1953,10 +1932,6 @@
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Imyntnŏ dugość kety wersyje (%i) przekrŏczŏ maksymalnõ dopuszczalnõ dugość (%i). Zmyńsz wielość abo miara parametra uacomment.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Pozōr: Ôdtworzōno było dane z poprzniōnego zbioru portmanyja! Ôryginalny %s ôstoł zapisany za %s w %s; jeźli twoje saldo abo transakcyje sōm niynŏleżne winiyn żeś prziwrōcić kopijõ ibrycznõ.</translation>
     </message>
     <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>

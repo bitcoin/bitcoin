@@ -11,7 +11,7 @@ mutex:CConnman::ThreadOpenConnections
 mutex:CConnman::ThreadOpenAddedConnections
 mutex:CConnman::SocketHandler
 mutex:UpdateTip
-mutex:PeerLogicValidation::UpdatedBlockTip
+mutex:PeerManager::UpdatedBlockTip
 mutex:g_best_block_mutex
 # race (TODO fix)
 race:CConnman::WakeMessageHandler
@@ -23,6 +23,8 @@ race:LoadWallet
 race:WalletBatch::WriteHDChain
 race:BerkeleyBatch
 race:BerkeleyDatabase
+race:DatabaseBatch
+race:leveldb::DBImpl::DeleteObsoleteFiles
 race:zmq::*
 race:bitcoin-qt
 # deadlock (TODO fix)
@@ -30,7 +32,7 @@ deadlock:CConnman::ForNode
 deadlock:CConnman::GetNodeStats
 deadlock:CChainState::ConnectTip
 deadlock:UpdateTip
-deadlock:wallet_tests::CreateWalletFromFile
+deadlock:wallet_tests::CreateWallet
 
 # WalletBatch (unidentified deadlock)
 deadlock:WalletBatch
@@ -45,3 +47,4 @@ deadlock:src/qt/test/*
 # External libraries
 deadlock:libdb
 race:libzmq
+race:epoll_ctl  # https://github.com/bitcoin/bitcoin/pull/20218

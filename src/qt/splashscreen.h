@@ -28,8 +28,9 @@ class SplashScreen : public QWidget
     Q_OBJECT
 
 public:
-    explicit SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle);
+    explicit SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle);
     ~SplashScreen();
+    void setNode(interfaces::Node& node);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -42,6 +43,9 @@ public Q_SLOTS:
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
+    /** Handle wallet load notifications. */
+    void handleLoadWallet();
+
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
@@ -50,15 +54,16 @@ private:
     void subscribeToCoreSignals();
     /** Disconnect core signals to splash screen */
     void unsubscribeFromCoreSignals();
-    /** Connect wallet signals to splash screen */
-    void ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet);
+    /** Initiate shutdown */
+    void shutdown();
 
     QPixmap pixmap;
     QString curMessage;
     QColor curColor;
     int curAlignment;
 
-    interfaces::Node& m_node;
+    interfaces::Node* m_node = nullptr;
+    bool m_shutdown = false;
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;

@@ -18,14 +18,11 @@ os: linux
 language: minimal
 arch: amd64
 cache:
-  ccache: true
   directories:
     - $TRAVIS_BUILD_DIR/depends/built
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
     - $TRAVIS_BUILD_DIR/releases/$HOST
-before_cache:
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 stages:
   - lint
   - test
@@ -47,7 +44,7 @@ script:
   - if [ $SECONDS -gt 1200 ]; then export CONTINUE=0; fi  # Likely the depends build took very long
   - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
   - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_a.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
-  - if [ $SECONDS -gt 2000 ]; then export CONTINUE=0; fi  # Likely the build took very long; The tests take about 1000s, so we should abort if we have less than 50*60-1000=2000s left
+  - if [[ $SECONDS -gt 50*60-$EXPECTED_TESTS_DURATION_IN_SECONDS ]]; then export CONTINUE=0; fi
   - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
   - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_b.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
 after_script:
@@ -69,92 +66,11 @@ jobs:
         - set -o errexit; source ./ci/lint/06_script.sh
 
     - stage: test
-      name: 'ARM  [GOAL: install]  [buster]  [unit tests, functional tests]'
-      arch: arm64  # Can disable QEMU_USER_CMD and run the tests natively without qemu
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_arm.sh"
-        QEMU_USER_CMD=""
-
-# s390 build was disabled temporarily because of disk space issues on the Travis VM
-#
-#    - stage: test
-#      name: 'S390x  [GOAL: install]  [buster]  [unit tests, functional tests]'
-#      arch: s390x  # Can disable QEMU_USER_CMD and run the tests natively without qemu
-#      env: >-
-#        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
-#        QEMU_USER_CMD=""
-
-    - stage: test
-      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_win64.sh"
-
-    - stage: test
       name: '32-bit + dash  [GOAL: install]  [CentOS 7]  [gui]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [C++17, previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: memory (MSan)]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_msan.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
-
-    - stage: test
-      name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, fuzzers under valgrind]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
-
-    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
-
-    - stage: test
-      name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_mac.sh"
-
-    - stage: test
-      name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
-      os: osx
-      # Use the most recent version:
-      # Xcode 11.3.1, macOS 10.14, SDK 10.15
-      # https://docs.travis-ci.com/user/reference/osx/#macos-version
-      osx_image: xcode11.3
-      cache:
-        directories:
-          - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
-          - $TRAVIS_BUILD_DIR/releases/$HOST
-          - $HOME/Library/Caches/Homebrew
-          - /usr/local/Homebrew
-      addons:
-        homebrew:
-          packages:
-          - libtool
-          - berkeley-db4
-          - boost
-          - miniupnpc
-          - qt
-          - qrencode
-          - python3
-          - ccache
-          - zeromq
-      env: >-
-        DANGER_RUN_CI_ON_HOST=true
-        CI_USE_APT_INSTALL=no
-        FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

@@ -21,7 +21,7 @@ static const unsigned char k2[32] = {0};
 
 static ChaCha20Poly1305AEAD aead(k1, 32, k2, 32);
 
-static void CHACHA20_POLY1305_AEAD(benchmark::State& state, size_t buffersize, bool include_decryption)
+static void CHACHA20_POLY1305_AEAD(benchmark::Bench& bench, size_t buffersize, bool include_decryption)
 {
     std::vector<unsigned char> in(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
     std::vector<unsigned char> out(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
@@ -29,7 +29,7 @@ static void CHACHA20_POLY1305_AEAD(benchmark::State& state, size_t buffersize, b
     uint64_t seqnr_aad = 0;
     int aad_pos = 0;
     uint32_t len = 0;
-    while (state.KeepRunning()) {
+    bench.batch(buffersize).unit("byte").run([&] {
         // encrypt or decrypt the buffer with a static key
         assert(aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true));
 
@@ -53,70 +53,71 @@ static void CHACHA20_POLY1305_AEAD(benchmark::State& state, size_t buffersize, b
             seqnr_aad = 0;
             aad_pos = 0;
         }
-    }
+    });
 }
 
-static void CHACHA20_POLY1305_AEAD_64BYTES_ONLY_ENCRYPT(benchmark::State& state)
+static void CHACHA20_POLY1305_AEAD_64BYTES_ONLY_ENCRYPT(benchmark::Bench& bench)
 {
-    CHACHA20_POLY1305_AEAD(state, BUFFER_SIZE_TINY, false);
+    CHACHA20_POLY1305_AEAD(bench, BUFFER_SIZE_TINY, false);
 }
 
-static void CHACHA20_POLY1305_AEAD_256BYTES_ONLY_ENCRYPT(benchmark::State& state)
+static void CHACHA20_POLY1305_AEAD_256BYTES_ONLY_ENCRYPT(benchmark::Bench& bench)
 {
-    CHACHA20_POLY1305_AEAD(state, BUFFER_SIZE_SMALL, false);
+    CHACHA20_POLY1305_AEAD(bench, BUFFER_SIZE_SMALL, false);
 }
 
-static void CHACHA20_POLY1305_AEAD_1MB_ONLY_ENCRYPT(benchmark::State& state)
+static void CHACHA20_POLY1305_AEAD_1MB_ONLY_ENCRYPT(benchmark::Bench& bench)
 {
-    CHACHA20_POLY1305_AEAD(state, BUFFER_SIZE_LARGE, false);
+    CHACHA20_POLY1305_AEAD(bench, BUFFER_SIZE_LARGE, false);
 }
 
-static void CHACHA20_POLY1305_AEAD_64BYTES_ENCRYPT_DECRYPT(benchmark::State& state)
+static void CHACHA20_POLY1305_AEAD_64BYTES_ENCRYPT_DECRYPT(benchmark::Bench& bench)
 {
-    CHACHA20_POLY1305_AEAD(state, BUFFER_SIZE_TINY, true);
+    CHACHA20_POLY1305_AEAD(bench, BUFFER_SIZE_TINY, true);
 }
 
-static void CHACHA20_POLY1305_AEAD_256BYTES_ENCRYPT_DECRYPT(benchmark::State& state)
+static void CHACHA20_POLY1305_AEAD_256BYTES_ENCRYPT_DECRYPT(benchmark::Bench& bench)
 {
-    CHACHA20_POLY1305_AEAD(state, BUFFER_SIZE_SMALL, true);
+    CHACHA20_POLY1305_AEAD(bench, BUFFER_SIZE_SMALL, true);
 }
 
-static void CHACHA20_POLY1305_AEAD_1MB_ENCRYPT_DECRYPT(benchmark::State& state)
+static void CHACHA20_POLY1305_AEAD_1MB_ENCRYPT_DECRYPT(benchmark::Bench& bench)
 {
-    CHACHA20_POLY1305_AEAD(state, BUFFER_SIZE_LARGE, true);
+    CHACHA20_POLY1305_AEAD(bench, BUFFER_SIZE_LARGE, true);
 }
 
 // Add Hash() (dbl-sha256) bench for comparison
 
-static void HASH(benchmark::State& state, size_t buffersize)
+static void HASH(benchmark::Bench& bench, size_t buffersize)
 {
     uint8_t hash[CHash256::OUTPUT_SIZE];
     std::vector<uint8_t> in(buffersize,0);
-    while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(hash);
+    bench.batch(in.size()).unit("byte").run([&] {
+        CHash256().Write(in).Finalize(hash);
+    });
 }
 
-static void HASH_64BYTES(benchmark::State& state)
+static void HASH_64BYTES(benchmark::Bench& bench)
 {
-    HASH(state, BUFFER_SIZE_TINY);
+    HASH(bench, BUFFER_SIZE_TINY);
 }
 
-static void HASH_256BYTES(benchmark::State& state)
+static void HASH_256BYTES(benchmark::Bench& bench)
 {
-    HASH(state, BUFFER_SIZE_SMALL);
+    HASH(bench, BUFFER_SIZE_SMALL);
 }
 
-static void HASH_1MB(benchmark::State& state)
+static void HASH_1MB(benchmark::Bench& bench)
 {
-    HASH(state, BUFFER_SIZE_LARGE);
+    HASH(bench, BUFFER_SIZE_LARGE);
 }
 
-BENCHMARK(CHACHA20_POLY1305_AEAD_64BYTES_ONLY_ENCRYPT, 500000);
-BENCHMARK(CHACHA20_POLY1305_AEAD_256BYTES_ONLY_ENCRYPT, 250000);
-BENCHMARK(CHACHA20_POLY1305_AEAD_1MB_ONLY_ENCRYPT, 340);
-BENCHMARK(CHACHA20_POLY1305_AEAD_64BYTES_ENCRYPT_DECRYPT, 500000);
-BENCHMARK(CHACHA20_POLY1305_AEAD_256BYTES_ENCRYPT_DECRYPT, 250000);
-BENCHMARK(CHACHA20_POLY1305_AEAD_1MB_ENCRYPT_DECRYPT, 340);
-BENCHMARK(HASH_64BYTES, 500000);
-BENCHMARK(HASH_256BYTES, 250000);
-BENCHMARK(HASH_1MB, 340);
+BENCHMARK(CHACHA20_POLY1305_AEAD_64BYTES_ONLY_ENCRYPT);
+BENCHMARK(CHACHA20_POLY1305_AEAD_256BYTES_ONLY_ENCRYPT);
+BENCHMARK(CHACHA20_POLY1305_AEAD_1MB_ONLY_ENCRYPT);
+BENCHMARK(CHACHA20_POLY1305_AEAD_64BYTES_ENCRYPT_DECRYPT);
+BENCHMARK(CHACHA20_POLY1305_AEAD_256BYTES_ENCRYPT_DECRYPT);
+BENCHMARK(CHACHA20_POLY1305_AEAD_1MB_ENCRYPT_DECRYPT);
+BENCHMARK(HASH_64BYTES);
+BENCHMARK(HASH_256BYTES);
+BENCHMARK(HASH_1MB);

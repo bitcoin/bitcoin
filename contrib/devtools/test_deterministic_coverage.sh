@@ -16,7 +16,6 @@ GCOV_EXECUTABLE="gcov"
 NON_DETERMINISTIC_TESTS=(
     "blockfilter_index_tests/blockfilter_index_initial_sync"  # src/checkqueue.h: In CCheckQueue::Loop(): while (queue.empty()) { ... }
     "coinselector_tests/knapsack_solver_test"                 # coinselector_tests.cpp: if (equal_sets(setCoinsRet, setCoinsRet2))
-    "denialofservice_tests/DoS_mapOrphans"                    # denialofservice_tests.cpp: it = mapOrphanTransactions.lower_bound(InsecureRand256());
     "fs_tests/fsbridge_fstream"                               # deterministic test failure?
     "miner_tests/CreateNewBlock_validity"                     # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
     "scheduler_tests/manythreads"                             # scheduler.cpp: CScheduler::serviceQueue()

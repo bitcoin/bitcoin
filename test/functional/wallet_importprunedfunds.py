@@ -5,11 +5,14 @@
 """Test the importprunedfunds and removeprunedfunds RPCs."""
 from decimal import Decimal
 
+from test_framework.address import key_to_p2wpkh
+from test_framework.key import ECKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet_util import bytes_to_wif
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -30,8 +33,11 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         # pubkey
         address2 = self.nodes[0].getnewaddress()
         # privkey
-        address3 = self.nodes[0].getnewaddress()
-        address3_privkey = self.nodes[0].dumpprivkey(address3)  # Using privkey
+        eckey = ECKey()
+        eckey.generate()
+        address3_privkey = bytes_to_wif(eckey.get_bytes())
+        address3 = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
+        self.nodes[0].importprivkey(address3_privkey)
 
         # Check only one address
         address_info = self.nodes[0].getaddressinfo(address1)
@@ -80,37 +86,44 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(balance1, Decimal(0))
 
         # Import with affiliated address with no rescan
-        self.nodes[1].importaddress(address=address2, rescan=False)
-        self.nodes[1].importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
-        assert [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
+        self.nodes[1].createwallet('wwatch', disable_private_keys=True)
+        wwatch = self.nodes[1].get_wallet_rpc('wwatch')
+        wwatch.importaddress(address=address2, rescan=False)
+        wwatch.importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
+        assert [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
 
         # Import with private key with no rescan
-        self.nodes[1].importprivkey(privkey=address3_privkey, rescan=False)
-        self.nodes[1].importprunedfunds(rawtxn3, proof3)
-        assert [tx for tx in self.nodes[1].listtransactions() if tx['txid'] == txnid3]
-        balance3 = self.nodes[1].getbalance()
+        w1 = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
+        w1.importprivkey(privkey=address3_privkey, rescan=False)
+        w1.importprunedfunds(rawtxn3, proof3)
+        assert [tx for tx in w1.listtransactions() if tx['txid'] == txnid3]
+        balance3 = w1.getbalance()
         assert_equal(balance3, Decimal('0.025'))
 
         # Addresses Test - after import
-        address_info = self.nodes[1].getaddressinfo(address1)
+        address_info = w1.getaddressinfo(address1)
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
-        address_info = self.nodes[1].getaddressinfo(address2)
-        assert_equal(address_info['iswatchonly'], True)
-        assert_equal(address_info['ismine'], False)
-        address_info = self.nodes[1].getaddressinfo(address3)
+        address_info = wwatch.getaddressinfo(address2)
+        if self.options.descriptors:
+            assert_equal(address_info['iswatchonly'], False)
+            assert_equal(address_info['ismine'], True)
+        else:
+            assert_equal(address_info['iswatchonly'], True)
+            assert_equal(address_info['ismine'], False)
+        address_info = w1.getaddressinfo(address3)
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], True)
 
         # Remove transactions
-        assert_raises_rpc_error(-8, "Transaction does not exist in wallet.", self.nodes[1].removeprunedfunds, txnid1)
-        assert not [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid1]
+        assert_raises_rpc_error(-8, "Transaction does not exist in wallet.", w1.removeprunedfunds, txnid1)
+        assert not [tx for tx in w1.listtransactions(include_watchonly=True) if tx['txid'] == txnid1]
 
-        self.nodes[1].removeprunedfunds(txnid2)
-        assert not [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
+        wwatch.removeprunedfunds(txnid2)
+        assert not [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
 
-        self.nodes[1].removeprunedfunds(txnid3)
-        assert not [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid3]
+        w1.removeprunedfunds(txnid3)
+        assert not [tx for tx in w1.listtransactions(include_watchonly=True) if tx['txid'] == txnid3]
 
 if __name__ == '__main__':
     ImportPrunedFundsTest().main()

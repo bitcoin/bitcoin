@@ -11,6 +11,7 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <init.h>
+#include <interfaces/chain.h>
 #include <miner.h>
 #include <net.h>
 #include <net_processing.h>
@@ -32,6 +33,7 @@
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <walletinitinterface.h>
 
 #include <functional>
 
@@ -95,8 +97,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SelectParams(chainName);
     SeedInsecureRand();
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
-    InitLogging();
-    AppInitParameterInteraction();
+    InitLogging(*m_node.args);
+    AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     SHA256AutoDetect();
     ECC_Start();
@@ -104,6 +106,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
+    m_node.chain = interfaces::MakeChain(m_node);
+    g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
     static bool noui_connected = false;
     if (!noui_connected) {
@@ -137,12 +141,15 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
+    m_node.mempool = MakeUnique<CTxMemPool>(&::feeEstimator);
+    m_node.mempool->setSanityCheck(1.0);
+
     m_node.chainman = &::g_chainman;
-    m_node.chainman->InitializeChainstate();
+    m_node.chainman->InitializeChainstate(*m_node.mempool);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
-    ::ChainstateActive().InitCoinsCache();
+    ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
@@ -160,14 +167,12 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
     g_parallel_script_checks = true;
 
-    m_node.mempool = &::mempool;
-    m_node.mempool->setSanityCheck(1.0);
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-    m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
+    m_node.peerman = MakeUnique<PeerManager>(chainparams, *m_node.connman, m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
     {
         CConnman::Options options;
-        options.m_msgproc = m_node.peer_logic.get();
+        options.m_msgproc = m_node.peerman.get();
         m_node.connman->Init(options);
     }
 }
@@ -182,9 +187,9 @@ TestingSetup::~TestingSetup()
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.args = nullptr;
-    m_node.mempool = nullptr;
+    UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
+    m_node.mempool.reset();
     m_node.scheduler.reset();
-    UnloadBlockIndex();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
@@ -192,49 +197,34 @@ TestingSetup::~TestingSetup()
 
 TestChain100Setup::TestChain100Setup()
 {
-    // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
-    // TODO: fix the code to support SegWit blocks.
-    gArgs.ForceSetArg("-segwitheight", "432");
-    // Need to recreate chainparams
-    SelectParams(CBaseChainParams::REGTEST);
-
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
-    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < COINBASE_MATURITY; i++)
-    {
+    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    for (int i = 0; i < COINBASE_MATURITY; i++) {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
         m_coinbase_txns.push_back(b.vtx[0]);
     }
 }
 
-// Create a new block with just given transactions, coinbase paying to
-// scriptPubKey, and try to add it to the current chain.
 CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
-    CBlock& block = pblocktemplate->block;
+    CTxMemPool empty_pool;
+    CBlock block = BlockAssembler(empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
 
-    // Replace mempool-selected txns with just coinbase plus passed-in txns:
-    block.vtx.resize(1);
-    for (const CMutableTransaction& tx : txns)
+    Assert(block.vtx.size() == 1);
+    for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
-    {
-        LOCK(cs_main);
-        unsigned int extraNonce = 0;
-        IncrementExtraNonce(&block, ::ChainActive().Tip(), extraNonce);
     }
+    RegenerateCommitments(block);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
-    CBlock result = block;
-    return result;
+    return block;
 }
 
 TestChain100Setup::~TestChain100Setup()
@@ -242,8 +232,8 @@ TestChain100Setup::~TestChain100Setup()
     gArgs.ForceSetArg("-segwitheight", "0");
 }
 
-
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx) {
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx)
+{
     return FromTx(MakeTransactionRef(tx));
 }
 

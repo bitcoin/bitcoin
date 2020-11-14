@@ -15,6 +15,7 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
+from test_framework.address import key_to_p2pkh
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
@@ -34,9 +35,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                            ["-addresstype=bech32", "-keypool=5"]
                           ]
         self.setup_clean_chain = True
+        self.wallet_names = []
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_sqlite()
 
     def test_importdesc(self, req, success, error_code=None, error_message=None, warnings=None, wallet=None):
         """Run importdescriptors and assert success"""
@@ -58,7 +61,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info('Setting up wallets')
-        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
+        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False, descriptors=True)
         w0 = self.nodes[0].get_wallet_rpc('w0')
 
         self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True, descriptors=True)
@@ -104,6 +107,17 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              success=False,
                              error_code=-8,
                              error_message="Internal addresses should not have a label")
+
+        self.log.info("Internal addresses should be detected as such")
+        key = get_generate_key()
+        addr = key_to_p2pkh(key.pubkey)
+        self.test_importdesc({"desc": descsum_create("pkh(" + key.pubkey + ")"),
+                              "timestamp": "now",
+                              "internal": True},
+                             success=True)
+        info = w1.getaddressinfo(addr)
+        assert_equal(info["ismine"], True)
+        assert_equal(info["ischange"], True)
 
         # # Test importing of a P2SH-P2WPKH descriptor
         key = get_generate_key()
@@ -207,6 +221,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              success=False,
                              error_code=-4,
                              error_message='Cannot import private keys to a wallet with private keys disabled')
+
+        self.log.info("Should not import a descriptor with hardened derivations when private keys are disabled")
+        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/1h/*)"),
+                              "timestamp": "now",
+                              "range": 1},
+                             success=False,
+                             error_code=-4,
+                             error_message='Cannot expand descriptor. Probably because of hardened derivations without private keys provided')
+
         for address in addresses:
             test_address(w1,
                          address,

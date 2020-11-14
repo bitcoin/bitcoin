@@ -7,6 +7,13 @@
 #include <logging.h>
 #include <util/system.h>
 
+bool ExistsBerkeleyDatabase(const fs::path& path);
+#ifdef USE_SQLITE
+bool ExistsSQLiteDatabase(const fs::path& path);
+#else
+#   define ExistsSQLiteDatabase(path)  (false)
+#endif
+
 fs::path GetWalletDir()
 {
     fs::path path;
@@ -29,31 +36,6 @@ fs::path GetWalletDir()
     return path;
 }
 
-static bool IsBerkeleyBtree(const fs::path& path)
-{
-    if (!fs::exists(path)) return false;
-
-    // A Berkeley DB Btree file has at least 4K.
-    // This check also prevents opening lock files.
-    boost::system::error_code ec;
-    auto size = fs::file_size(path, ec);
-    if (ec) LogPrintf("\n%s: %s %s\n", __func__, ec.message(), path.string());
-    if (size < 4096) return false;
-
-    fsbridge::ifstream file(path, std::ios::binary);
-    if (!file.is_open()) return false;
-
-    file.seekg(12, std::ios::beg); // Magic bytes start at offset 12
-    uint32_t data = 0;
-    file.read((char*) &data, sizeof(data)); // Read 4 bytes of file to compare against magic
-
-    // Berkeley DB Btree magic bytes, from:
-    //  https://github.com/file/file/blob/5824af38469ec1ca9ac3ffd251e7afe9dc11e227/magic/Magdir/database#L74-L75
-    //  - big endian systems - 00 05 31 62
-    //  - little endian systems - 62 31 05 00
-    return data == 0x00053162 || data == 0x62310500;
-}
-
 std::vector<fs::path> ListWalletDir()
 {
     const fs::path wallet_dir = GetWalletDir();
@@ -67,43 +49,33 @@ std::vector<fs::path> ListWalletDir()
             continue;
         }
 
-        // Get wallet path relative to walletdir by removing walletdir from the wallet path.
-        // This can be replaced by boost::filesystem::lexically_relative once boost is bumped to 1.60.
-        const fs::path path = it->path().string().substr(offset);
+        try {
+            // Get wallet path relative to walletdir by removing walletdir from the wallet path.
+            // This can be replaced by boost::filesystem::lexically_relative once boost is bumped to 1.60.
+            const fs::path path = it->path().string().substr(offset);
 
-        if (it->status().type() == fs::directory_file && IsBerkeleyBtree(it->path() / "wallet.dat")) {
-            // Found a directory which contains wallet.dat btree file, add it as a wallet.
-            paths.emplace_back(path);
-        } else if (it.level() == 0 && it->symlink_status().type() == fs::regular_file && IsBerkeleyBtree(it->path())) {
-            if (it->path().filename() == "wallet.dat") {
-                // Found top-level wallet.dat btree file, add top level directory ""
-                // as a wallet.
-                paths.emplace_back();
-            } else {
-                // Found top-level btree file not called wallet.dat. Current bitcoin
-                // software will never create these files but will allow them to be
-                // opened in a shared database environment for backwards compatibility.
-                // Add it to the list of available wallets.
+            if (it->status().type() == fs::directory_file &&
+                (ExistsBerkeleyDatabase(it->path()) || ExistsSQLiteDatabase(it->path()))) {
+                // Found a directory which contains wallet.dat btree file, add it as a wallet.
                 paths.emplace_back(path);
+            } else if (it.level() == 0 && it->symlink_status().type() == fs::regular_file && ExistsBerkeleyDatabase(it->path())) {
+                if (it->path().filename() == "wallet.dat") {
+                    // Found top-level wallet.dat btree file, add top level directory ""
+                    // as a wallet.
+                    paths.emplace_back();
+                } else {
+                    // Found top-level btree file not called wallet.dat. Current bitcoin
+                    // software will never create these files but will allow them to be
+                    // opened in a shared database environment for backwards compatibility.
+                    // Add it to the list of available wallets.
+                    paths.emplace_back(path);
+                }
             }
+        } catch (const std::exception& e) {
+            LogPrintf("%s: Error scanning %s: %s\n", __func__, it->path().string(), e.what());
+            it.no_push();
         }
     }
 
     return paths;
-}
-
-WalletLocation::WalletLocation(const std::string& name)
-    : m_name(name)
-    , m_path(fs::absolute(name, GetWalletDir()))
-{
-}
-
-bool WalletLocation::Exists() const
-{
-    fs::path path = m_path;
-    // For the default wallet, check specifically for the wallet.dat file
-    if (m_name.empty()) {
-        path = fs::absolute("wallet.dat", m_path);
-    }
-    return fs::symlink_status(path).type() != fs::file_not_found;
 }

@@ -70,10 +70,6 @@
         <translation>Hauek dira zuk dirua jaso dezaketen Bitcoin helbideak. Egiaztatu beti diru-kopurua eta dirua jasoko duen helbidea zuzen egon daitezen, txanponak bidali baino lehen.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Hauek dira ordainketak jasotzeko zure Bitcoin helbideak. Jaso taulako 'Jasotzeko helbide berri bat sortu' botoia erabili helbide berri bat sortzeko.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Helbidea kopiatu</translation>
     </message>
@@ -358,6 +354,10 @@
         <translation>Blokeak diskoan berriro zerrendatzen...</translation>
     </message>
     <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Bidali txanponak Bitcoin helbide batera</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Diruzorroa enkriptatzeko erabilitako pasahitza aldatu</translation>
     </message>
@@ -380,6 +380,10 @@
     <message>
         <source>Show or hide the main Window</source>
         <translation>Lehio nagusia erakutsi edo izkutatu</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Egiaztatu mesua Bitcoin helbide espezifikoarekin erregistratu direla ziurtatzeko</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -406,8 +410,20 @@
         <translation>Akatsa</translation>
     </message>
     <message>
+        <source>Information</source>
+        <translation>Informazioa</translation>
+    </message>
+    <message>
         <source>Up to date</source>
         <translation>Eguneratua</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Helbideak bidaltzen</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Helbideak jasotzen</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -426,8 +442,16 @@
         <translation>Diruzorroa itxi</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>Diruzorro lehenetsia</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Lehioa</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Txikitu</translation>
     </message>
     <message>
         <source>Zoom</source>
@@ -701,6 +725,10 @@
         <source>Open wallet warning</source>
         <translation>Diruzorroa irekitzen abisua</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Diruzorro lehenetsia</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -773,6 +801,9 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -821,28 +852,28 @@
         <source>Copy label</source>
         <translation>Etiketa kopiatu</translation>
     </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ezin da diruzorroa desblokeatu.</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Amount:</source>
+        <translation>Kopurua:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mezua:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Diruzorroa:</translation>
+    </message>
+    <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Helbidea kopiatu</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Helbidea</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Kopurua</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Izendapen</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mezua</translation>
     </message>
     </context>
 <context>
@@ -1187,14 +1218,22 @@
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Diruzorro berri bat sortu</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
         <translation>Txanponak bidali</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>Diruzorro lehenetsia</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -1204,6 +1243,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Uneko fitxategian datuak esportatu</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Akatsa</translation>
     </message>
     </context>
 <context>

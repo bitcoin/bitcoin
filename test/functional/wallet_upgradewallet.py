@@ -6,7 +6,7 @@
 
 Test upgradewallet RPC. Download node binaries:
 
-contrib/devtools/previous_release.sh -b v0.19.1 v0.18.1 v0.17.1 v0.16.3 v0.15.2
+test/get_previous_releases.py -b v0.19.1 v0.18.1 v0.17.2 v0.16.3 v0.15.2
 
 Only v0.15.2 and v0.16.3 are required by this test. The others are used in feature_backwards_compatibility.py
 """
@@ -31,6 +31,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
             ["-usehd=1"],            # v0.16.3 wallet
             ["-usehd=0"]             # v0.15.2 wallet
         ]
+        self.wallet_names = [self.default_wallet_name, None, None]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -46,6 +47,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
             150200,
         ])
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def dumb_sync_blocks(self):
         """
@@ -105,7 +107,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         # calling upgradewallet without version arguments
         # should return nothing if successful
-        assert_equal(wallet.upgradewallet(), "")
+        assert_equal(wallet.upgradewallet(), {})
         new_version = wallet.getwalletinfo()["walletversion"]
         # upgraded wallet version should be greater than older one
         assert_greater_than(new_version, old_version)
@@ -128,7 +130,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal('hdseedid' in wallet.getwalletinfo(), False)
         # calling upgradewallet with explicit version number
         # should return nothing if successful
-        assert_equal(wallet.upgradewallet(169900), "")
+        assert_equal(wallet.upgradewallet(169900), {})
         new_version = wallet.getwalletinfo()["walletversion"]
         # upgraded wallet should have version 169900
         assert_equal(new_version, 169900)

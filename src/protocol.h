@@ -11,6 +11,7 @@
 #define BITCOIN_PROTOCOL_H
 
 #include <netaddress.h>
+#include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <version.h>
@@ -36,7 +37,7 @@ public:
     static constexpr size_t HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
-    explicit CMessageHeader(const MessageStartChars& pchMessageStartIn);
+    explicit CMessageHeader();
 
     /** Construct a P2P message header from message-start characters, a command and the size of the message.
      * @note Passing in a `pszCommand` longer than COMMAND_SIZE will result in a run-time assertion error.
@@ -44,7 +45,7 @@ public:
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
-    bool IsValid(const MessageStartChars& messageStart) const;
+    bool IsCommandValid() const;
 
     SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchCommand, obj.nMessageSize, obj.pchChecksum); }
 
@@ -63,100 +64,96 @@ namespace NetMsgType {
 /**
  * The version message provides information about the transmitting node to the
  * receiving node at the beginning of a connection.
- * @see https://bitcoin.org/en/developer-reference#version
  */
 extern const char* VERSION;
 /**
  * The verack message acknowledges a previously-received version message,
  * informing the connecting node that it can begin to send other messages.
- * @see https://bitcoin.org/en/developer-reference#verack
  */
 extern const char* VERACK;
 /**
  * The addr (IP address) message relays connection information for peers on the
  * network.
- * @see https://bitcoin.org/en/developer-reference#addr
  */
 extern const char* ADDR;
 /**
+ * The addrv2 message relays connection information for peers on the network just
+ * like the addr message, but is extended to allow gossiping of longer node
+ * addresses (see BIP155).
+ */
+extern const char *ADDRV2;
+/**
+ * The sendaddrv2 message signals support for receiving ADDRV2 messages (BIP155).
+ * It also implies that its sender can encode as ADDRV2 and would send ADDRV2
+ * instead of ADDR to a peer that has signaled ADDRV2 support by sending SENDADDRV2.
+ */
+extern const char *SENDADDRV2;
+/**
  * The inv message (inventory message) transmits one or more inventories of
  * objects known to the transmitting peer.
- * @see https://bitcoin.org/en/developer-reference#inv
  */
 extern const char* INV;
 /**
  * The getdata message requests one or more data objects from another node.
- * @see https://bitcoin.org/en/developer-reference#getdata
  */
 extern const char* GETDATA;
 /**
  * The merkleblock message is a reply to a getdata message which requested a
  * block using the inventory type MSG_MERKLEBLOCK.
  * @since protocol version 70001 as described by BIP37.
- * @see https://bitcoin.org/en/developer-reference#merkleblock
  */
 extern const char* MERKLEBLOCK;
 /**
  * The getblocks message requests an inv message that provides block header
  * hashes starting from a particular point in the block chain.
- * @see https://bitcoin.org/en/developer-reference#getblocks
  */
 extern const char* GETBLOCKS;
 /**
  * The getheaders message requests a headers message that provides block
  * headers starting from a particular point in the block chain.
  * @since protocol version 31800.
- * @see https://bitcoin.org/en/developer-reference#getheaders
  */
 extern const char* GETHEADERS;
 /**
  * The tx message transmits a single transaction.
- * @see https://bitcoin.org/en/developer-reference#tx
  */
 extern const char* TX;
 /**
  * The headers message sends one or more block headers to a node which
  * previously requested certain headers with a getheaders message.
  * @since protocol version 31800.
- * @see https://bitcoin.org/en/developer-reference#headers
  */
 extern const char* HEADERS;
 /**
  * The block message transmits a single serialized block.
- * @see https://bitcoin.org/en/developer-reference#block
  */
 extern const char* BLOCK;
 /**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
- * @see https://bitcoin.org/en/developer-reference#getaddr
  */
 extern const char* GETADDR;
 /**
  * The mempool message requests the TXIDs of transactions that the receiving
  * node has verified as valid but which have not yet appeared in a block.
  * @since protocol version 60002.
- * @see https://bitcoin.org/en/developer-reference#mempool
  */
 extern const char* MEMPOOL;
 /**
  * The ping message is sent periodically to help confirm that the receiving
  * peer is still connected.
- * @see https://bitcoin.org/en/developer-reference#ping
  */
 extern const char* PING;
 /**
  * The pong message replies to a ping message, proving to the pinging node that
  * the ponging node is still alive.
  * @since protocol version 60001 as described by BIP31.
- * @see https://bitcoin.org/en/developer-reference#pong
  */
 extern const char* PONG;
 /**
  * The notfound message is a reply to a getdata message which requested an
  * object the receiving node does not have available for relay.
  * @since protocol version 70001.
- * @see https://bitcoin.org/en/developer-reference#notfound
  */
 extern const char* NOTFOUND;
 /**
@@ -165,7 +162,6 @@ extern const char* NOTFOUND;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filterload
  */
 extern const char* FILTERLOAD;
 /**
@@ -174,7 +170,6 @@ extern const char* FILTERLOAD;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filteradd
  */
 extern const char* FILTERADD;
 /**
@@ -183,14 +178,12 @@ extern const char* FILTERADD;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filterclear
  */
 extern const char* FILTERCLEAR;
 /**
  * Indicates that a node prefers to receive new block announcements via a
  * "headers" message rather than an "inv".
  * @since protocol version 70012 as described by BIP130.
- * @see https://bitcoin.org/en/developer-reference#sendheaders
  */
 extern const char* SENDHEADERS;
 /**
@@ -261,6 +254,12 @@ extern const char* GETCFCHECKPT;
  * evenly spaced filter headers for blocks on the requested chain.
  */
 extern const char* CFCHECKPT;
+/**
+ * Indicates that a node prefers to relay transactions via wtxid, rather than
+ * txid.
+ * @since protocol version 70016 as described by BIP 339.
+ */
+extern const char* WTXIDRELAY;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -285,6 +284,9 @@ enum ServiceFlags : uint64_t {
     // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
     // witness data.
     NODE_WITNESS = (1 << 3),
+    // NODE_COMPACT_FILTERS means the node will service basic block filter requests.
+    // See BIP157 and BIP158 for details on how this is implemented.
+    NODE_COMPACT_FILTERS = (1 << 6),
     // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
     // serving the last 288 (2 day) blocks
     // See BIP159 for details on how this is implemented.
@@ -361,7 +363,8 @@ class CAddress : public CService
 
 public:
     CAddress() : CService{} {};
-    explicit CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn, uint32_t nTimeIn) : CService{ipIn}, nTime{nTimeIn}, nServices{nServicesIn} {};
 
     SERIALIZE_METHODS(CAddress, obj)
     {
@@ -371,16 +374,30 @@ public:
             READWRITE(nVersion);
         }
         if ((s.GetType() & SER_DISK) ||
-            (nVersion >= CADDR_TIME_VERSION && !(s.GetType() & SER_GETHASH))) {
+            (nVersion != INIT_PROTO_VERSION && !(s.GetType() & SER_GETHASH))) {
+            // The only time we serialize a CAddress object without nTime is in
+            // the initial VERSION messages which contain two CAddress records.
+            // At that point, the serialization version is INIT_PROTO_VERSION.
+            // After the version handshake, serialization version is >=
+            // MIN_PEER_PROTO_VERSION and all ADDR messages are serialized with
+            // nTime.
             READWRITE(obj.nTime);
         }
-        READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
+        if (nVersion & ADDRV2_FORMAT) {
+            uint64_t services_tmp;
+            SER_WRITE(obj, services_tmp = obj.nServices);
+            READWRITE(Using<CompactSizeFormatter<false>>(services_tmp));
+            SER_READ(obj, obj.nServices = static_cast<ServiceFlags>(services_tmp));
+        } else {
+            READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
+        }
         READWRITEAS(CService, obj);
     }
 
-    ServiceFlags nServices{NODE_NONE};
     // disk and network only
     uint32_t nTime{TIME_INIT};
+
+    ServiceFlags nServices{NODE_NONE};
 };
 
 /** getdata message type flags */
@@ -391,16 +408,19 @@ const uint32_t MSG_TYPE_MASK = 0xffffffff >> 2;
  * These numbers are defined by the protocol. When adding a new value, be sure
  * to mention it in the respective BIP.
  */
-enum GetDataMsg {
+enum GetDataMsg : uint32_t {
     UNDEFINED = 0,
     MSG_TX = 1,
     MSG_BLOCK = 2,
-    // The following can only occur in getdata. Invs always use TX or BLOCK.
+    MSG_WTX = 5,                                      //!< Defined in BIP 339
+    // The following can only occur in getdata. Invs always use TX/WTX or BLOCK.
     MSG_FILTERED_BLOCK = 3,                           //!< Defined in BIP37
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
-    MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    // MSG_FILTERED_WITNESS_BLOCK is defined in BIP144 as reserved for future
+    // use and remains unused.
+    // MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
 };
 
 /** inv message data */
@@ -408,7 +428,7 @@ class CInv
 {
 public:
     CInv();
-    CInv(int typeIn, const uint256& hashIn);
+    CInv(uint32_t typeIn, const uint256& hashIn);
 
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
@@ -417,8 +437,29 @@ public:
     std::string GetCommand() const;
     std::string ToString() const;
 
-    int type;
+    // Single-message helper methods
+    bool IsMsgTx() const { return type == MSG_TX; }
+    bool IsMsgBlk() const { return type == MSG_BLOCK; }
+    bool IsMsgWtx() const { return type == MSG_WTX; }
+    bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
+    bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
+    bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
+
+    // Combined-message helper methods
+    bool IsGenTxMsg() const
+    {
+        return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+    }
+    bool IsGenBlkMsg() const
+    {
+        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
+    }
+
+    uint32_t type;
     uint256 hash;
 };
+
+/** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */
+GenTxid ToGenTxid(const CInv& inv);
 
 #endif // BITCOIN_PROTOCOL_H

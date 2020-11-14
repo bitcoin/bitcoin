@@ -8,6 +8,7 @@
 
 #include <amount.h>
 #include <rpc/request.h>
+#include <rpc/util.h>
 
 #include <functional>
 #include <map>
@@ -85,6 +86,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
 void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds);
 
 typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
+typedef RPCHelpMan (*RpcMethodFnType)();
 
 class CRPCCommand
 {
@@ -99,6 +101,19 @@ public:
         : category(std::move(category)), name(std::move(name)), actor(std::move(actor)), argNames(std::move(args)),
           unique_id(unique_id)
     {
+    }
+
+    //! Simplified constructor taking plain RpcMethodFnType function pointer.
+    CRPCCommand(std::string category, std::string name_in, RpcMethodFnType fn, std::vector<std::string> args_in)
+        : CRPCCommand(
+              category,
+              fn().m_name,
+              [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn().HandleRequest(request); return true; },
+              fn().GetArgNames(),
+              intptr_t(fn))
+    {
+        CHECK_NONFATAL(fn().m_name == name_in);
+        CHECK_NONFATAL(fn().GetArgNames() == args_in);
     }
 
     //! Simplified constructor taking plain rpcfn_type function pointer.
@@ -117,7 +132,7 @@ public:
 };
 
 /**
- * Bitcoin RPC command dispatcher.
+ * RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -145,7 +160,7 @@ public:
     /**
      * Appends a CRPCCommand to the dispatch table.
      *
-     * Returns false if RPC server is already running (dump concurrency protection).
+     * Precondition: RPC server is not running
      *
      * Commands with different method names but the same unique_id will
      * be considered aliases, and only the first registered method name will
@@ -154,7 +169,7 @@ public:
      * between calls based on method name, and aliased commands can also
      * register different names, types, and numbers of parameters.
      */
-    bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
+    void appendCommand(const std::string& name, const CRPCCommand* pcmd);
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
 };
 

@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(floats)
     for (int i = 0; i < 1000; i++) {
         ss << float(i);
     }
-    BOOST_CHECK(Hash(ss.begin(), ss.end()) == uint256S("8e8b4cf3e4df8b332057e3e23af42ebc663b61e0495d5e7e32d85099d7f3fe0c"));
+    BOOST_CHECK(Hash(ss) == uint256S("8e8b4cf3e4df8b332057e3e23af42ebc663b61e0495d5e7e32d85099d7f3fe0c"));
 
     // decode
     for (int i = 0; i < 1000; i++) {
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(doubles)
     for (int i = 0; i < 1000; i++) {
         ss << double(i);
     }
-    BOOST_CHECK(Hash(ss.begin(), ss.end()) == uint256S("43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"));
+    BOOST_CHECK(Hash(ss) == uint256S("43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"));
 
     // decode
     for (int i = 0; i < 1000; i++) {

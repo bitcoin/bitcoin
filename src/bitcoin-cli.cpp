@@ -14,11 +14,13 @@
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <stdio.h>
@@ -43,32 +45,35 @@ static const int CONTINUE_EXECUTION=-1;
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
 
-static void SetupCliArgs()
+static void SetupCliArgs(ArgsManager& argsman)
 {
-    SetupHelpOptions(gArgs);
+    SetupHelpOptions(argsman);
 
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
+    const auto signetBaseParams = CreateBaseChainParams(CBaseChainParams::SIGNET);
     const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);
 
-    gArgs.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    SetupChainParamsBaseOptions();
-    gArgs.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u, testnet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0).", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+
+    SetupChainParamsBaseOptions(argsman);
+    argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u, testnet: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 /** libevent event log callback */
@@ -82,11 +87,6 @@ static void libevent_log_cb(int severity, const char *msg)
         throw std::runtime_error(strprintf("libevent error: %s", msg));
     }
 }
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// Start
-//
 
 //
 // Exception thrown on connection error.  This error is used to determine
@@ -108,10 +108,7 @@ public:
 //
 static int AppInitRPC(int argc, char* argv[])
 {
-    //
-    // Parameters
-    //
-    SetupCliArgs();
+    SetupCliArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
@@ -143,7 +140,7 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error reading configuration file: %s\n", error);
         return EXIT_FAILURE;
     }
-    // Check for -chain, -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
+    // Check for chain settings (BaseParams() calls are only valid after this clause)
     try {
         SelectBaseParams(gArgs.GetChainName());
     } catch (const std::exception& e) {
@@ -271,7 +268,13 @@ public:
         result.pushKV("headers", batch[ID_BLOCKCHAININFO]["result"]["headers"]);
         result.pushKV("verificationprogress", batch[ID_BLOCKCHAININFO]["result"]["verificationprogress"]);
         result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
-        result.pushKV("connections", batch[ID_NETWORKINFO]["result"]["connections"]);
+
+        UniValue connections(UniValue::VOBJ);
+        connections.pushKV("in", batch[ID_NETWORKINFO]["result"]["connections_in"]);
+        connections.pushKV("out", batch[ID_NETWORKINFO]["result"]["connections_out"]);
+        connections.pushKV("total", batch[ID_NETWORKINFO]["result"]["connections"]);
+        result.pushKV("connections", connections);
+
         result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
@@ -288,6 +291,191 @@ public:
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
         return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+};
+
+/** Process netinfo requests */
+class NetinfoRequestHandler : public BaseRequestHandler
+{
+private:
+    static constexpr int8_t UNKNOWN_NETWORK{-1};
+    static constexpr uint8_t m_networks_size{3};
+    const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion"}};
+    std::array<std::array<uint16_t, m_networks_size + 2>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total/block-relay)
+    int8_t NetworkStringToId(const std::string& str) const
+    {
+        for (uint8_t i = 0; i < m_networks_size; ++i) {
+            if (str == m_networks.at(i)) return i;
+        }
+        return UNKNOWN_NETWORK;
+    }
+    uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
+    bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
+    bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
+    bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
+    bool m_is_asmap_on{false};
+    size_t m_max_addr_length{0};
+    size_t m_max_age_length{4};
+    size_t m_max_id_length{2};
+    struct Peer {
+        std::string addr;
+        std::string sub_version;
+        std::string network;
+        std::string age;
+        double min_ping;
+        double ping;
+        int64_t last_blck;
+        int64_t last_recv;
+        int64_t last_send;
+        int64_t last_trxn;
+        int id;
+        int mapped_as;
+        int version;
+        bool is_block_relay;
+        bool is_outbound;
+        bool operator<(const Peer& rhs) const { return std::tie(is_outbound, min_ping) < std::tie(rhs.is_outbound, rhs.min_ping); }
+    };
+    std::vector<Peer> m_peers;
+    std::string ChainToString() const
+    {
+        if (gArgs.GetChainName() == CBaseChainParams::TESTNET) return " testnet";
+        if (gArgs.GetChainName() == CBaseChainParams::SIGNET) return " signet";
+        if (gArgs.GetChainName() == CBaseChainParams::REGTEST) return " regtest";
+        return "";
+    }
+    std::string PingTimeToString(double seconds) const
+    {
+        if (seconds < 0) return "";
+        const double milliseconds{round(1000 * seconds)};
+        return milliseconds > 999999 ? "-" : ToString(milliseconds);
+    }
+    const int64_t m_time_now{GetSystemTimeInSeconds()};
+
+public:
+    static constexpr int ID_PEERINFO = 0;
+    static constexpr int ID_NETWORKINFO = 1;
+
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        if (!args.empty()) {
+            uint8_t n{0};
+            if (ParseUInt8(args.at(0), &n)) {
+                m_details_level = n;
+            }
+        }
+        UniValue result(UniValue::VARR);
+        result.push_back(JSONRPCRequestObj("getpeerinfo", NullUniValue, ID_PEERINFO));
+        result.push_back(JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO));
+        return result;
+    }
+
+    UniValue ProcessReply(const UniValue& batch_in) override
+    {
+        const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
+        if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
+        if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
+
+        const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
+        if (networkinfo["version"].get_int() < 209900) {
+            throw std::runtime_error("-netinfo requires bitcoind server to be running v0.21.0 and up");
+        }
+
+        // Count peer connection totals, and if DetailsRequested(), store peer data in a vector of structs.
+        for (const UniValue& peer : batch[ID_PEERINFO]["result"].getValues()) {
+            const std::string network{peer["network"].get_str()};
+            const int8_t network_id{NetworkStringToId(network)};
+            if (network_id == UNKNOWN_NETWORK) continue;
+            const bool is_outbound{!peer["inbound"].get_bool()};
+            const bool is_block_relay{!peer["relaytxes"].get_bool()};
+            ++m_counts.at(is_outbound).at(network_id);      // in/out by network
+            ++m_counts.at(is_outbound).at(m_networks_size); // in/out overall
+            ++m_counts.at(2).at(network_id);                // total by network
+            ++m_counts.at(2).at(m_networks_size);           // total overall
+            if (is_block_relay) {
+                ++m_counts.at(is_outbound).at(m_networks_size + 1); // in/out block-relay
+                ++m_counts.at(2).at(m_networks_size + 1);           // total block-relay
+            }
+            if (DetailsRequested()) {
+                // Push data for this peer to the peers vector.
+                const int peer_id{peer["id"].get_int()};
+                const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
+                const int version{peer["version"].get_int()};
+                const int64_t conn_time{peer["conntime"].get_int64()};
+                const int64_t last_blck{peer["last_block"].get_int64()};
+                const int64_t last_recv{peer["lastrecv"].get_int64()};
+                const int64_t last_send{peer["lastsend"].get_int64()};
+                const int64_t last_trxn{peer["last_transaction"].get_int64()};
+                const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
+                const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
+                const std::string addr{peer["addr"].get_str()};
+                const std::string age{conn_time == 0 ? "" : ToString((m_time_now - conn_time) / 60)};
+                const std::string sub_version{peer["subver"].get_str()};
+                m_peers.push_back({addr, sub_version, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_block_relay, is_outbound});
+                m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
+                m_max_age_length = std::max(age.length(), m_max_age_length);
+                m_max_id_length = std::max(ToString(peer_id).length(), m_max_id_length);
+                m_is_asmap_on |= (mapped_as != 0);
+            }
+        }
+
+        // Generate report header.
+        std::string result{strprintf("%s %s%s - %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
+
+        // Report detailed peer connections list sorted by direction and minimum ping time.
+        if (DetailsRequested() && !m_peers.empty()) {
+            std::sort(m_peers.begin(), m_peers.end());
+            result += strprintf("Peer connections sorted by direction and min ping\n<-> relay   net  mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
+            if (m_is_asmap_on) result += " asmap ";
+            result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
+            for (const Peer& peer : m_peers) {
+                std::string version{ToString(peer.version) + peer.sub_version};
+                result += strprintf(
+                    "%3s %5s %5s%7s%7s%5s%5s%5s%5s %*s%*i %*s %-*s%s\n",
+                    peer.is_outbound ? "out" : "in",
+                    peer.is_block_relay ? "block" : "full",
+                    peer.network,
+                    PingTimeToString(peer.min_ping),
+                    PingTimeToString(peer.ping),
+                    peer.last_send == 0 ? "" : ToString(m_time_now - peer.last_send),
+                    peer.last_recv == 0 ? "" : ToString(m_time_now - peer.last_recv),
+                    peer.last_trxn == 0 ? "" : ToString((m_time_now - peer.last_trxn) / 60),
+                    peer.last_blck == 0 ? "" : ToString((m_time_now - peer.last_blck) / 60),
+                    m_max_age_length, // variable spacing
+                    peer.age,
+                    m_is_asmap_on ? 7 : 0, // variable spacing
+                    m_is_asmap_on && peer.mapped_as != 0 ? ToString(peer.mapped_as) : "",
+                    m_max_id_length, // variable spacing
+                    peer.id,
+                    IsAddressSelected() ? m_max_addr_length : 0, // variable spacing
+                    IsAddressSelected() ? peer.addr : "",
+                    IsVersionSelected() && version != "0" ? version : "");
+            }
+            result += strprintf("                    ms     ms  sec  sec  min  min %*s\n\n", m_max_age_length, "min");
+        }
+
+        // Report peer connection totals by type.
+        result += "        ipv4    ipv6   onion   total  block-relay\n";
+        const std::array<std::string, 3> rows{{"in", "out", "total"}};
+        for (uint8_t i = 0; i < m_networks_size; ++i) {
+            result += strprintf("%-5s  %5i   %5i   %5i   %5i   %5i\n", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2), m_counts.at(i).at(m_networks_size), m_counts.at(i).at(m_networks_size + 1));
+        }
+
+        // Report local addresses, ports, and scores.
+        result += "\nLocal addresses";
+        const std::vector<UniValue>& local_addrs{networkinfo["localaddresses"].getValues()};
+        if (local_addrs.empty()) {
+            result += ": n/a\n";
+        } else {
+            size_t max_addr_size{0};
+            for (const UniValue& addr : local_addrs) {
+                max_addr_size = std::max(addr["address"].get_str().length() + 1, max_addr_size);
+            }
+            for (const UniValue& addr : local_addrs) {
+                result += strprintf("\n%-*s    port %6i    score %6i", max_addr_size, addr["address"].get_str(), addr["port"].get_int(), addr["score"].get_int());
+            }
+        }
+
+        return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
 };
 
@@ -388,6 +576,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     assert(output_headers);
     evhttp_add_header(output_headers, "Host", host.c_str());
     evhttp_add_header(output_headers, "Connection", "close");
+    evhttp_add_header(output_headers, "Content-Type", "application/json");
     evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
 
     // Attach request data
@@ -618,6 +807,8 @@ static int CommandLineRPC(int argc, char *argv[])
         std::string method;
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
+        } else if (gArgs.GetBoolArg("-netinfo", false)) {
+            rh.reset(new NetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-generate", false)) {
             const UniValue getnewaddress{GetNewAddress()};
             const UniValue& error{find_value(getnewaddress, "error")};

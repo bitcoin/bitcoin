@@ -67,6 +67,7 @@ void AppTests::appTests()
         return GetDataDir() / "blocks";
     }());
 
+    qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
     m_app.createOptionsModel(true /* reset settings */);
     QScopedPointer<const NetworkStyle> style(NetworkStyle::instantiate(Params().NetworkIDString()));
@@ -83,8 +84,11 @@ void AppTests::appTests()
     // Reset global state to avoid interfering with later tests.
     LogInstance().DisconnectTestLogger();
     AbortShutdown();
-    UnloadBlockIndex();
-    WITH_LOCK(::cs_main, g_chainman.Reset());
+    {
+        LOCK(cs_main);
+        UnloadBlockIndex(/* mempool */ nullptr, g_chainman);
+        g_chainman.Reset();
+    }
 }
 
 //! Entry point for BitcoinGUI tests.

@@ -12,7 +12,7 @@
 #include <validation.h>
 
 
-static void DuplicateInputs(benchmark::State& state)
+static void DuplicateInputs(benchmark::Bench& bench)
 {
     TestingSetup test_setup{
         CBaseChainParams::REGTEST,
@@ -61,11 +61,11 @@ static void DuplicateInputs(benchmark::State& state)
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    while (state.KeepRunning()) {
+    bench.run([&] {
         BlockValidationState cvstate{};
         assert(!CheckBlock(block, cvstate, chainparams.GetConsensus(), false, false));
         assert(cvstate.GetRejectReason() == "bad-txns-inputs-duplicate");
-    }
+    });
 }
 
-BENCHMARK(DuplicateInputs, 10);
+BENCHMARK(DuplicateInputs);
