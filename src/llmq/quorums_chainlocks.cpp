@@ -50,12 +50,6 @@ CChainLocksHandler::~CChainLocksHandler()
 void CChainLocksHandler::Start()
 {
     quorumSigningManager->RegisterRecoveredSigsListener(this);
-    scheduler->scheduleEvery([&]() {
-        CheckActiveState();
-        EnforceBestChainLock();
-        // regularly retry signing the current chaintip as it might have failed before due to missing islocks
-        TrySignChainTip();
-    }, std::chrono::milliseconds(5000));
 }
 
 void CChainLocksHandler::Stop()
@@ -227,18 +221,20 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
 void CChainLocksHandler::CheckActiveState()
 {
+    bool sporkActive = sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
+    {
+        LOCK(cs);
+        bool oldIsEnforced = isEnforced;
+        isSporkActive = sporkActive;
+        isEnforced = isSporkActive;
 
-    LOCK(cs);
-    bool oldIsEnforced = isEnforced;
-    isSporkActive = sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
-    isEnforced = isSporkActive;
-
-    if (!oldIsEnforced && isEnforced) {
-        // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
-        // us with some stale values which we should not try to enforce anymore (there probably was a good reason
-        // to disable spork19)
-        bestChainLockHash = uint256();
-        bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();
+        if (!oldIsEnforced && isEnforced) {
+            // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
+            // us with some stale values which we should not try to enforce anymore (there probably was a good reason
+            // to disable spork19)
+            bestChainLockHash = uint256();
+            bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();
+        }
     }
 }
 
@@ -405,7 +401,6 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
 // WARNING, do not hold cs while calling this method as we'll otherwise run into a deadlock
 void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex)
 {
-    auto& params = Params();
     // get the non-const pointer
     CBlockIndex* pindex2;
     {
@@ -413,7 +408,7 @@ void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex)
         pindex2 = LookupBlockIndex(pindex->GetBlockHash());
     }
     BlockValidationState state;
-    if (!InvalidateBlock(state, params, pindex2)) {
+    if (!InvalidateBlock(state, Params(), pindex2)) {
         LogPrintf("CChainLocksHandler::%s -- InvalidateBlock failed: %s\n", __func__, state.ToString());
         // This should not have happened and we are in a state were it's not safe to continue anymore
         assert(false);
