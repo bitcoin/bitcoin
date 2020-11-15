@@ -8,6 +8,7 @@
 
 #include <amount.h>
 #include <serialize.h>
+#include <tinyformat.h>
 
 #include <string>
 
@@ -65,7 +66,10 @@ public:
     friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
     friend bool operator!=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK != b.nSatoshisPerK; }
     CFeeRate& operator+=(const CFeeRate& a) { nSatoshisPerK += a.nSatoshisPerK; return *this; }
+    /** Returns the fee rate in BTC/kvB or sat/vB, with units, as a string */
     std::string ToString(const FeeEstimateMode& fee_estimate_mode = FeeEstimateMode::BTC_KVB) const;
+    /** Returns the fee rate in sat/vB, without units, as a string */
+    std::string SatsToString() const { return strprintf("%d.%03d", nSatoshisPerK / 1000, nSatoshisPerK % 1000); }
 
     SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
 };
