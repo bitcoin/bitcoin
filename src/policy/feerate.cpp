@@ -35,10 +35,21 @@ CAmount CFeeRate::GetFee(size_t nBytes_) const
     return nFee;
 }
 
-std::string CFeeRate::ToString(const FeeEstimateMode& fee_estimate_mode) const
+std::string CFeeRate::ToString(FeeEstimateMode mode, bool with_units) const
 {
-    switch (fee_estimate_mode) {
-    case FeeEstimateMode::SAT_VB: return strprintf("%d.%03d %s/vB", nSatoshisPerK / 1000, nSatoshisPerK % 1000, CURRENCY_ATOM);
-    default:                      return strprintf("%d.%08d %s/kvB", nSatoshisPerK / COIN, nSatoshisPerK % COIN, CURRENCY_UNIT);
+    if (with_units) {
+        switch (mode) {
+        case FeeEstimateMode::SAT_VB:
+            return strprintf("%d.%03d %s/vB", nSatoshisPerK / 1000, nSatoshisPerK % 1000, CURRENCY_ATOM);
+        default:
+            return strprintf("%d.%08d %s/kvB", nSatoshisPerK / COIN, nSatoshisPerK % COIN, CURRENCY_UNIT);
+        }
+    } else {
+        switch (mode) {
+        case FeeEstimateMode::SAT_VB:
+            return strprintf("%d.%03d", nSatoshisPerK / 1000, nSatoshisPerK % 1000);
+        default:
+            return strprintf("%d.%08d", nSatoshisPerK / COIN, nSatoshisPerK % COIN);
+        }
     }
 }

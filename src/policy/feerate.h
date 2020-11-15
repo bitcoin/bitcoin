@@ -67,7 +67,13 @@ public:
     friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
     friend bool operator!=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK != b.nSatoshisPerK; }
     CFeeRate& operator+=(const CFeeRate& a) { nSatoshisPerK += a.nSatoshisPerK; return *this; }
-    std::string ToString(const FeeEstimateMode& fee_estimate_mode = FeeEstimateMode::BTC_KVB) const;
+    /**
+     * Return the fee rate in BTC/kvB or sat/vB, with or without units, as a string.
+     *
+     *  @param[in] mode        FeeEstimateMode::SAT_VB or FeeEstimateMode::BTC_KVB
+     *  @param[in] with_units  bool whether to append the fee rate units ("sat/vB" or "BTC/kvB")
+     */
+    std::string ToString(FeeEstimateMode mode = FeeEstimateMode::BTC_KVB, bool with_units = true) const;
 
     SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
 };
