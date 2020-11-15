@@ -79,7 +79,7 @@ public Q_SLOTS:
     void gotoVerifyMessageTab(QString addr = "");
 
     /** Encrypt the wallet */
-    void encryptWallet(bool status);
+    void encryptWallet();
     /** Backup the wallet */
     void backupWallet();
     /** Change encrypted wallet passphrase */
