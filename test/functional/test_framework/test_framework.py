@@ -189,8 +189,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                             help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown, valgrind 3.14 or later required")
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
-        # SYSCOIN increase timeout
-        parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.6, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
+        parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
 
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--descriptors", default=False, action="store_true",
@@ -1127,6 +1126,7 @@ class DashTestFramework(SyscoinTestFramework):
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=30):
+        self.sync_blocks(self.nodes)
         for node in self.nodes:
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
