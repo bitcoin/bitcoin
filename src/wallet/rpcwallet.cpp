@@ -6,6 +6,7 @@
 #include <amount.h>
 #include <core_io.h>
 #include <interfaces/chain.h>
+#include <key_bip39.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <optional.h>
@@ -4227,8 +4228,73 @@ static RPCHelpMan sethdseed()
             }
             seed_key.Set(vch.begin(), vch.end(), true);
         } else {
-            if (!request.params[2].isNull() && request.params[2].get_str() == "hex") {
-                std::vector<unsigned char> seed = ParseHex(request.params[1].get_str());
+            if (!request.params[2].isNull()
+                    && (request.params[2].get_str() == "hex"
+                        || request.params[2].get_str() == "mnemonic")) {
+                std::vector<unsigned char> seed;
+                if(request.params[2].get_str() == "hex") {
+                    seed = ParseHex(request.params[1].get_str());
+                } else {
+                    std::string mnemonic_string = request.params[1].get_str();
+                    unsigned char* mnemonic = (unsigned char *)mnemonic_string.c_str();
+                    int i = 0, n = 0;
+                    while (mnemonic[i]) {
+                        if (mnemonic[i] == ' ') {
+                            n++;
+                        }
+                        i++;
+                    }
+                    n++;
+                    if (n < 12  || n > 24 || n % 3 != 0) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid mnemonic size");
+                    }
+                    char current_word[10];
+                    int j, k, ki, bi = 0;
+                    uint8_t bits[32 + 1];
+                    memset(bits, 0, sizeof(bits));
+                    i = 0;
+                    while (mnemonic[i]) {
+                        j = 0;
+                        while (mnemonic[i] != ' ' && mnemonic[i] != 0) {
+                            if (j >= (int)sizeof(current_word) - 1) {
+                                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid mnemonic word lenght");
+                            }
+                            current_word[j] = mnemonic[i];
+                            i++;
+                            j++;
+                        }
+                        current_word[j] = 0;
+                        if (mnemonic[i] != 0) {
+                            i++;
+                        }
+                        k = 0;
+                        for (;;) {
+                            if (k >= words_size) {
+                                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid mnemonic word");
+                            }
+                            if (strcmp(current_word, words[k]) == 0) {
+                                for (ki = 0; ki < 11; ki++) {
+                                    if (k & (1 << (10 - ki))) {
+                                        bits[bi / 8] |= 1 << (7 - (bi % 8));
+                                    }
+                                    bi++;
+                                }
+                                break;
+                            }
+                            k++;
+                        }
+                    }
+                    if (bi != n * 11) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid bits size");
+                    }
+                    j = n * 11 / 8;
+                    if (n == 24) {
+                        j--;
+                    }
+                    for(i = 0; i < j; i++) {
+                        seed.push_back(bits[i]);
+                    }
+                }
                 std::vector<unsigned char> vch;
                 if(seed.size() < 16 && seed.size() % 4 != 0) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid seed size");
