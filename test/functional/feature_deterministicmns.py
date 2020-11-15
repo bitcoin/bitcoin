@@ -32,6 +32,7 @@ class DIP3Test(SyscoinTestFramework):
     def start_controller_node(self):
         self.log.info("starting controller node")
         self.start_node(0, extra_args=self.extra_args)
+        force_finish_mnsync(self.nodes[0])
         for i in range(1, self.num_nodes):
             if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None:
                 self.connect_nodes(i, 0)

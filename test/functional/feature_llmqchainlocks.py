@@ -6,6 +6,7 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
+from test_framework.util import force_finish_mnsync
 
 '''
 feature_llmqchainlocks.py
@@ -86,6 +87,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Restart it so that it forgets all the chainlocks from the past")
         self.stop_node(0)
         self.start_node(0)
+        force_finish_mnsync(self.nodes[0])
         self.connect_nodes(0, 1)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         self.log.info("Now try to reorg the chain")
