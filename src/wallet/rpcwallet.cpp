@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/context.h>
+#include <optional.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -3593,7 +3594,7 @@ static RPCHelpMan rescanblockchain()
     }
 
     int start_height = 0;
-    Optional<int> stop_height;
+    Optional<int> stop_height = MakeOptional(false, int());
     uint256 start_block;
     {
         LOCK(pwallet->cs_wallet);
