@@ -181,32 +181,36 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
     if (diff.updatedMNs.empty() && diff.removedMns.empty()) {
         return;
     }
-
-    connman.ForEachNode([&](CNode* pnode) {
-        LOCK(pnode->cs_mnauth);
-        if (pnode->verifiedProRegTxHash.IsNull()) {
-            return;
-        }
-        auto verifiedDmn = oldMNList.GetMN(pnode->verifiedProRegTxHash);
-        if (!verifiedDmn) {
-            return;
-        }
-        bool doRemove = false;
-        if (diff.removedMns.count(verifiedDmn->GetInternalId())) {
-            doRemove = true;
-        } else {
-            auto it = diff.updatedMNs.find(verifiedDmn->GetInternalId());
-            if (it != diff.updatedMNs.end()) {
-                if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != pnode->verifiedPubKeyHash) {
-                    doRemove = true;
+    {
+        // called from async signal and thus we lose locks, need to ensure lock order as ForEachNode locks node context
+        LOCK(cs_main);
+        connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+            AssertLockHeld(cs_main);
+            LOCK(pnode->cs_mnauth);
+            if (pnode->verifiedProRegTxHash.IsNull()) {
+                return;
+            }
+            auto verifiedDmn = oldMNList.GetMN(pnode->verifiedProRegTxHash);
+            if (!verifiedDmn) {
+                return;
+            }
+            bool doRemove = false;
+            if (diff.removedMns.count(verifiedDmn->GetInternalId())) {
+                doRemove = true;
+            } else {
+                auto it = diff.updatedMNs.find(verifiedDmn->GetInternalId());
+                if (it != diff.updatedMNs.end()) {
+                    if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != pnode->verifiedPubKeyHash) {
+                        doRemove = true;
+                    }
                 }
             }
-        }
 
-        if (doRemove) {
-            LogPrint(BCLog::NET, "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
-                     pnode->verifiedProRegTxHash.ToString(), pnode->GetId());
-            pnode->fDisconnect = true;
-        }
-    });
+            if (doRemove) {
+                LogPrint(BCLog::NET, "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
+                        pnode->verifiedProRegTxHash.ToString(), pnode->GetId());
+                pnode->fDisconnect = true;
+            }
+        });
+    }
 }
