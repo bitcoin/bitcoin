@@ -23,7 +23,7 @@ static void FatalError(const char* fmt, const Args&... args)
     std::string strMessage = tfm::format(fmt, args...);
     SetMiscWarning(Untranslated(strMessage));
     LogPrintf("*** %s\n", strMessage);
-    AbortError(_("A fatal internal error occurred, see debug.log for details"));
+    AbortError(strprintf(_("A fatal internal error occurred, see %s for details."), gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE)));
     StartShutdown();
 }
 
