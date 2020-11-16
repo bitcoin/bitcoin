@@ -16,7 +16,6 @@
 #include <boost/thread.hpp>
 
 class CBlockIndex;
-class CScheduler;
 class CConnman;
 class PeerManager;
 namespace llmq
@@ -45,10 +44,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 
 
 private:
-    CScheduler* scheduler;
-    boost::thread* scheduler_thread;
     mutable RecursiveMutex cs;
-    bool tryLockChainTipScheduled{false};
     bool isSporkActive{false};
     bool isEnforced{false};
 
@@ -57,7 +53,7 @@ private:
 
     CChainLockSig bestChainLockWithKnownBlock;
     const CBlockIndex* bestChainLockBlockIndex{nullptr};
-
+    const CBlockIndex* processingChainLockBlockIndex{nullptr};
     int32_t lastSignedHeight{-1};
     uint256 lastSignedRequestId;
     uint256 lastSignedMsgHash;
@@ -81,10 +77,9 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
-    void AcceptedBlockHeader(const CBlockIndex* pindexNew);
-    void UpdatedBlockTip(const CBlockIndex* pindexNew);
+    void NotifyHeaderTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState();
-    void TrySignChainTip();
+    void TrySignChainTip(const CBlockIndex* pindexNew);
     void EnforceBestChainLock();
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 

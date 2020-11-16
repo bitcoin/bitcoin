@@ -34,9 +34,9 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
 
         self.mine_quorum()
         self.mine_quorum()
-
+        block = self.nodes[0].generate(1)[0]
+        self.wait_for_chainlocked_block_all_nodes(block)
         # Make sure that all nodes are chainlocked at the same height before starting actual tests
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         self.bump_mocktime(1)
@@ -99,7 +99,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
     def cycle_llmqs(self):
         self.mine_quorum()
         self.mine_quorum()
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
+        block = self.nodes[0].generate(1)[0]
+        self.wait_for_chainlocked_block_all_nodes(block)
 
     def test_all_nodes_session_timeout(self, do_cycle_llmqs):
         set_node_times(self.nodes, self.mocktime)
@@ -116,7 +117,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         time.sleep(5)
         # Make the signing session for the IS lock timeout on nodes 1-3
         self.bump_mocktime(61)
-        time.sleep(2) # make sure Cleanup() is called
+        self.nodes[0].generate(1) # make sure Cleanup() is called
         self.reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
@@ -138,7 +139,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         time.sleep(2) # make sure signing is done on node 2 (it's async)
         # Make the signing session for the IS lock timeout on node 3
         self.bump_mocktime(61)
-        time.sleep(2) # make sure Cleanup() is called
+        self.nodes[0].generate(1) # make sure Cleanup() is called
         self.reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
@@ -148,7 +149,6 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         # Make sure signing is done on nodes 1 and 2 (it's async)
-        time.sleep(5)
         if do_cycle_llmqs:
             self.cycle_llmqs()
         # Make node 0 consider the TX as safe

@@ -128,6 +128,8 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Reenable network on first node and wait for chainlock")
         self.reconnect_isolated_node(self.nodes[0], 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), timeout=30)
+        self.nodes[1].generate(50)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash(), timeout=30)
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe

@@ -270,6 +270,3 @@ void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMN
 void CMainSignals::NotifyHeaderTip(const CBlockIndex * pindex, bool fInitialDownload) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyHeaderTip(pindex, fInitialDownload); });
 }
-void CMainSignals::AcceptedBlockHeader(const CBlockIndex * pindex) {
-    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.AcceptedBlockHeader(pindex); });
-}

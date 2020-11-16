@@ -23,19 +23,14 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
     UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
 }
 
-void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
-{
-    if(ShutdownRequested())
-        return;
-    llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
-    masternodeSync.AcceptedBlockHeader(pindexNew);
-}
 
 void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
     if(ShutdownRequested())
         return;
     masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+    if(llmq::chainLocksHandler)
+        llmq::chainLocksHandler->NotifyHeaderTip(pindexNew, fInitialDownload);
 }
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
@@ -53,8 +48,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     if (fInitialDownload)
         return;
-    if(llmq::chainLocksHandler)
-        llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
     if(llmq::quorumManager)
         llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     if(llmq::quorumDKGSessionManager)

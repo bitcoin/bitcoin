@@ -201,7 +201,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     // b) we waited for at least MASTERNODE_SYNC_TICK_SECONDS/MASTERNODE_SYNC_TIMEOUT_SECONDS
                     //    (depending on the number of connected peers) since we reached the headers tip the last
                     //    time (i.e. since fReachedBestHeader has been set to true);
-                    // c) there were no blocks (UpdatedBlockTip, NotifyHeaderTip) or headers (AcceptedBlockHeader)
+                    // c) there were no blocks (UpdatedBlockTip, NotifyHeaderTip)
                     //    for at least MASTERNODE_SYNC_TICK_SECONDS/MASTERNODE_SYNC_TIMEOUT_SECONDS (depending on
                     //    the number of connected peers).
                     // We must be at the tip already, let's move to the next asset.
@@ -299,16 +299,6 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
 
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
     
-}
-
-void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
-{
-    LogPrint(BCLog::MNSYNC, "CMasternodeSync::AcceptedBlockHeader -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
-
-    if (!IsBlockchainSynced()) {
-        // Postpone timeout each time new block header arrives while we are still syncing blockchain
-        BumpAssetLastTime("CMasternodeSync::AcceptedBlockHeader");
-    }
 }
 
 void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman)

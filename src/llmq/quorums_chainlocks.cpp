@@ -8,7 +8,6 @@
 #include <chain.h>
 #include <masternode/masternodesync.h>
 #include <net_processing.h>
-#include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>
 #include <validation.h>
@@ -34,17 +33,10 @@ CChainLocksHandler::CChainLocksHandler(CConnman& _connman, PeerManager& _peerman
     connman(_connman),
     peerman(_peerman)
 {
-    scheduler = new CScheduler();
-    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new boost::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-scheduler", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
 {
-    scheduler_thread->interrupt();
-    scheduler_thread->join();
-    delete scheduler_thread;
-    delete scheduler;
 }
 
 void CChainLocksHandler::Start()
@@ -54,7 +46,6 @@ void CChainLocksHandler::Start()
 
 void CChainLocksHandler::Stop()
 {
-    scheduler->stop();
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
 
@@ -168,55 +159,25 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         bestChainLockBlockIndex = pindex;
         peerman.ForgetTxHash(from, hash);
     }
-
-    scheduler->scheduleFromNow([&]() {
-        CheckActiveState();
-        EnforceBestChainLock();
-    }, std::chrono::milliseconds(0));
-
+    CheckActiveState();
+    EnforceBestChainLock();
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
 }
 
-void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
+
+void CChainLocksHandler::NotifyHeaderTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
-    LOCK2(cs_main, cs);
-
-    if (pindexNew->GetBlockHash() == bestChainLock.blockHash) {
-        LogPrintf("CChainLocksHandler::%s -- block header %s came in late, updating and enforcing\n", __func__, pindexNew->GetBlockHash().ToString());
-
-        if (bestChainLock.nHeight != pindexNew->nHeight) {
-            // Should not happen, same as the conflict check from ProcessNewChainLock.
-            LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
-                      __func__, bestChainLock.ToString(), pindexNew->nHeight);
-            return;
-        }
-
-        // when EnforceBestChainLock is called later, it might end up invalidating other chains but not activating the
-        // CLSIG locked chain. This happens when only the header is known but the block is still missing yet. The usual
-        // block processing logic will handle this when the block arrives
-        bestChainLockWithKnownBlock = bestChainLock;
-        bestChainLockBlockIndex = pindexNew;
-    }
-}
-
-void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
-{
-    // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
-    // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
-    // EnforceBestChainLock switching chains.
-    LOCK(cs);
-    if (tryLockChainTipScheduled) {
+    if(fInitialDownload)
         return;
-    }
-    tryLockChainTipScheduled = true;
-    scheduler->scheduleFromNow([&]() {
-        CheckActiveState();
-        EnforceBestChainLock();
-        TrySignChainTip();
+    CheckActiveState();
+    {
         LOCK(cs);
-        tryLockChainTipScheduled = false;
-    }, std::chrono::milliseconds(0));
+        if(pindexNew != processingChainLockBlockIndex) {
+            processingChainLockBlockIndex = pindexNew;
+            TrySignChainTip(pindexNew);
+        }
+    }
 }
 
 void CChainLocksHandler::CheckActiveState()
@@ -238,7 +199,7 @@ void CChainLocksHandler::CheckActiveState()
     }
 }
 
-void CChainLocksHandler::TrySignChainTip()
+void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
 {
     Cleanup();
 
@@ -249,17 +210,12 @@ void CChainLocksHandler::TrySignChainTip()
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
-    uint256 msgHash;
-    int32_t nHeight;
-    {
-        LOCK(cs_main);
-        const CBlockIndex* pindex = ::ChainActive().Tip();
-        if (!pindex->pprev) {
-            return;
-        }
-        msgHash = pindex->GetBlockHash();
-        nHeight = pindex->nHeight;
+    if (!pindex->pprev) {
+        return;
     }
+    const uint256 msgHash = pindex->GetBlockHash();
+    const int32_t nHeight = pindex->nHeight;
+    
 
 
     // DIP8 defines a process called "Signing attempts" which should run before the CLSIG is finalized
@@ -306,12 +262,9 @@ void CChainLocksHandler::TrySignChainTip()
         lastSignedRequestId = requestId;
         lastSignedMsgHash = msgHash;
     }
-
     quorumSigningManager->AsyncSignIfMember(Params().GetConsensus().llmqTypeChainLocks, requestId, msgHash);
 }
 
-
-// This should also not be called from validation signals, as this might result in recursive calls
 void CChainLocksHandler::EnforceBestChainLock()
 {
     const CBlockIndex* currentBestChainLockBlockIndex;
@@ -353,23 +306,17 @@ void CChainLocksHandler::EnforceBestChainLock()
     for(const auto& index: invalidatingBlockIndexes) {
         DoInvalidateBlock(index);
     }
-    bool activateNeeded;
     {
         LOCK(cs_main);
-        // In case blocks from the correct chain are invalid at the moment, reconsider them. The only case where this
+        // In case blocks from the correct chain are invalid at the momIsolate node, mine on both parts of the network, andent, reconsider them. The only case where this
         // can happen right now is when missing superblock triggers caused the main chain to be dismissed first. When
         // the trigger later appears, this should bring us to the correct chain eventually. Please note that this does
         // NOT enforce invalid blocks in any way, it just causes re-validation.
         if (!currentBestChainLockBlockIndex->IsValid()) {
             ResetBlockFailureFlags(LookupBlockIndex(currentBestChainLockBlockIndex->GetBlockHash()));
         }
-        activateNeeded = ::ChainActive().Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
     }
-    // no cs_main allowed
-    BlockValidationState state;
-    if (activateNeeded && !ActivateBestChain(state, Params(), nullptr)) {
-        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
-    }
+
 }
 
 void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
