@@ -27,6 +27,8 @@
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 
+static std::vector<std::vector<std::string>> g_rpcauth;
+
 /** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
  * re-lock the wallet.
  */
@@ -99,15 +101,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
     std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
-    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
-        //Search for multi-user login/pass "rpcauth" from config
-        std::vector<std::string> vFields;
-        boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
-        if (vFields.size() != 3) {
-            //Incorrect formatting in config file
-            continue;
-        }
-
+    for (const auto& vFields : g_rpcauth) {
         std::string strName = vFields[0];
         if (!TimingResistantEqual(strName, strUser)) {
             continue;
@@ -259,6 +253,11 @@ static bool InitRPCAuthentication()
     if (gArgs.GetArg("-rpcauth","") != "")
     {
         LogPrintf("Using rpcauth authentication.\n");
+        for (std::string rpcauth : gArgs.GetArgs("-rpcauth")) {
+            std::vector<std::string> fields;
+            boost::split(fields, rpcauth, boost::is_any_of(":$"));
+            if (fields.size() == 3) g_rpcauth.push_back(fields);
+        }
     }
 
     g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
