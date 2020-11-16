@@ -438,12 +438,12 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
     return keypool_has_keys;
 }
 
-bool LegacyScriptPubKeyMan::Upgrade(int prev_version, bilingual_str& error)
+bool LegacyScriptPubKeyMan::Upgrade(int prev_version, int new_version, bilingual_str& error)
 {
     LOCK(cs_KeyStore);
     bool hd_upgrade = false;
     bool split_upgrade = false;
-    if (m_storage.CanSupportFeature(FEATURE_HD) && !IsHDEnabled()) {
+    if (IsFeatureSupported(new_version, FEATURE_HD) && !IsHDEnabled()) {
         WalletLogPrintf("Upgrading wallet to HD\n");
         m_storage.SetMinVersion(FEATURE_HD);
 
@@ -453,10 +453,17 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, bilingual_str& error)
         hd_upgrade = true;
     }
     // Upgrade to HD chain split if necessary
-    if (m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) {
+    if (IsFeatureSupported(new_version, FEATURE_HD_SPLIT)) {
         WalletLogPrintf("Upgrading wallet to use HD chain split\n");
         m_storage.SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
         split_upgrade = FEATURE_HD_SPLIT > prev_version;
+        // Upgrade the HDChain
+        if (m_hd_chain.nVersion < CHDChain::VERSION_HD_CHAIN_SPLIT) {
+            m_hd_chain.nVersion = CHDChain::VERSION_HD_CHAIN_SPLIT;
+            if (!WalletBatch(m_storage.GetDatabase()).WriteHDChain(m_hd_chain)) {
+                throw std::runtime_error(std::string(__func__) + ": writing chain failed");
+            }
+        }
     }
     // Mark all keys currently in the keypool as pre-split
     if (split_upgrade) {

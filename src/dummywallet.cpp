@@ -42,7 +42,6 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-salvagewallet",
         "-spendzeroconfchange",
         "-txconfirmtarget=<n>",
-        "-upgradewallet",
         "-wallet=<path>",
         "-walletbroadcast",
         "-walletdir=<dir>",
