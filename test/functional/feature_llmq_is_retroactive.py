@@ -118,6 +118,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         time.sleep(5)
         # Make the signing session for the IS lock timeout on nodes 1-3
         self.bump_mocktime(61)
+        time.sleep(2)
         self.nodes[0].generate(1) # make sure Cleanup() is called
         self.reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
@@ -140,6 +141,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         time.sleep(2) # make sure signing is done on node 2 (it's async)
         # Make the signing session for the IS lock timeout on node 3
         self.bump_mocktime(61)
+        time.sleep(2)
         self.nodes[0].generate(1) # make sure Cleanup() is called
         self.reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
@@ -150,6 +152,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         # Make sure signing is done on nodes 1 and 2 (it's async)
+        time.sleep(5)
         if do_cycle_llmqs:
             self.cycle_llmqs()
         # Make node 0 consider the TX as safe
