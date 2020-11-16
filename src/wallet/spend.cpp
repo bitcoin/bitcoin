@@ -394,11 +394,9 @@ bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const 
     std::vector<OutputGroup> all_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, false /* positive_only */);
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    std::set<CInputCoin> knapsack_coins;
-    CAmount knapsack_value;
-    if (KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, knapsack_coins, knapsack_value)) {
-        const auto waste = GetSelectionWaste(knapsack_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee, !coin_selection_params.m_subtract_fee_outputs);
-        results.emplace_back(std::make_tuple(waste, std::move(knapsack_coins), knapsack_value));
+    if (auto knapsack_result{KnapsackSolver(all_groups, nTargetValue + coin_selection_params.m_change_fee)}) {
+        knapsack_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+        results.emplace_back(std::make_tuple(knapsack_result->GetWaste(), knapsack_result->GetInputSet(), knapsack_result->GetSelectedValue()));
     }
 
     // We include the minimum final change for SRD as we do want to avoid making really small change.
