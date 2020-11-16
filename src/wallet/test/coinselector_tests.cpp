@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Setup
     std::vector<CInputCoin> utxo_pool;
     CoinSet selection;
-    CoinSet actual_selection;
+    SelectionResult expected_result(CAmount(0));
     CAmount value_ret = 0;
 
     /////////////////////////
@@ -175,72 +175,72 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     add_coin(4 * CENT, 4, utxo_pool);
 
     // Select 1 Cent
-    add_coin(1 * CENT, 1, actual_selection);
+    add_coin(1 * CENT, 1, expected_result.m_selected_inputs);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equivalent_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, expected_result.m_selected_inputs));
     BOOST_CHECK_EQUAL(value_ret, 1 * CENT);
-    actual_selection.clear();
+    expected_result.Clear();
     selection.clear();
 
     // Select 2 Cent
-    add_coin(2 * CENT, 2, actual_selection);
+    add_coin(2 * CENT, 2, expected_result.m_selected_inputs);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 2 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equivalent_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, expected_result.m_selected_inputs));
     BOOST_CHECK_EQUAL(value_ret, 2 * CENT);
-    actual_selection.clear();
+    expected_result.Clear();
     selection.clear();
 
     // Select 5 Cent
-    add_coin(4 * CENT, 4, actual_selection);
-    add_coin(1 * CENT, 1, actual_selection);
+    add_coin(4 * CENT, 4, expected_result.m_selected_inputs);
+    add_coin(1 * CENT, 1, expected_result.m_selected_inputs);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 5 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equivalent_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, expected_result.m_selected_inputs));
     BOOST_CHECK_EQUAL(value_ret, 5 * CENT);
-    actual_selection.clear();
+    expected_result.Clear();
     selection.clear();
 
     // Select 11 Cent, not possible
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 11 * CENT, 0.5 * CENT, selection, value_ret));
-    actual_selection.clear();
+    expected_result.Clear();
     selection.clear();
 
     // Cost of change is greater than the difference between target value and utxo sum
-    add_coin(1 * CENT, 1, actual_selection);
+    add_coin(1 * CENT, 1, expected_result.m_selected_inputs);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0.5 * CENT, selection, value_ret));
     BOOST_CHECK_EQUAL(value_ret, 1 * CENT);
-    BOOST_CHECK(equivalent_sets(selection, actual_selection));
-    actual_selection.clear();
+    BOOST_CHECK(equivalent_sets(selection, expected_result.m_selected_inputs));
+    expected_result.Clear();
     selection.clear();
 
     // Cost of change is less than the difference between target value and utxo sum
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0, selection, value_ret));
-    actual_selection.clear();
+    expected_result.Clear();
     selection.clear();
 
     // Select 10 Cent
     add_coin(5 * CENT, 5, utxo_pool);
-    add_coin(5 * CENT, 5, actual_selection);
-    add_coin(4 * CENT, 4, actual_selection);
-    add_coin(1 * CENT, 1, actual_selection);
+    add_coin(5 * CENT, 5, expected_result.m_selected_inputs);
+    add_coin(4 * CENT, 4, expected_result.m_selected_inputs);
+    add_coin(1 * CENT, 1, expected_result.m_selected_inputs);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 0.5 * CENT, selection, value_ret));
-    BOOST_CHECK(equivalent_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, expected_result.m_selected_inputs));
     BOOST_CHECK_EQUAL(value_ret, 10 * CENT);
-    actual_selection.clear();
+    expected_result.Clear();
     selection.clear();
 
     // Negative effective value
     // Select 10 Cent but have 1 Cent not be possible because too small
-    add_coin(5 * CENT, 5, actual_selection);
-    add_coin(3 * CENT, 3, actual_selection);
-    add_coin(2 * CENT, 2, actual_selection);
+    add_coin(5 * CENT, 5, expected_result.m_selected_inputs);
+    add_coin(3 * CENT, 3, expected_result.m_selected_inputs);
+    add_coin(2 * CENT, 2, expected_result.m_selected_inputs);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 5000, selection, value_ret));
     BOOST_CHECK_EQUAL(value_ret, 10 * CENT);
     // FIXME: this test is redundant with the above, because 1 Cent is selected, not "too small"
-    // BOOST_CHECK(equivalent_sets(selection, actual_selection));
+    // BOOST_CHECK(equivalent_sets(selection, expected_result.m_selected_inputs));
 
     // Select 0.25 Cent, not possible
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.25 * CENT, 0.5 * CENT, selection, value_ret));
-    actual_selection.clear();
+    expected_result.Clear();
     selection.clear();
 
     // Iteration exhaustion test
@@ -251,11 +251,11 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
     // Test same value early bailout optimization
     utxo_pool.clear();
-    add_coin(7 * CENT, 7, actual_selection);
-    add_coin(7 * CENT, 7, actual_selection);
-    add_coin(7 * CENT, 7, actual_selection);
-    add_coin(7 * CENT, 7, actual_selection);
-    add_coin(2 * CENT, 7, actual_selection);
+    add_coin(7 * CENT, 7, expected_result.m_selected_inputs);
+    add_coin(7 * CENT, 7, expected_result.m_selected_inputs);
+    add_coin(7 * CENT, 7, expected_result.m_selected_inputs);
+    add_coin(7 * CENT, 7, expected_result.m_selected_inputs);
+    add_coin(2 * CENT, 7, expected_result.m_selected_inputs);
     add_coin(7 * CENT, 7, utxo_pool);
     add_coin(7 * CENT, 7, utxo_pool);
     add_coin(7 * CENT, 7, utxo_pool);
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     }
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 30 * CENT, 5000, selection, value_ret));
     BOOST_CHECK_EQUAL(value_ret, 30 * CENT);
-    BOOST_CHECK(equivalent_sets(selection, actual_selection));
+    BOOST_CHECK(equivalent_sets(selection, expected_result.m_selected_inputs));
 
     ////////////////////
     // Behavior tests //
