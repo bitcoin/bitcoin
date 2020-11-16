@@ -27,7 +27,7 @@ class UacommentTest(BitcoinTestFramework):
 
         self.log.info("test -uacomment max length")
         self.stop_node(0)
-        expected = r"Error: Total length of network version string \([0-9]+\) exceeds maximum length \(256\). Reduce the number or size of uacomments."
+        expected = r"Error: Total length of network version string \([0-9]+\) exceeds maximum length \(256\). Reduce the number or size of -uacomment."
         self.nodes[0].assert_start_raises_init_error(["-uacomment=" + 'a' * 256], expected, match=ErrorMatch.FULL_REGEX)
 
         self.log.info("test -uacomment unsafe characters")

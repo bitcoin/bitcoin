@@ -94,7 +94,7 @@ bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermis
         return false;
     }
     if (addrBind.GetPort() == 0) {
-        error = strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind);
+        error = strprintf(_("Need to specify a port with %s: '%s'"), "-whitebind", strBind);
         return false;
     }
 
@@ -114,7 +114,7 @@ bool NetWhitelistPermissions::TryParse(const std::string str, NetWhitelistPermis
     CSubNet subnet;
     LookupSubNet(net, subnet);
     if (!subnet.IsValid()) {
-        error = strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net);
+        error = strprintf(_("Invalid netmask specified in %s: '%s'"), "-whitelist", net);
         return false;
     }
 

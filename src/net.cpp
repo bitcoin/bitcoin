@@ -2459,7 +2459,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds, connOptions.onion_binds)) {
         if (clientInterface) {
             clientInterface->ThreadSafeMessageBox(
-                _("Failed to listen on any port. Use -listen=0 if you want this."),
+                strprintf(_("Failed to listen on any port. Use %s if you want this."), "-listen=0"),
                 "", CClientUIInterface::MSG_ERROR);
         }
         return false;

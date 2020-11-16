@@ -1002,7 +1002,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         for (const auto& name : names) {
             BlockFilterType filter_type;
             if (!BlockFilterTypeByName(name, filter_type)) {
-                return InitError(strprintf(_("Unknown -blockfilterindex value %s."), name));
+                return InitError(strprintf(_("Unknown %s value %s."), "-blockfilterindex", name));
             }
             g_enabled_filter_types.insert(filter_type);
         }
@@ -1011,7 +1011,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Signal NODE_COMPACT_FILTERS if peerblockfilters and basic filters index are both enabled.
     if (args.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS)) {
         if (g_enabled_filter_types.count(BlockFilterType::BASIC) != 1) {
-            return InitError(_("Cannot set -peerblockfilters without -blockfilterindex."));
+            return InitError(strprintf(_("Cannot set %s without %s."), "-peerblockfilters", "-blockfilterindex"));
         }
 
         nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
@@ -1019,10 +1019,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // if using block pruning, then disallow txindex
     if (args.GetArg("-prune", 0)) {
-        if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
-            return InitError(_("Prune mode is incompatible with -txindex."));
+        if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+            return InitError(strprintf(_("Prune mode is incompatible with %s."), "-txindex"));
+        }
         if (!g_enabled_filter_types.empty()) {
-            return InitError(_("Prune mode is incompatible with -blockfilterindex."));
+            return InitError(strprintf(_("Prune mode is incompatible with %s."), "-blockfilterindex"));
         }
     }
 
@@ -1046,12 +1047,14 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     int fd_max = FD_SETSIZE;
 #endif
     nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS), 0);
-    if (nFD < MIN_CORE_FILEDESCRIPTORS)
+    if (nFD < MIN_CORE_FILEDESCRIPTORS) {
         return InitError(_("Not enough file descriptors available."));
-    nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS, nMaxConnections);
+    }
 
-    if (nMaxConnections < nUserMaxConnections)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
+    nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS, nMaxConnections);
+    if (nMaxConnections < nUserMaxConnections) {
+        InitWarning(strprintf(_("Reducing %s from %d to %d, because of system limitations."), "-maxconnections", nUserMaxConnections, nMaxConnections));
+    }
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (args.IsArgSet("-debug")) {
@@ -1101,8 +1104,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // mempool limits
     int64_t nMempoolSizeMax = args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t nMempoolSizeMin = args.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
-    if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
-        return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
+    if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin) {
+        return InitError(strprintf(_("%s must be at least %d MB."), "-maxmempool", std::ceil(nMempoolSizeMin / 1000000.0)));
+    }
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (args.IsArgSet("-incrementalrelayfee")) {
@@ -1197,7 +1201,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     nMaxTipAge = args.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     if (args.IsArgSet("-proxy") && args.GetArg("-proxy", "").empty()) {
-        return InitError(_("No proxy server specified. Use -proxy=<ip> or -proxy=<ip:port>."));
+        return InitError(strprintf(_("No proxy server specified. Use %s or %s."), "-proxy=<ip>", "-proxy=<ip:port>"));
     }
 
     return true;
@@ -1416,8 +1420,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
     strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
-        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
-            strSubVersion.size(), MAX_SUBVERSION_LENGTH));
+        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of %s."),
+            strSubVersion.size(), MAX_SUBVERSION_LENGTH, "-uacomment"));
     }
 
     if (args.IsArgSet("-onlynet")) {
@@ -1425,7 +1429,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         for (const std::string& snet : args.GetArgs("-onlynet")) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
-                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
+                return InitError(strprintf(_("Unknown network specified in %s: '%s'"), "-onlynet", snet));
             nets.insert(net);
         }
         for (int n = 0; n < NET_MAX; n++) {
@@ -1446,12 +1450,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
-            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+            return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-proxy", proxyArg));
         }
 
         proxyType addrProxy = proxyType(proxyAddr, proxyRandomize);
-        if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+        if (!addrProxy.IsValid()) {
+            return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-proxy", proxyArg));
+        }
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
@@ -1470,11 +1475,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         } else {
             CService onionProxy;
             if (!Lookup(onionArg, onionProxy, 9050, fNameLookup)) {
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
+                return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-onion", onionArg));
             }
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
-            if (!addrOnion.IsValid())
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
+            if (!addrOnion.IsValid()) {
+                return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-onion", onionArg));
+            }
             SetProxy(NET_ONION, addrOnion);
             SetReachable(NET_ONION, true);
         }
@@ -1623,7 +1629,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode) {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
+                    strLoadError = strprintf(_("You need to rebuild the database using %s to go back to unpruned mode. This will redownload the entire block chain."), "-reindex");
                     break;
                 }
 
@@ -1663,7 +1669,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                     // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                     if (!chainstate->ReplayBlocks(chainparams)) {
-                        strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
+                        strLoadError = strprintf(_("Unable to replay blocks. You will need to rebuild the database using %s."), "-reindex-chainstate");
                         failed_chainstate_init = true;
                         break;
                     }
