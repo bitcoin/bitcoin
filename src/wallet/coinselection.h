@@ -197,6 +197,41 @@ struct OutputGroup
  */
 [[nodiscard]] CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
 
+struct SelectionResult
+{
+    /** Set of inputs selected by the algorithm to use in the transaction */
+    std::set<CInputCoin> m_selected_inputs;
+    /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
+    const CAmount m_target;
+    /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
+    bool m_use_effective{false};
+    /** The computed waste */
+    std::optional<CAmount> m_waste;
+
+    explicit SelectionResult(const CAmount target)
+        : m_target(target) {}
+
+    SelectionResult() = delete;
+
+    /** Get the sum of the input values */
+    [[nodiscard]] CAmount GetSelectedValue() const;
+
+    void Clear();
+
+    void AddInput(const OutputGroup& group);
+
+    /** Calculates and stores the waste for this selection via GetSelectionWaste */
+    void ComputeAndSetWaste(CAmount change_cost);
+    [[nodiscard]] CAmount GetWaste() const;
+
+    /** Get m_selected_inputs */
+    const std::set<CInputCoin>& GetInputSet() const;
+    /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
+    std::vector<CInputCoin> GetShuffledInputVector() const;
+
+    bool operator<(SelectionResult other) const;
+};
+
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
 
 /** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible

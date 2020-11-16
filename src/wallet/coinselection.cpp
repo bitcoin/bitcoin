@@ -395,3 +395,50 @@ CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cos
 
     return waste;
 }
+
+void SelectionResult::ComputeAndSetWaste(CAmount change_cost)
+{
+    m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+}
+
+CAmount SelectionResult::GetWaste() const
+{
+    Assume(m_waste != std::nullopt);
+    return *m_waste;
+}
+
+CAmount SelectionResult::GetSelectedValue() const
+{
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.txout.nValue; });
+}
+
+void SelectionResult::Clear()
+{
+    m_selected_inputs.clear();
+    m_waste.reset();
+}
+
+void SelectionResult::AddInput(const OutputGroup& group)
+{
+    util::insert(m_selected_inputs, group.m_outputs);
+}
+
+const std::set<CInputCoin>& SelectionResult::GetInputSet() const
+{
+    return m_selected_inputs;
+}
+
+std::vector<CInputCoin> SelectionResult::GetShuffledInputVector() const
+{
+    std::vector<CInputCoin> coins(m_selected_inputs.begin(), m_selected_inputs.end());
+    Shuffle(coins.begin(), coins.end(), FastRandomContext());
+    return coins;
+}
+
+bool SelectionResult::operator<(SelectionResult other) const
+{
+    Assume(m_waste != std::nullopt);
+    Assume(other.m_waste != std::nullopt);
+    // As this operator is only used in std::min_element, we want the result that has more inputs when waste are equal.
+    return *m_waste < *other.m_waste || (*m_waste == *other.m_waste && m_selected_inputs.size() > other.m_selected_inputs.size());
+}
