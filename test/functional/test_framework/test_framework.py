@@ -1282,7 +1282,7 @@ class DashTestFramework(SyscoinTestFramework):
         quorums = self.nodes[0].quorum_list()
 
         def timeout_func():
-            self.bump_scheduler(5)
+            self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
             self.bump_mocktime(bumptime)
 
         # move forward to next DKG
