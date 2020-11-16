@@ -3271,7 +3271,15 @@ bool CChainState::PreciousBlock(BlockValidationState& state, const CChainParams&
 bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlockIndex *pindex) {
     return ::ChainstateActive().PreciousBlock(state, params, pindex);
 }
-
+// SYSCOIN
+bool CChainState::InvalidateBlocks(BlockValidationState& state, const CChainParams& chainparams, const std::vector<CBlockIndex*> &invalidatingBlockIndexes) {
+    LOCK(m_cs_chainstate);
+    for(auto& index: invalidatingBlockIndexes) {
+        if(!InvalidateBlock(state, chainparams, index))
+            return false;
+    }
+    return true;
+}
 bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex)
 {
     CBlockIndex* to_mark_failed = pindex;
@@ -3412,7 +3420,10 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
 bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex) {
     return ::ChainstateActive().InvalidateBlock(state, chainparams, pindex);
 }
-
+// SYSCOIN
+bool InvalidateBlocks(BlockValidationState& state, const CChainParams& chainparams, const std::vector<CBlockIndex*> &invalidatingBlockIndexes) {
+    return ::ChainstateActive().InvalidateBlocks(state, chainparams, invalidatingBlockIndexes);
+}
 void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
     AssertLockHeld(cs_main);
 

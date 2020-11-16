@@ -265,7 +265,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
 void CChainLocksHandler::EnforceBestChainLock()
 {
     const CBlockIndex* currentBestChainLockBlockIndex;
-    std::vector<const CBlockIndex*> invalidatingBlockIndexes;
+    std::vector<CBlockIndex*> invalidatingBlockIndexes;
     {
         LOCK2(cs_main, cs);
         CChainLockSig clsig;
@@ -293,17 +293,14 @@ void CChainLocksHandler::EnforceBestChainLock()
                 }
                 LogPrintf("CChainLocksHandler::%s -- CLSIG (%s) invalidates block %s\n",
                             __func__, clsig.ToString(), jt->second->GetBlockHash().ToString());
-                invalidatingBlockIndexes.emplace_back(jt->second); 
+                invalidatingBlockIndexes.emplace_back(const_cast<CBlockIndex*>(jt->second)); 
             }
 
             pindex = pindex->pprev;
         }
     }
     // no cs_main allowed
-    bool invalidateRes = true;
-    for(const auto& index: invalidatingBlockIndexes) {
-        invalidateRes = invalidateRes && DoInvalidateBlock(index);
-    }
+    bool invalidateRes = DoInvalidateBlocks(invalidatingBlockIndexes);
     bool activateNeeded = false;
     {
         LOCK(cs_main);
@@ -350,17 +347,12 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
 }
 
 // WARNING, do not hold cs while calling this method as we'll otherwise run into a deadlock
-bool CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex)
+bool CChainLocksHandler::DoInvalidateBlocks(const std::vector<CBlockIndex*> &invalidatingBlockIndexes)
 {
-    // get the non-const pointer
-    CBlockIndex* pindex2;
-    {
-        LOCK(cs_main);
-        pindex2 = LookupBlockIndex(pindex->GetBlockHash());
-    }
     BlockValidationState state;
-    if (!InvalidateBlock(state, Params(), pindex2)) {
-        LogPrintf("CChainLocksHandler::%s -- InvalidateBlock failed: %s\n", __func__, state.ToString());
+    if (!InvalidateBlocks(state, Params(), invalidatingBlockIndexes)) {
+        LogPrintf("CChainLocksHandler::%s -- InvalidateBlocks failed: %s\n", __func__, state.ToString());
+        return false;
     }
     return state.IsValid();
 }

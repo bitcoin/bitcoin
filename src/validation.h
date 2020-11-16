@@ -698,6 +698,8 @@ public:
     // Manual block validity manipulation:
     bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
+    // SYSCOIN
+    bool InvalidateBlocks(BlockValidationState& state, const CChainParams& chainparams, const std::vector<CBlockIndex*> &pindexVec) LOCKS_EXCLUDED(cs_main);
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Replay blocks that aren't fully applied to the database. */
@@ -763,7 +765,8 @@ bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlo
 
 /** Mark a block as invalid. */
 bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
-
+// SYSCOIN
+bool InvalidateBlocks(BlockValidationState& state, const CChainParams& chainparams, const std::vector<CBlockIndex*> &pindexVec) LOCKS_EXCLUDED(cs_main);
 /** Remove invalidity status from a block and its descendants. */
 void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
