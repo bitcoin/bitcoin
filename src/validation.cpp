@@ -3273,12 +3273,76 @@ bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlo
 }
 // SYSCOIN
 bool CChainState::InvalidateBlocks(BlockValidationState& state, const CChainParams& chainparams, const std::vector<CBlockIndex*> &invalidatingBlockIndexes) {
-    LOCK(m_cs_chainstate);
     for(auto& index: invalidatingBlockIndexes) {
         if(!InvalidateBlock(state, chainparams, index))
             return false;
     }
     return true;
+}
+bool CChainState::DoInvalidateBlocks(const CChainParams& params, const std::vector<CBlockIndex*> &invalidatingBlockIndexes) LOCKS_EXCLUDED(::cs_main)
+{
+    BlockValidationState state;
+    if (!InvalidateBlocks(state, params, invalidatingBlockIndexes)) {
+        LogPrintf("CChainLocksHandler::%s -- InvalidateBlocks failed: %s\n", __func__, state.ToString());
+        return false;
+    }
+    return state.IsValid();
+}
+void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex, const llmq::CChainLockSig& bestChainLockWithKnownBlock, const bool isEnforced)
+{
+    LOCK(m_cs_chainstate);
+    const CChainParams& params = Params();
+    const CBlockIndex* currentBestChainLockBlockIndex;
+    std::vector<CBlockIndex*> invalidatingBlockIndexes;
+    {
+        LOCK(cs_main);
+        const CBlockIndex* pindex = bestChainLockBlockIndex;
+        if (!isEnforced) {
+            return;
+        }
+        pindex = currentBestChainLockBlockIndex = bestChainLockBlockIndex;
+
+        if (!currentBestChainLockBlockIndex) {
+            // we don't have the header/block, so we can't do anything right now
+            return;
+        }
+        // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
+        // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
+        // and invalidate each of them.
+        while (pindex && !m_chain.Contains(pindex)) {
+            // Invalidate all blocks that have the same prevBlockHash but are not equal to blockHash
+            auto itp = LookupBlockIndexPrev(pindex->pprev->GetBlockHash());
+            for (auto jt = itp.first; jt != itp.second; ++jt) {
+                if (jt->second == pindex) {
+                    continue;
+                }
+                LogPrintf("CChainLocksHandler::%s -- CLSIG (%s) invalidates block %s\n",
+                            __func__, bestChainLockWithKnownBlock.ToString(), jt->second->GetBlockHash().ToString());
+                invalidatingBlockIndexes.emplace_back(const_cast<CBlockIndex*>(jt->second)); 
+            }
+
+            pindex = pindex->pprev;
+        }
+    }
+    // no cs_main allowed
+    const bool invalidateRes = DoInvalidateBlocks(params, invalidatingBlockIndexes);
+    bool activateNeeded = false;
+    {
+        LOCK(cs_main);
+        // In case blocks from the correct chain are invalid at the moment, reconsider them. The only case where this
+        // can happen right now is when missing superblock triggers caused the main chain to be dismissed first. When
+        // the trigger later appears, this should bring us to the correct chain eventually. Please note that this does
+        // NOT enforce invalid blocks in any way, it just causes re-validation.
+        if (!currentBestChainLockBlockIndex->IsValid()) {
+            ResetBlockFailureFlags(LookupBlockIndex(currentBestChainLockBlockIndex->GetBlockHash()));
+        }
+        activateNeeded = m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
+    }
+    // no cs_main allowed
+    BlockValidationState state;
+    if (invalidateRes && activateNeeded && !ActivateBestChain(state, params, nullptr)) {
+        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+    }
 }
 bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex)
 {
@@ -3461,7 +3525,10 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
 void ResetBlockFailureFlags(CBlockIndex *pindex) {
     return ::ChainstateActive().ResetBlockFailureFlags(pindex);
 }
-
+// SYSCOIN
+void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex, const llmq::CChainLockSig& bestChainLockWithKnownBlock, const bool isEnforced) {
+    ::ChainstateActive().EnforceBestChainLock(bestChainLockBlockIndex, bestChainLockWithKnownBlock, isEnforced);
+}
 CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus)
 {
     AssertLockHeld(cs_main);

@@ -79,7 +79,6 @@ public:
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState();
     void TrySignChainTip(const CBlockIndex* pindexNew);
-    void EnforceBestChainLock();
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 
     bool HasChainLock(int nHeight, const uint256& blockHash);
@@ -90,8 +89,6 @@ private:
     // these require locks to be held already
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
-    static bool DoInvalidateBlocks(const std::vector<CBlockIndex*> &vecIndex) LOCKS_EXCLUDED(::cs_main);
 
     void Cleanup();
 };
