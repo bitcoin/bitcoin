@@ -51,6 +51,8 @@ TEST_EXIT_SKIPPED = 77
 
 TMPDIR_PREFIX = "syscoin_func_test_"
 
+# SYSCOIN
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
