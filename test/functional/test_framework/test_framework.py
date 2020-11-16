@@ -121,6 +121,18 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         if self.options.timeout_factor == 0 :
             self.options.timeout_factor = 99999
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
+        # SYSCOIN
+        self.mocktime = None
+    
+    def bump_mocktime(self, t, nodes=None):
+        if self.mocktime is None:
+            self.mocktime = int(time.time())
+        else:
+            self.mocktime += t
+        set_node_times(nodes or self.nodes, self.mocktime)
+
+    def bump_scheduler(self, t, nodes=None):
+        bump_node_times(nodes or self.nodes, t)
 
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
@@ -637,6 +649,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                 return
             # Check that each peer has at least one connection
             assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            # SYSCOIN
+            self.bump_mocktime(1, nodes=nodes or self.nodes)
             time.sleep(wait)
         raise AssertionError("Block sync timed out after {}s:{}".format(
             timeout,
@@ -660,6 +674,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                 return
             # Check that each peer has at least one connection
             assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            # SYSCOIN
+            self.bump_mocktime(1, nodes=nodes or self.nodes)
             time.sleep(wait)
         raise AssertionError("Mempool sync timed out after {}s:{}".format(
             timeout,
@@ -876,7 +892,6 @@ class DashTestFramework(SyscoinTestFramework):
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
         self.mninfo = []
-        self.mocktime = None
         self.setup_clean_chain = True
         # additional args
         if extra_args is None:
@@ -893,16 +908,6 @@ class DashTestFramework(SyscoinTestFramework):
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
-
-    def bump_mocktime(self, t, nodes=None):
-        if self.mocktime is None:
-            self.mocktime = int(time.time())
-        else:
-            self.mocktime += t
-        set_node_times(nodes or self.nodes, self.mocktime)
-
-    def bump_scheduler(self, t, nodes=None):
-        bump_node_times(nodes or self.nodes, t)
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
