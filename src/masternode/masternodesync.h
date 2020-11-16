@@ -67,7 +67,6 @@ public:
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const;
     void ProcessTick(CConnman& connman, const PeerManager& peerman);
 
-    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
     void DoMaintenance(CConnman &connman, const PeerManager& peerman);

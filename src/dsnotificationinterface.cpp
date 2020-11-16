@@ -23,13 +23,6 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
     UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
 }
 
-
-void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
-{
-    if(ShutdownRequested())
-        return;
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload);
-}
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
     if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones

@@ -182,7 +182,6 @@ protected:
 
     // SYSCOIN
     virtual void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
-    virtual void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {}
     virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
     virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
@@ -222,8 +221,6 @@ public:
     void NotifyGovernanceVote(const CGovernanceVote &vote);
     void NotifyGovernanceObject(const CGovernanceObject &object);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
-    /** Notifies listeners of updated block header tip */
-    void NotifyHeaderTip(const CBlockIndex *, bool fInitialDownload);   
 };
 
 CMainSignals& GetMainSignals();
