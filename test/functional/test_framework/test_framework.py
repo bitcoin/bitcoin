@@ -1128,6 +1128,7 @@ class DashTestFramework(SyscoinTestFramework):
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=30):
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_blocks(self.nodes)
         for node in self.nodes:
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
