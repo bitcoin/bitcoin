@@ -30,6 +30,15 @@ This includes messages passed to the GUI through the UI interface through `InitM
 General recommendations
 ------------------------
 
+### Do not translate names
+
+The following tokens must not be parts of the strings are to be translated:
+- command line option names
+- RPC names
+- file names
+
+Use `%s` substitution, e.g., `strprintf(_("Unknown %s value %s."), "-blockfilterindex", name)`.
+
 ### Avoid unnecessary translation strings
 
 Try not to burden translators with translating messages that are e.g. slight variations of other messages.
