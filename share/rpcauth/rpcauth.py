@@ -27,6 +27,7 @@ def main():
     parser = ArgumentParser(description='Create login credentials for a JSON-RPC user')
     parser.add_argument('username', help='the username for authentication')
     parser.add_argument('password', help='leave empty to generate a random password or specify "-" to prompt for password', nargs='?')
+    parser.add_argument('--output', dest='output', help='file to store credentials, to be used with -rpcauthfile')
     args = parser.parse_args()
 
     if not args.password:
@@ -38,9 +39,14 @@ def main():
     salt = generate_salt(16)
     password_hmac = password_to_hmac(salt, args.password)
 
-    print('String to be appended to bitcoin.conf:')
-    print('rpcauth={0}:{1}${2}'.format(args.username, salt, password_hmac))
-    print('Your password:\n{0}'.format(args.password))
+    if args.output:
+        file = open(args.output, "x")
+        file.write('{0}:{1}${2}'.format(args.username, salt, password_hmac))
+        print('Your password:\n{0}'.format(args.password))
+    else:
+        print('String to be appended to bitcoin.conf:')
+        print('rpcauth={0}:{1}${2}'.format(args.username, salt, password_hmac))
+        print('Your password:\n{0}'.format(args.password))
 
 if __name__ == '__main__':
     main()
