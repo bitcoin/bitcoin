@@ -29,6 +29,7 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
   depends_releases_cache:
     folder: "/tmp/cirrus-ci-build/releases"
   merge_base_script:
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - bash -c "$PACKAGE_MANAGER_INSTALL git"
     - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
     - git config --global user.email "ci@ci.ci"
