@@ -300,8 +300,9 @@ void CChainLocksHandler::EnforceBestChainLock()
         }
     }
     // no cs_main allowed
+    bool invalidateRes = true;
     for(const auto& index: invalidatingBlockIndexes) {
-        DoInvalidateBlock(index);
+        invalidateRes = invalidateRes && DoInvalidateBlock(index);
     }
     bool activateNeeded = false;
     {
@@ -317,7 +318,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     }
     // no cs_main allowed
     BlockValidationState state;
-    if (activateNeeded && !ActivateBestChain(state, Params(), nullptr)) {
+    if (invalidateRes && activateNeeded && !ActivateBestChain(state, Params(), nullptr)) {
         LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
     }
 }
@@ -349,7 +350,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
 }
 
 // WARNING, do not hold cs while calling this method as we'll otherwise run into a deadlock
-void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex)
+bool CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex)
 {
     // get the non-const pointer
     CBlockIndex* pindex2;
@@ -360,9 +361,8 @@ void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex)
     BlockValidationState state;
     if (!InvalidateBlock(state, Params(), pindex2)) {
         LogPrintf("CChainLocksHandler::%s -- InvalidateBlock failed: %s\n", __func__, state.ToString());
-        // This should not have happened and we are in a state were it's not safe to continue anymore
-        assert(false);
     }
+    return state.IsValid();
 }
 
 bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)

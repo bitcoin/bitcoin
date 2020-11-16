@@ -91,7 +91,7 @@ private:
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    static void DoInvalidateBlock(const CBlockIndex* pindex) LOCKS_EXCLUDED(::cs_main);
+    static bool DoInvalidateBlock(const CBlockIndex* pindex) LOCKS_EXCLUDED(::cs_main);
 
     void Cleanup();
 };
