@@ -2800,7 +2800,7 @@ bool CWallet::CreateTransactionInternal(
                 // destination in case we don't need change.
                 CTxDestination dest;
                 if (!reservedest.GetReservedDestination(dest, true)) {
-                    error = _("Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.");
+                    error = strprintf(_("Transaction needs a change address, but we can't generate it. Please call %s first."), "keypoolrefill");
                 }
                 scriptChange = GetScriptForDestination(dest);
                 // A valid destination implies a change script (and
@@ -3346,7 +3346,7 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
 
     ReserveDestination reservedest(this, type);
     if (!reservedest.GetReservedDestination(dest, true)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first").translated;
+        error = strprintf(_("Error: Keypool ran out, please call %s first"), "keypoolrefill").translated;
         return false;
     }
 
