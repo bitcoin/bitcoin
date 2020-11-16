@@ -303,6 +303,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     for(const auto& index: invalidatingBlockIndexes) {
         DoInvalidateBlock(index);
     }
+    bool activateNeeded = false;
     {
         LOCK(cs_main);
         // In case blocks from the correct chain are invalid at the moment, reconsider them. The only case where this
@@ -312,8 +313,13 @@ void CChainLocksHandler::EnforceBestChainLock()
         if (!currentBestChainLockBlockIndex->IsValid()) {
             ResetBlockFailureFlags(LookupBlockIndex(currentBestChainLockBlockIndex->GetBlockHash()));
         }
+        activateNeeded = ::ChainActive().Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
     }
-
+    // no cs_main allowed
+    BlockValidationState state;
+    if (activateNeeded && !ActivateBestChain(state, Params(), nullptr)) {
+        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+    }
 }
 
 void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)

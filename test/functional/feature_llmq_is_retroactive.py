@@ -26,6 +26,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)

@@ -28,7 +28,7 @@ void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, boo
 {
     if(ShutdownRequested())
         return;
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload);
 }
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
@@ -42,7 +42,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones
         return;
 
-    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
+    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload);
 
     if (fInitialDownload)
         return;
