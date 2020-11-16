@@ -120,21 +120,24 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         }
         return;
     }
-
+    bool clsSigInternalConflict = false;
     {
-        LOCK2(cs_main, cs);
-
+        LOCK(cs);
         if (InternalHasConflictingChainLock(clsig.nHeight, clsig.blockHash)) {
             // This should not happen. If it happens, it means that a malicious entity controls a large part of the MN
             // network. In this case, we don't allow him to reorg older chainlocks.
             LogPrintf("CChainLocksHandler::%s -- new CLSIG (%s) tries to reorg previous CLSIG (%s), peer=%d\n",
                       __func__, clsig.ToString(), bestChainLock.ToString(), from);
-            peerman.ForgetTxHash(from, hash);
-            return;
+            clsSigInternalConflict = true;
+        } else {
+            bestChainLockHash = hash;
+            bestChainLock = clsig;
         }
-
-        bestChainLockHash = hash;
-        bestChainLock = clsig;
+    }
+    if(clsSigInternalConflict) {
+        LOCK(cs_main);
+        peerman.ForgetTxHash(from, hash);
+        return;
     }
     // don't hold lock while relaying which locks nodes/mempool
     CInv inv(MSG_CLSIG, hash);
@@ -302,7 +305,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     }
     {
         LOCK(cs_main);
-        // In case blocks from the correct chain are invalid at the momIsolate node, mine on both parts of the network, andent, reconsider them. The only case where this
+        // In case blocks from the correct chain are invalid at the moment, reconsider them. The only case where this
         // can happen right now is when missing superblock triggers caused the main chain to be dismissed first. When
         // the trigger later appears, this should bring us to the correct chain eventually. Please note that this does
         // NOT enforce invalid blocks in any way, it just causes re-validation.
