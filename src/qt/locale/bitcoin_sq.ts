@@ -26,8 +26,16 @@
         <translation>Fshi adresen e selektuar nga lista</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Vendos adresën ose etiketën për të kërkuar</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Eksporto</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -164,6 +172,18 @@
         <translation>Jepe fjalëkalimin e vjetër dhe fjalkalimin e ri për portofolin.</translation>
     </message>
     <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Portofoli që duhet të enkriptohet</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Portofoli juaj do të enkriptohet</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Portofoli juaj është i enkriptuar.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>Enkriptimi i portofolit dështoi</translation>
     </message>
@@ -216,6 +236,10 @@
     <message>
         <source>Quit application</source>
         <translation>Mbyllni aplikacionin</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Shfaq informacion rreth Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -762,6 +786,10 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Eksporto</translation>
+    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>

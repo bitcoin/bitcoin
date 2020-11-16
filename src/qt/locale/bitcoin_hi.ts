@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>एड्रेस या लेबल को बदलने के लिए राइट-क्लिक करें </translation>
+        <translation>पता व नामपत्र बदलने के लिए दायीं कुंजी दबाइए </translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -319,6 +319,10 @@
         <translation>तिजोरी</translation>
     </message>
     <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>इस पते पर बिटकौइन भेजें</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>पहचान शब्द/अक्षर जो वॉलेट एनक्रिपशन के लिए इस्तेमाल किया है उसे बदलिए!</translation>
     </message>
@@ -359,6 +363,22 @@
         <translation>नवीनतम</translation>
     </message>
     <message>
+        <source>Open a wallet</source>
+        <translation>बटुआ खोलें</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>बटुआ बंद करें...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>बटुआ बंद करें</translation>
+    </message>
+    <message>
+        <source>Close All Wallets...</source>
+        <translation>सारे बटुएँ बंद करें...</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>भेजी ट्रांजक्शन</translation>
     </message>
@@ -378,6 +398,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Quantity:</source>
+        <translation>मात्रा :</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>राशि :</translation>
     </message>
@@ -392,6 +416,14 @@
     <message>
         <source>Confirmed</source>
         <translation>पक्का</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>हाँ</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>नहीं</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -571,6 +603,10 @@
         <translation>सिक्के भेजें|</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation>मात्रा :</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>राशि :</translation>
     </message>
@@ -724,6 +760,10 @@
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>बटुआ बंद करें</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
