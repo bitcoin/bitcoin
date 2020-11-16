@@ -192,7 +192,7 @@ class PopFr(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.sync_all(self.nodes[0:3])
+        self.sync_all(self.nodes[0:4])
 
         from pypopminer import MockMiner
         self.apm = MockMiner()

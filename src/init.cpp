@@ -211,6 +211,7 @@ void Shutdown(NodeContext& node)
     // CScheduler/checkqueue threadGroup
     threadGroup.interrupt_all();
     threadGroup.join_all();
+    VeriBlock::StopPop();
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
