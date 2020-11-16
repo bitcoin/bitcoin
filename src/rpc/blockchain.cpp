@@ -2497,9 +2497,12 @@ static RPCHelpMan dumptxoutset()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     fs::path path = fs::absolute(request.params[0].get_str(), GetDataDir());
+    fs::path pathjson = fs::absolute(request.params[0].get_str()+".json", GetDataDir());
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
     fs::path temppath = fs::absolute(request.params[0].get_str() + ".incomplete", GetDataDir());
+    // SYSCOIN
+    fs::path temppathjson = fs::absolute(request.params[0].get_str() + ".incomplete.json", GetDataDir());
 
     if (fs::exists(path)) {
         throw JSONRPCError(
@@ -2510,6 +2513,8 @@ static RPCHelpMan dumptxoutset()
 
     FILE* file{fsbridge::fopen(temppath, "wb")};
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
+    // SYSCOIN
+    FILE* filejson{fsbridge::fopen(temppathjson, "w")};
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CCoinsStats stats;
     CBlockIndex* tip;
@@ -2548,26 +2553,33 @@ static RPCHelpMan dumptxoutset()
     COutPoint key;
     Coin coin;
     unsigned int iter{0};
-
     while (pcursor->Valid()) {
         if (iter % 5000 == 0) node.rpc_interruption_point();
         ++iter;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
             afile << key;
             afile << coin;
+            CTxDestination dest;
+            if(ExtractDestination(coin.out.scriptPubKey, dest)) {
+                fprintf(filejson, "%s,%s\n", EncodeDestination(dest).c_str(), ValueFromAmount(coin.out.nValue).write().c_str());
+            }
         }
 
         pcursor->Next();
     }
 
+
     afile.fclose();
+    fclose(filejson);
     fs::rename(temppath, path);
+    fs::rename(temppathjson, pathjson);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("coins_written", stats.coins_count);
     result.pushKV("base_hash", tip->GetBlockHash().ToString());
     result.pushKV("base_height", tip->nHeight);
     result.pushKV("path", path.string());
+    result.pushKV("pathjson", pathjson.string());
     return result;
 },
     };
