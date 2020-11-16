@@ -436,20 +436,12 @@ void CWallet::chainStateFlushed(const CBlockLocator& loc)
     batch.WriteBestBlock(loc);
 }
 
-void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, bool fExplicit)
+void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
     if (nWalletVersion >= nVersion)
         return;
-
-    // when doing an explicit upgrade, if we pass the max version permitted, upgrade all the way
-    if (fExplicit && nVersion > nWalletMaxVersion)
-            nVersion = FEATURE_LATEST;
-
     nWalletVersion = nVersion;
-
-    if (nVersion > nWalletMaxVersion)
-        nWalletMaxVersion = nVersion;
 
     {
         WalletBatch* batch = batch_in ? batch_in : new WalletBatch(*database);
@@ -458,18 +450,6 @@ void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, 
         if (!batch_in)
             delete batch;
     }
-}
-
-bool CWallet::SetMaxVersion(int nVersion)
-{
-    LOCK(cs_wallet);
-    // cannot downgrade below current version
-    if (nWalletVersion > nVersion)
-        return false;
-
-    nWalletMaxVersion = nVersion;
-
-    return true;
 }
 
 std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
@@ -656,7 +636,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
 
         // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch, true);
+        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch);
 
         if (!encrypted_batch->TxnCommit()) {
             delete encrypted_batch;
@@ -4125,33 +4105,31 @@ const CAddressBookData* CWallet::FindAddressBookEntry(const CTxDestination& dest
 bool CWallet::UpgradeWallet(int version, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     int prev_version = GetVersion();
-    int nMaxVersion = version;
-    if (nMaxVersion == 0) // the -upgradewallet without argument case
-    {
+    if (version == 0) {
         WalletLogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
-        nMaxVersion = FEATURE_LATEST;
-        SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
+        version = FEATURE_LATEST;
     } else {
-        WalletLogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
+        WalletLogPrintf("Allowing wallet upgrade up to %i\n", version);
     }
-    if (nMaxVersion < GetVersion())
+    if (version < prev_version)
     {
         error = _("Cannot downgrade wallet");
         return false;
     }
-    SetMaxVersion(nMaxVersion);
 
     LOCK(cs_wallet);
 
     // Do not upgrade versions to any version between HD_SPLIT and FEATURE_PRE_SPLIT_KEYPOOL unless already supporting HD_SPLIT
-    int max_version = GetVersion();
-    if (!CanSupportFeature(FEATURE_HD_SPLIT) && max_version >= FEATURE_HD_SPLIT && max_version < FEATURE_PRE_SPLIT_KEYPOOL) {
+    if (!CanSupportFeature(FEATURE_HD_SPLIT) && version >= FEATURE_HD_SPLIT && version < FEATURE_PRE_SPLIT_KEYPOOL) {
         error = _("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.");
         return false;
     }
 
+    // Permanently upgrade to the version
+    SetMinVersion(GetClosestWalletFeature(version));
+
     for (auto spk_man : GetActiveScriptPubKeyMans()) {
-        if (!spk_man->Upgrade(prev_version, error)) {
+        if (!spk_man->Upgrade(prev_version, version, error)) {
             return false;
         }
     }

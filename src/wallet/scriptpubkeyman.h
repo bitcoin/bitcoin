@@ -37,7 +37,7 @@ public:
     virtual bool IsWalletFlagSet(uint64_t) const = 0;
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
     virtual bool CanSupportFeature(enum WalletFeature) const = 0;
-    virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr, bool = false) = 0;
+    virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr) = 0;
     virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
     virtual bool HasEncryptionKeys() const = 0;
     virtual bool IsLocked() const = 0;
@@ -206,7 +206,7 @@ public:
     virtual bool CanGetAddresses(bool internal = false) const { return false; }
 
     /** Upgrades the wallet to the specified version */
-    virtual bool Upgrade(int prev_version, bilingual_str& error) { return false; }
+    virtual bool Upgrade(int prev_version, int new_version, bilingual_str& error) { return false; }
 
     virtual bool HavePrivateKeys() const { return false; }
 
@@ -371,7 +371,7 @@ public:
 
     bool SetupGeneration(bool force = false) override;
 
-    bool Upgrade(int prev_version, bilingual_str& error) override;
+    bool Upgrade(int prev_version, int new_version, bilingual_str& error) override;
 
     bool HavePrivateKeys() const override;
 
