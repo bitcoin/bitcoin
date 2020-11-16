@@ -13,7 +13,7 @@ feature_llmqsigning.py
 Checks LLMQs signing sessions
 
 '''
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
+
 class LLMQSigningTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
@@ -45,7 +45,6 @@ class LLMQSigningTest(DashTestFramework):
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
             t = time.time()
             while time.time() - t < timeout:
                 if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
@@ -85,10 +84,12 @@ class LLMQSigningTest(DashTestFramework):
 
         # fast forward until 0.5 days before cleanup is expected, recovered sig should still be valid
         self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
+        self.bump_scheduler(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         self.bump_mocktime(int(60 * 60 * 24 * 1))
+        self.bump_scheduler(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 
@@ -96,6 +97,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
+        self.bump_scheduler(5)
         wait_for_sigs(True, False, True, 15)
 
 
@@ -115,8 +117,8 @@ class LLMQSigningTest(DashTestFramework):
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
-        # Let 2 seconds pass so that the next node is used for recovery, which should succeed
-        self.bump_mocktime(2)
+        # Bump scheduler 5 second so that the next node is used for recovery, which should succeed
+        self.bump_scheduler(5)
         wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
