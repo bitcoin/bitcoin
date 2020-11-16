@@ -92,17 +92,14 @@ static void BnBExhaustion(benchmark::Bench& bench)
 {
     // Setup
     std::vector<OutputGroup> utxo_pool;
-    CoinSet selection;
-    CAmount value_ret = 0;
 
     bench.run([&] {
         // Benchmark
         CAmount target = make_hard_case(17, utxo_pool);
-        SelectCoinsBnB(utxo_pool, target, 0, selection, value_ret); // Should exhaust
+        SelectCoinsBnB(utxo_pool, target, 0); // Should exhaust
 
         // Cleanup
         utxo_pool.clear();
-        selection.clear();
     });
 }
 

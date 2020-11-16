@@ -56,17 +56,14 @@ struct {
  *        bound of the range.
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
- * @param std::set<CInputCoin>& out_set -> This is an output parameter for the set of CInputCoins
- *        that have been selected.
- * @param CAmount& value_ret -> This is an output parameter for the total value of the CInputCoins
- *        that were selected.
+ * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
 static const size_t TOTAL_TRIES = 100000;
 
-bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret)
+std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
 {
-    out_set.clear();
+    SelectionResult result(selection_target);
     CAmount curr_value = 0;
 
     std::vector<bool> curr_selection; // select the utxo at this index
@@ -80,7 +77,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selectio
         curr_available_value += utxo.GetSelectionAmount();
     }
     if (curr_available_value < selection_target) {
-        return false;
+        return std::nullopt;
     }
 
     // Sort the utxo_pool
@@ -156,19 +153,17 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selectio
 
     // Check for solution
     if (best_selection.empty()) {
-        return false;
+        return std::nullopt;
     }
 
     // Set output set
-    value_ret = 0;
     for (size_t i = 0; i < best_selection.size(); ++i) {
         if (best_selection.at(i)) {
-            util::insert(out_set, utxo_pool.at(i).m_outputs);
-            value_ret += utxo_pool.at(i).m_value;
+            result.AddInput(utxo_pool.at(i));
         }
     }
 
-    return true;
+    return result;
 }
 
 std::optional<std::pair<std::set<CInputCoin>, CAmount>> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value)
@@ -421,6 +416,7 @@ void SelectionResult::Clear()
 void SelectionResult::AddInput(const OutputGroup& group)
 {
     util::insert(m_selected_inputs, group.m_outputs);
+    m_use_effective = !group.m_subtract_fee_outputs;
 }
 
 const std::set<CInputCoin>& SelectionResult::GetInputSet() const

@@ -385,11 +385,9 @@ bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const 
 
     // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
     std::vector<OutputGroup> positive_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, true /* positive_only */);
-    std::set<CInputCoin> bnb_coins;
-    CAmount bnb_value;
-    if (SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, bnb_coins, bnb_value)) {
-        const auto waste = GetSelectionWaste(bnb_coins, /* cost of change */ CAmount(0), nTargetValue, !coin_selection_params.m_subtract_fee_outputs);
-        results.emplace_back(std::make_tuple(waste, std::move(bnb_coins), bnb_value));
+    if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
+        bnb_result->ComputeAndSetWaste(CAmount(0));
+        results.emplace_back(std::make_tuple(bnb_result->GetWaste(), bnb_result->GetInputSet(), bnb_result->GetSelectedValue()));
     }
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
