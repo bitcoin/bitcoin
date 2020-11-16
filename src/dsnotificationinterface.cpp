@@ -29,8 +29,6 @@ void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, boo
     if(ShutdownRequested())
         return;
     masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
-    if(llmq::chainLocksHandler)
-        llmq::chainLocksHandler->NotifyHeaderTip(pindexNew, fInitialDownload);
 }
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
@@ -52,7 +50,8 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     if(llmq::quorumDKGSessionManager)
         llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
-
+    if(llmq::chainLocksHandler)
+        llmq::chainLocksHandler->UpdatedBlockTip(pindexNew, fInitialDownload);
     if (!fDisableGovernance) governance.UpdatedBlockTip(pindexNew, connman);
 }
 

@@ -3124,8 +3124,6 @@ static bool NotifyHeaderTip() LOCKS_EXCLUDED(cs_main) {
     }
     // Send block tip changed notifications without cs_main
     if (fNotify) {
-        // SYSCOIN
-        GetMainSignals().NotifyHeaderTip(pindexHeader, fInitialBlockDownload);
         uiInterface.NotifyHeaderTip(GetSynchronizationState(fInitialBlockDownload), pindexHeader);
     }
     return fNotify;

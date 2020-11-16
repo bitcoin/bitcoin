@@ -166,18 +166,12 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 }
 
 
-void CChainLocksHandler::NotifyHeaderTip(const CBlockIndex* pindexNew, bool fInitialDownload)
+void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
     if(fInitialDownload)
         return;
     CheckActiveState();
-    {
-        LOCK(cs);
-        if(pindexNew != processingChainLockBlockIndex) {
-            processingChainLockBlockIndex = pindexNew;
-            TrySignChainTip(pindexNew);
-        }
-    }
+    TrySignChainTip(pindexNew);
 }
 
 void CChainLocksHandler::CheckActiveState()
