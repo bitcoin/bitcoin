@@ -12,6 +12,7 @@ ZDAG_WARNING_RBF = 1
 ZDAG_WARNING_NOT_ZDAG_TX = 2
 ZDAG_WARNING_SIZE_OVER_POLICY = 3
 ZDAG_MAJOR_CONFLICT = 4
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 class AssetVerifyZDAGTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -44,6 +45,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, False)['txid']
         time.sleep(0.25)
         tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         time.sleep(0.25)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
@@ -53,6 +55,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.0001, False)['txid']
         time.sleep(0.25)
         tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 1)['txid']
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(2):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
@@ -93,6 +96,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
         time.sleep(0.25)
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
@@ -119,6 +123,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
         time.sleep(0.25)
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)

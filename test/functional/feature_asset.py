@@ -5,6 +5,7 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class AssetTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -113,19 +114,23 @@ class AssetTest(SyscoinTestFramework):
         self.sync_blocks()
         asset0 = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         asset1 = self.nodes[1].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetupdate(asset0, '', '', 127, '', {}, {})
         self.nodes[1].assetupdate(asset1, '', '', 127, '', {}, {})
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assettransfer(asset0, self.nodes[1].getnewaddress())
         self.nodes[1].assettransfer(asset1, self.nodes[0].getnewaddress())
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assetupdate, asset0, '', '', 127, '', {}, {})
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assetupdate, asset1, '', '', 127, '', {}, {})
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
@@ -135,16 +140,19 @@ class AssetTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[1].assettransfer, asset1, self.nodes[0].getnewaddress())
         self.nodes[0].assetupdate(asset1, '', '', 127, '', {}, {})
         self.nodes[1].assetupdate(asset0, '', '', 127, '', {}, {})
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assettransfer(asset1, self.nodes[1].getnewaddress())
         self.nodes[1].assettransfer(asset0, self.nodes[0].getnewaddress())
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetupdate(asset0, '', '', 127, '', {}, {})
         self.nodes[1].assetupdate(asset1, '', '', 127, '', {}, {})
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         self.nodes[0].generate(1)
 

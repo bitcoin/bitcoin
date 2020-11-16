@@ -849,6 +849,9 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("USE_SQLITE")
 
+    def bump_scheduler(self, t, nodes=None):
+        bump_node_times(nodes or self.nodes, t)
+
 MASTERNODE_COLLATERAL = 100
 
 
@@ -900,9 +903,6 @@ class DashTestFramework(SyscoinTestFramework):
         else:
             self.mocktime += t
         set_node_times(nodes or self.nodes, self.mocktime)
-
-    def bump_scheduler(self, t, nodes=None):
-        bump_node_times(nodes or self.nodes, t)
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size

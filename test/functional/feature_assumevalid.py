@@ -47,7 +47,7 @@ from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import DashTestFramework
 # SYSCOIN
 from test_framework.util import assert_equal, force_finish_mnsync
-
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
@@ -186,6 +186,7 @@ class AssumeValidTest(DashTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
+        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.assert_blockchain_height(self.nodes[0], 101)
 
         # Send all blocks to node1. All blocks will be accepted.
