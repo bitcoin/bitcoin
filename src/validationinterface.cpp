@@ -262,11 +262,8 @@ void CMainSignals::NotifyGovernanceVote(const CGovernanceVote &vote) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(vote); });
 }
 void CMainSignals::NotifyGovernanceObject(const CGovernanceObject &object) {
-     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceObject(object); });
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceObject(object); });
 }
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
-    auto event = [&] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
-    };
-    ENQUEUE_AND_LOG_EVENT(event, "%s", __func__, "NotifyMasternodeListChanged");
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
 }
