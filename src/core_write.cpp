@@ -14,17 +14,20 @@
 #include <undo.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 
-UniValue ValueFromAmount(const CAmount& amount)
+UniValue ValueFromAmount(const CAmount amount)
 {
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs / COIN;
-    int64_t remainder = n_abs % COIN;
+    static_assert(COIN > 1);
+    int64_t quotient = amount / COIN;
+    int64_t remainder = amount % COIN;
+    if (amount < 0) {
+        quotient = -quotient;
+        remainder = -remainder;
+    }
     return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
+            strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
 }
 
 std::string FormatScript(const CScript& script)
