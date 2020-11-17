@@ -186,7 +186,6 @@ public:
     bool ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
-    bool RewindBlockIndex(const CChainParams& params);
     bool LoadGenesisBlock(const CChainParams& chainparams);
     bool AddGenesisBlock(const CChainParams& chainparams, const CBlock& block, CValidationState& state);
 
