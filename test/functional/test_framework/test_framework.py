@@ -51,8 +51,6 @@ TEST_EXIT_SKIPPED = 77
 
 TMPDIR_PREFIX = "syscoin_func_test_"
 
-# SYSCOIN
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
@@ -851,9 +849,6 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("USE_SQLITE")
 
-    def bump_scheduler(self, t, nodes=None):
-        bump_node_times(nodes or self.nodes, t)
-
 MASTERNODE_COLLATERAL = 100
 
 
@@ -918,6 +913,9 @@ class DashTestFramework(SyscoinTestFramework):
         else:
             self.mocktime += t
         set_node_times(nodes or self.nodes, self.mocktime)
+
+    def bump_scheduler(self, t, nodes=None):
+        bump_node_times(nodes or self.nodes, t)
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size

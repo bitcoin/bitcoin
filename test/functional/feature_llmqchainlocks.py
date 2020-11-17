@@ -14,7 +14,6 @@ feature_llmqchainlocks.py
 Checks LLMQs based ChainLocks
 
 '''
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)

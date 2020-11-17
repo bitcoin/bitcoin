@@ -5,7 +5,6 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class AssetAuxFeesTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -24,7 +23,6 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 250)
-        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
@@ -35,7 +33,6 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 250)
-        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_mempools()
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
