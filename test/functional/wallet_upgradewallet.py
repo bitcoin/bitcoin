@@ -211,7 +211,8 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         self.log.info('Wallets cannot be downgraded')
         copy_non_hd()
-        self.test_upgradewallet_error(wallet, previous_version=60000, requested_version=40000, msg="Cannot downgrade wallet")
+        self.test_upgradewallet_error(wallet, previous_version=60000, requested_version=40000,
+            msg="Cannot downgrade wallet from version 60000 to version 40000. Wallet version unchanged.")
         wallet.unloadwallet()
         assert_equal(before_checksum, sha256sum_file(node_master_wallet))
         node_master.loadwallet('')
@@ -250,7 +251,8 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.log.info('Cannot upgrade to HD Split, needs Pre Split Keypool')
         for version in [139900, 159900, 169899]:
             self.test_upgradewallet_error(wallet, previous_version=130000, requested_version=version,
-                msg="Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.")
+                msg="Cannot upgrade a non HD split wallet from version {} to version {} without upgrading to "
+                    "support pre-split keypool. Please use version 169900 or no version specified.".format(130000, version))
 
         self.log.info('Upgrade HD to HD chain split')
         self.test_upgradewallet(wallet, previous_version=130000, requested_version=169900)
