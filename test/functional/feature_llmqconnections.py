@@ -23,7 +23,6 @@ class LLMQConnections(DashTestFramework):
 
     def run_test(self):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.bump_mocktime(5)
         self.wait_for_sporks_same()
 
         q = self.mine_quorum(expected_connections=2)
@@ -40,7 +39,6 @@ class LLMQConnections(DashTestFramework):
 
         self.log.info("activating SPORK_21_QUORUM_ALL_CONNECTED")
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
-        self.bump_mocktime(5)
         self.wait_for_sporks_same()
 
         self.log.info("mining one block and waiting for all members to connect to each other")

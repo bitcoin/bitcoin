@@ -1149,7 +1149,8 @@ class DashTestFramework(SyscoinTestFramework):
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
-            time.sleep(1)
+            time.sleep(0.5)
+            self.bump_mocktime(1)
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
         wait_until_helper(check_sporks_same, timeout=timeout)

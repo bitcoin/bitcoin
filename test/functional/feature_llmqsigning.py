@@ -25,7 +25,6 @@ class LLMQSigningTest(DashTestFramework):
     def run_test(self):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
-        self.bump_mocktime(5)
         self.wait_for_sporks_same()
 
         self.mine_quorum()
