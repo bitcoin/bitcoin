@@ -197,7 +197,6 @@ static RPCHelpMan getpeerinfo()
         }
         obj.pushKV("services", strprintf("%016x", stats.nServices));
         obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
-        // SYSCOIN
         if (!stats.verifiedProRegTxHash.IsNull()) {
             obj.pushKV("verified_proregtx_hash", stats.verifiedProRegTxHash.ToString());
         }

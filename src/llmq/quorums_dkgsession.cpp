@@ -459,6 +459,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions()
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
     dkgManager.connman.ForEachNode([&](const CNode* pnode) {
+        LOCK(pnode->cs_mnauth);
         if (pnode->verifiedProRegTxHash.IsNull()) {
             return;
         }
@@ -1316,10 +1317,13 @@ void CDKGSession::RelayOtherInvToParticipants(const CInv& inv) const
     LOCK(invCs);
     dkgManager.connman.ForEachNode([&](CNode* pnode) {
         bool relay = false;
-        if (pnode->qwatch) {
-            relay = true;
-        } else if (!pnode->verifiedProRegTxHash.IsNull() && relayMembers.count(pnode->verifiedProRegTxHash)) {
-            relay = true;
+        {
+            LOCK(pnode->cs_mnauth);
+            if (pnode->qwatch) {
+                relay = true;
+            } else if (!pnode->verifiedProRegTxHash.IsNull() && relayMembers.count(pnode->verifiedProRegTxHash)) {
+                relay = true;
+            }
         }
         if (relay) {
             pnode->PushOtherInventory(inv);

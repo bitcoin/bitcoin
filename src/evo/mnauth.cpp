@@ -183,13 +183,16 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
     }
 
     connman.ForEachNode([&](CNode* pnode) {
-        LOCK(pnode->cs_mnauth);
-        if (pnode->verifiedProRegTxHash.IsNull()) {
-            return;
-        }
-        auto verifiedDmn = oldMNList.GetMN(pnode->verifiedProRegTxHash);
-        if (!verifiedDmn) {
-            return;
+        CDeterministicMNCPtr verifiedDmn;
+        {
+            LOCK(pnode->cs_mnauth);
+            if (pnode->verifiedProRegTxHash.IsNull()) {
+                return;
+            }
+            verifiedDmn = oldMNList.GetMN(pnode->verifiedProRegTxHash);
+            if (!verifiedDmn) {
+                return;
+            }
         }
         bool doRemove = false;
         if (diff.removedMns.count(verifiedDmn->GetInternalId())) {
@@ -204,6 +207,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         }
 
         if (doRemove) {
+            LOCK(pnode->cs_mnauth);
             LogPrint(BCLog::NET, "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
                     pnode->verifiedProRegTxHash.ToString(), pnode->GetId());
             pnode->fDisconnect = true;

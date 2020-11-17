@@ -187,6 +187,7 @@ static RPCHelpMan quorum_dkgstatus()
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             node.connman->ForEachNode([&](CNode* pnode) {
+                LOCK(pnode->cs_mnauth);
                 if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {
                     foundConnections.emplace(pnode->verifiedProRegTxHash, pnode->addr);
                 }
