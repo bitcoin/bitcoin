@@ -154,13 +154,11 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     if (request.params[1].get_str() == "0") {
         hashParent = uint256();
     } else {
-        hashParent = ParseHashV(request.params[1], "fee-txid, parameter 1");
+        hashParent = ParseHashV(request.params[1], "parent-hash");
     }
 
-    std::string strRevision = request.params[2].get_str();
-    std::string strTime = request.params[3].get_str();
-    int nRevision = atoi(strRevision);
-    int64_t nTime = atoi64(strTime);
+    int nRevision = ParseInt32V(request.params[2], "revision");
+    int64_t nTime = ParseInt64V(request.params[3], "time");
     std::string strDataHex = request.params[4].get_str();
 
     // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
@@ -172,8 +170,8 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     // users ignore all instructions on dashcentral etc. and do not save them...
     // Let's log them here and hope users do not mess with debug.log
     LogPrintf("gobject_prepare -- params: %s %s %s %s, data: %s, hash: %s\n",
-                request.params[1].get_str(), request.params[2].get_str(),
-                request.params[3].get_str(), request.params[4].get_str(),
+                request.params[1].getValStr(), request.params[2].getValStr(),
+                request.params[3].getValStr(), request.params[4].getValStr(),
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
@@ -265,21 +263,19 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     uint256 txidFee;
 
     if (!request.params[5].isNull()) {
-        txidFee = ParseHashV(request.params[5], "fee-txid, parameter 6");
+        txidFee = ParseHashV(request.params[5], "fee-txid");
     }
     uint256 hashParent;
     if (request.params[1].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
         hashParent = uint256();
     } else {
-        hashParent = ParseHashV(request.params[1], "parent object hash, parameter 2");
+        hashParent = ParseHashV(request.params[1], "parent-hash");
     }
 
     // GET THE PARAMETERS FROM USER
 
-    std::string strRevision = request.params[2].get_str();
-    std::string strTime = request.params[3].get_str();
-    int nRevision = atoi(strRevision);
-    int64_t nTime = atoi64(strTime);
+    int nRevision = ParseInt32V(request.params[2], "revision");
+    int64_t nTime = ParseInt64V(request.params[3], "time");
     std::string strDataHex = request.params[4].get_str();
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
