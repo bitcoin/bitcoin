@@ -1118,23 +1118,23 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_tx(self, txid, node, expected=True, timeout=15):
         def check_tx():
             try:
-                time.sleep(0.5)
-                self.bump_mocktime(1)
+                time.sleep(1)
                 return node.getrawtransaction(txid)
             except:
                 return False
+        self.bump_mocktime(5)
         if wait_until_helper(check_tx, timeout=timeout) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=30):
         def check_chainlocked_block():
             try:
-                time.sleep(0.5)
-                self.bump_mocktime(1)
+                time.sleep(1)
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"] is True
             except:
                 return False
+        self.bump_mocktime(5)
         if wait_until_helper(check_chainlocked_block, timeout=timeout) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
@@ -1149,10 +1149,11 @@ class DashTestFramework(SyscoinTestFramework):
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
-            time.sleep(0.5)
+            time.sleep(1)
             self.bump_mocktime(1)
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
+        self.bump_mocktime(5)
         wait_until_helper(check_sporks_same, timeout=timeout)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None, done_proc=None):
