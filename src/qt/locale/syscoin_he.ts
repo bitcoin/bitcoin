@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>העתקת הכתובת המסומנת ללוח הגזירים של המערכת</translation>
+        <translation>העתקת את הכתובת המסומנת ללוח</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
