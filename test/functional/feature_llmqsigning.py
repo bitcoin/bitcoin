@@ -69,7 +69,6 @@ class LLMQSigningTest(DashTestFramework):
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
         self.mninfo[2].node.quorum_sign(100, id, msgHash)
-        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
         recsig_time = self.mocktime
@@ -96,7 +95,6 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
-        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
 
@@ -116,8 +114,6 @@ class LLMQSigningTest(DashTestFramework):
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
-        # Let 5 seconds pass so that the next node is used for recovery, which should succeed
-        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
