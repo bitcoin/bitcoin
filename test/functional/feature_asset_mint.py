@@ -51,7 +51,7 @@ class AssetMintTest(SyscoinTestFramework):
         # try to enable aux fee which should throw an error of invalid value
         assert_raises_rpc_error(-26, 'mint-mismatch-value', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, True)
         self.nodes[0].assetallocationmint(self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
-
+        time.sleep(0.25)
         # cannot mint twice
         assert_raises_rpc_error(-26, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         self.nodes[0].generate(1)
