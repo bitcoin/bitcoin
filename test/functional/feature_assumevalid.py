@@ -45,9 +45,7 @@ from test_framework.messages import (
 from test_framework.p2p import P2PInterface
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import DashTestFramework
-# SYSCOIN
-from test_framework.util import assert_equal, force_finish_mnsync
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
+from test_framework.util import assert_equal
 
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
@@ -86,9 +84,9 @@ class AssumeValidTest(DashTestFramework):
     def assert_blockchain_height(self, node, height):
         """Wait until the blockchain is no longer advancing and verify it's reached the expected height."""
         last_height = node.getblock(node.getbestblockhash())['height']
-        timeout = 10
+        timeout = 30
         while True:
-            time.sleep(0.25)
+            time.sleep(1)
             # SYSCOIN
             self.bump_mocktime(1)
             current_height = node.getblock(node.getbestblockhash())['height']
@@ -96,7 +94,7 @@ class AssumeValidTest(DashTestFramework):
                 last_height = current_height
                 if timeout < 0:
                     assert False, "blockchain too short after timeout: %d" % current_height
-                timeout - 0.25
+                timeout - 1
                 continue
             elif current_height > height:
                 assert False, "blockchain too long: %d" % current_height
@@ -169,9 +167,6 @@ class AssumeValidTest(DashTestFramework):
         # SYSCOIN Start node1 and node2 with assumevalid so they accept a block with a bad signature.
         self.start_node(1, extra_args=self.extra_args + ["-assumevalid=" + hex(block102.sha256)])
         self.start_node(2, extra_args=self.extra_args + ["-assumevalid=" + hex(block102.sha256)])
-        force_finish_mnsync(self.nodes[0])
-        force_finish_mnsync(self.nodes[1])
-        force_finish_mnsync(self.nodes[2])
 
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
@@ -186,7 +181,7 @@ class AssumeValidTest(DashTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
-        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
+        self.bump_scheduler(5)
         self.assert_blockchain_height(self.nodes[0], 101)
 
         # Send all blocks to node1. All blocks will be accepted.
