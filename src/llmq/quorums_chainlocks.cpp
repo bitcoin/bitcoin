@@ -92,7 +92,6 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
 
 void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLockSig& clsig, const uint256&hash )
 {
-    bool enforced;
     if (from != -1) {
         LOCK(cs_main);
         peerman.ReceivedResponse(from, hash);
@@ -100,7 +99,6 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 
     {
         LOCK(cs);
-        enforced = isEnforced;
         if (!seenChainLocks.emplace(hash, GetTimeMillis()).second) {
             return;
         }
@@ -165,7 +163,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         peerman.ForgetTxHash(from, hash);
     }
     CheckActiveState();
-    EnforceBestChainLock(bestChainLockBlockIndex, bestChainLockWithKnownBlock, enforced);
+    EnforceBestChainLock(bestChainLockBlockIndex, bestChainLockWithKnownBlock, isEnforced);
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
 }
@@ -175,7 +173,6 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 {
     if(fInitialDownload)
         return;
-    CheckActiveState();
     TrySignChainTip(pindexNew);
 }
 
