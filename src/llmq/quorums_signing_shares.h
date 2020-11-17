@@ -342,8 +342,8 @@ public:
 
 class CSigSharesManager : public CRecoveredSigsListener
 {
-    static const int64_t SESSION_NEW_SHARES_TIMEOUT = 60;
-    static const int64_t SIG_SHARE_REQUEST_TIMEOUT = 5;
+    static const int64_t SESSION_NEW_SHARES_TIMEOUT = 80;
+    static const int64_t SIG_SHARE_REQUEST_TIMEOUT = 10;
 
     // we try to keep total message size below 10k
     const size_t MAX_MSGS_CNT_QSIGSESANN = 100;
