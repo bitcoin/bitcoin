@@ -279,7 +279,8 @@ MAX_NODES = 15
 PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
-
+# SYSCOIN
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class PortSeed:
     # Must be initialized with a unique integer for each process

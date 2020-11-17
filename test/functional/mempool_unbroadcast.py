@@ -12,9 +12,8 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     create_confirmed_utxos,
+    MAX_INITIAL_BROADCAST_DELAY,
 )
-
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class MempoolUnbroadcastTest(SyscoinTestFramework):
     def set_test_params(self):

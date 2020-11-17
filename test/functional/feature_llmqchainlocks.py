@@ -6,7 +6,7 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync
+from test_framework.util import force_finish_mnsync, MAX_INITIAL_BROADCAST_DELAY
 
 '''
 feature_llmqchainlocks.py
@@ -88,6 +88,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.start_node(0)
         force_finish_mnsync(self.nodes[0])
         self.connect_nodes(0, 1)
+        self.nodes[0].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         self.log.info("Now try to reorg the chain")
         self.nodes[0].generate(2)

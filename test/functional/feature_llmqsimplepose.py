@@ -6,7 +6,7 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import p2p_port, force_finish_mnsync
+from test_framework.util import p2p_port, force_finish_mnsync, MAX_INITIAL_BROADCAST_DELAY
 
 '''
 llmq-simplepose.py
@@ -53,6 +53,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             time.sleep(0.5)
             self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-listen=0"])
             self.connect_nodes(mn.node.index, 0)
+            self.nodes[mn.node.index].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
             # Make sure the to-be-banned node is still connected well via outbound connections
             for mn2 in self.mninfo:
                 if mn2 is not mn:
@@ -68,6 +69,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             time.sleep(0.5)
             self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
             self.connect_nodes(mn.node.index, 0)
+            self.nodes[mn.node.index].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
             self.reset_probe_timeouts()
         self.test_banning(force_old_mn_proto, False)
 

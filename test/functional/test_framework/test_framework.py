@@ -51,7 +51,6 @@ TEST_EXIT_SKIPPED = 77
 
 TMPDIR_PREFIX = "syscoin_func_test_"
 
-
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
 
@@ -1135,6 +1134,7 @@ class DashTestFramework(SyscoinTestFramework):
                 return block["confirmations"] > 0 and block["chainlock"] is True
             except:
                 return False
+        time.sleep(1)
         if wait_until_helper(check_chainlocked_block, timeout=timeout) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 

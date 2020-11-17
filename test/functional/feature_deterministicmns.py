@@ -9,7 +9,7 @@
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
 from test_framework.messages import CTransaction, ToHex, FromHex, CCbTx, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import p2p_port, Decimal, force_finish_mnsync, assert_equal, hex_str_to_bytes
+from test_framework.util import p2p_port, Decimal, force_finish_mnsync, assert_equal, hex_str_to_bytes, MAX_INITIAL_BROADCAST_DELAY
 class Masternode(object):
     pass
 
@@ -276,6 +276,7 @@ class DIP3Test(SyscoinTestFramework):
         force_finish_mnsync(self.nodes[mn.idx])
         mn.node = self.nodes[mn.idx]
         self.connect_nodes(mn.node.index, 0)
+        self.nodes[mn.idx].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_all()
 
     def spend_mn_collateral(self, mn, with_dummy_input_output=False):
