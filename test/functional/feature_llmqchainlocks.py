@@ -34,6 +34,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.sync_blocks(self.nodes, timeout=60*5)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.bump_mocktime(5)
         self.wait_for_sporks_same()
 
         self.log.info("Mining 4 quorums")
@@ -41,6 +42,7 @@ class LLMQChainLocksTest(DashTestFramework):
             self.mine_quorum()
 
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.bump_mocktime(5)
         self.wait_for_sporks_same()
 
         self.log.info("Mine single block, wait for chainlock")

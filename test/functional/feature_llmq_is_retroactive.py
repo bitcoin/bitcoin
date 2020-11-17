@@ -30,6 +30,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.bump_mocktime(5)
         self.wait_for_sporks_same()
 
         self.mine_quorum()
