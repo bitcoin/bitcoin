@@ -102,27 +102,8 @@ bool checkPopDataSize(const altintegration::PopData& popData, altintegration::Va
 
 bool popdataStatelessValidation(const altintegration::PopData& popData, altintegration::ValidationState& state)
 {
-    auto& config = *GetPop().config;
-
-    for (const auto& b : popData.context) {
-        if (!altintegration::checkBlock(b, state, *config.vbk.params)) {
-            return state.Invalid("pop-vbkblock-statelessly-invalid");
-        }
-    }
-
-    for (const auto& vtb : popData.vtbs) {
-        if (!altintegration::checkVTB(vtb, state, *config.btc.params)) {
-            return state.Invalid("pop-vtb-statelessly-invalid");
-        }
-    }
-
-    for (const auto& atv : popData.atvs) {
-        if (!altintegration::checkATV(atv, state, *config.alt)) {
-            return state.Invalid("pop-atv-statelessly-invalid");
-        }
-    }
-
-    return true;
+    auto& pop = GetPop();
+    return altintegration::checkPopData(*pop.popValidator, popData, state);
 }
 
 bool addAllBlockPayloads(const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)

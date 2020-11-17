@@ -16,7 +16,8 @@ altintegration::PopContext& GetPop()
     return *app;
 }
 
-void StopPop() {
+void StopPop()
+{
     if (app == nullptr) return;
     app->stop();
 }
