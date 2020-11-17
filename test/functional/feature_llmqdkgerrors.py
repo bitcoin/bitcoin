@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import DashTestFramework
-
+from test_framework.util import force_finish_mnsync
 '''
 llmq-dkgerrors.py
 
@@ -20,6 +20,8 @@ class LLMQDKGErrors(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.sync_blocks(self.nodes, timeout=60*5)
         self.confirm_mns()
 

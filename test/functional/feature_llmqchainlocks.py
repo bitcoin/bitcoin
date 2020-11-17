@@ -29,6 +29,7 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(len(self.nodes)):
             if i != 1:
                 self.connect_nodes(i, 1)
+            force_finish_mnsync(self.nodes[i])
 
         self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
@@ -46,7 +47,6 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
-
         self.log.info("Mine many blocks, wait for chainlock")
         self.nodes[0].generate(20)
         # We need more time here due to 20 blocks being generated at once

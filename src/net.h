@@ -512,7 +512,7 @@ public:
             return true;
         });
     }
-    void RelayOtherInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+    void RelayOtherInv(const CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
     CNode* FindNode(const CService& addr);

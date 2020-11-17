@@ -1129,12 +1129,12 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=30):
         def check_chainlocked_block():
             try:
-                time.sleep(1)
+                time.sleep(0.5)
+                self.bump_mocktime(1)
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"] is True
             except:
                 return False
-        self.bump_mocktime(5)
         if wait_until_helper(check_chainlocked_block, timeout=timeout) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 

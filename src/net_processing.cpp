@@ -105,7 +105,7 @@ static constexpr auto OVERLOADED_PEER_TX_DELAY = std::chrono::seconds{2};
 /** How long to wait (in microseconds) before downloading a transaction from an additional peer */
 static constexpr std::chrono::microseconds GETDATA_TX_INTERVAL{std::chrono::seconds{60}};
 // SYSCOIN
-static constexpr std::chrono::microseconds GETDATA_OTHER_INTERVAL{std::chrono::seconds{6}};
+static constexpr std::chrono::microseconds GETDATA_OTHER_INTERVAL{std::chrono::seconds{15}};
 /** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
@@ -806,14 +806,7 @@ std::chrono::microseconds GetAdditionalTxRequestDelay(uint32_t invType)
     // some messages need to be re-requested faster when the first announcing peer did not answer to GETDATA
     switch(invType)
     {
-        case MSG_SPORK:
-        case MSG_GOVERNANCE_OBJECT:       
-        case MSG_GOVERNANCE_OBJECT_VOTE:
-        case MSG_QUORUM_FINAL_COMMITMENT:
-        case MSG_QUORUM_CONTRIB:
-        case MSG_QUORUM_COMPLAINT:
-        case MSG_QUORUM_JUSTIFICATION:
-        case MSG_QUORUM_PREMATURE_COMMITMENT:
+        case MSG_QUORUM_RECOVERED_SIG:
             return GETDATA_OTHER_INTERVAL;
         case MSG_CLSIG:
             return std::chrono::seconds{5};

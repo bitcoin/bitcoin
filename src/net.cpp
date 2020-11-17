@@ -3196,7 +3196,7 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 // SYSCOIN
-void CConnman::RelayOtherInv(CInv &inv, const int minProtoVersion) {
+void CConnman::RelayOtherInv(const CInv &inv, const int minProtoVersion) {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes)
         if(pnode->nVersion >= minProtoVersion)

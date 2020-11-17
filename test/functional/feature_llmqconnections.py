@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_greater_than_or_equal, time
+from test_framework.util import assert_greater_than_or_equal, time, force_finish_mnsync
 
 '''
 feature_llmqconnections.py
@@ -22,6 +22,8 @@ class LLMQConnections(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
