@@ -4484,12 +4484,12 @@ static RPCHelpMan upgradewallet()
     const int current_version{pwallet->GetVersion()};
     std::string result;
 
-    if (!wallet_upgraded) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    } else if (previous_version == current_version) {
-        result = "Already at latest version. Wallet version unchanged.";
-    } else {
-        result = strprintf("Wallet upgraded successfully from version %i to version %i.", previous_version, current_version);
+    if (wallet_upgraded) {
+        if (previous_version == current_version) {
+            result = "Already at latest version. Wallet version unchanged.";
+        } else {
+            result = strprintf("Wallet upgraded successfully from version %i to version %i.", previous_version, current_version);
+        }
     }
 
     UniValue obj(UniValue::VOBJ);
@@ -4498,8 +4498,8 @@ static RPCHelpMan upgradewallet()
     obj.pushKV("current_version", current_version);
     if (!result.empty()) {
         obj.pushKV("result", result);
-    }
-    if (!error.empty()) {
+    } else {
+        CHECK_NONFATAL(!error.empty());
         obj.pushKV("error", error.original);
     }
     return obj;

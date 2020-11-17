@@ -23,7 +23,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hex_string,
-    assert_raises_rpc_error,
     sha256sum_file,
 )
 
@@ -104,6 +103,18 @@ class UpgradeWalletTest(BitcoinTestFramework):
             }
         )
         assert_equal(wallet.getwalletinfo()["walletversion"], new_version)
+
+    def test_upgradewallet_error(self, wallet, previous_version, requested_version, msg):
+        assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
+        assert_equal(wallet.upgradewallet(requested_version),
+            {
+                "wallet_name": "",
+                "previous_version": previous_version,
+                "current_version": previous_version,
+                "error": msg,
+            }
+        )
+        assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
 
     def run_test(self):
         self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
@@ -200,7 +211,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         self.log.info('Wallets cannot be downgraded')
         copy_non_hd()
-        assert_raises_rpc_error(-4, 'Cannot downgrade wallet', wallet.upgradewallet, 40000)
+        self.test_upgradewallet_error(wallet, previous_version=60000, requested_version=40000, msg="Cannot downgrade wallet")
         wallet.unloadwallet()
         assert_equal(before_checksum, sha256sum_file(node_master_wallet))
         node_master.loadwallet('')
@@ -237,12 +248,9 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal('m/0\'/0\'/1\'', info['hdkeypath'])
 
         self.log.info('Cannot upgrade to HD Split, needs Pre Split Keypool')
-        assert_raises_rpc_error(-4, 'Cannot upgrade a non HD split wallet without upgrading to support pre split keypool', wallet.upgradewallet, 139900)
-        assert_equal(130000, wallet.getwalletinfo()['walletversion'])
-        assert_raises_rpc_error(-4, 'Cannot upgrade a non HD split wallet without upgrading to support pre split keypool', wallet.upgradewallet, 159900)
-        assert_equal(130000, wallet.getwalletinfo()['walletversion'])
-        assert_raises_rpc_error(-4, 'Cannot upgrade a non HD split wallet without upgrading to support pre split keypool', wallet.upgradewallet, 169899)
-        assert_equal(130000, wallet.getwalletinfo()['walletversion'])
+        for version in [139900, 159900, 169899]:
+            self.test_upgradewallet_error(wallet, previous_version=130000, requested_version=version,
+                msg="Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.")
 
         self.log.info('Upgrade HD to HD chain split')
         self.test_upgradewallet(wallet, previous_version=130000, requested_version=169900)
