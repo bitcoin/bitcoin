@@ -18,6 +18,7 @@ static const char *MSG_HASHTXLOCK    = "hashtxlock";
 static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
 static const char *MSG_HASHISCON     = "hashinstantsenddoublespend";
+static const char *MSG_HASHRECSIG    = "hashrecoveredsig";
 static const char *MSG_RAWBLOCK      = "rawblock";
 static const char *MSG_RAWCHAINLOCK  = "rawchainlock";
 static const char *MSG_RAWCLSIG      = "rawchainlocksig";
@@ -27,6 +28,7 @@ static const char *MSG_RAWTXLOCKSIG  = "rawtxlocksig";
 static const char *MSG_RAWGVOTE      = "rawgovernancevote";
 static const char *MSG_RAWGOBJ       = "rawgovernanceobject";
 static const char *MSG_RAWISCON      = "rawinstantsenddoublespend";
+static const char *MSG_RAWRECSIG     = "rawrecoveredsig";
 
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
@@ -230,6 +232,14 @@ bool CZMQPublishHashInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpend
         && SendMessage(MSG_HASHISCON, dataPreviousHash, 32);
 }
 
+bool CZMQPublishHashRecoveredSigNotifier::NotifyRecoveredSig(const llmq::CRecoveredSig &sig)
+{
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashrecoveredsig %s\n", sig.msgHash.ToString());
+    char data[32];
+    for (unsigned int i = 0; i < 32; i++)
+        data[31 - i] = sig.msgHash.begin()[i];
+    return SendMessage(MSG_HASHRECSIG, data, 32);
+}
 
 bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
@@ -350,3 +360,14 @@ bool CZMQPublishRawInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpendA
     return SendMessage(MSG_RAWISCON, &(*ssCurrent.begin()), ssCurrent.size())
         && SendMessage(MSG_RAWISCON, &(*ssPrevious.begin()), ssPrevious.size());
 }
+
+bool CZMQPublishRawRecoveredSigNotifier::NotifyRecoveredSig(const llmq::CRecoveredSig& sig)
+{
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawrecoveredsig %s\n", sig.msgHash.ToString());
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << sig;
+
+    return SendMessage(MSG_RAWRECSIG, &(*ss.begin()), ss.size());
+}
+

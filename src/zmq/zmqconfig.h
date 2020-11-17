@@ -24,6 +24,7 @@
 
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_instantsend.h>
+#include <llmq/quorums_signing.h>
 
 void zmqError(const char *str);
 

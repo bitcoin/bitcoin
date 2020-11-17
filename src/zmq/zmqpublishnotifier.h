@@ -72,6 +72,12 @@ public:
     bool NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) override;
 };
 
+class CZMQPublishHashRecoveredSigNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyRecoveredSig(const llmq::CRecoveredSig&) override;
+};
+
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
@@ -124,5 +130,11 @@ class CZMQPublishRawInstantSendDoubleSpendNotifier : public CZMQAbstractPublishN
 {
 public:
     bool NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) override;
+};
+
+class CZMQPublishRawRecoveredSigNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyRecoveredSig(const llmq::CRecoveredSig &sig) override;
 };
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

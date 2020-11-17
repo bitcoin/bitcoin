@@ -45,3 +45,8 @@ bool CZMQAbstractNotifier::NotifyInstantSendDoubleSpendAttempt(const CTransactio
 {
     return true;
 }
+
+bool CZMQAbstractNotifier::NotifyRecoveredSig(const llmq::CRecoveredSig& /*sig*/)
+{
+    return true;
+}

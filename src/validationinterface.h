@@ -30,6 +30,7 @@ enum class MemPoolRemovalReason;
 namespace llmq {
     class CChainLockSig;
     class CInstantSendLock;
+    class CRecoveredSig;
 } // namespace llmq
 
 // These functions dispatch to one or all registered wallets
@@ -125,6 +126,7 @@ protected:
     virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
     virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
     virtual void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {}
+    virtual void NotifyRecoveredSig(const llmq::CRecoveredSig& sig) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
     /**
      * Notifies listeners of the new active block chain on-disk.
@@ -189,6 +191,7 @@ public:
     void NotifyGovernanceVote(const CGovernanceVote &vote);
     void NotifyGovernanceObject(const CGovernanceObject &object);
     void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx);
+    void NotifyRecoveredSig(const llmq::CRecoveredSig &sig);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
     void SetBestChain(const CBlockLocator &);
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);

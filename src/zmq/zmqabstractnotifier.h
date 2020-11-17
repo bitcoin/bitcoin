@@ -15,6 +15,7 @@ class CZMQAbstractNotifier;
 namespace llmq {
     class CChainLockSig;
     class CInstantSendLock;
+    class CRecoveredSig;
 } // namespace llmq
 
 typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
@@ -46,7 +47,7 @@ public:
     virtual bool NotifyGovernanceVote(const CGovernanceVote &vote);
     virtual bool NotifyGovernanceObject(const CGovernanceObject &object);
     virtual bool NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx);
-
+    virtual bool NotifyRecoveredSig(const llmq::CRecoveredSig& sig);
 
 protected:
     void *psocket;
