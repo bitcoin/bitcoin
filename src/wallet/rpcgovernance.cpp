@@ -128,8 +128,8 @@ static RPCHelpMan gobject_prepare()
     // users ignore all instructions on syshub etc. and do not save them...
     // Let's log them here and hope users do not mess with debug.log
     LogPrintf("gobject_prepare -- params: %s %s %s %s, data: %s, hash: %s\n",
-                request.params[0].get_str(), request.params[1].get_str(),
-                request.params[2].get_str(), request.params[3].get_str(),
+                request.params[0].getValStr(), request.params[1].getValStr(),
+                request.params[2].getValStr(), request.params[3].getValStr(),
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
