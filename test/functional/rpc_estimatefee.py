@@ -28,7 +28,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # wrong type for estimatesmartfee(estimate_mode)
         assert_raises_rpc_error(-3, "Expected type string, got number", self.nodes[0].estimatesmartfee, 1, 1)
-        assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", self.nodes[0].estimatesmartfee, 1, 'foo')
+        assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"', self.nodes[0].estimatesmartfee, 1, 'foo')
 
         # wrong type for estimaterawfee(threshold)
         assert_raises_rpc_error(-3, "Expected type number, got string", self.nodes[0].estimaterawfee, 1, 'foo')

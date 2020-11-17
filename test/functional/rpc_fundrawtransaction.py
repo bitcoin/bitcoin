@@ -90,7 +90,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_op_return()
         self.test_watchonly()
         self.test_all_watched_funds()
-        self.test_feerate_with_conf_target_and_estimate_mode()
         self.test_option_feerate()
         self.test_address_reuse()
         self.test_option_subtract_fee_from_outputs()
@@ -708,74 +707,86 @@ class RawTransactionsTest(BitcoinTestFramework):
         wwatch.unloadwallet()
 
     def test_option_feerate(self):
-        self.log.info("Test fundrawtxn feeRate option")
-
-        # Make sure there is exactly one input so coin selection can't skew the result.
-        assert_equal(len(self.nodes[3].listunspent(1)), 1)
-
-        inputs = []
-        outputs = {self.nodes[3].getnewaddress() : 1}
-        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
-        result = self.nodes[3].fundrawtransaction(rawtx)  # uses self.min_relay_tx_fee (set by settxfee)
-        result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
-        result3 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 10 * self.min_relay_tx_fee})
-        assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)", self.nodes[3].fundrawtransaction, rawtx, {"feeRate": 1})
-        result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
-        assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
-        assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
-
-    def test_feerate_with_conf_target_and_estimate_mode(self):
-        self.log.info("Test fundrawtxn passing an explicit fee rate using conf_target and estimate_mode")
+        self.log.info("Test fundrawtxn with explicit fee rates (fee_rate sat/vB and feeRate BTC/kvB)")
         node = self.nodes[3]
         # Make sure there is exactly one input so coin selection can't skew the result.
-        assert_equal(len(node.listunspent(1)), 1)
+        assert_equal(len(self.nodes[3].listunspent(1)), 1)
         inputs = []
         outputs = {node.getnewaddress() : 1}
         rawtx = node.createrawtransaction(inputs, outputs)
 
-        for unit, fee_rate in {"btc/kb": 0.1, "sat/b": 10000}.items():
-            self.log.info("Test fundrawtxn with conf_target {} estimate_mode {} produces expected fee".format(fee_rate, unit))
-            # With no arguments passed, expect fee of 141 sats/b.
-            assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000141, vspan=0.00000001)
-            # Expect fee to be 10,000x higher when explicit fee 10,000x greater is specified.
-            result = node.fundrawtransaction(rawtx, {"conf_target": fee_rate, "estimate_mode": unit})
-            assert_approx(result["fee"], vexp=0.0141, vspan=0.0001)
+        result = node.fundrawtransaction(rawtx)  # uses self.min_relay_tx_fee (set by settxfee)
+        btc_kvb_to_sat_vb = 100000  # (1e5)
+        result1 = node.fundrawtransaction(rawtx, {"fee_rate": 2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
+        result2 = node.fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
+        result3 = node.fundrawtransaction(rawtx, {"fee_rate": 10 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
+        result4 = node.fundrawtransaction(rawtx, {"feeRate": 10 * self.min_relay_tx_fee})
+        result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
+        assert_fee_amount(result1['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
+        assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
+        assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
+        assert_fee_amount(result4['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
 
-        for field, fee_rate in {"conf_target": 0.1, "estimate_mode": "sat/b"}.items():
-            self.log.info("Test fundrawtxn raises RPC error if both feeRate and {} are passed".format(field))
-            assert_raises_rpc_error(
-                -8, "Cannot specify both {} and feeRate".format(field),
-                lambda: node.fundrawtransaction(rawtx, {"feeRate": 0.1, field: fee_rate}))
+        # With no arguments passed, expect fee of 141 satoshis.
+        assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000141, vspan=0.00000001)
+        # Expect fee to be 10,000x higher when an explicit fee rate 10,000x greater is specified.
+        result = node.fundrawtransaction(rawtx, {"fee_rate": 10000})
+        assert_approx(result["fee"], vexp=0.0141, vspan=0.0001)
 
         self.log.info("Test fundrawtxn with invalid estimate_mode settings")
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
             assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
-                lambda: self.nodes[1].fundrawtransaction(rawtx, {"estimate_mode": v, "conf_target": 0.1}))
-        for mode in ["foo", Decimal("3.141592")]:
-            assert_raises_rpc_error(-8, "Invalid estimate_mode parameter",
-                lambda: self.nodes[1].fundrawtransaction(rawtx, {"estimate_mode": mode, "conf_target": 0.1}))
+                node.fundrawtransaction, rawtx, {"estimate_mode": v, "conf_target": 0.1, "add_inputs": True})
+        for mode in ["", "foo", Decimal("3.141592")]:
+            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
+                node.fundrawtransaction, rawtx, {"estimate_mode": mode, "conf_target": 0.1, "add_inputs": True})
 
         self.log.info("Test fundrawtxn with invalid conf_target settings")
-        for mode in ["unset", "economical", "conservative", "btc/kb", "sat/b"]:
+        for mode in ["unset", "economical", "conservative"]:
             self.log.debug("{}".format(mode))
             for k, v in {"string": "", "object": {"foo": "bar"}}.items():
                 assert_raises_rpc_error(-3, "Expected type number for conf_target, got {}".format(k),
-                    lambda: self.nodes[1].fundrawtransaction(rawtx, {"estimate_mode": mode, "conf_target": v}))
-            if mode in ["btc/kb", "sat/b"]:
-                assert_raises_rpc_error(-3, "Amount out of range",
-                    lambda: self.nodes[1].fundrawtransaction(rawtx, {"estimate_mode": mode, "conf_target": -1}))
-                assert_raises_rpc_error(-4, "Fee rate (0.00000000 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)",
-                    lambda: self.nodes[1].fundrawtransaction(rawtx, {"estimate_mode": mode, "conf_target": 0}))
-            else:
-                for n in [-1, 0, 1009]:
-                    assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",
-                        lambda: self.nodes[1].fundrawtransaction(rawtx, {"estimate_mode": mode, "conf_target": n}))
+                    node.fundrawtransaction, rawtx, {"estimate_mode": mode, "conf_target": v, "add_inputs": True})
+            for n in [-1, 0, 1009]:
+                assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees.h
+                    node.fundrawtransaction, rawtx, {"estimate_mode": mode, "conf_target": n, "add_inputs": True})
 
-        for unit, fee_rate in {"sat/B": 0.99999999, "BTC/kB": 0.00000999}.items():
-            self.log.info("- raises RPC error 'fee rate too low' if conf_target {} and estimate_mode {} are passed".format(fee_rate, unit))
-            assert_raises_rpc_error(-4, "Fee rate (0.00000999 BTC/kB) is lower than the minimum fee rate setting (0.00001000 BTC/kB)",
-                lambda: self.nodes[1].fundrawtransaction(rawtx, {"estimate_mode": unit, "conf_target": fee_rate, "add_inputs": True}))
+        self.log.info("Test invalid fee rate settings")
+        assert_raises_rpc_error(-8, "Invalid fee_rate 0.000 sat/vB (must be greater than 0)",
+            node.fundrawtransaction, rawtx, {"fee_rate": 0, "add_inputs": True})
+        assert_raises_rpc_error(-8, "Invalid feeRate 0.00000000 BTC/kvB (must be greater than 0)",
+            node.fundrawtransaction, rawtx, {"feeRate": 0, "add_inputs": True})
+        for param, value in {("fee_rate", 100000), ("feeRate", 1.000)}:
+            assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)",
+                node.fundrawtransaction, rawtx, {param: value, "add_inputs": True})
+            assert_raises_rpc_error(-3, "Amount out of range",
+                node.fundrawtransaction, rawtx, {"fee_rate": -1, "add_inputs": True})
+            assert_raises_rpc_error(-3, "Amount is not a number or string",
+                node.fundrawtransaction, rawtx, {"fee_rate": {"foo": "bar"}, "add_inputs": True})
+            assert_raises_rpc_error(-3, "Invalid amount",
+                node.fundrawtransaction, rawtx, {"fee_rate": "", "add_inputs": True})
 
+        self.log.info("Test min fee rate checks are bypassed with fundrawtxn, e.g. a fee_rate under 1 sat/vB is allowed")
+        node.fundrawtransaction(rawtx, {"fee_rate": 0.99999999, "add_inputs": True})
+        node.fundrawtransaction(rawtx, {"feeRate": 0.00000999, "add_inputs": True})
+
+        self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
+        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
+            node.fundrawtransaction, rawtx, {"fee_rate": 0.1, "feeRate": 0.1, "add_inputs": True})
+
+        self.log.info("- raises RPC error if both feeRate and estimate_mode passed")
+        assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and feeRate",
+            node.fundrawtransaction, rawtx, {"estimate_mode": "economical", "feeRate": 0.1, "add_inputs": True})
+
+        for param in ["feeRate", "fee_rate"]:
+            self.log.info("- raises RPC error if both {} and conf_target are passed".format(param))
+            assert_raises_rpc_error(-8, "Cannot specify both conf_target and {}. Please provide either a confirmation "
+                "target in blocks for automatic fee estimation, or an explicit fee rate.".format(param),
+                node.fundrawtransaction, rawtx, {param: 1, "conf_target": 1, "add_inputs": True})
+
+        self.log.info("- raises RPC error if both fee_rate and estimate_mode are passed")
+        assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and fee_rate",
+            node.fundrawtransaction, rawtx, {"fee_rate": 1, "estimate_mode": "economical", "add_inputs": True})
 
     def test_address_reuse(self):
         """Test no address reuse occurs."""
@@ -803,12 +814,32 @@ class RawTransactionsTest(BitcoinTestFramework):
         outputs = {self.nodes[2].getnewaddress(): 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
+        # Test subtract fee from outputs with feeRate (BTC/kvB)
         result = [self.nodes[3].fundrawtransaction(rawtx),  # uses self.min_relay_tx_fee (set by settxfee)
             self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": []}),  # empty subtraction list
             self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0]}),  # uses self.min_relay_tx_fee (set by settxfee)
             self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee}),
             self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee, "subtractFeeFromOutputs": [0]}),]
+        dec_tx = [self.nodes[3].decoderawtransaction(tx_['hex']) for tx_ in result]
+        output = [d['vout'][1 - r['changepos']]['value'] for d, r in zip(dec_tx, result)]
+        change = [d['vout'][r['changepos']]['value'] for d, r in zip(dec_tx, result)]
 
+        assert_equal(result[0]['fee'], result[1]['fee'], result[2]['fee'])
+        assert_equal(result[3]['fee'], result[4]['fee'])
+        assert_equal(change[0], change[1])
+        assert_equal(output[0], output[1])
+        assert_equal(output[0], output[2] + result[2]['fee'])
+        assert_equal(change[0] + result[0]['fee'], change[2])
+        assert_equal(output[3], output[4] + result[4]['fee'])
+        assert_equal(change[3] + result[3]['fee'], change[4])
+
+        # Test subtract fee from outputs with fee_rate (sat/vB)
+        btc_kvb_to_sat_vb = 100000  # (1e5)
+        result = [self.nodes[3].fundrawtransaction(rawtx),  # uses self.min_relay_tx_fee (set by settxfee)
+            self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": []}),  # empty subtraction list
+            self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0]}),  # uses self.min_relay_tx_fee (set by settxfee)
+            self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee}),
+            self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee, "subtractFeeFromOutputs": [0]}),]
         dec_tx = [self.nodes[3].decoderawtransaction(tx_['hex']) for tx_ in result]
         output = [d['vout'][1 - r['changepos']]['value'] for d, r in zip(dec_tx, result)]
         change = [d['vout'][r['changepos']]['value'] for d, r in zip(dec_tx, result)]
