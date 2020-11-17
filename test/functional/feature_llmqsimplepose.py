@@ -25,8 +25,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.sync_blocks(self.nodes, timeout=60*5)
-        self.confirm_mns()
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
