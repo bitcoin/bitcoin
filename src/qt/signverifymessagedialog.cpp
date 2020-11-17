@@ -18,18 +18,21 @@
 #include <string>
 #include <vector>
 
+#include <QButtonGroup>
 #include <QClipboard>
 
 SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
-    model(0)
+    model(0),
+    pageButtons(0)
 {
     ui->setupUi(this);
 
-    pageButtons.addButton(ui->btnSignMessage, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnVerifyMessage, pageButtons.buttons().size());
-    connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+    pageButtons = new QButtonGroup(this);
+    pageButtons->addButton(ui->btnSignMessage, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnVerifyMessage, pageButtons->buttons().size());
+    connect(pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
 
     ui->messageIn_SM->setPlaceholderText(tr("Enter a message to be signed"));
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
@@ -64,6 +67,7 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
 
 SignVerifyMessageDialog::~SignVerifyMessageDialog()
 {
+    delete pageButtons;
     delete ui;
 }
 
@@ -101,8 +105,8 @@ void SignVerifyMessageDialog::showTab_VM(bool fShow)
 void SignVerifyMessageDialog::showPage(int index)
 {
     std::vector<QWidget*> vecNormal;
-    QAbstractButton* btnActive = pageButtons.button(index);
-    for (QAbstractButton* button : pageButtons.buttons()) {
+    QAbstractButton* btnActive = pageButtons->button(index);
+    for (QAbstractButton* button : pageButtons->buttons()) {
         if (button != btnActive) {
             vecNormal.push_back(button);
         }
@@ -297,4 +301,12 @@ bool SignVerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
         }
     }
     return QDialog::eventFilter(object, event);
+}
+
+void SignVerifyMessageDialog::showEvent(QShowEvent* event)
+{
+    if (!event->spontaneous()) {
+        GUIUtil::updateButtonGroupShortcuts(pageButtons);
+    }
+    QDialog::showEvent(event);
 }

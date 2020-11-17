@@ -1154,10 +1154,10 @@ void BitcoinGUI::updatePrivateSendVisibility()
     if (appToolBar != nullptr) {
         appToolBar->actions()[2]->setVisible(fEnabled);
         privateSendCoinsButton->setVisible(fEnabled);
+        GUIUtil::updateButtonGroupShortcuts(tabGroup);
     }
     privateSendCoinsMenuAction->setVisible(fEnabled);
     showPrivateSendHelpAction->setVisible(fEnabled);
-    updateToolBarShortcuts();
     updateWidth();
 }
 
@@ -1184,26 +1184,6 @@ void BitcoinGUI::updateWidth()
     int nWidth = std::max<int>(980, (nWidthWidestButton + 30) * (nButtonsVisible + 1));
     setMinimumWidth(nWidth);
     resize(nWidth, height());
-}
-
-void BitcoinGUI::updateToolBarShortcuts()
-{
-    if (walletFrame == nullptr) {
-        return;
-    }
-#ifdef Q_OS_MAC
-    auto modifier = Qt::CTRL;
-#else
-    auto modifier = Qt::ALT;
-#endif
-    int nKey = 0;
-    for (auto button : tabGroup->buttons()) {
-        if (button->isVisible()) {
-            button->setShortcut(QKeySequence(modifier + Qt::Key_1 + nKey++));
-        } else {
-            button->setShortcut(QKeySequence());
-        }
-    }
 }
 
 void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header)

@@ -5,10 +5,13 @@
 #ifndef BITCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
 #define BITCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
 
-#include <QButtonGroup>
 #include <QDialog>
 
 class WalletModel;
+
+QT_BEGIN_NAMESPACE
+class QButtonGroup;
+QT_END_NAMESPACE
 
 namespace Ui {
     class SignVerifyMessageDialog;
@@ -35,7 +38,9 @@ protected:
 private:
     Ui::SignVerifyMessageDialog *ui;
     WalletModel *model;
-    QButtonGroup pageButtons;
+    QButtonGroup* pageButtons;
+
+    void showEvent(QShowEvent* event) override;
 
 private Q_SLOTS:
     /** custom tab buttons clicked */

@@ -11,7 +11,6 @@
 
 #include <net.h>
 
-#include <QButtonGroup>
 #include <QWidget>
 #include <QCompleter>
 #include <QThread>
@@ -29,6 +28,7 @@ namespace Ui {
 }
 
 QT_BEGIN_NAMESPACE
+class QButtonGroup;
 class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
@@ -168,7 +168,7 @@ private:
 
     interfaces::Node& m_node;
     Ui::RPCConsole *ui;
-    QButtonGroup pageButtons;
+    QButtonGroup* pageButtons;
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;

@@ -28,6 +28,7 @@
 #include <db_cxx.h>
 #endif
 
+#include <QButtonGroup>
 #include <QDir>
 #include <QDesktopWidget>
 #include <QKeyEvent>
@@ -453,7 +454,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     historyPtr(0),
     peersTableContextMenu(0),
     banTableContextMenu(0),
-    consoleFontSize(0)
+    consoleFontSize(0),
+    pageButtons(0)
 {
     ui->setupUi(this);
 
@@ -525,12 +527,13 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
 
     consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(GUIUtil::getFontNormal()).pointSize()).toInt();
 
-    pageButtons.addButton(ui->btnInfo, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnConsole, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnNetTraffic, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnPeers, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnRepair, pageButtons.buttons().size());
-    connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+    pageButtons = new QButtonGroup(this);
+    pageButtons->addButton(ui->btnInfo, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnConsole, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnNetTraffic, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnPeers, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnRepair, pageButtons->buttons().size());
+    connect(pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
 
     showPage(TAB_INFO);
 
@@ -543,6 +546,7 @@ RPCConsole::~RPCConsole()
     settings.setValue("RPCConsoleWindowGeometry", saveGeometry());
     m_node.rpcUnsetTimerInterface(rpcTimerInterface);
     delete rpcTimerInterface;
+    delete pageButtons;
     delete ui;
 }
 
@@ -978,8 +982,8 @@ void RPCConsole::setInstantSendLockCount(size_t count)
 void RPCConsole::showPage(int index)
 {
     std::vector<QWidget*> vecNormal;
-    QAbstractButton* btnActive = pageButtons.button(index);
-    for (QAbstractButton* button : pageButtons.buttons()) {
+    QAbstractButton* btnActive = pageButtons->button(index);
+    for (QAbstractButton* button : pageButtons->buttons()) {
         if (button != btnActive) {
             vecNormal.push_back(button);
         }
@@ -1266,6 +1270,8 @@ void RPCConsole::resizeEvent(QResizeEvent *event)
 void RPCConsole::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
+
+    GUIUtil::updateButtonGroupShortcuts(pageButtons);
 
     if (!clientModel || !clientModel->getPeerTableModel())
         return;

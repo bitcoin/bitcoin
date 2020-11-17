@@ -20,6 +20,7 @@
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
 
+#include <QButtonGroup>
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>
@@ -33,7 +34,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
     model(0),
-    mapper(0)
+    mapper(0),
+    pageButtons(0)
 {
     ui->setupUi(this);
 
@@ -77,7 +79,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), ui->proxyPortTor, SLOT(setEnabled(bool)));
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), this, SLOT(updateProxyValidationState()));
 
-    pageButtons.addButton(ui->btnMain, pageButtons.buttons().size());
+    pageButtons = new QButtonGroup(this);
+    pageButtons->addButton(ui->btnMain, pageButtons->buttons().size());
     /* Remove Wallet/PrivateSend tabs in case of -disablewallet */
     if (!enableWallet) {
         ui->stackedWidgetOptions->removeWidget(ui->pageWallet);
@@ -85,14 +88,14 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         ui->stackedWidgetOptions->removeWidget(ui->pagePrivateSend);
         ui->btnPrivateSend->hide();
     } else {
-        pageButtons.addButton(ui->btnWallet, pageButtons.buttons().size());
-        pageButtons.addButton(ui->btnPrivateSend, pageButtons.buttons().size());
+        pageButtons->addButton(ui->btnWallet, pageButtons->buttons().size());
+        pageButtons->addButton(ui->btnPrivateSend, pageButtons->buttons().size());
     }
-    pageButtons.addButton(ui->btnNetwork, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnDisplay, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnAppearance, pageButtons.buttons().size());
+    pageButtons->addButton(ui->btnNetwork, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnDisplay, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnAppearance, pageButtons->buttons().size());
 
-    connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+    connect(pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
 
     showPage(0);
 
@@ -164,6 +167,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
 OptionsDialog::~OptionsDialog()
 {
+    delete pageButtons;
     delete ui;
 }
 
@@ -294,8 +298,8 @@ void OptionsDialog::setMapper()
 void OptionsDialog::showPage(int index)
 {
     std::vector<QWidget*> vecNormal;
-    QAbstractButton* btnActive = pageButtons.button(index);
-    for (QAbstractButton* button : pageButtons.buttons()) {
+    QAbstractButton* btnActive = pageButtons->button(index);
+    for (QAbstractButton* button : pageButtons->buttons()) {
         if (button != btnActive) {
             vecNormal.push_back(button);
         }
@@ -437,13 +441,14 @@ void OptionsDialog::updatePrivateSendVisibility()
     bool fEnabled = false;
 #endif
     ui->btnPrivateSend->setVisible(fEnabled);
+    GUIUtil::updateButtonGroupShortcuts(pageButtons);
 }
 
 void OptionsDialog::updateWidth()
 {
     int nWidthWidestButton{0};
     int nButtonsVisible{0};
-    for (QAbstractButton* button : pageButtons.buttons()) {
+    for (QAbstractButton* button : pageButtons->buttons()) {
         if (!button->isVisible()) {
             continue;
         }
@@ -461,6 +466,7 @@ void OptionsDialog::showEvent(QShowEvent* event)
 {
     if (!event->spontaneous()) {
         updateWidth();
+        GUIUtil::updateButtonGroupShortcuts(pageButtons);
     }
     QDialog::showEvent(event);
 }

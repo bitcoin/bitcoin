@@ -5,7 +5,6 @@
 #ifndef BITCOIN_QT_OPTIONSDIALOG_H
 #define BITCOIN_QT_OPTIONSDIALOG_H
 
-#include <QButtonGroup>
 #include <QDialog>
 #include <QValidator>
 
@@ -14,6 +13,7 @@ class OptionsModel;
 class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
+class QButtonGroup;
 class QDataWidgetMapper;
 QT_END_NAMESPACE
 
@@ -74,7 +74,7 @@ private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
-    QButtonGroup pageButtons;
+    QButtonGroup* pageButtons;
     QString previousTheme;
     AppearanceWidget* appearance;
     bool fPrivateSendEnabledPrev{false};
