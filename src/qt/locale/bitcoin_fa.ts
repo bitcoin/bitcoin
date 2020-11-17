@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>ساخت یک آدرس جدید</translation>
+        <translation>ایجاد یک آدرس جدید</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -515,6 +515,14 @@
         <translation>کیف پول را ببندید</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>همه‌ی کیف پول‌ها را ببند...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>همه‌ی کیف پول‌ها را ببند</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>کیف پول پیش‌فرض</translation>
     </message>
@@ -621,6 +629,10 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>wallet رمزگذاری شد و در حال حاضر قفل است</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>پیام اصلی:</translation>
     </message>
     </context>
 <context>
@@ -1021,6 +1033,10 @@
 <context>
     <name>OpenWalletActivity</name>
     <message>
+        <source>Open wallet failed</source>
+        <translation>بازکردن کیف پول به مشکل خورده است</translation>
+    </message>
+    <message>
         <source>Open wallet warning</source>
         <translation>هشدار باز کردن کیف پول</translation>
     </message>
@@ -1083,6 +1099,10 @@
     <message>
         <source>Expert</source>
         <translation>حرفه‌ای</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>فعال کردن قابلیت سکه و کنترل</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1291,6 +1311,26 @@
         <translation>تگفتگو</translation>
     </message>
     <message>
+        <source>Copy to Clipboard</source>
+        <translation>کپی کردن</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>ذخیره...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>بستن</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>مشکل نامشخصی در پردازش عملیات رخ داده.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>ذخیره اطلاعات عملیات</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>میزان کل</translation>
     </message>
@@ -1298,7 +1338,19 @@
         <source>or</source>
         <translation>یا</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>عملیات هنوز به امضا(ها) نیاز دارد.</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(اما این کیف‌‌پول نمی‌تواند عملیات‌ها را امضا کند.)</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>وضعیت عملیات نامشخص است.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1598,6 +1650,10 @@
         <translation>پنجره گره</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>ارتفاع فعلی بلوک</translation>
+    </message>
+    <message>
         <source>Decrease font size</source>
         <translation>کاهش دادن اندازه فونت</translation>
     </message>
@@ -1784,6 +1840,14 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Request payment to ...</source>
+        <translation>درخواست واریز به ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>آدرس‌ها:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>میزان وجه:</translation>
     </message>
@@ -1958,6 +2022,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>گرد و غبار یا داست:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation>تنظیمات مخفی کردن کارمزد عملیات</translation>
+    </message>
+    <message>
         <source>Confirmation time target:</source>
         <translation>هدف زمانی تایید شدن:</translation>
     </message>
@@ -2020,6 +2088,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Are you sure you want to send?</source>
         <translation>آیا برای ارسال کردن یا فرستادن مطمئن هستید؟</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>ذخیره اطلاعات عملیات</translation>
     </message>
     <message>
         <source>or</source>
@@ -2322,6 +2394,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>باز تا %1</translation>
     </message>
     <message>
+        <source>abandoned</source>
+        <translation>رها شده</translation>
+    </message>
+    <message>
         <source>%1/unconfirmed</source>
         <translation>%1/تأیید نشده</translation>
     </message>
@@ -2470,6 +2546,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Unconfirmed</source>
         <translation>تایید نشده</translation>
+    </message>
+    <message>
+        <source>Abandoned</source>
+        <translation>رهاشده</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
@@ -2691,6 +2771,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation>آیا برای بستن کیف پول مطمئن هستید&lt;i&gt; %1 &lt;/i&gt; ؟</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>همه‌ی کیف پول‌ها را ببند</translation>
     </message>
     </context>
 <context>

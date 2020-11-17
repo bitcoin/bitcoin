@@ -30,6 +30,10 @@
         <translation>从列表删除选定的地址</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>输入地址或者标签进行搜索</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>导出当前数据到文件</translation>
     </message>
@@ -64,6 +68,12 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>这是你的比特币发币地址。发送前请确认发送数量和接收地址</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>这是你的比特币接收地址。点击接收选项卡中“创建新的接收地址”按钮来创建新的地址。
+签名只能使用“传统”类型的地址。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -112,8 +122,40 @@
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <source>Passphrase Dialog</source>
+        <translation>密码对话框</translation>
+    </message>
+    <message>
+        <source>Enter passphrase</source>
+        <translation>输入密码</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation>新密码</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation>重复输入新密码</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation>显示密码</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>加密钱包</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>此操作需要您的钱包密码用来解锁钱包。</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>解锁钱包</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>此操作需要您的钱包密码用来解密钱包。</translation>
     </message>
     </context>
 <context>

@@ -50,6 +50,10 @@
         <translation>Coin gönderilecek adresi seçiniz</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation>S&amp;ç</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation>Gönderici adresler</translation>
     </message>
@@ -134,6 +138,10 @@ Cüzdan kilidini aç.</translation>
         <translation>Cüzdan kilidini aç</translation>
     </message>
     <message>
+        <source>Decrypt wallet</source>
+        <translation>cüzdan şifresini çöz</translation>
+    </message>
+    <message>
         <source>Change passphrase</source>
         <translation>Parola değiştir</translation>
     </message>
@@ -176,9 +184,25 @@ Cüzdan kilidini aç.</translation>
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>İP/Ağ maskesi</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Kadar Yasaklı</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>&amp;Mesajı imzala ...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Ağ ile senkronize ediliyor...</translation>
+    </message>
     <message>
         <source>&amp;Overview</source>
         <translation>Genel durum</translation>
@@ -204,8 +228,40 @@ Cüzdan kilidini aç.</translation>
         <translation>Uygulamayı kapat</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>%1 hakkındaki bilgileri göster</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>&amp;Qt hakkında</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Qt hakkındaki bilgileri göster</translation>
+    </message>
+    <message>
         <source>&amp;Options...</source>
         <translation>Seçenekler</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>%1 için yapılandırma seçeneklerini değiştirin</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>Cüzdan &amp;Şifrelemek...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>Cüzdanı &amp;Yedekle</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>Parola &amp;Değiştir...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>&amp;URI aç...</translation>
     </message>
     <message>
         <source>Create Wallet...</source>
@@ -220,6 +276,10 @@ Cüzdan kilidini aç.</translation>
         <translation>Cüzdan</translation>
     </message>
     <message>
+        <source>Click to disable network activity.</source>
+        <translation>Ağ etkinliğini devre dışı bırakmak için tıklayın.</translation>
+    </message>
+    <message>
         <source>Network activity disabled.</source>
         <translation>Network aktivitesi devre dışı bırakıldı</translation>
     </message>
@@ -228,12 +288,24 @@ Cüzdan kilidini aç.</translation>
         <translation>Network activitesini serbest bırakmak için tıklayınız</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Bağlantılar senkronize ediliyor (%1%)...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Diskteki blokları yeniden indeksleme ...</translation>
+    </message>
+    <message>
         <source>&amp;Verify message...</source>
         <translation>Mesajı doğrula</translation>
     </message>
     <message>
         <source>&amp;Send</source>
         <translation>Gönder</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Teslim alınan</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -256,6 +328,10 @@ Cüzdan kilidini aç.</translation>
         <translation>Yardım</translation>
     </message>
     <message>
+        <source>Tabs toolbar</source>
+        <translation>Araç çubuğu sekmeleri</translation>
+    </message>
+    <message>
         <source>&amp;Command-line options</source>
         <translation>Komut-satırı seçenekleri</translation>
     </message>
@@ -270,6 +346,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Information</source>
         <translation>Bilgi</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Güncel</translation>
     </message>
     <message>
         <source>Open Wallet</source>

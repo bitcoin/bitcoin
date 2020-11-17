@@ -478,12 +478,24 @@
         <translation>தேதி வரை</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>நோட் விண்டோ</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>திற நோட் பிழைத்திருத்தம் மற்றும் கண்டறியும் பணியகம்</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>முகவரிகள் அனுப்புகிறது</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>முகவரிகள் பெறுதல்</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>திற பிட்காயின்: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1440,6 +1452,10 @@
         <translation>'bitcoin: //' சரியான URI அல்ல. அதற்கு பதிலாக 'பிட்கின்:' பயன்படுத்தவும்.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>பரிவர்த்தனை வேண்டுதலை ஏற்க இயலாது ஏனென்றால் BIP70  ஆதரவு தரவில்லை</translation>
+    </message>
+    <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
         <translation>பிப்70 இல் உள்ள பரவலான பாதுகாப்பு குறைபாடுகள் காரணமாக, வாலட்டை மாற்றுவதற்கான எந்தவொரு வணிக அறிவுறுத்தல்களும் புறக்கணிக்கப்பட வேண்டும் என்று கடுமையாக பரிந்துரைக்கப்படுகிறது.</translation>
     </message>
@@ -1722,6 +1738,10 @@
     <message>
         <source>User Agent</source>
         <translation>பயனர் முகவர்</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>நோட் விண்டோ</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2280,6 +2300,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>அனுப்பும் பிட்காயின்களை உறுதிப்படுத்தவும்</translation>
     </message>
     <message>
+        <source>Confirm transaction proposal</source>
+        <translation>பரிவர்த்தனை வரைவு உறுதி செய்</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>அனுப்புவும்</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>பெறுநரின் முகவரி தவறானது. மீண்டும் சரிபார்க்கவும்.</translation>
     </message>
@@ -2519,6 +2547,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>வாலட் திறத்தல் ரத்து செய்யப்பட்டது.</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>தவறு எதுவுமில்லை</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3046,6 +3078,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Confirm fee bump</source>
         <translation>கட்டண ஏற்றத்தை உறுதிப்படுத்தவும்</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>பரிவர்த்தனை செய்ய இயலாது</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
