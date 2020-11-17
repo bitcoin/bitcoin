@@ -20,7 +20,6 @@ from .authproxy import JSONRPCException
 from .messages import MY_SUBVERSION
 from .util import (
     append_config,
-    assert_equal,
     delete_cookie_file,
     get_rpc_proxy,
     rpc_url,
@@ -89,6 +88,14 @@ class TestNode():
 
         self.p2ps = []
 
+    def _node_msg(self, msg: str) -> str:
+        """Return a modified msg that identifies this node by its index as a debugging aid."""
+        return "[node %d] %s" % (self.index, msg)
+
+    def _raise_assertion_error(self, msg: str):
+        """Raise an AssertionError with msg modified to identify this node."""
+        raise AssertionError(self._node_msg(msg))
+
     def __del__(self):
         # Ensure that we don't leave any dashd processes lying around after
         # the test ends
@@ -96,7 +103,7 @@ class TestNode():
             # Should only happen on test failure
             # Avoid using logger, as that may have already been shutdown when
             # this destructor is called.
-            print("Cleaning up leftover process")
+            print(self._node_msg("Cleaning up leftover process"))
             self.process.kill()
 
     def __getattr__(self, name):
@@ -104,7 +111,7 @@ class TestNode():
         if self.use_cli:
             return getattr(self.cli, name)
         else:
-            assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
+            assert self.rpc_connected and self.rpc is not None, self._node_msg("Error: no RPC connection")
             return getattr(self.rpc, name)
 
     def start(self, extra_args=None, stderr=None, *args, **kwargs):
@@ -130,7 +137,8 @@ class TestNode():
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
-                raise FailedToStartError('dashd exited with status {} during initialization'.format(self.process.returncode))
+                raise FailedToStartError(self._node_msg(
+                    'dashd exited with status {} during initialization'.format(self.process.returncode)))
             try:
                 self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
@@ -151,14 +159,13 @@ class TestNode():
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        raise AssertionError("Unable to connect to dashd")
+        self._raise_assertion_error("Unable to connect to dashd")
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
             return self.cli("-rpcwallet={}".format(wallet_name))
         else:
-            assert self.rpc_connected
-            assert self.rpc
+            assert self.rpc_connected and self.rpc, self._node_msg("RPC not connected")
             wallet_path = "wallet/%s" % wallet_name
             return self.rpc / wallet_path
 
@@ -185,7 +192,8 @@ class TestNode():
             return False
 
         # process has stopped. Assert that it didn't return an error code.
-        assert_equal(return_code, 0)
+        assert return_code == 0, self._node_msg(
+            "Node returned non-zero exit code (%d) when stopping" % return_code)
         self.running = False
         self.process = None
         self.rpc_connected = False
@@ -237,16 +245,18 @@ class TestNode():
                     stderr = log_stderr.read().decode('utf-8').strip()
                     if partial_match:
                         if re.search(expected_msg, stderr, flags=re.MULTILINE) is None:
-                            raise AssertionError('Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
+                            self._raise_assertion_error(
+                                'Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
                     else:
                         if re.fullmatch(expected_msg, stderr) is None:
-                            raise AssertionError('Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
+                            self._raise_assertion_error(
+                                'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
             else:
                 if expected_msg is None:
                     assert_msg = "dashd should have exited with an error"
                 else:
                     assert_msg = "dashd should have exited with expected error " + expected_msg
-                raise AssertionError(assert_msg)
+                self._raise_assertion_error(assert_msg)
 
     def node_encrypt_wallet(self, passphrase):
         """"Encrypts the wallet.
@@ -277,7 +287,7 @@ class TestNode():
 
         Convenience property - most tests only use a single p2p connection to each
         node, so this saves having to write node.p2ps[0] many times."""
-        assert self.p2ps, "No p2p connection"
+        assert self.p2ps, self._node_msg("No p2p connection")
         return self.p2ps[0]
 
     def disconnect_p2ps(self):

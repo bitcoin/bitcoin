@@ -254,3 +254,55 @@ bool CScript::IsPushOnly() const
 {
     return this->IsPushOnly(begin());
 }
+
+bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet)
+{
+    opcodeRet = OP_INVALIDOPCODE;
+    if (pvchRet)
+        pvchRet->clear();
+    if (pc >= end)
+        return false;
+
+    // Read instruction
+    if (end - pc < 1)
+        return false;
+    unsigned int opcode = *pc++;
+
+    // Immediate operand
+    if (opcode <= OP_PUSHDATA4)
+    {
+        unsigned int nSize = 0;
+        if (opcode < OP_PUSHDATA1)
+        {
+            nSize = opcode;
+        }
+        else if (opcode == OP_PUSHDATA1)
+        {
+            if (end - pc < 1)
+                return false;
+            nSize = *pc++;
+        }
+        else if (opcode == OP_PUSHDATA2)
+        {
+            if (end - pc < 2)
+                return false;
+            nSize = ReadLE16(&pc[0]);
+            pc += 2;
+        }
+        else if (opcode == OP_PUSHDATA4)
+        {
+            if (end - pc < 4)
+                return false;
+            nSize = ReadLE32(&pc[0]);
+            pc += 4;
+        }
+        if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
+            return false;
+        if (pvchRet)
+            CScriptBase::assign_to(pc, pc + nSize, *pvchRet);
+        pc += nSize;
+    }
+
+    opcodeRet = static_cast<opcodetype>(opcode);
+    return true;
+}

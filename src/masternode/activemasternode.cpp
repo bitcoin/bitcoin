@@ -114,7 +114,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+    bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {

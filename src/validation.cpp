@@ -152,7 +152,7 @@ private:
       * ahead and mark descendants of invalid blocks as FAILED_CHILD at that time,
       * instead of putting things in this set.
       */
-    std::set<CBlockIndex*> g_failed_blocks;
+    std::set<CBlockIndex*> m_failed_blocks;
 
 public:
     CChain chainActive;
@@ -785,7 +785,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
         // No transactions are allowed below minRelayTxFee except from disconnected blocks
         if (!bypass_limits && nModifiedFees < ::minRelayTxFee.GetFee(nSize)) {
-            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "min relay fee not met");
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "min relay fee not met", false, strprintf("%d < %d", nModifiedFees, ::minRelayTxFee.GetFee(nSize)));
         }
 
         if (nAbsurdFee && nFees > nAbsurdFee)
@@ -1372,7 +1372,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
 void CChainState::InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) {
     if (!state.CorruptionPossible()) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
-        g_failed_blocks.insert(pindex);
+        m_failed_blocks.insert(pindex);
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
         InvalidChainFound(pindex);
@@ -1813,21 +1813,26 @@ void static FlushBlockFile(bool fFinalize = false)
     LOCK(cs_LastBlockFile);
 
     CDiskBlockPos posOld(nLastBlockFile, 0);
+    bool status = true;
 
     FILE *fileOld = OpenBlockFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nSize);
-        FileCommit(fileOld);
+            status &= TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nSize);
+        status &= FileCommit(fileOld);
         fclose(fileOld);
     }
 
     fileOld = OpenUndoFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nUndoSize);
-        FileCommit(fileOld);
+            status &= TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nUndoSize);
+        status &= FileCommit(fileOld);
         fclose(fileOld);
+    }
+
+    if (!status) {
+        AbortNode("Flushing block file to disk failed. This is likely the result of an I/O error.");
     }
 }
 
@@ -2544,14 +2549,18 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
 void FlushStateToDisk() {
     CValidationState state;
     const CChainParams& chainparams = Params();
-    FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS);
+    if (!FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS)) {
+        LogPrintf("%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
+    }
 }
 
 void PruneAndFlush() {
     CValidationState state;
     fCheckForPruning = true;
     const CChainParams& chainparams = Params();
-    FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
+    if (!FlushStateToDisk(chainparams, state, FlushStateMode::NONE)) {
+        LogPrintf("%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
+    }
 }
 
 static void DoWarning(const std::string& strWarning)
@@ -3069,19 +3078,18 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
                 assert(trace.pblock && trace.pindex);
                 GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
             }
+
+            // Notify external listeners about the new tip.
+            // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
+            GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
+            GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
+
+            // Always notify the UI if a new block tip was connected
+            if (pindexFork != pindexNewTip) {
+                uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
+            }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
-
-        // Notifications/callbacks that can run without cs_main
-
-        // Notify external listeners about the new tip.
-        GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
-        GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
-
-        // Always notify the UI if a new block tip was connected
-        if (pindexFork != pindexNewTip) {
-            uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
-        }
 
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
 
@@ -3187,7 +3195,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     pindex->nStatus |= BLOCK_FAILED_VALID;
     setDirtyBlockIndex.insert(pindex);
     setBlockIndexCandidates.erase(pindex);
-    g_failed_blocks.insert(pindex);
+    m_failed_blocks.insert(pindex);
 
     // DisconnectTip will add transactions to disconnectpool; try to add these
     // back to the mempool.
@@ -3236,7 +3244,7 @@ bool CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
                 // Reset invalid block marker if it was pointing to one of those.
                 pindexBestInvalid = nullptr;
             }
-            g_failed_blocks.erase(it->second);
+            m_failed_blocks.erase(it->second);
         }
         it++;
     }
@@ -3678,10 +3686,10 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // If the previous block index isn't valid, determine if it descends from any block which
-        // has been found invalid (g_failed_blocks), then mark pindexPrev and any blocks
+        // has been found invalid (m_failed_blocks), then mark pindexPrev and any blocks
         // between them as failed.
         if (!pindexPrev->IsValid(BLOCK_VALID_SCRIPTS)) {
-            for (const CBlockIndex* failedit : g_failed_blocks) {
+            for (const CBlockIndex* failedit : m_failed_blocks) {
                 if (pindexPrev->GetAncestor(failedit->nHeight) == failedit) {
                     assert(failedit->nStatus & BLOCK_FAILED_VALID);
                     CBlockIndex* invalid_walk = pindexPrev;
@@ -3992,7 +4000,9 @@ void PruneBlockFilesManual(int nManualPruneHeight)
 {
     CValidationState state;
     const CChainParams& chainparams = Params();
-    FlushStateToDisk(chainparams, state, FlushStateMode::NONE, nManualPruneHeight);
+    if (!FlushStateToDisk(chainparams, state, FlushStateMode::NONE, nManualPruneHeight)) {
+        LogPrintf("%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
+    }
 }
 
 /**
@@ -4268,6 +4278,7 @@ bool LoadChainTip(const CChainParams& chainparams)
         LogPrintf("%s: Connecting genesis block...\n", __func__);
         CValidationState state;
         if (!ActivateBestChain(state, chainparams)) {
+            LogPrintf("%s: failed to activate chain (%s)\n", __func__, FormatStateMessage(state));
             return false;
         }
     }
@@ -4384,7 +4395,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             if (!g_chainstate.ConnectBlock(block, state, pindex, coins, chainparams))
-                return error("VerifyDB(): *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
+                return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         }
     }
 
@@ -4501,7 +4512,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view) {
 
 void CChainState::UnloadBlockIndex() {
     nBlockSequenceId = 1;
-    g_failed_blocks.clear();
+    m_failed_blocks.clear();
     setBlockIndexCandidates.clear();
 }
 
@@ -4575,7 +4586,7 @@ bool CChainState::AddGenesisBlock(const CChainParams& chainparams, const CBlock&
 {
     CDiskBlockPos blockPos = SaveBlockToDisk(block, 0, chainparams, nullptr);
     if (blockPos.IsNull())
-        return error("%s: writing genesis block to disk failed", __func__);
+        return error("%s: writing genesis block to disk failed (%s)", __func__, FormatStateMessage(state));
     CBlockIndex *pindex = AddToBlockIndex(block);
     ReceivedBlockTransactions(block, pindex, blockPos);
     return true;
@@ -5065,7 +5076,8 @@ bool DumpMempool(void)
         }
 
         file << mapDeltas;
-        FileCommit(file.Get());
+        if (!FileCommit(file.Get()))
+            throw std::runtime_error("FileCommit failed");
         file.fclose();
         RenameOver(GetDataDir() / "mempool.dat.new", GetDataDir() / "mempool.dat");
         int64_t last = GetTimeMicros();

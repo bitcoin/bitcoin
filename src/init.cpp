@@ -99,25 +99,24 @@ std::unique_ptr<PeerLogicValidation> peerLogic;
 class DummyWalletInit : public WalletInitInterface {
 public:
 
-    std::string GetHelpString(bool showDebug) override {return std::string{};}
-    bool ParameterInteraction() override {return true;}
-    void RegisterRPC(CRPCTable &) override {}
-    bool Verify() override {return true;}
-    bool Open() override {return true;}
-    void Start(CScheduler& scheduler) override {}
-    void Flush() override {}
-    void Stop() override {}
-    void Close() override {}
+    std::string GetHelpString(bool showDebug) const override {return std::string{};}
+    bool ParameterInteraction() const override {return true;}
+    void RegisterRPC(CRPCTable &) const override {}
+    bool Verify() const override {return true;}
+    bool Open() const override {return true;}
+    void Start(CScheduler& scheduler) const override {}
+    void Flush() const override {}
+    void Stop() const override {}
+    void Close() const override {}
 
     // Dash Specific WalletInitInterface InitPrivateSendSettings
-    void AutoLockMasternodeCollaterals() override {}
-    void InitPrivateSendSettings() override {}
-    void InitKeePass() override {}
-    bool InitAutoBackup() override {return true;}
+    void AutoLockMasternodeCollaterals() const override {}
+    void InitPrivateSendSettings() const override {}
+    void InitKeePass() const override {}
+    bool InitAutoBackup() const override {return true;}
 };
 
-static DummyWalletInit g_dummy_wallet_init;
-WalletInitInterface* const g_wallet_init_interface = &g_dummy_wallet_init;
+const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 #endif
 
 static CDSNotificationInterface* pdsNotificationInterface = nullptr;
@@ -244,7 +243,7 @@ void PrepareShutdown()
     std::string statusmessage;
     bool fRPCInWarmup = RPCIsInWarmup(&statusmessage);
 
-    g_wallet_init_interface->Flush();
+    g_wallet_init_interface.Flush();
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
@@ -324,7 +323,7 @@ void PrepareShutdown()
         deterministicMNManager.reset();
         evoDb.reset();
     }
-    g_wallet_init_interface->Stop();
+    g_wallet_init_interface.Stop();
 
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
@@ -375,7 +374,7 @@ void Shutdown()
         PrepareShutdown();
     }
     // Shutdown part 2: delete wallet instance
-    g_wallet_init_interface->Close();
+    g_wallet_init_interface.Close();
     globalVerifyHandle.reset();
     ECC_Stop();
     LogPrintf("%s: done\n", __func__);
@@ -546,7 +545,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-whitelist=<IP address or network>", _("Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.") +
         " " + _("Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway"));
 
-    strUsage += g_wallet_init_interface->GetHelpString(showDebug);
+    strUsage += g_wallet_init_interface.GetHelpString(showDebug);
 
 #if ENABLE_ZMQ
     strUsage += HelpMessageGroup(_("ZeroMQ notification options:"));
@@ -859,7 +858,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
         activeMasternodeManager->Init(pindexTip);
     }
 
-    g_wallet_init_interface->AutoLockMasternodeCollaterals();
+    g_wallet_init_interface.AutoLockMasternodeCollaterals();
 
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool();
@@ -1335,7 +1334,7 @@ bool AppInitParameterInteraction()
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
-    if (!g_wallet_init_interface->ParameterInteraction()) return false;
+    if (!g_wallet_init_interface.ParameterInteraction()) return false;
 
     fIsBareMultisigStd = gArgs.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = gArgs.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
@@ -1671,7 +1670,7 @@ bool AppInitMain()
      * available in the GUI RPC console even if external calls are disabled.
      */
     RegisterAllCoreRPCCommands(tableRPC);
-    g_wallet_init_interface->RegisterRPC(tableRPC);
+    g_wallet_init_interface.RegisterRPC(tableRPC);
 #if ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
@@ -1690,11 +1689,11 @@ bool AppInitMain()
 
     // ********************************************************* Step 5: verify wallet database integrity
 
-    if(!g_wallet_init_interface->InitAutoBackup()) return false;
-    if (!g_wallet_init_interface->Verify()) return false;
+    if (!g_wallet_init_interface.InitAutoBackup()) return false;
+    if (!g_wallet_init_interface.Verify()) return false;
 
     // Initialize KeePass Integration
-    g_wallet_init_interface->InitKeePass();
+    g_wallet_init_interface.InitKeePass();
     // ********************************************************* Step 6: network initialization
     // Note that we absolutely cannot open any actual connections
     // until the very end ("start node") as the UTXO/block state
@@ -2071,7 +2070,7 @@ bool AppInitMain()
     fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: load wallet
-    if (!g_wallet_init_interface->Open()) return false;
+    if (!g_wallet_init_interface.Open()) return false;
 
     // As InitLoadWallet can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
@@ -2134,7 +2133,7 @@ bool AppInitMain()
 
     // ********************************************************* Step 10b: setup PrivateSend
 
-    g_wallet_init_interface->InitPrivateSendSettings();
+    g_wallet_init_interface.InitPrivateSendSettings();
     CPrivateSend::InitStandardDenominations();
 
     // ********************************************************* Step 10b: Load cache data
@@ -2352,7 +2351,7 @@ bool AppInitMain()
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
 
-    g_wallet_init_interface->Start(scheduler);
+    g_wallet_init_interface.Start(scheduler);
 
     return true;
 }

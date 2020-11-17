@@ -893,9 +893,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             if (fGivenKeys && scriptPubKey.IsPayToScriptHash()) {
                 RPCTypeCheckObj(prevOut,
                     {
-                        {"txid", UniValueType(UniValue::VSTR)},
-                        {"vout", UniValueType(UniValue::VNUM)},
-                        {"scriptPubKey", UniValueType(UniValue::VSTR)},
                         {"redeemScript", UniValueType(UniValue::VSTR)},
                     });
                 UniValue v = find_value(prevOut, "redeemScript");
