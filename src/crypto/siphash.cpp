@@ -25,14 +25,14 @@ CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
     v[2] = 0x6c7967656e657261ULL ^ k0;
     v[3] = 0x7465646279746573ULL ^ k1;
     count = 0;
-    tail = 0;
+    tmp = 0;
 }
 
 CSipHasher& CSipHasher::Write(uint64_t data)
 {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
 
-    assert((count & 0x07) == 0);
+    assert(count % 8 == 0);
 
     v3 ^= data;
     SIPROUND;
@@ -70,14 +70,14 @@ CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
 
     if (ntail != 0) {
         needed = 8 - ntail;
-        tail |= ReadU64ByLenLE(data, std::min(size, needed)) << 8 * ntail;
+        tmp |= ReadU64ByLenLE(data, std::min(size, needed)) << 8 * ntail;
         if (size < needed) {
             return *this;
         } else {
-            v3 ^= tail;
+            v3 ^= tmp;
             SIPROUND;
             SIPROUND;
-            v0 ^= tail;
+            v0 ^= tmp;
         }
     }
 
@@ -98,7 +98,7 @@ CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
     v[1] = v1;
     v[2] = v2;
     v[3] = v3;
-    tail = ReadU64ByLenLE(data + i, left);
+    tmp = ReadU64ByLenLE(data + i, left);
 
     return *this;
 }
@@ -107,14 +107,12 @@ uint64_t CSipHasher::Finalize() const
 {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
 
-
-    uint64_t t = tail | (((uint64_t)count) << 56);
+    uint64_t t = tmp | (((uint64_t)count) << 56);
 
     v3 ^= t;
     SIPROUND;
     SIPROUND;
     v0 ^= t;
-
     v2 ^= 0xFF;
     SIPROUND;
     SIPROUND;
