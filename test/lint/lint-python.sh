@@ -55,6 +55,7 @@ enabled=(
     F621 # too many expressions in an assignment with star-unpacking
     F622 # two or more starred expressions in an assignment (a, *b, *c = d)
     F631 # assertion test is a tuple, which are always True
+    F632 # use ==/!= to compare str, bytes, and int literals
     F701 # a break statement outside of a while or for loop
     F702 # a continue statement outside of a while or for loop
     F703 # a continue statement in a finally block in a loop

@@ -62,7 +62,7 @@ def get_ELF_program_headers(executable):
                     splitline = [x.strip() for x in line.split()]
                     flags = splitline[ofs_flags]
                     # check for 'R', ' E'
-                    if splitline[ofs_flags + 1] is 'E':
+                    if splitline[ofs_flags + 1] == 'E':
                         flags += ' E'
                     headers.append((typ, flags, []))
             count += 1
