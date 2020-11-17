@@ -38,6 +38,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="placeholderText">
+     <string>Wallet</string>
+   </property>
   </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
@@ -68,17 +71,33 @@
     <string>Encrypt Wallet</string>
    </property>
    <property name="checked">
-    <bool>true</bool>
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="advanced_options_label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>90</y>
+     <width>130</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font-weight:bold;</string>
+   </property>
+   <property name="text">
+    <string>Advanced options</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="disable_privkeys_checkbox">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>80</y>
+     <y>115</y>
      <width>171</width>
      <height>22</height>
     </rect>
@@ -94,8 +113,8 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>110</y>
-     <width>171</width>
+     <y>135</y>
+     <width>220</width>
      <height>22</height>
     </rect>
    </property>
@@ -110,7 +129,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>140</y>
+     <y>155</y>
      <width>171</width>
      <height>22</height>
     </rect>
@@ -128,6 +147,7 @@
   <tabstop>encrypt_wallet_checkbox</tabstop>
   <tabstop>disable_privkeys_checkbox</tabstop>
   <tabstop>blank_wallet_checkbox</tabstop>
+  <tabstop>descriptor_checkbox</tabstop>
  </tabstops>
  <resources/>
  <connections>
