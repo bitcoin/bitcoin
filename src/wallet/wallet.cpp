@@ -4826,7 +4826,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
     return walletInstance;
 }
 
-bool CWallet::UpgradeWallet(int version, bilingual_str& error, std::vector<bilingual_str>& warnings)
+bool CWallet::UpgradeWallet(int version, bilingual_str& error)
 {
     int nMaxVersion = version;
     auto nMinVersion = DEFAULT_USE_HD_WALLET ? FEATURE_LATEST : FEATURE_COMPRPUBKEY;
