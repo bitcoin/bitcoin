@@ -70,7 +70,8 @@ fi
 
 # Default to building for all supported HOSTs (overridable by environment)
 export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu
-                       x86_64-w64-mingw32}"
+                       x86_64-w64-mingw32
+                       x86_64-apple-darwin18}"
 
 DISTSRC_BASE="${DISTSRC_BASE:-${PWD}}"
 
@@ -105,6 +106,7 @@ for host in $hosts_distsrc_exists; do
 done
 exit 1
 else
+
     mkdir -p "$DISTSRC_BASE"
 fi
 

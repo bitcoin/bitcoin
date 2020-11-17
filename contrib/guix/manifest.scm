@@ -3,24 +3,33 @@
              (gnu packages autotools)
              (gnu packages base)
              (gnu packages bash)
+             (gnu packages cdrom)
              (gnu packages check)
+             (gnu packages cmake)
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
+             (gnu packages gnome)
+             (gnu packages image)
+             (gnu packages imagemagick)
              (gnu packages installers)
              (gnu packages linux)
+             (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
              (gnu packages shells)
              (gnu packages version-control)
+             (guix build-system font)
              (guix build-system gnu)
              (guix build-system trivial)
+             (guix download)
              (guix gexp)
+             ((guix licenses) #:prefix license:)
              (guix packages)
              (guix profiles)
              (guix utils))
@@ -161,11 +170,29 @@ chain for " target " development."))
   (package-with-extra-patches base-nsis
     (search-our-patches "nsis-SConstruct-sde-support.patch")))
 
+(define-public font-tuffy
+  (package
+   (name "font-tuffy")
+   (version "20120614")
+   (source
+    (origin
+     (method url-fetch)
+     (uri (string-append "http://tulrich.com/fonts/tuffy-" version ".tar.gz"))
+     (file-name (string-append name "-" version ".tar.gz"))
+     (sha256
+      (base32
+       "02vf72bgrp30vrbfhxjw82s115z27dwfgnmmzfb0n9wfhxxfpyf6"))))
+   (build-system font-build-system)
+   (home-page "http://tulrich.com/fonts/")
+   (synopsis "The Tuffy Truetype Font Family")
+   (description
+    "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
+   (license license:public-domain)))
 
 (packages->manifest
  (append
   (list ;; The Basics
-        bash-minimal
+        bash
         which
         coreutils
         util-linux
@@ -195,8 +222,8 @@ chain for " target " development."))
         python-3.7
         ;; Git
         git
-        ;; Native gcc 9 toolchain targeting glibc 2.27
-        (make-gcc-toolchain gcc-9 glibc-2.27))
+        ;; Native gcc 7 toolchain
+        gcc-toolchain-7)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
@@ -208,4 +235,6 @@ chain for " target " development."))
                                                #:base-gcc-for-libc gcc-7)))
           ((string-contains target "-linux-")
            (list (make-bitcoin-cross-toolchain target)))
+          ((string-contains target "darwin")
+           (list clang-8 libcap binutils imagemagick libtiff librsvg font-tuffy cmake-3.15.5 xorriso))
           (else '())))))
