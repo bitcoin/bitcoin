@@ -96,17 +96,5 @@ class LLMQDKGErrors(DashTestFramework):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
-    def confirm_mns(self):
-        while True:
-            diff = self.nodes[0].protx_diff(1, self.nodes[0].getblockcount())
-            found_unconfirmed = False
-            for mn in diff["mnList"]:
-                if int(mn["confirmedHash"], 16) == 0:
-                    found_unconfirmed = True
-                    break
-            if not found_unconfirmed:
-                break
-            self.nodes[0].generate(1)
-        self.sync_blocks()
 if __name__ == '__main__':
     LLMQDKGErrors().main()

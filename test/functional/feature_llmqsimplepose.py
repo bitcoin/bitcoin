@@ -25,7 +25,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-
+        self.sync_blocks(self.nodes, timeout=60*5)
+        self.confirm_mns()
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -91,7 +92,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 if expect_contribution_to_fail:
                     expected_contributors -= 1
                 # Make sure we do fresh probes
-                self.bump_scheduler(5)
                 self.bump_mocktime(60 * 60)
                 self.mine_quorum(expected_connections=1, expected_members=len(online_mninfos), expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos=online_mninfos, bumptime=15)
 
@@ -126,7 +126,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
-        self.bump_scheduler(5)
         self.bump_mocktime(60 * 60 + 1)
         self.sync_all()
 

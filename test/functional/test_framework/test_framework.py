@@ -899,6 +899,19 @@ class DashTestFramework(SyscoinTestFramework):
         self.llmq_size = 3
         self.llmq_threshold = 2
 
+    def confirm_mns(self):
+        while True:
+            diff = self.nodes[0].protx_diff(1, self.nodes[0].getblockcount())
+            found_unconfirmed = False
+            for mn in diff["mnList"]:
+                if int(mn["confirmedHash"], 16) == 0:
+                    found_unconfirmed = True
+                    break
+            if not found_unconfirmed:
+                break
+            self.nodes[0].generate(1)
+        self.sync_blocks()
+
     def bump_mocktime(self, t, nodes=None):
         if self.mocktime is None:
             self.mocktime = int(time.time())
@@ -1128,7 +1141,6 @@ class DashTestFramework(SyscoinTestFramework):
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=30):
-        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_blocks(self.nodes)
         for node in self.nodes:
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
@@ -1285,7 +1297,6 @@ class DashTestFramework(SyscoinTestFramework):
         quorums = self.nodes[0].quorum_list()
 
         def timeout_func():
-            self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY)
             self.bump_mocktime(bumptime)
 
         # move forward to next DKG
@@ -1345,7 +1356,6 @@ class DashTestFramework(SyscoinTestFramework):
         i = 0
         while quorums == self.nodes[0].quorum_list():
             time.sleep(2)
-            self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY, nodes=nodes)
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(1)
             self.sync_blocks(nodes)
@@ -1356,7 +1366,6 @@ class DashTestFramework(SyscoinTestFramework):
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.nodes[0].generate(8)
-        self.bump_scheduler(MAX_INITIAL_BROADCAST_DELAY, nodes=nodes)
         self.bump_mocktime(5, nodes=nodes)
         self.sync_blocks(nodes)
 

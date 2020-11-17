@@ -181,7 +181,6 @@ class AssumeValidTest(DashTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
-        self.bump_scheduler(5)
         self.assert_blockchain_height(self.nodes[0], 101)
 
         # Send all blocks to node1. All blocks will be accepted.
@@ -193,6 +192,7 @@ class AssumeValidTest(DashTestFramework):
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
+        self.bump_mocktime(5)
         self.assert_blockchain_height(self.nodes[2], 101)
 
 

@@ -23,7 +23,8 @@ class LLMQSigningTest(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-
+        self.sync_blocks(self.nodes, timeout=60*5)
+        self.confirm_mns()
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
@@ -49,8 +50,8 @@ class LLMQSigningTest(DashTestFramework):
             while time.time() - t < timeout:
                 if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
                     return
-                self.bump_mocktime(1)
-                time.sleep(0.1)
+                self.bump_mocktime(5)
+                time.sleep(1)
             raise AssertionError("wait_for_sigs timed out")
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
@@ -69,6 +70,7 @@ class LLMQSigningTest(DashTestFramework):
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
         self.mninfo[2].node.quorum_sign(100, id, msgHash)
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
         recsig_time = self.mocktime
@@ -84,12 +86,10 @@ class LLMQSigningTest(DashTestFramework):
 
         # fast forward until 0.5 days before cleanup is expected, recovered sig should still be valid
         self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
-        self.bump_scheduler(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         self.bump_mocktime(int(60 * 60 * 24 * 1))
-        self.bump_scheduler(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 
@@ -97,7 +97,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
-        self.bump_scheduler(5)
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
 
@@ -117,8 +117,8 @@ class LLMQSigningTest(DashTestFramework):
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
-        # Bump scheduler 5 second so that the next node is used for recovery, which should succeed
-        self.bump_scheduler(5)
+        # Let 2 seconds pass so that the next node is used for recovery, which should succeed
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
