@@ -106,6 +106,10 @@ def uint256_from_str(s):
     return r
 
 
+def uint256_to_string(uint256):
+    return '%064x' % uint256
+
+
 def uint256_from_compact(c):
     nbytes = (c >> 24) & 0xFF
     v = (c & 0xFFFFFF) << (8 * (nbytes - 3))
