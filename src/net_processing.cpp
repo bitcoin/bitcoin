@@ -2183,6 +2183,8 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 
     if (msg_type == NetMsgType::VERACK)
     {
+        if (pfrom->fSuccessfullyConnected) return true;
+
         pfrom->SetRecvVersion(std::min(pfrom->nVersion.load(), PROTOCOL_VERSION));
 
         if (!pfrom->fInbound) {
