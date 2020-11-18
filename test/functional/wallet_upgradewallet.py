@@ -338,6 +338,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         new_kvs = dump_bdb_kv(node_master_wallet)
         up_defaultkey = new_kvs[b'\x0adefaultkey']
         assert_equal(defaultkey, up_defaultkey)
+        assert_equal(wallet.getwalletinfo()["walletversion"], 159900)
         # 0.16.3 doesn't have a default key
         v16_3_kvs = dump_bdb_kv(v16_3_wallet)
         assert b'\x0adefaultkey' not in v16_3_kvs
