@@ -47,7 +47,7 @@ class VersionBitsWarningTest(SyscoinTestFramework):
 
         for _ in range(numblocks):
             block = create_block(tip, create_coinbase(height + 1), block_time)
-            block.set_base_version(version)
+            block.nVersion = version
             block.solve()
             peer.send_message(msg_block(block))
             block_time += 1

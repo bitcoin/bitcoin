@@ -155,7 +155,7 @@ class AssumeValidTest(DashTestFramework):
         # Bury the assumed valid block 2100 deep
         for _ in range(2100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
-            block.set_base_version(4)
+            block.nVersion = 4
             block.solve()
             self.blocks.append(block)
             self.tip = block.sha256

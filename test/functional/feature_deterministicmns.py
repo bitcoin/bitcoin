@@ -414,7 +414,7 @@ class DIP3Test(SyscoinTestFramework):
         coinbase.calc_sha256(with_witness=True)
 
         block = create_block(int(tip_hash, 16), coinbase)
-        block.set_base_version(4)
+        block.nVersion = 4
         block.vtx += vtx
         block.hashMerkleRoot = block.calc_merkle_root()
         add_witness_commitment(block)

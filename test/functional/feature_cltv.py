@@ -92,9 +92,9 @@ class BIP65Test(SyscoinTestFramework):
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
-        # SYSCOIN
+
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
-        block.set_base_version(3)
+        block.nVersion = 3
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
@@ -108,7 +108,7 @@ class BIP65Test(SyscoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
-        block.set_base_version(3)
+        block.nVersion = 3
         block.solve()
         with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x00000003)'.format(block.hash)]):
             peer.send_and_ping(msg_block(block))
@@ -116,7 +116,7 @@ class BIP65Test(SyscoinTestFramework):
             peer.sync_with_ping()
 
         self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
-        block.set_base_version(4)
+        block.nVersion = 4
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_txids[1],
                 self.nodeaddress, amount=1.0)
