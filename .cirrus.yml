@@ -122,7 +122,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
 task:
-  name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
+  name: 'macOS 10.14  [GOAL: deploy] [no functional tests]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
