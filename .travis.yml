@@ -57,7 +57,7 @@ jobs:
       env:
       cache: pip
       language: python
-      python: '3.5' # Oldest supported version according to doc/dependencies.md
+      python: '3.6' # Oldest supported version according to doc/dependencies.md
       install:
         - set -o errexit; source ./ci/lint/04_install.sh
       before_script:
@@ -71,6 +71,6 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
