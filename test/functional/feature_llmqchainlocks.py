@@ -134,7 +134,11 @@ class LLMQChainLocksTest(DashTestFramework):
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
         self.bump_mocktime(60 * 60 + 1)
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.sync_all()
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
 
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)
