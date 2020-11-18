@@ -28,6 +28,7 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     hex_str_to_bytes,
+    force_finish_mnsync,
 )
 
 VALID_DATA_LIMIT = MAX_PROTOCOL_MESSAGE_LENGTH - 5  # Account for the 5-byte length prefix
@@ -59,6 +60,9 @@ class InvalidMessagesTest(SyscoinTestFramework):
         self.setup_clean_chain = True
 
     def run_test(self):
+        # SYSCOIN
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.test_buffer()
         self.test_magic_bytes()
         self.test_checksum()
@@ -244,8 +248,9 @@ class InvalidMessagesTest(SyscoinTestFramework):
         self.log.info("Test node stays up despite many large junk messages")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         conn2 = self.nodes[0].add_p2p_connection(P2PDataStore())
-        msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
-        assert len(msg_at_size.serialize()) == MAX_PROTOCOL_MESSAGE_LENGTH
+        # SYSCOIN
+        msg_at_size = msg_unrecognized(str_data="b" * ((4 * 1024 * 1024) - 5))
+        assert len(msg_at_size.serialize()) == (4 * 1024 * 1024)
 
         self.log.info("(a) Send 80 messages, each of maximum valid data size (4MB)")
         for _ in range(80):

@@ -77,7 +77,7 @@ from test_framework.script import (
     taproot_construct,
 )
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_raises_rpc_error, assert_equal
+from test_framework.util import assert_raises_rpc_error, assert_equal, force_finish_mnsync
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
     hash160,
@@ -1437,6 +1437,9 @@ class TaprootTest(SyscoinTestFramework):
         self.log.info("  - Done")
 
     def run_test(self):
+        # SYSCOIN
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         # Post-taproot activation tests go first (pre-taproot tests' blocks are invalid post-taproot).
         self.log.info("Post-activation tests...")
         self.nodes[1].generate(101)
