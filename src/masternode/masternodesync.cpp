@@ -307,8 +307,14 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
 
     nTimeLastUpdateBlockTip = GetAdjustedTime();
 
-    if (IsSynced() || !pindexBestHeader || !pindexNew)
+    if (IsSynced() || !pindexNew)
         return;
+    {
+        LOCK(cs_main);
+        if(!pindexBestHeader) {
+            return;
+        }
+    }
 
     if (!IsBlockchainSynced()) {
         // Postpone timeout each time new block arrives while we are still syncing blockchain
@@ -325,10 +331,12 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
         return;
     }
     bool fReachedBestHeaderNew;
+    int32_t bestHeight;
     {
         LOCK(cs_main);
         // Note: since we sync headers first, it should be ok to use this
         fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
+        bestHeight = pindexBestHeader->nHeight;
     }
 
     if (fReachedBestHeader && !fReachedBestHeaderNew) {
@@ -341,7 +349,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
     fReachedBestHeader = fReachedBestHeaderNew;
 
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
-                pindexNew->nHeight, pindexBestHeader->nHeight, fInitialDownload, fReachedBestHeader);
+                pindexNew->nHeight, bestHeight, fInitialDownload, fReachedBestHeader);
 }
 
 void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman)
