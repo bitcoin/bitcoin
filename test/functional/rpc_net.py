@@ -119,7 +119,7 @@ class NetTest(DashTestFramework):
             assert_net_servicesnames(int(info["localservices"], 0x10), info["localservicesnames"])
 
         # Check dynamically generated networks list in getnetworkinfo help output.
-        assert "(ipv4, ipv6, onion)" in self.nodes[0].help("getnetworkinfo")
+        assert "(ipv4, ipv6, onion, i2p)" in self.nodes[0].help("getnetworkinfo")
 
         self.log.info('Test extended connections info')
         self.connect_nodes(1, 2)
@@ -162,7 +162,7 @@ class NetTest(DashTestFramework):
             assert_net_servicesnames(int(info[0]["services"], 0x10), info[0]["servicesnames"])
 
         # Check dynamically generated networks list in getpeerinfo help output.
-        assert "(ipv4, ipv6, onion, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
+        assert "(ipv4, ipv6, onion, i2p, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
 
     def test_service_flags(self):
         self.nodes[0].add_p2p_connection(P2PInterface(), services=(1 << 4) | (1 << 63))
