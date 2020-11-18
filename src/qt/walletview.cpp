@@ -258,11 +258,11 @@ void WalletView::updateEncryptionStatus()
     Q_EMIT encryptionStatusChanged();
 }
 
-void WalletView::encryptWallet(bool status)
+void WalletView::encryptWallet()
 {
     if(!walletModel)
         return;
-    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt : AskPassphraseDialog::Decrypt, this);
+    AskPassphraseDialog dlg(AskPassphraseDialog::Encrypt, this);
     dlg.setModel(walletModel);
     dlg.exec();
 
