@@ -62,6 +62,7 @@ class AssetTest(SyscoinTestFramework):
         assert_raises_rpc_error(-26, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', '', gooddata, '0x', 8, 10000, 127, '', {}, {})
         self.nodes[0].generate(1)
         self.nodes[0].assetnew('1', 'ABCDEFGHI', gooddata, '0x', 8, 10000, 127, '', {}, {})
+        self.nodes[0].generate(1)
         assert_raises_rpc_error(-26, 'asset-invalid-symbol', self.nodes[0].assetnew, '1', 'ABCDEFGHIJ', gooddata, '0x', 8, 10000, 127, '', {}, {})
         self.nodes[0].generate(1)
 
