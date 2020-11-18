@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-core-linux-0.21"
+name: "bitcoin-core-linux-0.22"
 enable_cache: true
 distro: "ubuntu"
 suites:
