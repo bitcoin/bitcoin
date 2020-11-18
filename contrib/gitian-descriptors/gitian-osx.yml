@@ -1,5 +1,5 @@
 ---
-name: "syscoin-core-osx-4.1"
+name: "syscoin-core-osx-4.2"
 enable_cache: true
 distro: "ubuntu"
 suites:
