@@ -89,6 +89,7 @@ import json
 import hashlib
 import os
 import random
+
 # === Framework for building spending transactions. ===
 #
 # The computation is represented as a "context" dict, whose entries store potentially-unevaluated expressions that
@@ -1129,13 +1130,13 @@ def spenders_taproot_inactive():
     ]
     tap = taproot_construct(pub, scripts)
 
-    # Test that keypath spending is valid & standard if compliant, but valid and nonstandard otherwise.
-    add_spender(spenders, "inactive/keypath_valid", key=sec, tap=tap)
+    # Test that keypath spending is valid & non-standard, regardless of validity.
+    add_spender(spenders, "inactive/keypath_valid", key=sec, tap=tap, standard=False)
     add_spender(spenders, "inactive/keypath_invalidsig", key=sec, tap=tap, standard=False, sighash=bitflipper(default_sighash))
     add_spender(spenders, "inactive/keypath_empty", key=sec, tap=tap, standard=False, witness=[])
 
-    # Same for scriptpath spending (but using future features like annex, leaf versions, or OP_SUCCESS is nonstandard).
-    add_spender(spenders, "inactive/scriptpath_valid", key=sec, tap=tap, leaf="pk", inputs=[getter("sign")])
+    # Same for scriptpath spending (and features like annex, leaf versions, or OP_SUCCESS don't change this)
+    add_spender(spenders, "inactive/scriptpath_valid", key=sec, tap=tap, leaf="pk", standard=False, inputs=[getter("sign")])
     add_spender(spenders, "inactive/scriptpath_invalidsig", key=sec, tap=tap, leaf="pk", standard=False, inputs=[getter("sign")], sighash=bitflipper(default_sighash))
     add_spender(spenders, "inactive/scriptpath_invalidcb", key=sec, tap=tap, leaf="pk", standard=False, inputs=[getter("sign")], controlblock=bitflipper(default_controlblock))
     add_spender(spenders, "inactive/scriptpath_valid_unkleaf", key=sec, tap=tap, leaf="future_leaf", standard=False, inputs=[getter("sign")])
@@ -1199,7 +1200,7 @@ class TaprootTest(SyscoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         # Node 0 has Taproot inactive, Node 1 active.
-        self.extra_args = [["-dip3params=2000:2000","-par=1", "-vbparams=taproot:1:1"], ["-dip3params=2000:2000","-par=1"]]
+        self.extra_args = [["-dip3params=2000:2000","-par=1","-vbparams=taproot:1:1"], ["-dip3params=2000:2000","-par=1"]]
 
     def block_submit(self, node, txs, msg, err_msg, cb_pubkey=None, fees=0, sigops_weight=0, witness=False, accept=False):
 
@@ -1210,8 +1211,7 @@ class TaprootTest(SyscoinTestFramework):
         extra_output_script = CScript([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR))
 
         block = create_block(self.tip, create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees), self.lastblocktime + 1)
-        # SYSCOIN
-        block.set_base_version(4)
+        block.nVersion = 4
         for tx in txs:
             tx.rehash()
             block.vtx.append(tx)
@@ -1462,7 +1462,11 @@ class TaprootTest(SyscoinTestFramework):
 
         # Pre-taproot activation tests.
         self.log.info("Pre-activation tests...")
-        self.test_spenders(self.nodes[0], spenders_taproot_inactive(), input_counts=[1, 2, 2, 2, 2, 3])
+        # Run each test twice; once in isolation, and once combined with others. Testing in isolation
+        # means that the standardness is verified in every test (as combined transactions are only standard
+        # when all their inputs are standard).
+        self.test_spenders(self.nodes[0], spenders_taproot_inactive(), input_counts=[1])
+        self.test_spenders(self.nodes[0], spenders_taproot_inactive(), input_counts=[2, 3])
 
 
 if __name__ == '__main__':
