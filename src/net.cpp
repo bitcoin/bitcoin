@@ -3080,17 +3080,6 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 {
     Init(connOptions);
 
-    {
-        LOCK(cs_totalBytesRecv);
-        nTotalBytesRecv = 0;
-    }
-    {
-        LOCK(cs_totalBytesSent);
-        nTotalBytesSent = 0;
-        nMaxOutboundTotalBytesSentInCycle = 0;
-        nMaxOutboundCycleStartTime = 0s;
-    }
-
 #ifdef USE_KQUEUE
     if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
         kqueuefd = kqueue();
