@@ -23,8 +23,6 @@
 #include <util/translation.h>
 #include <util/url.h>
 
-#include <functional>
-
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
