@@ -1,8 +1,6 @@
 Bitcoin Core integration/staging tree
 =====================================
 
-https://bitcoincore.org
-
 What is Bitcoin?
 ----------------
 
