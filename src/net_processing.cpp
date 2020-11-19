@@ -4241,7 +4241,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::RECONCILDIFF, true, local_missing));
             peer->m_recon_state->FinalizeReconciliation(true, Q_RECOMPUTE, local_missing.size(), remote_missing.size());
         } else {
-            // TODO: handle failure
+            // Initial reconciliation failed.
+            LogPrint(BCLog::NET, "Outgoing reconciliation with peer=%i initially failed, requesting extension sketch\n", pfrom.GetId());
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::REQSKETCHEXT));
+            peer->m_recon_state->UpdateOutgoingPhase(RECON_EXT_REQUESTED);
         }
         return;
     }

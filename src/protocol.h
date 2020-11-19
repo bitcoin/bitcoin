@@ -285,6 +285,10 @@ extern const char *SKETCH;
  * and requests the missing transactions by short ids.
  */
 extern const char *RECONCILDIFF;
+/**
+ * Requests a sketch extension for ongoing reconciliation.
+ */
+extern const char *REQSKETCHEXT;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
