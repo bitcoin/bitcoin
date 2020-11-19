@@ -57,10 +57,10 @@ class ToolWalletTest(BitcoinTestFramework):
             assert_equal(p.poll(), 1)
             assert error in stderr.strip()
 
-    def assert_tool_output(self, output, *args):
+    def assert_tool_output(self, output, *args, stderr=''):
         p = self.bitcoin_wallet_process(*args)
         stdout, stderr = p.communicate()
-        assert_equal(stderr, '')
+        assert_equal(stderr, stderr)
         assert_equal(stdout, output)
         assert_equal(p.poll(), 0)
 
@@ -179,10 +179,10 @@ class ToolWalletTest(BitcoinTestFramework):
         load_output = ""
         if file_format is not None and file_format != dump_data["format"]:
             load_output += "Warning: Dumpfile wallet format \"{}\" does not match command line specified format \"{}\".\n".format(dump_data["format"], file_format)
-        self.assert_tool_output(load_output, *args)
+        self.assert_tool_output('', *args, stderr=load_output)
         assert (self.nodes[0].wallets_path / wallet_name).is_dir()
 
-        self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", '-wallet={}'.format(wallet_name), '-dumpfile={}'.format(rt_dumppath), 'dump')
+        self.assert_tool_output('', '-wallet={}'.format(wallet_name), '-dumpfile={}'.format(rt_dumppath), 'dump', stderr="The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n")
 
         rt_dump_data = self.read_dump(rt_dumppath)
         wallet_dat = self.nodes[0].wallets_path / wallet_name / "wallet.dat"
@@ -337,7 +337,7 @@ class ToolWalletTest(BitcoinTestFramework):
 
         self.log.info('Checking basic dump')
         wallet_dump = self.nodes[0].datadir_path / "wallet.dump"
-        self.assert_tool_output('The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n', '-wallet=todump', '-dumpfile={}'.format(wallet_dump), 'dump')
+        self.assert_tool_output('', '-wallet=todump', '-dumpfile={}'.format(wallet_dump), 'dump', stderr='The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n')
 
         dump_data = self.read_dump(wallet_dump)
         orig_dump = dump_data.copy()
@@ -471,7 +471,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.stop_node(0)
 
         wallet_dump = self.nodes[0].datadir_path / "endian.dump"
-        self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", "-wallet=endian", f"-dumpfile={wallet_dump}", "dump")
+        self.assert_tool_output('', "-wallet=endian", f"-dumpfile={wallet_dump}", "dump", stderr="The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n")
         expected_dump = self.read_dump(wallet_dump)
 
         self.do_tool_createfromdump("native_endian", "endian.dump", "bdb")
@@ -510,7 +510,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.stop_node(0)
 
         wallet_dump = self.nodes[0].datadir_path / "bigrecords.dump"
-        self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", "-wallet=bigrecords", f"-dumpfile={wallet_dump}", "dump")
+        self.assert_tool_output('', "-wallet=bigrecords", f"-dumpfile={wallet_dump}", "dump", stderr="The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n")
         dump = self.read_dump(wallet_dump)
         for k,v in dump.items():
             if tx["hex"] in v:
@@ -543,7 +543,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.start_node(0)
         self.nodes[0].loadwallet("unclean_lsn")
         self.stop_node(0)
-        self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", "-wallet=unclean_lsn", f"-dumpfile={wallet_dump}", "dump")
+        self.assert_tool_output('', "-wallet=unclean_lsn", f"-dumpfile={wallet_dump}", "dump", stderr="The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n")
 
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
