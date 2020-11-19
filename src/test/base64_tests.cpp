@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
 {
     static const std::string vstrIn[]  = {"","f","fo","foo","foob","fooba","foobar"};
     static const std::string vstrOut[] = {"","Zg==","Zm8=","Zm9v","Zm9vYg==","Zm9vYmE=","Zm9vYmFy"};
-    for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
+    for (unsigned int i=0; i<std::size(vstrIn); i++)
     {
         std::string strEnc = EncodeBase64(vstrIn[i]);
         BOOST_CHECK_EQUAL(strEnc, vstrOut[i]);
