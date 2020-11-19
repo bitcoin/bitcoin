@@ -26,13 +26,10 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         # check if mining quorums with all nodes being online succeeds without punishment/banning
-        self.test_no_banning()
+        self.test_no_banning(expected_connections=2)
 
         # Now lets isolate MNs one by one and verify that punishment/banning happens
-        def isolate_mn(mn):
-            mn.node.setnetworkactive(False)
-            wait_until(lambda: mn.node.getconnectioncount() == 0)
-        self.test_banning(isolate_mn, True)
+        self.test_banning(self.isolate_mn, 1)
 
         self.repair_masternodes(False)
 
@@ -45,50 +42,66 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.test_no_banning(expected_connections=4)
 
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
-        def close_mn_port(mn):
-            self.stop_node(mn.node.index)
-            self.start_masternode(mn, ["-listen=0", "-nobind"])
-            connect_nodes(mn.node, 0)
-            # Make sure the to-be-banned node is still connected well via outbound connections
-            for mn2 in self.mninfo:
-                if mn2 is not mn:
-                    connect_nodes(mn.node, mn2.node.index)
-            self.reset_probe_timeouts()
-        self.test_banning(close_mn_port, False)
+        self.test_banning(self.close_mn_port, 3)
 
         self.repair_masternodes(True)
         self.reset_probe_timeouts()
 
-        def force_old_mn_proto(mn):
-            self.stop_node(mn.node.index)
-            self.start_masternode(mn, ["-pushversion=70216"])
-            connect_nodes(mn.node, 0)
-            self.reset_probe_timeouts()
-        self.test_banning(force_old_mn_proto, False)
+        self.test_banning(self.force_old_mn_proto, 3)
 
-    def test_no_banning(self, expected_connections=1):
+    def isolate_mn(self, mn):
+        mn.node.setnetworkactive(False)
+        wait_until(lambda: mn.node.getconnectioncount() == 0)
+        return True
+
+    def close_mn_port(self, mn):
+        self.stop_node(mn.node.index)
+        self.start_masternode(mn, ["-listen=0", "-nobind"])
+        connect_nodes(mn.node, 0)
+        # Make sure the to-be-banned node is still connected well via outbound connections
+        for mn2 in self.mninfo:
+            if mn2 is not mn:
+                connect_nodes(mn.node, mn2.node.index)
+        self.reset_probe_timeouts()
+        return False
+
+    def force_old_mn_proto(self, mn):
+        self.stop_node(mn.node.index)
+        self.start_masternode(mn, ["-pushversion=70216"])
+        connect_nodes(mn.node, 0)
+        self.reset_probe_timeouts()
+        return False
+
+    def test_no_banning(self, expected_connections):
         for i in range(3):
             self.mine_quorum(expected_connections=expected_connections)
         for mn in self.mninfo:
             assert(not self.check_punished(mn) and not self.check_banned(mn))
 
-    def test_banning(self, invalidate_proc, expect_contribution_to_fail):
-        online_mninfos = self.mninfo.copy()
+    def test_banning(self, invalidate_proc, expected_connections):
+        mninfos_online = self.mninfo.copy()
+        mninfos_valid = self.mninfo.copy()
+        expected_contributors = len(mninfos_online)
         for i in range(2):
-            mn = online_mninfos[len(online_mninfos) - 1]
-            online_mninfos.remove(mn)
-            invalidate_proc(mn)
+            mn = mninfos_valid.pop()
+            went_offline = invalidate_proc(mn)
+            if went_offline:
+                mninfos_online.remove(mn)
+                expected_contributors -= 1
 
             t = time.time()
-            while (not self.check_punished(mn) or not self.check_banned(mn)) and (time.time() - t) < 120:
-                expected_contributors = len(online_mninfos) + 1
-                if expect_contribution_to_fail:
-                    expected_contributors -= 1
+            while (not self.check_banned(mn)) and (time.time() - t) < 120:
                 # Make sure we do fresh probes
-                self.bump_mocktime(60 * 60)
-                self.mine_quorum(expected_connections=1, expected_members=len(online_mninfos), expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos=online_mninfos)
+                self.bump_mocktime(50 * 60 + 1)
+                # Sleep a couple of seconds to let mn sync tick to happen
+                time.sleep(2)
+                self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
-            assert(self.check_punished(mn) and self.check_banned(mn))
+            assert(self.check_banned(mn))
+
+            if not went_offline:
+                # we do not include PoSe banned mns in quorums, so the next one should have 1 contributor less
+                expected_contributors -= 1
 
     def repair_masternodes(self, restart):
         # Repair all nodes
@@ -118,7 +131,9 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
-        self.bump_mocktime(60 * 60 + 1)
+        self.bump_mocktime(50 * 60 + 1)
+        # Sleep a couple of seconds to let mn sync tick to happen
+        time.sleep(2)
         self.sync_all()
 
     def check_punished(self, mn):
