@@ -26,7 +26,6 @@
 #include <QApplication>
 #include <QByteArray>
 #include <QDataStream>
-#include <QDateTime>
 #include <QDebug>
 #include <QFile>
 #include <QFileOpenEvent>
