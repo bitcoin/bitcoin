@@ -1226,7 +1226,6 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         ss << fileBuffer;
         const uint256& calcHash = ss.GetSHA256();
         const uint256& localHash = uint256S(checksum);
-        LogPrintf("%s Comparing calculated hash %s to local hash %s\n", __func__, calcHash.GetHex(), localHash.GetHex());
         return calcHash == localHash;
     }
     return true;
