@@ -1353,7 +1353,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_blocks(nodes)
         i = 0
         while quorums == self.nodes[0].quorum_list():
-            time.sleep(1)
+            time.sleep(2)
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(1)
             self.sync_blocks(nodes)

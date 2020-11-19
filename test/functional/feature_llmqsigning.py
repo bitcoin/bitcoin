@@ -49,7 +49,7 @@ class LLMQSigningTest(DashTestFramework):
             while time.time() - t < timeout:
                 if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
                     return
-                self.bump_mocktime(5)
+                self.bump_mocktime(1)
                 time.sleep(1)
             raise AssertionError("wait_for_sigs timed out")
 
@@ -69,6 +69,7 @@ class LLMQSigningTest(DashTestFramework):
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
         self.mninfo[2].node.quorum_sign(100, id, msgHash)
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
         recsig_time = self.mocktime
@@ -87,6 +88,7 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].generate(1)
+        self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
@@ -94,6 +96,7 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].generate(1)
+        self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 
@@ -103,6 +106,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
 
@@ -122,6 +126,7 @@ class LLMQSigningTest(DashTestFramework):
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
