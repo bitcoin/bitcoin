@@ -86,12 +86,14 @@ class LLMQSigningTest(DashTestFramework):
         self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
+        self.nodes[0].generate(1)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         self.bump_mocktime(int(60 * 60 * 24 * 1))
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
+        self.nodes[0].generate(1)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 

@@ -97,6 +97,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 self.bump_mocktime(60 * 60)
                 for i in range(len(self.nodes)):
                     force_finish_mnsync(self.nodes[i])
+                self.nodes[0].generate(1)
                 self.mine_quorum(expected_connections=1, expected_members=len(online_mninfos), expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos=online_mninfos, bumptime=15)
                 for i in range(len(self.nodes)):
                     force_finish_mnsync(self.nodes[i])
@@ -135,6 +136,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.bump_mocktime(60 * 60 + 1)
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
+        self.nodes[0].generate(1)
         self.sync_all()
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
