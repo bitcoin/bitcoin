@@ -362,7 +362,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             {
                 ssValue >> hash;
             }
-            catch (...) {}
+            catch (const std::ios_base::failure&) {}
 
             bool fSkipCheck = false;
 
