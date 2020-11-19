@@ -1442,17 +1442,23 @@ class TaprootTest(BitcoinTestFramework):
         self.nodes[1].generate(101)
         self.test_spenders(self.nodes[1], spenders_taproot_active(), input_counts=[1, 2, 2, 2, 2, 3])
 
-        # Transfer funds to pre-taproot node.
+        # Transfer value of the largest 500 coins to pre-taproot node.
         addr = self.nodes[0].getnewaddress()
+
+        unsp = self.nodes[1].listunspent()
+        unsp = sorted(unsp, key=lambda i: i['amount'], reverse=True)
+        unsp = unsp[:500]
+
         rawtx = self.nodes[1].createrawtransaction(
             inputs=[{
                 'txid': i['txid'],
                 'vout': i['vout']
-            } for i in self.nodes[1].listunspent()],
-            outputs={addr: self.nodes[1].getbalance()},
+            } for i in unsp],
+            outputs={addr: sum(i['amount'] for i in unsp)}
         )
         rawtx = self.nodes[1].signrawtransactionwithwallet(rawtx)['hex']
-        # Transaction is too large to fit into the mempool, so put it into a block
+
+        # Mine a block with the transaction
         block = create_block(tmpl=self.nodes[1].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS), txlist=[rawtx])
         add_witness_commitment(block)
         block.rehash()
