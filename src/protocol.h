@@ -280,6 +280,11 @@ extern const char *REQRECON;
  * Peer should respond with "reconcildiff" or "reqsketchext" message.
  */
 extern const char *SKETCH;
+/**
+ * Indicates whether ongoing reconciliation has succeeded,
+ * and requests the missing transactions by short ids.
+ */
+extern const char *RECONCILDIFF;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
