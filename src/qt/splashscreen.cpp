@@ -28,8 +28,8 @@
 #include <QScreen>
 
 
-SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
-    QWidget(nullptr, f), curAlignment(0), m_node(node)
+SplashScreen::SplashScreen(interfaces::Node& node, const NetworkStyle *networkStyle) :
+    QWidget(), curAlignment(0), m_node(node)
 {
 
     // transparent background

@@ -31,7 +31,11 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     pageButtons = new QButtonGroup(this);
     pageButtons->addButton(ui->btnSignMessage, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnVerifyMessage, pageButtons->buttons().size());
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+    connect(pageButtons, &QButtonGroup::idClicked, this, &SignVerifyMessageDialog::showPage);
+#else
     connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &SignVerifyMessageDialog::showPage);
+#endif
 
     // These icons are needed on Mac also
     GUIUtil::setIcon(ui->addressBookButton_SM, "address-book");
