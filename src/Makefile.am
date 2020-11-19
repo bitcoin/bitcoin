@@ -813,8 +813,8 @@ endif
 syscoin_cli_LDADD = \
   $(LIBSYSCOIN_CLI) \
   $(LIBUNIVALUE) \
-  $(LIBCHIABLS) \
   $(LIBSYSCOIN_UTIL) \
+  $(LIBCHIABLS) \
   $(LIBSYSCOIN_CRYPTO)
 
 syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
