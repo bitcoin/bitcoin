@@ -10,6 +10,6 @@ export CONTAINER_NAME=ci_native_tsan
 export DOCKER_NAME_TAG=ubuntu:20.04
 export PACKAGES="clang llvm libc++abi-dev libc++-dev python3-zmq"
 export DEP_OPTS="CC=clang CXX='clang++ -stdlib=libc++'"
-export TEST_RUNNER_EXTRA="--exclude feature_block,feature_taproot,feature_llmqsigning.py,feature_llmqsimplepose"  # Low memory on Travis machines, exclude feature_block.
+export TEST_RUNNER_EXTRA="--exclude feature_block,feature_taproot,feature_llmqconnections,feature_llmqsigning,feature_llmqsimplepose"  # Low memory on Travis machines, exclude feature_block.
 export GOAL="install"
 export SYSCOIN_CONFIG="--enable-zmq --with-gui=no CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' CXXFLAGS='-g' --with-sanitizers=thread CC=clang CXX='clang++ -stdlib=libc++' --with-boost-process"
