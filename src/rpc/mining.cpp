@@ -1268,12 +1268,9 @@ static RPCHelpMan estimaterawfee()
 /* ************************************************************************** */
 /* Merge mining.  */
 
-
-UniValue createauxblock(const JSONRPCRequest& request)
+static RPCHelpMan createauxblock()
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            RPCHelpMan{"createauxblock",
+    return RPCHelpMan{"createauxblock",
                 "\nCreates a new block and returns information required to"
                 " merge-mine it.\n",
                 {
@@ -1295,8 +1292,9 @@ UniValue createauxblock(const JSONRPCRequest& request)
                   HelpExampleCli("createauxblock", "\"address\"")
                   + HelpExampleRpc("createauxblock", "\"address\"")
                 },
-            }.ToString());
-     // Check coinbase payout address
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    // Check coinbase payout address
     const CTxDestination coinbaseScript
       = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(coinbaseScript)) {
@@ -1306,13 +1304,14 @@ UniValue createauxblock(const JSONRPCRequest& request)
     const CScript scriptPubKey = GetScriptForDestination(coinbaseScript);
 
     return AuxpowMiner::get ().createAuxBlock(scriptPubKey, request.context);
+},
+    };
 }
 
-UniValue submitauxblock(const JSONRPCRequest& request)
+
+static RPCHelpMan submitauxblock()
 {
-    if (request.fHelp || request.params.size() != 2)
-        throw std::runtime_error(
-            RPCHelpMan{"submitauxblock",
+    return RPCHelpMan{"submitauxblock",
                 "\nSubmits a solved auxpow for a block that was previously"
                 " created by 'createauxblock'.\n",
                 {
@@ -1325,10 +1324,14 @@ UniValue submitauxblock(const JSONRPCRequest& request)
                     HelpExampleCli("submitauxblock", "\"hash\" \"serialised auxpow\"")
                     + HelpExampleRpc("submitauxblock", "\"hash\" \"serialised auxpow\"")
                 },
-            }.ToString());
-     return AuxpowMiner::get ().submitAuxBlock(request.params[0].get_str(),
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    return AuxpowMiner::get ().submitAuxBlock(request.params[0].get_str(),
                                           request.params[1].get_str(), request.context);
+},
+    };
 }
+
 
  /* ************************************************************************** */
 
