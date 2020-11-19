@@ -1197,6 +1197,8 @@ class TaprootTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def set_test_params(self):
+        # SYSCOIN
+        self.rpc_timeout = 240
         self.num_nodes = 2
         self.setup_clean_chain = True
         # Node 0 has Taproot inactive, Node 1 active.
