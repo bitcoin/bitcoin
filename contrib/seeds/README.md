@@ -26,7 +26,12 @@ that the list is as expected.
 
 ## Dependencies
 
-Ubuntu:
+Ubuntu, Debian:
 
-    sudo apt-get install python3-pip
-    pip3 install dnspython
+    sudo apt-get install python3-dnspython
+
+and/or for other operating systems:
+
+    pip3 install dnspython3
+
+See https://dnspython.readthedocs.io/en/latest/installation.html for more information.
