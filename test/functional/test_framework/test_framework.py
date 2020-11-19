@@ -1285,21 +1285,27 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_comitments, timeout=timeout)
 
-    def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None, bumptime=1):
+    def mine_quorum(self, expected_connections=2, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None, bumptime=1):
+        spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
+
+        if expected_connections is None:
+            expected_connections = (self.llmq_size - 1) if spork21_active else 2
         if expected_members is None:
             expected_members = self.llmq_size
         if expected_contributions is None:
             expected_contributions = self.llmq_size
         if expected_commitments is None:
             expected_commitments = self.llmq_size
-        if mninfos is None:
-            mninfos = self.mninfo
+        if mninfos_online is None:
+            mninfos_online = self.mninfo.copy()
+        if mninfos_valid is None:
+            mninfos_valid = self.mninfo.copy()
 
         self.log.info("Mining quorum: expected_members=%d, expected_connections=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
                       "expected_commitments=%d" % (expected_members, expected_connections, expected_contributions, expected_complaints,
                                                    expected_justifications, expected_commitments))
 
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos]
+        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
 
         quorums = self.nodes[0].quorum_list()
 
@@ -1317,41 +1323,41 @@ class DashTestFramework(SyscoinTestFramework):
 
         self.log.info("Waiting for phase 1 (init)")
         timeout_func()
-        self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos, wait_proc=timeout_func)
+        self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, wait_proc=timeout_func)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 1 (init)"))
-        if self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] == 0:
-            self.wait_for_masternode_probes(mninfos, wait_proc=timeout_func)
+        if spork21_active:
+            self.wait_for_masternode_probes(mninfos_valid, wait_proc=timeout_func)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 2 (contribute)")
-        self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 2 (contribute)"))
+        self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 2 (contribute)"))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 3 (complain)")
-        self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 3 (complain)"))
+        self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 3 (complain)"))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 4 (justify)")
-        self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 4 (justify)"))
+        self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 4 (justify)"))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 5 (commit)")
-        self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 5 (commit)"))
+        self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 5 (commit)"))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 6 (mining)")
 
-        self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 6 (mining))"))
+        self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 6 (mining))"))
 
         self.log.info("Waiting final commitment")
         self.wait_for_quorum_commitment(q, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done final commitment"))
