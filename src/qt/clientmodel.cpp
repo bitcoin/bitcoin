@@ -23,8 +23,6 @@
 #include <QDebug>
 #include <QThread>
 #include <QTimer>
-// SYSCOIN
-#include <masternode/masternodesync.h>
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
 
@@ -102,10 +100,9 @@ CDeterministicMNList ClientModel::getMasternodeList() const
 void ClientModel::refreshMasternodeList()
 {
     LOCK(cs_mnlinst);
-    CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
-    setMasternodeList(mnList);
+    setMasternodeList(m_node.evo().getListAtChainTip());
 }
+
 int ClientModel::getHeaderTipHeight() const
 {
     if (cachedBestHeaderHeight == -1) {

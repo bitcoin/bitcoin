@@ -7,7 +7,6 @@
 #include <coins.h>
 #include <qt/guiutil.h>
 #include <init.h>
-#include <masternode/masternodesync.h>
 #include <netbase.h>
 #include <sync.h>
 #include <validation.h>
@@ -140,7 +139,7 @@ void MasternodeList::updateDIP3ListScheduled()
             fFilterUpdatedDIP3 = false;
         }
     } else if (mnListChanged) {
-        int64_t nMnListUpdateSecods = masternodeSync.IsBlockchainSynced() ? MASTERNODELIST_UPDATE_SECONDS : MASTERNODELIST_UPDATE_SECONDS*10;
+        int64_t nMnListUpdateSecods = clientModel->masternodeSync().isBlockchainSynced() ? MASTERNODELIST_UPDATE_SECONDS : MASTERNODELIST_UPDATE_SECONDS*10;
         int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + nMnListUpdateSecods;
 
         if (nSecondsToWait <= 0) {

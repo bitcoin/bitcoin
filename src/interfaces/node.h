@@ -49,6 +49,28 @@ struct BlockAndHeaderTipInfo
     int64_t header_time;
     double verification_progress;
 };
+// SYSCOIN
+//! Interface for the src/evo part of a syscoin node (syscoind process).
+class EVO
+{
+public:
+    virtual ~EVO() {}
+    virtual CDeterministicMNList getListAtChainTip() = 0;
+};
+
+
+//! Interface for the src/masternode part of a syscoin node (syscoind process).
+namespace Masternode
+{
+class Sync
+{
+public:
+    virtual ~Sync() {}
+    virtual bool isBlockchainSynced() = 0;
+    virtual bool isSynced() = 0;
+    virtual std::string getSyncStatus() =  0;
+};
+}
 
 //! Top-level interface for a syscoin node (syscoind process).
 class Node
@@ -176,6 +198,12 @@ public:
 
     //! Get wallet client.
     virtual WalletClient& walletClient() = 0;
+    // SYSCOIN
+    //! Return interface for accessing evo related handler.
+    virtual EVO& evo() = 0;
+
+    //! Return interface for accessing masternode related handler.
+    virtual Masternode::Sync& masternodeSync() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

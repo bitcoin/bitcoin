@@ -41,9 +41,40 @@
 #include <univalue.h>
 
 #include <boost/signals2/signal.hpp>
+// SYSCOIN
+#include <evo/deterministicmns.h>
+#include <masternode/masternodesync.h>
 
 namespace interfaces {
 namespace {
+// SYSCOIN
+class EVOImpl : public EVO
+{
+public:
+    CDeterministicMNList getListAtChainTip() override
+    {
+        CDeterministicMNList mnList;
+        deterministicMNManager->GetListAtChainTip(mnList);
+        return mnList;
+    }
+};
+
+class MasternodeSyncImpl : public Masternode::Sync
+{
+public:
+    bool isSynced()
+    {
+        return masternodeSync.IsSynced();
+    }
+    bool isBlockchainSynced()
+    {
+        return masternodeSync.IsBlockchainSynced();
+    }
+    std::string getSyncStatus()
+    {
+        return masternodeSync.GetSyncStatus().original;
+    }
+};
 
 class NodeImpl : public Node
 {

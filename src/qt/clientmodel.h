@@ -54,6 +54,8 @@ public:
     ~ClientModel();
 
     interfaces::Node& node() const { return m_node; }
+    // SYSCOIN
+    interfaces::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();

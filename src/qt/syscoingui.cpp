@@ -63,7 +63,6 @@
 #include <QVBoxLayout>
 #include <QWindow>
 // SYSCOIN
-#include <masternode/masternodesync.h>
 #include <qt/masternodelist.h>
 #include <QStringList>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
@@ -1086,7 +1085,7 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
     }
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!m_node.masternodeSync().isBlockchainSynced())
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
@@ -1135,7 +1134,7 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         return;
 
     // No additional data sync should be happening while blockchain is not synced, nothing to update
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!m_node.masternodeSync().isBlockchainSynced())
         return;
    // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
     statusBar()->clearMessage();
@@ -1149,7 +1148,7 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-    if(masternodeSync.IsSynced()) {
+     if (m_node.masternodeSync().isSynced()) {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
         labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
@@ -1165,7 +1164,7 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
     }
 
-    strSyncStatus = QString::fromStdString(masternodeSync.GetSyncStatus().original);
+    strSyncStatus = QString::fromStdString(m_node.masternodeSync().getSyncStatus());
     progressBarLabel->setText(strSyncStatus);
     tooltip = strSyncStatus + QString("<br>") + tooltip;
 
