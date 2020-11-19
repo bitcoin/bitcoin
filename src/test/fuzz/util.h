@@ -98,7 +98,8 @@ NODISCARD inline CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider) 
 
 NODISCARD inline int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:00Z");
+    // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) is a no-op.
+    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:01Z");
     static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
     return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(time_min, time_max);
 }
