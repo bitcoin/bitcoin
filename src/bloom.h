@@ -109,7 +109,18 @@ public:
  * insert()'ed ... but may also return true for items that were not inserted.
  *
  * It needs around 1.8 bytes per element per factor 0.1 of false positive rate.
- * (More accurately: 3/(log(256)*log(2)) * log(1/fpRate) * nElements bytes)
+ * For example, if we want 1000 elements, we'd need:
+ * - ~1800 bytes for a false positive rate of 0.1
+ * - ~3600 bytes for a false positive rate of 0.01
+ * - ~5400 bytes for a false positive rate of 0.001
+ *
+ * If we make these simplifying assumptions:
+ * - logFpRate / log(0.5) doesn't get rounded or clamped in the nHashFuncs calculation
+ * - nElements is even, so that nEntriesPerGeneration == nElements / 2
+ *
+ * Then we get a more accurate estimate for filter bytes:
+ *
+ *     3/(log(256)*log(2)) * log(1/fpRate) * nElements
  */
 class CRollingBloomFilter
 {
