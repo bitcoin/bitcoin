@@ -1,11 +1,14 @@
-Dash Core version 0.15
+Dash Core version 0.16
 ======================
 
 Release is now available from:
 
   <https://www.dash.org/downloads/#wallets>
 
-This is a new major version release, bringing new features, various bugfixes and other improvements.
+This is a new major version release, bringing new features, various bugfixes
+and other improvements.
+
+This release is mandatory for all nodes.
 
 Please report bugs using the issue tracker at github:
 
@@ -23,492 +26,578 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Dash-Qt (on Mac) or
 dashd/dash-qt (on Linux). If you upgrade after DIP0003 activation and you were
 using version < 0.13 you will have to reindex (start with -reindex-chainstate
-or -reindex) to make sure your wallet has all the new data synced. Upgrading from
-version 0.13 should not require any additional actions.
+or -reindex) to make sure your wallet has all the new data synced. Upgrading
+from version 0.13 should not require any additional actions.
 
 When upgrading from a version prior to 0.14.0.3, the
-first startup of Dash Core will run a migration process which can take a few minutes
-to finish. After the migration, a downgrade to an older version is only possible with
-a reindex (or reindex-chainstate).
+first startup of Dash Core will run a migration process which can take a few
+minutes to finish. After the migration, a downgrade to an older version is only
+possible with a reindex (or reindex-chainstate).
 
 Downgrade warning
 -----------------
 
 ### Downgrade to a version < 0.14.0.3
 
-Downgrading to a version smaller than 0.14.0.3 is not supported anymore due to changes
-in the "evodb" database format. If you need to use an older version, you have to perform
-a reindex or re-sync the whole chain.
+Downgrading to a version older than 0.14.0.3 is no longer supported due to
+changes in the "evodb" database format. If you need to use an older version,
+you must either reindex or re-sync the whole chain.
+
+### Downgrade of masternodes to < 0.16
+
+Starting with this release, masternodes will verify the protocol version of other
+masternodes. This will result in PoSe punishment/banning for outdated masternodes,
+so downgrading is not recommended.
 
 Notable changes
 ===============
 
-Removal of the p2p alert system
--------------------------------
-The p2p alert system was designed to send messages to all nodes supporting it by someone who holds
-so called alert keys to notify such nodes in case of severe network issues. This version removes
-the `alert` p2p message and `--alert` option. Internal alerts, partition detection warnings and the
-`--alertnotify` option features remain.
-
-Removal of the legacy InstantSend system
-----------------------------------------
-Version 0.14 introduced the new LLMQ-based InstantSend system which is designed to be much more scalable
-than the legacy one without sacrificing security. The new system also allows all transactions to be treated as
-InstantSend transactions. The legacy system was disabled together with the successful deployment of ChainLocks,
-but we had to keep supporting the legacy system for a while to ensure a smooth transition period. This version finally drops
-the legacy system completely.
-
-Read more about ChainLocks: https://github.com/dashpay/dips/blob/master/dip-0008.md
-Read more about LLMQ-based InstantSend: https://github.com/dashpay/dips/blob/master/dip-0010.md
-
-Sporks
-------
-The security level of ChainLocks and LLMQ-based InstantSend made sporks `SPORK_5_INSTANTSEND_MAX_VALUE` and
-`SPORK_12_RECONSIDER_BLOCKS` obsolete, so they are removed now. Sporks `SPORK_15_DETERMINISTIC_MNS_ENABLED`,
-`SPORK_16_INSTANTSEND_AUTOLOCKS` and `SPORK_20_INSTANTSEND_LLMQ_BASED` have no code logic behind them anymore
-because they were used as part of the DIP0003, DIP0008 and DIP0010 activation process which is finished now.
-They are still kept and relayed only to ensure smooth operation of v0.14 clients and will be removed in some
-future version.
-
-Mempool sync improvements
+Block Reward Reallocation
 -------------------------
-Nodes joining the network will now try to sync their mempool from other v0.15+ peers via the `mempool` p2p message.
-This behaviour can be disabled via the new `--syncmempool` option. Nodes serving such requests will now also push
-`inv` p2p messages for InstandSend locks which are held for transactions in their mempool. These two changes
-should help new nodes to quickly catchup on start and detect any potential double-spend as soon as possible.
-This should also help wallets to slightly improve UX by showing the correct status of unconfirmed transactions
-locked via InstandSend, if they were sent while the receiving wallet was offline. Note that bloom-filters
-still apply to such `inv` messages, just like they do for transactions and locks that are relayed on a
-regular basis.
+This version implements Block Reward Reallocation which was proposed in order
+to slow the growth rate of Dash’s circulating supply by encouraging the
+formation of masternodes and was voted in by the network. The resulting allocation
+will split all non-proposal block rewards 40% toward miners and 60% toward
+masternodes in the end-state once the transition period is complete.
 
-PrivateSend improvements
-------------------------
-This version decouples the so called "Lite Mode" and client-side PrivateSend mixing, which allows client-side mixing
-on pruned nodes running with `--litemode` option. Such nodes will have to also specify the newly redefined
-`--enableprivatesend` option. Non-prunned nodes do not have to do this but they can use `--enableprivatesend`
-option to disable mixing completely instead. Please note that specifying this option does not start mixing
-automatically anymore (which was the case in previous versions). To automatically start mixing, use the new
-`--privatesendautostart` option in addition to `--enableprivatesend`. Additionally, PrivateSend can always be
-controlled with the `privatesend` RPC.
+The reallocation will take place over 4.5 years with a total of 18 reallocation
+periods between the start and end state. The transition is being made gradually
+to avoid market volatility and minimize network disruption.
 
-Thanks to LLMQ-based InstantSend and its ability to lock chains of unconfirmed transactions (and not only a single
-one like in the legacy system), PrivateSend mixing speed has improved significantly. In such an environment
-Liquidity Provider Mode, which was introduced a long time ago to support mixing volume, is no longer needed and
-is removed now. As such the `--liquidityprovider` option is not available anymore.
+Note that this is a hardfork which must be activated by miners. To do this they
+should start creating blocks signalling bit 5 in the `version` field of the block header.
 
-Some other improvements were also introduced to speed up mixing, e.g. by joining more queues or dropping potential
-malicious mixing participants faster by checking some rules earlier etc. Lots of related code was refactored to
-further improve its readability, which should make it easier for someone to re-implement PrivateSend
-correctly in other wallets if there is a desire to do so.
+### Reallocation periods
 
-Wallet changes
---------------
-Wallet internals were optimized to significantly improve performance which should be especially notable for huge
-wallets with tens of thousands of transactions or more. The GUI for such wallets should be much more responsive too now.
+Each reallocation period will last three superblock cycles (approximately one
+quarter). The following table shows the split of the non-proposal block rewards during
+each period.
 
-Running Masternodes from local wallets was deprecated a long time ago and starting from this version we disable
-wallet functionality on Masternodes completely.
+|Event|Miner|Masternode|
+|--|-----|-----|
+|Now|50.0%|50.0%|
+|1 |48.7%|51.3%|
+|2 |47.4%|52.6%|
+|3 |46.7%|53.3%|
+|4 |46.0%|54.0%|
+|5 |45.4%|54.6%|
+|6 |44.8%|55.2%|
+|7 |44.3%|55.7%|
+|8 |43.8%|56.2%|
+|9 |43.3%|56.7%|
+|10|42.8%|57.2%|
+|11|42.3%|57.7%|
+|12|41.8%|58.2%|
+|13|41.5%|58.5%|
+|14|41.2%|58.8%|
+|15|40.9%|59.1%|
+|16|40.6%|59.4%|
+|17|40.3%|59.7%|
+|18|40.1%|59.9%|
+|End|40.0%|60.0%|
 
-GUI changes
------------
-The Qt GUI went through a refresh to follow branding color guides and to make it feel lighter. All old themes besides
-the Traditional one (the one with a minimal styling) were removed and instead a new Dark theme was added.
+Dynamic Activation Thresholds
+-----------------------------
+In Dash we have used lower thresholds (80% vs 95% in BTC) to activate upgrades
+via a BIP9-like mechanism for quite some time. While it's preferable to have as much
+of the network hashrate signal update readiness as possible, this can result in
+quite lengthy upgrades if one large non-upgraded entity stalls
+all progress. Simply lowering thresholds even further can result in network
+upgrades occurring too quickly and potentially introducing network instability. This version
+implements BIP9-like dynamic activation thresholds which drop from some initial
+level to a minimally acceptable one over time at an increasing rate. This provides
+a safe non-blocking way of activating proposals.
 
-In this version we made a lot of optimizations to remove various lags and lockups, the GUI in general should feel
-much more smoother now, especially for huge wallets or when navigating through the masternode list. The latter has
-a few new columns (collateral, owner and voting addresses) which give more options to filter and/or sort the list.
-All issues with hi-dpi monitors should also be fixed now.
+This mechanism applies to the Block Reward Reallocation proposal mentioned above.
+Its initial threshold is 80% and it will decrease to a minimum of 60% over the
+course of 10 periods. Each period is 4032 blocks (approximately one week).
 
-The "Send" popup dialog was slightly tweaked to improve the language and provide a bit more information about inputs
-included in the transaction, its size and the actual resulting fee rate. It will also show the number of inputs
-a PrivateSend transaction is going to consume and display a warning regarding sender privacy if this number is 10
-or higher.
-
-Changes in regtest and devnet p2p/rpc ports
--------------------------------------------
-Default p2p and rpc ports for devnets and regtest were changed to ensure their consistency and to avoid
-any potential interference with bitcoin's regtests. New default p2p/rpc ports for devnet are 19799/19798,
-for regtest - 19899/19898 respectively.
-
-ZMQ changes
------------
-Added two new messages `rawchainlocksig` and `rawtxlocksig` which return the raw data of the block/transaction
-concatenated with the corresponding `clsig`/`islock` message respectively.
-
-Crash reports and stack traces
-------------------------------
-Binaries built with Gitian (including all official releases) will from now on always have crash reports and
-crash hooks enabled. This means, that all binaries will print some information about the stack trace at the
-time of a crash. If no debug information is present at crash time (which is usually the case), the binaries
-will print a line that looks like this:
-```
-2020-01-06 14:41:08 Windows Exception: EXCEPTION_ACCESS_VIOLATION
-No debug information available for stacktrace. You should add debug information and then run:
-dashd.exe -printcrashinfo=bvcgc43iinzgc43ijfxgm3yba....
-```
-If you encounter such a crash, include these lines when you report the crash and we will be able to debug it
-further. Anyone interested in running the specified `-printcrashinfo` command can do so after copying the debug info
-file from the Gitian build to the same place where the binary is located. This will then print a detailed stack
-trace.
-
-RPC changes
------------
-There are a few changes in existing RPC interfaces in this release:
-- no more `instantsend` field in various RPC commands
-- `use-IS`, `use_is` and `instantsend` options are deprecated in various RPC commands and have no effect anymore
-- added new `merkleRootQuorums` field in `getblock` RPC results
-- individual Dash-specific fields which were used to display soft-fork progress in `getblockchaininfo` are replaced
- with the backported `statistics` object
-- `privatesend_balance` field is shown in all related RPC results regardless of the Lite Mode or PrivateSend state
-- added `pubKeyOperator` field for each masternode in `quorum info` RPC response
-
-There are also new RPC commands:
-- `getbestchainlock`
-- `getmerkleblocks`
-- `getprivatesendinfo`
-
-`getpoolinfo` was deprecated in favor of `getprivatesendinfo` and no longer returns any data.
-
-There are also new RPC commands backported from Bitcoin Core 0.15:
-- `abortrescan`
-- `combinerawtransaction`
-- `getblockstats`
-- `getchaintxstats`
-- `listwallets`
-- `logging`
-- `uptime`
-
-Make sure to check Bitcoin Core 0.15 release notes in a [section](#backports-from-bitcoin-core-015) below
-for more RPC changes.
-
-See `help command` in rpc for more info.
-
-Command-line options
---------------------
-Changes in existing cmd-line options:
-- `--enableprivatesend` option has a new meaning now, see [PrivateSend](#privatesend) section for more info
-
-New cmd-line options:
-- `--printcrashinfo`
-- `--syncmempool`
-- `--privatesendautostart`
-
-Few cmd-line options are no longer supported:
-- `--alerts`
-- `--masternode`, deprecated, specifying `--masternodeblsprivkey` option alone is enough to enable masternode mode now
-- `--liquidityprovider`
-- `--enableinstantsend`, dropped due to removal of the Legacy InstantSend
-
-Make sure to check Bitcoin Core 0.15 release notes in a [section](#backports-from-bitcoin-core-015) below
-for more changes in command-line options.
-
-See `Help -> Command-line options` in Qt wallet or `dashd --help` for more info.
-
-Build system
-------------
-This version always includes stacktraces in binaries now, `--enable-stacktraces` option is no longer available.
-Instead you can choose if you want to hook crash reporting into various types of crashes by using `--enable-crash-hooks`
-option (default is `no`). When using this option on macOS make sure to build binaries with `make -C src osx_debug`.
-
-Backports from Bitcoin Core 0.15
---------------------------------
-
-Most of the changes between Bitcoin Core 0.14 and Bitcoin Core 0.15 have been backported into Dash Core 0.15.
-We only excluded backports which do not align with Dash, like SegWit or RBF related changes.
-
-You can read about changes brought by backporting from Bitcoin Core 0.15 in following docs:
-- https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.15.0.md
-- https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.15.1.md
-
-Some other individual PRs were backported from versions 0.16+, you can find the full list of backported PRs
-and additional fixes in https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.15-backports.md
-
-Miscellaneous
--------------
-A lot of refactoring, backports, code cleanups and other small fixes were done in this release. Dash-specific
-modules were reorganized in separate folders to make navigation through code a bit easier.
-
-0.15 Change log
-===============
-
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.5...dashpay:v0.15.0.0).
-
-- [`3c055bf79`](https://github.com/dashpay/dash/commit/3c055bf79) Bump nMinimumChainWork and defaultAssumeValid (#3336)
-- [`818e7a6f7`](https://github.com/dashpay/dash/commit/818e7a6f7) Update release notes
-- [`9d5c3d12e`](https://github.com/dashpay/dash/commit/9d5c3d12e) Try to actually accept newly created dstx-es into masternode's mempool (#3332)
-- [`f23e722da`](https://github.com/dashpay/dash/commit/f23e722da) Switch CLIENT_VERSION_IS_RELEASE to `true` for v0.15 (#3306)
-- [`b57f1dac8`](https://github.com/dashpay/dash/commit/b57f1dac8) Update release notes
-- [`15c6df583`](https://github.com/dashpay/dash/commit/15c6df583) Bring back "about" menu icon (#3329)
-- [`2c30818f7`](https://github.com/dashpay/dash/commit/2c30818f7) Add pubKeyOperator to `quorum info` rpc response (#3327)
-- [`2bbf78c1b`](https://github.com/dashpay/dash/commit/2bbf78c1b) Update release-notes.md
-- [`2c305d02d`](https://github.com/dashpay/dash/commit/2c305d02d) Update translations 2020-02-03 (#3322)
-- [`672e18e48`](https://github.com/dashpay/dash/commit/672e18e48) Only sync mempool from v0.15+ (proto 70216+) nodes (#3321)
-- [`829bde81e`](https://github.com/dashpay/dash/commit/829bde81e) Fix dark text on dark background in combobox dropdowns on windows (#3315)
-- [`c0a671e84`](https://github.com/dashpay/dash/commit/c0a671e84) Fix node protection logic false positives (#3314)
-- [`8d5fc6e0a`](https://github.com/dashpay/dash/commit/8d5fc6e0a) Merge #13162: [net] Don't incorrectly log that REJECT messages are unknown.
-- [`9e711befd`](https://github.com/dashpay/dash/commit/9e711befd) More of 13946
-- [`e5e3572e9`](https://github.com/dashpay/dash/commit/e5e3572e9) Merge #13946: p2p: Clarify control flow in ProcessMessage
-- [`dbbc51121`](https://github.com/dashpay/dash/commit/dbbc51121) Add `automake` package to dash-win-signer's packages list (#3307)
-- [`fd0f24335`](https://github.com/dashpay/dash/commit/fd0f24335) [Trivial] Release note update (#3308)
-- [`058872d4f`](https://github.com/dashpay/dash/commit/058872d4f) Update release-notes.md
-- [`546e69f1a`](https://github.com/dashpay/dash/commit/546e69f1a) Fix CActiveMasternodeManager::GetLocalAddress to prefer IPv4 if multiple local addresses are known (#3304)
-- [`e4ef7e8d0`](https://github.com/dashpay/dash/commit/e4ef7e8d0) Drop unused `invSet` in `CDKGSession` (#3303)
-- [`da7686c93`](https://github.com/dashpay/dash/commit/da7686c93) Update translations 2020-01-23 (#3302)
-- [`6b5d3edae`](https://github.com/dashpay/dash/commit/6b5d3edae) Fix dip4-coinbasemerkleroots.py race condition (#3297)
-- [`a8213cadb`](https://github.com/dashpay/dash/commit/a8213cadb) Various fixes for DSTX-es (#3295)
-- [`2c26bdf2d`](https://github.com/dashpay/dash/commit/2c26bdf2d) Update release-notes.md
-- [`1d9adbe63`](https://github.com/dashpay/dash/commit/1d9adbe63) Replace generic CScopedDBTransaction with specialized CEvoDBScopedCommitter (#3292)
-- [`8fd486c6b`](https://github.com/dashpay/dash/commit/8fd486c6b) Translations 2020-01 (#3192)
-- [`3c54f6527`](https://github.com/dashpay/dash/commit/3c54f6527) Bump copyright year to 2020 (#3290)
-- [`35d28c748`](https://github.com/dashpay/dash/commit/35d28c748) Update man pages (#3291)
-- [`203cc9077`](https://github.com/dashpay/dash/commit/203cc9077)  trivial: adding SVG and high contrast icons  (#3209)
-- [`e875d4925`](https://github.com/dashpay/dash/commit/e875d4925) Define defaultTheme and darkThemePrefix as constants and use them instead of plain strings (#3288)
-- [`1d203b422`](https://github.com/dashpay/dash/commit/1d203b422) Bump PROTOCOL_VERSION to 70216 (#3287)
-- [`b84482ac5`](https://github.com/dashpay/dash/commit/b84482ac5) Let regtest have its own qt settings (#3286)
-- [`1c885bbed`](https://github.com/dashpay/dash/commit/1c885bbed) Only load valid themes, fallback to "Light" theme otherwise (#3285)
-- [`ce924278d`](https://github.com/dashpay/dash/commit/ce924278d) Don't load caches when blocks/chainstate was deleted and also delete old caches (#3280)
-- [`ebf529e8a`](https://github.com/dashpay/dash/commit/ebf529e8a) Drop new connection instead of old one when duplicate MNAUTH is received (#3272)
-- [`817cd9a17`](https://github.com/dashpay/dash/commit/817cd9a17) AppInitMain should quit early and return `false` if shutdown was requested at some point (#3267)
-- [`42e104932`](https://github.com/dashpay/dash/commit/42e104932) Tweak few more strings re mixing and balances (#3265)
-- [`d30eeb6f8`](https://github.com/dashpay/dash/commit/d30eeb6f8) Use -Wno-psabi for arm builds on Travis/Gitlab (#3264)
-- [`1df3c67a8`](https://github.com/dashpay/dash/commit/1df3c67a8) A few fixes for integration tests (#3263)
-- [`6e50a7b2a`](https://github.com/dashpay/dash/commit/6e50a7b2a) Fix params.size() check in "protx list wallet" RPC (#3259)
-- [`1a1cec224`](https://github.com/dashpay/dash/commit/1a1cec224) Fix pull request detection in .gitlab-ci.yml (#3256)
-- [`31afa9c0f`](https://github.com/dashpay/dash/commit/31afa9c0f) Don't disconnect masternode connections when we have less then the desired amount of outbound nodes (#3255)
-- [`cecbbab3c`](https://github.com/dashpay/dash/commit/cecbbab3c) move privatesend rpc methods from rpc/masternode.cpp to new rpc/privatesend.cpp (#3253)
-- [`8e054f374`](https://github.com/dashpay/dash/commit/8e054f374) Sync mempool from other nodes on start (#3251)
-- [`474f25b8d`](https://github.com/dashpay/dash/commit/474f25b8d) Push islock invs when syncing mempool (#3250)
-- [`3b0f8ff8b`](https://github.com/dashpay/dash/commit/3b0f8ff8b) Skip mnsync restrictions for whitelisted and manually added nodes (#3249)
-- [`fd94e9c38`](https://github.com/dashpay/dash/commit/fd94e9c38) Streamline, refactor and unify PS checks for mixing entries and final txes (#3246)
-- [`c42b20097`](https://github.com/dashpay/dash/commit/c42b20097) Try to avoid being marked as a bad quorum member when we sleep for too long in SleepBeforePhase (#3245)
-- [`db6ea1de8`](https://github.com/dashpay/dash/commit/db6ea1de8) Fix log output in CDKGPendingMessages::PushPendingMessage (#3244)
-- [`416d85b29`](https://github.com/dashpay/dash/commit/416d85b29) Tolerate parent cache with empty cache-artifact directory (#3240)
-- [`0c9c27c6f`](https://github.com/dashpay/dash/commit/0c9c27c6f) Add ccache to gitian packages lists (#3237)
-- [`65206833e`](https://github.com/dashpay/dash/commit/65206833e) Fix menu bar text color in Dark theme (#3236)
-- [`7331d4edd`](https://github.com/dashpay/dash/commit/7331d4edd) Bump wait_for_chainlocked_block_all_nodes timeout in llmq-is-retroactive.py to 30 sec when mining lots of blocks at once (#3238)
-- [`dad102669`](https://github.com/dashpay/dash/commit/dad102669) Update static and dns seeds for mainnet and testnet (#3234)
-- [`9378c271b`](https://github.com/dashpay/dash/commit/9378c271b) Modify makesseeds.py to work with "protx list valid 1" instead of "masternode list (#3235)
-- [`91a996e32`](https://github.com/dashpay/dash/commit/91a996e32) Make sure mempool txes are properly processed by CChainLocksHandler despite node restarts (#3226)
-- [`2b587f0eb`](https://github.com/dashpay/dash/commit/2b587f0eb) Slightly refactor CDKGSessionHandler::SleepBeforePhase (#3224)
-- [`fdb05860e`](https://github.com/dashpay/dash/commit/fdb05860e) Don't join thread in CQuorum::~CQuorum when called from within the thread (#3223)
-- [`4c00d98ea`](https://github.com/dashpay/dash/commit/4c00d98ea) Allow re-signing of IS locks when performing retroactive signing (#3219)
-- [`b4b9d3467`](https://github.com/dashpay/dash/commit/b4b9d3467) Tests: Fix the way nodes are connected to each other in setup_network/start_masternodes (#3221)
-- [`dfe99c950`](https://github.com/dashpay/dash/commit/dfe99c950) Decouple cs_mnauth/cs_main (#3220)
-- [`08f447af9`](https://github.com/dashpay/dash/commit/08f447af9) Tests: Allow specifying different cmd-line params for each masternode (#3222)
-- [`9dad60386`](https://github.com/dashpay/dash/commit/9dad60386) Tweak "Send" popup and refactor related code a bit (#3218)
-- [`bb7a32d2e`](https://github.com/dashpay/dash/commit/bb7a32d2e) Add Dark theme (#3216)
-- [`05ac4dbb4`](https://github.com/dashpay/dash/commit/05ac4dbb4) Dashify few strings (#3214)
-- [`482a549a2`](https://github.com/dashpay/dash/commit/482a549a2) Add collateral, owner and voting addresses to masternode list table (#3207)
-- [`37f96f5a3`](https://github.com/dashpay/dash/commit/37f96f5a3) Bump version to 0.15 and update few const-s/chainparams (#3204)
-- [`9de994988`](https://github.com/dashpay/dash/commit/9de994988) Compliance changes to terminology (#3211)
-- [`d475f17bc`](https://github.com/dashpay/dash/commit/d475f17bc) Fix styles for progress dialogs, shutdown window and text selection (#3212)
-- [`df372ec5f`](https://github.com/dashpay/dash/commit/df372ec5f) Fix off-by-one error for coinbase txes confirmation icons (#3206)
-- [`1e94e3333`](https://github.com/dashpay/dash/commit/1e94e3333) Fix styling for disabled buttons (#3205)
-- [`7677b5578`](https://github.com/dashpay/dash/commit/7677b5578) Actually apply CSS styling to RPC console (#3201)
-- [`63cc22d5e`](https://github.com/dashpay/dash/commit/63cc22d5e) More Qt tweaks (#3200)
-- [`7aa9c43f8`](https://github.com/dashpay/dash/commit/7aa9c43f8) Few Qt tweaks (#3199)
-- [`fd50c1c71`](https://github.com/dashpay/dash/commit/fd50c1c71) Hold cs_main/cs_wallet in main MakeCollateralAmounts (#3197)
-- [`460e0f475`](https://github.com/dashpay/dash/commit/460e0f475) Fix locking of funds for mixing (#3194)
-- [`415b81e41`](https://github.com/dashpay/dash/commit/415b81e41) Refactor some pow functions (#3198)
-- [`b2fed3862`](https://github.com/dashpay/dash/commit/b2fed3862) A few trivial fixes for RPCs (#3196)
-- [`f8296364a`](https://github.com/dashpay/dash/commit/f8296364a) Two trivial fixes for logs (#3195)
-- [`d5cc88f00`](https://github.com/dashpay/dash/commit/d5cc88f00) Should mark tx as a PS one regardless of change calculations in CreateTransaction (#3193)
-- [`e9235b9bb`](https://github.com/dashpay/dash/commit/e9235b9bb) trivial: Rename txid paramater for gobject voteraw (#3191)
-- [`70b320bab`](https://github.com/dashpay/dash/commit/70b320bab) Detect masternode mode from masternodeblsprivkey arg (#3188)
-- [`1091ab3c6`](https://github.com/dashpay/dash/commit/1091ab3c6) Translations201909 (#3107)
-- [`251fb5e69`](https://github.com/dashpay/dash/commit/251fb5e69) Slightly optimize ApproximateBestSubset and its usage for PS txes (#3184)
-- [`a55624b25`](https://github.com/dashpay/dash/commit/a55624b25) Fix 3182: Append scrollbar styles (#3186)
-- [`1bbe1adb4`](https://github.com/dashpay/dash/commit/1bbe1adb4) Add a simple test for payoutAddress reuse in `protx update_registrar` (#3183)
-- [`372389d23`](https://github.com/dashpay/dash/commit/372389d23) Disable styling for scrollbars on macos (#3182)
-- [`e0781095f`](https://github.com/dashpay/dash/commit/e0781095f) A couple of fixes for additional indexes (#3181)
-- [`d3ce0964b`](https://github.com/dashpay/dash/commit/d3ce0964b) Add Qt GUI refresh w/branding updates (#3000)
-- [`9bc699ff2`](https://github.com/dashpay/dash/commit/9bc699ff2) Update activemn if protx info changed (#3176)
-- [`bbd9b10d4`](https://github.com/dashpay/dash/commit/bbd9b10d4) Refactor nonLockedTxsByInputs (#3178)
-- [`64a913d6f`](https://github.com/dashpay/dash/commit/64a913d6f) Allow empty strings in `protx update_registrar` as an option to re-use current values (#3177)
-- [`3c21d2577`](https://github.com/dashpay/dash/commit/3c21d2577) Slightly adjust some README.md files (#3175)
-- [`883fcbe8b`](https://github.com/dashpay/dash/commit/883fcbe8b) Always run extended tests in Gitlab CI (#3173)
-- [`a7492c1d3`](https://github.com/dashpay/dash/commit/a7492c1d3) Handle coin type via CCoinControl (#3172)
-- [`0d1a04905`](https://github.com/dashpay/dash/commit/0d1a04905) Don't show individual messages for each TX when too many come in at once (#3170)
-- [`589c89250`](https://github.com/dashpay/dash/commit/589c89250) Fix 2 more bottlenecks causing GUI lockups (#3169)
-- [`dfd6ee472`](https://github.com/dashpay/dash/commit/dfd6ee472) Actually update spent index on DisconnectBlock (#3167)
-- [`3c818e95b`](https://github.com/dashpay/dash/commit/3c818e95b) Only track last seen time instead of first and last seen time (#3165)
-- [`df3dbe85b`](https://github.com/dashpay/dash/commit/df3dbe85b) Wait for sporks to propagate in llmq-chainlocks.py before mining new blocks (#3168)
-- [`8cbd63d9e`](https://github.com/dashpay/dash/commit/8cbd63d9e) Make HD wallet warning a bit more natural (#3164)
-- [`001c4338b`](https://github.com/dashpay/dash/commit/001c4338b) Improved messaging for ip address errors (#3163)
-- [`33d04ebf2`](https://github.com/dashpay/dash/commit/33d04ebf2) Disable move ctor/operator for CKeyHolder (#3162)
-- [`da2f503a4`](https://github.com/dashpay/dash/commit/da2f503a4) Fix largest part of GUI lockups with large wallets (#3155)
-- [`3c6b5f98e`](https://github.com/dashpay/dash/commit/3c6b5f98e) Use wallet UTXOs whenever possible to avoid looping through all wallet txes (#3156)
-- [`4db91c605`](https://github.com/dashpay/dash/commit/4db91c605) Fix Gitlab cache issues (#3160)
-- [`e9ed35482`](https://github.com/dashpay/dash/commit/e9ed35482) Partially revert 3061 (#3150)
-- [`4b6af8f2c`](https://github.com/dashpay/dash/commit/4b6af8f2c) Few fixes related to SelectCoinsGroupedByAddresses (#3144)
-- [`859d60f81`](https://github.com/dashpay/dash/commit/859d60f81) Don't use $CACHE_DIR in after_script (#3159)
-- [`be127bc2e`](https://github.com/dashpay/dash/commit/be127bc2e) Replace vecAskFor with a priority queue (#3147)
-- [`a13a9182d`](https://github.com/dashpay/dash/commit/a13a9182d) Add missing "notfound" and "getsporks" to messagemap (#3146)
-- [`efd8d2c82`](https://github.com/dashpay/dash/commit/efd8d2c82) Avoid propagating InstantSend related old recovered sigs (#3145)
-- [`24fee3051`](https://github.com/dashpay/dash/commit/24fee3051) Add support for Gitlab CI (#3149)
-- [`1cbe280ad`](https://github.com/dashpay/dash/commit/1cbe280ad) Qt: Remove old themes (#3141)
-- [`dcdf1f3a6`](https://github.com/dashpay/dash/commit/dcdf1f3a6) Some refactoring for spork related functionality in tests (#3137)
-- [`411241471`](https://github.com/dashpay/dash/commit/411241471) Introduce getprivatesendinfo and deprecate getpoolinfo (#3140)
-- [`152c10bc4`](https://github.com/dashpay/dash/commit/152c10bc4) Various fixes for mixing queues (#3138)
-- [`e0c56246f`](https://github.com/dashpay/dash/commit/e0c56246f) Fixes and refactorings related to using mnsync in tests (#3136)
-- [`f8e238c5b`](https://github.com/dashpay/dash/commit/f8e238c5b) [Trivial] RPC help updates (#3134)
-- [`d49ee618f`](https://github.com/dashpay/dash/commit/d49ee618f) Add more logging to DashTestFramework (#3130)
-- [`cd6c5b4b4`](https://github.com/dashpay/dash/commit/cd6c5b4b4) Multiple fixes for ChainLock tests (#3129)
-- [`e06c116d2`](https://github.com/dashpay/dash/commit/e06c116d2) Actually pass extra_args to nodes in assumevalid.py (#3131)
-- [`737ac967f`](https://github.com/dashpay/dash/commit/737ac967f) Refactor some Dash-specific `wait_for*` functions in tests (#3122)
-- [`b4aefb513`](https://github.com/dashpay/dash/commit/b4aefb513) Also consider txindex for transactions in AlreadyHave() (#3126)
-- [`d9e98e31e`](https://github.com/dashpay/dash/commit/d9e98e31e) Fix scripted diff check condition (#3128)
-- [`bad3243b8`](https://github.com/dashpay/dash/commit/bad3243b8) Bump mocktime before generating new blocks and generate a few blocks at the end of `test_mempool_doublespend` in `p2p-instantsend.py` (#3125)
-- [`82ebba18f`](https://github.com/dashpay/dash/commit/82ebba18f) Few fixes for `wait_for_instantlock` (#3123)
-- [`a2fa9bb7e`](https://github.com/dashpay/dash/commit/a2fa9bb7e) Ignore recent rejects filter for locked txes (#3124)
-- [`2ca2138fc`](https://github.com/dashpay/dash/commit/2ca2138fc) Whitelist nodes in llmq-dkgerrors.py (#3112)
-- [`a8fa5cff9`](https://github.com/dashpay/dash/commit/a8fa5cff9) Make orphan TX map limiting dependent on total TX size instead of TX count (#3121)
-- [`746b5f8cd`](https://github.com/dashpay/dash/commit/746b5f8cd) Remove commented out code (#3117)
-- [`3ac583cce`](https://github.com/dashpay/dash/commit/3ac583cce) docs: Add packages for building in Alpine Linux (#3115)
-- [`c5da93851`](https://github.com/dashpay/dash/commit/c5da93851) A couple of minor improvements in IS code (#3114)
-- [`43b7c31d9`](https://github.com/dashpay/dash/commit/43b7c31d9) Wait for the actual best block chainlock in llmq-chainlocks.py (#3109)
-- [`22ac6ba4e`](https://github.com/dashpay/dash/commit/22ac6ba4e) Make sure chainlocks and blocks are propagated in llmq-is-cl-conflicts.py before moving to next steps (#3108)
-- [`9f1ee8c70`](https://github.com/dashpay/dash/commit/9f1ee8c70) scripted-diff: Refactor llmq type consensus param names (#3093)
-- [`1c74b668b`](https://github.com/dashpay/dash/commit/1c74b668b) Introduce getbestchainlock rpc and fix llmq-is-cl-conflicts.py (#3094)
-- [`ac0270871`](https://github.com/dashpay/dash/commit/ac0270871) Respect `logips` config option in few more log outputs (#3078)
-- [`d26b6a84c`](https://github.com/dashpay/dash/commit/d26b6a84c) Fix a couple of issues with PS fee calculations (#3077)
-- [`40399fd97`](https://github.com/dashpay/dash/commit/40399fd97) Circumvent BIP69 sorting in fundrawtransaction.py test (#3100)
-- [`e2d651f60`](https://github.com/dashpay/dash/commit/e2d651f60) Add OpenSSL termios fix for musl libc (#3099)
-- [`783653f6a`](https://github.com/dashpay/dash/commit/783653f6a) Ensure execinfo.h and linker flags set in autoconf (#3098)
-- [`7320c3da2`](https://github.com/dashpay/dash/commit/7320c3da2) Refresh zmq 4.1.5 patches (#3092)
-- [`822e617be`](https://github.com/dashpay/dash/commit/822e617be) Fix chia_bls include prefix (#3091)
-- [`35f079cbf`](https://github.com/dashpay/dash/commit/35f079cbf) Remove unused code (#3097)
-- [`1acde17e8`](https://github.com/dashpay/dash/commit/1acde17e8) Don't care about governance cache while the blockchain isn't synced yet (#3089)
-- [`0d126c2ae`](https://github.com/dashpay/dash/commit/0d126c2ae) Use chainparams factory for devnet (#3087)
-- [`ac90abe89`](https://github.com/dashpay/dash/commit/ac90abe89) When mixing, always try to join an exsisting queue, only fall back to starting a new queue (#3085)
-- [`68d575dc0`](https://github.com/dashpay/dash/commit/68d575dc0) Masternodes should have no wallet enabled (#3084)
-- [`6b5b70fab`](https://github.com/dashpay/dash/commit/6b5b70fab) Remove liquidity provider privatesend (#3082)
-- [`0b2221ed6`](https://github.com/dashpay/dash/commit/0b2221ed6) Clarify default max peer connections (#3081)
-- [`c22169d57`](https://github.com/dashpay/dash/commit/c22169d57) Reduce non-debug PS log output (#3076)
-- [`41ae1c7e2`](https://github.com/dashpay/dash/commit/41ae1c7e2) Add LDFLAGS_WRAP_EXCEPTIONS to dash_fuzzy linking (#3075)
-- [`77b88558e`](https://github.com/dashpay/dash/commit/77b88558e) Update/modernize macOS plist (#3074)
-- [`f1ff14818`](https://github.com/dashpay/dash/commit/f1ff14818) Fix bip69 vs change position issue (#3063)
-- [`9abc39383`](https://github.com/dashpay/dash/commit/9abc39383) Refactor few things here and there (#3066)
-- [`3d5eabcfb`](https://github.com/dashpay/dash/commit/3d5eabcfb) Update/unify `debug` and `logging` rpc descriptions (#3071)
-- [`0e94e97cc`](https://github.com/dashpay/dash/commit/0e94e97cc) Add missing tx `type` to `TxToUniv` (#3069)
-- [`becca24fc`](https://github.com/dashpay/dash/commit/becca24fc) Few fixes in docs/comments (#3068)
-- [`9d109d6a3`](https://github.com/dashpay/dash/commit/9d109d6a3) Add missing `instantlock`/`instantlock_internal` to `getblock`'s `verbosity=2` mode (#3067)
-- [`0f088d03a`](https://github.com/dashpay/dash/commit/0f088d03a) Change regtest and devnet p2p/rpc ports (#3064)
-- [`190542256`](https://github.com/dashpay/dash/commit/190542256) Rework govobject/trigger cleanup a bit (#3070)
-- [`386de78bc`](https://github.com/dashpay/dash/commit/386de78bc) Fix SelectCoinsMinConf to allow instant respends (#3061)
-- [`cbbeec689`](https://github.com/dashpay/dash/commit/cbbeec689) RPC Getrawtransaction fix (#3065)
-- [`1e3496799`](https://github.com/dashpay/dash/commit/1e3496799) Added getmemoryinfo parameter string update (#3062)
-- [`9d2d8cced`](https://github.com/dashpay/dash/commit/9d2d8cced) Add a few malleability tests for DIP2/3 transactions (#3060)
-- [`4983f7abb`](https://github.com/dashpay/dash/commit/4983f7abb) RPC Fix typo in getmerkleblocks help (#3056)
-- [`a78dcfdec`](https://github.com/dashpay/dash/commit/a78dcfdec) Add the public GPG key for Pasta for Gitian building (#3057)
-- [`929c892c0`](https://github.com/dashpay/dash/commit/929c892c0) Remove p2p alert leftovers (#3050)
-- [`dd7873857`](https://github.com/dashpay/dash/commit/dd7873857) Re-verify invalid IS sigs when the active quorum set rotated (#3052)
-- [`13e023510`](https://github.com/dashpay/dash/commit/13e023510) Remove recovered sigs from the LLMQ db when corresponding IS locks get confirmed (#3048)
-- [`4a7525da3`](https://github.com/dashpay/dash/commit/4a7525da3) Add "instantsendlocks" to getmempoolinfo RPC (#3047)
-- [`fbb49f92d`](https://github.com/dashpay/dash/commit/fbb49f92d) Bail out properly on Evo DB consistency check failures in ConnectBlock/DisconnectBlock (#3044)
-- [`8d89350b8`](https://github.com/dashpay/dash/commit/8d89350b8) Use less alarming fee warning note (#3038)
-- [`02f6188e8`](https://github.com/dashpay/dash/commit/02f6188e8) Do not count 0-fee txes for fee estimation (#3037)
-- [`f0c73f5ce`](https://github.com/dashpay/dash/commit/f0c73f5ce) Revert "Skip mempool.dat when wallet is starting in "zap" mode (#2782)"
-- [`be3bc48c9`](https://github.com/dashpay/dash/commit/be3bc48c9) Fix broken link in PrivateSend info dialog (#3031)
-- [`acab8c552`](https://github.com/dashpay/dash/commit/acab8c552) Add Dash Core Group codesign certificate (#3027)
-- [`a1c4321e9`](https://github.com/dashpay/dash/commit/a1c4321e9) Fix osslsigncode compile issue in gitian-build (#3026)
-- [`2f21e5551`](https://github.com/dashpay/dash/commit/2f21e5551) Remove legacy InstantSend code (#3020)
-- [`7a440d626`](https://github.com/dashpay/dash/commit/7a440d626) Optimize on-disk deterministic masternode storage to reduce size of evodb (#3017)
-- [`85fcf32c9`](https://github.com/dashpay/dash/commit/85fcf32c9) Remove support for InstantSend locked gobject collaterals (#3019)
-- [`bdec34c94`](https://github.com/dashpay/dash/commit/bdec34c94) remove DS mixes once they have been included in a chainlocked block (#3015)
-- [`ee9adb948`](https://github.com/dashpay/dash/commit/ee9adb948) Use std::unique_ptr for mnList in CSimplifiedMNList (#3014)
-- [`b401a3baa`](https://github.com/dashpay/dash/commit/b401a3baa) Fix compilation on Ubuntu 16.04 (#3013)
-- [`c6eededca`](https://github.com/dashpay/dash/commit/c6eededca) Add "isValidMember" and "memberIndex" to "quorum memberof" and allow to specify quorum scan count (#3009)
-- [`b9aadc071`](https://github.com/dashpay/dash/commit/b9aadc071) Fix excessive memory use when flushing chainstate and EvoDB (#3008)
-- [`780bffeb7`](https://github.com/dashpay/dash/commit/780bffeb7) Enable stacktrace support in gitian builds (#3006)
-- [`5809c5c3d`](https://github.com/dashpay/dash/commit/5809c5c3d) Implement "quorum memberof" (#3004)
-- [`63424fb26`](https://github.com/dashpay/dash/commit/63424fb26) Fix 2 common Travis failures which happen when Travis has network issues (#3003)
-- [`09b017fc5`](https://github.com/dashpay/dash/commit/09b017fc5) Only load signingActiveQuorumCount + 1 quorums into cache (#3002)
-- [`b75e1cebd`](https://github.com/dashpay/dash/commit/b75e1cebd) Decouple lite mode and client-side PrivateSend (#2893)
-- [`b9a738528`](https://github.com/dashpay/dash/commit/b9a738528) Remove skipped denom from the list on tx commit (#2997)
-- [`5bdb2c0ce`](https://github.com/dashpay/dash/commit/5bdb2c0ce) Revert "Show BIP9 progress in getblockchaininfo (#2435)"
-- [`b62db7618`](https://github.com/dashpay/dash/commit/b62db7618) Revert " Add real timestamp to log output when mock time is enabled (#2604)"
-- [`1f6e0435b`](https://github.com/dashpay/dash/commit/1f6e0435b) [Trivial] Fix a typo in a comment in mnauth.h (#2988)
-- [`f84d5d46d`](https://github.com/dashpay/dash/commit/f84d5d46d) QT: Revert "Force TLS1.0+ for SSL connections" (#2985)
-- [`2e13d1305`](https://github.com/dashpay/dash/commit/2e13d1305) Add some comments to make quorum merkle root calculation more clear+ (#2984)
-- [`6677a614a`](https://github.com/dashpay/dash/commit/6677a614a) Run extended tests when Travis is started through cron (#2983)
-- [`d63202bdc`](https://github.com/dashpay/dash/commit/d63202bdc) Should send "reject" when mixing queue is full (#2981)
-- [`8d5781f40`](https://github.com/dashpay/dash/commit/8d5781f40) Stop reporting/processing the number of mixing participants in DSSTATUSUPDATE (#2980)
-- [`7334aa553`](https://github.com/dashpay/dash/commit/7334aa553) adjust privatesend formatting and follow some best practices (#2979)
-- [`f14179ca0`](https://github.com/dashpay/dash/commit/f14179ca0) [Tests] Remove unused variable and inline another variable in evo_deterministicmns_tests.cpp (#2978)
-- [`2756cb795`](https://github.com/dashpay/dash/commit/2756cb795) remove spork 12 (#2754)
-- [`633231092`](https://github.com/dashpay/dash/commit/633231092) Provide correct params to AcceptToMemoryPoolWithTime() in LoadMempool() (#2976)
-- [`e03538778`](https://github.com/dashpay/dash/commit/e03538778) Back off for 1m when connecting to quorum masternodes (#2975)
-- [`bfcfb70d8`](https://github.com/dashpay/dash/commit/bfcfb70d8) Ignore blocks that do not match the filter in getmerkleblocks rpc (#2973)
-- [`4739daddc`](https://github.com/dashpay/dash/commit/4739daddc) Process/keep messages/connections from PoSe-banned MNs (#2967)
-- [`864856688`](https://github.com/dashpay/dash/commit/864856688) Multiple speed optimizations for deterministic MN list handling (#2972)
-- [`d931cb723`](https://github.com/dashpay/dash/commit/d931cb723) Update copyright date (2019) (#2970)
-- [`a83b63186`](https://github.com/dashpay/dash/commit/a83b63186) Fix UI masternode list (#2966)
-- [`85c9ea400`](https://github.com/dashpay/dash/commit/85c9ea400) Throw a bit more descriptive error message on UpgradeDB failure on pruned nodes (#2962)
-- [`2c5e2bc6c`](https://github.com/dashpay/dash/commit/2c5e2bc6c) Inject custom specialization of std::hash for SporkId enum into std (#2960)
-- [`809aae73a`](https://github.com/dashpay/dash/commit/809aae73a) RPC docs helper updates (#2949)
-- [`09d66c776`](https://github.com/dashpay/dash/commit/09d66c776) Fix compiler warning (#2956)
-- [`26bd0d278`](https://github.com/dashpay/dash/commit/26bd0d278) Fix bls and bls_dkg bench (#2955)
-- [`d28d318aa`](https://github.com/dashpay/dash/commit/d28d318aa) Remove logic for handling objects and votes orphaned by not-yet-known MNs (#2954)
-- [`e02c562aa`](https://github.com/dashpay/dash/commit/e02c562aa) [RPC] Remove check for deprecated `masternode start-many` command (#2950)
-- [`fc73b4d6e`](https://github.com/dashpay/dash/commit/fc73b4d6e) Refactor sporks to get rid of repeated if/else blocks (#2946)
-- [`a149ca747`](https://github.com/dashpay/dash/commit/a149ca747) Remove references to instantx and darksend in sendcoinsdialog.cpp (#2936)
-- [`b74cd3e10`](https://github.com/dashpay/dash/commit/b74cd3e10) Only require valid collaterals for votes and triggers (#2947)
-- [`66b336c93`](https://github.com/dashpay/dash/commit/66b336c93) Use Travis stages instead of custom timeouts (#2948)
-- [`5780fa670`](https://github.com/dashpay/dash/commit/5780fa670) Remove duplicate code from src/Makefile.am (#2944)
-- [`428f30450`](https://github.com/dashpay/dash/commit/428f30450) Implement `rawchainlocksig` and `rawtxlocksig` (#2930)
-- [`c08e76101`](https://github.com/dashpay/dash/commit/c08e76101) Tighten rules for DSVIN/DSTX (#2897)
-- [`f1fe24b67`](https://github.com/dashpay/dash/commit/f1fe24b67) Only gracefully timeout Travis when integration tests need to be run (#2933)
-- [`7c05aa821`](https://github.com/dashpay/dash/commit/7c05aa821) Also gracefully timeout Travis builds when building source takes >30min (#2932)
-- [`5652ea023`](https://github.com/dashpay/dash/commit/5652ea023) Show number of InstantSend locks in Debug Console (#2919)
-- [`a3f030609`](https://github.com/dashpay/dash/commit/a3f030609) Implement getmerkleblocks rpc (#2894)
-- [`32aa229c7`](https://github.com/dashpay/dash/commit/32aa229c7) Reorganize Dash Specific code into folders (#2753)
-- [`acbf0a221`](https://github.com/dashpay/dash/commit/acbf0a221) Bump version to 0.14.1 (#2928)
-
-External wallet files
+Concentrated Recovery
 ---------------------
+In the current system, signature shares are propagated to all LLMQ members
+until one of them has collected enough shares to recover the signature. All
+members keep propagating and verifying each share until this recovered signature
+is propagated in the LLMQ. This causes significant load on the LLMQ and results
+in decreased throughput.
 
-The `-wallet=<path>` option now accepts full paths instead of requiring wallets
-to be located in the -walletdir directory.
+This new system initially sends all shares to a single deterministically selected node,
+so that this node can recover the signature and propagate the recovered signature.
+This way only the recovered signature needs to be propagated and verified by all
+members. After sending their share to this node, each member waits for a
+timeout and then sends their share to another deterministically selected member.
+This process is repeated until a recovered signature is finally created and propagated.
 
-Newly created wallet format
----------------------------
+This timeout begins at two seconds and increases exponentially up to ten seconds
+(i.e. `2,4,8,10,10`) for each node that times out. This is to minimize the time
+taken to generate a signature if the recovery node is down, while also
+minimizing the traffic generated when the network is under stress.
 
-If `-wallet=<path>` is specified with a path that does not exist, it will now
-create a wallet directory at the specified location (containing a wallet.dat
-data file, a db.log file, and database/log.?????????? files) instead of just
+The new system is activated with the newly added `SPORK_21_QUORUM_ALL_CONNECTED`
+which has two hardcoded values with a special meaning: `0` activates Concentrated
+Recovery for every LLMQ and `1` excludes `400_60` and `400_85` quorums.
+
+Increased number of masternode connections
+------------------------------------------
+To implement "Concentrated Recovery", it is now necessary for all members of a LLMQ
+to connect to all other members of the same LLMQ. This significantly increases the general
+connection count for masternodes. Although these intra-quorum connections are less resource
+intensive than normal p2p connections (as they only exchange LLMQ/masternode related
+messages), masternode hardware and network requirements will still be higher than before.
+
+Initially this change will only be activated for the smaller LLMQs (50 members).
+Eventually it may be activated for larger quorums (400 members).
+
+This is also controlled via `SPORK_21_QUORUM_ALL_CONNECTED`.
+
+Masternode Connection Probing
+-----------------------------
+While each LLMQ member must have a connection to each other member, it's not necessary
+for all members to actually connect to all other members. This is because only
+one of a pair of two masternodes need to initiate the connection while the other one can
+wait for an incoming connection. Probing is done in the case where a masternode doesn't
+really need an outbound connection, but still wants to verify that the other side
+has its port open. This is done by initiating a short lived connection, waiting
+for `MNAUTH` to succeed and then disconnecting again.
+
+After this process, each member of a LLMQ knows which members are unable to accept
+connections, after which they will vote on these members to be "bad".
+
+Masternode Minimum Protocol Version Checks
+------------------------------------------
+Members of LLMQs will now also check all other members for minimum protocol versions
+while in DKG. If a masternode determines that another LLMQ member has a protocol
+version that is too low, it will vote for the other member to be "bad".
+
+PoSe punishment/banning
+-----------------------
+If 80% of all LLMQ members voted for the same member to be bad, it is excluded
+in the final stages of the DKG. This causes the bad masternode to get PoSe punished
+and then eventually PoSe banned.
+
+Network performance improvements
+--------------------------------
+This version of Dash Core includes multiple optimizations to the network and p2p message
+handling code. The most important one is the introduction of `epoll` on linux-based
+systems. This removes most of the CPU overhead caused by the sub-optimal use of `select`,
+which could easily use up 50-80% of the CPU time spent in the network thread when many
+connections were involved.
+
+Since these optimizations are exclusive to linux, it is possible that masternodes hosted
+on windows servers will be unable to handle the network load and should consider migrating
+to a linux based operating system.
+
+Other improvements were made to the p2p message handling code, so that LLMQ
+related connections do less work than full/normal p2p connections.
+
+Wallet files
+------------
+The `--wallet=<path>` option now accepts full paths instead of requiring
+wallets to be located in the `-walletdir` directory.
+
+If `--wallet=<path>` is specified with a path that does not exist, it will now
+create a wallet directory at the specified location (containing a `wallet.dat`
+data file, a `db.log` file, and `database/log.??????????` files) instead of just
 creating a data file at the path and storing log files in the parent
 directory. This should make backing up wallets more straightforward than
 before because the specified wallet path can just be directly archived without
 having to look in the parent directory for transaction log files.
 
 For backwards compatibility, wallet paths that are names of existing data files
-in the `-walletdir` directory will continue to be accepted and interpreted the
+in the `--walletdir` directory will continue to be accepted and interpreted the
 same as before.
 
-Low-level RPC changes
----------------------
+When Dash Core is not started with any `--wallet=<path>` options, the name of
+the default wallet returned by `getwalletinfo` and `listwallets` RPCs is
+now the empty string `""` instead of `"wallet.dat"`. If Dash Core is started
+with any `--wallet=<path>` options, there is no change in behavior, and the
+name of any wallet is just its `<path>` string.
 
-- When Dash Core is not started with any `-wallet=<path>` options, the name of
-  the default wallet returned by `getwalletinfo` and `listwallets` RPCs is
-  now the empty string `""` instead of `"wallet.dat"`. If Dash Core is started
-  with any `-wallet=<path>` options, there is no change in behavior, and the
-  name of any wallet is just its `<path>` string.
+PrivateSend coin management improvements
+----------------------------------------
+A new algorithm for the creation of mixing denominations was implemented which
+should reduce the number of the smallest inputs created and give users more
+control on soft and hard caps. A much more accurate fee management algorithm was
+also implemented which should fix issues for users who have custom fees
+specified in wallet config or in times when network is under load.
+
+There is a new "PrivateSend" tab in the GUI which allows spending fully
+mixed coins only. The CoinControl feature was also improved to display coins
+based on the tab it was opened in, to protect users from accidentally spending
+mixed and non-mixed coins in the same transaction and to give better overview of
+spendable mixed coins.
+
+PrivateSend Random Round Mixing
+-------------------------------
+Some potential attacks on PrivateSend assume that all inputs had been mixed
+for the same number of rounds (up to 16). While this assumption alone is not
+enough to break PrivateSend privacy, it could still provide some additional
+information for other methods like cluster analysis and help to narrow results.
+
+With Random Round Mixing, an input will be mixed to N rounds like prior. However,
+at this point, a salted hash of each input is used to pick ~50% of inputs to
+be mixed for another round. This rule is then executed again on the new inputs.
+This results in an exponential decay where if you mix a set
+of inputs, half of those inputs will be mixed for N rounds, 1/4 will be mixed N+1,
+1/8 will be mixed N+2, etc. Current implementation caps it at N+3 which results
+in mixing an average of N+0.875 rounds and sounds like a reasonable compromise
+given the privacy gains.
+
+GUI changes
+-----------
+All dialogs, tabs, icons, colors and interface elements were reworked to improve
+user experience, let the wallet look more consistent and to make the GUI more
+flexible. There is a new "Appearance setup" dialog that will show up on the first start
+of this version and a corresponding tab has been added to the options which allows the
+user to pick a theme and to tweak the font family, the font weight and the font size.
+This feature specifically should help users who had font size/scaling issues previously.
+
+For advanced users and developers there is a new way to control the wallet's look
+by specifying a path to custom css files via `--custom-css-dir`. Additionally, the new
+`--debug-ui` will force Dash Core to reload the custom css files as soon as they get updated
+which makes it possible to see and debug all css adjustments live in the running GUI.
+
+From now on the "Pay To" field in "Send" and "PrivateSend" tabs also accepts Dash URIs.
+The Dash address and the amount from the URI are assigned to corresponding fields automatically
+if a Dash URI gets pasted into the field.
+
+Sporks
+------
+Two new sporks were introduced in this version:
+- `SPORK_21_QUORUM_ALL_CONNECTED` allows to control Concentrated Recovery and
+Masternode Probing activation;
+- `SPORK_22_PS_MORE_PARTICIPANTS` raises the number of users that can participate
+in a single PrivateSend mixing transaction to 20.
+
+Sporks `SPORK_15_DETERMINISTIC_MNS_ENABLED`, `SPORK_16_INSTANTSEND_AUTOLOCKS`
+and `SPORK_20_INSTANTSEND_LLMQ_BASED` which were previously deprecated in v0.15
+are completely removed now. `SPORK_6_NEW_SIGS` was never activated on mainnet
+and was also removed in this version.
+
+Build system
+------------
+The minimum version of the GCC compiler required to compile Dash Core is now 4.8.
+The minimum version of Qt is now 5.5.1. Some packages in `depends/` as well as
+`secp256k1` and `leveldb` subtrees were updated to newer versions.
+
+RPC changes
+-----------
+There are a few changes in existing RPC interfaces in this release:
+- `getpeerinfo` has new field `masternode` to indicate whether connection was
+  due to masternode connection attempt
+- `getprivatesendinfo` `denoms` field was replaced by `denoms_goal` and
+  `denoms_hardcap`
+- `listunspent` has new filter option `coinType` to be able to filter different
+  types of coins (all, mixed etc.)
+- `protx diff` returns more detailed information about new quorums
+- `quorum dkgstatus` shows `quorumConnections` for each LLMQ with detailed
+  information about each participating masternode
+- `quorum sign` has an optional `quorumHash` argument to pick the exact quorum
+- `socketevents` in `getnetworkinfo` rpc shows the socket events mode,
+  either `epoll`, `poll` or `select`
+
+There are also new RPC commands:
+- `quorum selectquorum` returns the quorum that would/should sign a request
+
+There are also new RPC commands backported from Bitcoin Core 0.16:
+- `help-console` for more info about using console in Qt
+- `loadwallet` loads a wallet from a wallet file or directory
+- `rescanblockchain` rescans the local blockchain for wallet related transactions
+- `savemempool` dumps the mempool to disk
+
+Please check Bitcoin Core 0.16 release notes in a [section](#backports-from-bitcoin-core-016)
+below and `help <command>` in rpc for more information.
+
+Command-line options
+--------------------
+Changes in existing cmd-line options:
+
+New cmd-line options:
+- `--custom-css-dir`
+- `--debug-ui`
+- `--disablegovernance`
+- `--font-family`
+- `--font-scale`
+- `--font-weight-bold`
+- `--font-weight-normal`
+- `--llmqdevnetparams`
+- `--llmqtestparams`
+- `--privatesenddenomsgoal`
+- `--privatesenddenomshardcap`
+- `--socketevents`
+
+Few cmd-line options are no longer supported:
+- `--litemode`
+- `--privatesenddenoms`
+
+There are also new command-line options backported from Bitcoin Core 0.16:
+- `--addrmantest`
+- `--debuglogfile`
+- `--deprecatedrpc`
+- `--enablebip61`
+- `--getinfo`
+- `--stdinrpcpass`
+
+Please check Bitcoin Core 0.16 release notes in a [section](#backports-from-bitcoin-core-016)
+below and `Help -> Command-line options` in Qt wallet or `dashd --help` for more information.
+
+Backports from Bitcoin Core 0.16
+--------------------------------
+
+Most of the changes between Bitcoin Core 0.15 and Bitcoin Core 0.16 have been
+backported into Dash Core 0.16. We only excluded backports which do not align
+with Dash, like SegWit or RBF related changes.
+
+You can read about changes brought by backporting from Bitcoin Core 0.16 in
+following docs:
+- https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.16.0.md
+- https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.16.1.md
+- https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.16.2.md
+
+Some other individual PRs were backported from versions 0.17+, you can find the
+full list of backported PRs and additional fixes in [release-notes-0.16-backports.md](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.16-backports.md)
+
+Miscellaneous
+-------------
+A lot of refactoring, code cleanups and other small fixes were done in this release.
+
+0.16 Change log
+===============
+
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.15.0.0...dashpay:v0.16.0.1).
+
+- [`37fe9a6e2f`](https://github.com/dashpay/dash/commit/37fe9a6e2f) Fix mempool sync (#3725)
+- [`69b77765ba`](https://github.com/dashpay/dash/commit/69b77765ba) qt: Fix font family updates (#3746)
+- [`cf2da32ffe`](https://github.com/dashpay/dash/commit/cf2da32ffe) qt: Fix font size and scaling issues (#3734)
+- [`586f166499`](https://github.com/dashpay/dash/commit/586f166499) qt: Fix Recent transactions list height (#3744)
+- [`12d0782071`](https://github.com/dashpay/dash/commit/12d0782071) Translations 2020-09 (#3736)
+- [`fc8ca6ad50`](https://github.com/dashpay/dash/commit/fc8ca6ad50) Bump few things and update man pages for v0.16 (#3737)
+- [`8e6706dede`](https://github.com/dashpay/dash/commit/8e6706dede) qt: Add PrivateSend tab in OptionsDialog, allow to show/hide PS UI (#3717)
+- [`dbfdf8cb15`](https://github.com/dashpay/dash/commit/dbfdf8cb15) qt: Finetune OverviewPage (#3715)
+- [`9028712b60`](https://github.com/dashpay/dash/commit/9028712b60) qt: Finetune TransactionsView (#3710)
+- [`f4e3bf95d0`](https://github.com/dashpay/dash/commit/f4e3bf95d0) qt: Finetune CoinControlDialog + bitcoin#14828 (#3701)
+- [`e405f553b9`](https://github.com/dashpay/dash/commit/e405f553b9) RPC: Update getprivatesendinfo help (#3727)
+- [`b4a78fb285`](https://github.com/dashpay/dash/commit/b4a78fb285) Fix testnet icon (#3726)
+- [`3650ee6556`](https://github.com/dashpay/dash/commit/3650ee6556) qt: Remove unused assets (#3721)
+- [`cb078422cd`](https://github.com/dashpay/dash/commit/cb078422cd) qt: Finetune RPCConsole (#3720)
+- [`a198a74a4f`](https://github.com/dashpay/dash/commit/a198a74a4f) privatesend: Avoid interacting with keypool in CTransactionBuilder ctor (#3723)
+- [`f601122cbd`](https://github.com/dashpay/dash/commit/f601122cbd) qt: Hide remaining PrivateSend UI if PrivateSend is not enabled  (#3716)
+- [`c7896eb657`](https://github.com/dashpay/dash/commit/c7896eb657) qt: Disable missing macOS focus rects in AddressBookPage (#3711)
+- [`c136522e84`](https://github.com/dashpay/dash/commit/c136522e84) qt: Finetune Options Dialog (#3709)
+- [`bb0d5d4808`](https://github.com/dashpay/dash/commit/bb0d5d4808) qt: Make sure send confirmation dialog uses correct font settings (#3714)
+- [`ab5ffe3c11`](https://github.com/dashpay/dash/commit/ab5ffe3c11) qt: Use scaled font size for all QToolTip instances (#3708)
+- [`42b606ea76`](https://github.com/dashpay/dash/commit/42b606ea76) qt: Make sure font size in  TransactionDescDialog is adjusted properly (#3707)
+- [`8fa280140a`](https://github.com/dashpay/dash/commit/8fa280140a) qt: Tweak few strings (#3706)
+- [`a70056c5a8`](https://github.com/dashpay/dash/commit/a70056c5a8) privatesend: Implement Random Round Mixing (#3661)
+- [`eb163c53a5`](https://github.com/dashpay/dash/commit/eb163c53a5) Implement dynamic activation thresholds (#3692)
+- [`7d6aba47cf`](https://github.com/dashpay/dash/commit/7d6aba47cf) Implement Block Reward Reallocation (#3691)
+- [`19aab3a1d8`](https://github.com/dashpay/dash/commit/19aab3a1d8) qt|wallet: Fix "Use available balance" for PrivateSend  (#3700)
+- [`37af70a188`](https://github.com/dashpay/dash/commit/37af70a188) Merge #13622: Remove mapRequest tracking that just effects Qt display. (#3694)
+- [`e13c746a7d`](https://github.com/dashpay/dash/commit/e13c746a7d) chainparams: Remove llmq_50_60 from regtest (#3696)
+- [`f2c1a9213c`](https://github.com/dashpay/dash/commit/f2c1a9213c) Fix two potential issues in the way pending islocks are processed (#3678)
+- [`01a3a6c81a`](https://github.com/dashpay/dash/commit/01a3a6c81a) qt: Finetune ModalOverlay (#3699)
+- [`16f9d94404`](https://github.com/dashpay/dash/commit/16f9d94404) qt: Make sure the statusbar reflects internal states correct (#3698)
+- [`9e425d66c6`](https://github.com/dashpay/dash/commit/9e425d66c6) Partially merge #3604:
+- [`2bb94c73eb`](https://github.com/dashpay/dash/commit/2bb94c73eb) masternode|net|rpc: Improve masternode sync process (#3690)
+- [`aa81a06264`](https://github.com/dashpay/dash/commit/aa81a06264) masternode|rpc: Remove unused code (#3689)
+- [`2e92237865`](https://github.com/dashpay/dash/commit/2e92237865) qt: Improved status bar (#3688)
+- [`54ed089f97`](https://github.com/dashpay/dash/commit/54ed089f97) test: Implement unit tests for CTransactionBuilder (#3677)
+- [`ab0f789be6`](https://github.com/dashpay/dash/commit/ab0f789be6) wallet: Fix and improve CWallet::CreateTransaction (#3668)
+- [`dd55609d6b`](https://github.com/dashpay/dash/commit/dd55609d6b) test: Implement unit tests for CWallet::CreateTransaction (#3667)
+- [`9c988d5b5a`](https://github.com/dashpay/dash/commit/9c988d5b5a) privatesend|wallet|qt: Improve calculations in CreateDenominated/MakeCollateralAmounts (#3657)
+- [`ba2dcb0399`](https://github.com/dashpay/dash/commit/ba2dcb0399) qt: Update assets and colorize them theme related (#3574)
+- [`50d7a2fecf`](https://github.com/dashpay/dash/commit/50d7a2fecf) qt: Ignore GUIUtil::updateFont calls until GUIUtil::loadFonts was called (#3687)
+- [`608f481a9c`](https://github.com/dashpay/dash/commit/608f481a9c) qt: Fix block update signals/slots in BitcoinGUI and SendCoinsDialog (#3685)
+- [`25e4fed75b`](https://github.com/dashpay/dash/commit/25e4fed75b) QT: add last block hash to debug ui (#3672)
+- [`195dcad1ee`](https://github.com/dashpay/dash/commit/195dcad1ee) trivial/docs: minor adjustments to PrivateSend help text (#3669)
+- [`b1a35b2d32`](https://github.com/dashpay/dash/commit/b1a35b2d32) Merge #13007: test: Fix dangling wallet pointer in vpwallets (#3666)
+- [`f9bf42cb90`](https://github.com/dashpay/dash/commit/f9bf42cb90) Harden spork6 logic then remove spork6 (#3662)
+- [`604d6a4225`](https://github.com/dashpay/dash/commit/604d6a4225) Fix some translation issues (#3656)
+- [`60d298376b`](https://github.com/dashpay/dash/commit/60d298376b) Fix crash on splash screen when wallet fails to load (#3629)
+- [`ca76dd0868`](https://github.com/dashpay/dash/commit/ca76dd0868) qt: Give PrivateSend separate instances of SendCoinsDialog + CCoinControl (#3625)
+- [`0969c2d268`](https://github.com/dashpay/dash/commit/0969c2d268) qt: Splashscreen redesign (#3613)
+- [`966be38c79`](https://github.com/dashpay/dash/commit/966be38c79) qt: Make sure stylesheet updates of -debug-ui are activated (#3623)
+- [`0ed7f1672c`](https://github.com/dashpay/dash/commit/0ed7f1672c) qt: Add missing placeholders (#3575)
+- [`103fda2cb7`](https://github.com/dashpay/dash/commit/103fda2cb7) qt: Fix appearancewidget.h to make lint-include-guards.sh happy (#3627)
+- [`2cc36dffde`](https://github.com/dashpay/dash/commit/2cc36dffde) qt: Drop PlatformStyle (#3573)
+- [`b073ae9853`](https://github.com/dashpay/dash/commit/b073ae9853) qt: Redesign scrollbar styles (#3571)
+- [`1a2867f886`](https://github.com/dashpay/dash/commit/1a2867f886) qt: Introduce appearance tab and setup dialog (#3568)
+- [`d44611bc2b`](https://github.com/dashpay/dash/commit/d44611bc2b) qt: General qt/c++ related fixes and updates (#3562)
+- [`d22ab43910`](https://github.com/dashpay/dash/commit/d22ab43910) qt: Introduce platform specific css sections (#3570)
+- [`a16cfa77de`](https://github.com/dashpay/dash/commit/a16cfa77de) qt: Redesign BitcoinAmountField (#3569)
+- [`7db9909a17`](https://github.com/dashpay/dash/commit/7db9909a17) qt: Introduce runtime theme changes (#3559)
+- [`b3738648d6`](https://github.com/dashpay/dash/commit/b3738648d6) qt: General CSS related redesigns (#3563)
+- [`1dea248d0d`](https://github.com/dashpay/dash/commit/1dea248d0d) qt: Make use of GUIUtil themed colors/styles (#3561)
+- [`06d69d74c2`](https://github.com/dashpay/dash/commit/06d69d74c2) qt: Replace usage of QTabBar with custom replacement (#3560)
+- [`edfc3a4646`](https://github.com/dashpay/dash/commit/edfc3a4646) qt: Call GUIUtil::loadFonts earlier (#3593)
+- [`f371e4771c`](https://github.com/dashpay/dash/commit/f371e4771c) qt: Add -debug-ui command line parameter (#3558)
+- [`dde4ab5f84`](https://github.com/dashpay/dash/commit/dde4ab5f84) qt: Add -custom-css-dir commmand line parameter (#3557)
+- [`067622764c`](https://github.com/dashpay/dash/commit/067622764c) qt: Disable macOS system focus rectangles for dash themes (#3556)
+- [`d296cbdca1`](https://github.com/dashpay/dash/commit/d296cbdca1) qt: Implement application wide font management (#3555)
+- [`b409254587`](https://github.com/dashpay/dash/commit/b409254587) qt: Redesign of the main toolbar (#3554)
+- [`c5fcc811d6`](https://github.com/dashpay/dash/commit/c5fcc811d6) qt: Generalized css files, simple design changes, added scripts to keep track of color usage (#3508)
+- [`8aeeb97995`](https://github.com/dashpay/dash/commit/8aeeb97995) Print exception origin in crash messages (#3653)
+- [`bd5c047e28`](https://github.com/dashpay/dash/commit/bd5c047e28) Implement a safer version of GetCrashInfoFromException (#3652)
+- [`4414b5c3c7`](https://github.com/dashpay/dash/commit/4414b5c3c7) llmq: Fix spork check in CSigSharesManager::ForceReAnnouncement (#3650)
+- [`c232f2a12d`](https://github.com/dashpay/dash/commit/c232f2a12d) [RPC] Show address of fundDest when no funds (#3649)
+- [`abe3d578b2`](https://github.com/dashpay/dash/commit/abe3d578b2) Include protocol version into MNAUTH (#3631)
+- [`4db8968d4a`](https://github.com/dashpay/dash/commit/4db8968d4a) rpc: update help text for BLS operator key arguments (#3628)
+- [`bbb0064b60`](https://github.com/dashpay/dash/commit/bbb0064b60) init: Fix crash due to -litemode and improve its deprecation warning (#3626)
+- [`8d99e7836c`](https://github.com/dashpay/dash/commit/8d99e7836c) Fix `-resetguisettings` (#3624)
+- [`508fc2db4b`](https://github.com/dashpay/dash/commit/508fc2db4b) privatesend: Increase max participants to 20 (#3610)
+- [`f425316eed`](https://github.com/dashpay/dash/commit/f425316eed) util: Change TraceThread's "name" type: "const char*" -> "const std::string" (#3609)
+- [`a170c649b8`](https://github.com/dashpay/dash/commit/a170c649b8) Fail GetTransaction when the block from txindex is not in mapBlockIndex (#3606)
+- [`62c3fb5748`](https://github.com/dashpay/dash/commit/62c3fb5748) llmq: Fix thread handling in CDKGSessionManager and CDKGSessionHandler (#3601)
+- [`aa3bec6106`](https://github.com/dashpay/dash/commit/aa3bec6106) evo: Avoid some unnecessary copying in BuildNewListFromBlock (#3594)
+- [`6a249f59b6`](https://github.com/dashpay/dash/commit/6a249f59b6) Merge #13564: [wallet] loadwallet shouldn't create new wallets. (#3592)
+- [`b45b1373a0`](https://github.com/dashpay/dash/commit/b45b1373a0) Prefer creating larger denoms at the second step of CreateDenominated (#3589)
+- [`bac02d0c9a`](https://github.com/dashpay/dash/commit/bac02d0c9a) More accurate fee calculation in CreateDenominated (#3588)
+- [`baf18a35d5`](https://github.com/dashpay/dash/commit/baf18a35d5) More pruning improvements (#3579)
+- [`0297eb428a`](https://github.com/dashpay/dash/commit/0297eb428a) Change litemode to disablegovernance (#3577)
+- [`da38e2bf83`](https://github.com/dashpay/dash/commit/da38e2bf83) Change litemode from disabling all Dash specific features to disabling governance validation (#3488)
+- [`772b6bfe7c`](https://github.com/dashpay/dash/commit/772b6bfe7c) Disable new connection handling and concentrated recovery for large LLMQs (#3548)
+- [`c72bc354f8`](https://github.com/dashpay/dash/commit/c72bc354f8) contrib: Move dustinface.pgp into contrib/gitian-keys (#3547)
+- [`0b70380fff`](https://github.com/dashpay/dash/commit/0b70380fff) Fix argument handling for devnets (#3549)
+- [`5f9fc5edb6`](https://github.com/dashpay/dash/commit/5f9fc5edb6) Fix CSigningManager::VerifyRecoveredSig (#3546)
+- [`00486eca06`](https://github.com/dashpay/dash/commit/00486eca06) Use exponential backoff timeouts for recovery (#3535)
+- [`34c354eaad`](https://github.com/dashpay/dash/commit/34c354eaad) Dont skip sendmessages (#3534)
+- [`40814d945e`](https://github.com/dashpay/dash/commit/40814d945e) Avoid overriding validation states, return more specific states in some cases (#3541)
+- [`139f589b6f`](https://github.com/dashpay/dash/commit/139f589b6f) Don'd send SENDXXX messages to fMasternode connections (#3537)
+- [`f064964678`](https://github.com/dashpay/dash/commit/f064964678) Only relay DKG messages to intra quorum connection members (#3536)
+- [`d08b971ddb`](https://github.com/dashpay/dash/commit/d08b971ddb) Use correct CURRENT_VERSION constants when creating ProTx-es via rpc (#3524)
+- [`4ae57a2276`](https://github.com/dashpay/dash/commit/4ae57a2276) qt: Fix label updates in SendCoinsEntry (#3523)
+- [`1a54f0392d`](https://github.com/dashpay/dash/commit/1a54f0392d) Revert "implemented labeler which automatically adds RPC label to anything modifying RPC files (#3499)" (#3517)
+- [`acff9998e1`](https://github.com/dashpay/dash/commit/acff9998e1) UpgradeDBIfNeeded failure should require reindexing (#3516)
+- [`1163fc70a2`](https://github.com/dashpay/dash/commit/1163fc70a2) Use correct CURRENT_VERSION constants when checking ProTx version (#3515)
+- [`0186fdfe60`](https://github.com/dashpay/dash/commit/0186fdfe60) Fix chainlock scheduler handling (#3514)
+- [`b4008ee4fc`](https://github.com/dashpay/dash/commit/b4008ee4fc) Some Dashification (#3513)
+- [`ab5aeed920`](https://github.com/dashpay/dash/commit/ab5aeed920) Optimize MN lists cache (#3506)
+- [`91d9329093`](https://github.com/dashpay/dash/commit/91d9329093) Make CDeterministicMN::internalId private to make sure it's set/accessed properly (#3505)
+- [`232430fac9`](https://github.com/dashpay/dash/commit/232430fac9) Fix ProcessNewBlock vs EnforceBestChainLock deadlocks in ActivateBestChain (#3492)
+- [`fe98b81b80`](https://github.com/dashpay/dash/commit/fe98b81b80) implemented labeler which automatically adds RPC label to anything modifying RPC files (#3499)
+- [`ae5faf23da`](https://github.com/dashpay/dash/commit/ae5faf23da) Better error handling while processing special txes (#3504)
+- [`13a45ec323`](https://github.com/dashpay/dash/commit/13a45ec323) rpc: Validate provided keys for query_options parameter in listunspent (#3507)
+- [`9b47883884`](https://github.com/dashpay/dash/commit/9b47883884) contrib: Added dustinface.pgp (#3502)
+- [`048503bcb5`](https://github.com/dashpay/dash/commit/048503bcb5) qt: Some UI fixes and improvements (#3500)
+- [`8fcda67a54`](https://github.com/dashpay/dash/commit/8fcda67a54) Remove spork 15, 16, 20 (#3493)
+- [`9d3546baee`](https://github.com/dashpay/dash/commit/9d3546baee) Reintroduce mixing hard cap for all but the largest denom (#3489)
+- [`397630a82c`](https://github.com/dashpay/dash/commit/397630a82c) CI: Fix Gitlab nowallet and release builds (#3491)
+- [`a9fc40fb0a`](https://github.com/dashpay/dash/commit/a9fc40fb0a) add "Verifying a Rebase" section to CONTRIBUTING.md (#3487)
+- [`0c5c99243a`](https://github.com/dashpay/dash/commit/0c5c99243a) rpc/wallet: Add coinType to queryOptions of listunspent (#3483)
+- [`3a56ed9ca6`](https://github.com/dashpay/dash/commit/3a56ed9ca6) Fix NO_WALLET=1 build (#3490)
+- [`926087aac6`](https://github.com/dashpay/dash/commit/926087aac6) Implement significantly improved createdenominations algorithm (#3479)
+- [`fe208c98e3`](https://github.com/dashpay/dash/commit/fe208c98e3) Feat. request for Dash Platform: `quorum sign` rpc command with additional quorumHash #3424 (#3446)
+- [`4c1f65baae`](https://github.com/dashpay/dash/commit/4c1f65baae) Fix #3241 UX/UI - Introduce PrivateSend tab which allows to spend fully mixed coins only (#3442)
+- [`f46617dbab`](https://github.com/dashpay/dash/commit/f46617dbab) add litemode information to help texts regarding CL/IS and change getbestchainlock to throw an error if running in litemode (#3478)
+- [`5cabc8f5ca`](https://github.com/dashpay/dash/commit/5cabc8f5ca) Introduce ONLY_PRIVATESEND coin type to select fully mixed coins only (#3459)
+- [`e0ff9af2b0`](https://github.com/dashpay/dash/commit/e0ff9af2b0) qt: Allow and process URIs pasted to the payTo field of SendCoinsEntry (#3475)
+- [`1c20160933`](https://github.com/dashpay/dash/commit/1c20160933) Fix `gobject submit`: replace request params with txidFee (#3471)
+- [`970c23d6e6`](https://github.com/dashpay/dash/commit/970c23d6e6) Remove logic for forcing chainlocks without DIP8 activation on testnet (#3470)
+- [`ae15299117`](https://github.com/dashpay/dash/commit/ae15299117) Feature request #3425 - Add information to "protx diff" (#3468)
+- [`017c4779ca`](https://github.com/dashpay/dash/commit/017c4779ca) Fix recovery from coin db crashes (and dbcrash.py test) (#3467)
+- [`d5f403d3fd`](https://github.com/dashpay/dash/commit/d5f403d3fd) Refactor and fix GetRealOutpointPrivateSendRounds (#3460)
+- [`c06838e205`](https://github.com/dashpay/dash/commit/c06838e205) Streamline processing of pool state updates (#3458)
+- [`538fcf2f1b`](https://github.com/dashpay/dash/commit/538fcf2f1b) Disable qt menu heuristics for openConfEditorAction (#3466)
+- [`6e1c5480cd`](https://github.com/dashpay/dash/commit/6e1c5480cd) qt: Maximize the window if the dock icon gets clicked on macOS (#3465)
+- [`3960d622c5`](https://github.com/dashpay/dash/commit/3960d622c5) Fix incorrect nTimeFirstKey reset due to missing count of hd pubkeys (#3461)
+- [`d0bb30838b`](https://github.com/dashpay/dash/commit/d0bb30838b) Various (mostly trivial) PS fixes (#3457)
+- [`b0963b079e`](https://github.com/dashpay/dash/commit/b0963b079e) Fix deadlocks (#3456)
+- [`bdce58756a`](https://github.com/dashpay/dash/commit/bdce58756a) Remove duplicated condition check (#3464)
+- [`10baa4a857`](https://github.com/dashpay/dash/commit/10baa4a857) Update Windows build instructions (#3453)
+- [`7fdc4c7b0d`](https://github.com/dashpay/dash/commit/7fdc4c7b0d) change miniupnp lib server (#3452)
+- [`911b5580e4`](https://github.com/dashpay/dash/commit/911b5580e4) Fix typo in error log when EPOLL_CTL_ADD fails for wakeup pipe (#3451)
+- [`b775fa263f`](https://github.com/dashpay/dash/commit/b775fa263f) Lower DEFAULT_PRIVATESEND_DENOMS (#3434)
+- [`d59deea77b`](https://github.com/dashpay/dash/commit/d59deea77b) Implement epoll support (#3445)
+- [`96faa8155e`](https://github.com/dashpay/dash/commit/96faa8155e) Don't disconnect masternode probes for a few seconds (#3449)
+- [`608aed3d85`](https://github.com/dashpay/dash/commit/608aed3d85) Don't try to connect to itself through CLLMQUtils::GetQuorumConnections (#3448)
+- [`d663f48085`](https://github.com/dashpay/dash/commit/d663f48085) Lower SELECT_TIMEOUT_MILLISECONDS for USE_WAKEUP_PIPE case (#3444)
+- [`f5f4ccbf24`](https://github.com/dashpay/dash/commit/f5f4ccbf24) Refactor/Prepare CConnman for upcoming epoll support (#3432)
+- [`93aa640af8`](https://github.com/dashpay/dash/commit/93aa640af8) Fix #3248: use blue logo for Traditional theme (#3441)
+- [`3d24290bcb`](https://github.com/dashpay/dash/commit/3d24290bcb) Take all nodes into account in check_sigs instead of just just masternodes (#3437)
+- [`d06597a421`](https://github.com/dashpay/dash/commit/d06597a421) [Trivial] Adjust some text in mnauth.cpp (#3413)
+- [`de931a25a3`](https://github.com/dashpay/dash/commit/de931a25a3) Wakeup wakeup-pipe when new peers are added (#3433)
+- [`75a1968c96`](https://github.com/dashpay/dash/commit/75a1968c96) Fix abandonconflict.py (#3436)
+- [`2610e718cd`](https://github.com/dashpay/dash/commit/2610e718cd) Don't delete MN list snapshots and diffs from DB when reorgs take place (#3435)
+- [`6d83b0a053`](https://github.com/dashpay/dash/commit/6d83b0a053) Make socketevents mode (poll vs select) configurable via parameter (#3431)
+- [`9a8caf0986`](https://github.com/dashpay/dash/commit/9a8caf0986) Remove fix for fNetworkActive vs OpenNetworkConnection race (#3430)
+- [`96ed9fae39`](https://github.com/dashpay/dash/commit/96ed9fae39) Fix flushing of rejects before disconnecting (#3429)
+- [`0cb385c567`](https://github.com/dashpay/dash/commit/0cb385c567) Improve network connections related logging (#3428)
+- [`d5092c44cb`](https://github.com/dashpay/dash/commit/d5092c44cb) Make sure that cleanup is not triggered too early in llmq-signing.py (#3427)
+- [`402b13907d`](https://github.com/dashpay/dash/commit/402b13907d) Only call DisconnectNodes once per second (#3421)
+- [`ee995ef02a`](https://github.com/dashpay/dash/commit/ee995ef02a) Implement more reliable wait_for_masternode_probes in test framework (#3422)
+- [`755a23ca00`](https://github.com/dashpay/dash/commit/755a23ca00) Always pass current mocktime to started nodes (#3423)
+- [`1e30054b9e`](https://github.com/dashpay/dash/commit/1e30054b9e) Avoid calling SendMessages (and others) for all nodes all the time (#3420)
+- [`8aa85c084b`](https://github.com/dashpay/dash/commit/8aa85c084b) Deterministically choose which peers to drop on duplicate MNAUTH (#3419)
+- [`79f0bb1033`](https://github.com/dashpay/dash/commit/79f0bb1033) Fix crash in validateaddress (#3418)
+- [`d032d02f10`](https://github.com/dashpay/dash/commit/d032d02f10) Multiple fixes for failing tests (#3410)
+- [`e20c63f535`](https://github.com/dashpay/dash/commit/e20c63f535) A few simple/trivial optimizations (#3398)
+- [`9bcdeaea57`](https://github.com/dashpay/dash/commit/9bcdeaea57) Avoid unnecessary processing/verification of reconstructed recovered signatures (#3399)
+- [`38556a3d49`](https://github.com/dashpay/dash/commit/38556a3d49) Don't try to connect to masternodes that we already have a connection to (#3401)
+- [`0e56e32c22`](https://github.com/dashpay/dash/commit/0e56e32c22) Add cache for CBlockTreeDB::HasTxIndex (#3402)
+- [`2dff0501e9`](https://github.com/dashpay/dash/commit/2dff0501e9) Remove semaphore for masternode connections (#3403)
+- [`c1d9dd553a`](https://github.com/dashpay/dash/commit/c1d9dd553a) FindDevNetGenesisBlock remove unused arg (#3405)
+- [`c7b6eb851d`](https://github.com/dashpay/dash/commit/c7b6eb851d) Implement "concentrated recovery" of LLMQ signatures (#3389)
+- [`e518ce4e13`](https://github.com/dashpay/dash/commit/e518ce4e13) Increase DIP0008 bip9 window by 10 years (#3391)
+- [`1aba86567b`](https://github.com/dashpay/dash/commit/1aba86567b) Implement checking of open ports and min proto versions in DKGs (#3390)
+- [`f43cdbc586`](https://github.com/dashpay/dash/commit/f43cdbc586) Gradually bump mocktime in wait_for_quorum_connections (#3388)
+- [`3b904a0fa1`](https://github.com/dashpay/dash/commit/3b904a0fa1) Add a note about dash_hash under dependencies in test/README.md (#3386)
+- [`b0668028b6`](https://github.com/dashpay/dash/commit/b0668028b6) Implement more randomized behavior in GetQuorumConnections (#3385)
+- [`27dfb5a34d`](https://github.com/dashpay/dash/commit/27dfb5a34d) Move wait_proc into wait_for_quorum_connections (#3384)
+- [`ff6f391aea`](https://github.com/dashpay/dash/commit/ff6f391aea) Refactor Gitlab builds to use multiple stages (#3377)
+- [`a5a3e51554`](https://github.com/dashpay/dash/commit/a5a3e51554) Let all LLMQ members connect to each other instead of only a few ones (#3380)
+- [`8ab1a3734a`](https://github.com/dashpay/dash/commit/8ab1a3734a) Bump mocktime each time waiting for phase1 fails (#3383)
+- [`c68b5f68aa`](https://github.com/dashpay/dash/commit/c68b5f68aa) Hold CEvoDB lock while iterating mined commitments (#3379)
+- [`deba865b17`](https://github.com/dashpay/dash/commit/deba865b17) Also verify quorumHash when waiting for DKG phases (#3382)
+- [`17ece14f40`](https://github.com/dashpay/dash/commit/17ece14f40) Better/more logging for DKGs (#3381)
+- [`80be2520a2`](https://github.com/dashpay/dash/commit/80be2520a2) Call FlushBackgroundCallbacks before resetting CConnman (#3378)
+- [`b6bdb8be9e`](https://github.com/dashpay/dash/commit/b6bdb8be9e) Faster opening of masternode connections (#3375)
+- [`94bcf85347`](https://github.com/dashpay/dash/commit/94bcf85347) Refactor and unify quorum connection handling #(3367)
+- [`c0bb06e766`](https://github.com/dashpay/dash/commit/c0bb06e766) Multiple fixes for masternode connection handling (#3366)
+- [`f2ece1031f`](https://github.com/dashpay/dash/commit/f2ece1031f) Remove logging for waking of select() (#3370)
+- [`cf1f8c3825`](https://github.com/dashpay/dash/commit/cf1f8c3825) Support devnets in mininode (#3364)
+- [`f7ddee13a1`](https://github.com/dashpay/dash/commit/f7ddee13a1) Fix possible segfault (#3365)
+- [`40cdfe8662`](https://github.com/dashpay/dash/commit/40cdfe8662) Add peer id to "socket send error" logs (#3363)
+- [`0fa2e14065`](https://github.com/dashpay/dash/commit/0fa2e14065) Fix issues introduced with asynchronous signal handling (#3369)
+- [`b188c5c25e`](https://github.com/dashpay/dash/commit/b188c5c25e) Refactor some PrivateSend related code to use WalletModel instead of accessing the wallet directly from qt (#3345)
+- [`05c134c783`](https://github.com/dashpay/dash/commit/05c134c783) Fix litemode vs txindex check (#3355)
+- [`c9881d0fc7`](https://github.com/dashpay/dash/commit/c9881d0fc7) Masternodes must have required services enabled (#3350)
+- [`c6911354a1`](https://github.com/dashpay/dash/commit/c6911354a1) Few tweaks for MakeCollateralAmounts (#3347)
+- [`56b8e97ab0`](https://github.com/dashpay/dash/commit/56b8e97ab0) Refactor and simplify PrivateSend based on the fact that we only mix one single denom at a time now (#3346)
+- [`af7cfd6a3f`](https://github.com/dashpay/dash/commit/af7cfd6a3f) Define constants for keys in CInstantSendDb and use them instead of plain strings (#3352)
+- [`d52020926c`](https://github.com/dashpay/dash/commit/d52020926c) Fix undefined behaviour in stacktrace printing. (#3357)
+- [`4c01ca4573`](https://github.com/dashpay/dash/commit/4c01ca4573) Fix undefined behaviour in unordered_limitedmap and optimise it. (#3349)
+- [`2521970a50`](https://github.com/dashpay/dash/commit/2521970a50) Add configurable devnet quorums (#3348)
+- [`7075083f07`](https://github.com/dashpay/dash/commit/7075083f07) Detect mixing session readiness based on the current pool state (#3328)
+- [`dff9430c5e`](https://github.com/dashpay/dash/commit/dff9430c5e) A couple of fixes for CActiveMasternodeManager::Init() (#3326)
+- [`4af4432cb9`](https://github.com/dashpay/dash/commit/4af4432cb9) Add unit tests for CPrivateSend::IsCollateralAmount (#3310)
+- [`e1fc378ffd`](https://github.com/dashpay/dash/commit/e1fc378ffd) Refactor PS a bit and make it so that the expected flow for mixing is to time out and fallback (#3309)
+- [`39b17fd5a3`](https://github.com/dashpay/dash/commit/39b17fd5a3) Fix empty TRAVIS_COMMIT_RANGE for one-commit-branch builds in Travis (#3299)
+- [`f4f9f918dc`](https://github.com/dashpay/dash/commit/f4f9f918dc) [Pretty Trivial] Adjust some comments (#3252)
+- [`26fb682e91`](https://github.com/dashpay/dash/commit/26fb682e91) Speed up prevector initialization and vector assignment from prevectors (#3274)
+- [`9c9cac6d67`](https://github.com/dashpay/dash/commit/9c9cac6d67) Show quorum connections in "quorum dkgstatus" and use it in mine_quorum (#3271)
+- [`aca6af0a0e`](https://github.com/dashpay/dash/commit/aca6af0a0e) Use smaller LLMQs in regtest (#3269)
+- [`88da298082`](https://github.com/dashpay/dash/commit/88da298082) Add -whitelist to all nodes in smartfees.py (#3273)
+- [`7e3ed76e54`](https://github.com/dashpay/dash/commit/7e3ed76e54) Make a deep copy of extra_args before modifying it in set_dash_test_params (#3270)
+- [`75bb7ec022`](https://github.com/dashpay/dash/commit/75bb7ec022) A few optimizations/speedups for Dash related tests (#3268)
+- [`2afdc8c6f6`](https://github.com/dashpay/dash/commit/2afdc8c6f6) Add basic PrivateSend RPC Tests (#3254)
+- [`dc656e3236`](https://github.com/dashpay/dash/commit/dc656e3236) Bump version to 0.16 on develop (#3239)
+- [`c182c6ca14`](https://github.com/dashpay/dash/commit/c182c6ca14) Upgrade Travis to use Bionic instead of Trusty (#3143)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- 10xcryptodev
+- Akshay CM (akshaynexus)
 - Alexander Block (codablock)
-- Amir Abrams (AmirAbrams)
-- -k (charlesrocket)
 - Cofresi
-- Nathan Marley (nmarley)
+- CryptoTeller
+- dustinface (xdustinface)
+- konez2k
+- Oleg Girko (OlegGirko)
 - PastaPastaPasta
-- Riku (rikublock)
-- strophy
-- taw00
+- Piter Bushnell (Bushstar)
+- sc-9310
 - thephez
 - UdjinM6
 
@@ -537,6 +626,7 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
+- [v0.15.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.15.0.0.md) released Febrary/18/2020
 - [v0.14.0.5](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.5.md) released December/08/2019
 - [v0.14.0.4](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.4.md) released November/22/2019
 - [v0.14.0.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.3.md) released August/15/2019
