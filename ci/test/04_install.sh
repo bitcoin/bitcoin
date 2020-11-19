@@ -60,8 +60,8 @@ if [ -n "$DPKG_ADD_ARCH" ]; then
 fi
 
 if [[ $DOCKER_NAME_TAG == centos* ]]; then
-  ${CI_RETRY_EXE} DOCKER_EXEC yum -y install epel-release
-  ${CI_RETRY_EXE} DOCKER_EXEC yum -y install $DOCKER_PACKAGES $PACKAGES
+  ${CI_RETRY_EXE} DOCKER_EXEC dnf -y install epel-release
+  ${CI_RETRY_EXE} DOCKER_EXEC dnf -y --allowerasing install $DOCKER_PACKAGES $PACKAGES
 elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
