@@ -79,8 +79,7 @@ public:
     /// Create splash screen
     void createSplashScreen(const NetworkStyle *networkStyle);
     /// Basic initialization, before starting initialization/shutdown thread. Return true on success.
-    // SYSCOIN
-    bool baseInitialize(char* argv[]);
+    bool baseInitialize();
 
     /// Request core initialization
     void requestInitialize();

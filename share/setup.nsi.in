@@ -72,8 +72,6 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File @abs_top_srcdir@/release/@SYSCOIN_GUI_NAME@@EXEEXT@
-    File @abs_top_srcdir@/release/sysrelayer.nod@EXEEXT@
-    File @abs_top_srcdir@/release/sysgeth.nod@EXEEXT@
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
@@ -127,8 +125,6 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
-    Delete /REBOOTOK $INSTDIR\sysrelayer.nod@EXEEXT@
-    Delete /REBOOTOK $INSTDIR\sysgeth.nod@EXEEXT@
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon

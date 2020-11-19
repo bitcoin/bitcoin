@@ -101,11 +101,10 @@
 #include <key_io.h>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <util/executable_path/include/boost/executable_path.hpp>
-#include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 #include <flatdatabase.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
+#include <curl/curl.h>
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 static bool fFeeEstimatesInitialized = false;
@@ -405,6 +404,7 @@ void Shutdown(NodeContext& node)
     }
 
     node.args = nullptr;
+    curl_global_cleanup();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -528,6 +528,8 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> for the relayer (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast, full or disabled (to run your own geth node) (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethDescriptorURL", strprintf("Geth descriptor URL where to do versioning checks and binary downloads for Geth (default: https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-relayerDescriptorURL", strprintf("Relayer descriptor URL where to do versioning checks and binary downloads for the Geth relayer (default: https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -937,6 +939,8 @@ static bool AppInitServers(const util::Ref& context, NodeContext& node)
         return false;
     if (args.GetBoolArg("-rest", DEFAULT_REST_ENABLE)) StartREST(context);
     StartHTTPServer();
+    // SYSCOIN
+    curl_global_init(CURL_GLOBAL_ALL);
     return true;
 }
 
@@ -1076,12 +1080,8 @@ std::set<BlockFilterType> g_enabled_filter_types;
     // The log was successful, terminate now.
     std::terminate();
 };
-// SYSCOIN
-bool AppInitBasicSetup(ArgsManager& args, char* argv[])
+bool AppInitBasicSetup(ArgsManager& args)
 {
-    // SYSCOIN
-    if(argv != nullptr)
-        exePath = boost::executable_path(argv[0]);
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
     // Turn off Microsoft heap dump noise

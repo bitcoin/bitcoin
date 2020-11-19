@@ -5855,6 +5855,9 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
 }
 
 void DoGethMaintenance() {
+    if(ShutdownRequested()) {
+        return;
+    }
     bool ibd = false;
     {
         LOCK(cs_main);
@@ -5863,14 +5866,18 @@ void DoGethMaintenance() {
     // hasn't started yet so start
     if(gethPID == 0 || relayerPID == 0) {
         gethPID = relayerPID = -1;
-        LogPrintf("GETH: Starting Geth and Relayer because PID's were uninitialized\n");
+        LogPrintf("%s: Starting Geth and Relayer because PID's were uninitialized\n", __func__);
         int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
         int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
         bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
         const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-        StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
+        if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+            LogPrintf("%s: Failed to start Geth\n", __func__); 
         int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-        StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
+        if(!StartRelayerNode(relayerDescriptorURL, relayerPID, rpcport, wsport, ethrpcport))
+            LogPrintf("%s: Failed to start Relayer\n", __func__); 
         nRandomResetSec = GetRandInt(600);
         nLastGethHeaderTime = GetSystemTimeInSeconds();
     // if not syncing chain restart geth/relayer if its been long enough since last blocks from relayer
@@ -5878,11 +5885,11 @@ void DoGethMaintenance() {
         const int64_t nTimeSeconds = (int64_t)GetSystemTimeInSeconds();
         // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
         if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
-            LogPrintf("GETH: Last header time not received in sufficient time, trying to resync...\n");
+            LogPrintf("%s: Last header time not received in sufficient time, trying to resync...\n", __func__);
             // reset timer so it will only do this check at least once every interval (around 10 mins average) if geth seems stuck
             nLastGethHeaderTime = nTimeSeconds;
             // stop geth and relayer
-            LogPrintf("GETH: Stopping Geth and Relayer\n"); 
+            LogPrintf("%s: Stopping Geth and Relayer\n", __func__); 
             StopGethNode(gethPID);
             StopRelayerNode(relayerPID);
             // copy wallet dir if exists
@@ -5892,7 +5899,7 @@ void DoGethMaintenance() {
             fs::path keyStoreTmpDir = dataDir / "keystoretmp";
             bool existedKeystore = fs::exists(gethKeyStoreDir);
             if(existedKeystore){
-                LogPrintf("GETH: Copying keystore for Geth to a temp directory\n"); 
+                LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
                 try{
                     recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
                 } catch(const  std::runtime_error& e) {
@@ -5900,12 +5907,12 @@ void DoGethMaintenance() {
                     return;
                 }
             }
-            LogPrintf("GETH: Removing Geth data directory\n");
+            LogPrintf("%s: Removing Geth data directory\n", __func__);
             // clean geth data dir
             fs::remove_all(gethDir);
             // replace keystore dir
             if(existedKeystore){
-                LogPrintf("GETH: Replacing keystore with temp keystore directory\n");
+                LogPrintf("%s: Replacing keystore with temp keystore directory\n", __func__);
                 try{
                     fs::create_directory(gethDir);
                     recursive_copy(keyStoreTmpDir, gethKeyStoreDir);
@@ -5915,20 +5922,24 @@ void DoGethMaintenance() {
                 }
                 fs::remove_all(keyStoreTmpDir);
             }
-            LogPrintf("GETH: Restarting Geth and Relayer\n");
+            LogPrintf("%s: Restarting Geth and Relayer\n", __func__);
             // start node and relayer again
             int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
             int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
             bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
             const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-            StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
+            const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+            const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
+            if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+                LogPrintf("%s: Failed to start Geth\n", __func__); 
             int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-            StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
+            if(!StartRelayerNode(relayerDescriptorURL, relayerPID, rpcport, wsport, ethrpcport))
+                LogPrintf("%s: Failed to start Relayer\n", __func__); 
             // reset randomized reset number
             nRandomResetSec = GetRandInt(600);
             // set flag that geth is resyncing
             fGethSynced = false;
-            LogPrintf("GETH: Done, waiting for resync...\n");
+            LogPrintf("%s: Done, waiting for resync...\n", __func__);
         }
     }
 }

@@ -73,6 +73,7 @@
 #include <util/time.h>
 #include <ctpl.h>
 #include <random.h>
+#include <curl/curl.h>
 bool fMasternodeMode = false;
 bool bGethTestnet = false;
 bool fDisableGovernance = false;
@@ -86,7 +87,6 @@ pid_t gethPID = 0;
 pid_t relayerPID = 0;
 int64_t nRandomResetSec = 0;
 int64_t nLastGethHeaderTime = 0;
-std::string exePath = "";
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
@@ -94,6 +94,8 @@ int32_t DEFAULT_MN_COLLATERAL_REQUIRED = 100000;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 CAmount nMNCollateralRequired = DEFAULT_MN_COLLATERAL_REQUIRED*COIN;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
+RecursiveMutex cs_relayer;
+RecursiveMutex cs_geth;
 #include <typeinfo>
 #include <univalue.h>
 
@@ -104,6 +106,10 @@ const char * const SYSCOIN_SETTINGS_FILENAME = "settings.json";
 
 ArgsManager gArgs;
 // SYSCOIN
+struct DescriptorDetails {
+    std::string binURL;
+    std::string sha256Sum;
+};
 #ifdef WIN32
     #include <windows.h>
     #include <winnt.h>
@@ -1084,27 +1090,14 @@ void KillProcess(const pid_t& pid){
 std::string GetGethFilename(){
     // For Windows:
     #ifdef WIN32
-       return "sysgeth.nod.exe";
+       return "sysgeth.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "sysgeth.nod";
+        return "sysgeth";
     #else
         // Linux
-        return "sysgeth.nod";
-    #endif
-}
-std::string GetGethAndRelayerFilepath(){
-    // For Windows:
-    #ifdef WIN32
-       return "/bin/win64/";
-    #endif    
-    #ifdef MAC_OSX
-        // Mac
-        return "/bin/osx/";
-    #else
-        // Linux
-        return "/bin/linux/";
+        return "sysgeth";
     #endif
 }
 bool StopGethNode(pid_t &pid)
@@ -1151,46 +1144,154 @@ bool CheckSpecs(std::string &errMsg, bool bMiner){
         errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.").translated;
    return errMsg.empty();         
 }
-
-bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
+bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
+    fsbridge::ifstream file(filePath);
+    if (!file.is_open())
+        return false;
+    std::string fileBuffer;
+    while (file.good()) {
+        std::string input_buffer;
+        file >> input_buffer;
+        fileBuffer += input_buffer;
+    }
+    file.close();
+    UniValue json(UniValue::VOBJ);
+    std::string binArchitectureTag = "linux";
+    #ifdef WIN32
+        binArchitectureTag = "windows";
+    #endif    
+    #ifdef MAC_OSX
+        binArchitectureTag = "darwin";
+    #endif
+    if(json.read(fileBuffer) && json.isObject()) {
+        const UniValue& jsonObj = json.get_obj();
+        const UniValue& architectureValue = find_value(jsonObj, "bins");
+        if(architectureValue.isObject()) {
+            const UniValue& binValue = find_value(architectureValue.get_obj(), binArchitectureTag);
+            if(binValue.isObject()) {
+                const UniValue& binURLValue = find_value(binValue, "url");
+                if(binURLValue.isStr()) {
+                    const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
+                    if(binChecksumValue.isStr()) {
+                        details.binURL = binURLValue.get_str();
+                        details.sha256Sum = binChecksumValue.get_str();
+                        return true;
+                    }
+                }
+            }
+        }  
+    }
+    return false;
+}
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written;
+}
+bool DownloadFile(const std::string &url, const std::string &dest, const std::string &mode="wb", const std::string &checksum="") {
+    CURL *curl;
+    FILE *fp;
+    CURLcode res;
+    curl = curl_easy_init();
+    if (curl) {
+        fp = fopen(dest.c_str(),mode.c_str());
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+        res = curl_easy_perform(curl);
+        /* always cleanup */
+        curl_easy_cleanup(curl);
+        fclose(fp);
+        if(mode == "wb")
+            fs::permissions(dest,
+                    fs::perms::owner_exe | fs::perms::group_exe |
+                    fs::perms::others_exe | fs::perms::owner_read | fs::perms::group_read |
+                    fs::perms::others_read);
+    }
+    if(!checksum.empty()) {
+        LogPrintf("%s: Checking file checksum of %s\n", __func__, dest);
+        fsbridge::ifstream file(dest, std::ios_base::binary);
+        if (!file.is_open())
+            return false;
+        std::string fileBuffer;
+        while (file.good()) {
+            std::string input_buffer;
+            file >> input_buffer;
+            fileBuffer += input_buffer;
+        }
+        file.close();
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << fileBuffer;
+        const uint256& calcHash = ss.GetSHA256();
+        const uint256& localHash = uint256S(checksum);
+        LogPrintf("%s Comparing calculated hash %s to local hash %s\n", __func__, calcHash.GetHex(), localHash.GetHex());
+        return calcHash == localHash;
+    }
+    return true;
+}
+bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
+    DescriptorDetails descriptorDetailsLocal, descriptorDetailsRemote;
+    GetDescriptorStats(descriptorDestPath, descriptorDetailsLocal);
+    // always download remote descriptor to check checksum, if remote doesn't exist use local. Both local and remote cannot be missing.
+    if(!DownloadFile(descriptorURL, descriptorDestPath, "w"))
+        return false;
+    if(!GetDescriptorStats(descriptorDestPath, descriptorDetailsRemote)) {
+        if(!descriptorDetailsLocal.binURL.empty()) {
+            LogPrintf("%s: Could not download descriptor from %s but found local descriptor so using that...\n", __func__, descriptorURL);
+            return true;
+        }
+        LogPrintf("%s: Could not download descriptor from %s\n", __func__, descriptorURL);
+        return false;
+    }
+    if(descriptorDetailsLocal.sha256Sum.empty() || descriptorDetailsLocal.sha256Sum != descriptorDetailsRemote.sha256Sum) {
+         LogPrintf("%s: New version available! Downloading from %s and saving to %s\n", __func__, descriptorDetailsRemote.binURL, binaryDestPath);
+         if(!DownloadFile(descriptorDetailsRemote.binURL, binaryDestPath, "wb", descriptorDetailsRemote.sha256Sum)) {
+             LogPrintf("%s: Could not download binary %s or checksum failed\n", __func__, descriptorDetailsRemote.binURL);
+             return false;
+         }
+    }
+    LogPrintf("%s: Version is up-to-date!\n", __func__);
+    return true;
+}
+bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
 {
+    LOCK(cs_geth);
     if(mode == "disabled") {
         LogPrintf("%s: Geth is disabled, user chose to deploy their own Geth instance!\n", __func__);
         pid = -1;
         return true;
     }
-    LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
-    std::string gethFilename = GetGethFilename();
-    
     // stop any geth nodes before starting
     StopGethNode(pid);
-    fs::path fpathDefault = exePath;
-    fpathDefault = fpathDefault.parent_path();
-    
-    fs::path dataDir = GetDataDir(true) / "geth";
 
-    // ../Resources
-    fs::path attempt1 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + gethFilename;
+    LogPrintf("%s: Downloading Geth descriptor from %s\n", __func__, gethDescriptorURL);
+    fs::path descriptorPath = GetDataDir() / "gethdescriptor.json";
+    fs::path binaryURL = GetDataDir() / GetGethFilename();
+    // if either bin or descriptor not existing remove both files to download from scratch
+    if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
+        if(fs::exists(binaryURL.string()))
+            fs::remove(binaryURL.string());
+        if(fs::exists(descriptorPath.string()))
+            fs::remove(descriptorPath.string());          
+    }
+    if(!DownloadBinaryFromDescriptor(descriptorPath.string(), binaryURL.string(), gethDescriptorURL)) {
+        if (fs::exists(descriptorPath.string())) {
+            fs::remove(descriptorPath.string());
+        }
+        if (fs::exists(binaryURL.string())) {
+            fs::remove(binaryURL.string());
+        }
+        return false;
+    }
+    LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
+    
+
+    fs::path attempt1 = binaryURL.string();
     attempt1 = attempt1.make_preferred();
 
-    // current executable path
-    fs::path attempt2 = fpathDefault.string() + "/" + gethFilename;
-    attempt2 = attempt2.make_preferred();
-    // current executable path + bin/[os]/sysgeth.nod
-    fs::path attempt3 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
-    attempt3 = attempt3.make_preferred();
-    // $path
-    fs::path attempt4 = gethFilename;
-    attempt4 = attempt4.make_preferred();
-    // $path + bin/[os]/sysgeth.nod
-    fs::path attempt5 = GetGethAndRelayerFilepath() + gethFilename;
-    attempt5 = attempt5.make_preferred();
-    // /usr/local/bin/sysgeth.nod
-    fs::path attempt6 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
-    attempt6 = attempt6.make_preferred();
-
-    
-  
+    fs::path dataDir = GetDataDir(true) / "geth";
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
     struct sigaction sa;
@@ -1209,12 +1310,6 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
 	// TODO: sanitize environment variables as per
 	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
     if( pid == 0 ) {
-        // Order of looking for the geth binary:
-        // 1. current executable directory
-        // 2. current executable directory/bin/[os]/syscoin_geth
-        // 3. $path
-        // 4. $path/bin/[os]/syscoin_geth
-        // 5. /usr/local/bin/syscoin_geth
         std::string portStr = itostr(websocketport);
         std::string rpcportStr = itostr(ethrpcport);
         char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
@@ -1226,80 +1321,10 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
                 (char*)"--http.corsdomain",(char*)"*",
-                NULL };
-        char * argvAttempt2[20] = {(char*)attempt2.string().c_str(), 
-                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
-                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
-                (char*)"--ws.origins", (char*)"*",
-                (char*)"--syncmode", (char*)mode.c_str(), 
-                (char*)"--datadir", (char*)dataDir.c_str(),
-                (char*)"--allow-insecure-unlock",
-                bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--http.corsdomain",(char*)"*",
-                NULL };
-        char * argvAttempt3[20] = {(char*)attempt3.string().c_str(), 
-                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
-                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
-                (char*)"--ws.origins", (char*)"*",
-                (char*)"--syncmode", (char*)mode.c_str(), 
-                (char*)"--datadir", (char*)dataDir.c_str(),
-                (char*)"--allow-insecure-unlock",
-                bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--http.corsdomain",(char*)"*",
-                NULL };
-        char * argvAttempt4[20] = {(char*)attempt4.string().c_str(), 
-                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
-                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
-                (char*)"--ws.origins", (char*)"*",
-                (char*)"--syncmode", (char*)mode.c_str(), 
-                (char*)"--datadir", (char*)dataDir.c_str(),
-                (char*)"--allow-insecure-unlock",
-                bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--http.corsdomain",(char*)"*",
-                NULL };
-        char * argvAttempt5[20] = {(char*)attempt5.string().c_str(), 
-                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
-                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
-                (char*)"--ws.origins", (char*)"*",
-                (char*)"--syncmode", (char*)mode.c_str(), 
-                (char*)"--datadir", (char*)dataDir.c_str(),
-                (char*)"--allow-insecure-unlock",
-                bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--http.corsdomain",(char*)"*",
-                NULL };   
-        char * argvAttempt6[20] = {(char*)attempt6.string().c_str(), 
-                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(), 
-                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
-                (char*)"--ws.origins", (char*)"*",
-                (char*)"--syncmode", (char*)mode.c_str(), 
-                (char*)"--datadir", (char*)dataDir.c_str(),
-                (char*)"--allow-insecure-unlock",
-                bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--http.corsdomain",(char*)"*",
-                NULL };                                                                   
+                NULL };                                                              
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
-            LogPrintf("Geth not found at %s, trying in current folder\n", argvAttempt1[0]);
-            execv(argvAttempt2[0], &argvAttempt2[0]);
-            if (errno != 0) {
-                LogPrintf("Geth not found at %s, trying in current bin folder\n", argvAttempt2[0]);
-                execvp(argvAttempt3[0], &argvAttempt3[0]); // path
-                if (errno != 0) {
-                    LogPrintf("Geth not found at %s, trying in $PATH\n", argvAttempt3[0]);
-                    execvp(argvAttempt4[0], &argvAttempt4[0]);
-                    if (errno != 0) {
-                        LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", argvAttempt4[0]);
-                        execvp(argvAttempt5[0], &argvAttempt5[0]);
-                        if (errno != 0) {
-                            LogPrintf("Geth not found at %s, trying in /usr/local/bin folder\n", argvAttempt5[0]);
-                            execvp(argvAttempt6[0], &argvAttempt6[0]);
-                            if (errno != 0) {
-                                LogPrintf("Geth not found in %s, giving up.\n", argvAttempt6[0]);
-                            }
-                        }
-                    }
-                }
-            }
+            LogPrintf("Geth not found at %s\n", argvAttempt1[0]);
         }
     } else {
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
@@ -1312,22 +1337,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
         }
-        pid = fork(attempt2.string(), args);
+        pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
-            LogPrintf("Geth not found at %s, trying in current bin folder\n", attempt2.string());
-            pid = fork(attempt3.string(), args);
-            if( pid <= 0 ) {
-                LogPrintf("Geth not found at %s, trying in $PATH\n", attempt3.string());
-                pid = fork(attempt4.string(), args);
-                if( pid <= 0 ) {
-                    LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", attempt4.string());
-                    pid = fork(attempt5.string(), args);
-                    if( pid <= 0 ) {
-                        LogPrintf("Geth not found in %s, giving up.\n", attempt5.string());
-                        return false;
-                    }
-                }
-            }
+            LogPrintf("Geth not found at %s\n", attempt1.string());
         }  
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;
@@ -1345,14 +1357,14 @@ fs::path GetRelayerPidFile()
 std::string GetRelayerFilename(){
     // For Windows:
     #ifdef WIN32
-       return "sysrelayer.nod.exe";
+       return "sysrelayer.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "sysrelayer.nod";
+        return "sysrelayer";
     #else
         // Linux
-        return "sysrelayer.nod";
+        return "sysrelayer";
     #endif
 }
 bool StopRelayerNode(pid_t &pid)
@@ -1388,9 +1400,9 @@ bool StopRelayerNode(pid_t &pid)
     return true;
 }
 
-bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int websocketport, int ethrpcport)
+bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int rpcport, int websocketport, int ethrpcport)
 {   
-    std::string relayerFilename = GetRelayerFilename();
+    LOCK(cs_relayer);
     // stop any relayer process  before starting
     StopRelayerNode(pid);
 
@@ -1399,33 +1411,34 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
     if (gArgs.GetArg("-rpcpassword", "") != "" || !GetAuthCookie(&strRPCUserColonPass)) {
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
+
+    LogPrintf("%s: Downloading Relayer descriptor from %s\n", __func__, relayerDescriptorURL);
+    fs::path descriptorPath = GetDataDir() / "relayerdescriptor.json";
+    fs::path binaryURL = GetDataDir() / GetRelayerFilename();
+    if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
+        if(fs::exists(binaryURL.string()))
+            fs::remove(binaryURL.string());
+        if(fs::exists(descriptorPath.string()))
+            fs::remove(descriptorPath.string());          
+    }
+    if(!DownloadBinaryFromDescriptor(descriptorPath.string(), binaryURL.string(), relayerDescriptorURL)) {
+        if (fs::exists(descriptorPath.string())) {
+            fs::remove(descriptorPath.string());
+        }
+        if (fs::exists(binaryURL.string())) {
+            fs::remove(binaryURL.string());
+        }
+        return false;
+    }
     LogPrintf("%s: Starting relayer on port %d, RPC credentials %s, wsport %d ethrpcport %d...\n", __func__, rpcport, strRPCUserColonPass, websocketport, ethrpcport);
-
-
-    fs::path fpathDefault = exePath;
-    fpathDefault = fpathDefault.parent_path();
     
+    // stop any geth nodes before starting
+    StopGethNode(pid);
+
+    fs::path attempt1 = binaryURL.string();
+    attempt1 = attempt1.make_preferred();
     fs::path dataDir = GetDataDir(true) / "geth";
 
-    // ../Resources
-    fs::path attempt1 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + relayerFilename;
-    attempt1 = attempt1.make_preferred();
-
-    // current executable path
-    fs::path attempt2 = fpathDefault.string() + "/" + relayerFilename;
-    attempt2 = attempt2.make_preferred();
-    // current executable path + bin/[os]/sysrelayer.nod
-    fs::path attempt3 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
-    attempt3 = attempt3.make_preferred();
-    // $path
-    fs::path attempt4 = relayerFilename;
-    attempt4 = attempt4.make_preferred();
-    // $path + bin/[os]/sysrelayer.nod
-    fs::path attempt5 = GetGethAndRelayerFilepath() + relayerFilename;
-    attempt5 = attempt5.make_preferred();
-    // /usr/local/bin/sysrelayer.nod
-    fs::path attempt6 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
-    attempt6 = attempt6.make_preferred();
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
         struct sigaction sa;
@@ -1457,59 +1470,9 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
 					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
-            char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
-                    (char*)"--datadir", (char*)dataDir.string().c_str(),
-					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
-            char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
-                    (char*)"--datadir", (char*)dataDir.string().c_str(),
-					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
-            char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
-                    (char*)"--datadir", (char*)dataDir.string().c_str(),
-					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
-            char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
-                    (char*)"--datadir", (char*)dataDir.string().c_str(),
-					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
-            char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
-                    (char*)"--datadir", (char*)dataDir.string().c_str(),
-					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
 	        if (errno != 0) {
-		        LogPrintf("Relayer not found at %s, trying in current folder\n", argvAttempt1[0]);
-		        execv(argvAttempt2[0], &argvAttempt2[0]);
-		        if (errno != 0) {
-                    LogPrintf("Relayer not found at %s, trying in current bin folder\n", argvAttempt2[0]);
-                    execvp(argvAttempt3[0], &argvAttempt3[0]); // path
-                    if (errno != 0) {
-                        LogPrintf("Relayer not found at %s, trying in $PATH\n", argvAttempt3[0]);
-                        execvp(argvAttempt4[0], &argvAttempt4[0]);
-                        if (errno != 0) {
-                            LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", argvAttempt4[0]);
-                            execvp(argvAttempt5[0], &argvAttempt5[0]);
-                            if (errno != 0) {
-                                LogPrintf("Relayer not found at %s, trying in /usr/local/bin folder\n", argvAttempt5[0]);
-                                execvp(argvAttempt6[0], &argvAttempt6[0]);
-                                if (errno != 0) {
-                                    LogPrintf("Relayer not found in %s, giving up.\n", argvAttempt6[0]);
-                                }
-                            }
-                        }
-                    }
-	            }
+		        LogPrintf("Relayer not found at %s\n", argvAttempt1[0]);
 	        }
         } else {
             boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
@@ -1525,22 +1488,9 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
                 std::string(" --datadir ") + dataDir.string() +
 				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
 				std::string(" --sysrpcport ") + rpcSysPortStr; 
-        pid = fork(attempt2.string(), args);
+        pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
-            LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt2.string());
-            pid = fork(attempt3.string(), args);
-            if( pid <= 0 ) {
-                LogPrintf("Relayer not found at %s, trying in $PATH\n", attempt3.string());
-                pid = fork(attempt4.string(), args);
-                if( pid <= 0 ) {
-                    LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", attempt4.string());
-                    pid = fork(attempt5.string(), args);
-                    if( pid <= 0 ) {
-                        LogPrintf("Relayer not found in %s, giving up.\n", attempt5.string());
-                        return false;
-                    }
-                }
-            }
+            LogPrintf("Relayer not found at %s\n", attempt1.string());
         }                         
         boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;

@@ -33,8 +33,7 @@ void InitParameterInteraction(ArgsManager& args);
  *  @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  *  @pre Parameters should be parsed and config file should be read.
  */
-// SYSCOIN
-bool AppInitBasicSetup(ArgsManager& args, char* argv[]);
+bool AppInitBasicSetup(ArgsManager& args);
 /**
  * Initialization: parameter interaction.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.

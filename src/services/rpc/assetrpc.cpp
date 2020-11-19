@@ -18,7 +18,6 @@
 #include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-extern std::string exePath;
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -652,9 +651,11 @@ static RPCHelpMan syscoinstartgeth()
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
     const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-    if(!StartGethNode(exePath, gethPID, wsport, ethrpcport, mode))
+    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+    const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
+    if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
-    if(!StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport))
+    if(!StartRelayerNode(relayerDescriptorURL, relayerPID, rpcport, wsport, ethrpcport))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
     
     UniValue ret(UniValue::VOBJ);

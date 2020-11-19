@@ -80,8 +80,6 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/sysgeth.nod.exe $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/sysrelayer.nod.exe $(top_builddir)/release
 	@test -f $(MAKENSIS) && echo 'OutFile "$@"' | cat $(top_builddir)/share/setup.nsi - | $(MAKENSIS) -V2 - || \
 	  echo error: could not build $@
 	@echo built $@
@@ -89,9 +87,6 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
-
-SYSCOIN_GETH_BINS =	$(top_builddir)/src/bin/osx/sysgeth.nod \
-	$(top_builddir)/src/bin/osx/sysrelayer.nod
 
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)

@@ -35,21 +35,6 @@ std::string stringFromSyscoinTx(const int &nVersion) {
     }
 }
 
-std::vector<unsigned char> vchFromString(const std::string &str) {
-	unsigned char *strbeg = (unsigned char*)str.c_str();
-	return std::vector<unsigned char>(strbeg, strbeg + str.size());
-}
-std::string stringFromVch(const std::vector<unsigned char> &vch) {
-	std::string res;
-	std::vector<unsigned char>::const_iterator vi = vch.begin();
-	while (vi != vch.end()) {
-		res += (char)(*vi);
-		vi++;
-	}
-	return res;
-}
-
-
 
 
 bool CAsset::UnserializeFromData(const std::vector<unsigned char> &vchData) {

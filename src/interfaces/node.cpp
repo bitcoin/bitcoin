@@ -53,10 +53,9 @@ public:
     void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
-    // SYSCOIN
-    bool baseInitialize(char* argv[]) override
+    bool baseInitialize() override
     {
-        return AppInitBasicSetup(gArgs, argv) && AppInitParameterInteraction(gArgs) && AppInitSanityChecks() &&
+        return AppInitBasicSetup(gArgs) && AppInitParameterInteraction(gArgs) && AppInitSanityChecks() &&
                AppInitLockDataDirectory() && AppInitInterfaces(*m_context);
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override

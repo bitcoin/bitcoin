@@ -69,8 +69,7 @@ public:
     virtual uint32_t getLogCategories() = 0;
 
     //! Initialize app dependencies.
-    // SYSCOIN
-    virtual bool baseInitialize(char* argv[]) = 0;
+    virtual bool baseInitialize() = 0;
 
     //! Start node.
     virtual bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info = nullptr) = 0;

@@ -306,8 +306,6 @@ SYSCOIN_CORE_H = \
   util/translation.h \
   util/ui_change_type.h \
   util/url.h \
-  util/executable_path/include/boost/executable_path.hpp \
-  util/executable_path/include/boost/detail/executable_path_internals.hpp \
   util/vector.h \
   validation.h \
   validationinterface.h \
@@ -738,15 +736,6 @@ libsyscoin_util_a_SOURCES = \
   util/strencodings.cpp \
   util/string.cpp \
   util/time.cpp \
-  util/executable_path/src/executable_path.cpp \
-  util/executable_path/src/detail/executable_path_internals_bsd.cpp \
-  util/executable_path/src/detail/executable_path_internals_common.cpp \
-  util/executable_path/src/detail/executable_path_internals_linux.cpp \
-  util/executable_path/src/detail/executable_path_internals_macintosh.cpp \
-  util/executable_path/src/detail/executable_path_internals_other.cpp \
-  util/executable_path/src/detail/executable_path_internals_qnx.cpp \
-  util/executable_path/src/detail/executable_path_internals_solaris.cpp \
-  util/executable_path/src/detail/executable_path_internals_windows.cpp \
   $(SYSCOIN_CORE_H)
 
 if USE_LIBEVENT
@@ -884,18 +873,6 @@ libsyscoinconsensus_la_LIBADD = $(LIBSECP256K1)
 libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(LEVELDB_CPPFLAGS)
 libsyscoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-endif
-
-# syscoin pre-built binaries #
-dist_bin_SCRIPTS =
-if TARGET_WINDOWS
-  dist_bin_SCRIPTS += bin/win64/sysgeth.nod.exe bin/win64/sysrelayer.nod.exe
-endif
-if TARGET_LINUX
-  dist_bin_SCRIPTS += bin/linux/sysgeth.nod bin/linux/sysrelayer.nod
-endif
-if TARGET_DARWIN
-  dist_bin_SCRIPTS += bin/osx/sysgeth.nod bin/osx/sysrelayer.nod
 endif
 
 #

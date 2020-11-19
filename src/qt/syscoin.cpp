@@ -302,10 +302,9 @@ void SyscoinApplication::setNode(interfaces::Node& node)
     if (optionsModel) optionsModel->setNode(*m_node);
     if (m_splash) m_splash->setNode(*m_node);
 }
-// SYSCOIN
-bool SyscoinApplication::baseInitialize(char* argv[])
+bool SyscoinApplication::baseInitialize()
 {
-    return node().baseInitialize(argv);
+    return node().baseInitialize();
 }
 
 void SyscoinApplication::startThread()
@@ -636,8 +635,7 @@ int GuiMain(int argc, char* argv[])
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
-        // SYSCOIN
-        if (app.baseInitialize(argv)) {
+        if (app.baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(PACKAGE_NAME), (HWND)app.getMainWinId());
