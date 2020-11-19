@@ -24,6 +24,10 @@ enum class SynchronizationState;
 namespace interfaces {
 class Handler;
 class Node;
+// SYSCOIN
+namespace Masternode {
+    class Sync;
+}
 }
 
 QT_BEGIN_NAMESPACE
@@ -55,7 +59,7 @@ public:
 
     interfaces::Node& node() const { return m_node; }
     // SYSCOIN
-    interfaces::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
+    interfaces::Masternode::Sync& masternodeSync() const;
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();

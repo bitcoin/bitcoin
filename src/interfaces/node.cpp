@@ -78,6 +78,9 @@ public:
 
 class NodeImpl : public Node
 {
+    // SYSCOIN
+    EVOImpl m_evo;
+    MasternodeSyncImpl m_masternodeSync;
 public:
     NodeImpl(NodeContext* context) { setContext(context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
@@ -266,6 +269,9 @@ public:
     {
         return *Assert(m_context->wallet_client);
     }
+    // SYSCOIN
+    EVO& evo() override { return m_evo; }
+    Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage_connect(fn));

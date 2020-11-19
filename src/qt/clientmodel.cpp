@@ -90,11 +90,14 @@ void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
     mnListCached = mnList;
     Q_EMIT masternodeListChanged();
 }
-
+// SYSCOIN
 CDeterministicMNList ClientModel::getMasternodeList() const
 {
     LOCK(cs_mnlinst);
     return mnListCached;
+}
+interfaces::Masternode::Sync& ClientModel::masternodeSync() const { 
+    return m_node.masternodeSync(); 
 }
 
 void ClientModel::refreshMasternodeList()
