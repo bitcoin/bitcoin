@@ -120,7 +120,6 @@ class WalletEncryptionTest(BitcoinTestFramework):
                 )
                 stdout, stderr = proc.communicate()
                 assert_equal(proc.poll(), 0)
-                assert_equal(stderr, "")
 
             # Since it is no longer possible to encrypt a wallet without privkeys, we need to force one into the wallet
             # 1. Make a dump of the wallet
