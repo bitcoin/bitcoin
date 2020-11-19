@@ -23,6 +23,7 @@ void initialize()
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
     CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeBool()};
     CAddress random_address;
     CNetAddr random_netaddr;

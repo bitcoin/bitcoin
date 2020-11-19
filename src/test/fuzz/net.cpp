@@ -27,7 +27,7 @@ void initialize()
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
     const std::optional<CAddress> address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
     if (!address) {
         return;
