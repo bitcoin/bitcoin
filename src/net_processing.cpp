@@ -5067,17 +5067,33 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             LOCK(peer->m_recon_state_mutex);
             if (peer->m_recon_state) {
                 // Respond to a requested reconciliation to enable efficient transaction exchange.
-                // Respond only periodically to a) limit CPU usage for sketch computation,
+                // For initial requests, respond only periodically to a) limit CPU usage for sketch computation,
                 // and, b) limit transaction possession privacy leak.
-                if (peer->m_recon_state->GetIncomingPhase() == RECON_INIT_REQUESTED && current_time > peer->m_recon_state->GetNextRespond()) {
+                // It's safe to respond to extension request without a delay because they are already limited by initial requests.
+                if ((peer->m_recon_state->GetIncomingPhase() == RECON_INIT_REQUESTED && current_time > peer->m_recon_state->GetNextRespond()) ||
+                    peer->m_recon_state->GetIncomingPhase() == RECON_EXT_REQUESTED) {
+                    Minisketch sketch;
                     std::vector<unsigned char> response_skdata;
-                    uint16_t sketch_capacity = peer->m_recon_state->EstimateSketchCapacity();
-                    Minisketch sketch = peer->m_recon_state->ComputeSketch(sketch_capacity);
-                    if (sketch) {
+                    if (peer->m_recon_state->GetIncomingPhase() == RECON_INIT_REQUESTED) {
+                        uint16_t sketch_capacity = peer->m_recon_state->EstimateSketchCapacity();
+                        sketch = peer->m_recon_state->ComputeSketch(sketch_capacity);
+                        peer->m_recon_state->UpdateIncomingPhase(RECON_INIT_RESPONDED, sketch_capacity);
+                        if (sketch) response_skdata = sketch.Serialize();
+                    } else {
+                        sketch = peer->m_recon_state->ComputeExtendedSketch();
+                        peer->m_recon_state->UpdateIncomingPhase(RECON_EXT_RESPONDED);
+                        // Local extension sketch can be null only if initial sketch or initial capacity was 0,
+                        // in which case we would have terminated reconciliation already.
+                        assert(sketch);
                         response_skdata = sketch.Serialize();
+                        // For the sketch extension, send only the higher sketch elements.
+                        size_t lower_bytes_to_drop = peer->m_recon_state->GetCapacitySnapshot() * BYTES_PER_SKETCH_CAPACITY;
+                        // Extended sketch is twice the size of the initial sketch (which is m_capacity_snapshot).
+                        assert(lower_bytes_to_drop <= response_skdata.size());
+                        response_skdata.erase(response_skdata.begin(), response_skdata.begin() + lower_bytes_to_drop);
                     }
+
                     m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::SKETCH, response_skdata));
-                    peer->m_recon_state->UpdateIncomingPhase(RECON_INIT_RESPONDED, sketch_capacity);
                 }
             }
         }

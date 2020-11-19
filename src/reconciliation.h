@@ -243,6 +243,10 @@ public:
         return m_local_q * Q_PRECISION;
     }
 
+    uint16_t GetCapacitySnapshot()
+    {
+        return m_capacity_snapshot;
+    }
     ReconPhase GetIncomingPhase() const
     {
         return m_incoming_recon;
@@ -266,10 +270,14 @@ public:
         }
     }
 
-    void UpdateOutgoingPhase(ReconPhase phase)
+    void UpdateOutgoingPhase(ReconPhase phase, uint16_t remote_sketch_capacity=0)
     {
         m_outgoing_recon = phase;
-        if (phase == RECON_EXT_REQUESTED) m_local_set.clear();
+        if (phase == RECON_EXT_REQUESTED) {
+            m_capacity_snapshot = remote_sketch_capacity;
+            m_local_set_snapshot = m_local_set;
+            m_local_set.clear();
+        }
     }
 
     std::vector<uint256> GetLocalSet()
@@ -331,14 +339,20 @@ public:
      * of elements (see BIP-330). Considering whether we are going to send a sketch to a peer or use
      * locally, we estimate the set difference.
      */
-    Minisketch ComputeSketch(uint16_t& capacity)
+    Minisketch ComputeSketch(uint16_t capacity, bool use_snapshot=false)
     {
         Minisketch sketch;
+        std::set<uint256> working_set;
+        if (use_snapshot) {
+            working_set = m_local_set_snapshot;
+        } else {
+            working_set = m_local_set;
+        }
         // Avoid serializing/sending an empty sketch.
-        if (m_local_set.size() == 0 || capacity == 0) return sketch;
+        if (working_set.size() == 0 || capacity == 0) return sketch;
 
         std::vector<uint32_t> short_ids;
-        for (const auto& wtxid: m_local_set) {
+        for (const auto& wtxid: working_set) {
             uint32_t short_txid = ComputeShortID(wtxid);
             short_ids.push_back(short_txid);
             m_local_short_id_mapping.emplace(short_txid, wtxid);
@@ -352,6 +366,16 @@ public:
             }
         }
         return sketch;
+    }
+
+    Minisketch ComputeExtendedSketch()
+    {
+        // For now, compute a sketch of twice the capacity were computed originally.
+        // If the sketch is meant to be sent, drop the lower syndromes.
+        // TODO: optimize by computing the extension *on top* of the existent sketch
+        // instead of computing the lower order elements again.
+        uint16_t extended_capacity = m_capacity_snapshot * 2;
+        return ComputeSketch(extended_capacity, true);
     }
 
     /**
