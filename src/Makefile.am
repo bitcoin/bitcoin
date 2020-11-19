@@ -810,6 +810,10 @@ if TARGET_WINDOWS
 syscoin_cli_SOURCES += syscoin-cli-res.rc
 endif
 
+if GLIBC_BACK_COMPAT
+  syscoin_cli_SOURCES += compat/glibc_compat.cpp
+endif
+
 syscoin_cli_LDADD = \
   $(LIBSYSCOIN_CLI) \
   $(LIBUNIVALUE) \

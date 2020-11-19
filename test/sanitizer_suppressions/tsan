@@ -53,4 +53,5 @@ race:epoll_ctl  # https://github.com/bitcoin/bitcoin/pull/20218
 
 race:CBLSWorker::GenerateContributions
 race:ctpl::thread_pool::push
+race:masternodeSync
 deadlock:CConnman::ForEachNode
