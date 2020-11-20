@@ -55,4 +55,5 @@ race:CBLSWorker::GenerateContributions
 race:ctpl::thread_pool::push
 race:masternodeSync
 race:CEvoDB::CommitRootTransaction
+race:CDeterministicMNManager:GetListForBlock
 deadlock:CConnman::ForEachNode
