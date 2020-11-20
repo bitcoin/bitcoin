@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from decimal import Decimal
-from test_framework.test_framework import SyscoinTestFramework
+from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 ZDAG_NOT_FOUND = -1
@@ -13,7 +13,7 @@ ZDAG_WARNING_RBF = 1
 ZDAG_WARNING_NOT_ZDAG_TX = 2
 ZDAG_WARNING_SIZE_OVER_POLICY = 3
 ZDAG_MAJOR_CONFLICT = 4
-class AssetZDAGTest(SyscoinTestFramework):
+class AssetZDAGTest(DashTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
@@ -58,6 +58,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
         self.nodes[1].assetallocationsend(self.asset, newaddress1, 0.4, False)
+        self.bump_mocktime(5)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
@@ -72,7 +73,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         time.sleep(0.25)
         # use tx3 to build tx4
         tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.025, False)['txid']
-
+        self.bump_mocktime(5)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
             self.nodes[i].getrawtransaction(tx1)
@@ -147,10 +148,12 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.2)
         time.sleep(0.25)
         self.nodes[2].assetallocationsend(self.asset, useraddress1, 0.2)
+        self.bump_mocktime(5)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         # put all in useraddress1 so node4 can access in dbl spend, its probably in change address prior to this on node0
         self.nodes[0].assetallocationsend(self.asset, useraddress1, 1.5)
-        self.sync_mempools(self.nodes[0:3],timeout=30)
+        self.bump_mocktime(5)
+        self.sync_mempools(timeout=30)
         txid = self.nodes[0].assetallocationsend(self.asset, useraddress1, 1.5)['txid']
         # dbl spend
         txdblspend = self.nodes[3].assetallocationburn(self.asset, 1.1, "0x931d387731bbbc988b312206c74f77d004d6b84b")["txid"]
@@ -161,6 +164,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[1].assetallocationsend(self.asset, useraddress3, 0.2)
         time.sleep(0.25)
         self.nodes[2].assetallocationburn(self.asset, 0.3, "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        self.bump_mocktime(5)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         # node1/node2/node3 shouldn't have dbl spend tx because no RBF and not zdag tx
         assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[0].getrawtransaction, txdblspend)
