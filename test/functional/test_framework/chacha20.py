@@ -8,6 +8,8 @@ import os
 import sys
 import csv
 
+from . import chacha20_bindings
+
 
 class ChaCha20:
     """Class representing a ChaCha20 cipher instance."""
@@ -104,6 +106,26 @@ class ChaCha20:
         return ((v << bits) & 0xffffffff) | (v >> (32 - bits))
 
 class TestFrameworkChaCha20(unittest.TestCase):
+    def test_cpp(self):
+        def cpp_tester(i, msg_hex, key_hex, nonce_int, counter_int, out_hex):
+            c = chacha20_bindings.ChaCha20()
+            msg_bytes = bytes.fromhex(msg_hex)
+            key_bytes = bytes.fromhex(key_hex)
+            expected_bytes = bytes.fromhex(out_hex)
+
+            c.SetKey(key_bytes)
+            c.SetIV(nonce_int)
+            c.Seek(counter_int)
+
+            if len(msg_hex) == 0:
+                out = c.Keystream(len(expected_bytes))
+            else:
+                out = c.Crypt(msg_bytes)
+
+            self.assertEqual(out, expected_bytes, "ChaCha20 cpp test vector %i" % i)
+
+        self.csv_vectors(cpp_tester)
+
     def test_python(self):
         def python_tester(i, msg_hex, key_hex, nonce_int, counter_int, out_hex):
             msg_bytes = bytes.fromhex(msg_hex)
