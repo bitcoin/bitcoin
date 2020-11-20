@@ -105,3 +105,64 @@ class ChaCha20:
         """Rotate the 32-bit value v left by bits bits."""
         bits %= 32  # Make sure the term below does not throw an exception
         return ((v << bits) & 0xffffffff) | (v >> (32 - bits))
+
+class TestFrameworkChaCha20(unittest.TestCase):
+    def test_cpp(self):
+        all_vectors = self.csv_vectors()
+
+        for vector in all_vectors:
+            c = chacha20_bindings.ChaCha20()
+
+            c.SetKey(vector['key_bytes'])
+            c.SetIV(vector['nonce_int'])
+            c.Seek(vector['counter_int'])
+
+            if len(vector['msg_bytes']) == 0:
+                out = c.Keystream(len(vector['expected_bytes']))
+            else:
+                out = c.Crypt(vector['msg_bytes'])
+
+            error_msg = "ChaCha20 cpp failed for the test vector of index {}".format(
+                vector['idx'])
+            self.assertEqual(out, vector['expected_bytes'], error_msg)
+
+    def test_python(self):
+        all_vectors = self.csv_vectors()
+
+        for vector in all_vectors:
+            c = ChaCha20(vector['key_bytes'], vector['nonce_int'])
+
+            if len(vector['msg_bytes']) == 0:
+                out = c.keystream(
+                    len(vector['expected_bytes']), vector['counter_int'])
+            else:
+                out = c.encrypt(vector['msg_bytes'], vector['counter_int'])
+
+            error_msg = "ChaCha20 python failed for the test vector of index {}".format(
+                vector['idx'])
+            self.assertEqual(out, vector['expected_bytes'], error_msg)
+
+    def csv_vectors(self):
+        all_vectors = list()
+
+        with open(
+            os.path.join(sys.path[0], 'test_framework',
+                         'chacha20_test_vectors.csv'),
+            newline='',
+            encoding='utf8'
+        ) as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+
+            for row in csv_reader:
+                vector = dict()
+
+                vector['idx'] = int(row['index'])
+                vector['msg_bytes'] = bytes.fromhex(row['message'])
+                vector['key_bytes'] = bytes.fromhex(row['key'])
+                vector['nonce_int'] = int(row['nonce'], 16)
+                vector['counter_int'] = int(row['counter'])
+                vector['expected_bytes'] = bytes.fromhex(row['output'])
+
+                all_vectors.append(vector)
+
+        return all_vectors
