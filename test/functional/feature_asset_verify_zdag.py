@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
 ZDAG_NOT_FOUND = -1
@@ -12,7 +12,7 @@ ZDAG_WARNING_RBF = 1
 ZDAG_WARNING_NOT_ZDAG_TX = 2
 ZDAG_WARNING_SIZE_OVER_POLICY = 3
 ZDAG_MAJOR_CONFLICT = 4
-class AssetVerifyZDAGTest(DashTestFramework):
+class AssetVerifyZDAGTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4

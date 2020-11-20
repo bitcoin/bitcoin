@@ -44,7 +44,7 @@ from test_framework.messages import (
 )
 from test_framework.p2p import P2PInterface
 from test_framework.script import (CScript, OP_TRUE)
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
 class BaseNode(P2PInterface):
@@ -53,15 +53,13 @@ class BaseNode(P2PInterface):
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_message(headers_message)
 
-# SYSCOIN
-class AssumeValidTest(DashTestFramework):
+class AssumeValidTest(SyscoinestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.rpc_timeout = 120
         # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only
         self.extra_args = ['-dip3params=9000:9000']
-        self.mocktime = None
 
     def setup_network(self):
         self.add_nodes(3)
