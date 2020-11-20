@@ -3836,7 +3836,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
         return AbortNode(state, std::string("System error: ") + e.what());
     }
 
-    FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
+    if (pcoinsTip != nullptr) {
+        FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
+    }
 
     CheckBlockIndex(chainparams.GetConsensus());
 
