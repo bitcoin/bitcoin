@@ -7,56 +7,13 @@ import hashlib
 import unittest
 
 from .util import modinv
+from .chacha20 import ChaCha20
 
-def rot32(v, bits):
-    """Rotate the 32-bit value v left by bits bits."""
-    bits %= 32  # Make sure the term below does not throw an exception
-    return ((v << bits) & 0xffffffff) | (v >> (32 - bits))
-
-def chacha20_doubleround(s):
-    """Apply a ChaCha20 double round to 16-element state array s.
-
-    See https://cr.yp.to/chacha/chacha-20080128.pdf and https://tools.ietf.org/html/rfc8439
-    """
-    QUARTER_ROUNDS = [(0, 4, 8, 12),
-                      (1, 5, 9, 13),
-                      (2, 6, 10, 14),
-                      (3, 7, 11, 15),
-                      (0, 5, 10, 15),
-                      (1, 6, 11, 12),
-                      (2, 7, 8, 13),
-                      (3, 4, 9, 14)]
-
-    for a, b, c, d in QUARTER_ROUNDS:
-        s[a] = (s[a] + s[b]) & 0xffffffff
-        s[d] = rot32(s[d] ^ s[a], 16)
-        s[c] = (s[c] + s[d]) & 0xffffffff
-        s[b] = rot32(s[b] ^ s[c], 12)
-        s[a] = (s[a] + s[b]) & 0xffffffff
-        s[d] = rot32(s[d] ^ s[a], 8)
-        s[c] = (s[c] + s[d]) & 0xffffffff
-        s[b] = rot32(s[b] ^ s[c], 7)
 
 def chacha20_32_to_384(key32):
-    """Specialized ChaCha20 implementation with 32-byte key, 0 IV, 384-byte output."""
-    # See RFC 8439 section 2.3 for chacha20 parameters
-    CONSTANTS = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
-
-    key_bytes = [0]*8
-    for i in range(8):
-        key_bytes[i] = int.from_bytes(key32[(4 * i):(4 * (i+1))], 'little')
-
-    INITIALIZATION_VECTOR = [0] * 4
-    init = CONSTANTS + key_bytes + INITIALIZATION_VECTOR
-    out = bytearray()
-    for counter in range(6):
-        init[12] = counter
-        s = init.copy()
-        for _ in range(10):
-            chacha20_doubleround(s)
-        for i in range(16):
-            out.extend(((s[i] + init[i]) & 0xffffffff).to_bytes(4, 'little'))
-    return bytes(out)
+    """Generate ChaCha20 keystream with 32-byte key, 0 IV, 384-byte output."""
+    c = ChaCha20(key32, 0)
+    return c.keystream(384)
 
 def data_to_num3072(data):
     """Hash a 32-byte array data to a 3072-bit number using 6 Chacha20 operations."""
