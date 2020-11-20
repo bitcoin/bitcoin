@@ -3,6 +3,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Native Python ChaCha20 implementation with a 64-bit nonce."""
 
+import unittest
+import os
+import sys
+import csv
+
 
 class ChaCha20:
     """Class representing a ChaCha20 cipher instance."""
@@ -97,3 +102,38 @@ class ChaCha20:
         """Rotate the 32-bit value v left by bits bits."""
         bits %= 32  # Make sure the term below does not throw an exception
         return ((v << bits) & 0xffffffff) | (v >> (32 - bits))
+
+class TestFrameworkChaCha20(unittest.TestCase):
+    def test_python(self):
+        def python_tester(i, msg_hex, key_hex, nonce_int, counter_int, out_hex):
+            msg_bytes = bytes.fromhex(msg_hex)
+            key_bytes = bytes.fromhex(key_hex)
+            expected_bytes = bytes.fromhex(out_hex)
+
+            c = ChaCha20(key_bytes, nonce_int)
+
+            if len(msg_hex) == 0:
+                out = c.keystream(len(expected_bytes), counter_int)
+            else:
+                out = c.encrypt(msg_bytes, counter_int)
+
+            self.assertEqual(out, expected_bytes, "ChaCha20 python test vector %i" % i)
+
+        self.csv_vectors(python_tester)
+
+    def csv_vectors(self, tester):
+        with open(
+            os.path.join(sys.path[0], 'test_framework', 'chacha20_test_vectors.csv'),
+            newline='',
+            encoding='utf8'
+        ) as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)
+
+            for row in reader:
+                (i_str, msg_hex, key_hex, nonce_str, counter_str, out_hex) = row
+                i = int(i_str)
+                counter_int = int(counter_str)
+                nonce_int = int(nonce_str, 16)
+
+                tester(i, msg_hex, key_hex, nonce_int, counter_int, out_hex)
