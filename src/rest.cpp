@@ -19,7 +19,6 @@
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/ref.h>
-#include <util/strencodings.h>
 #include <validation.h>
 #include <version.h>
 
@@ -117,9 +116,10 @@ static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
     param = strReq.substr(0, pos);
     const std::string suff(strReq, pos + 1);
 
-    for (unsigned int i = 0; i < ARRAYLEN(rf_names); i++)
-        if (suff == rf_names[i].name)
-            return rf_names[i].rf;
+    for (const auto& rf_name : rf_names) {
+        if (suff == rf_name.name)
+            return rf_name.rf;
+    }
 
     /* If no suffix is found, return original string.  */
     param = strReq;
@@ -129,12 +129,13 @@ static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
 static std::string AvailableDataFormatsString()
 {
     std::string formats;
-    for (unsigned int i = 0; i < ARRAYLEN(rf_names); i++)
-        if (strlen(rf_names[i].name) > 0) {
+    for (const auto& rf_name : rf_names) {
+        if (strlen(rf_name.name) > 0) {
             formats.append(".");
-            formats.append(rf_names[i].name);
+            formats.append(rf_name.name);
             formats.append(", ");
         }
+    }
 
     if (formats.length() > 0)
         return formats.substr(0, formats.length() - 2);
@@ -695,6 +696,7 @@ void InterruptREST()
 
 void StopREST()
 {
-    for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++)
-        UnregisterHTTPHandler(uri_prefixes[i].prefix, false);
+    for (const auto& up : uri_prefixes) {
+        UnregisterHTTPHandler(up.prefix, false);
+    }
 }
