@@ -21,7 +21,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 {
     // Construct deserializer, with a dummy NodeId
     V1TransportDeserializer deserializer{Params(), (NodeId)0, SER_NETWORK, INIT_PROTO_VERSION};
-    Span<const char> msg_bytes{(const char*)buffer.data(), buffer.size()};
+    Span<const uint8_t> msg_bytes{buffer};
     while (msg_bytes.size() > 0) {
         const int handled = deserializer.Read(msg_bytes);
         if (handled < 0) {
