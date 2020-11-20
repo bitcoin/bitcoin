@@ -117,6 +117,8 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockV
 
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
+    if(!deterministicMNManager)
+        return false;
     LOCK(deterministicMNManager->cs);
 
     static int64_t nTimeDMN = 0;

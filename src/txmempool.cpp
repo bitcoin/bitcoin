@@ -438,7 +438,8 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
             mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
             CDeterministicMNList mnList;
-            deterministicMNManager->GetListAtChainTip(mnList);
+            if(deterministicMNManager)
+                deterministicMNManager->GetListAtChainTip(mnList);
             auto dmn = mnList.GetMN(proTx.proTxHash);
             if(dmn) {
                 newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
@@ -452,7 +453,8 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         if(GetTxPayload(tx, proTx)) {
             mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
             CDeterministicMNList mnList;
-            deterministicMNManager->GetListAtChainTip(mnList);
+            if(deterministicMNManager)
+                deterministicMNManager->GetListAtChainTip(mnList);
             auto dmn = mnList.GetMN(proTx.proTxHash);
             if(dmn) {
                 newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
@@ -822,7 +824,8 @@ void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
         }
     };
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     for (const auto& in : tx.vin) {
         auto collateralIt = mapProTxCollaterals.find(in.prevout);
         if (collateralIt != mapProTxCollaterals.end()) {
@@ -1267,7 +1270,8 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
 
         // this method should only be called with validated ProTxs
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
         auto dmn = mnList.GetMN(proTx.proTxHash);
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
@@ -1291,7 +1295,8 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
 
         // this method should only be called with validated ProTxs
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
         auto dmn = mnList.GetMN(proTx.proTxHash);
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());

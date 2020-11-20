@@ -255,7 +255,8 @@ static RPCHelpMan quorum_memberof()
         LOCK(cs_main);
         const CBlockIndex* pindexTip = ::ChainActive().Tip();
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListForBlock(pindexTip, mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(pindexTip, mnList);
         dmn = mnList.GetMN(protxHash);
         if (!dmn) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");

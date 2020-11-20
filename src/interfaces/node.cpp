@@ -54,7 +54,8 @@ public:
     CDeterministicMNList getListAtChainTip() override
     {
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
         return mnList;
     }
 };

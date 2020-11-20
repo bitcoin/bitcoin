@@ -181,7 +181,8 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     if (pindexPrev) {
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(pindexPrev, mnList);
 
         // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
         if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->collateralOutpoint != collateralOutpoint) {
@@ -237,7 +238,8 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
 
     if (pindexPrev) {
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(pindexPrev, mnList);
         auto mn = mnList.GetMN(ptx.proTxHash);
         if (!mn) {
             return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);
@@ -309,7 +311,8 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
 
     if (pindexPrev) {
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(pindexPrev, mnList);
         auto dmn = mnList.GetMN(ptx.proTxHash);
         if (!dmn) {
             return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);
@@ -378,7 +381,8 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
 
     if (pindexPrev) {
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListForBlock(pindexPrev, mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(pindexPrev, mnList);
         auto dmn = mnList.GetMN(ptx.proTxHash);
         if (!dmn)
             return FormatSyscoinErrorMessage(state, "bad-protx-hash", fJustCheck);

@@ -878,10 +878,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         AddToSpends(hash);
         // SYSCOIN
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
-                if (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
+                if (deterministicMNManager && deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
                     LockCoin(COutPoint(hash, i));
                 }
             }
@@ -3482,13 +3483,14 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 void CWallet::AutoLockMasternodeCollaterals()
 {
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
 
     LOCK(cs_wallet);
     for (const auto& pair : mapWallet) {
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
+                if (deterministicMNManager && deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
                     LockCoin(COutPoint(pair.first, i));
                 }
             }
@@ -3899,14 +3901,15 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
 
     AssertLockHeld(cs_wallet);
 
     for (const auto& pair : mapWallet) {
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
+                if (deterministicMNManager && deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
                     vOutpts.emplace_back(COutPoint(pair.first, i));
                 }
             }

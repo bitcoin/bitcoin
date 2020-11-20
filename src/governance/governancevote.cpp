@@ -120,7 +120,8 @@ void CGovernanceVote::Relay(CConnman& connman) const
         return;
     }
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         return;
@@ -225,7 +226,8 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
         return false;
     }
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());

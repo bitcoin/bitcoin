@@ -60,7 +60,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 {
     if (!fMasternodeMode) return;
 
-    if (!deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) return;
+    if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) return;
 
     // Check that our local network configuration is correct
     if (!fListen && Params().RequireRoutableExternalIP()) {
@@ -76,7 +76,8 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         return;
     }
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListForBlock(pindex, mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListForBlock(pindex, mnList);
     if(!activeMasternodeInfo.blsPubKeyOperator)
         return;
     CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeMasternodeInfo.blsPubKeyOperator);
@@ -141,12 +142,14 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     if (!fMasternodeMode) return;
-    if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
+    if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 
     if (state == MASTERNODE_READY) {
         CDeterministicMNList oldMNList, newMNList;
-        deterministicMNManager->GetListForBlock(pindexNew->pprev, oldMNList);
-        deterministicMNManager->GetListForBlock(pindexNew, newMNList);
+        if(deterministicMNManager) {
+            deterministicMNManager->GetListForBlock(pindexNew->pprev, oldMNList);
+            deterministicMNManager->GetListForBlock(pindexNew, newMNList);
+        }
         if (!newMNList.IsMNValid(activeMasternodeInfo.proTxHash)) {
             // MN disappeared from MN list
             state = MASTERNODE_REMOVED;

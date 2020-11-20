@@ -175,6 +175,8 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet)
 {
+    if(!deterministicMNManager)
+        return false;
     LOCK(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
     const CBlockIndex* baseBlockIndex = ::ChainActive().Genesis();

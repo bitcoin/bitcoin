@@ -2043,7 +2043,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         addrman.ResolveCollisions();
         // SYSCOIN
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
 
         int64_t nANow = GetAdjustedTime();
         int nTries = 0;
@@ -2182,7 +2183,8 @@ void CConnman::ThreadOpenMasternodeConnections()
             }
         });
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
         if (interruptNet)
             return;
 

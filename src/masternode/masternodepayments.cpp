@@ -220,7 +220,8 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
     for(int h = nStartHeight; h < nEndHeight; h++) {
         if (h <= nChainTipHeight) {
             CDeterministicMNList payeeList;
-            deterministicMNManager->GetListForBlock(::ChainActive()[h - 1], payeeList);
+            if(deterministicMNManager)
+                deterministicMNManager->GetListForBlock(::ChainActive()[h - 1], payeeList);
             CDeterministicMNCPtr payee = payeeList.GetMNPayee();
             mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
         } else {
@@ -230,7 +231,8 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
     }
     if (doProjection) {
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
         std::vector<CDeterministicMNCPtr> projection;
         mnList.GetProjectedMNPayees(nEndHeight - nChainTipHeight, projection);
         for (size_t i = 0; i < projection.size(); i++) {
@@ -300,7 +302,8 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
         if(!pindex)
             return false;
         CDeterministicMNList dmnPayeeList;
-        deterministicMNManager->GetListForBlock(pindex, dmnPayeeList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(pindex, dmnPayeeList);
         dmnPayee = dmnPayeeList.GetMNPayee();
         if (!dmnPayee) {
             return false;
@@ -329,7 +332,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, const CAmount &blockR
 
 bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount& nHalfFee, CAmount& nMNSeniorityRet)
 {
-    if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
+    if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here
         return true;
     }

@@ -160,7 +160,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
     AssertLockHeld(cs_main);
     curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
 
-    if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
+    if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
         return false;
     }
     std::vector<CDeterministicMNCPtr> mns;

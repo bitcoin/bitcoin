@@ -883,7 +883,8 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     LogPrintf("Filling coin cache with masternode UTXOs...\n");
     int64_t nStart = GetTimeMillis();
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         Coin coin;
         GetUTXOCoin(dmn->collateralOutpoint, coin);

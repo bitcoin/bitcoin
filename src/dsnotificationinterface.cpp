@@ -27,8 +27,8 @@ void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pin
 {
     if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones
         return;
-
-    deterministicMNManager->UpdatedBlockTip(pindexNew);
+    if(deterministicMNManager)
+        deterministicMNManager->UpdatedBlockTip(pindexNew);
 }
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {

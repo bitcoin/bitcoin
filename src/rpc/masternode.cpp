@@ -100,7 +100,8 @@ static RPCHelpMan masternode_count()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     int total = mnList.GetAllMNsCount();
     int enabled = mnList.GetValidMNsCount();
 
@@ -115,7 +116,8 @@ static RPCHelpMan masternode_count()
 UniValue GetNextMasternodeForPayment(size_t heightShift)
 {
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     std::vector<CDeterministicMNCPtr> payees;
     mnList.GetProjectedMNPayees(heightShift, payees);
     if (payees.empty())
@@ -194,7 +196,8 @@ static RPCHelpMan masternode_status()
     mnObj.pushKV("outpoint", activeMasternodeInfo.outpoint.ToStringShort());
     mnObj.pushKV("service", activeMasternodeInfo.service.ToString());
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMN(activeMasternodeInfo.proTxHash);
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
@@ -285,7 +288,8 @@ RPCHelpMan masternodelist()
 
     UniValue obj(UniValue::VOBJ);
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     auto dmnToStatus = [&](const CDeterministicMNCPtr& dmn) {
         if (mnList.IsMNValid(dmn)) {
             return "ENABLED";

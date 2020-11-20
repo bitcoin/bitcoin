@@ -20,7 +20,8 @@ void CLLMQUtils::GetAllQuorumMembers(uint8_t llmqType, const CBlockIndex* pindex
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
     CDeterministicMNList allMns;
-    deterministicMNManager->GetListForBlock(pindexQuorum, allMns);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListForBlock(pindexQuorum, allMns);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pindexQuorum->GetBlockHash()));
     allMns.CalculateQuorum(params.size, modifier, members);
 }
@@ -194,7 +195,8 @@ void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pi
     if (!connections.empty()) {
         if (!connman.HasMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
             CDeterministicMNList mnList;
-            deterministicMNManager->GetListAtChainTip(mnList);
+            if(deterministicMNManager)
+                deterministicMNManager->GetListAtChainTip(mnList);
             std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : connections) {
                 auto dmn = mnList.GetValidMN(c);
@@ -232,7 +234,8 @@ void CLLMQUtils::AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex *
     if (!probeConnections.empty()) {
         if (LogAcceptCategory(BCLog::LLMQ)) {
             CDeterministicMNList mnList;
-            deterministicMNManager->GetListAtChainTip(mnList);
+            if(deterministicMNManager)
+                deterministicMNManager->GetListAtChainTip(mnList);
             std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes probes for quorum %s:", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : probeConnections) {
                 auto dmn = mnList.GetValidMN(c);

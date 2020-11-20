@@ -459,7 +459,8 @@ std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& 
     if (it == mapObjects.end()) return vecResult;
     const CGovernanceObject& govobj = it->second;
     CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(mnList);
     std::map<COutPoint, CDeterministicMNCPtr> mapMasternodes;
     if (mnCollateralOutpointFilter.IsNull()) {
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
@@ -948,7 +949,8 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     size_t nProjectedVotes = 2000;
     if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
         CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
         nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, (int)mnList.GetValidMNsCount())));
     }
 
@@ -1174,7 +1176,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
     nCachedBlockHeight = pindex->nHeight;
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
 
-    if (deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) {
+    if (deterministicMNManager && deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) {
         RemoveInvalidVotes();
     }
 
@@ -1239,7 +1241,8 @@ void CGovernanceManager::RemoveInvalidVotes()
 
     LOCK(cs);
     CDeterministicMNList curMNList;
-    deterministicMNManager->GetListAtChainTip(curMNList);
+    if(deterministicMNManager)
+        deterministicMNManager->GetListAtChainTip(curMNList);
     CDeterministicMNListDiff diff;
     lastMNListForVotingKeys.BuildDiff(curMNList, diff);
 
