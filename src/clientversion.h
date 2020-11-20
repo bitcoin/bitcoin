@@ -39,25 +39,8 @@ static const int CLIENT_VERSION =
                              10000 * CLIENT_VERSION_MAJOR
                          +     100 * CLIENT_VERSION_MINOR
                          +       1 * CLIENT_VERSION_BUILD;
-static const int CLIENT_VERSION_MASTERNODE_MAJOR = 1;
-static const int CLIENT_MASTERNODE_VERSION =
-                           1000000 * CLIENT_VERSION_MASTERNODE_MAJOR
-                         +   10000 * CLIENT_VERSION_MINOR
-                         +     100 * CLIENT_VERSION_REVISION
-                         +       1 * CLIENT_VERSION_BUILD;
-// these depend on sentinel code used for this client, pull in from sentinel python version (should be same)
-static const int CLIENT_VERSION_SENTINEL_MAJOR = 1;  
-static const int CLIENT_VERSION_SENTINEL_MINOR = 0;   
-static const int CLIENT_VERSION_SENTINEL_REVISION = 0;   
-static const int CLIENT_VERSION_SENTINEL_BUILD = 0;                          
-static const int CLIENT_SENTINEL_VERSION =
-                           1000000 * CLIENT_VERSION_SENTINEL_MAJOR
-                         +   10000 * CLIENT_VERSION_SENTINEL_MINOR
-                         +     100 * CLIENT_VERSION_SENTINEL_REVISION
-                         +       1 * CLIENT_VERSION_SENTINEL_BUILD;  
 extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
-// SYSCOIN
 std::string FormatVersion(int nVersion);
 
 std::string FormatFullVersion();
