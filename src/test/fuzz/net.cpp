@@ -129,7 +129,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
             [&] {
                 const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
                 bool complete;
-                node.ReceiveMsgBytes((const char*)b.data(), b.size(), complete);
+                node.ReceiveMsgBytes({(const char*)b.data(), b.size()}, complete);
             });
     }
 

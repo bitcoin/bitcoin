@@ -933,8 +933,8 @@ public:
     virtual bool Complete() const = 0;
     // set the serialization context version
     virtual void SetVersion(int version) = 0;
-    // read and deserialize data
-    virtual int Read(const char *data, unsigned int bytes) = 0;
+    /** read and deserialize data, advances msg_bytes data pointer */
+    virtual int Read(Span<const char>& msg_bytes) = 0;
     // decomposes a message from the context
     virtual std::optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err) = 0;
     virtual ~TransportDeserializer() {}
@@ -955,8 +955,8 @@ private:
     unsigned int nDataPos;
 
     const uint256& GetMessageHash() const;
-    int readHeader(const char *pch, unsigned int nBytes);
-    int readData(const char *pch, unsigned int nBytes);
+    int readHeader(Span<const char> msg_bytes);
+    int readData(Span<const char> msg_bytes);
 
     void Reset() {
         vRecv.clear();
@@ -990,9 +990,14 @@ public:
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
     }
-    int Read(const char *pch, unsigned int nBytes) override {
-        int ret = in_data ? readData(pch, nBytes) : readHeader(pch, nBytes);
-        if (ret < 0) Reset();
+    int Read(Span<const char>& msg_bytes) override
+    {
+        int ret = in_data ? readData(msg_bytes) : readHeader(msg_bytes);
+        if (ret < 0) {
+            Reset();
+        } else {
+            msg_bytes = msg_bytes.subspan(ret);
+        }
         return ret;
     }
     std::optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err_raw_size) override;
@@ -1271,7 +1276,16 @@ public:
         return nRefCount;
     }
 
-    bool ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete);
+    /**
+     * Receive bytes from the buffer and deserialize them into messages.
+     *
+     * @param[in]   msg_bytes   The raw data
+     * @param[out]  complete    Set True if at least one message has been
+     *                          deserialized and is ready to be processed
+     * @return  True if the peer should stay connected,
+     *          False if the peer should be disconnected from.
+     */
+    bool ReceiveMsgBytes(Span<const char> msg_bytes, bool& complete);
 
     void SetRecvVersion(int nVersionIn)
     {
