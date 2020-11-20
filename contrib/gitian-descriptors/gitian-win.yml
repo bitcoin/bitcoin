@@ -1,5 +1,5 @@
 ---
-name: "dash-win-18.0"
+name: "dash-win-18"
 enable_cache: true
 distro: "ubuntu"
 suites:
