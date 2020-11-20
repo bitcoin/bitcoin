@@ -238,7 +238,8 @@ define $(package)_config_cmds
   cd ../qttranslations && ../qtbase/bin/qmake qttranslations.pro -o Makefile && \
   cd translations && ../../qtbase/bin/qmake translations.pro -o Makefile && cd ../.. && \
   cd qttools/src/linguist/lrelease/ && ../../../../qtbase/bin/qmake lrelease.pro -o Makefile && \
-  cd ../lupdate/ && ../../../../qtbase/bin/qmake lupdate.pro -o Makefile && cd ../../../..
+  cd ../lupdate/ && ../../../../qtbase/bin/qmake lupdate.pro -o Makefile && cd ../../../.. && \
+  echo ".obj/qpaintengine_raster.o: CXXFLAGS += -O2" >> qtbase/src/gui/Makefile
 endef
 
 define $(package)_build_cmds
