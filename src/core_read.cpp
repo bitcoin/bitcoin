@@ -20,10 +20,10 @@
 #include <algorithm>
 #include <string>
 
-CScript ParseScript(const std::string& s)
-{
-    CScript result;
+namespace {
 
+opcodetype ParseOpCode(const std::string& s)
+{
     static std::map<std::string, opcodetype> mapOpNames;
 
     if (mapOpNames.empty())
@@ -44,6 +44,17 @@ CScript ParseScript(const std::string& s)
             }
         }
     }
+
+    auto it = mapOpNames.find(s);
+    if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
+    return it->second;
+}
+
+} // namespace
+
+CScript ParseScript(const std::string& s)
+{
+    CScript result;
 
     std::vector<std::string> words;
     boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
@@ -82,14 +93,10 @@ CScript ParseScript(const std::string& s)
             std::vector<unsigned char> value(w->begin()+1, w->end()-1);
             result << value;
         }
-        else if (mapOpNames.count(*w))
-        {
-            // opcode, e.g. OP_ADD or ADD:
-            result << mapOpNames[*w];
-        }
         else
         {
-            throw std::runtime_error("script parse error");
+            // opcode, e.g. OP_ADD or ADD:
+            result << ParseOpCode(*w);
         }
     }
 
