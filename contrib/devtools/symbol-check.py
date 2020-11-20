@@ -68,6 +68,8 @@ ELF_ALLOWED_LIBRARIES = {
 'ld-linux.so.2', # 32-bit dynamic linker
 'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
 'ld-linux-armhf.so.3', # 32-bit ARM dynamic linker
+'ld64.so.1', # POWER64 ABIv1 dynamic linker
+'ld64.so.2', # POWER64 ABIv2 dynamic linker
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
 'libxcb.so.1', # part of X11
@@ -80,6 +82,7 @@ pixie.EM_386:    (2,1),
 pixie.EM_X86_64: (2,2,5),
 pixie.EM_ARM:    (2,4),
 pixie.EM_AARCH64:(2,17),
+pixie.EM_PPC64:  (2,17),
 pixie.EM_RISCV:  (2,27)
 }
 
