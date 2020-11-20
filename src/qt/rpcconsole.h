@@ -99,6 +99,8 @@ private Q_SLOTS:
     void showOrHideBanTableIfRequired();
     /** clear the selected node */
     void clearSelectedNode();
+    /** show detailed information on ui about selected node */
+    void updateDetailWidget();
 
 public Q_SLOTS:
     void clear(bool clearHistory = true);
@@ -132,8 +134,6 @@ public Q_SLOTS:
     void browseHistory(int offset);
     /** Scroll console view to end */
     void scrollToEnd();
-    /** Handle selection of peer in peers list */
-    void peerSelected(const QItemSelection &selected, const QItemSelection &deselected);
     /** Handle selection caching before update */
     void peerLayoutAboutToChange();
     /** Handle updated peer information */
@@ -158,8 +158,6 @@ private:
     void setTrafficGraphRange(TrafficGraphData::GraphRange range);
     /** Build parameter list for restart */
     void buildParameterlist(QString arg);
-    /** show detailed information on ui about selected node */
-    void updateNodeDetail(const CNodeCombinedStats *stats);
     /** Set required icons for buttons inside the dialog */
     void setButtonIcons();
     /** Reload some themes related widgets */
