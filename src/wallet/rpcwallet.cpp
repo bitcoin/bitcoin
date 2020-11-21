@@ -4611,6 +4611,7 @@ static RPCHelpMan walletdisplayaddress()
 
 RPCHelpMan abortrescan();
 RPCHelpMan dumpprivkey();
+RPCHelpMan dumpmasterprivkey();
 RPCHelpMan importprivkey();
 RPCHelpMan importaddress();
 RPCHelpMan importpubkey();
@@ -4637,6 +4638,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &psbtbumpfee,                    },
     { "wallet",             &createwallet,                   },
     { "wallet",             &dumpprivkey,                    },
+    { "wallet",             &dumpmasterprivkey,              },
     { "wallet",             &dumpwallet,                     },
     { "wallet",             &encryptwallet,                  },
     { "wallet",             &getaddressesbylabel,            },
