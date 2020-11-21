@@ -1,0 +1,46 @@
+commit f967441837e0f7f88234d18177850e0aefc57dba
+Author: fanquake <fanquake@gmail.com>
+Date:   Sat Nov 21 11:44:47 2020 +0800
+
+    build: fix determinism issue when compiling with Clang 8.0.0
+    
+    When building Qt using LLVM/Clang 8 under -O3 (it's default),
+    we run into a determinism issue in qt_intersect_spans (qpaintengine_raster.cpp).
+    
+    The issue has been fixed upstream
+    https://github.com/llvm/llvm-project/commit/db101864bdc938deb1d63fe4f7da761bd38e5cae
+    & https://reviews.llvm.org/D64601, however the fix has not been
+    backported to the 8.x branch.
+    
+    To work around this, we special-case the file causing the issue, and
+    compile it with -O2.
+    
+    The patch is also scoped to only darwin builds, as that is the only
+    platform which is built using the non-deterministic compiler.
+
+diff --git a/qtbase/src/gui/painting/painting.pri b/qtbase/src/gui/painting/painting.pri
+index 63e345545c0..2a671d71cc0 100644
+--- a/qtbase/src/gui/painting/painting.pri
++++ b/qtbase/src/gui/painting/painting.pri
+@@ -133,3 +133,21 @@ MIPS_DSP_ASM += painting/qdrawhelper_mips_dsp_asm.S
+ MIPS_DSPR2_ASM += painting/qdrawhelper_mips_dspr2_asm.S
+ 
+ include($$PWD/../../3rdparty/zlib_dependency.pri)
++
++darwin {
++    PAINTENGINE_RASTER_SOURCES = painting/qpaintengine_raster.cpp
++
++    qpaintengine_raster_O2.commands = $$QMAKE_CXX -c $(CXXFLAGS) $(INCPATH)
++
++    # use -O2 instead of -O3 to work around a determinism issue when building with Clang 8
++    qpaintengine_raster_O2.commands += -O2
++
++    qpaintengine_raster_O2.commands += -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
++    qpaintengine_raster_O2.dependency_type = TYPE_C
++    qpaintengine_raster_O2.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_BASE}$${first(QMAKE_EXT_OBJ)}
++    qpaintengine_raster_O2.input = PAINTENGINE_RASTER_SOURCES
++    qpaintengine_raster_O2.variable_out = OBJECTS
++    qpaintengine_raster_O2.name = compiling[qpaintengine_raster_O2] ${QMAKE_FILE_IN}
++    silent: qpaintengine_raster_O2.commands = @echo compiling[qpaintengine_raster_O2] ${QMAKE_FILE_IN} && $$qpaintengine_raster_O2.commands
++    QMAKE_EXTRA_COMPILERS += qpaintengine_raster_O2
++}
