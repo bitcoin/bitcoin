@@ -1396,3 +1396,12 @@ bool GetWalletRestrictionFromJSONRPCRequest(const JSONRPCRequest& request, std::
     out_wallet_allowed = request.m_wallet_restriction;
     return true;
 }
+
+void EnsureNotWalletRestricted(const JSONRPCRequest& request)
+{
+    std::string authorized_wallet_name;
+    const bool have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+    if (have_wallet_restriction) {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not available for wallet-restricted RPC users");
+    }
+}

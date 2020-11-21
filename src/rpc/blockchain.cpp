@@ -2693,6 +2693,8 @@ static RPCHelpMan dumptxoutset()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    EnsureNotWalletRestricted(request);
+
     // handle optional ASCII parameters
     const bool is_human_readable = !request.params[1].isNull();
     const bool show_header = request.params[2].isNull() || request.params[2].get_bool();
