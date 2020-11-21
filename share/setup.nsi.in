@@ -56,7 +56,7 @@ CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@.@CLIENT_VERSION_BUILD@
+VIProductVersion @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_BUILD@.0
 VIAddVersionKey ProductName "@PACKAGE_NAME@"
 VIAddVersionKey ProductVersion "@PACKAGE_VERSION@"
 VIAddVersionKey CompanyName "${COMPANY}"
