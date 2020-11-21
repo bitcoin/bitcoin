@@ -27,7 +27,6 @@
 #include <util/translation.h>
 #include <util/url.h>
 #include <util/vector.h>
-#include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
 #include <wallet/load.h>
@@ -224,14 +223,8 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         if (!estimate_mode.isNull() && !estimate_mode.get_str().empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate");
         }
-        CFeeRate fee_rate_in_sat_vb{CFeeRate(AmountFromValue(fee_rate), COIN)};
-        if (override_min_fee) {
-            if (fee_rate_in_sat_vb <= CFeeRate(0)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid fee_rate %s (must be greater than 0)", fee_rate_in_sat_vb.ToString(FeeEstimateMode::DUFF_B)));
-            }
-            cc.fOverrideFeeRate = true;
-        }
-        cc.m_feerate = fee_rate_in_sat_vb;
+        cc.m_feerate = CFeeRate(AmountFromValue(fee_rate), COIN);
+        if (override_min_fee) cc.fOverrideFeeRate = true;
         return;
     }
     if (!estimate_mode.isNull() && !FeeModeFromString(estimate_mode.get_str(), cc.m_fee_mode)) {
@@ -3474,11 +3467,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
             if (options.exists("estimate_mode")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
             }
-            CFeeRate fee_rate(AmountFromValue(options["feeRate"]));
-            if (fee_rate <= CFeeRate(0)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid feeRate %s (must be greater than 0)", fee_rate.ToString(FeeEstimateMode::DASH_KB)));
-            }
-            coinControl.m_feerate = fee_rate;
+            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
 
