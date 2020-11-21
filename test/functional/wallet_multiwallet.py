@@ -355,11 +355,16 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[0].unloadwallet)
         assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", self.nodes[0].unloadwallet, "dummy")
         assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", node.get_wallet_rpc("dummy").unloadwallet)
-        assert_raises_rpc_error(-8, "Both the RPC endpoint wallet and wallet_name parameter were provided (only one allowed)", w1.unloadwallet, "w2"),
-        assert_raises_rpc_error(-8, "Both the RPC endpoint wallet and wallet_name parameter were provided (only one allowed)", w1.unloadwallet, "w1"),
+        assert_raises_rpc_error(-8, "RPC endpoint wallet and wallet_name parameter specify different wallets", w1.unloadwallet, "w2"),
 
         # Successfully unload the specified wallet name
         self.nodes[0].unloadwallet("w1")
+        assert 'w1' not in self.nodes[0].listwallets()
+
+        # Unload w1 again, this time providing the wallet name twice
+        self.nodes[0].loadwallet("w1")
+        assert 'w1' in self.nodes[0].listwallets()
+        w1.unloadwallet("w1")
         assert 'w1' not in self.nodes[0].listwallets()
 
         # Successfully unload the wallet referenced by the request endpoint
