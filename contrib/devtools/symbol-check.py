@@ -157,7 +157,7 @@ def check_version(max_versions, version, arch) -> bool:
 def check_imported_symbols(filename) -> bool:
     elf = pixie.load(filename)
     cppfilt = CPPFilt()
-    ok = True
+    ok: bool = True
 
     for symbol in elf.dyn_symbols:
         if not symbol.is_import:
@@ -172,7 +172,7 @@ def check_imported_symbols(filename) -> bool:
 def check_exported_symbols(filename) -> bool:
     elf = pixie.load(filename)
     cppfilt = CPPFilt()
-    ok = True
+    ok: bool = True
     for symbol in elf.dyn_symbols:
         if not symbol.is_export:
             continue
@@ -184,7 +184,7 @@ def check_exported_symbols(filename) -> bool:
     return ok
 
 def check_ELF_libraries(filename) -> bool:
-    ok = True
+    ok: bool = True
     elf = pixie.load(filename)
     for library_name in elf.query_dyn_tags(pixie.DT_NEEDED):
         assert(isinstance(library_name, bytes))
@@ -207,7 +207,7 @@ def macho_read_libraries(filename) -> List[str]:
     return libraries
 
 def check_MACHO_libraries(filename) -> bool:
-    ok = True
+    ok: bool = True
     for dylib in macho_read_libraries(filename):
         if dylib not in MACHO_ALLOWED_LIBRARIES:
             print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
@@ -227,7 +227,7 @@ def pe_read_libraries(filename) -> List[str]:
     return libraries
 
 def check_PE_libraries(filename) -> bool:
-    ok = True
+    ok: bool = True
     for dylib in pe_read_libraries(filename):
         if dylib not in PE_ALLOWED_LIBRARIES:
             print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
@@ -260,7 +260,7 @@ def identify_executable(executable) -> Optional[str]:
     return None
 
 if __name__ == '__main__':
-    retval = 0
+    retval: int = 0
     for filename in sys.argv[1:]:
         try:
             etype = identify_executable(filename)
@@ -269,7 +269,7 @@ if __name__ == '__main__':
                 retval = 1
                 continue
 
-            failed = []
+            failed: List[str] = []
             for (name, func) in CHECKS[etype]:
                 if not func(filename):
                     failed.append(name)
