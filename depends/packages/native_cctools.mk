@@ -7,11 +7,11 @@ $(package)_build_subdir=cctools
 $(package)_patches=ld64_disable_threading.patch
 
 ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-$(package)_clang_version=8.0.0
+$(package)_clang_version=9.0.0
 $(package)_clang_download_path=https://releases.llvm.org/$($(package)_clang_version)
-$(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-14.04.tar.xz
-$(package)_clang_file_name=clang-llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-14.04.tar.xz
-$(package)_clang_sha256_hash=9ef854b71949f825362a119bf2597f744836cb571131ae6b721cd102ffea8cd0
+$(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+$(package)_clang_file_name=clang-llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+$(package)_clang_sha256_hash=a23b082b30c128c9831dbdd96edad26b43f56624d0ad0ea9edec506f5385038d
 endif
 
 $(package)_libtapi_version=3efb201881e7a76a21e0554906cf306432539cef
