@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(util_datadir)
     ClearDatadirCache();
     const fs::path dd_norm = GetDataDir();
 
-    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/");
+    gArgs.ForceSetArg("-datadir", dd_norm.string());
     ClearDatadirCache();
     BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
 
@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_CASE(util_datadir)
     ClearDatadirCache();
     BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
 
-    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/./");
+    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/.");
     ClearDatadirCache();
     BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
 
-    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/.//");
+    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/./.");
     ClearDatadirCache();
     BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
 }
