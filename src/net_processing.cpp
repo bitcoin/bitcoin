@@ -1926,7 +1926,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
     int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
-    if(pop_res != -1)
+    if(pop_res >= 0)
     {
         return pop_res;
     }

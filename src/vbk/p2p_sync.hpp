@@ -52,7 +52,7 @@ namespace p2p {
 const static std::string get_prefix = "g";
 const static std::string offer_prefix = "of";
 
-const static uint32_t MAX_POP_DATA_SENDING_AMOUNT = MAX_INV_SZ;
+const static uint32_t MAX_POP_DATA_SENDING_AMOUNT = 1000;
 const static uint32_t MAX_POP_MESSAGE_SENDING_COUNT = 30;
 
 template <typename pop_t>
@@ -79,25 +79,27 @@ template <typename PopDataType>
 void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    auto& pop_mempool = *VeriBlock::GetPop().mempool;
-    const auto& data = pop_mempool.getMap<PopDataType>();
-
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<PopDataType>();
+    auto& pop_mempool = *VeriBlock::GetPop().mempool;
+    std::vector<std::vector<uint8_t>> hashes;
 
-    std::vector<std::vector<uint8_t>>
-        hashes;
-    for (const auto& el : data) {
-        PopP2PState& pop_state = pop_state_map[el.first];
-        if (pop_state.offered_pop_data == 0 && pop_state.known_pop_data == 0) {
-            ++pop_state.offered_pop_data;
-            hashes.push_back(el.first.asVector());
-        }
+    auto addhashes = [&](const std::unordered_map<typename PopDataType::id_t, std::shared_ptr<PopDataType>>& map) {
+        for (const auto& el : map) {
+            PopP2PState& pop_state = pop_state_map[el.first];
+            if (pop_state.offered_pop_data == 0 && pop_state.known_pop_data == 0) {
+                ++pop_state.offered_pop_data;
+                hashes.push_back(el.first.asVector());
+            }
 
-        if (hashes.size() == MAX_POP_DATA_SENDING_AMOUNT) {
-            connman->PushMessage(node, msgMaker.Make(offer_prefix + PopDataType::name(), hashes));
-            hashes.clear();
+            if (hashes.size() == MAX_POP_DATA_SENDING_AMOUNT) {
+                connman->PushMessage(node, msgMaker.Make(offer_prefix + PopDataType::name(), hashes));
+                hashes.clear();
+            }
         }
-    }
+    };
+
+    addhashes(pop_mempool.getMap<PopDataType>());
+    addhashes(pop_mempool.getInFlightMap<PopDataType>());
 
     if (!hashes.empty()) {
         connman->PushMessage(node, msgMaker.Make(offer_prefix + PopDataType::name(), hashes));
