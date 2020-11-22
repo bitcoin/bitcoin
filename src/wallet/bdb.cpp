@@ -628,7 +628,7 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
                     LogPrintf("copied %s to %s\n", strFile, pathDest.string());
                     return true;
                 } catch (const fs::filesystem_error& e) {
-                    LogPrintf("error copying %s to %s - %s\n", strFile, pathDest.string(), fsbridge::get_filesystem_error_message(e));
+                    LogPrintf("error copying %s (%s) to %s - %s\n", strFile, pathSrc.string(), pathDest.string(), fsbridge::get_filesystem_error_message(e));
                     return false;
                 }
             }
