@@ -167,6 +167,12 @@ AC_ARG_WITH([qrencode],
   [use_qr=$withval],
   [use_qr=auto])
 
+AC_ARG_WITH([xdg],
+  [AS_HELP_STRING([--without-xdg],
+  [disable installing XDG data (default is yes if GUI is enabled)])],
+  [with_xdg=$withval],
+  [with_xdg=auto])
+
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--disable-hardening],
   [do not attempt to harden the resulting executables (default is to harden when possible)])],
@@ -1492,10 +1498,12 @@ AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
   AC_MSG_RESULT(yes)
   AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
-
+  AND_WALLET=' and wallet'
 else
   AC_MSG_RESULT(no)
+  AND_WALLET=
 fi
+AC_SUBST(AND_WALLET)
 
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
@@ -1550,6 +1558,10 @@ if test x$bitcoin_enable_qt != xno; then
   fi
   AC_MSG_RESULT([$use_qr])
 
+  if test x$with_xdg != xno; then
+    with_xdg=yes
+  fi
+
   if test x$XGETTEXT = x; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
@@ -1560,6 +1572,12 @@ if test x$bitcoin_enable_qt != xno; then
     BUILD_TEST_QT="yes"
   else
     AC_MSG_RESULT([no])
+  fi
+else
+  if test x$with_xdg = xyes; then
+    AC_MSG_ERROR([--with-xdg specified, but GUI is not enabled])
+  else
+    with_xdg=no
   fi
 fi
 
@@ -1597,6 +1615,7 @@ AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
+AM_CONDITIONAL([WITH_XDG], [test x$with_xdg = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([USE_LIBEVENT],[test x$use_libevent = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
@@ -1684,6 +1703,7 @@ AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/bitcoin-util-test.py:test/util/bitcoin-util-test.py])
 AC_CONFIG_LINKS([test/util/rpcauth-test.py:test/util/rpcauth-test.py])
+AM_COND_IF([WITH_XDG], [AC_CONFIG_FILES([share/qt/org.bitcoin.bitcoin_qt.desktop])])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
