@@ -14,7 +14,9 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
+#ifdef USE_BDB
 #include <wallet/bdb.h>
+#endif
 #ifdef USE_SQLITE
 #include <wallet/sqlite.h>
 #endif
@@ -1011,9 +1013,11 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
 
     Optional<DatabaseFormat> format;
     if (exists) {
+#ifdef USE_BDB
         if (ExistsBerkeleyDatabase(path)) {
             format = DatabaseFormat::BERKELEY;
         }
+#endif
 #ifdef USE_SQLITE
         if (ExistsSQLiteDatabase(path)) {
             if (format) {
@@ -1052,15 +1056,31 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     // Format is not set when a db doesn't already exist, so use the format specified by the options if it is set.
     if (!format && options.require_format) format = options.require_format;
 
+    // If the format is not specified or detected, choose the default format based on what is available. We prefer BDB over SQLite for now.
+    if (!format) {
 #ifdef USE_SQLITE
-    if (format && format == DatabaseFormat::SQLITE) {
-        return MakeSQLiteDatabase(path, options, status, error);
-    }
-#else
-    assert(format != DatabaseFormat::SQLITE);
+        format = DatabaseFormat::SQLITE;
 #endif
+#ifdef USE_BDB
+        format = DatabaseFormat::BERKELEY;
+#endif
+    }
 
+    if (format == DatabaseFormat::SQLITE) {
+#ifdef USE_SQLITE
+        return MakeSQLiteDatabase(path, options, status, error);
+#endif
+        error = Untranslated(strprintf("Failed to open database path '%s'. Build does not support SQLite database format.", path.string()));
+        status = DatabaseStatus::FAILED_BAD_FORMAT;
+        return nullptr;
+    }
+
+#ifdef USE_BDB
     return MakeBerkeleyDatabase(path, options, status, error);
+#endif
+    error = Untranslated(strprintf("Failed to open database path '%s'. Build does not support Berkeley DB database format.", path.string()));
+    status = DatabaseStatus::FAILED_BAD_FORMAT;
+    return nullptr;
 }
 
 /** Return object for accessing dummy database with no read/write capabilities. */
@@ -1072,5 +1092,9 @@ std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
 /** Return object for accessing temporary in-memory database. */
 std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
 {
+#ifdef USE_BDB
     return MakeUnique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
+#elif USE_SQLITE
+    return MakeUnique<SQLiteDatabase>("", "", true);
+#endif
 }
