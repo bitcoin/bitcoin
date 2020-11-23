@@ -14,3 +14,4 @@ export GOAL="install"
 export DEP_OPTS="NO_QT=1"  # Gui disabled for now to avoid build failures
 export BITCOIN_CONFIG="--enable-zmq --with-gui=no --enable-reduce-exports --with-boost-process"
 export CONFIG_SHELL="/bin/dash"
+export TEST_RUNNER_ENV="LC_ALL=en_US.UTF-8"

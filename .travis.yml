@@ -64,13 +64,3 @@ jobs:
         - set -o errexit; source ./ci/lint/05_before_script.sh
       script:
         - set -o errexit; source ./ci/lint/06_script.sh
-
-    - stage: test
-      name: '32-bit + dash  [GOAL: install]  [CentOS 8]  [gui]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
