@@ -64,8 +64,3 @@ jobs:
         - set -o errexit; source ./ci/lint/05_before_script.sh
       script:
         - set -o errexit; source ./ci/lint/06_script.sh
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no wallet]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"

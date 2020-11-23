@@ -40,7 +40,7 @@ if [ -z "$NO_DEPENDS" ]; then
     # CentOS has problems building the depends if the config shell is not explicitly set
     # (i.e. for libevent a Makefile with an empty SHELL variable is generated, leading to
     #  an error as the first command is executed)
-    SHELL_OPTS="CONFIG_SHELL=/bin/bash"
+    SHELL_OPTS="LC_ALL=en_US.UTF-8 CONFIG_SHELL=/bin/bash"
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
