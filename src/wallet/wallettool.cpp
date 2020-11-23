@@ -122,6 +122,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Close();
         } else if (command == "salvage") {
+#ifdef USE_BDB
             bilingual_str error;
             std::vector<bilingual_str> warnings;
             bool ret = RecoverDatabaseFile(path, error, warnings);
@@ -134,6 +135,10 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
                 }
             }
             return ret;
+#else
+            tfm::format(std::cerr, "Salvage command is not available as BDB support is not compiled");
+            return false;
+#endif
         }
     } else {
         tfm::format(std::cerr, "Invalid command: %s\n", command);

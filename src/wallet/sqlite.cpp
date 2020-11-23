@@ -206,7 +206,9 @@ void SQLiteDatabase::Open()
     }
 
     if (m_db == nullptr) {
-        TryCreateDirectories(m_dir_path);
+        if (!m_mock) {
+            TryCreateDirectories(m_dir_path);
+        }
         int ret = sqlite3_open_v2(m_file_path.c_str(), &m_db, flags, nullptr);
         if (ret != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to open database: %s\n", sqlite3_errstr(ret)));
