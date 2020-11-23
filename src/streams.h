@@ -264,19 +264,6 @@ public:
         nVersion = nVersionIn;
     }
 
-    CDataStream& operator+=(const CDataStream& b)
-    {
-        vch.insert(vch.end(), b.begin(), b.end());
-        return *this;
-    }
-
-    friend CDataStream operator+(const CDataStream& a, const CDataStream& b)
-    {
-        CDataStream ret = a;
-        ret += b;
-        return (ret);
-    }
-
     std::string str() const
     {
         return (std::string(begin(), end()));
@@ -460,11 +447,6 @@ public:
         // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
-    }
-
-    void GetAndClear(CSerializeData &d) {
-        d.insert(d.end(), begin(), end());
-        clear();
     }
 
     /**
