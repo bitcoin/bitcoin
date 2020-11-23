@@ -22,7 +22,7 @@ FUZZ_TARGET_INIT(p2p_transport_deserializer, initialize_p2p_transport_deserializ
 {
     // Construct deserializer, with a dummy NodeId
     V1TransportDeserializer deserializer{Params(), (NodeId)0, SER_NETWORK, INIT_PROTO_VERSION};
-    Span<const char> msg_bytes{(const char*)buffer.data(), buffer.size()};
+    Span<const uint8_t> msg_bytes{buffer};
     while (msg_bytes.size() > 0) {
         const int handled = deserializer.Read(msg_bytes);
         if (handled < 0) {
