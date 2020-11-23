@@ -885,13 +885,13 @@ int CMPTransaction::interpretPacket()
         return (PKT_ERROR -2);
     }
 
-    // Use chainActive[block] here to avoid locking cs_main after cs_tally below
+    // Use ::ChainActive()[block] here to avoid locking cs_main after cs_tally below
     CBlockIndex* pindex;
     uint256 blockHash;
     {
         LOCK(cs_main);
-        pindex = chainActive[block];
-        blockHash = chainActive[block]->GetBlockHash();
+        pindex = ::ChainActive()[block];
+        blockHash = ::ChainActive()[block]->GetBlockHash();
     }
 
     LOCK(cs_tally);
@@ -2429,7 +2429,7 @@ int CMPTransaction::logicMath_Alert()
             if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
                 fs::path persistPath = GetDataDir() / "MP_persist";
                 if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-                DoAbortNode(msgText, msgText);
+                AbortNode(msgText, msgText);
             }
         }
     }

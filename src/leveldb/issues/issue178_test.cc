@@ -3,9 +3,9 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 // Test for issue 178: a manual compaction causes deleted data to reappear.
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
-#include <cstdlib>
 
 #include "leveldb/db.h"
 #include "leveldb/write_batch.h"
@@ -21,11 +21,9 @@ std::string Key1(int i) {
   return buf;
 }
 
-std::string Key2(int i) {
-  return Key1(i) + "_xxx";
-}
+std::string Key2(int i) { return Key1(i) + "_xxx"; }
 
-class Issue178 { };
+class Issue178 {};
 
 TEST(Issue178, Test) {
   // Get rid of any state from an old run.
@@ -87,6 +85,4 @@ TEST(Issue178, Test) {
 
 }  // anonymous namespace
 
-int main(int argc, char** argv) {
-  return leveldb::test::RunAllTests();
-}
+int main(int argc, char** argv) { return leveldb::test::RunAllTests(); }

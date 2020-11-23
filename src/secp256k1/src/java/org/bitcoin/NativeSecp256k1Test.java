@@ -52,7 +52,7 @@ public class NativeSecp256k1Test {
     }
 
     /**
-      * This tests secret key verify() for a invalid secretkey
+      * This tests secret key verify() for an invalid secretkey
       */
     public static void testSecKeyVerifyNeg() throws AssertFailException{
         boolean result = false;

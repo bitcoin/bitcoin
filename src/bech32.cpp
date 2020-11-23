@@ -3,6 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bech32.h>
+#include <util/vector.h>
+
+#include <assert.h>
 
 namespace
 {
@@ -23,13 +26,6 @@ const int8_t CHARSET_REV[128] = {
     -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
 };
-
-/** Concatenate two byte arrays. */
-data Cat(data x, const data& y)
-{
-    x.insert(x.end(), y.begin(), y.end());
-    return x;
-}
 
 /** This function will compute what 6 5-bit values to XOR into the last 6 input values, in order to
  *  make the checksum 0. These 6 values are packed together in a single 30-bit integer. The higher
@@ -58,7 +54,7 @@ uint32_t PolyMod(const data& v)
 
     // During the course of the loop below, `c` contains the bitpacked coefficients of the
     // polynomial constructed from just the values of v that were processed so far, mod g(x). In
-    // the above example, `c` initially corresponds to 1 mod (x), and after processing 2 inputs of
+    // the above example, `c` initially corresponds to 1 mod g(x), and after processing 2 inputs of
     // v, it corresponds to x^2 + v0*x + v1 mod g(x). As 1 mod g(x) = 1, that is the starting value
     // for `c`.
     uint32_t c = 1;
@@ -145,6 +141,10 @@ namespace bech32
 
 /** Encode a Bech32 string. */
 std::string Encode(const std::string& hrp, const data& values) {
+    // First ensure that the HRP is all lowercase. BIP-173 requires an encoder
+    // to return a lowercase Bech32 string, but if given an uppercase HRP, the
+    // result will always be invalid.
+    for (const char& c : hrp) assert(c < 'A' || c > 'Z');
     data checksum = CreateChecksum(hrp, values);
     data combined = Cat(values, checksum);
     std::string ret = hrp + '1';

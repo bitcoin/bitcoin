@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,12 +17,17 @@ static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
 
+/** BIP 9 defines a finite-state-machine to deploy a softfork in multiple stages.
+ *  State transitions happen during retarget period if conditions are met
+ *  In case of reorg, transitions can go backward. Without transition, state is
+ *  inherited between periods. All blocks of a period share the same state.
+ */
 enum class ThresholdState {
-    DEFINED,
-    STARTED,
-    LOCKED_IN,
-    ACTIVE,
-    FAILED,
+    DEFINED,   // First state that each softfork starts out as. The genesis block is by definition in this state for each deployment.
+    STARTED,   // For blocks past the starttime.
+    LOCKED_IN, // For one retarget period after the first retarget period with STARTED blocks of which at least threshold have the associated bit set in nVersion.
+    ACTIVE,    // For all blocks after the LOCKED_IN retarget period (final state)
+    FAILED,    // For all blocks once the first retarget period after the timeout time is hit, if LOCKED_IN wasn't already reached (final state)
 };
 
 // A map that gives the state for blocks whose height is a multiple of Period().
@@ -30,11 +35,17 @@ enum class ThresholdState {
 // will either be nullptr or a block with (height + 1) % Period() == 0.
 typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
 
+/** Display status of an in-progress BIP9 softfork */
 struct BIP9Stats {
+    /** Length of blocks of the BIP9 signalling period */
     int period;
+    /** Number of blocks with the version bit set required to activate the softfork */
     int threshold;
+    /** Number of blocks elapsed since the beginning of the current period */
     int elapsed;
+    /** Number of blocks with the version bit set since the beginning of the current period */
     int count;
+    /** False if there are not enough blocks left in this period to pass activation threshold */
     bool possible;
 };
 
@@ -50,12 +61,17 @@ protected:
     virtual int Threshold(const Consensus::Params& params) const =0;
 
 public:
+    /** Returns the numerical statistics of an in-progress BIP9 softfork in the current period */
     BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const;
-    // Note that the functions below take a pindexPrev as input: they compute information for block B based on its parent.
+    /** Returns the state for pindex A based on parent pindexPrev B. Applies any state transition if conditions are present.
+     *  Caches state from first block of period. */
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    /** Returns the height since when the ThresholdState has started for pindex A based on parent pindexPrev B, all blocks of a period share the same */
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
 };
 
+/** BIP 9 allows multiple softforks to be deployed in parallel. We cache per-period state for every one of them
+ *  keyed by the bit position used to signal support. */
 struct VersionBitsCache
 {
     ThresholdConditionCache caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];

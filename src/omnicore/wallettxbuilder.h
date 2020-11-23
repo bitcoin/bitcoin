@@ -7,6 +7,7 @@
 
 class uint256;
 class CWallet;
+struct NodeContext;
 
 namespace interfaces {
 class Wallet;
@@ -38,13 +39,13 @@ int WalletTxBuilder(
  * Creates and sends a raw transaction by selecting all coins from the sender
  * and enough coins from a fee source. Change is sent to the fee source!
  */
-int CreateFundedTransaction(
-        const std::string& senderAddress,
+int CreateFundedTransaction(const std::string& senderAddress,
         const std::string& receiverAddress,
         const std::string& feeAddress,
         const std::vector<unsigned char>& payload,
         uint256& retTxid,
-        interfaces::Wallet* iWallet);
+        interfaces::Wallet* iWallet,
+        NodeContext &node);
 
 int CreateDExTransaction(interfaces::Wallet* pwallet, const std::string& buyerAddress, const std::string& sellerAddress, const CAmount& nAmount, uint256& txid);
 #endif

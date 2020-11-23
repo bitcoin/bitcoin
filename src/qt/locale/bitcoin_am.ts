@@ -66,10 +66,6 @@
         <translation>እነኚ የቢትኮይን ክፍያ የመላኪያ አድራሻዎችዎ ናቸው:: ገንዘብ/ኮይኖች ከመላክዎ በፊት መጠኑን እና የመቀበያ አድራሻውን ሁልጊዜ ያረጋግጡ::</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>እነኚ የቢትኮይን ክፍያ የመቀበያ አድራሻዎችዎ ናቸው:: ለእያንዳንዱ ግብይት አዲስ የመቀበያ አድራሻ እንዲጠቀሙ ይመከራል:: </translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;አድራሻ ቅዳ</translation>
     </message>
@@ -132,10 +128,6 @@
         <translation>አዲስ የይለፍ-ሐረጉን ይድገሙት</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>አዲስ የይለፍ ሐረግዎን ወደ ቢትኮይን ቦርሳዎ ያስገቡ:: &lt;br/&gt;እባክዎ ለየይለፍ ሐረግዎ&lt;b&gt;አስር ወይም ከዚያ በላይ የዘፈቀደ ዓይነተ-ፊደላት&lt;/b&gt;, ወይም&lt;b&gt;ስምንት ወይም ከዚያ በላይ ቃላት&lt;/b&gt; ይጠቀሙ ::</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>የቢትኮይን ቦርሳውን አመስጥር</translation>
     </message>
@@ -158,10 +150,6 @@
     <message>
         <source>Change passphrase</source>
         <translation>ይለፍ-ሐረግ ለውጥ</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>የድሮውን የይለፍ-ሐረግ እና አዲሱን የይለፍ-ሐረግ ወደ ቢትኮይን ቦርሳዎ ያስገቡ::</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -290,6 +278,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -308,6 +302,9 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     </context>
 <context>
@@ -321,9 +318,6 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -367,16 +361,10 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    </context>
-<context>
-    <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>

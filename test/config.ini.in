@@ -6,6 +6,7 @@
 # test/functional/test_runner.py and test/util/bitcoin-util-test.py
 
 [environment]
+PACKAGE_NAME=@PACKAGE_NAME@
 SRCDIR=@abs_top_srcdir@
 BUILDDIR=@abs_top_builddir@
 EXEEXT=@EXEEXT@
@@ -15,6 +16,7 @@ RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 # Which components are enabled. These are commented out by `configure` if they were disabled when running config.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=true
 @BUILD_BITCOIN_CLI_TRUE@ENABLE_CLI=true
+@BUILD_BITCOIN_WALLET_TRUE@ENABLE_WALLET_TOOL=true
 @BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=true
 @ENABLE_FUZZ_TRUE@ENABLE_FUZZ=true
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true

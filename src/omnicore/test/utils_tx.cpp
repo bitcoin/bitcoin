@@ -10,7 +10,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <util/strencodings.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 

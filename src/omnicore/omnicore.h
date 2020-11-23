@@ -140,7 +140,7 @@ const std::vector<unsigned char> GetOmMarker();
 extern bool autoCommit;
 
 //! Global lock for state objects
-extern CCriticalSection cs_tally;
+extern RecursiveMutex cs_tally;
 
 //! Available balances of wallet properties
 extern std::map<uint32_t, int64_t> global_balance_money;
@@ -188,7 +188,7 @@ extern std::unordered_map<std::string, CMPTally> mp_tally_map;
 extern CCoinsView viewDummy;
 extern CCoinsViewCache view;
 //! Guards coins view cache
-extern CCriticalSection cs_tx_cache;
+extern RecursiveMutex cs_tx_cache;
 
 /** Returns the encoding class, used to embed a payload. */
 int GetEncodingClass(const CTransaction& tx, int nBlock);

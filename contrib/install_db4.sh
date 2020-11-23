@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Install libdb4.8 (Berkeley DB).
 
@@ -14,7 +17,7 @@ if [ -z "${1}" ]; then
 fi
 
 expand_path() {
-  echo "$(cd "${1}" && pwd -P)"
+  cd "${1}" && pwd -P
 }
 
 BDB_PREFIX="$(expand_path ${1})/db4"; shift;
@@ -23,7 +26,7 @@ BDB_HASH='12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef'
 BDB_URL="https://download.oracle.com/berkeley-db/${BDB_VERSION}.tar.gz"
 
 check_exists() {
-  which "$1" >/dev/null 2>&1
+  command -v "$1" >/dev/null
 }
 
 sha256_check() {
@@ -70,6 +73,20 @@ CLANG_CXX11_PATCH_HASH='7a9a47b03fd5fb93a16ef42235fa9512db9b0829cfc3bdf90edd3ec1
 http_get "${CLANG_CXX11_PATCH_URL}" clang.patch "${CLANG_CXX11_PATCH_HASH}"
 patch -p2 < clang.patch
 
+# The packaged config.guess and config.sub are ancient (2009) and can cause build issues.
+# Replace them with modern versions.
+# See https://github.com/bitcoin/bitcoin/issues/16064
+CONFIG_GUESS_URL='https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=55eaf3e779455c4e5cc9f82efb5278be8f8f900b'
+CONFIG_GUESS_HASH='2d1ff7bca773d2ec3c6217118129220fa72d8adda67c7d2bf79994b3129232c1'
+CONFIG_SUB_URL='https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=55eaf3e779455c4e5cc9f82efb5278be8f8f900b'
+CONFIG_SUB_HASH='3a4befde9bcdf0fdb2763fc1bfa74e8696df94e1ad7aac8042d133c8ff1d2e32'
+
+rm -f "dist/config.guess"
+rm -f "dist/config.sub"
+
+http_get "${CONFIG_GUESS_URL}" dist/config.guess "${CONFIG_GUESS_HASH}"
+http_get "${CONFIG_SUB_URL}" dist/config.sub "${CONFIG_SUB_HASH}"
+
 cd build_unix/
 
 "${BDB_PREFIX}/${BDB_VERSION}/dist/configure" \
@@ -81,7 +98,9 @@ make install
 echo
 echo "db4 build complete."
 echo
+# shellcheck disable=SC2016
 echo 'When compiling bitcoind, run `./configure` in the following way:'
 echo
 echo "  export BDB_PREFIX='${BDB_PREFIX}'"
+# shellcheck disable=SC2016
 echo '  ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" ...'

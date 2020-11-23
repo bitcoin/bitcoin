@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
 #include <hash.h>
 #include <util/strencodings.h>
+#include <util/asmap.h>
 #include <tinyformat.h>
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
@@ -14,6 +15,11 @@ static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 // 0xFD + sha256("bitcoin")[0:5]
 static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
 
+/**
+ * Construct an unspecified IPv6 network address (::/128).
+ *
+ * @note This address is considered invalid by CNetAddr::IsValid()
+ */
 CNetAddr::CNetAddr()
 {
     memset(ip, 0, sizeof(ip));
@@ -40,6 +46,20 @@ void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
     }
 }
 
+/**
+ * Try to make this a dummy address that maps the specified name into IPv6 like
+ * so: (0xFD + %sha256("bitcoin")[0:5]) + %sha256(name)[0:10]. Such dummy
+ * addresses have a prefix of fd6b:88c0:8724::/48 and are guaranteed to not be
+ * publicly routable as it falls under RFC4193's fc00::/7 subnet allocated to
+ * unique-local addresses.
+ *
+ * CAddrMan uses these fake addresses to keep track of which DNS seeds were
+ * used.
+ *
+ * @returns Whether or not the operation was successful.
+ *
+ * @see CNetAddr::IsInternal(), CNetAddr::IsRFC4193()
+ */
 bool CNetAddr::SetInternal(const std::string &name)
 {
     if (name.empty()) {
@@ -52,6 +72,16 @@ bool CNetAddr::SetInternal(const std::string &name)
     return true;
 }
 
+/**
+ * Try to make this a dummy address that maps the specified onion address into
+ * IPv6 using OnionCat's range and encoding. Such dummy addresses have a prefix
+ * of fd87:d87e:eb43::/48 and are guaranteed to not be publicly routable as they
+ * fall under RFC4193's fc00::/7 subnet allocated to unique-local addresses.
+ *
+ * @returns Whether or not the operation was successful.
+ *
+ * @see CNetAddr::IsTor(), CNetAddr::IsRFC4193()
+ */
 bool CNetAddr::SetSpecial(const std::string &strName)
 {
     if (strName.size()>6 && strName.substr(strName.size() - 6, 6) == ".onion") {
@@ -175,6 +205,22 @@ bool CNetAddr::IsRFC4843() const
     return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10);
 }
 
+bool CNetAddr::IsRFC7343() const
+{
+    return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x20);
+}
+
+bool CNetAddr::IsHeNet() const
+{
+    return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x04 && GetByte(12) == 0x70);
+}
+
+/**
+ * @returns Whether or not this is a dummy address that maps an onion address
+ *          into IPv6.
+ *
+ * @see CNetAddr::SetSpecial(const std::string &)
+ */
 bool CNetAddr::IsTor() const
 {
     return (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
@@ -194,6 +240,16 @@ bool CNetAddr::IsLocal() const
     return false;
 }
 
+/**
+ * @returns Whether or not this network address is a valid address that @a could
+ *          be used to refer to an actual host.
+ *
+ * @note A valid address may or may not be publicly routable on the global
+ *       internet. As in, the set of valid addresses is a superset of the set of
+ *       publicly routable addresses.
+ *
+ * @see CNetAddr::IsRoutable()
+ */
 bool CNetAddr::IsValid() const
 {
     // Cleanup 3-byte shifted addresses caused by garbage in size field
@@ -233,11 +289,25 @@ bool CNetAddr::IsValid() const
     return true;
 }
 
+/**
+ * @returns Whether or not this network address is publicly routable on the
+ *          global internet.
+ *
+ * @note A routable address is always valid. As in, the set of routable addresses
+ *       is a subset of the set of valid addresses.
+ *
+ * @see CNetAddr::IsValid()
+ */
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsLocal() || IsInternal());
+    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsRFC7343() || IsLocal() || IsInternal());
 }
 
+/**
+ * @returns Whether or not this is a dummy address that maps a name into IPv6.
+ *
+ * @see CNetAddr::SetInternal(const std::string &)
+ */
 bool CNetAddr::IsInternal() const
 {
    return memcmp(ip, g_internal_prefix, sizeof(g_internal_prefix)) == 0;
@@ -299,6 +369,16 @@ bool operator<(const CNetAddr& a, const CNetAddr& b)
     return (memcmp(a.ip, b.ip, 16) < 0);
 }
 
+/**
+ * Try to get our IPv4 address.
+ *
+ * @param[out] pipv4Addr The in_addr struct to which to copy.
+ *
+ * @returns Whether or not the operation was successful, in particular, whether
+ *          or not our address was an IPv4 address.
+ *
+ * @see CNetAddr::IsIPv4()
+ */
 bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
 {
     if (!IsIPv4())
@@ -307,6 +387,16 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
     return true;
 }
 
+/**
+ * Try to get our IPv6 address.
+ *
+ * @param[out] pipv6Addr The in6_addr struct to which to copy.
+ *
+ * @returns Whether or not the operation was successful, in particular, whether
+ *          or not our address was an IPv6 address.
+ *
+ * @see CNetAddr::IsIPv6()
+ */
 bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 {
     if (!IsIPv6()) {
@@ -316,75 +406,137 @@ bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
     return true;
 }
 
-// get canonical identifier of an address' group
-// no two connections will be attempted to addresses with the same group
-std::vector<unsigned char> CNetAddr::GetGroup() const
+bool CNetAddr::HasLinkedIPv4() const
+{
+    return IsRoutable() && (IsIPv4() || IsRFC6145() || IsRFC6052() || IsRFC3964() || IsRFC4380());
+}
+
+uint32_t CNetAddr::GetLinkedIPv4() const
+{
+    if (IsIPv4() || IsRFC6145() || IsRFC6052()) {
+        // IPv4, mapped IPv4, SIIT translated IPv4: the IPv4 address is the last 4 bytes of the address
+        return ReadBE32(ip + 12);
+    } else if (IsRFC3964()) {
+        // 6to4 tunneled IPv4: the IPv4 address is in bytes 2-6
+        return ReadBE32(ip + 2);
+    } else if (IsRFC4380()) {
+        // Teredo tunneled IPv4: the IPv4 address is in the last 4 bytes of the address, but bitflipped
+        return ~ReadBE32(ip + 12);
+    }
+    assert(false);
+}
+
+uint32_t CNetAddr::GetNetClass() const {
+    uint32_t net_class = NET_IPV6;
+    if (IsLocal()) {
+        net_class = 255;
+    }
+    if (IsInternal()) {
+        net_class = NET_INTERNAL;
+    } else if (!IsRoutable()) {
+        net_class = NET_UNROUTABLE;
+    } else if (HasLinkedIPv4()) {
+        net_class = NET_IPV4;
+    } else if (IsTor()) {
+        net_class = NET_ONION;
+    }
+    return net_class;
+}
+
+uint32_t CNetAddr::GetMappedAS(const std::vector<bool> &asmap) const {
+    uint32_t net_class = GetNetClass();
+    if (asmap.size() == 0 || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
+        return 0; // Indicates not found, safe because AS0 is reserved per RFC7607.
+    }
+    std::vector<bool> ip_bits(128);
+    if (HasLinkedIPv4()) {
+        // For lookup, treat as if it was just an IPv4 address (pchIPv4 prefix + IPv4 bits)
+        for (int8_t byte_i = 0; byte_i < 12; ++byte_i) {
+            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
+                ip_bits[byte_i * 8 + bit_i] = (pchIPv4[byte_i] >> (7 - bit_i)) & 1;
+            }
+        }
+        uint32_t ipv4 = GetLinkedIPv4();
+        for (int i = 0; i < 32; ++i) {
+            ip_bits[96 + i] = (ipv4 >> (31 - i)) & 1;
+        }
+    } else {
+        // Use all 128 bits of the IPv6 address otherwise
+        for (int8_t byte_i = 0; byte_i < 16; ++byte_i) {
+            uint8_t cur_byte = GetByte(15 - byte_i);
+            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
+                ip_bits[byte_i * 8 + bit_i] = (cur_byte >> (7 - bit_i)) & 1;
+            }
+        }
+    }
+    uint32_t mapped_as = Interpret(asmap, ip_bits);
+    return mapped_as;
+}
+
+/**
+ * Get the canonical identifier of our network group
+ *
+ * The groups are assigned in a way where it should be costly for an attacker to
+ * obtain addresses with many different group identifiers, even if it is cheap
+ * to obtain addresses with the same identifier.
+ *
+ * @note No two connections will be attempted to addresses with the same network
+ *       group.
+ */
+std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) const
 {
     std::vector<unsigned char> vchRet;
-    int nClass = NET_IPV6;
+    uint32_t net_class = GetNetClass();
+    // If non-empty asmap is supplied and the address is IPv4/IPv6,
+    // return ASN to be used for bucketing.
+    uint32_t asn = GetMappedAS(asmap);
+    if (asn != 0) { // Either asmap was empty, or address has non-asmappable net class (e.g. TOR).
+        vchRet.push_back(NET_IPV6); // IPv4 and IPv6 with same ASN should be in the same bucket
+        for (int i = 0; i < 4; i++) {
+            vchRet.push_back((asn >> (8 * i)) & 0xFF);
+        }
+        return vchRet;
+    }
+
+    vchRet.push_back(net_class);
     int nStartByte = 0;
     int nBits = 16;
 
-    // all local addresses belong to the same group
-    if (IsLocal())
-    {
-        nClass = 255;
+    if (IsLocal()) {
+        // all local addresses belong to the same group
         nBits = 0;
-    }
-    // all internal-usage addresses get their own group
-    if (IsInternal())
-    {
-        nClass = NET_INTERNAL;
+    } else if (IsInternal()) {
+        // all internal-usage addresses get their own group
         nStartByte = sizeof(g_internal_prefix);
         nBits = (sizeof(ip) - sizeof(g_internal_prefix)) * 8;
-    }
-    // all other unroutable addresses belong to the same group
-    else if (!IsRoutable())
-    {
-        nClass = NET_UNROUTABLE;
+    } else if (!IsRoutable()) {
+        // all other unroutable addresses belong to the same group
         nBits = 0;
-    }
-    // for IPv4 addresses, '1' + the 16 higher-order bits of the IP
-    // includes mapped IPv4, SIIT translated IPv4, and the well-known prefix
-    else if (IsIPv4() || IsRFC6145() || IsRFC6052())
-    {
-        nClass = NET_IPV4;
-        nStartByte = 12;
-    }
-    // for 6to4 tunnelled addresses, use the encapsulated IPv4 address
-    else if (IsRFC3964())
-    {
-        nClass = NET_IPV4;
-        nStartByte = 2;
-    }
-    // for Teredo-tunnelled IPv6 addresses, use the encapsulated IPv4 address
-    else if (IsRFC4380())
-    {
-        vchRet.push_back(NET_IPV4);
-        vchRet.push_back(GetByte(3) ^ 0xFF);
-        vchRet.push_back(GetByte(2) ^ 0xFF);
+    } else if (HasLinkedIPv4()) {
+        // IPv4 addresses (and mapped IPv4 addresses) use /16 groups
+        uint32_t ipv4 = GetLinkedIPv4();
+        vchRet.push_back((ipv4 >> 24) & 0xFF);
+        vchRet.push_back((ipv4 >> 16) & 0xFF);
         return vchRet;
-    }
-    else if (IsTor())
-    {
-        nClass = NET_ONION;
+    } else if (IsTor()) {
         nStartByte = 6;
         nBits = 4;
-    }
-    // for he.net, use /36 groups
-    else if (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x04 && GetByte(12) == 0x70)
+    } else if (IsHeNet()) {
+        // for he.net, use /36 groups
         nBits = 36;
-    // for the rest of the IPv6 network, use /32 groups
-    else
+    } else {
+        // for the rest of the IPv6 network, use /32 groups
         nBits = 32;
+    }
 
-    vchRet.push_back(nClass);
+    // push our ip onto vchRet byte by byte...
     while (nBits >= 8)
     {
         vchRet.push_back(GetByte(15 - nStartByte));
         nStartByte++;
         nBits -= 8;
     }
+    // ...for the last byte, push nBits and for the rest of the byte push 1's
     if (nBits > 0)
         vchRet.push_back(GetByte(15 - nStartByte) | ((1 << (8 - nBits)) - 1));
 
@@ -526,6 +678,18 @@ bool operator<(const CService& a, const CService& b)
     return static_cast<CNetAddr>(a) < static_cast<CNetAddr>(b) || (static_cast<CNetAddr>(a) == static_cast<CNetAddr>(b) && a.port < b.port);
 }
 
+/**
+ * Obtain the IPv4/6 socket address this represents.
+ *
+ * @param[out] paddr The obtained socket address.
+ * @param[in,out] addrlen The size, in bytes, of the address structure pointed
+ *                        to by paddr. The value that's pointed to by this
+ *                        parameter might change after calling this function if
+ *                        the size of the corresponding address structure
+ *                        changed.
+ *
+ * @returns Whether or not the operation was successful.
+ */
 bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
 {
     if (IsIPv4()) {
@@ -556,13 +720,16 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
     return false;
 }
 
+/**
+ * @returns An identifier unique to this service's address and port number.
+ */
 std::vector<unsigned char> CService::GetKey() const
 {
      std::vector<unsigned char> vKey;
      vKey.resize(18);
      memcpy(vKey.data(), ip, 16);
-     vKey[16] = port / 0x100;
-     vKey[17] = port & 0x0FF;
+     vKey[16] = port / 0x100; // most significant byte of our port
+     vKey[17] = port & 0x0FF; // least significant byte of our port
      return vKey;
 }
 
@@ -641,6 +808,10 @@ CSubNet::CSubNet(const CNetAddr &addr):
     network = addr;
 }
 
+/**
+ * @returns True if this subnet is valid, the specified address is valid, and
+ *          the specified address belongs in this subnet.
+ */
 bool CSubNet::Match(const CNetAddr &addr) const
 {
     if (!valid || !addr.IsValid())
@@ -651,6 +822,10 @@ bool CSubNet::Match(const CNetAddr &addr) const
     return true;
 }
 
+/**
+ * @returns The number of 1-bits in the prefix of the specified subnet mask. If
+ *          the specified subnet mask is not a valid one, -1.
+ */
 static inline int NetmaskBits(uint8_t x)
 {
     switch(x) {

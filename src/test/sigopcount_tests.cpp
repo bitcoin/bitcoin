@@ -1,15 +1,15 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
-#include <consensus/validation.h>
 #include <pubkey.h>
 #include <key.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <uint256.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <vector>
 
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 3U);
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 21U);
 
-    CScript p2sh = GetScriptForDestination(CScriptID(s1));
+    CScript p2sh = GetScriptForDestination(ScriptHash(s1));
     CScript scriptSig;
     scriptSig << OP_0 << Serialize(s1);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s2.GetSigOpCount(true), 3U);
     BOOST_CHECK_EQUAL(s2.GetSigOpCount(false), 20U);
 
-    p2sh = GetScriptForDestination(CScriptID(s2));
+    p2sh = GetScriptForDestination(ScriptHash(s2));
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(true), 0U);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(false), 0U);
     CScript scriptSig2;
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     // Multisig nested in P2SH
     {
         CScript redeemScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
-        CScript scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
+        CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << OP_0 << OP_0 << ToByteVector(redeemScript);
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     {
         CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
         CScript scriptSig = GetScriptForWitness(p2pk);
-        CScript scriptPubKey = GetScriptForDestination(CScriptID(scriptSig));
+        CScript scriptPubKey = GetScriptForDestination(ScriptHash(scriptSig));
         scriptSig = CScript() << ToByteVector(scriptSig);
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     {
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
         CScript redeemScript = GetScriptForWitness(witnessScript);
-        CScript scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
+        CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));

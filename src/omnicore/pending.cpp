@@ -15,7 +15,7 @@
 namespace mastercore
 {
 //! Guards my_pending
-CCriticalSection cs_pending;
+RecursiveMutex cs_pending;
 
 //! Global map of pending transaction objects
 PendingMap my_pending;

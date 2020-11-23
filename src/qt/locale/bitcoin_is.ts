@@ -66,10 +66,6 @@
         <translation>Þetta eru Bitcoin færslugildin sem senda greiðslur. Skoðið ævinlega vel upphæðina og færslugildin sem þiggja greiðslur áður en mynt er send.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Þetta eru Bitcoin færslugildin sem þiggja greiðslur. Mælt er með að nota aldrei sama færslugildið til að þiggja fleiri en eina greiðslu.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Afrita færslugildi</translation>
     </message>
@@ -132,10 +128,6 @@
         <translation>Endurtaktu nýja lykilsetningu</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Skráðu nýju lykilsetninguna í veskið. &lt;br/&gt;Vinsamlegast notaðu lykilsetningu með &lt;b&gt;tíu eða fleiri slembibókstöfum&lt;/b&gt;, eða &lt;b&gt;átta eða fleiri orðum&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Dulkóða veski</translation>
     </message>
@@ -158,10 +150,6 @@
     <message>
         <source>Change passphrase</source>
         <translation>Breyta lykilsetningu</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Skráðu gömlu lykilsetninguna og þá nýju í veskið.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -334,20 +322,8 @@
         <translation>Breyta lykilsetningunni sem gildir um dulkóðun veskis</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Kembunargluggi</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Opna kembunar- og greiningarstjórnborð</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Yfirfara skilaboð...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -406,8 +382,8 @@
         <translation>Sýna færslugildi sem notuð hafa verið til að taka við mynt og merkingar þeirra</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Opna bitcoin: URI eða greiðslubeiðni</translation>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Valkostir skipanalínu</translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -596,6 +572,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -666,6 +648,9 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -725,10 +710,11 @@
     </message>
     </context>
 <context>
-    <name>QObject::QObject</name>
-    </context>
-<context>
     <name>QRImageWidget</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URI varð of langt, reyndu að minnka texta í merki / skilaboðum.</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -786,11 +772,7 @@
         <source>Wallet</source>
         <translation>Veski</translation>
     </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>URI varð of langt, reyndu að minnka texta í merki / skilaboðum.</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -849,16 +831,10 @@
     </message>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    </context>
-<context>
-    <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -956,17 +932,5 @@
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Viðvörun: Netið er ekki í fullu samræmi! Einhver námuvinnsla virðist í ólagi.</translation>
     </message>
-    <message>
-        <source>Information</source>
-        <translation>Upplýsingar</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Viðvörun</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Villa</translation>
-    </message>
-</context>
+    </context>
 </TS>

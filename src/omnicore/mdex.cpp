@@ -407,7 +407,7 @@ int64_t CMPMetaDEx::getAmountToFill() const
 
 int64_t CMPMetaDEx::getBlockTime() const
 {
-    CBlockIndex* pblockindex = chainActive[block];
+    CBlockIndex* pblockindex = ::ChainActive()[block];
     return pblockindex->GetBlockTime();
 }
 
@@ -424,7 +424,7 @@ std::string CMPMetaDEx::ToString() const
         property, FormatMP(property, amount_forsale), desired_property, FormatMP(desired_property, amount_desired));
 }
 
-void CMPMetaDEx::saveOffer(std::ofstream& file, CHash256& hasher) const
+void CMPMetaDEx::saveOffer(std::ofstream& file, CHash256 &hasher) const
 {
     std::string lineOut = strprintf("%s,%d,%d,%d,%d,%d,%d,%d,%s,%d",
         addr,

@@ -9,6 +9,7 @@
 #include <amount.h>
 #include <validation.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <sync.h>
 #include <tinyformat.h>
 

@@ -119,7 +119,7 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
         if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
             fs::path persistPath = GetDataDir() / "MP_persist";
             if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-            DoAbortNode(msg, msg);
+            AbortNode(msg, msg);
         }
     }
     int64_t newCachedAmount = currentCachedAmount + amount;
@@ -264,7 +264,7 @@ void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
             }
             if (!newValue.empty()) newValue += ",";
             newValue += strprintf("%d:%d", tempItem.first, tempItem.second);
-            if (msc_debug_fees) PrintToLog("      Readding immature entry: block %d amount %d\n", tempItem.first, tempItem.second);
+            if (msc_debug_fees) PrintToLog("      Reading immature entry: block %d amount %d\n", tempItem.first, tempItem.second);
         }
         // make sure the pruned cache isn't completely empty, if it is, prune down to just the most recent entry
         if (newValue.empty()) {
@@ -342,7 +342,7 @@ COmniFeeHistory::~COmniFeeHistory()
 {
     if (msc_debug_fees) PrintToLog("COmniFeeHistory closed\n");
 }
-    
+
 // Show Fee History DB statistics
 void COmniFeeHistory::printStats()
 {
@@ -512,4 +512,3 @@ void COmniFeeHistory::RecordFeeDistribution(const uint32_t &propertyId, int bloc
     leveldb::Status status = pdb->Put(writeoptions, key, value);
     if (msc_debug_fees) PrintToLog("Added fee distribution to feeCacheHistory - key=%s value=%s [%s]\n", key, value, status.ToString());
 }
-

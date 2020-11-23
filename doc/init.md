@@ -53,17 +53,17 @@ Paths
 
 All three configurations assume several paths that might need to be adjusted.
 
-Binary:              `/usr/bin/bitcoind`  
-Configuration file:  `/etc/bitcoin/bitcoin.conf`  
-Data directory:      `/var/lib/bitcoind`  
+Binary:              `/usr/bin/bitcoind`
+Configuration file:  `/etc/bitcoin/bitcoin.conf`
+Data directory:      `/var/lib/bitcoind`
 PID file:            `/var/run/bitcoind/bitcoind.pid` (OpenRC and Upstart) or `/run/bitcoind/bitcoind.pid` (systemd)
-Lock file:           `/var/lock/subsys/bitcoind` (CentOS)  
+Lock file:           `/var/lock/subsys/bitcoind` (CentOS)
 
-The configuration file, PID directory (if applicable) and data directory
-should all be owned by the bitcoin user and group.  It is advised for security
-reasons to make the configuration file and data directory only readable by the
-bitcoin user and group.  Access to bitcoin-cli and other bitcoind rpc clients
-can then be controlled by group membership.
+The PID directory (if applicable) and data directory should both be owned by the
+bitcoin user and group. It is advised for security reasons to make the
+configuration file and data directory only readable by the bitcoin user and
+group. Access to bitcoin-cli and other bitcoind rpc clients can then be
+controlled by group membership.
 
 NOTE: When using the systemd .service file, the creation of the aforementioned
 directories and the setting of their permissions is automatically handled by
@@ -83,10 +83,10 @@ OpenRC).
 
 ### macOS
 
-Binary:              `/usr/local/bin/bitcoind`  
-Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`  
-Data directory:      `~/Library/Application Support/Bitcoin`  
-Lock file:           `~/Library/Application Support/Bitcoin/.lock`  
+Binary:              `/usr/local/bin/bitcoind`
+Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`
+Data directory:      `~/Library/Application Support/Bitcoin`
+Lock file:           `~/Library/Application Support/Bitcoin/.lock`
 
 Installing Service Configuration
 -----------------------------------

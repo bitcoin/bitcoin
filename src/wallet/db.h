@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,7 @@
 #include <fs.h>
 #include <serialize.h>
 #include <streams.h>
-#include <sync.h>
 #include <util/system.h>
-#include <version.h>
 
 #include <atomic>
 #include <map>
@@ -101,6 +99,9 @@ public:
 /** Return whether a wallet database is currently loaded. */
 bool IsWalletLoaded(const fs::path& wallet_path);
 
+/** Given a wallet directory path or legacy file path, return path to main data file in the wallet database. */
+fs::path WalletDataFilePath(const fs::path& wallet_path);
+
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
 
@@ -156,7 +157,7 @@ public:
 
     /** Back up the entire database to a file.
      */
-    bool Backup(const std::string& strDest);
+    bool Backup(const std::string& strDest) const;
 
     /** Make sure all changes are flushed to disk.
      */
@@ -192,7 +193,7 @@ private:
      * Only to be used at a low level, application should ideally not care
      * about this.
      */
-    bool IsDummy() { return env == nullptr; }
+    bool IsDummy() const { return env == nullptr; }
 };
 
 /** RAII class that provides access to a Berkeley database */
@@ -243,7 +244,7 @@ public:
     /* verifies the database environment */
     static bool VerifyEnvironment(const fs::path& file_path, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const fs::path& file_path, std::vector<std::string>& warnings, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
 
     template <typename K, typename T>
     bool Read(const K& key, T& value)
@@ -394,17 +395,6 @@ public:
         int ret = activeTxn->abort();
         activeTxn = nullptr;
         return (ret == 0);
-    }
-
-    bool ReadVersion(int& nVersion)
-    {
-        nVersion = 0;
-        return Read(std::string("version"), nVersion);
-    }
-
-    bool WriteVersion(int nVersion)
-    {
-        return Write(std::string("version"), nVersion);
     }
 
     bool static Rewrite(BerkeleyDatabase& database, const char* pszSkip = nullptr);

@@ -12,7 +12,7 @@
 #include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <stdint.h>
 #include <algorithm>
@@ -29,8 +29,8 @@ BOOST_FIXTURE_TEST_SUITE(omnicore_sender_bycontribution_tests, BasicTestingSetup
 static CTransaction TxClassB(const std::vector<CTxOut>& txInputs);
 static bool GetSenderByContribution(const std::vector<CTxOut>& vouts, std::string& strSender);
 static CTxOut createTxOut(int64_t amount, const std::string& dest);
-static CKeyID createRandomKeyId();
-static CScriptID createRandomScriptId();
+static PKHash createRandomKeyId();
+static ScriptHash createRandomScriptId();
 void shuffleAndCheck(std::vector<CTxOut>& vouts, unsigned nRounds);
 
 // Test settings
@@ -382,25 +382,25 @@ static CTxOut createTxOut(int64_t amount, const std::string& dest)
 }
 
 /** Helper to create a CKeyID object with random value.*/
-static CKeyID createRandomKeyId()
+static PKHash createRandomKeyId()
 {
     std::vector<unsigned char> vch;
     vch.reserve(20);
     for (int i = 0; i < 20; ++i) {
         vch.push_back(static_cast<unsigned char>(GetRandInt(256)));
     }
-    return CKeyID(uint160(vch));
+    return PKHash(uint160(vch));
 }
 
 /** Helper to create a CScriptID object with random value.*/
-static CScriptID createRandomScriptId()
+static ScriptHash createRandomScriptId()
 {
     std::vector<unsigned char> vch;
     vch.reserve(20);
     for (int i = 0; i < 20; ++i) {
         vch.push_back(static_cast<unsigned char>(GetRandInt(256)));
     }
-    return CScriptID(uint160(vch));
+    return ScriptHash(uint160(vch));
 }
 
 /**

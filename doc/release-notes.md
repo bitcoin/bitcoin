@@ -1,9 +1,12 @@
-Bitcoin Core version 0.18.1 is now available from:
+0.20.1 Release Notes
+====================
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.18.1/>
+Bitcoin Core version 0.20.1 is now available from:
 
-This is a new minor version release, including new features, various bug
-fixes and performance improvements, as well as updated translations.
+  <https://bitcoincore.org/bin/bitcoin-core-0.20.1/>
+
+This minor release includes various bug fixes and performance
+improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -16,120 +19,140 @@ To receive security and update notifications, please subscribe to:
 How to Upgrade
 ==============
 
-If you are running an older version, shut it down. Wait until it has
-completely shut down (which might take a few minutes for older
-versions), then run the installer (on Windows) or just copy over
-`/Applications/Bitcoin-Qt` (on Mac) or `bitcoind`/`bitcoin-qt` (on
-Linux).
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes in some cases), then run the
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+or `bitcoind`/`bitcoin-qt` (on Linux).
 
-The first time you run version 0.15.0 or newer, your chainstate database
-will be converted to a new format, which will take anywhere from a few
-minutes to half an hour, depending on the speed of your machine.
-
-Note that the block database format also changed in version 0.8.0 and
-there is no automatic upgrade code from before version 0.8 to version
-0.15.0 or later. Upgrading directly from 0.7.x and earlier without
-redownloading the blockchain is not supported.  However, as usual, old
-wallet versions are still supported.
+Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+possible, but it might take some time if the data directory needs to be migrated. Old
+wallet versions of Bitcoin Core are generally supported.
 
 Compatibility
 ==============
 
 Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not
-recommended to use Bitcoin Core on unsupported systems.
+using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  Bitcoin
+Core should also work on most other Unix-like systems but is not as
+frequently tested on them.  It is not recommended to use Bitcoin Core on
+unsupported systems.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
-as frequently tested on them.
+From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
+longer supported. Additionally, Bitcoin Core does not yet change appearance
+when macOS "dark mode" is activated.
 
-From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
-built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10. Additionally, Bitcoin Core does not yet change appearance when
-macOS "dark mode" is activated.
+Known Bugs
+==========
 
-Known issues
-============
+The process for generating the source code release ("tarball") has changed in an
+effort to make it more complete, however, there are a few regressions in
+this release:
 
-Wallet GUI
-----------
+- The generated `configure` script is currently missing, and you will need to
+  install autotools and run `./autogen.sh` before you can run
+  `./configure`. This is the same as when checking out from git.
 
-For advanced users who have both (1) enabled coin control features, and
-(2) are using multiple wallets loaded at the same time: The coin control
-input selection dialog can erroneously retain wrong-wallet state when
-switching wallets using the dropdown menu. For now, it is recommended
-not to use coin control features with multiple wallets loaded.
+- Instead of running `make` simply, you should instead run
+  `BITCOIN_GENBUILD_NO_GIT=1 make`.
 
-0.18.1 change log
+Notable changes
+===============
+
+Changes regarding misbehaving peers
+-----------------------------------
+
+Peers that misbehave (e.g. send us invalid blocks) are now referred to as
+discouraged nodes in log output, as they're not (and weren't) strictly banned:
+incoming connections are still allowed from them, but they're preferred for
+eviction.
+
+Furthermore, a few additional changes are introduced to how discouraged
+addresses are treated:
+
+- Discouraging an address does not time out automatically after 24 hours
+  (or the `-bantime` setting). Depending on traffic from other peers,
+  discouragement may time out at an indeterminate time.
+
+- Discouragement is not persisted over restarts.
+
+- There is no method to list discouraged addresses. They are not returned by
+  the `listbanned` RPC. That RPC also no longer reports the `ban_reason`
+  field, as `"manually added"` is the only remaining option.
+
+- Discouragement cannot be removed with the `setban remove` RPC command.
+  If you need to remove a discouragement, you can remove all discouragements by
+  stop-starting your node.
+
+Notification changes
+--------------------
+
+`-walletnotify` notifications are now sent for wallet transactions that are
+removed from the mempool because they conflict with a new block. These
+notifications were sent previously before the v0.19 release, but had been
+broken since that release (bug
+[#18325](https://github.com/bitcoin/bitcoin/issues/18325)).
+
+PSBT changes
+------------
+
+PSBTs will contain both the non-witness utxo and the witness utxo for segwit
+inputs in order to restore compatibility with wallet software that are now
+requiring the full previous transaction for segwit inputs. The witness utxo
+is still provided to maintain compatibility with software which relied on its
+existence to determine whether an input was segwit.
+
+0.20.1 change log
 =================
 
+### Mining
+- #19019 Fix GBT: Restore "!segwit" and "csv" to "rules" key (luke-jr)
+
 ### P2P protocol and network code
-- #15990 Add tests and documentation for blocksonly (MarcoFalke)
-- #16021 Avoid logging transaction decode errors to stderr (MarcoFalke)
-- #16405 fix: tor: Call `event_base_loopbreak` from the event's callback (promag)
-- #16412 Make poll in InterruptibleRecv only filter for POLLIN events (tecnovert)
+- #19219 Replace automatic bans with discouragement filter (sipa)
 
 ### Wallet
-- #15913 Add -ignorepartialspends to list of ignored wallet options (luke-jr)
+- #19300 Handle concurrent wallet loading (promag)
+- #18982 Minimal fix to restore conflicted transaction notifications (ryanofsky)
 
 ### RPC and other APIs
-- #15991 Bugfix: fix pruneblockchain returned prune height (jonasschnelli)
-- #15899 Document iswitness flag and fix bug in converttopsbt (MarcoFalke)
-- #16026 Ensure that uncompressed public keys in a multisig always returns a legacy address (achow101)
-- #14039 Disallow extended encoding for non-witness transactions (sipa)
-- #16210 add 2nd arg to signrawtransactionwithkey examples (dooglus)
-- #16250 signrawtransactionwithkey: report error when missing redeemScript/witnessScript (ajtowns)
+- #19524 Increment input value sum only once per UTXO in decodepsbt (fanquake)
+- #19517 psbt: Increment input value sum only once per UTXO in decodepsbt (achow101)
+- #19215 psbt: Include and allow both non_witness_utxo and witness_utxo for segwit inputs (achow101)
 
 ### GUI
-- #16044 fix the bug of OPEN CONFIGURATION FILE on Mac (shannon1916)
-- #15957 Show "No wallets available" in open menu instead of nothing (meshcollider)
-- #16118 Enable open wallet menu on setWalletController (promag)
-- #16135 Set progressDialog to nullptr (promag)
-- #16231 Fix open wallet menu initialization order (promag) 
-- #16254 Set `AA_EnableHighDpiScaling` attribute early (hebasto) 
-- #16122 Enable console line edit on setClientModel (promag) 
-- #16348 Assert QMetaObject::invokeMethod result (promag)
+- #19097 Add missing QPainterPath include (achow101)
+- #19059 update Qt base translations for macOS release (fanquake)
 
 ### Build system
-- #15985 Add test for GCC bug 90348 (sipa)
-- #15947 Install bitcoin-wallet manpage (domob1812)
-- #15983 build with -fstack-reuse=none (MarcoFalke)
+- #19152 improve build OS configure output (skmcontrib)
+- #19536 qt, build: Fix QFileDialog for static builds (hebasto)
 
 ### Tests and QA
-- #15826 Pure python EC (sipa)
-- #15893 Add test for superfluous witness record in deserialization (instagibbs)
-- #14818 Bugfix: test/functional/rpc_psbt: Remove check for specific error message that depends on uncertain assumptions (luke-jr)
-- #15831 Add test that addmultisigaddress fails for watchonly addresses (MarcoFalke)
-
-### Documentation
-- #15890 Remove text about txes always relayed from -whitelist (harding)
+- #19444 Remove cached directories and associated script blocks from appveyor config (sipsorcery)
+- #18640 appveyor: Remove clcache (MarcoFalke)
 
 ### Miscellaneous
-- #16095 Catch by reference not value in wallettool (kristapsk)
-- #16205 Replace fprintf with tfm::format (MarcoFalke)
+- #19194 util: Don't reference errno when pthread fails (miztake)
+- #18700 Fix locking on WSL using flock instead of fcntl (meshcollider)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- Aaron Clauson
 - Andrew Chow
-- Anthony Towns
-- Chris Moore
-- Daniel Kraft
-- David A. Harding
 - fanquake
-- Gregory Sanders
 - Hennadii Stepanov
-- John Newbery
-- Jonas Schnelli
 - João Barbosa
-- Kristaps Kaupe
 - Luke Dashjr
 - MarcoFalke
-- MeshCollider
+- MIZUTA Takeshi
 - Pieter Wuille
-- shannon1916
-- tecnovert
+- Russell Yanofsky
+- sachinkm77
+- Samuel Dobson
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as to everyone that helped with translations on
+[Transifex](https://www.transifex.com/bitcoin/bitcoin/).

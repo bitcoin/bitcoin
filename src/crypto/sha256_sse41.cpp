@@ -1,9 +1,12 @@
+// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifdef ENABLE_SSE41
 
 #include <stdint.h>
 #include <immintrin.h>
 
-#include <crypto/sha256.h>
 #include <crypto/common.h>
 
 namespace sha256d64_sse41 {
