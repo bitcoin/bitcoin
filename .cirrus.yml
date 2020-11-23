@@ -63,7 +63,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no boost::process, no functional tests]'
+  name: 'Win64  [GOAL: deploy]  [unit tests, no gui tests, no boost::process, no functional tests]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
@@ -80,7 +80,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [bionic]  [C++17, previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
+  name: 'x86_64 Linux  [GOAL: install]  [bionic]  [previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
@@ -147,7 +147,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
+  name: 'macOS 10.15 native [GOAL: install] [GUI] [no depends]'
   macos_brew_addon_script:
     - brew install boost libevent berkeley-db4 qt miniupnpc ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
