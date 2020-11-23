@@ -874,6 +874,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_sqlite_compiled():
             raise SkipTest("sqlite has not been compiled.")
 
+    def skip_if_no_bdb(self):
+        """Skip the running test if BDB has not been compiled."""
+        if not self.is_bdb_compiled():
+            raise SkipTest("BDB has not been compiled.")
+
     def skip_if_no_wallet_tool(self):
         """Skip the running test if dash-wallet has not been compiled."""
         if not self.is_wallet_tool_compiled():
@@ -901,9 +906,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         return self.config["components"].getboolean("ENABLE_ZMQ")
 
     def is_sqlite_compiled(self):
-        """Checks whether the wallet module was compiled."""
+        """Checks whether the wallet module was compiled with Sqlite support."""
         return self.config["components"].getboolean("USE_SQLITE")
 
+    def is_bdb_compiled(self):
+        """Checks whether the wallet module was compiled with BDB support."""
+        return self.config["components"].getboolean("USE_BDB")
 
 MASTERNODE_COLLATERAL = 1000
 HIGHPERFORMANCE_MASTERNODE_COLLATERAL = 4000
