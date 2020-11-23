@@ -39,7 +39,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
    
-    const bool &ethTxRootShouldExist = !ibd && fLoaded && fGethSynced;
+    const bool &ethTxRootShouldExist = !ibd && fLoaded && fGethSynced && fMasternodeMode;
     bool readTxRootFail;
     {
         LOCK(cs_setethstatus);

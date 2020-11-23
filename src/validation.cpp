@@ -3942,7 +3942,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             CMintSyscoin mintSyscoin(*txRef);
             bool readTxRootFail;
             if(!mintSyscoin.IsNull()) {
-                const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && fLoaded && fGethSynced;
+                const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && fLoaded && fGethSynced && fMasternodeMode;
                 {
                     LOCK(cs_setethstatus);
                     readTxRootFail = !pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB);
@@ -5840,7 +5840,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
 }
 
 void DoGethMaintenance() {
-    if(ShutdownRequested()) {
+    if(ShutdownRequested() || !fMasternodeMode) {
         return;
     }
     bool ibd = false;
