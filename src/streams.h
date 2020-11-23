@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <ios>
 #include <limits>
+#include <optional>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -205,12 +206,12 @@ class CDataStream
 protected:
     using vector_type = SerializeData;
     vector_type vch;
-    unsigned int nReadPos;
+    unsigned int nReadPos{0};
 
     int nType;
     int nVersion;
-public:
 
+public:
     typedef vector_type::allocator_type   allocator_type;
     typedef vector_type::size_type        size_type;
     typedef vector_type::difference_type  difference_type;
@@ -222,28 +223,20 @@ public:
     typedef vector_type::reverse_iterator reverse_iterator;
 
     explicit CDataStream(int nTypeIn, int nVersionIn)
-    {
-        Init(nTypeIn, nVersionIn);
-    }
+        : nType{nTypeIn},
+          nVersion{nVersionIn} {}
 
     explicit CDataStream(Span<const uint8_t> sp, int nTypeIn, int nVersionIn)
-        : vch(sp.data(), sp.data() + sp.size())
-    {
-        Init(nTypeIn, nVersionIn);
-    }
+        : vch(sp.data(), sp.data() + sp.size()),
+          nType{nTypeIn},
+          nVersion{nVersionIn} {}
 
     template <typename... Args>
     CDataStream(int nTypeIn, int nVersionIn, Args&&... args)
+        : nType{nTypeIn},
+          nVersion{nVersionIn}
     {
-        Init(nTypeIn, nVersionIn);
         ::SerializeMany(*this, std::forward<Args>(args)...);
-    }
-
-    void Init(int nTypeIn, int nVersionIn)
-    {
-        nReadPos = 0;
-        nType = nTypeIn;
-        nVersion = nVersionIn;
     }
 
     std::string str() const
@@ -342,12 +335,17 @@ public:
         nReadPos = 0;
     }
 
-    bool Rewind(size_type n)
+    bool Rewind(std::optional<size_type> n = std::nullopt)
     {
+        // Total rewind if no size is passed
+        if (!n) {
+            nReadPos = 0;
+            return true;
+        }
         // Rewind by n characters if the buffer hasn't been compacted yet
-        if (n > nReadPos)
+        if (*n > nReadPos)
             return false;
-        nReadPos -= n;
+        nReadPos -= *n;
         return true;
     }
 
