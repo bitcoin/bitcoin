@@ -969,11 +969,11 @@ public:
     }
 
 
-    void AddKnownTx(const uint256& hash)
+    void AddInventoryKnown(const CInv& inv)
     {
         if (m_tx_relay != nullptr) {
             LOCK(m_tx_relay->cs_tx_inventory);
-            m_tx_relay->filterInventoryKnown.insert(hash);
+            m_tx_relay->filterInventoryKnown.insert(inv.hash);
         }
     }
 
