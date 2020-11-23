@@ -99,11 +99,18 @@ class HTTPBasicsTest(BitcoinTestFramework):
 
         self.test_auth(self.nodes[1], self.rpcuser, self.rpcpassword)
 
-        self.log.info('Check that failure to write cookie file will abort the node gracefully')
+        init_error = 'Error: Unable to start HTTP server. See debug log for details.'
+
+        self.log.info('Check -rpcauth are validated')
+        # Empty -rpcauth= are ignored
+        self.restart_node(0, extra_args=['-rpcauth='])
         self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo'])
+        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo:bar'])
+
+        self.log.info('Check that failure to write cookie file will abort the node gracefully')
         cookie_file = os.path.join(get_datadir_path(self.options.tmpdir, 0), self.chain, '.cookie.tmp')
         os.mkdir(cookie_file)
-        init_error = 'Error: Unable to start HTTP server. See debug log for details.'
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
 
 
