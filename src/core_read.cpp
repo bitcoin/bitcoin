@@ -1,10 +1,9 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
 
-#include <psbt.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -12,7 +11,6 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <version.h>
 
@@ -61,6 +59,14 @@ CScript ParseScript(const std::string& s)
         {
             // Number
             int64_t n = atoi64(*w);
+
+            //limit the range of numbers ParseScript accepts in decimal
+            //since numbers outside -0xFFFFFFFF...0xFFFFFFFF are illegal in scripts
+            if (n > int64_t{0xffffffff} || n < -1 * int64_t{0xffffffff}) {
+                throw std::runtime_error("script parse error: decimal numeric value only allowed in the "
+                                         "range -0xFFFFFFFF...0xFFFFFFFF");
+            }
+
             result << n;
         }
         else if (w->substr(0,2) == "0x" && w->size() > 2 && IsHex(std::string(w->begin()+2, w->end())))
@@ -174,33 +180,6 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         return false;
     }
 
-    return true;
-}
-
-bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error)
-{
-    bool invalid;
-    std::string tx_data = DecodeBase64(base64_tx, &invalid);
-    if (invalid) {
-        error = "invalid base64";
-        return false;
-    }
-    return DecodeRawPSBT(psbt, tx_data, error);
-}
-
-bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data, std::string& error)
-{
-    CDataStream ss_data(tx_data.data(), tx_data.data() + tx_data.size(), SER_NETWORK, PROTOCOL_VERSION);
-    try {
-        ss_data >> psbt;
-        if (!ss_data.empty()) {
-            error = "extra data after PSBT";
-            return false;
-        }
-    } catch (const std::exception& e) {
-        error = e.what();
-        return false;
-    }
     return true;
 }
 

@@ -15,9 +15,9 @@
 #include <core_io.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
-#include <keystore.h>
 #include <validation.h>
 #include <net.h>
+#include <node/context.h>
 #include <node/transaction.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -114,14 +114,13 @@ int WalletTxBuilder(
 
     // If this request is only to create, but not commit the transaction then display it and exit
     if (!commit) {
-        retRawTx = EncodeHexTx(wtxNew->get());
+        retRawTx = EncodeHexTx(*wtxNew);
         return 0;
     } else {
         // Commit the transaction to the wallet and broadcast)
-        PrintToLog("%s: %s; nFeeRet = %d\n", __func__, wtxNew->get().ToString(), nFeeRet);
-        std::string rejectReason;
-        if (!wtxNew->commit({}, {}, rejectReason)) return MP_ERR_COMMIT_TX;
-        retTxid = wtxNew->get().GetHash();
+        PrintToLog("%s: %s; nFeeRet = %d\n", __func__, wtxNew->ToString(), nFeeRet);
+        iWallet->commitTransaction(wtxNew, {}, {});
+        retTxid = wtxNew->GetHash();
         return 0;
     }
 #else
@@ -185,7 +184,8 @@ int CreateFundedTransaction(
         const std::string& feeAddress,
         const std::vector<unsigned char>& payload,
         uint256& retTxid,
-        interfaces::Wallet* iWallet)
+        interfaces::Wallet* iWallet,
+        NodeContext& node)
 {
     if (!iWallet) {
         return MP_ERR_WALLET_ACCESS;
@@ -252,11 +252,11 @@ int CreateFundedTransaction(
         strFailReason = "send to self without change";
     }
 
-    if (fSuccess && wtxNew->get().vout.size() > max_outputs)
+    if (fSuccess && wtxNew->vout.size() > max_outputs)
     {
         strFailReason = "more outputs than expected";
         PrintToLog("%s: ERROR: more outputs than expected (Max expected %d, actual %d)\n Failed transaction: %s\n",
-                   __func__, max_outputs, wtxNew->get().vout.size(), wtxNew->get().ToString());
+                   __func__, max_outputs, wtxNew->vout.size(), wtxNew->ToString());
     }
 
     // to restore the original order of inputs, create a new transaction and add
@@ -274,14 +274,14 @@ int CreateFundedTransaction(
         }
 
         // add other selected coins
-        for(const CTxIn& txin : wtxNew->get().vin) {
+        for(const CTxIn& txin : wtxNew->vin) {
             if (!coinControl.IsSelected(txin.prevout)) {
                 tx.vin.push_back(txin);
             }
         }
 
         // add outputs
-        for(const CTxOut& txOut : wtxNew->get().vout) {
+        for(const CTxOut& txOut : wtxNew->vout) {
             tx.vout.push_back(txOut);
         }
     }
@@ -307,8 +307,8 @@ int CreateFundedTransaction(
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        LOCK(mempool.cs);
-        CCoinsViewCache &viewChain = *pcoinsTip;
+        LOCK2(cs_main, mempool.cs);
+        CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
@@ -343,26 +343,25 @@ int CreateFundedTransaction(
 
     // send the transaction
 
-    CValidationState state;
-    bool missing_inputs;
+    TxValidationState state;
     CTransactionRef ctx(MakeTransactionRef(std::move(tx)));
 
     {
         LOCK(cs_main);
-        if (!AcceptToMemoryPool(mempool, state, ctx, &missing_inputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE)) {
+        if (!AcceptToMemoryPool(mempool, state, ctx, nullptr, false, DEFAULT_TRANSACTION_MAXFEE)) {
             PrintToLog("%s: ERROR: failed to broadcast transaction: %s\n", __func__, state.GetRejectReason());
             return MP_ERR_COMMIT_TX;
         }
     }
 
-    uint256 txid;
     std::string err_string;
-    const TransactionError err = BroadcastTransaction(ctx, txid, err_string, true);
+
+    const TransactionError err = BroadcastTransaction(node, ctx, err_string, iWallet->getDefaultMaxTxFee(), true, false);
     if (TransactionError::OK != err) {
         LogPrintf("%s: BroadcastTransaction failed error: %s\n", __func__, err_string);
     }
 
-    retTxid = txid;
+    retTxid = ctx->GetHash();
 
     return 0;
 }
@@ -414,12 +413,8 @@ int CreateDExTransaction(interfaces::Wallet* pwallet, const std::string& buyerAd
     }
 
     // Commit the transaction to the wallet and broadcast
-    std::string rejectReason;
-    if (!wtxNew->commit({}, {}, rejectReason)) {
-        return MP_ERR_COMMIT_TX;
-    }
-
-    txid = wtxNew->get().GetHash();
+    pwallet->commitTransaction(wtxNew, {}, {});
+    txid = wtxNew->GetHash();
 
     return 0;
 }

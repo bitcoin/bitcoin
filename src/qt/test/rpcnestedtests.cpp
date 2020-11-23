@@ -1,18 +1,13 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/test/rpcnestedtests.h>
 
-#include <chainparams.h>
-#include <consensus/validation.h>
-#include <fs.h>
 #include <interfaces/node.h>
-#include <validation.h>
-#include <rpc/register.h>
 #include <rpc/server.h>
 #include <qt/rpcconsole.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/system.h>
 
@@ -37,7 +32,6 @@ void RPCNestedTests::rpcNestedTests()
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
-    //mempool.setSanityCheck(1.0);
 
     TestingSetup test;
 
@@ -46,7 +40,7 @@ void RPCNestedTests::rpcNestedTests()
     std::string result;
     std::string result2;
     std::string filtered;
-    auto node = interfaces::MakeNode();
+    interfaces::Node* node = &m_node;
     RPCConsole::RPCExecuteCommandLine(*node, result, "getblockchaininfo()[chain]", &filtered); //simple result filtering with path
     QVERIFY(result=="main");
     QVERIFY(filtered == "getblockchaininfo()[chain]");

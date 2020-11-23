@@ -55,7 +55,7 @@ printf "   * Generating addresses to use as fee recipients (OMN holders)\\n"
 ADDRESS=()
 for i in {1..6}
 do
-   ADDRESS=("${ADDRESS[@]}" $($SRCDIR/omnicore-cli --regtest getnewaddress))
+   ADDRESS=("${ADDRESS[@]}" "$($SRCDIR/omnicore-cli --regtest getnewaddress)")
 done
 printf "   * Using a total of 1000 OMNI\\n"
 printf "   * Seeding %s with 50.00 OMNI\\n" ${ADDRESS[1]}
@@ -73,7 +73,7 @@ $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "\\nActivating the fee system...\\n"
 printf "   * Sending the activation\\n"
 BLOCKS=$($SRCDIR/omnicore-cli --regtest getblockcount)
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 9 $(($BLOCKS + 8)) 999)
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 9 $((BLOCKS + 8)) 999)
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "     # Checking the activation transaction was valid... "
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep valid | cut -c15-)
@@ -229,7 +229,7 @@ fi
 printf "\\nActivating all pair trading...\\n"
 printf "   * Sending the activation\\n"
 BLOCKS=$($SRCDIR/omnicore-cli --regtest getblockcount)
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 8 $(($BLOCKS + 8)) 999)
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendactivation $ADDR 8 $((BLOCKS + 8)) 999)
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "     # Checking the activation transaction was valid... "
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep valid | cut -c15-)
@@ -531,7 +531,7 @@ fi
 printf "\\nRolling back the chain to test ability to roll back a distribution during reorg (disconnecting 1 block from tip and mining a replacement)\\n"
 printf "   * Executing the rollback\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
 PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 printf "   * Clearing the mempool\\n"
@@ -551,7 +551,7 @@ printf "   * Mining a replacement block\\n"
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "   * Verifiying the results\\n"
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 printf "      # Checking the block count is the same as before the rollback... "
 if [ $BLOCK == $NEWBLOCK ]
   then
@@ -734,7 +734,7 @@ fi
 printf "   # Rolling back the chain to orphan a block (disconnecting 1 block from tip and mining a replacement)\\n"
 printf "      * Executing the rollback\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
 PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 printf "      * Clearing the mempool\\n"
@@ -754,7 +754,7 @@ printf "      * Mining a replacement block\\n"
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "      * Verifiying the results\\n"
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
-NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $((BLOCK)))
 printf "         # Checking the block count is the same as before the rollback... "
 if [ $BLOCK == $NEWBLOCK ]
   then

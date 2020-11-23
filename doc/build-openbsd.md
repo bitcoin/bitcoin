@@ -38,19 +38,19 @@ from ports, for the same reason as boost above (g++/libstd++ incompatibility).
 If you have to build it yourself, you can use [the installation script included
 in contrib/](/contrib/install_db4.sh) like so:
 
-```shell
+```bash
 ./contrib/install_db4.sh `pwd` CC=cc CXX=c++
 ```
 
 from the root of the repository. Then set `BDB_PREFIX` for the next section:
 
-```shell
+```bash
 export BDB_PREFIX="$PWD/db4"
 ```
 
 ### Building Bitcoin Core
 
-**Important**: use `gmake`, not `make`. The non-GNU `make` will exit with a horrible error.
+**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 Preparation:
 ```bash
@@ -70,12 +70,14 @@ Make sure `BDB_PREFIX` is set to the appropriate path from the above steps.
 To configure with wallet:
 ```bash
 ./configure --with-gui=no CC=cc CXX=c++ \
-    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
+    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
+    BDB_CFLAGS="-I${BDB_PREFIX}/include" \
+    MAKE=gmake
 ```
 
 To configure without wallet:
 ```bash
-./configure --disable-wallet --with-gui=no CC=cc CXX=c++
+./configure --disable-wallet --with-gui=no CC=cc CXX=c++ MAKE=gmake
 ```
 
 Build and run the tests:

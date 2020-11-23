@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,6 @@
 #define BITCOIN_BENCH_BENCH_H
 
 #include <functional>
-#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -14,6 +13,9 @@
 
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
+
+struct RegTestingSetup;
+extern const RegTestingSetup* g_testing_setup; //!< A pointer to the current testing setup
 
 // Simple micro-benchmarking framework; API mostly matches a subset of the Google Benchmark
 // framework (see https://github.com/google/benchmark)

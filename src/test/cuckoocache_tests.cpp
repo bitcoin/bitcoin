@@ -1,20 +1,21 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <boost/test/unit_test.hpp>
 #include <cuckoocache.h>
 #include <script/sigcache.h>
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 #include <random.h>
 #include <thread>
+#include <deque>
 
 /** Test Suite for CuckooCache
  *
- *  1) All tests should have a deterministic result (using insecure rand
+ *  1. All tests should have a deterministic result (using insecure rand
  *  with deterministic seeds)
- *  2) Some test methods are templated to allow for easier testing
+ *  2. Some test methods are templated to allow for easier testing
  *  against new versions / comparing
- *  3) Results should be treated as a regression test, i.e., did the behavior
+ *  3. Results should be treated as a regression test, i.e., did the behavior
  *  change significantly from what was expected. This can be OK, depending on
  *  the nature of the change, but requires updating the tests to reflect the new
  *  expected behavior. For example improving the hit rate may cause some tests
@@ -29,7 +30,7 @@ BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
  */
 BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
     size_t megabytes = 4;
     cc.setup_bytes(megabytes << 20);
@@ -47,7 +48,7 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 template <typename Cache>
 static double test_cache(size_t megabytes, double load)
 {
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -82,9 +83,9 @@ static double test_cache(size_t megabytes, double load)
  *
  * Examples:
  *
- * 1) at load 0.5, we expect a perfect hit rate, so we multiply by
+ * 1. at load 0.5, we expect a perfect hit rate, so we multiply by
  * 1.0
- * 2) at load 2.0, we expect to see half the entries, so a perfect hit rate
+ * 2. at load 2.0, we expect to see half the entries, so a perfect hit rate
  * would be 0.5. Therefore, if we see a hit rate of 0.4, 0.4*2.0 = 0.8 is the
  * normalized hit rate.
  *
@@ -118,7 +119,7 @@ template <typename Cache>
 static void test_cache_erase(size_t megabytes)
 {
     double load = 1;
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -181,7 +182,7 @@ template <typename Cache>
 static void test_cache_erase_parallel(size_t megabytes)
 {
     double load = 1;
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -285,7 +286,7 @@ static void test_cache_generations()
     // iterations with non-deterministic values, so it isn't "overfit" to the
     // specific entropy in FastRandomContext(true) and implementation of the
     // cache.
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
 
     // block_activity models a chunk of network activity. n_insert elements are
     // added to the cache. The first and last n/4 are stored for removal later

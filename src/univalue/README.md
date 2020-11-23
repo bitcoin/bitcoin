@@ -12,21 +12,10 @@ an arbitrary depth.
 This class is aligned with the JSON standard, [RFC
 7159](https://tools.ietf.org/html/rfc7159.html).
 
-## Installation
+## Library usage
 
-This project is a standard GNU
-[autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html)
-project.  Build and install instructions are available in the `INSTALL`
-file provided with GNU autotools.
+This is a fork of univalue used by Bitcoin Core. It is not maintained for usage
+by other projects. Notably, the API may break in non-backward-compatible ways.
 
-```
-$ ./autogen.sh
-$ ./configure
-$ make
-```
-
-## Design
-
-UniValue provides a single dynamic RAII C++ object class,
-and minimizes template use (contra json_spirit).
-
+Other projects looking for a maintained library should use the upstream
+univalue at https://github.com/jgarzik/univalue.

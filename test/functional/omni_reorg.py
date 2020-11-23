@@ -66,3 +66,4 @@ class OmniReorgTest(BitcoinTestFramework):
 
 if __name__ == '__main__':
     OmniReorgTest().main()
+

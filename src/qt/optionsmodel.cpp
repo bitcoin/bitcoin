@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,9 +17,9 @@
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
-#include <qt/intro.h>
+#include <util/string.h>
 
-#include <QNetworkProxy>
+#include <QDebug>
 #include <QSettings>
 #include <QStringList>
 
@@ -92,12 +92,8 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("bPrune"))
         settings.setValue("bPrune", false);
     if (!settings.contains("nPruneSize"))
-        settings.setValue("nPruneSize", 2);
-    // Convert prune size from GB to MiB:
-    const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
-    if (!m_node.softSetArg("-prune", settings.value("bPrune").toBool() ? std::to_string(nPruneSizeMiB) : "0")) {
-        addOverriddenOption("-prune");
-    }
+        settings.setValue("nPruneSize", DEFAULT_PRUNE_TARGET_GB);
+    SetPruneEnabled(settings.value("bPrune").toBool());
 
     if (!settings.contains("nDatabaseCache"))
         settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
@@ -110,7 +106,7 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-par");
 
     if (!settings.contains("strDataDir"))
-        settings.setValue("strDataDir", Intro::getDefaultDataDirectory());
+        settings.setValue("strDataDir", GUIUtil::getDefaultDataDirectory());
 
     // Wallet
 #ifdef ENABLE_WALLET
@@ -173,7 +169,7 @@ static void CopySettings(QSettings& dst, const QSettings& src)
 /** Back up a QSettings to an ini-formatted file. */
 static void BackupSettings(const fs::path& filename, const QSettings& src)
 {
-    qWarning() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
+    qInfo() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
     QSettings dst(GUIUtil::boostPathToQString(filename), QSettings::IniFormat);
     dst.clear();
     CopySettings(dst, src);
@@ -187,7 +183,7 @@ void OptionsModel::Reset()
     BackupSettings(GetDataDir(true) / "guisettings.ini.bak", settings);
 
     // Save the strDataDir setting
-    QString dataDir = Intro::getDefaultDataDirectory();
+    QString dataDir = GUIUtil::getDefaultDataDirectory();
     dataDir = settings.value("strDataDir", dataDir).toString();
 
     // Remove all entries from our QSettings object
@@ -239,6 +235,31 @@ static void SetProxySetting(QSettings &settings, const QString &name, const Prox
 static const QString GetDefaultProxyAddress()
 {
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
+}
+
+void OptionsModel::SetPruneEnabled(bool prune, bool force)
+{
+    QSettings settings;
+    settings.setValue("bPrune", prune);
+    const int64_t prune_target_mib = PruneGBtoMiB(settings.value("nPruneSize").toInt());
+    std::string prune_val = prune ? ToString(prune_target_mib) : "0";
+    if (force) {
+        m_node.forceSetArg("-prune", prune_val);
+        return;
+    }
+    if (!m_node.softSetArg("-prune", prune_val)) {
+        addOverriddenOption("-prune");
+    }
+}
+
+void OptionsModel::SetPruneTargetGB(int prune_target_gb, bool force)
+{
+    const bool prune = prune_target_gb > 0;
+    if (prune) {
+        QSettings settings;
+        settings.setValue("nPruneSize", prune_target_gb);
+    }
+    SetPruneEnabled(prune, force);
 }
 
 // read QSettings values and return them
@@ -470,24 +491,6 @@ void OptionsModel::setDisplayUnit(const QVariant &value)
         settings.setValue("nDisplayUnit", nDisplayUnit);
         Q_EMIT displayUnitChanged(nDisplayUnit);
     }
-}
-
-bool OptionsModel::getProxySettings(QNetworkProxy& proxy) const
-{
-    // Directly query current base proxy, because
-    // GUI settings can be overridden with -proxy.
-    proxyType curProxy;
-    if (m_node.getProxy(NET_IPV4, curProxy)) {
-        proxy.setType(QNetworkProxy::Socks5Proxy);
-        proxy.setHostName(QString::fromStdString(curProxy.proxy.ToStringIP()));
-        proxy.setPort(curProxy.proxy.GetPort());
-
-        return true;
-    }
-    else
-        proxy.setType(QNetworkProxy::NoProxy);
-
-    return false;
 }
 
 void OptionsModel::setRestartRequired(bool fRequired)

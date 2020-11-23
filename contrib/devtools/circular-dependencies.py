@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2018 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import sys
 import re
@@ -8,9 +11,18 @@ MAPPING = {
     'core_write.cpp': 'core_io.cpp',
 }
 
+# Directories with header-based modules, where the assumption that .cpp files
+# define functions and variables declared in corresponding .h files is
+# incorrect.
+HEADER_MODULE_PATHS = [
+    'interfaces/'
+]
+
 def module_name(path):
     if path in MAPPING:
         path = MAPPING[path]
+    if any(path.startswith(dirpath) for dirpath in HEADER_MODULE_PATHS):
+        return path
     if path.endswith(".h"):
         return path[:-2]
     if path.endswith(".c"):

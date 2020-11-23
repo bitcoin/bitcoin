@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,6 +31,8 @@ fs::path GetWalletDir()
 
 static bool IsBerkeleyBtree(const fs::path& path)
 {
+    if (!fs::exists(path)) return false;
+
     // A Berkeley DB Btree file has at least 4K.
     // This check also prevents opening lock files.
     boost::system::error_code ec;

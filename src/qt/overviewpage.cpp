@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -77,22 +77,12 @@ Q_DECLARE_METATYPE(interfaces::WalletBalances)
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
-
-    WalletModel *walletModel;
-
 public:
     explicit TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
-        QAbstractItemDelegate(parent),
-        walletModel(nullptr),
-        unit(BitcoinUnits::BTC),
+        QAbstractItemDelegate(parent), unit(BitcoinUnits::BTC),
         platformStyle(_platformStyle)
     {
 
-    }
-
-    void setWalletModel(WalletModel *model)
-    {
-        this->walletModel = model;
     }
 
     inline void paint(QPainter *painter, const QStyleOptionViewItem &option,
@@ -171,14 +161,13 @@ public:
                             CMPTransaction mp_obj;
                             int parseRC = ParseTransaction(*wtx, blockHeight, 0, mp_obj);
                             if (0 < parseRC) { //positive RC means DEx payment
-                                valid = true;
                                 std::string tmpBuyer, tmpSeller;
                                 uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
                                 {
                                     LOCK(cs_tally);
                                     pDbTransactionList->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
                                 }
-                                bool bIsBuy = IsMyAddress(tmpBuyer, &walletModel->wallet());
+                                bool bIsBuy = IsMyAddress(tmpBuyer);
                                 LOCK(cs_tally);
                                 int numberOfPurchases=pDbTransactionList->getNumberOfSubRecords(hash);
                                 if (0<numberOfPurchases) { // calculate total bought/sold
@@ -205,9 +194,9 @@ public:
                                         omniAmountStr = QString::fromStdString(FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId));
                                     }
                                     if (!mp_obj.getReceiver().empty()) {
-                                        if (IsMyAddress(mp_obj.getReceiver(), &walletModel->wallet())) {
+                                        if (IsMyAddress(mp_obj.getReceiver())) {
                                             omniOutbound = false;
-                                            if (IsMyAddress(mp_obj.getSender(), &walletModel->wallet())) omniSendToSelf = true;
+                                            if (IsMyAddress(mp_obj.getSender())) omniSendToSelf = true;
                                         }
                                         address = QString::fromStdString(mp_obj.getReceiver());
                                     } else {
@@ -546,9 +535,8 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 void OverviewPage::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
-    if(model)
-    {
-        // Show warning if this is a prerelease version
+    if (model) {
+        // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
 
@@ -566,7 +554,6 @@ void OverviewPage::setClientModel(ClientModel *model)
 void OverviewPage::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    txdelegate->setWalletModel(model);
     if(model && model->getOptionsModel())
     {
         // Set up transaction list
@@ -589,9 +576,9 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
         connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
 
-        updateWatchOnlyLabels(wallet.haveWatchOnly() && !model->privateKeysDisabled());
+        updateWatchOnlyLabels(wallet.haveWatchOnly() && !model->wallet().privateKeysDisabled());
         connect(model, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
-            updateWatchOnlyLabels(showWatchOnly && !walletModel->privateKeysDisabled());
+            updateWatchOnlyLabels(showWatchOnly && !walletModel->wallet().privateKeysDisabled());
         });
     }
 

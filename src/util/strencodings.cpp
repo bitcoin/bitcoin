@@ -1,9 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <tinyformat.h>
 
@@ -138,7 +139,7 @@ std::string EncodeBase64(const unsigned char* pch, size_t len)
 
 std::string EncodeBase64(const std::string& str)
 {
-    return EncodeBase64((const unsigned char*)str.c_str(), str.size());
+    return EncodeBase64((const unsigned char*)str.data(), str.size());
 }
 
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
@@ -190,6 +191,12 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 
 std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 {
+    if (!ValidAsCString(str)) {
+        if (pf_invalid) {
+            *pf_invalid = true;
+        }
+        return {};
+    }
     std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
@@ -207,7 +214,7 @@ std::string EncodeBase32(const unsigned char* pch, size_t len)
 
 std::string EncodeBase32(const std::string& str)
 {
-    return EncodeBase32((const unsigned char*)str.c_str(), str.size());
+    return EncodeBase32((const unsigned char*)str.data(), str.size());
 }
 
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
@@ -259,6 +266,12 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 
 std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
+    if (!ValidAsCString(str)) {
+        if (pf_invalid) {
+            *pf_invalid = true;
+        }
+        return {};
+    }
     std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
@@ -269,7 +282,7 @@ NODISCARD static bool ParsePrechecks(const std::string& str)
         return false;
     if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
         return false;
-    if (str.size() != strlen(str.c_str())) // No embedded NUL characters allowed
+    if (!ValidAsCString(str)) // No embedded NUL characters allowed
         return false;
     return true;
 }
@@ -392,16 +405,6 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
         }
     }
     return out.str();
-}
-
-std::string i64tostr(int64_t n)
-{
-    return strprintf("%d", n);
-}
-
-std::string itostr(int n)
-{
-    return strprintf("%d", n);
 }
 
 int64_t atoi64(const char* psz)
@@ -546,9 +549,18 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     return true;
 }
 
-void Downcase(std::string& str)
+std::string ToLower(const std::string& str)
 {
-    std::transform(str.begin(), str.end(), str.begin(), [](char c){return ToLower(c);});
+    std::string r;
+    for (auto ch : str) r += ToLower((unsigned char)ch);
+    return r;
+}
+
+std::string ToUpper(const std::string& str)
+{
+    std::string r;
+    for (auto ch : str) r += ToUpper((unsigned char)ch);
+    return r;
 }
 
 std::string Capitalize(std::string str)

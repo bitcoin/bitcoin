@@ -31,7 +31,7 @@
 static std::vector<unsigned char> AddressToBytes(const std::string& address)
 {
     std::vector<unsigned char> addressBytes;
-    bool success = DecodeBase58(address, addressBytes);
+    bool success = DecodeBase58(address, addressBytes, 21 + 4);
     if (!success) {
         PrintToLog("ERROR: failed to decode address %s.\n", address);
     }

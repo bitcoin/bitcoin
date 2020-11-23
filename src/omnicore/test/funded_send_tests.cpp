@@ -1,4 +1,4 @@
-#include <test/test_bitcoin.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -17,26 +17,29 @@
 
 #include <vector>
 
-static void AddKey(CWallet& wallet, const CKey& key)
-{
-    LOCK(wallet.cs_wallet);
-    wallet.AddKeyPubKey(key, key.GetPubKey());
-}
-
 class FundedSendTestingSetup : public TestChain100Setup
 {
 public:
     FundedSendTestingSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = std::make_shared<CWallet>(*m_chain, WalletLocation(), WalletDatabase::CreateMock());
+        wallet = std::make_shared<CWallet>(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock());
+        {
+            LOCK(wallet->cs_wallet);
+            wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        }
         bool firstRun;
         wallet->LoadWallet(firstRun);
-        AddKey(*wallet, coinbaseKey);
+        auto spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
+        {
+            LOCK2(wallet->cs_wallet, spk_man->cs_KeyStore);
+            spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        }
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        CWallet::ScanResult result = wallet->ScanForWalletTransactions(chainActive.Genesis()->GetBlockHash(), {}, reserver, false);
+        wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {}, reserver, false);
         interface_wallet = interfaces::MakeWallet(wallet);
+        wallet->m_fallback_fee = CFeeRate(1000);
     }
 
     ~FundedSendTestingSetup()
@@ -44,27 +47,37 @@ public:
         wallet.reset();
     }
 
-    CWalletTx& AddTx(std::vector<CRecipient>& recipients)
+    void AddTx(std::vector<CRecipient>& recipients)
     {
         CTransactionRef tx;
-        CReserveKey reservekey(wallet.get());
         CAmount fee;
         int changePos = -1;
         std::string error;
         CCoinControl dummy;
-        wallet->CreateTransaction(*m_locked_chain, recipients, tx, reservekey, fee, changePos, error, dummy);
-        CValidationState state;
-        wallet->CommitTransaction(tx, {}, {}, reservekey, nullptr, state);
+        {
+            auto locked_chain = m_chain->lock();
+            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, recipients, tx, fee, changePos, error, dummy));
+        }
+        wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
             blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).tx);
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        LOCK(wallet->cs_wallet);
-        auto it = wallet->mapWallet.find(tx->GetHash());
-        it->second.SetMerkleBranch(chainActive.Tip()->GetBlockHash(), 1);
-        return it->second;
+
+        std::map<uint256, CWalletTx>::iterator it;
+        {
+            LOCK(wallet->cs_wallet);
+            it = wallet->mapWallet.find(tx->GetHash());
+        }
+
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 1);
+        it->second.m_confirm = confirm;
+        {
+            LOCK(wallet->cs_wallet);
+            wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        }
     }
 
     // For dust set entry in amounts to -1
@@ -72,9 +85,12 @@ public:
         std::vector<CRecipient> recipients;
         std::vector<CTxDestination> destinations;
         for (auto amount : amounts) {
-            CPubKey pubkey;
-            wallet->GetKeyFromPool(pubkey);
-            CTxDestination dest = GetDestinationForKey(pubkey, OutputType::LEGACY);
+            CTxDestination dest;
+            {
+                LOCK(wallet->cs_wallet);
+                std::string error;
+                wallet->GetNewDestination(OutputType::LEGACY, "", dest, error);
+            }
             destinations.push_back(dest);
             if (amount > 0) {
                 recipients.push_back({GetScriptForDestination(dest), amount, false});
@@ -89,8 +105,7 @@ public:
         return destinations;
     }
 
-    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
-    std::unique_ptr<interfaces::Chain::Lock> m_locked_chain = m_chain->assumeLocked();
+    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain(m_node);
     std::shared_ptr<CWallet> wallet;
     std::unique_ptr<interfaces::Wallet> interface_wallet;
 };
@@ -113,7 +128,7 @@ BOOST_AUTO_TEST_CASE(create_token_funded_by_source)
     std::vector<CTxDestination> destinations = CreateDestinations({1 * COIN, 0});
 
     uint256 hash;
-    BOOST_CHECK_EQUAL(CreateFundedTransaction(EncodeDestination(destinations[0] /* source */), EncodeDestination(destinations[1] /* receiver */), EncodeDestination(destinations[1] /* receiver */), dummy_payload(), hash, interface_wallet.get()), 0);
+    BOOST_CHECK_EQUAL(CreateFundedTransaction(EncodeDestination(destinations[0] /* source */), EncodeDestination(destinations[1] /* receiver */), EncodeDestination(destinations[1] /* receiver */), dummy_payload(), hash, interface_wallet.get(), m_node), 0);
 
     // Expect two outputs
     check_outputs(hash, 2);
@@ -124,7 +139,7 @@ BOOST_AUTO_TEST_CASE(create_token_funded_by_receiver_address)
     std::vector<CTxDestination> destinations = CreateDestinations({-1 /* Dust */, 1 * COIN});
 
     uint256 hash;
-    BOOST_CHECK_EQUAL(CreateFundedTransaction(EncodeDestination(destinations[0] /* source */), EncodeDestination(destinations[1] /* receiver */), EncodeDestination(destinations[1] /* receiver */), dummy_payload(), hash, interface_wallet.get()), 0);
+    BOOST_CHECK_EQUAL(CreateFundedTransaction(EncodeDestination(destinations[0] /* source */), EncodeDestination(destinations[1] /* receiver */), EncodeDestination(destinations[1] /* receiver */), dummy_payload(), hash, interface_wallet.get(), m_node), 0);
 
     // Expect two outputs
     check_outputs(hash, 2);
@@ -135,7 +150,7 @@ BOOST_AUTO_TEST_CASE(create_token_funded_by_fee_address)
     std::vector<CTxDestination> destinations = CreateDestinations({-1 /* Dust */, 0, 1 * COIN});
 
     uint256 hash;
-    BOOST_CHECK_EQUAL(CreateFundedTransaction(EncodeDestination(destinations[0] /* source */), EncodeDestination(destinations[1] /* receiver */), EncodeDestination(destinations[2] /* fee */), dummy_payload(), hash, interface_wallet.get()), 0);
+    BOOST_CHECK_EQUAL(CreateFundedTransaction(EncodeDestination(destinations[0] /* source */), EncodeDestination(destinations[1] /* receiver */), EncodeDestination(destinations[2] /* fee */), dummy_payload(), hash, interface_wallet.get(), m_node), 0);
 
     // Expect three outputs
     check_outputs(hash, 3);

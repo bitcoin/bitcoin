@@ -1,11 +1,13 @@
 package=expat
-$(package)_version=2.2.6
-$(package)_download_path=https://github.com/libexpat/libexpat/releases/download/R_2_2_6/
+$(package)_version=2.2.7
+$(package)_download_path=https://github.com/libexpat/libexpat/releases/download/R_2_2_7/
 $(package)_file_name=$(package)-$($(package)_version).tar.bz2
-$(package)_sha256_hash=17b43c2716d521369f82fc2dc70f359860e90fa440bea65b3b85f0b246ea81f2
+$(package)_sha256_hash=cbc9102f4a31a8dafd42d642e9a3aa31e79a0aedaa1f6efd2795ebc83174ec18
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-static --without-docbook
+  $(package)_config_opts=--disable-shared --without-docbook --without-tests --without-examples
+  $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
+  $(package)_config_opts_linux=--with-pic
 endef
 
 define $(package)_config_cmds
@@ -18,4 +20,8 @@ endef
 
 define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm lib/*.la
 endef

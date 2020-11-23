@@ -698,7 +698,7 @@ int LoadMostRelevantInMemoryState()
     std::set<uint256> persistedBlocks;
     {
         LOCK2(cs_main, cs_tally);
-        while (nullptr != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
+        while (nullptr != spBlockIndex && false == ::ChainActive().Contains(spBlockIndex)) {
             int remainingSPs = pDbSpInfo->popBlock(spBlockIndex->GetBlockHash());
             if (remainingSPs < 0) {
                 // trigger a full reparse, if the levelDB cannot roll back
@@ -731,7 +731,7 @@ int LoadMostRelevantInMemoryState()
                 uint256 blockHash;
                 blockHash.SetHex(vstr[1]);
                 CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
-                if (pBlockIndex == nullptr || false == chainActive.Contains(pBlockIndex)) {
+                if (pBlockIndex == nullptr || false == ::ChainActive().Contains(pBlockIndex)) {
                     continue;
                 }
 

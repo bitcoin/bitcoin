@@ -84,10 +84,10 @@ std::string HashToAddress(unsigned char version, const uint160& hash)
 {
     if (version == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)[0]) {
         CKeyID keyId(hash);
-        return EncodeDestination(keyId);
+        return EncodeDestination(PKHash(keyId));
     } else if (version == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS)[0]) {
         CScriptID scriptId(hash);
-        return EncodeDestination(scriptId);
+        return EncodeDestination(ScriptHash(scriptId));
     }
 
     return "";

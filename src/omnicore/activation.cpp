@@ -92,7 +92,7 @@ void CheckLiveActivations(int blockHeight)
             if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
                 fs::path persistPath = GetDataDir() / "MP_persist";
                 if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-                DoAbortNode(msgText, msgText);
+                AbortNode(msgText, msgText);
             }
         }
         PendingActivationCompleted(liveActivation);

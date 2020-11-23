@@ -119,7 +119,7 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
         if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
             fs::path persistPath = GetDataDir() / "MP_persist";
             if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-            DoAbortNode(msg, msg);
+            AbortNode(msg, msg);
         }
     }
     int64_t newCachedAmount = currentCachedAmount + amount;
@@ -250,7 +250,7 @@ void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
         std::set<feeCacheItem>::iterator startIt = sCacheHistoryItems.begin();
         feeCacheItem firstItem = *startIt;
         if (firstItem.first >= pruneBlock) {
-            if (msc_debug_fees) PrintToLog("Ending PruneCache - no matured entries found.\n");
+            if (msc_debug_fees) PrintToLog("Endingg PruneCache - no matured entries found.\n");
             return; // all entries are above supplied block value, nothing to do
         }
         std::string newValue;

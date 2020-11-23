@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <Import Project="..\common.qt.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}</ProjectGuid>
+    <ConfigurationType>Application</ConfigurationType>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\qt\main.cpp" />
+    <ResourceCompile Include="..\..\src\qt\res\bitcoin-qt-res.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+      <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_cli\libbitcoin_cli.vcxproj">
+      <Project>{0667528c-d734-4009-adf9-c0d6c4a5a5a6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_common\libbitcoin_common.vcxproj">
+      <Project>{7c87e378-df58-482e-aa2f-1bc129bc19ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_crypto\libbitcoin_crypto.vcxproj">
+      <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_qt\libbitcoin_qt.vcxproj">
+      <Project>{2b4abff8-d1fd-4845-88c9-1f3c0a6512bf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_server\libbitcoin_server.vcxproj">
+      <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+      <Project>{b53a5535-ee9d-4c6f-9a26-f79ee3bc3754}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_wallet\libbitcoin_wallet.vcxproj">
+      <Project>{93b86837-b543-48a5-a89b-7c87abb77df2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_zmq\libbitcoin_zmq.vcxproj">
+      <Project>{792d487f-f14c-49fc-a9de-3fc150f31c3f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
+      <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">
+      <Project>{bb493552-3b8c-4a8c-bf69-a6e7a51d2ea6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
+      <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4206</AdditionalOptions>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\src;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(QtDebugLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4206</AdditionalOptions>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\src;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

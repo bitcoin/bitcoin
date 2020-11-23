@@ -1,6 +1,10 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <mutex>
+#include <sstream>
+#include <set>
 
 #include <blockfilter.h>
 #include <crypto/siphash.h>
@@ -14,6 +18,10 @@ static constexpr int GCS_SER_TYPE = SER_NETWORK;
 
 /// Protocol version used to serialize parameters in GCS filter encoding.
 static constexpr int GCS_SER_VERSION = 0;
+
+static const std::map<BlockFilterType, std::string> g_filter_types = {
+    {BlockFilterType::BASIC, "basic"},
+};
 
 template <typename OStream>
 static void GolombRiceEncode(BitStreamWriter<OStream>& bitwriter, uint8_t P, uint64_t x)
@@ -197,6 +205,56 @@ bool GCSFilter::MatchAny(const ElementSet& elements) const
     return MatchInternal(queries.data(), queries.size());
 }
 
+const std::string& BlockFilterTypeName(BlockFilterType filter_type)
+{
+    static std::string unknown_retval = "";
+    auto it = g_filter_types.find(filter_type);
+    return it != g_filter_types.end() ? it->second : unknown_retval;
+}
+
+bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type) {
+    for (const auto& entry : g_filter_types) {
+        if (entry.second == name) {
+            filter_type = entry.first;
+            return true;
+        }
+    }
+    return false;
+}
+
+const std::set<BlockFilterType>& AllBlockFilterTypes()
+{
+    static std::set<BlockFilterType> types;
+
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+            for (auto entry : g_filter_types) {
+                types.insert(entry.first);
+            }
+        });
+
+    return types;
+}
+
+const std::string& ListBlockFilterTypes()
+{
+    static std::string type_list;
+
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+            std::stringstream ret;
+            bool first = true;
+            for (auto entry : g_filter_types) {
+                if (!first) ret << ", ";
+                ret << entry.second;
+                first = false;
+            }
+            type_list = ret.str();
+        });
+
+    return type_list;
+}
+
 static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
                                                  const CBlockUndo& block_undo)
 {
@@ -251,6 +309,8 @@ bool BlockFilter::BuildParams(GCSFilter::Params& params) const
         params.m_P = BASIC_FILTER_P;
         params.m_M = BASIC_FILTER_M;
         return true;
+    case BlockFilterType::INVALID:
+        return false;
     }
 
     return false;

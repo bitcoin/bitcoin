@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,16 +53,5 @@
 #define NO_THREAD_SAFETY_ANALYSIS
 #define ASSERT_EXCLUSIVE_LOCK(...)
 #endif // __GNUC__
-
-// Utility class for indicating to compiler thread analysis that a mutex is
-// locked (when it couldn't be determined otherwise).
-struct SCOPED_LOCKABLE LockAnnotation
-{
-    template <typename Mutex>
-    explicit LockAnnotation(Mutex& mutex) EXCLUSIVE_LOCK_FUNCTION(mutex)
-    {
-    }
-    ~LockAnnotation() UNLOCK_FUNCTION() {}
-};
 
 #endif // BITCOIN_THREADSAFETY_H

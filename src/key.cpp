@@ -1,11 +1,10 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
 
-#include <arith_uint256.h>
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
 #include <random.h>
@@ -84,13 +83,13 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
  * <http://www.secg.org/sec1-v2.pdf>. The optional parameters and publicKey fields are
  * included.
  *
- * privkey must point to an output buffer of length at least CKey::PRIVATE_KEY_SIZE bytes.
+ * privkey must point to an output buffer of length at least CKey::SIZE bytes.
  * privkeylen must initially be set to the size of the privkey buffer. Upon return it
  * will be set to the number of bytes used in the buffer.
  * key32 must point to a 32-byte raw private key.
  */
 static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, bool compressed) {
-    assert(*privkeylen >= CKey::PRIVATE_KEY_SIZE);
+    assert(*privkeylen >= CKey::SIZE);
     secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
     if (!secp256k1_ec_pubkey_create(ctx, &pubkey, key32)) {
@@ -116,11 +115,11 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
-        pubkeylen = CPubKey::COMPRESSED_PUBLIC_KEY_SIZE;
+        pubkeylen = CPubKey::COMPRESSED_SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
-        assert(*privkeylen == CKey::COMPRESSED_PRIVATE_KEY_SIZE);
+        assert(*privkeylen == CKey::COMPRESSED_SIZE);
     } else {
         static const unsigned char begin[] = {
             0x30,0x82,0x01,0x13,0x02,0x01,0x01,0x04,0x20
@@ -142,11 +141,11 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
-        pubkeylen = CPubKey::PUBLIC_KEY_SIZE;
+        pubkeylen = CPubKey::SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
-        assert(*privkeylen == CKey::PRIVATE_KEY_SIZE);
+        assert(*privkeylen == CKey::SIZE);
     }
     return 1;
 }
@@ -163,13 +162,19 @@ void CKey::MakeNewKey(bool fCompressedIn) {
     fCompressed = fCompressedIn;
 }
 
+bool CKey::Negate()
+{
+    assert(fValid);
+    return secp256k1_ec_privkey_negate(secp256k1_context_sign, keydata.data());
+}
+
 CPrivKey CKey::GetPrivKey() const {
     assert(fValid);
     CPrivKey privkey;
     int ret;
     size_t privkeylen;
-    privkey.resize(PRIVATE_KEY_SIZE);
-    privkeylen = PRIVATE_KEY_SIZE;
+    privkey.resize(SIZE);
+    privkeylen = SIZE;
     ret = ec_privkey_export_der(secp256k1_context_sign, privkey.data(), &privkeylen, begin(), fCompressed);
     assert(ret);
     privkey.resize(privkeylen);
@@ -179,7 +184,7 @@ CPrivKey CKey::GetPrivKey() const {
 CPubKey CKey::GetPubKey() const {
     assert(fValid);
     secp256k1_pubkey pubkey;
-    size_t clen = CPubKey::PUBLIC_KEY_SIZE;
+    size_t clen = CPubKey::SIZE;
     CPubKey result;
     int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, begin());
     assert(ret);
@@ -271,7 +276,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     if ((nChild >> 31) == 0) {
         CPubKey pubkey = GetPubKey();
-        assert(pubkey.size() == CPubKey::COMPRESSED_PUBLIC_KEY_SIZE);
+        assert(pubkey.size() == CPubKey::COMPRESSED_SIZE);
         BIP32Hash(cc, nChild, *pubkey.begin(), pubkey.begin()+1, vout.data());
     } else {
         assert(size() == 32);
