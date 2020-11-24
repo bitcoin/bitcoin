@@ -12,7 +12,7 @@ $(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch
 $(package)_patches+= fix_rcc_determinism.patch fix_riscv64_arch.patch xkb-default.patch no-xlib.patch
 $(package)_patches+= fix_android_qmake_conf.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches+= freetype_back_compat.patch drop_lrelease_dependency.patch fix_powerpc_libpng.patch
-$(package)_patches+= fix_mingw_cross_compile.patch
+$(package)_patches+= fix_mingw_cross_compile.patch fix_qpainter_non_determinism.patch
 
 # Update OSX_QT_TRANSLATIONS when this is updated
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
@@ -231,6 +231,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_riscv64_arch.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_mingw_cross_compile.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_qpainter_non_determinism.patch &&\
   sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
