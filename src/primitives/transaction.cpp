@@ -10,7 +10,7 @@
 #include <util/strencodings.h>
 #include <assert.h>
 // SYSCOIN
-#include <dbwrapper.h>
+#include <streams.h>
 #include <key_io.h>
 std::string COutPoint::ToString() const
 {
