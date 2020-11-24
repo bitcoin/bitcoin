@@ -1423,10 +1423,18 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     BOOST_CHECK(ParseInt32("2147483647", &n) && n == 2147483647);
     BOOST_CHECK(ParseInt32("-2147483648", &n) && n == (-2147483647 - 1)); // (-2147483647 - 1) equals INT_MIN
     BOOST_CHECK(ParseInt32("-1234", &n) && n == -1234);
+    BOOST_CHECK(ParseInt32("00000000000000001234", &n) && n == 1234);
+    BOOST_CHECK(ParseInt32("-00000000000000001234", &n) && n == -1234);
+    BOOST_CHECK(ParseInt32("00000000000000000000", &n) && n == 0);
+    BOOST_CHECK(ParseInt32("-00000000000000000000", &n) && n == 0);
     // Invalid values
     BOOST_CHECK(!ParseInt32("", &n));
     BOOST_CHECK(!ParseInt32(" 1", &n)); // no padding inside
     BOOST_CHECK(!ParseInt32("1 ", &n));
+    BOOST_CHECK(!ParseInt32("++1", &n));
+    BOOST_CHECK(!ParseInt32("+-1", &n));
+    BOOST_CHECK(!ParseInt32("-+1", &n));
+    BOOST_CHECK(!ParseInt32("--1", &n));
     BOOST_CHECK(!ParseInt32("1a", &n));
     BOOST_CHECK(!ParseInt32("aap", &n));
     BOOST_CHECK(!ParseInt32("0x1", &n)); // no hex
@@ -1482,10 +1490,19 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt32)
     BOOST_CHECK(ParseUInt32("2147483647", &n) && n == 2147483647);
     BOOST_CHECK(ParseUInt32("2147483648", &n) && n == (uint32_t)2147483648);
     BOOST_CHECK(ParseUInt32("4294967295", &n) && n == (uint32_t)4294967295);
+    BOOST_CHECK(ParseUInt32("+1234", &n) && n == 1234);
+    BOOST_CHECK(ParseUInt32("00000000000000001234", &n) && n == 1234);
+    BOOST_CHECK(ParseUInt32("00000000000000000000", &n) && n == 0);
     // Invalid values
+    BOOST_CHECK(!ParseUInt32("-00000000000000000000", &n));
     BOOST_CHECK(!ParseUInt32("", &n));
     BOOST_CHECK(!ParseUInt32(" 1", &n)); // no padding inside
     BOOST_CHECK(!ParseUInt32(" -1", &n));
+    BOOST_CHECK(!ParseUInt32("++1", &n));
+    BOOST_CHECK(!ParseUInt32("+-1", &n));
+    BOOST_CHECK(!ParseUInt32("-+1", &n));
+    BOOST_CHECK(!ParseUInt32("--1", &n));
+    BOOST_CHECK(!ParseUInt32("-1", &n));
     BOOST_CHECK(!ParseUInt32("1 ", &n));
     BOOST_CHECK(!ParseUInt32("1a", &n));
     BOOST_CHECK(!ParseUInt32("aap", &n));
