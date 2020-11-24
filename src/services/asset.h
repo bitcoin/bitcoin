@@ -128,10 +128,8 @@ public:
     CAsset() {
         SetNull();
     }
-    explicit CAsset(const CTransaction &tx) {
-        SetNull();
-        UnserializeFromTx(tx);
-    }
+    explicit CAsset(const CTransaction &tx);
+    
     inline void ClearAsset() {
         strPubData.clear();
         vchContract.clear();

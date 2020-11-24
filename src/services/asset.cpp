@@ -303,3 +303,22 @@ void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     Serialize(dsBurn);
     vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
 }
+
+CAssetAllocation::CAssetAllocation(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+
+CMintSyscoin::CMintSyscoin(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+
+CBurnSyscoin::CBurnSyscoin(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+CAsset::CAsset(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}

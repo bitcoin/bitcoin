@@ -683,10 +683,7 @@ public:
 	CAssetAllocation() {
 		SetNull();
 	}
-    explicit CAssetAllocation(const CTransaction &tx) {
-		SetNull();
-		UnserializeFromTx(tx);
-	}
+    explicit CAssetAllocation(const CTransaction &tx);
 
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.voutAssets == b.voutAssets
@@ -724,10 +721,7 @@ public:
     CMintSyscoin() {
         SetNull();
     }
-    explicit CMintSyscoin(const CTransaction &tx) {
-        SetNull();
-        UnserializeFromTx(tx);
-    }
+    explicit CMintSyscoin(const CTransaction &tx);
 
     SERIALIZE_METHODS(CMintSyscoin, obj) {
         READWRITEAS(CAssetAllocation, obj);
@@ -749,10 +743,7 @@ public:
     CBurnSyscoin() {
         SetNull();
     }
-    explicit CBurnSyscoin(const CTransaction &tx) {
-        SetNull();
-        UnserializeFromTx(tx);
-    }
+    explicit CBurnSyscoin(const CTransaction &tx);
 
     SERIALIZE_METHODS(CBurnSyscoin, obj) {
         READWRITEAS(CAssetAllocation, obj);
