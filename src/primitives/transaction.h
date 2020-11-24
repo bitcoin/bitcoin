@@ -953,7 +953,7 @@ class GenTxid
     uint32_t m_type;
 public:
     GenTxid(bool is_wtxid, const uint256& hash, const uint32_t& type) : m_is_wtxid(is_wtxid), m_hash(hash), m_type(type) {}
-    GenTxid(bool is_wtxid, const uint256& hash);
+    GenTxid(bool is_wtxid, const uint256& hash) : m_is_wtxid(is_wtxid), m_hash(hash), m_type(0) {}
     bool IsWtxid() const { return m_is_wtxid; }
     const uint256& GetHash() const { return m_hash; }
     const uint32_t& GetType() const { return m_type; }

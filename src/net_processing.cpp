@@ -1483,8 +1483,15 @@ bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLU
     }
 
     const uint256& hash = gtxid.GetHash();
+    uint32_t type = gtxid.GetType();
+    if(type == UNDEFINED) {
+        if(gtxid.IsWtxid())
+            type = MSG_WTX;
+        else
+            type = MSG_TX;
+    }
     // SYSCOIN
-    switch (gtxid.GetType())
+    switch (type)
     {
     case MSG_SPORK:
     {
@@ -4960,6 +4967,12 @@ bool PeerManager::SendMessages(CNode* pto)
                     gtxid.GetHash().ToString(), pto->GetId(), gtxid.GetType());
                 // SYSCOIN
                 uint32_t nType = gtxid.GetType();
+                if(nType == UNDEFINED) {
+                    if(gtxid.IsWtxid())
+                        nType = MSG_WTX;
+                    else
+                        nType = MSG_TX;
+                }
                 if(nType == MSG_TX) {
                     nType |= GetFetchFlags(*pto);
                 }
@@ -4969,7 +4982,7 @@ bool PeerManager::SendMessages(CNode* pto)
                     vGetData.clear();
                 }
                 // SYSCOIN
-                m_txrequest.RequestedTx(pto->GetId(), gtxid.GetHash(), current_time + GetAdditionalTxRequestDelay(gtxid.GetType()));
+                m_txrequest.RequestedTx(pto->GetId(), gtxid.GetHash(), current_time + GetAdditionalTxRequestDelay(nType));
             } else {
                 // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
                 // this should already be called whenever a transaction becomes AlreadyHaveTx().

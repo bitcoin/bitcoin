@@ -14,7 +14,6 @@
 #include <script/script.h>
 #include <pubkey.h>
 #include <script/standard.h>
-#include <protocol.h>
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -514,14 +513,6 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
         return false;
     }
 	return true;
-}
-
-GenTxid::GenTxid(bool is_wtxid, const uint256& hash): m_is_wtxid(is_wtxid), m_hash(hash) {
-    if(m_is_wtxid) {
-        m_type = MSG_WTX;
-    } else {
-        m_type = MSG_TX;
-    }
 }
 
 CAssetAllocation::CAssetAllocation(const CTransaction &tx) {
