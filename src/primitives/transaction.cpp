@@ -11,7 +11,6 @@
 #include <assert.h>
 // SYSCOIN
 #include <streams.h>
-#include <script/script.h>
 #include <pubkey.h>
 #include <script/standard.h>
 std::string COutPoint::ToString() const
