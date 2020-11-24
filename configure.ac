@@ -643,7 +643,7 @@ case $host in
 
          bdb_prefix=$($BREW --prefix berkeley-db4 2>/dev/null)
          qt5_prefix=$($BREW --prefix qt5 2>/dev/null)
-         if test x$bdb_prefix != x && test "x$BDB_CFLAGS" = "x" && test "x$BDB_LIBS" = "x"; then
+         if test x$bdb_prefix != x && test "x$BDB_CFLAGS" = "x" && test "x$BDB_LIBS" = "x" && test "$use_bdb" != "no"; then
            dnl This must precede the call to BITCOIN_FIND_BDB48 below.
            BDB_CFLAGS="-I$bdb_prefix/include"
            BDB_LIBS="-L$bdb_prefix/lib -ldb_cxx-4.8"
