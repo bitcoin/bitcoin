@@ -89,7 +89,7 @@ class PopFr(BitcoinTestFramework):
 
         # mine 10 more blocks to fork A
         self.nodes[0].generate(nblocks=10)
-        self.sync_all(self.nodes[0:1])
+        self.sync_all(self.nodes[0:2])
         self.log.info("nodes[0,1] are in sync and are at fork A (103...113 blocks)")
 
         # fork B is at 200
@@ -103,14 +103,14 @@ class PopFr(BitcoinTestFramework):
         # mine pop tx on node0
         containinghash = self.nodes[0].generate(nblocks=10)
         self.log.info("node0 mines 10 more blocks")
-        self.sync_all(self.nodes[0:1])
+        self.sync_all(self.nodes[0:2])
         containingblock = self.nodes[0].getblock(containinghash[0])
 
         assert_equal(self.nodes[1].getblock(containinghash[0])['hash'], containingblock['hash'])
 
         tip = self.get_best_block(self.nodes[0])
         assert txid in containingblock['pop']['data']['atvs'], "pop tx is not in containing block"
-        self.sync_blocks(self.nodes[0:1])
+        self.sync_blocks(self.nodes[0:2])
         self.log.info("nodes[0,1] are in sync, pop tx containing block is {}".format(containingblock['height']))
         self.log.info("node0 tip is {}".format(tip['height']))
 
@@ -192,7 +192,7 @@ class PopFr(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.sync_all(self.nodes[0:3])
+        self.sync_all(self.nodes[0:4])
 
         from pypopminer import MockMiner
         self.apm = MockMiner()

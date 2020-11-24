@@ -147,6 +147,7 @@ TestingSetup::~TestingSetup()
 {
     threadGroup.interrupt_all();
     threadGroup.join_all();
+    VeriBlock::StopPop();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     g_rpc_node = nullptr;

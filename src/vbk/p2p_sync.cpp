@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "vbk/p2p_sync.hpp"
+#include "validation.h"
 #include <veriblock/entities/atv.hpp>
 #include <veriblock/entities/vbkblock.hpp>
 #include <veriblock/entities/vtb.hpp>
@@ -88,11 +89,18 @@ bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, alt
 {
     AssertLockHeld(cs_main);
     LogPrint(BCLog::NET, "received offered pop data: %s, bytes size: %d\n", pop_t::name(), vRecv.size());
+
+    // do not process 'offers' during initial block download
+    if (::ChainstateActive().IsInitialBlockDownload()) {
+        // TODO: may want to keep a list of offered payloads, then filter all existing (on-chain) payloadsm and 'GET' others
+        return true;
+    }
+
     std::vector<std::vector<uint8_t>> offered_data;
     vRecv >> offered_data;
 
     if (offered_data.size() > MAX_POP_DATA_SENDING_AMOUNT) {
-        LogPrint(BCLog::NET, "peer %d send oversized message getdata size() = %u \n", node->GetId(), offered_data.size());
+        LogPrint(BCLog::NET, "peer %d sent oversized message getdata size() = %u \n", node->GetId(), offered_data.size());
         Misbehaving(node->GetId(), 20, strprintf("message getdata size() = %u", offered_data.size()));
         return false;
     }
@@ -147,7 +155,7 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
     }
 
     altintegration::ValidationState state;
-    auto result = pop_mempool.submit(std::make_shared<pop_t>(data), state);
+    auto result = pop_mempool.submit(data, state);
     if (!result && result.status == altintegration::MemPool::FAILED_STATELESS) {
         LogPrint(BCLog::NET, "peer %d sent statelessly invalid pop data: %s\n", node->GetId(), state.toString());
         Misbehaving(node->GetId(), 20, strprintf("statelessly invalid pop data getdata, reason: %s", state.toString()));

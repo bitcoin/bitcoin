@@ -244,7 +244,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         while len(self.nodes[1].getrawmempool()) > 0:
             self.nodes[1].generate(1)
 
-        self.sync_blocks(self.nodes[0:3], wait=.1)
+        self.sync_blocks(self.nodes[0:3])
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
