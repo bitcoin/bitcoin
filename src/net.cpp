@@ -2606,9 +2606,7 @@ std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pc
 
 std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct)
 {
-    SOCKET socket;
-    WITH_LOCK(requestor.cs_hSocket, socket = requestor.hSocket);
-    auto local_socket_bytes = GetBindAddress(socket).GetAddrBytes();
+    auto local_socket_bytes = requestor.addrBind.GetAddrBytes();
     uint64_t cache_id = GetDeterministicRandomizer(RANDOMIZER_ID_ADDRCACHE)
         .Write(requestor.addr.GetNetwork())
         .Write(local_socket_bytes.data(), local_socket_bytes.size())
