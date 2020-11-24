@@ -14,6 +14,7 @@
 #include <compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
+#include <i2p.h>
 #include <net_permissions.h>
 #include <netbase.h>
 #include <node/ui_interface.h>
@@ -2187,6 +2188,45 @@ void CConnman::ThreadMessageHandler()
     }
 }
 
+void CConnman::ThreadI2PAcceptIncoming()
+{
+    static constexpr auto err_wait_begin = 1s;
+    static constexpr auto err_wait_cap = 5min;
+    auto err_wait = err_wait_begin;
+
+    bool advertising_listen_addr = false;
+    i2p::Connection conn;
+
+    while (!interruptNet) {
+
+        if (!m_i2p_sam_session->Listen(conn)) {
+            if (advertising_listen_addr && conn.me.IsValid()) {
+                RemoveLocal(conn.me);
+                advertising_listen_addr = false;
+            }
+
+            interruptNet.sleep_for(err_wait);
+            if (err_wait < err_wait_cap) {
+                err_wait *= 2;
+            }
+
+            continue;
+        }
+
+        if (!advertising_listen_addr) {
+            AddLocal(conn.me, LOCAL_BIND);
+            advertising_listen_addr = true;
+        }
+
+        if (!m_i2p_sam_session->Accept(conn)) {
+            continue;
+        }
+
+        CreateNodeFromAcceptedSocket(conn.sock.Release(), NetPermissionFlags::PF_NONE,
+                                     CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE});
+    }
+}
+
 bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError, NetPermissionFlags permissions)
 {
     int nOne = 1;
@@ -2472,6 +2512,12 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Process messages
     threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
 
+    if (connOptions.m_i2p_accept_incoming && m_i2p_sam_session.get() != nullptr) {
+        threadI2PAcceptIncoming =
+            std::thread(&TraceThread<std::function<void()>>, "i2paccept",
+                        std::function<void()>(std::bind(&CConnman::ThreadI2PAcceptIncoming, this)));
+    }
+
     // Dump network addresses
     scheduler.scheduleEvery([this] { DumpAddresses(); }, DUMP_PEERS_INTERVAL);
 
@@ -2519,6 +2565,9 @@ void CConnman::Interrupt()
 
 void CConnman::StopThreads()
 {
+    if (threadI2PAcceptIncoming.joinable()) {
+        threadI2PAcceptIncoming.join();
+    }
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();
     if (threadOpenConnections.joinable())

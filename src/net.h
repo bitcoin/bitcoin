@@ -1050,6 +1050,7 @@ private:
     void ProcessAddrFetch();
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
+    void ThreadI2PAcceptIncoming();
     void AcceptConnection(const ListenSocket& hListenSocket);
 
     /**
@@ -1242,6 +1243,7 @@ private:
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
+    std::thread threadI2PAcceptIncoming;
 
     /** flag for deciding to connect to an extra outbound peer,
      *  in excess of m_max_outbound_full_relay
