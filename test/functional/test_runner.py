@@ -153,6 +153,7 @@ BASE_SCRIPTS= [
     'feature_shutdown.py',
     'rpc_privatesend.py',
     'p2p_fingerprint.py',
+    'rpc_platform_filter.py',
     'feature_uacomment.py',
     'p2p_unrequested_blocks.py',
     'feature_logging.py',

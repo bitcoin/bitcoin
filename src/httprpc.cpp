@@ -76,6 +76,9 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
         nStatus = HTTP_BAD_REQUEST;
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
+    else if (code == RPC_PLATFORM_RESTRICTION) {
+        nStatus = HTTP_FORBIDDEN;
+    }
 
     std::string strReply = JSONRPCReply(NullUniValue, objError, id);
 

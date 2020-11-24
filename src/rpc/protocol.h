@@ -57,6 +57,7 @@ enum RPCErrorCode
     RPC_VERIFY_ALREADY_IN_CHAIN     = -27, //!< Transaction already in chain
     RPC_IN_WARMUP                   = -28, //!< Client still warming up
     RPC_METHOD_DEPRECATED           = -32, //!< RPC method is deprecated
+    RPC_PLATFORM_RESTRICTION        = -33, //!< This RPC command cannot be run by platform-user
 
     //! Aliases for backward compatibility
     RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,

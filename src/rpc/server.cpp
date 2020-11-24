@@ -34,6 +34,16 @@ static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
 
+// Any commands submitted by this user will have their commands filtered based on the platformAllowedCommands
+static const std::string defaultPlatformUser = "platform-user";
+
+static const std::map<std::string, std::set<std::string>> platformAllowedCommands{
+    {"getbestblockhash", {}},
+    {"getblockhash", {}},
+    {"getblockcount", {}},
+    {"getbestchainlock", {}},
+};
+
 static struct CRPCSignals
 {
     boost::signals2::signal<void ()> Started;
@@ -549,6 +559,22 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     const CRPCCommand *pcmd = tableRPC[request.strMethod];
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
+
+    // Before executing the RPC Command, filter commands from platform rpc user
+    if (fMasternodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
+
+        auto it = platformAllowedCommands.find(request.strMethod);
+        // If the requested method is not available in platformAllowedCommands
+        if (it == platformAllowedCommands.end()) {
+            throw JSONRPCError(RPC_PLATFORM_RESTRICTION, strprintf("Method \"%s\" prohibited", request.strMethod));
+        }
+
+        const std::string strFirstParam = !request.params.empty() ? request.params[0].getValStr() : "";
+        // If there are any parameter restrictions for the requested method make sure the first paramter is allowed
+        if (!it->second.empty() && it->second.count(strFirstParam) == 0) {
+            throw JSONRPCError(RPC_PLATFORM_RESTRICTION, strprintf("Parameter \"%s\" prohibited for method \"%s\"", strFirstParam, request.strMethod));
+        }
+    }
 
     g_rpcSignals.PreCommand(*pcmd);
 
