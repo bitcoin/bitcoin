@@ -28,7 +28,7 @@ class PSBTTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [
             ["-walletrbf=1"],
-            ["-walletrbf=0", "-changetype=legacy"],
+            ["-walletrbf=0", "-changetype=legacy", "-deprecatedrpc=feeRate"],
             []
         ]
         self.supports_cli = False
