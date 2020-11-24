@@ -299,7 +299,6 @@ libbitcoin_server_a_SOURCES = \
   index/blockfilterindex.cpp \
   index/txindex.cpp \
   init.cpp \
-  interfaces/chain.cpp \
   miner.cpp \
   net.cpp \
   net_processing.cpp \
