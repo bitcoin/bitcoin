@@ -49,8 +49,10 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(readTxRootFail) {
         if(ethTxRootShouldExist) {
-            // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
-            UninterruptibleSleep(std::chrono::milliseconds{1000});
+            if(!fJustCheck && !bSanityCheck) {
+                // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
+                UninterruptibleSleep(std::chrono::milliseconds{1000});
+            }
             // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
             // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
             return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
