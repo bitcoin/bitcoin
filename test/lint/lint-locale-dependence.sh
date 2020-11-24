@@ -59,6 +59,7 @@ KNOWN_VIOLATIONS=(
     "src/ethereum/ethereum.cpp:.*strtol"
     "src/ethereum/ethereum.cpp:.*stoul"
     "src/util/system.cpp:.*strtol"
+    "src/rpc/blockchain.cpp:.*fprintf"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/|chiabls/)"

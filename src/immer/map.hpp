@@ -38,7 +38,7 @@ class map_transient;
  *
  * @rst
  *
- * This cotainer provides a good trade-off between cache locality,
+ * This container provides a good trade-off between cache locality,
  * search, update performance and structural sharing.  It does so by
  * storing the data in contiguous chunks of :math:`2^{B}` elements.
  * When storing big objects, the size of these contiguous chunks can
@@ -219,7 +219,7 @@ public:
      *   element in the container or ``end()`` when the key is missing.
      *   In the case of an unordered container, the only meaningful
      *   thing one may do with it is to compare it with the end, to
-     *   test if the find was succesfull, and dereference it.  This
+     *   test if the find was successful, and dereference it.  This
      *   comparison is cumbersome compared to testing for a non-empty
      *   optional value.  Furthermore, for an immutable container,
      *   returning an iterator would have some additional performance
@@ -229,7 +229,7 @@ public:
      *   ``std::optional<const T&>`` but this construction is not valid
      *   in any current standard.  As a compromise we return a
      *   pointer, which has similar syntactic properties yet it is
-     *   unfortunatelly unnecessarily unrestricted.
+     *   unfortunately unnecessarily unrestricted.
      *
      * @endrst
      */

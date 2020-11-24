@@ -35,7 +35,7 @@ template <typename T>
 using get_transience_policy_t = typename get_transience_policy<T>::type;
 
 /*!
- * Metafunction that returns wether to *prefer fewer bigger objects*
+ * Metafunction that returns whether to *prefer fewer bigger objects*
  * to use for a given *heap policy*.
  */
 template <typename HeapPolicy>
@@ -52,7 +52,7 @@ constexpr auto get_prefer_fewer_bigger_objects_v =
     get_prefer_fewer_bigger_objects<T>::value;
 
 /*!
- * Metafunction that returns wether to use *transient R-Values*
+ * Metafunction that returns whether to use *transient R-Values*
  * for a given *refcount policy*.
  */
 template <typename RefcountPolicy>

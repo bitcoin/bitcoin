@@ -73,7 +73,7 @@ extern "C" float __wrap_log2f(float x)
 {
     return log2f_old(x);
 }
-// SYSCOIN wrapper for getrandom 2.25 glibc compatbility for up to 2.17 backwards
+// SYSCOIN wrapper for getrandom 2.25 glibc compatibility for up to 2.17 backwards
 #ifndef WIN32
 /** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
  * compatible way to get cryptographic randomness on UNIX-ish platforms.

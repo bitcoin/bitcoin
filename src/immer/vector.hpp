@@ -40,7 +40,7 @@ class vector_transient;
  *
  * @rst
  *
- * This cotainer provides a good trade-off between cache locality,
+ * This container provides a good trade-off between cache locality,
  * random access, update performance and structural sharing.  It does
  * so by storing the data in contiguous chunks of :math:`2^{BL}`
  * elements.  By default, when ``sizeof(T) == sizeof(void*)`` then
@@ -54,7 +54,7 @@ class vector_transient;
  *    *effectively* :math:`O(...)`. Do not confuse this with the word
  *    *amortized*, which has a very different meaning.  In this
  *    context, *effective* means that while the
- *    mathematically rigurous
+ *    mathematically rigorous
  *    complexity might be higher, for all practical matters the
  *    provided complexity is more useful to think about the actual
  *    cost of the operation.

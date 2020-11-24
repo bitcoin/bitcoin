@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_greater_than_or_equal, time, force_finish_mnsync
+from test_framework.util import assert_greater_than_or_equal, force_finish_mnsync
 
 '''
 feature_llmqconnections.py

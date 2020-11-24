@@ -36,7 +36,7 @@ class set_transient;
  *
  * @rst
  *
- * This cotainer provides a good trade-off between cache locality,
+ * This container provides a good trade-off between cache locality,
  * membership checks, update performance and structural sharing.  It
  * does so by storing the data in contiguous chunks of :math:`2^{B}`
  * elements.  When storing big objects, the size of these contiguous
