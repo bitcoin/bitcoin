@@ -205,3 +205,101 @@ UniValue CNotaryDetails::ToJson() const {
     value.pushKV("hd_required", bRequireHD);
     return value;
 }
+
+bool CAssetAllocation::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsAsset);
+    } catch (std::exception &e) {
+		SetNull();
+        return false;
+    }
+	return true;
+}
+bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
+	std::vector<unsigned char> vchData;
+	int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {	
+        SetNull();
+        return false;
+    }
+    
+    return true;
+}
+void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsAsset);
+	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
+
+}
+bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsMS);
+    } catch (std::exception &e) {
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
+    std::vector<unsigned char> vchData;
+    int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {   
+        SetNull();
+        return false;
+    }  
+    return true;
+}
+
+void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsMint);
+    vchData = std::vector<unsigned char>(dsMint.begin(), dsMint.end());
+}
+
+bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsMS);
+    } catch (std::exception &e) {
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+bool CBurnSyscoin::UnserializeFromTx(const CTransaction &tx) {
+    std::vector<unsigned char> vchData;
+    int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {   
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsBurn);
+    vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
+}

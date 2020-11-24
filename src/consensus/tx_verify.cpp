@@ -205,8 +205,9 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
     // SYSCOIN
     if(tx.HasAssets()) {
-        if(!tx.GetAssetValueOut(mapAssetOut, state)) {
-            return false; // state is filled by GetAssetValueOut
+        std::string err;
+        if(!tx.GetAssetValueOut(mapAssetOut, err)) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, err);
         }
         // if input was used, validate it against output (note, no fees for assets in == out)
         if(!CheckTxInputsAssets(tx, state, tx.voutAssets.begin()->key, mapAssetIn, mapAssetOut)) {

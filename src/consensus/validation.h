@@ -177,5 +177,8 @@ inline int GetWitnessCommitmentIndex(const CBlock& block)
     }
     return commitpos;
 }
-
+// SYSCOIN
+static inline bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string &errorMessage, bool bConsensus) {
+    return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
+}
 #endif // SYSCOIN_CONSENSUS_VALIDATION_H

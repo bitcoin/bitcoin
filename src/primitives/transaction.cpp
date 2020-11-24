@@ -10,10 +10,7 @@
 #include <util/strencodings.h>
 #include <assert.h>
 // SYSCOIN
-#include <dbwrapper.h>
-#include <consensus/validation.h>
-#include <pubkey.h>
-#include <services/asset.h>
+
 #include <key_io.h>
 std::string COutPoint::ToString() const
 {
@@ -381,13 +378,14 @@ CAmount CTransaction::GetAssetValueOut(const std::vector<CAssetOutValue> &vecVou
     }
     return nTotal;
 }
-bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, TxValidationState& state) const
+bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
     for(const auto &it: voutAssets) {
         CAmount nTotal = 0;
         if(it.values.empty()) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
+            err = "bad-txns-asset-empty";
+            return false;
         }
         const uint32_t &nAsset = it.key;
         const size_t &nVoutSize = vout.size();
@@ -395,32 +393,38 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, TxValidationState& 
         for(const auto& voutAsset: it.values) {
             const uint32_t& nOut = voutAsset.n;
             if(nOut >= nVoutSize) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
+                err = "bad-txns-asset-outofrange";
+                return false;
             }
             const CAmount& nAmount = voutAsset.nValue;
             // make sure the vout assetinfo matches the asset commitment in OP_RETURN
             if(vout[nOut].assetInfo.nAsset != nAsset || vout[nOut].assetInfo.nValue != nAmount) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-assetinfo-mismatch");
+                err = "bad-txns-asset-out-assetinfo-mismatch";
+                return false;
             }
             nTotal += nAmount;
             if(nAmount == 0) {
                 // only one zero val per asset is allowed
                 if(zeroVal) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-out");
+                    err = "bad-txns-asset-multiple-zero-out";
+                    return false;
                 }
                 zeroVal = true;
             }
             if(!MoneyRangeAsset(nTotal) || !MoneyRangeAsset(nAmount)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
+                err = "bad-txns-asset-out-outofrange";
+                return false;
             }
             auto itSet = setUsedIndex.emplace(nOut);
             if(!itSet.second) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-not-unique");
+                err = "bad-txns-asset-out-not-unique";
+                return false;
             }
         }
         auto itRes = mapAssetOut.emplace(nAsset, std::make_pair(zeroVal, nTotal));
         if(!itRes.second) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-not-unique");
+            err = "bad-txns-asset-not-unique";
+            return false;
         }
     }
     return true;
@@ -507,108 +511,6 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
         return false;
     }
 	return true;
-}
-
-bool CAssetAllocation::UnserializeFromData(const std::vector<unsigned char> &vchData) {
-    try {
-        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        Unserialize(dsAsset);
-    } catch (std::exception &e) {
-		SetNull();
-        return false;
-    }
-	return true;
-}
-bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
-	std::vector<unsigned char> vchData;
-	int nOut;
-    if (!GetSyscoinData(tx, vchData, nOut))
-    {
-        SetNull();
-        return false;
-    }
-    if(!UnserializeFromData(vchData))
-    {	
-        SetNull();
-        return false;
-    }
-    
-    return true;
-}
-void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
-    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsAsset);
-	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
-
-}
-bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
-    try {
-        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        Unserialize(dsMS);
-    } catch (std::exception &e) {
-        SetNull();
-        return false;
-    }
-    return true;
-}
-
-bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
-    std::vector<unsigned char> vchData;
-    int nOut;
-    if (!GetSyscoinData(tx, vchData, nOut))
-    {
-        SetNull();
-        return false;
-    }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }  
-    return true;
-}
-
-void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
-    CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsMint);
-    vchData = std::vector<unsigned char>(dsMint.begin(), dsMint.end());
-}
-
-bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
-    try {
-        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        Unserialize(dsMS);
-    } catch (std::exception &e) {
-        SetNull();
-        return false;
-    }
-    return true;
-}
-
-bool CBurnSyscoin::UnserializeFromTx(const CTransaction &tx) {
-    std::vector<unsigned char> vchData;
-    int nOut;
-    if (!GetSyscoinData(tx, vchData, nOut))
-    {
-        SetNull();
-        return false;
-    }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }
-    return true;
-}
-
-void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
-    CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsBurn);
-    vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
-}
-
-bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string &errorMessage, bool bConsensus) {
-    return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
 }
 
 GenTxid::GenTxid(bool is_wtxid, const uint256& hash): m_is_wtxid(is_wtxid), m_hash(hash) {

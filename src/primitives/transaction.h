@@ -555,7 +555,7 @@ public:
     CAmount GetValueOut() const;
     // SYSCOIN
     CAmount GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const;
-    bool GetAssetValueOut(CAssetsMap &mapAssetOut, TxValidationState& state) const;
+    bool GetAssetValueOut(CAssetsMap &mapAssetOut, std::string& err) const;
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
@@ -765,7 +765,6 @@ public:
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
-bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string &errorMessage, bool bConsensus);
 bool IsSyscoinTx(const int &nVersion);
 bool IsMasternodeTx(const int &nVersion);
 bool IsAssetAllocationTx(const int &nVersion);
