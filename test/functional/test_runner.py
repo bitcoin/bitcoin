@@ -297,6 +297,7 @@ BASE_SCRIPTS = [
     'feature_asset_auxfees.py',
     'feature_asset_reorg.py',
     'feature_asset_mint.py',
+    'feature_asset_mint_chainlock.py',
     'feature_asset_txroots.py',
     'feature_asset_burn.py',
     'feature_asset_notary.py',

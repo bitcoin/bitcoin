@@ -115,13 +115,13 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         # skipped. If list is truncated, wallet creation is skipped and keys
         # are not imported.
         self.wallet_names = None
+        # SYSCOIN
+        self.mocktime = None
         self.set_test_params()
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         if self.options.timeout_factor == 0 :
             self.options.timeout_factor = 99999
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
-        # SYSCOIN
-        self.mocktime = None
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
 
