@@ -1008,10 +1008,16 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     int nInbound = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
-    if (hSocket != INVALID_SOCKET) {
-        if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
-            LogPrintf("Warning: Unknown socket family\n");
+    if (hSocket == INVALID_SOCKET) {
+        const int nErr = WSAGetLastError();
+        if (nErr != WSAEWOULDBLOCK) {
+            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
         }
+        return;
+    }
+
+    if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
+        LogPrintf("Warning: Unknown socket family\n");
     }
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::PF_NONE;
@@ -1030,14 +1036,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         for (const CNode* pnode : vNodes) {
             if (pnode->IsInboundConn()) nInbound++;
         }
-    }
-
-    if (hSocket == INVALID_SOCKET)
-    {
-        int nErr = WSAGetLastError();
-        if (nErr != WSAEWOULDBLOCK)
-            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
-        return;
     }
 
     if (!fNetworkActive) {
