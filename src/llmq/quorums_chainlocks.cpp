@@ -160,12 +160,11 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
             return;
         }
 
-        bestChainLockWithKnownBlock = bestChainLock;
         bestChainLockBlockIndex = pindex;
         peerman.ForgetTxHash(from, hash);
     }
     CheckActiveState();
-    EnforceBestChainLock(bestChainLockBlockIndex, bestChainLockWithKnownBlock, enforced);
+    EnforceBestChainLock(bestChainLockBlockIndex, bestChainLock, enforced);
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
 }
@@ -193,7 +192,7 @@ void CChainLocksHandler::CheckActiveState()
             // us with some stale values which we should not try to enforce anymore (there probably was a good reason
             // to disable spork19)
             bestChainLockHash = uint256();
-            bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();
+            bestChainLock = CChainLockSig();
         }
     }
 }

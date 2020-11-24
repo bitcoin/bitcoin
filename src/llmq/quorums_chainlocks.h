@@ -51,7 +51,6 @@ private:
     uint256 bestChainLockHash;
     CChainLockSig bestChainLock;
 
-    CChainLockSig bestChainLockWithKnownBlock;
     const CBlockIndex* bestChainLockBlockIndex{nullptr};
     int32_t lastSignedHeight{-1};
     uint256 lastSignedRequestId;
