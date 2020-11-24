@@ -4,10 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <primitives/pureheader.h>
-
 #include <hash.h>
-#include <util/strencodings.h>
-#include <versionbits.h>
 uint256 CPureBlockHeader::GetHash() const
 {
     return SerializeHash(*this);
