@@ -1005,8 +1005,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
-    int nInbound = 0;
-    int nMaxInbound = nMaxConnections - m_max_outbound;
 
     if (hSocket == INVALID_SOCKET) {
         const int nErr = WSAGetLastError();
@@ -1024,6 +1022,18 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::PF_NONE;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
+
+    CreateNodeFromAcceptedSocket(hSocket, permissionFlags, addr_bind, addr);
+}
+
+void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
+                                            NetPermissionFlags permissionFlags,
+                                            const CAddress& addr_bind,
+                                            const CAddress& addr)
+{
+    int nInbound = 0;
+    int nMaxInbound = nMaxConnections - m_max_outbound;
+
     AddWhitelistPermissionFlags(permissionFlags, addr);
     if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_ISIMPLICIT)) {
         NetPermissions::ClearFlag(permissionFlags, PF_ISIMPLICIT);

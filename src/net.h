@@ -1049,6 +1049,20 @@ private:
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
+
+    /**
+     * Create a `CNode` object from a socket that has just been accepted and add the node to
+     * the `vNodes` member.
+     * @param[in] hSocket Connected socket to communicate with the peer.
+     * @param[in] permissionFlags The peer's permissions.
+     * @param[in] addr_bind The address and port at our side of the connection.
+     * @param[in] addr The address and port at the peer's side of the connection.
+     */
+    void CreateNodeFromAcceptedSocket(SOCKET hSocket,
+                                      NetPermissionFlags permissionFlags,
+                                      const CAddress& addr_bind,
+                                      const CAddress& addr);
+
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
