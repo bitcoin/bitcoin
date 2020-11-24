@@ -1256,11 +1256,6 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
 bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
 {
     LOCK(cs_geth);
-    if(mode == "disabled") {
-        LogPrintf("%s: Geth is disabled, user chose to deploy their own Geth instance!\n", __func__);
-        pid = -1;
-        return true;
-    }
     // stop any geth nodes before starting
     StopGethNode(pid);
 
