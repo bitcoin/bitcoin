@@ -11,7 +11,10 @@
 #include <assert.h>
 // SYSCOIN
 #include <streams.h>
-#include <key_io.h>
+#include <script/script.h>
+#include <pubkey.h>
+#include <script/standard.h>
+#include <protocol.h>
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
