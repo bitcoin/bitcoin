@@ -255,11 +255,17 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) 
             entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
 
-        if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) 
-            entry.__pushKV("auxfee", asset.auxFeeDetails.ToJson());
+        if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
+            UniValue value(UniValue::VOBJ);
+            asset.auxFeeDetails.ToJson(value);
+            entry.__pushKV("auxfee", value);
+        }
 
-        if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) 
-            entry.__pushKV("notary_details", asset.notaryDetails.ToJson());
+        if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+            UniValue value(UniValue::VOBJ);
+            asset.notaryDetails.ToJson(value);
+            entry.__pushKV("notary_details", value);
+        }
 
         if(asset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) 
             entry.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
@@ -268,7 +274,6 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
     }
     return true;
 }
-
 
 bool AssetAllocationWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry) {
     if(!AllocationWtxToJson(wtx, assetInfo, strCategory, entry))

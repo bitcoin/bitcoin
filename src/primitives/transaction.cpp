@@ -10,7 +10,7 @@
 #include <util/strencodings.h>
 #include <assert.h>
 // SYSCOIN
-
+#include <dbwrapper.h>
 #include <key_io.h>
 std::string COutPoint::ToString() const
 {
@@ -519,4 +519,152 @@ GenTxid::GenTxid(bool is_wtxid, const uint256& hash): m_is_wtxid(is_wtxid), m_ha
     } else {
         m_type = MSG_TX;
     }
+}
+
+CAssetAllocation::CAssetAllocation(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+
+CMintSyscoin::CMintSyscoin(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+
+CBurnSyscoin::CBurnSyscoin(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+CAsset::CAsset(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+
+bool CAsset::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		Unserialize(dsAsset);
+    } catch (std::exception &e) {
+		SetNull();
+        return false;
+    }
+	return true;
+}
+
+bool CAsset::UnserializeFromTx(const CTransaction &tx) {
+	std::vector<unsigned char> vchData;
+	int nOut;
+	if (!GetSyscoinData(tx, vchData, nOut))
+	{
+		SetNull();
+		return false;
+	}
+	if(!UnserializeFromData(vchData))
+	{	
+		SetNull();
+		return false;
+	}
+    return true;
+}
+bool CAssetAllocation::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsAsset);
+    } catch (std::exception &e) {
+		SetNull();
+        return false;
+    }
+	return true;
+}
+bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
+	std::vector<unsigned char> vchData;
+	int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {	
+        SetNull();
+        return false;
+    }
+    
+    return true;
+}
+bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsMS);
+    } catch (std::exception &e) {
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
+    std::vector<unsigned char> vchData;
+    int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {   
+        SetNull();
+        return false;
+    }  
+    return true;
+}
+
+bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsMS);
+    } catch (std::exception &e) {
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+bool CBurnSyscoin::UnserializeFromTx(const CTransaction &tx) {
+    std::vector<unsigned char> vchData;
+    int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {   
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsAsset);
+	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
+
+}
+void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsMint);
+    vchData = std::vector<unsigned char>(dsMint.begin(), dsMint.end());
+}
+
+void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsBurn);
+    vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
+}
+void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsAsset);
+	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 }

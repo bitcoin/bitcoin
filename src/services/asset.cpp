@@ -37,44 +37,10 @@ std::string stringFromSyscoinTx(const int &nVersion) {
 
 
 
-bool CAsset::UnserializeFromData(const std::vector<unsigned char> &vchData) {
-    try {
-		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
-		Unserialize(dsAsset);
-    } catch (std::exception &e) {
-		SetNull();
-        return false;
-    }
-	return true;
-}
-
-bool CAsset::UnserializeFromTx(const CTransaction &tx) {
-	std::vector<unsigned char> vchData;
-	int nOut;
-	if (!GetSyscoinData(tx, vchData, nOut))
-	{
-		SetNull();
-		return false;
-	}
-	if(!UnserializeFromData(vchData))
-	{	
-		SetNull();
-		return false;
-	}
-    return true;
-}
-
-
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     arith_uint256 txidArith = UintToArith256(outPoint.hash);
     txidArith += outPoint.n;
     return txidArith.GetLow32();
-}
-
-void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
-    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsAsset);
-	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 }
 
 bool GetAsset(const uint32_t &nAsset,
@@ -84,7 +50,7 @@ bool GetAsset(const uint32_t &nAsset,
     return true;
 }
 
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut) {
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (mapAssetOut.empty()) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outputs-empty");
     }
@@ -159,8 +125,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
     }
 }
 
-UniValue CAuxFeeDetails::ToJson() const {
-    UniValue value(UniValue::VOBJ);
+void CAuxFeeDetails::ToJson(UniValue& value) const {
     UniValue feeStruct(UniValue::VARR);
     for(const auto& auxfee: vecAuxFees) {
         UniValue auxfeeArr(UniValue::VARR);
@@ -170,7 +135,6 @@ UniValue CAuxFeeDetails::ToJson() const {
     }
     value.__pushKV("auxfee_address", vchAuxFeeKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{vchAuxFeeKeyID})));
     value.__pushKV("fee_struct", feeStruct);
-    return value;
 }
 
 CNotaryDetails::CNotaryDetails(const UniValue& value){
@@ -198,127 +162,8 @@ CNotaryDetails::CNotaryDetails(const UniValue& value){
     bRequireHD = hdObj.get_bool()? 1: 0; 
 }
 
-UniValue CNotaryDetails::ToJson() const {
-    UniValue value(UniValue::VOBJ);
+void CNotaryDetails::ToJson(UniValue& value) const {
     value.pushKV("endpoint", strEndPoint);
     value.pushKV("instant_transfers", bEnableInstantTransfers);
     value.pushKV("hd_required", bRequireHD);
-    return value;
-}
-
-bool CAssetAllocation::UnserializeFromData(const std::vector<unsigned char> &vchData) {
-    try {
-        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        Unserialize(dsAsset);
-    } catch (std::exception &e) {
-		SetNull();
-        return false;
-    }
-	return true;
-}
-bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
-	std::vector<unsigned char> vchData;
-	int nOut;
-    if (!GetSyscoinData(tx, vchData, nOut))
-    {
-        SetNull();
-        return false;
-    }
-    if(!UnserializeFromData(vchData))
-    {	
-        SetNull();
-        return false;
-    }
-    
-    return true;
-}
-void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
-    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsAsset);
-	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
-
-}
-bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
-    try {
-        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        Unserialize(dsMS);
-    } catch (std::exception &e) {
-        SetNull();
-        return false;
-    }
-    return true;
-}
-
-bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
-    std::vector<unsigned char> vchData;
-    int nOut;
-    if (!GetSyscoinData(tx, vchData, nOut))
-    {
-        SetNull();
-        return false;
-    }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }  
-    return true;
-}
-
-void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
-    CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsMint);
-    vchData = std::vector<unsigned char>(dsMint.begin(), dsMint.end());
-}
-
-bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
-    try {
-        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        Unserialize(dsMS);
-    } catch (std::exception &e) {
-        SetNull();
-        return false;
-    }
-    return true;
-}
-
-bool CBurnSyscoin::UnserializeFromTx(const CTransaction &tx) {
-    std::vector<unsigned char> vchData;
-    int nOut;
-    if (!GetSyscoinData(tx, vchData, nOut))
-    {
-        SetNull();
-        return false;
-    }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }
-    return true;
-}
-
-void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
-    CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsBurn);
-    vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
-}
-
-CAssetAllocation::CAssetAllocation(const CTransaction &tx) {
-    SetNull();
-    UnserializeFromTx(tx);
-}
-
-CMintSyscoin::CMintSyscoin(const CTransaction &tx) {
-    SetNull();
-    UnserializeFromTx(tx);
-}
-
-CBurnSyscoin::CBurnSyscoin(const CTransaction &tx) {
-    SetNull();
-    UnserializeFromTx(tx);
-}
-CAsset::CAsset(const CTransaction &tx) {
-    SetNull();
-    UnserializeFromTx(tx);
 }

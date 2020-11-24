@@ -83,6 +83,7 @@ EXPECTED_BOOST_INCLUDES=(
     boost/multiprecision/cpp_int.hpp
     boost/throw_exception.hpp
     boost/tuple/tuple.hpp
+    boost/pool/pool_alloc.hpp
     boost/thread.hpp
 )
 
