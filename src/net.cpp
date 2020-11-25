@@ -421,10 +421,20 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     bool connected = false;
     std::unique_ptr<Sock> sock;
     proxyType proxy;
+    CAddress addr_bind;
+    assert(!addr_bind.IsValid());
+
     if (addrConnect.IsValid()) {
         bool proxyConnectionFailed = false;
 
-        if (GetProxy(addrConnect.GetNetwork(), proxy)) {
+        if (addrConnect.GetNetwork() == NET_I2P && m_i2p_sam_session.get() != nullptr) {
+            i2p::Connection conn;
+            if (m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed)) {
+                connected = true;
+                sock = std::make_unique<Sock>(std::move(conn.sock));
+                addr_bind = CAddress{conn.me, NODE_NONE};
+            }
+        } else if (GetProxy(addrConnect.GetNetwork(), proxy)) {
             sock = CreateSock(proxy.proxy);
             if (!sock) {
                 return nullptr;
@@ -464,7 +474,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     // Add node
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-    CAddress addr_bind = GetBindAddress(sock->Get());
+    if (!addr_bind.IsValid()) {
+        addr_bind = GetBindAddress(sock->Get());
+    }
     CNode* pnode = new CNode(id, nLocalServices, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type, /* inbound_onion */ false);
     pnode->AddRef();
 
